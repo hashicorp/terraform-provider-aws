@@ -588,7 +588,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
-		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+		if _, err := waitGlobalReplicationGroupAvailable(context.TODO(), conn, v.(string), globalReplicationGroupDefaultCreatedTimeout); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) to be available: %w", v, err)
 		}
 	}
@@ -1048,7 +1048,7 @@ func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicati
 		return err
 	}
 
-	_, err = WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	_, err = waitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
 	if err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}

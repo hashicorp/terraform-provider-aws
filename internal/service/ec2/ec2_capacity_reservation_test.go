@@ -44,6 +44,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 				),

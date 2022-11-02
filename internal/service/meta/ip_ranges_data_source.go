@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"golang.org/x/exp/slices"
 )
 
@@ -135,8 +136,8 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 		return
 	}
 
-	regions := flex.ExpandFrameworkStringValueSet(ctx, data.Regions)
-	services := flex.ExpandFrameworkStringValueSet(ctx, data.Services)
+	regions := tfslices.ApplyToAll(flex.ExpandFrameworkStringValueSet(ctx, data.Regions), strings.ToLower)
+	services := tfslices.ApplyToAll(flex.ExpandFrameworkStringValueSet(ctx, data.Services), strings.ToLower)
 	matchFilter := func(region, service string) bool {
 		matchRegion := len(regions) == 0 || slices.Contains(regions, strings.ToLower(region))
 		matchService := slices.Contains(services, strings.ToLower(service))

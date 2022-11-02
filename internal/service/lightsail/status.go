@@ -118,3 +118,28 @@ func statusDatabaseBackupRetention(conn *lightsail.Lightsail, db *string) resour
 		return output, strconv.FormatBool(*output.RelationalDatabase.BackupRetentionEnabled), nil
 	}
 }
+
+func statusInstance(conn *lightsail.Lightsail, iName *string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		in := &lightsail.GetInstanceStateInput{
+			InstanceName: iName,
+		}
+
+		iNameValue := aws.StringValue(iName)
+
+		log.Printf("[DEBUG] Checking if Lightsail Instance (%s) is in a ready state.", iNameValue)
+
+		out, err := conn.GetInstanceState(in)
+
+		if err != nil {
+			return out, "FAILED", err
+		}
+
+		if out.State == nil {
+			return nil, "Failed", fmt.Errorf("Error retrieving Instance info for (%s)", iNameValue)
+		}
+
+		log.Printf("[DEBUG] Lightsail Instance (%s) State is currently (%s)", iNameValue, *out.State.Name)
+		return out, *out.State.Name, nil
+	}
+}

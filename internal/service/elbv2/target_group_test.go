@@ -273,6 +273,17 @@ func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
 		},
 	})
 }

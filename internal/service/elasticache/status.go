@@ -1,6 +1,8 @@
 package elasticache
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -95,10 +97,10 @@ const (
 	GlobalReplicationGroupStatusDeleted     = "deleted"
 )
 
-// StatusGlobalReplicationGroup fetches the Global Replication Group and its Status
-func StatusGlobalReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID string) resource.StateRefreshFunc {
+// statusGlobalReplicationGroup fetches the Global Replication Group and its Status
+func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		grg, err := FindGlobalReplicationGroupByID(conn, globalReplicationGroupID)
+		grg, err := FindGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -114,8 +116,8 @@ const (
 	GlobalReplicationGroupMemberStatusAssociated = "associated"
 )
 
-// StatusGlobalReplicationGroup fetches the Global Replication Group and its Status
-func StatusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
+// statusGlobalReplicationGroupMember fetches a Global Replication Group Member and its Status
+func statusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		member, err := FindGlobalReplicationGroupMemberByID(conn, globalReplicationGroupID, id)
 		if tfresource.NotFound(err) {

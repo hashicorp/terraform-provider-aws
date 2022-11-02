@@ -167,7 +167,7 @@ var (
 		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
 		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
-	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
+	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
 )
 
 func ResourceQueue() *schema.Resource {

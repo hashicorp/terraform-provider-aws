@@ -154,23 +154,81 @@ func FindCapacityReservationByID(conn *ec2.EC2, id string) (*ec2.CapacityReserva
 	return output, nil
 }
 
-// FindCarrierGatewayByID returns the carrier gateway corresponding to the specified identifier.
-// Returns nil and potentially an error if no carrier gateway is found.
+func FindCarrierGateway(conn *ec2.EC2, input *ec2.DescribeCarrierGatewaysInput) (*ec2.CarrierGateway, error) {
+	output, err := FindCarrierGateways(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindCarrierGateways(conn *ec2.EC2, input *ec2.DescribeCarrierGatewaysInput) ([]*ec2.CarrierGateway, error) {
+	var output []*ec2.CarrierGateway
+
+	err := conn.DescribeCarrierGatewaysPages(input, func(page *ec2.DescribeCarrierGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.CarrierGateways {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindCarrierGatewayByID(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
 	input := &ec2.DescribeCarrierGatewaysInput{
 		CarrierGatewayIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeCarrierGateways(input)
+	output, err := FindCarrierGateway(conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.CarrierGateways) == 0 {
-		return nil, nil
+	if state := aws.StringValue(output.State); state == ec2.CarrierGatewayStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
 	}
 
-	return output.CarrierGateways[0], nil
+	// Eventual consistency check.
+	if aws.StringValue(output.CarrierGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindClientVPNEndpoint(conn *ec2.EC2, input *ec2.DescribeClientVpnEndpointsInput) (*ec2.ClientVpnEndpoint, error) {
@@ -1504,6 +1562,26 @@ func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionWithContext(c
 	}
 
 	return FindNetworkInterfacesWithContext(ctx, conn, input)
+}
+
+func FindNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"attachment.attachment-id": id,
+		}),
+	}
+
+	networkInterface, err := FindNetworkInterfaceWithContext(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return networkInterface, nil
 }
 
 func FindNetworkInterfaceAttachmentByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
@@ -3311,6 +3389,164 @@ func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn *ec2.EC2, vpnConnection
 	}
 }
 
+func FindTrafficMirrorFilter(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorFiltersInput) (*ec2.TrafficMirrorFilter, error) {
+	output, err := FindTrafficMirrorFilters(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTrafficMirrorFilters(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorFiltersInput) ([]*ec2.TrafficMirrorFilter, error) {
+	var output []*ec2.TrafficMirrorFilter
+
+	err := conn.DescribeTrafficMirrorFiltersPages(input, func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficMirrorFilters {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTrafficMirrorFilterByID(conn *ec2.EC2, id string) (*ec2.TrafficMirrorFilter, error) {
+	input := &ec2.DescribeTrafficMirrorFiltersInput{
+		TrafficMirrorFilterIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTrafficMirrorFilter(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TrafficMirrorFilterId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindTrafficMirrorFilterRuleByTwoPartKey(conn *ec2.EC2, filterID, ruleID string) (*ec2.TrafficMirrorFilterRule, error) {
+	output, err := FindTrafficMirrorFilterByID(conn, filterID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range [][]*ec2.TrafficMirrorFilterRule{output.IngressFilterRules, output.EgressFilterRules} {
+		for _, v := range v {
+			if aws.StringValue(v.TrafficMirrorFilterRuleId) == ruleID {
+				return v, nil
+			}
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
+func FindTrafficMirrorSession(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorSessionsInput) (*ec2.TrafficMirrorSession, error) {
+	output, err := FindTrafficMirrorSessions(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTrafficMirrorSessions(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorSessionsInput) ([]*ec2.TrafficMirrorSession, error) {
+	var output []*ec2.TrafficMirrorSession
+
+	err := conn.DescribeTrafficMirrorSessionsPages(input, func(page *ec2.DescribeTrafficMirrorSessionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficMirrorSessions {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorSessionIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTrafficMirrorSessionByID(conn *ec2.EC2, id string) (*ec2.TrafficMirrorSession, error) {
+	input := &ec2.DescribeTrafficMirrorSessionsInput{
+		TrafficMirrorSessionIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTrafficMirrorSession(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TrafficMirrorSessionId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindTrafficMirrorTarget(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorTargetsInput) (*ec2.TrafficMirrorTarget, error) {
 	output, err := FindTrafficMirrorTargets(conn, input)
 
@@ -4939,15 +5175,33 @@ func FindInternetGatewayAttachment(conn *ec2.EC2, internetGatewayID, vpcID strin
 	return attachment, nil
 }
 
-func FindIPAMPoolCIDRs(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) ([]*ec2.IpamPoolCidr, error) {
-	var output []*ec2.IpamPoolCidr
+func FindIPAM(conn *ec2.EC2, input *ec2.DescribeIpamsInput) (*ec2.Ipam, error) {
+	output, err := FindIPAMs(conn, input)
 
-	err := conn.GetIpamPoolCidrsPages(input, func(page *ec2.GetIpamPoolCidrsOutput, lastPage bool) bool {
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMs(conn *ec2.EC2, input *ec2.DescribeIpamsInput) ([]*ec2.Ipam, error) {
+	var output []*ec2.Ipam
+
+	err := conn.DescribeIpamsPages(input, func(page *ec2.DescribeIpamsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.IpamPoolCidrs {
+		for _, v := range page.Ipams {
 			if v != nil {
 				output = append(output, v)
 			}
@@ -4956,7 +5210,7 @@ func FindIPAMPoolCIDRs(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) ([]*ec2.
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -4968,6 +5222,52 @@ func FindIPAMPoolCIDRs(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) ([]*ec2.
 	}
 
 	return output, nil
+}
+
+func FindIPAMByID(conn *ec2.EC2, id string) (*ec2.Ipam, error) {
+	input := &ec2.DescribeIpamsInput{
+		IpamIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindIPAM(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.IpamId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindIPAMPool(conn *ec2.EC2, input *ec2.DescribeIpamPoolsInput) (*ec2.IpamPool, error) {
+	output, err := FindIPAMPools(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
 func FindIPAMPools(conn *ec2.EC2, input *ec2.DescribeIpamPoolsInput) ([]*ec2.IpamPool, error) {
@@ -4987,8 +5287,271 @@ func FindIPAMPools(conn *ec2.EC2, input *ec2.DescribeIpamPoolsInput) ([]*ec2.Ipa
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindIPAMPoolByID(conn *ec2.EC2, id string) (*ec2.IpamPool, error) {
+	input := &ec2.DescribeIpamPoolsInput{
+		IpamPoolIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindIPAMPool(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamPoolStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.IpamPoolId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindIPAMPoolAllocation(conn *ec2.EC2, input *ec2.GetIpamPoolAllocationsInput) (*ec2.IpamPoolAllocation, error) {
+	output, err := FindIPAMPoolAllocations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMPoolAllocations(conn *ec2.EC2, input *ec2.GetIpamPoolAllocationsInput) ([]*ec2.IpamPoolAllocation, error) {
+	var output []*ec2.IpamPoolAllocation
+
+	err := conn.GetIpamPoolAllocationsPages(input, func(page *ec2.GetIpamPoolAllocationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPoolAllocations {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolAllocationIdNotFound, errCodeInvalidIPAMPoolIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindIPAMPoolAllocationByTwoPartKey(conn *ec2.EC2, allocationID, poolID string) (*ec2.IpamPoolAllocation, error) {
+	input := &ec2.GetIpamPoolAllocationsInput{
+		IpamPoolAllocationId: aws.String(allocationID),
+		IpamPoolId:           aws.String(poolID),
+	}
+
+	output, err := FindIPAMPoolAllocation(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.IpamPoolAllocationId) != allocationID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindIPAMPoolCIDR(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) (*ec2.IpamPoolCidr, error) {
+	output, err := FindIPAMPoolCIDRs(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMPoolCIDRs(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) ([]*ec2.IpamPoolCidr, error) {
+	var output []*ec2.IpamPoolCidr
+
+	err := conn.GetIpamPoolCidrsPages(input, func(page *ec2.GetIpamPoolCidrsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPoolCidrs {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindIPAMPoolCIDRByTwoPartKey(conn *ec2.EC2, cidrBlock, poolID string) (*ec2.IpamPoolCidr, error) {
+	input := &ec2.GetIpamPoolCidrsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"cidr": cidrBlock,
+		}),
+		IpamPoolId: aws.String(poolID),
+	}
+
+	output, err := FindIPAMPoolCIDR(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamPoolCidrStateDeprovisioned {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.Cidr) != cidrBlock {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindIPAMScope(conn *ec2.EC2, input *ec2.DescribeIpamScopesInput) (*ec2.IpamScope, error) {
+	output, err := FindIPAMScopes(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMScopes(conn *ec2.EC2, input *ec2.DescribeIpamScopesInput) ([]*ec2.IpamScope, error) {
+	var output []*ec2.IpamScope
+
+	err := conn.DescribeIpamScopesPages(input, func(page *ec2.DescribeIpamScopesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamScopes {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMScopeIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindIPAMScopeByID(conn *ec2.EC2, id string) (*ec2.IpamScope, error) {
+	input := &ec2.DescribeIpamScopesInput{
+		IpamScopeIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindIPAMScope(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamScopeStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.IpamScopeId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
 	return output, nil

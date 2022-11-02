@@ -971,6 +971,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
+	d.Set("ip_address_type", targetGroup.IpAddressType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)

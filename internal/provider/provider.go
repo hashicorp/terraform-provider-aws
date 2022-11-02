@@ -521,10 +521,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
 
-			"aws_dx_connection": directconnect.DataSourceConnection(),
-			"aws_dx_gateway":    directconnect.DataSourceGateway(),
-			"aws_dx_location":   directconnect.DataSourceLocation(),
-			"aws_dx_locations":  directconnect.DataSourceLocations(),
+			"aws_dx_connection":           directconnect.DataSourceConnection(),
+			"aws_dx_gateway":              directconnect.DataSourceGateway(),
+			"aws_dx_location":             directconnect.DataSourceLocation(),
+			"aws_dx_locations":            directconnect.DataSourceLocations(),
+			"aws_dx_router_configuration": directconnect.DataSourceRouterConfiguration(),
 
 			"aws_directory_service_directory": ds.DataSourceDirectory(),
 
@@ -1524,6 +1525,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_fsx_backup":                        fsx.ResourceBackup(),
 			"aws_fsx_lustre_file_system":            fsx.ResourceLustreFileSystem(),
 			"aws_fsx_data_repository_association":   fsx.ResourceDataRepositoryAssociation(),
+			"aws_fsx_file_cache":                    fsx.ResourceFileCache(),
 			"aws_fsx_ontap_file_system":             fsx.ResourceOntapFileSystem(),
 			"aws_fsx_ontap_storage_virtual_machine": fsx.ResourceOntapStorageVirtualMachine(),
 			"aws_fsx_ontap_volume":                  fsx.ResourceOntapVolume(),
@@ -1624,8 +1626,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_inspector_assessment_template": inspector.ResourceAssessmentTemplate(),
 			"aws_inspector_resource_group":      inspector.ResourceResourceGroup(),
 
-			"aws_inspector2_organization_configuration": inspector2.ResourceOrganizationConfiguration(),
 			"aws_inspector2_delegated_admin_account":    inspector2.ResourceDelegatedAdminAccount(),
+			"aws_inspector2_enabler":                    inspector2.ResourceEnabler(),
+			"aws_inspector2_organization_configuration": inspector2.ResourceOrganizationConfiguration(),
 
 			"aws_iot_authorizer":                 iot.ResourceAuthorizer(),
 			"aws_iot_certificate":                iot.ResourceCertificate(),
@@ -1710,11 +1713,18 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
 			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
+			"aws_lightsail_disk":                                 lightsail.ResourceDisk(),
+			"aws_lightsail_disk_attachment":                      lightsail.ResourceDiskAttachment(),
 			"aws_lightsail_domain":                               lightsail.ResourceDomain(),
 			"aws_lightsail_domain_entry":                         lightsail.ResourceDomainEntry(),
 			"aws_lightsail_instance":                             lightsail.ResourceInstance(),
 			"aws_lightsail_instance_public_ports":                lightsail.ResourceInstancePublicPorts(),
 			"aws_lightsail_key_pair":                             lightsail.ResourceKeyPair(),
+			"aws_lightsail_lb":                                   lightsail.ResourceLoadBalancer(),
+			"aws_lightsail_lb_attachment":                        lightsail.ResourceLoadBalancerAttachment(),
+			"aws_lightsail_lb_certificate":                       lightsail.ResourceLoadBalancerCertificate(),
+			"aws_lightsail_lb_certificate_attachment":            lightsail.ResourceLoadBalancerCertificateAttachment(),
+			"aws_lightsail_lb_stickiness_policy":                 lightsail.ResourceLoadBalancerStickinessPolicy(),
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
@@ -1919,6 +1929,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_route53recoveryreadiness_recovery_group":  route53recoveryreadiness.ResourceRecoveryGroup(),
 			"aws_route53recoveryreadiness_resource_set":    route53recoveryreadiness.ResourceResourceSet(),
 
+			"aws_route53_resolver_config":                          route53resolver.ResourceConfig(),
 			"aws_route53_resolver_dnssec_config":                   route53resolver.ResourceDNSSECConfig(),
 			"aws_route53_resolver_endpoint":                        route53resolver.ResourceEndpoint(),
 			"aws_route53_resolver_firewall_config":                 route53resolver.ResourceFirewallConfig(),
@@ -1988,6 +1999,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_notebook_instance":                         sagemaker.ResourceNotebookInstance(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": sagemaker.ResourceNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_project":                                   sagemaker.ResourceProject(),
+			"aws_sagemaker_servicecatalog_portfolio_status":           sagemaker.ResourceServicecatalogPortfolioStatus(),
 			"aws_sagemaker_studio_lifecycle_config":                   sagemaker.ResourceStudioLifecycleConfig(),
 			"aws_sagemaker_user_profile":                              sagemaker.ResourceUserProfile(),
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
@@ -2053,8 +2065,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
-			"aws_sesv2_configuration_set": sesv2.ResourceConfigurationSet(),
-			"aws_sesv2_dedicated_ip_pool": sesv2.ResourceDedicatedIPPool(),
+			"aws_sesv2_configuration_set":                  sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_dedicated_ip_assignment":            sesv2.ResourceDedicatedIPAssignment(),
+			"aws_sesv2_dedicated_ip_pool":                  sesv2.ResourceDedicatedIPPool(),
+			"aws_sesv2_email_identity":                     sesv2.ResourceEmailIdentity(),
+			"aws_sesv2_email_identity_feedback_attributes": sesv2.ResourceEmailIdentityFeedbackAttributes(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
@@ -2066,8 +2081,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_signer_signing_job":                signer.ResourceSigningJob(),
 			"aws_signer_signing_profile":            signer.ResourceSigningProfile(),
 			"aws_signer_signing_profile_permission": signer.ResourceSigningProfilePermission(),
-
-			"aws_simpledb_domain": simpledb.ResourceDomain(),
 
 			"aws_sns_platform_application": sns.ResourcePlatformApplication(),
 			"aws_sns_sms_preferences":      sns.ResourceSMSPreferences(),
@@ -2182,11 +2195,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 	providerData := &conns.AWSClient{
 		// TODO: This should be generated.
 
-		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
-		ServiceMap: map[string]intf.ServiceData{
-			"globalaccelerator": globalaccelerator.ServiceData,
-			"meta":              meta.ServiceData,
-			"sts":               sts.ServiceData,
+		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
+		ServicePackages: []intf.ServicePackageData{
+			globalaccelerator.ServicePackageData,
+			//medialive.ServicePackageData,
+			meta.ServicePackageData,
+			simpledb.ServicePackageData,
+			sts.ServicePackageData,
 		},
 	}
 
@@ -2295,7 +2310,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	// Configure each service.
-	for _, v := range providerData.ServiceMap {
+	for _, v := range providerData.ServicePackages {
 		if err := v.Configure(ctx, providerData); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
