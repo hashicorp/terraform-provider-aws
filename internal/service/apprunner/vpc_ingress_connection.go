@@ -154,7 +154,7 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("status", config.Status)
 	d.Set("domain_name", config.DomainName)
 
-	if err := d.Set("ingress_vpc_configuration", flattenIngressVpcConfiguration(config.IngressVpcConfiguration)); err != nil {
+	if err := d.Set("ingress_vpc_configuration", flattenIngressVPCConfiguration(config.IngressVpcConfiguration)); err != nil {
 		return diag.Errorf("error setting ingress_vpc_configuration: %s", err)
 	}
 
@@ -239,7 +239,7 @@ func expandIngressVPCConfiguration(l []interface{}) *apprunner.IngressVpcConfigu
 	return configuration
 }
 
-func flattenIngressVpcConfiguration(ingressVpcConfiguration *apprunner.IngressVpcConfiguration) []interface{} {
+func flattenIngressVPCConfiguration(ingressVpcConfiguration *apprunner.IngressVpcConfiguration) []interface{} {
 	if ingressVpcConfiguration == nil {
 		return []interface{}{}
 	}
