@@ -88,6 +88,86 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	}
 }
 
+func TestExpandFrameworkStringValueMap(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.Map
+		expected map[string]string
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{
+				"one": types.String{Value: "GET"},
+				"two": types.String{Value: "HEAD"},
+			}},
+			expected: map[string]string{
+				"one": "GET",
+				"two": "HEAD",
+			},
+		},
+		"zero elements": {
+			input:    types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{}},
+			expected: map[string]string{},
+		},
+		"invalid element type": {
+			input: types.Map{ElemType: types.BoolType, Elems: map[string]attr.Value{
+				"one": types.Bool{Value: true},
+				"two": types.Bool{Value: false},
+			}},
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ExpandFrameworkStringValueMap(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkStringList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []*string
+		expected types.List
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []*string{aws.String("GET"), aws.String("HEAD")},
+			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{
+				types.String{Value: "GET"},
+				types.String{Value: "HEAD"},
+			}},
+		},
+		"zero elements": {
+			input:    []*string{},
+			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := FlattenFrameworkStringList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkStringValueList(t *testing.T) {
 	t.Parallel()
 

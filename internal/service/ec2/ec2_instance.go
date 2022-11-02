@@ -816,6 +816,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
+		ClientToken:                       aws.String(resource.UniqueId()),
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,

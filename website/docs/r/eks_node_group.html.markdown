@@ -78,6 +78,7 @@ resource "aws_eks_node_group" "example" {
   node_role_arn   = aws_iam_role.example.arn
   subnet_ids      = aws_subnet.example[*].id
 }
+```
 
 ### Example IAM Role for EKS Node Group
 
