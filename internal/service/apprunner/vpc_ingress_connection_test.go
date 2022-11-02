@@ -209,7 +209,7 @@ resource "aws_vpc_endpoint" "apprunner" {
   service_name      = "com.amazonaws.${data.aws_region.current.name}.apprunner.requests"
   vpc_endpoint_type = "Interface"
   
-  subnet_ids = aws_subnet.test.*.id
+  subnet_ids = aws_subnet.test[*].id
   
   security_group_ids = [
     aws_vpc.test.default_security_group_id,
