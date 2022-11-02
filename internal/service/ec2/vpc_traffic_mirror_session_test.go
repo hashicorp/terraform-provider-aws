@@ -6,15 +6,14 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
@@ -179,13 +178,9 @@ func testAccCheckTrafficMirrorSessionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeTrafficMirrorSessions(&ec2.DescribeTrafficMirrorSessionsInput{
-			TrafficMirrorSessionIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+		_, err := tfec2.FindTrafficMirrorSessionByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorSessionId.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -193,41 +188,34 @@ func testAccCheckTrafficMirrorSessionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if len(out.TrafficMirrorSessions) != 0 {
-			return fmt.Errorf("Traffic mirror session %s still not destroyed", rs.Primary.ID)
-		}
+		return fmt.Errorf("EC2 Traffic Mirror Session %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckTrafficMirrorSessionExists(name string, session *ec2.TrafficMirrorSession) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorSessionExists(n string, v *ec2.TrafficMirrorSession) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID set for %s", name)
+			return fmt.Errorf("No EC2 Traffic Mirror Session ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := conn.DescribeTrafficMirrorSessions(&ec2.DescribeTrafficMirrorSessionsInput{
-			TrafficMirrorSessionIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+
+		output, err := tfec2.FindTrafficMirrorSessionByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(out.TrafficMirrorSessions) == 0 {
-			return fmt.Errorf("Traffic mirror session %s not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		*session = *out.TrafficMirrorSessions[0]
-
+		return nil
 		return nil
 	}
 }

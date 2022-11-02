@@ -81,6 +81,7 @@ const (
 	errCodeInvalidSubnetCIDRReservationIDNotFound         = "InvalidSubnetCidrReservationID.NotFound"
 	errCodeInvalidSubnetIDNotFound                        = "InvalidSubnetID.NotFound"
 	errCodeInvalidSubnetIdNotFound                        = "InvalidSubnetId.NotFound"
+	errCodeInvalidTrafficMirrorSessionIdNotFound          = "InvalidTrafficMirrorSessionId.NotFound"
 	errCodeInvalidTrafficMirrorTargetIdNotFound           = "InvalidTrafficMirrorTargetId.NotFound"
 	errCodeInvalidTransitGatewayAttachmentIDNotFound      = "InvalidTransitGatewayAttachmentID.NotFound"
 	errCodeInvalidTransitGatewayConnectPeerIDNotFound     = "InvalidTransitGatewayConnectPeerID.NotFound"
