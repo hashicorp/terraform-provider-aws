@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dx_connection_confirmation: Increase default timeout to 30min instead of 10min.
+```
