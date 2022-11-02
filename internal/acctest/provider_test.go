@@ -910,7 +910,7 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 ` //lintignore:AT004
 
-const testAccProviderConfigBase = `
+const testAccProviderConfig_base = `
 data "aws_region" "provider_test" {}
 
 # Required to initialize the provider.
@@ -922,9 +922,7 @@ data "aws_service" "provider_test" {
 
 func testAccProviderConfig_endpoints(endpoints string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -940,9 +938,7 @@ provider "aws" {
 
 func testAccProviderConfig_fipsEndpoint(endpoint, rName string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   endpoints {
     s3 = %[1]q
@@ -963,9 +959,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 []string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -983,9 +977,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeys0() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -997,9 +989,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeys1(tag1 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     keys = [%[1]q]
@@ -1015,9 +1005,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeys2(tag1, tag2 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     keys = [%[1]q, %[2]q]
@@ -1033,9 +1021,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeyPrefixes0() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -1047,9 +1033,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeyPrefixes3(tagPrefix1 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     key_prefixes = [%[1]q]
@@ -1065,9 +1049,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeyPrefixes2(tagPrefix1, tagPrefix2 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     key_prefixes = [%[1]q, %[2]q]
@@ -1083,9 +1065,7 @@ provider "aws" {
 
 func testAccProviderConfig_defaultTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   default_tags {}
 
@@ -1099,9 +1079,7 @@ provider "aws" {
 
 func testAccProviderConfig_defaultAndIgnoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   default_tags {}
   ignore_tags {}
@@ -1116,9 +1094,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   ignore_tags {}
 
@@ -1132,9 +1108,7 @@ provider "aws" {
 
 func testAccProviderConfig_region(region string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   region                      = %[1]q
   skip_credentials_validation = true
@@ -1147,9 +1121,7 @@ provider "aws" {
 
 func testAccProviderConfig_stsRegion(region, stsRegion string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   region                      = %[1]q
   sts_region                  = %[2]q
