@@ -527,15 +527,19 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 }
 
 func testAccProtoV5ProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
-	p, err := provider.New(context.Background())
+	return map[string]func() (tfprotov5.ProviderServer, error){
+		acctest.ProviderName: func() (tfprotov5.ProviderServer, error) {
+			providerServerFactory, p, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
-	if err != nil {
-		t.Fatal(err)
+			if err != nil {
+				return nil, err
+			}
+
+			*v = p
+
+			return providerServerFactory(), nil
+		},
 	}
-
-	*v = p
-
-	return acctest.ProtoV5ProviderFactories
 }
 
 func testAccCheckPartition(t *testing.T, p **schema.Provider, expectedPartition string) resource.TestCheckFunc { //nolint:unparam
