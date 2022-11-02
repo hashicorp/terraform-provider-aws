@@ -1017,6 +1017,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_appmesh_virtual_service": appmesh.ResourceVirtualService(),
 
 			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
+			"aws_apprunner_vpc_ingress_connection":             apprunner.ResourceVpcIngressConnection(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
 			"aws_apprunner_observability_configuration":        apprunner.ResourceObservabilityConfiguration(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
