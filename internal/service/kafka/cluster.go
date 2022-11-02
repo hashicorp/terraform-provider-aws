@@ -632,7 +632,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("open_monitoring", nil)
 	}
 
-	d.Set("storage_mode", aws.StringValue(cluster.StorageMode))
+	d.Set("storage_mode", cluster.StorageMode)
 
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
