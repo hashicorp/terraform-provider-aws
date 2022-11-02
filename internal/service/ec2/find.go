@@ -3459,6 +3459,24 @@ func FindTrafficMirrorFilterByID(conn *ec2.EC2, id string) (*ec2.TrafficMirrorFi
 	return output, nil
 }
 
+func FindTrafficMirrorFilterRuleByTwoPartKey(conn *ec2.EC2, filterID, ruleID string) (*ec2.TrafficMirrorFilterRule, error) {
+	output, err := FindTrafficMirrorFilterByID(conn, filterID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range [][]*ec2.TrafficMirrorFilterRule{output.IngressFilterRules, output.EgressFilterRules} {
+		for _, v := range v {
+			if aws.StringValue(v.TrafficMirrorFilterRuleId) == ruleID {
+				return v, nil
+			}
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindTrafficMirrorSession(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorSessionsInput) (*ec2.TrafficMirrorSession, error) {
 	output, err := FindTrafficMirrorSessions(conn, input)
 

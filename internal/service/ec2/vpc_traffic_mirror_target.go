@@ -20,6 +20,7 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 		Read:   resourceTrafficMirrorTargetRead,
 		Update: resourceTrafficMirrorTargetUpdate,
 		Delete: resourceTrafficMirrorTargetDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

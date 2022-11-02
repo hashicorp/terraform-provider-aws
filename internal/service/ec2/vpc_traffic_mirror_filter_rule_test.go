@@ -6,14 +6,13 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
@@ -156,16 +155,9 @@ func testAccCheckTrafficMirrorFilterRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		ruleId := rs.Primary.ID
-		filterId := rs.Primary.Attributes["traffic_mirror_filter_id"]
+		_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
 
-		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
-			TrafficMirrorFilterIds: []*string{
-				aws.String(filterId),
-			},
-		})
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorFilterId.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -173,82 +165,39 @@ func testAccCheckTrafficMirrorFilterRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if len(out.TrafficMirrorFilters) == 0 {
-			return nil
-		}
-
-		filter := out.TrafficMirrorFilters[0]
-		var ruleList []*ec2.TrafficMirrorFilterRule
-		ruleList = append(ruleList, filter.IngressFilterRules...)
-		ruleList = append(ruleList, filter.EgressFilterRules...)
-
-		for _, rule := range ruleList {
-			if aws.StringValue(rule.TrafficMirrorFilterRuleId) == ruleId {
-				return fmt.Errorf("Rule %s still exists in filter %s", ruleId, filterId)
-			}
-		}
+		return fmt.Errorf("EC2 Traffic Mirror Filter Rule %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccTrafficMirrorFilterRuleImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccTrafficMirrorFilterRuleImportStateIdFunc(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
+			return "", fmt.Errorf("Not found: %s", n)
 		}
 
 		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID), nil
 	}
 }
 
-func testAccCheckTrafficMirrorFilterRuleExists(name string) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorFilterRuleExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID set for %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		ruleId := rs.Primary.ID
-		filterId := rs.Primary.Attributes["traffic_mirror_filter_id"]
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Traffic Mirror Filter Rule ID is set")
+		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
-			TrafficMirrorFilterIds: []*string{
-				aws.String(filterId),
-			},
-		})
 
-		if err != nil {
-			return err
-		}
+		_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
 
-		if len(out.TrafficMirrorFilters) == 0 {
-			return fmt.Errorf("Traffic mirror filter %s not found", rs.Primary.ID)
-		}
-
-		filter := out.TrafficMirrorFilters[0]
-		var ruleList []*ec2.TrafficMirrorFilterRule
-		ruleList = append(ruleList, filter.IngressFilterRules...)
-		ruleList = append(ruleList, filter.EgressFilterRules...)
-
-		var exists bool
-		for _, rule := range ruleList {
-			if aws.StringValue(rule.TrafficMirrorFilterRuleId) == ruleId {
-				exists = true
-				break
-			}
-		}
-
-		if !exists {
-			return fmt.Errorf("Rule %s not found inside filter %s", ruleId, filterId)
-		}
-
-		return nil
+		return err
 	}
 }
 
