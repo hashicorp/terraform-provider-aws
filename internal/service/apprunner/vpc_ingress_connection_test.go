@@ -20,6 +20,9 @@ import (
 func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
+	vpcResourceName := "aws_vpc.test"
+	vpcEndpointResourceName := "aws_vpc_endpoint.apprunner"
+	appRunnerServiceResourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -31,9 +34,13 @@ func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 				Config: testAccVPCIngressConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIngressConnectionExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`vpcingressconnection/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`vpcingressconnection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.VPCIngressConnectionStatusActive),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_arn", appRunnerServiceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_endpoint_id", vpcEndpointResourceName, "id"),
 				),
 			},
 			{
@@ -226,7 +233,7 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
 }
 
 func testAccVPCIngressConnectionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_ingress_connection" "test" {
   name = %[1]q
   service_arn = aws_apprunner_service.test.arn
@@ -240,11 +247,11 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccVPCIngressConnectionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_ingress_connection" "test" {
   name = %[1]q
   service_arn = aws_apprunner_service.test.arn
@@ -259,5 +266,5 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
