@@ -684,8 +684,8 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
 	} else {
-		d.Set("stream_view_type", "")
 		d.Set("stream_enabled", false)
+		d.Set("stream_view_type", d.Get("stream_view_type").(string))
 	}
 
 	d.Set("stream_arn", table.LatestStreamArn)
@@ -826,7 +826,21 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
 	}
 
-	if d.HasChanges("stream_enabled", "stream_view_type") {
+	// make change when
+	//   stream_enabled has change (below) OR
+	//   stream_view_type has change and stream_enabled is true (special case)
+	if !d.HasChange("stream_enabled") && d.HasChange("stream_view_type") {
+		if v, ok := d.Get("stream_enabled").(bool); ok && v {
+			// in order to change stream view type:
+			//   1) stream have already been enabled, and
+			//   2) it must be disabled and then reenabled (otherwise, ValidationException: Table already has an enabled stream)
+			if err := cycleStreamEnabled(conn, d.Id(), d.Get("stream_view_type").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("stream_enabled") {
 		hasTableUpdate = true
 
 		input.StreamSpecification = &dynamodb.StreamSpecification{
@@ -1002,6 +1016,43 @@ func isTableOptionDisabled(v interface{}) bool {
 }
 
 // CRUD helpers
+
+// cycleStreamEnabled disables the stream and then re-enables it with streamViewType
+func cycleStreamEnabled(conn *dynamodb.DynamoDB, id string, streamViewType string, timeout time.Duration) error {
+	input := &dynamodb.UpdateTableInput{
+		TableName: aws.String(id),
+	}
+	input.StreamSpecification = &dynamodb.StreamSpecification{
+		StreamEnabled: aws.Bool(false),
+	}
+
+	_, err := conn.UpdateTable(input)
+
+	if err != nil {
+		return fmt.Errorf("cycling stream enabled: %s", err)
+	}
+
+	if _, err := waitTableActive(conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for stream cycle: %s", err)
+	}
+
+	input.StreamSpecification = &dynamodb.StreamSpecification{
+		StreamEnabled:  aws.Bool(true),
+		StreamViewType: aws.String(streamViewType),
+	}
+
+	_, err = conn.UpdateTable(input)
+
+	if err != nil {
+		return fmt.Errorf("cycling stream enabled: %s", err)
+	}
+
+	if _, err := waitTableActive(conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for stream cycle: %s", err)
+	}
+
+	return nil
+}
 
 func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interface{}, tfVersion string, create bool, timeout time.Duration) error {
 	for _, tfMapRaw := range tfList {

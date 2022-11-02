@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/swf"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -202,17 +203,22 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfswf.FindDomainByName(context.Background(), conn, rs.Primary.ID)
+		// Retrying as Read after Delete is not always consistent.
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			_, err := tfswf.FindDomainByName(context.Background(), conn, rs.Primary.ID)
 
-		if tfresource.NotFound(err) {
-			continue
-		}
+			if tfresource.NotFound(err) {
+				return nil
+			}
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
 
-		return fmt.Errorf("SWF Domain still exists: %s", rs.Primary.ID)
+			return resource.RetryableError(fmt.Errorf("SWF Domain still exists: %s", rs.Primary.ID))
+		})
+
+		return err
 	}
 
 	return nil

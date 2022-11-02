@@ -52,7 +52,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
-					resource.TestCheckResourceAttr(resourceName, "usage_mode", "GENERAL_PURPOSE"),
+					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
 			{
@@ -233,7 +233,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
-					resource.TestCheckResourceAttr(resourceName, "usage_mode", "GENERAL_PURPOSE"),
+					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
 			{
@@ -761,6 +761,7 @@ func testAccCertificateAuthorityConfig_enabled(commonName, certificateAuthorityT
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   enabled                         = %[1]t
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
   permanent_deletion_time_in_days = 7
   type                            = %[2]q
 
@@ -800,6 +801,7 @@ func testAccCertificateAuthorityConfig_root(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
   type                            = "ROOT"
 
   certificate_authority_configuration {
@@ -839,6 +841,8 @@ data "aws_partition" "current" {}
 func testAccCertificateAuthorityConfig_required(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -854,6 +858,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 func testAccCertificateAuthorityConfig_revocationConfigurationEmpty(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -875,6 +881,7 @@ func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCu
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -905,6 +912,7 @@ func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEn
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -932,6 +940,7 @@ func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEx
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -959,6 +968,7 @@ func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationS3
 		fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -987,6 +997,7 @@ func testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationC
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -1011,6 +1022,7 @@ func testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationE
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -1069,6 +1081,7 @@ func testAccCertificateAuthorityConfig_tagsSingle(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -1090,6 +1103,7 @@ func testAccCertificateAuthorityConfig_tagsSingleUpdated(commonName string) stri
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -1111,6 +1125,7 @@ func testAccCertificateAuthorityConfig_tagsMultiple(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"

@@ -71,6 +71,68 @@ func waitBackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return nil, err
 }
 
+func waitFileCacheCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.FileCacheLifecycleCreating},
+		Target:  []string{fsx.FileCacheLifecycleAvailable},
+		Refresh: statusFileCache(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.FileCache); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+		return output, err
+	}
+	return nil, err
+}
+
+func waitFileCacheUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.FileCacheLifecycleUpdating},
+		Target:  []string{fsx.FileCacheLifecycleAvailable},
+		Refresh: statusFileCache(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.FileCache); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFileCacheDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.FileCacheLifecycleAvailable, fsx.FileCacheLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusFileCache(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.FileCache); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitFileSystemCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleCreating},

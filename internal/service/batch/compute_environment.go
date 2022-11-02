@@ -165,7 +165,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"spot_iam_fleet_role": {
