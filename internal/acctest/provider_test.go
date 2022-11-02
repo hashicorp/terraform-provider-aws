@@ -537,7 +537,7 @@ func testAccProtoV5ProviderFactoriesInternal(t *testing.T, v **schema.Provider) 
 	*v = p
 
 	return map[string]func() (tfprotov5.ProviderServer, error){
-		acctest.ProviderName: func() (tfprotov5.ProviderServer, error) {
+		acctest.ProviderName: func() (tfprotov5.ProviderServer, error) { //nolint:unparam
 			return providerServer, nil
 		},
 	}
