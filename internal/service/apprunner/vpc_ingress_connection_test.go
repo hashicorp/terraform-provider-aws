@@ -185,7 +185,7 @@ data "aws_region" "current" {}
 
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
-  
+
   source_configuration {
     image_repository {
       image_configuration {
@@ -196,7 +196,7 @@ resource "aws_apprunner_service" "test" {
     }
     auto_deployments_enabled = false
   }
-  
+
   network_configuration {
     ingress_configuration {
       is_publicly_accessible = false
@@ -208,9 +208,9 @@ resource "aws_vpc_endpoint" "apprunner" {
   vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.apprunner.requests"
   vpc_endpoint_type = "Interface"
-  
+
   subnet_ids = aws_subnet.test[*].id
-  
+
   security_group_ids = [
     aws_vpc.test.default_security_group_id,
   ]
@@ -223,7 +223,7 @@ func testAccVPCIngressConnectionConfig_basic(rName string) string {
 resource "aws_apprunner_vpc_ingress_connection" "test" {
   name        = %[1]q
   service_arn = aws_apprunner_service.test.arn
-	
+
   ingress_vpc_configuration {
     vpc_id          = aws_vpc.test.id
     vpc_endpoint_id = aws_vpc_endpoint.apprunner.id
@@ -235,9 +235,9 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
 func testAccVPCIngressConnectionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_ingress_connection" "test" {
-  name = %[1]q
+  name        = %[1]q
   service_arn = aws_apprunner_service.test.arn
-	
+
   ingress_vpc_configuration {
     vpc_id          = aws_vpc.test.id
     vpc_endpoint_id = aws_vpc_endpoint.apprunner.id
@@ -253,14 +253,14 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
 func testAccVPCIngressConnectionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_ingress_connection" "test" {
-  name = %[1]q
+  name        = %[1]q
   service_arn = aws_apprunner_service.test.arn
-	
+
   ingress_vpc_configuration {
     vpc_id          = aws_vpc.test.id
     vpc_endpoint_id = aws_vpc_endpoint.apprunner.id
   }
-  
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
