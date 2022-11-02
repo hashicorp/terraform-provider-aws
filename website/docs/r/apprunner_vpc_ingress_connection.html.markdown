@@ -42,8 +42,8 @@ The following arguments supported:
 
 The `ingress_vpc_configuration` block supports the following argument:
 
-* `vpc_id` - (Required) The ID of the VPC endpoint that your App Runner service connects to.
 * `vpc_id` - (Required) The ID of the VPC that is used for the VPC endpoint.
+* `vpc_endpoint_id` - (Required) The ID of the VPC endpoint that your App Runner service connects to.
 
 ## Attributes Reference
 
