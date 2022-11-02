@@ -33,7 +33,7 @@ func ResourceVPCIngressConnection() *schema.Resource {
 			},
 			"service_arn": {
 				Type:         schema.TypeString,
-				Computed:     true,
+				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
