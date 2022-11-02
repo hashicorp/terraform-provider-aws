@@ -40,7 +40,7 @@ func ResourceVPCIngressConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"configuration": {
+			"ingress_vpc_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -85,7 +85,7 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 		VpcIngressConnectionName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("ingress_vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.IngressVpcConfiguration = expandIngressVPCConfiguration(v.([]interface{}))
 	}
 
@@ -154,8 +154,8 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("status", config.Status)
 	d.Set("domain_name", config.DomainName)
 
-	if err := d.Set("configuration", flattenIngressVpcConfiguration(config.IngressVpcConfiguration)); err != nil {
-		return diag.Errorf("error setting configuration: %s", err)
+	if err := d.Set("ingress_vpc_configuration", flattenIngressVpcConfiguration(config.IngressVpcConfiguration)); err != nil {
+		return diag.Errorf("error setting ingress_vpc_configuration: %s", err)
 	}
 
 	tags, err := ListTags(conn, arn)
