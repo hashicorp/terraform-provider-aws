@@ -25,6 +25,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 		Read:   resourceComputeEnvironmentRead,
 		Update: resourceComputeEnvironmentUpdate,
 		Delete: resourceComputeEnvironmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -143,7 +143,7 @@ func TestAccBatchComputeEnvironment_eksConfiguration(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_eksConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(resourceName, &ce),
-					resource.TestCheckResourceAttr(resourceName, "eks_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "eks_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "eks_configuration.0.eks_cluter_arn", eksClusterResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "eks_configuration.0.kubernetes_namespace", "aws-batch"),
 				),
@@ -1614,7 +1614,7 @@ func testAccComputeEnvironmentConfig_eksConfiguration(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigEKSClusterBase(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.batch_service.arn
+  role_arn = aws_iam_role.test.arn
   
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
@@ -1635,11 +1635,7 @@ resource "aws_iam_role" "batch_service" {
     "Action": "sts:AssumeRole",
     "Effect": "Allow",
     "Principal": {
-      "Service": [
-        "batch.${data.aws_partition.current.dns_suffix}",
-        "eks.${data.aws_partition.current.dns_suffix}",
-        "ec2.${data.aws_partition.current.dns_suffix}"
-      ]
+      "Service": "batch.${data.aws_partition.current.dns_suffix}"
     }
   }]
 }
@@ -1651,13 +1647,8 @@ resource "aws_iam_role_policy_attachment" "batch_service" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.batch_service.name
-}
-
 resource "aws_batch_compute_environment" "test" {
-  compute_environment = %[1]q
+  compute_environment_name = %[1]q
 
   eks_configuration {
     eks_cluster_arn      = aws_eks_cluster.test.arn
