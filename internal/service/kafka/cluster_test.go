@@ -1980,7 +1980,7 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 }
-`, rName))
+`, rName, storageMode))
 }
 
 func testAccClusterConfig_numberOfBrokerNodes(rName string, brokerCount int) string {
