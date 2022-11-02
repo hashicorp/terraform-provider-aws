@@ -1871,7 +1871,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   dynamic "source_access_configuration" {
-    for_each = aws_subnet.test.*.id
+    for_each = aws_subnet.test[*].id
     content {
       type = "VPC_SUBNET"
       uri  = "subnet:${source_access_configuration.value}"
@@ -1910,7 +1910,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   dynamic "source_access_configuration" {
-    for_each = aws_subnet.test.*.id
+    for_each = aws_subnet.test[*].id
     content {
       type = "VPC_SUBNET"
       uri  = "subnet:${source_access_configuration.value}"
