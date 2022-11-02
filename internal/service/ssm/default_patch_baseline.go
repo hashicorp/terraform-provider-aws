@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -25,31 +24,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type lazyClient[T any] struct {
-	initOnce sync.Once
-	config   *aws.Config
-	initf    func(aws.Config) T
-
-	clientOnce sync.Once
-	client     T
-}
-
-func (l *lazyClient[T]) Init(config *aws.Config, f func(aws.Config) T) {
-	l.initOnce.Do(func() {
-		l.config = config
-		l.initf = f
-	})
-}
-
-func (l *lazyClient[T]) Client() T {
-	l.clientOnce.Do(func() {
-		l.client = l.initf(*l.config)
-	})
-	return l.client
-}
-
-var SSMClientV2 lazyClient[*ssm.Client]
-
 const (
 	patchBaselineIDRegexPattern = `pb-[0-9a-f]{17}`
 )
@@ -66,10 +40,7 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 				id := d.Id()
 
 				if isPatchBaselineID(id) || isPatchBaselineARN(id) {
-					SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
-						return ssm.NewFromConfig(c)
-					})
-					conn := SSMClientV2.Client()
+					conn := meta.(*conns.AWSClient).SSMClient()
 
 					patchbaseline, err := findPatchBaselineByID(ctx, conn, id)
 					if err != nil {
@@ -186,10 +157,7 @@ const (
 )
 
 func resourceDefaultPatchBaselineRegister(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
-		return ssm.NewFromConfig(c)
-	})
-	conn := SSMClientV2.Client()
+	conn := meta.(*conns.AWSClient).SSMClient()
 
 	baselineID := d.Get("baseline_id").(string)
 	in := &ssm.RegisterDefaultPatchBaselineInput{
@@ -214,10 +182,7 @@ func resourceDefaultPatchBaselineRegister(ctx context.Context, d *schema.Resourc
 }
 
 func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
-		return ssm.NewFromConfig(c)
-	})
-	conn := SSMClientV2.Client()
+	conn := meta.(*conns.AWSClient).SSMClient()
 
 	out, err := FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(d.Id()))
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -253,10 +218,7 @@ func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func defaultPatchBaselineRestoreOSDefault(ctx context.Context, meta *conns.AWSClient, os string) (diags diag.Diagnostics) {
-	SSMClientV2.Init(meta.Config, func(c aws.Config) *ssm.Client {
-		return ssm.NewFromConfig(c)
-	})
-	conn := SSMClientV2.Client()
+	conn := meta.SSMClient()
 
 	baselineID, err := FindDefaultDefaultPatchBaselineIDForOS(ctx, conn, types.OperatingSystem(os))
 	if errors.Is(err, tfresource.ErrEmptyResult) {

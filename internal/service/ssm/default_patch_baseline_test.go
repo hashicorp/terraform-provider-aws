@@ -255,10 +255,7 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 }
 
 func testAccCheckDefaultPatchBaselineDestroy(s *terraform.State) error {
-	tfssm.SSMClientV2.Init(acctest.Provider.Meta().(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
-		return ssm.NewFromConfig(c)
-	})
-	conn := tfssm.SSMClientV2.Client()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -301,10 +298,7 @@ func testAccCheckDefaultPatchBaselineExists(name string, defaultpatchbaseline *s
 			return create.Error(names.SSM, create.ErrActionCheckingExistence, tfssm.ResNameDefaultPatchBaseline, name, errors.New("not set"))
 		}
 
-		tfssm.SSMClientV2.Init(acctest.Provider.Meta().(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
-			return ssm.NewFromConfig(c)
-		})
-		conn := tfssm.SSMClientV2.Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
 		ctx := context.Background()
 
 		resp, err := tfssm.FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(rs.Primary.ID))
