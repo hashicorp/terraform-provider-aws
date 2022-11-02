@@ -16,7 +16,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"audio_description": {
+				"audio_descriptions": {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -33,6 +33,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 								Type:     schema.TypeList,
 								Optional: true,
 								Computed: true,
+								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"algorithm": {
@@ -491,7 +492,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				"output_group": {
+				"output_groups": {
 					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Resource{
@@ -1142,12 +1143,14 @@ func channelEncoderSettingsSchema() *schema.Schema {
 									},
 								},
 							},
-							"output": {
+							"outputs": {
 								Type:     schema.TypeList,
 								Required: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"output_settings": outputSettingsSchema(),
+										"output_settings": func() *schema.Schema {
+											return outputSettingsSchema()
+										}(),
 										"audio_description_names": {
 											Type:     schema.TypeSet,
 											Optional: true,
@@ -1200,7 +1203,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				"video_description": {
+				"video_descriptions": {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Computed: true,
@@ -2234,16 +2237,16 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.EncoderSettings
-	if v, ok := m["audio_description"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["audio_descriptions"].(*schema.Set); ok && v.Len() > 0 {
 		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v.List())
 	}
-	if v, ok := m["output_group"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["output_groups"].([]interface{}); ok && len(v) > 0 {
 		settings.OutputGroups = expandChannelEncoderSettingsOutputGroups(v)
 	}
 	if v, ok := m["timecode_config"].([]interface{}); ok && len(v) > 0 {
 		settings.TimecodeConfig = expandChannelEncoderSettingsTimecodeConfig(v)
 	}
-	if v, ok := m["video_description"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["video_descriptions"].(*schema.Set); ok && v.Len() > 0 {
 		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v.List())
 	}
 	if v, ok := m["avail_blanking"].([]interface{}); ok && len(v) > 0 {
@@ -2343,7 +2346,7 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 		if v, ok := m["output_group_settings"].([]interface{}); ok && len(v) > 0 {
 			o.OutputGroupSettings = expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(v)
 		}
-		if v, ok := m["output"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["outputs"].([]interface{}); ok && len(v) > 0 {
 			o.Outputs = expandChannelEncoderSettingsOutputGroupsOutputs(v)
 		}
 		if v, ok := m["name"].(string); ok && v != "" {
@@ -2754,10 +2757,10 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 	}
 
 	m := map[string]interface{}{
-		"audio_description": flattenAudioDescriptions(apiObject.AudioDescriptions),
-		"output_group":      flattenOutputGroups(apiObject.OutputGroups),
-		"timecode_config":   flattenTimecodeConfig(apiObject.TimecodeConfig),
-		"video_description": flattenVideoDescriptions(apiObject.VideoDescriptions), // TODO
+		"audio_descriptions": flattenAudioDescriptions(apiObject.AudioDescriptions),
+		"output_groups":      flattenOutputGroups(apiObject.OutputGroups),
+		"timecode_config":    flattenTimecodeConfig(apiObject.TimecodeConfig),
+		"video_descriptions": flattenVideoDescriptions(apiObject.VideoDescriptions), // TODO
 		// TODO avail_blanking
 		// TODO avail_configuration
 		// TODO blackout_slate
@@ -2776,7 +2779,7 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 		return nil
 	}
 
-	ml := make([]interface{}, 0)
+	var ml []interface{}
 
 	for _, v := range od {
 		m := map[string]interface{}{
@@ -2799,12 +2802,12 @@ func flattenOutputGroups(op []types.OutputGroup) []interface{} {
 		return nil
 	}
 
-	ol := make([]interface{}, 0)
+	var ol []interface{}
 
 	for _, v := range op {
 		m := map[string]interface{}{
 			"output_group_settings": flattenOutputGroupSettings(v.OutputGroupSettings),
-			"output":                flattenOutputs(v.Outputs),
+			"outputs":               flattenOutputs(v.Outputs),
 			"name":                  aws.ToString(v.Name),
 		}
 
@@ -2831,7 +2834,7 @@ func flattenOutputs(os []types.Output) []interface{} {
 		return nil
 	}
 
-	outputs := make([]interface{}, 0)
+	var outputs []interface{}
 
 	for _, item := range os {
 		m := map[string]interface{}{
@@ -3051,7 +3054,7 @@ func flattenVideoDescriptions(tfList []types.VideoDescription) []interface{} {
 		return nil
 	}
 
-	out := make([]interface{}, 0)
+	var out []interface{}
 
 	for _, item := range tfList {
 		m := map[string]interface{}{

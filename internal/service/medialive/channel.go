@@ -64,7 +64,7 @@ func ResourceChannel() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.ChannelClass](),
 			},
-			"destination": {
+			"destinations": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -133,8 +133,8 @@ func ResourceChannel() *schema.Resource {
 			"encoder_settings": func() *schema.Schema {
 				return channelEncoderSettingsSchema()
 			}(),
-			"input_attachment": {
-				Type:     schema.TypeList,
+			"input_attachments": {
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -708,14 +708,14 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("channel_class"); ok {
 		in.ChannelClass = types.ChannelClass(v.(string))
 	}
-	if v, ok := d.GetOk("destination"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("destinations"); ok && v.(*schema.Set).Len() > 0 {
 		in.Destinations = expandChannelDestinations(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]interface{})) > 0 {
 		in.EncoderSettings = expandChannelEncoderSettings(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("input_attachment"); ok && len(v.([]interface{})) > 0 {
-		in.InputAttachments = expandChannelInputAttachments(v.([]interface{}))
+	if v, ok := d.GetOk("input_attachments"); ok && v.(*schema.Set).Len() > 0 {
+		in.InputAttachments = expandChannelInputAttachments(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
@@ -779,10 +779,10 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
-	if err := d.Set("input_attachment", flattenChannelInputAttachments(out.InputAttachments)); err != nil {
+	if err := d.Set("input_attachments", flattenChannelInputAttachments(out.InputAttachments)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
-	if err := d.Set("destination", flattenChannelDestinations(out.Destinations)); err != nil {
+	if err := d.Set("destinations", flattenChannelDestinations(out.Destinations)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("encoder_settings", flattenChannelEncoderSettings(out.EncoderSettings)); err != nil {
@@ -834,8 +834,8 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.CdiInputSpecification = expandChannelCdiInputSpecification(d.Get("cdi_input_specification").([]interface{}))
 		}
 
-		if d.HasChange("destination") {
-			in.Destinations = expandChannelDestinations(d.Get("destination").(*schema.Set).List())
+		if d.HasChange("destinations") {
+			in.Destinations = expandChannelDestinations(d.Get("destinations").(*schema.Set).List())
 		}
 
 		if d.HasChange("encoder_settings") {
@@ -1065,7 +1065,7 @@ func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{
 		return nil
 	}
 
-	out := make([]interface{}, 0)
+	var out []interface{}
 
 	for _, item := range tfList {
 		m := map[string]interface{}{
@@ -1096,7 +1096,7 @@ func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSele
 		return nil
 	}
 
-	out := make([]interface{}, 0)
+	var out []interface{}
 
 	for _, v := range tfList {
 		m := map[string]interface{}{

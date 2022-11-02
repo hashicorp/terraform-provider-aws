@@ -249,12 +249,12 @@ resource "aws_medialive_channel" "test" {
     maximum_bitrate  = "MAX_20_MBPS"
   }
 
-  input_attachment {
+  input_attachments {
     input_attachment_name = "example-input1"
     input_id              = aws_medialive_input.test.id
   }
 
-  destination {
+  destinations {
     id = %[1]q
 
     settings {
@@ -271,16 +271,16 @@ resource "aws_medialive_channel" "test" {
       source = "EMBEDDED"
     }
 
-    audio_description {
+    audio_descriptions {
       audio_selector_name = %[1]q
       name                = %[1]q
     }
 
-    video_description {
+    video_descriptions {
       name = "test-video-name"
     }
 
-    output_group {
+    output_groups {
       output_group_settings {
         archive_group_settings {
           destination {
@@ -289,7 +289,7 @@ resource "aws_medialive_channel" "test" {
         }
       }
 
-      output {
+      outputs {
         output_name             = "test-output-name"
         video_description_name  = "test-video-name"
         audio_description_names = [%[1]q]
