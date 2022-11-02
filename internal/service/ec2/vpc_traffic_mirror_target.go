@@ -183,7 +183,7 @@ func resourceTrafficMirrorTargetDelete(d *schema.ResourceData, meta interface{})
 		TrafficMirrorTargetId: aws.String(d.Id()),
 	})
 
-	if nil != err {
+	if err != nil {
 		return fmt.Errorf("deleting EC2 Traffic Mirror Target (%s): %w", d.Id(), err)
 	}
 

@@ -5,14 +5,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
@@ -161,13 +160,9 @@ func testAccCheckTrafficMirrorFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
-			TrafficMirrorFilterIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+		_, err := tfec2.FindTrafficMirrorFilterByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorFilterId.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -175,40 +170,32 @@ func testAccCheckTrafficMirrorFilterDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if len(out.TrafficMirrorFilters) != 0 {
-			return fmt.Errorf("Traffic mirror filter %s still not destroyed", rs.Primary.ID)
-		}
+		return fmt.Errorf("EC2 Traffic Mirror Filter %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckTrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorFilterExists(n string, v *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID set for %s", name)
+			return fmt.Errorf("No EC2 Traffic Mirror Filter ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
-			TrafficMirrorFilterIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+
+		output, err := tfec2.FindTrafficMirrorFilterByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(out.TrafficMirrorFilters) == 0 {
-			return fmt.Errorf("Traffic mirror filter %s not found", rs.Primary.ID)
-		}
-
-		*traffic = *out.TrafficMirrorFilters[0]
+		*v = *output
 
 		return nil
 	}

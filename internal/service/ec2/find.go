@@ -3389,6 +3389,76 @@ func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn *ec2.EC2, vpnConnection
 	}
 }
 
+func FindTrafficMirrorFilter(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorFiltersInput) (*ec2.TrafficMirrorFilter, error) {
+	output, err := FindTrafficMirrorFilters(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTrafficMirrorFilters(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorFiltersInput) ([]*ec2.TrafficMirrorFilter, error) {
+	var output []*ec2.TrafficMirrorFilter
+
+	err := conn.DescribeTrafficMirrorFiltersPages(input, func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficMirrorFilters {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTrafficMirrorFilterByID(conn *ec2.EC2, id string) (*ec2.TrafficMirrorFilter, error) {
+	input := &ec2.DescribeTrafficMirrorFiltersInput{
+		TrafficMirrorFilterIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTrafficMirrorFilter(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TrafficMirrorFilterId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindTrafficMirrorSession(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorSessionsInput) (*ec2.TrafficMirrorSession, error) {
 	output, err := FindTrafficMirrorSessions(conn, input)
 
