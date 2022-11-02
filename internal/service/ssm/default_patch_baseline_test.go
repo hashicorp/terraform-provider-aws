@@ -254,6 +254,53 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 	})
 }
 
+func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
+	var main, alternate ssm.GetDefaultPatchBaselineOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_default_patch_baseline.test"
+	resourceAlternateName := "aws_ssm_default_patch_baseline.alternate"
+	baselineResourceName := "aws_ssm_patch_baseline.test"
+	baselineAlternateResourceName := "aws_ssm_patch_baseline.alternate"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SSMEndpointID, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultPatchBaselineConfig_crossRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDefaultPatchBaselineExists(resourceName, &main),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+
+					testAccCheckDefaultPatchBaselineExists(resourceName, &alternate),
+					resource.TestCheckResourceAttrPair(resourceAlternateName, "baseline_id", baselineAlternateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceAlternateName, "id", baselineAlternateResourceName, "operating_system"),
+				),
+			},
+			// Import by OS
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Import by Baseline ID
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDefaultPatchBaselineDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
 	ctx := context.Background()
@@ -394,4 +441,37 @@ resource "aws_ssm_patch_baseline" "updated" {
   approved_patches_compliance_level = "CRITICAL"
 }
 `, rName, os)
+}
+
+func testAccDefaultPatchBaselineConfig_crossRegion(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_ssm_default_patch_baseline" "test" {
+  baseline_id = aws_ssm_patch_baseline.test.id
+}
+
+resource "aws_ssm_patch_baseline" "test" {
+  name = %[1]q
+
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+}
+
+resource "aws_ssm_default_patch_baseline" "alternate" {
+  provider = awsalternate
+
+  baseline_id = aws_ssm_patch_baseline.alternate.id
+}
+
+resource "aws_ssm_patch_baseline" "alternate" {
+  provider = awsalternate
+
+  name = "%[1]s-alternate"
+
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+}
+`, rName),
+	)
 }
