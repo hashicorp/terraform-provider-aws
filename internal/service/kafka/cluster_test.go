@@ -92,6 +92,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringDefault),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_mode"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "zookeeper_connect_string", clusterZookeeperConnectStringRegexp),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string"),
@@ -971,6 +972,37 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "true"),
 					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKafkaCluster_storageMode(t *testing.T) {
+	var cluster kafka.ClusterInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageMode(rName, "LOCAL"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "storage_mode", "LOCAL"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_storageMode(rName, "TIERED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "storage_mode", "TIERED"),
 				),
 			},
 		},
@@ -1931,6 +1963,24 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName, enhancedMonitoring))
+}
+
+func testAccClusterConfig_storageMode(rName string, storageMode string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.7.1"
+  number_of_broker_nodes = 3
+  storage_mode           = %[2]q
+
+  broker_node_group_info {
+    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.example_sg.id]
+  }
+}
+`, rName))
 }
 
 func testAccClusterConfig_numberOfBrokerNodes(rName string, brokerCount int) string {
