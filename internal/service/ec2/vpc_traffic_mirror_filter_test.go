@@ -45,7 +45,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_noDNS(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
-					resource.TestCheckNoResourceAttr(resourceName, "network_services"),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", "0"),
 				),
 			},
 			// Test Enable DNS service
@@ -139,76 +139,6 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID set for %s", name)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
-			TrafficMirrorFilterIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if len(out.TrafficMirrorFilters) == 0 {
-			return fmt.Errorf("Traffic mirror filter %s not found", rs.Primary.ID)
-		}
-
-		*traffic = *out.TrafficMirrorFilters[0]
-
-		return nil
-	}
-}
-
-func testAccVPCTrafficMirrorFilterConfig_basic(description string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  description = "%s"
-
-  network_services = ["amazon-dns"]
-}
-`, description)
-}
-
-func testAccVPCTrafficMirrorFilterConfig_noDNS(description string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  description = "%s"
-}
-`, description)
-}
-
-func testAccVPCTrafficMirrorFilterConfig_tags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccVPCTrafficMirrorFilterConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
 func testAccPreCheckTrafficMirrorFilter(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -251,4 +181,74 @@ func testAccCheckTrafficMirrorFilterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckTrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID set for %s", name)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
+			TrafficMirrorFilterIds: []*string{
+				aws.String(rs.Primary.ID),
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if len(out.TrafficMirrorFilters) == 0 {
+			return fmt.Errorf("Traffic mirror filter %s not found", rs.Primary.ID)
+		}
+
+		*traffic = *out.TrafficMirrorFilters[0]
+
+		return nil
+	}
+}
+
+func testAccVPCTrafficMirrorFilterConfig_basic(description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  description = %[1]q
+
+  network_services = ["amazon-dns"]
+}
+`, description)
+}
+
+func testAccVPCTrafficMirrorFilterConfig_noDNS(description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  description = %[1]q
+}
+`, description)
+}
+
+func testAccVPCTrafficMirrorFilterConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccVPCTrafficMirrorFilterConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
