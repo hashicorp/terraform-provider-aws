@@ -150,6 +150,7 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	arn := aws.StringValue(config.VpcIngressConnectionArn)
 
 	d.Set("arn", arn)
+	d.Set("service_arn", config.ServiceArn)
 	d.Set("name", config.VpcIngressConnectionName)
 	d.Set("status", config.Status)
 	d.Set("domain_name", config.DomainName)
