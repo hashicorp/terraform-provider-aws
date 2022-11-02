@@ -224,10 +224,8 @@ The `code_configuration` block supports the following arguments:
 
 - `code_configuration_values` - (Optional) Basic configuration for building and running the App Runner service. Use this parameter to quickly launch an App Runner service without providing an apprunner.yaml file in the source code repository (or ignoring the file if it exists). See [Code Configuration Values](#code-configuration-values) below for more details.
 - `configuration_source` - (Required) Source of the App Runner configuration. Valid values: `REPOSITORY`, `API`. Values are interpreted as follows:
-  - `REPOSITORY` - App Runner reads configuration values from the apprunner.yaml file in the
-    source code repository and ignores the CodeConfigurationValues parameter.
-  - `API` - App Runner uses configuration values provided in the CodeConfigurationValues
-    parameter and ignores the apprunner.yaml file in the source code repository.
+  - `REPOSITORY` - App Runner reads configuration values from the apprunner.yaml file in the source code repository and ignores the CodeConfigurationValues parameter.
+  - `API` - App Runner uses configuration values provided in the CodeConfigurationValues parameter and ignores the apprunner.yaml file in the source code repository.
 
 ### Code Configuration Values
 
