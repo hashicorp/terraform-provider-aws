@@ -22,22 +22,8 @@ func DataSourceIPAMPool() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			// computed
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"address_family": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"publicly_advertisable": {
-				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"allocation_default_netmask_length": {
@@ -53,6 +39,10 @@ func DataSourceIPAMPool() *schema.Resource {
 				Computed: true,
 			},
 			"allocation_resource_tags": tftags.TagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_import": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -65,7 +55,12 @@ func DataSourceIPAMPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"filter": DataSourceFiltersSchema(),
 			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -83,6 +78,10 @@ func DataSourceIPAMPool() *schema.Resource {
 			},
 			"pool_depth": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"publicly_advertisable": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"source_ipam_pool_id": {
@@ -108,30 +107,21 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 		input.IpamPoolIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	filters, filtersOk := d.GetOk("filter")
-	if filtersOk {
-		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	output, err := conn.DescribeIpamPools(input)
-	var pool *ec2.IpamPool
+	pool, err := FindIPAMPool(conn, input)
 
 	if err != nil {
-		return err
+		return tfresource.SingularDataSourceFindError("IPAM Pool", err)
 	}
-
-	if len(output.IpamPools) == 0 || output.IpamPools[0] == nil {
-		return tfresource.SingularDataSourceFindError("EC2 VPC IPAM POOL", tfresource.NewEmptyResultError(input))
-	}
-
-	if len(output.IpamPools) > 1 {
-		return fmt.Errorf("multiple IPAM Pools matched; use additional constraints to reduce matches to a single IPAM pool")
-	}
-
-	pool = output.IpamPools[0]
 
 	d.SetId(aws.StringValue(pool.IpamPoolId))
-
 	d.Set("address_family", pool.AddressFamily)
 	d.Set("allocation_default_netmask_length", pool.AllocationDefaultNetmaskLength)
 	d.Set("allocation_max_netmask_length", pool.AllocationMaxNetmaskLength)
@@ -151,7 +141,7 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("state", pool.State)
 
 	if err := d.Set("tags", KeyValueTags(pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

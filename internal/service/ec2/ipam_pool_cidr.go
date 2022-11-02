@@ -85,7 +85,7 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("cidr_authorization_context"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CidrAuthorizationContext = expandIpamCidrAuthorizationContext(v.([]interface{})[0].(map[string]interface{}))
+		input.CidrAuthorizationContext = expandIPAMCIDRAuthorizationContext(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.ProvisionIpamPoolCidr(input)
@@ -98,7 +98,7 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(IPAMPoolCIDRCreateResourceID(cidrBlock, poolID))
 
 	if _, err := WaitIPAMPoolCIDRCreated(conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool CIDR (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for IPAM Pool CIDR (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceIPAMPoolCIDRRead(d, meta)
@@ -146,7 +146,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 		IpamPoolId: aws.String(poolID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIPAMPoolIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return nil
 	}
 
@@ -156,7 +156,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := WaitIPAMPoolCIDRDeleted(conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool CIDR (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for IPAM Pool CIDR (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -181,7 +181,7 @@ func IPAMPoolCIDRParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandIpamCidrAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamCidrAuthorizationContext { // nosemgrep:ci.caps1-in-func-name,ci.caps2-in-func-name,ci.caps5-in-func-name
+func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamCidrAuthorizationContext {
 	if tfMap == nil {
 		return nil
 	}
