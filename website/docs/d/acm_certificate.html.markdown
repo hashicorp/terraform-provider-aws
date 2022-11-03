@@ -42,7 +42,7 @@ data "aws_acm_certificate" "rsa_4096" {
 * `statuses` - (Optional) List of statuses on which to filter the returned list. Valid values are `PENDING_VALIDATION`, `ISSUED`,
    `INACTIVE`, `EXPIRED`, `VALIDATION_TIMED_OUT`, `REVOKED` and `FAILED`. If no value is specified, only certificates in the `ISSUED` state
    are returned.
-* `types` - (Optional) List of types on which to filter the returned list. Valid values are `AMAZON_ISSUED` and `IMPORTED`.
+* `types` - (Optional) List of types on which to filter the returned list. Valid values are `AMAZON_ISSUED`, `PRIVATE`, and `IMPORTED`.
 * `most_recent` - (Optional) If set to true, it sorts the certificates matched by previous criteria by the NotBefore field, returning only the most recent one. If set to false, it returns an error if more than one certificate is found. Defaults to false.
 
 ## Attributes Reference

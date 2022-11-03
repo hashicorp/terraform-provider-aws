@@ -62,80 +62,38 @@ func ResourceUserProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 5,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"execution_role": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"sharing_settings": {
+						"canvas_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"notebook_output_option": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      sagemaker.NotebookOutputOptionDisabled,
-										ValidateFunc: validation.StringInSlice(sagemaker.NotebookOutputOption_Values(), false),
-									},
-									"s3_kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"s3_output_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"tensor_board_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									"time_series_forecasting_settings": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
-												},
-												"lifecycle_config_arn": {
+												"amazon_forecast_role_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												"status": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
 												},
 											},
 										},
 									},
 								},
 							},
+						},
+						"execution_role": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
@@ -245,6 +203,135 @@ func ResourceUserProfile() *schema.Resource {
 												"image_version_number": {
 													Type:     schema.TypeInt,
 													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"r_session_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 30,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"security_groups": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 5,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"sharing_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"notebook_output_option": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      sagemaker.NotebookOutputOptionDisabled,
+										ValidateFunc: validation.StringInSlice(sagemaker.NotebookOutputOption_Values(), false),
+									},
+									"s3_kms_key_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"s3_output_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"tensor_board_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},

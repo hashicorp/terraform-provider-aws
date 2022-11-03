@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
 func init() {
@@ -36,7 +35,7 @@ func (d *dataSourceBillingServiceAccount) GetSchema(context.Context) (tfsdk.Sche
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"arn": {
-				Type:     fwtypes.ARNType,
+				Type:     types.StringType,
 				Computed: true,
 			},
 			"id": {
@@ -80,13 +79,13 @@ func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request data
 		Resource:  "root",
 	}
 
-	data.ARN = fwtypes.ARN{Value: arn}
+	data.ARN = types.String{Value: arn.String()}
 	data.ID = types.String{Value: billingAccountID}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type dataSourceBillingServiceAccountData struct {
-	ARN fwtypes.ARN  `tfsdk:"arn"`
+	ARN types.String `tfsdk:"arn"`
 	ID  types.String `tfsdk:"id"`
 }

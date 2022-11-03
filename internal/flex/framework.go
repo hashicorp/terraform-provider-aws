@@ -38,6 +38,20 @@ func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) []string 
 	return vs
 }
 
+func ExpandFrameworkStringValueMap(ctx context.Context, set types.Map) map[string]string {
+	if set.IsNull() || set.IsUnknown() {
+		return nil
+	}
+
+	var m map[string]string
+
+	if set.ElementsAs(ctx, &m, false).HasError() {
+		return nil
+	}
+
+	return m
+}
+
 func FlattenFrameworkStringList(_ context.Context, vs []*string) types.List {
 	elems := make([]attr.Value, len(vs))
 

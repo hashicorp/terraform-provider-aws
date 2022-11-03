@@ -40,6 +40,13 @@ The following arguments are supported:
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensorboard-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
+* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
+* `r_session_app_settings` - (Optional) The RSession app settings. See [RSession App Settings](#rsession-app-settings) below.
+* `canvas_app_settings` - (Optional) The Canvas app settings. See [Canvas App Settings](#canvas-app-settings) below.
+
+#### Canvas App Settings
+
+* `time_series_forecasting_settings` - (Optional) Time series forecast settings for the Canvas app. see [Time Series Forecasting Settings](#time-series-forecasting-settings) below.
 
 #### Sharing Settings
 
@@ -62,6 +69,11 @@ The following arguments are supported:
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
+#### RSession App Settings
+
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
+
 ##### Default Resource Spec
 
 * `instance_type` - (Optional) The instance type.
@@ -74,6 +86,11 @@ The following arguments are supported:
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
+
+##### Time Series Forecasting Settings
+
+* `amazon_forecast_role_arn` - (Optional)  The IAM role that Canvas passes to Amazon Forecast for time series forecasting. By default, Canvas uses the execution role specified in the UserProfile that launches the Canvas app. If an execution role is not specified in the UserProfile, Canvas uses the execution role specified in the Domain that owns the UserProfile. To allow time series forecasting, this IAM role should have the [AmazonSageMakerCanvasForecastAccess](https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam-awsmanpol-canvas.html#security-iam-awsmanpol-AmazonSageMakerCanvasForecastAccess) policy attached and forecast.amazonaws.com added in the trust relationship as a service principal.
+* `status` - (Optional) Describes whether time series forecasting is enabled or disabled in the Canvas app. Valid values are `ENABLED` and `DISABLED`.
 
 ## Attributes Reference
 

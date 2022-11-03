@@ -31,6 +31,22 @@ resource "aws_acmpca_certificate_authority" "example" {
 }
 ```
 
+### Short-lived certificate
+
+```terraform
+resource "aws_acmpca_certificate_authority" "example" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "example.com"
+    }
+  }
+}
+```
+
 ### Enable Certificate Revocation List
 
 ```terraform
@@ -94,6 +110,7 @@ The following arguments are supported:
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
+* `usage_mode` - (Optional) Specifies whether the CA issues general-purpose certificates that typically require a revocation mechanism, or short-lived certificates that may optionally omit revocation because they expire quickly. Short-lived certificate validity is limited to seven days. Defaults to `GENERAL_PURPOSE`. Valid values: `GENERAL_PURPOSE` and `SHORT_LIVED_CERTIFICATE`.
 * `tags` - (Optional) Key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
 * `permanent_deletion_time_in_days` - (Optional) Number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.

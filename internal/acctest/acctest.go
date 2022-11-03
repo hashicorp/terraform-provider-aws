@@ -110,7 +110,7 @@ func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tf
 
 	for _, name := range providerNames {
 		factories[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 			if err != nil {
 				return nil, err
@@ -691,17 +691,29 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 }
 
-// PreCheckRegion checks that the test region is the specified region.
-func PreCheckRegion(t *testing.T, region string) {
-	if curr := Region(); curr != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.DefaultRegion, curr, region)
+// PreCheckRegion checks that the test region is one of the specified regions.
+func PreCheckRegion(t *testing.T, regions ...string) {
+	curr := Region()
+	var regionOK bool
+
+	for _, region := range regions {
+		if curr == region {
+			regionOK = true
+			break
+		}
+	}
+
+	if !regionOK {
+		t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
 	}
 }
 
 // PreCheckRegionNot checks that the test region is not one of the specified regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
+	curr := Region()
+
 	for _, region := range regions {
-		if curr := Region(); curr == region {
+		if curr == region {
 			t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
 		}
 	}
@@ -1019,19 +1031,18 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 	return resource.Delete(d, meta)
 }
 
-func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, resourceName string) resource.TestCheckFunc {
+func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		resourceState, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("resource not found: %s", n)
 		}
 
-		if resourceState.Primary.ID == "" {
-			return fmt.Errorf("resource ID missing: %s", resourceName)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteResource(resource, resource.Data(resourceState.Primary), provo.Meta())
+		return DeleteResource(resource, resource.Data(rs.Primary), provo.Meta())
 	}
 }
 
@@ -1769,17 +1780,8 @@ func ConfigLatestAmazonLinux2HVMEBSARM64AMI() string {
 }
 
 func ConfigLambdaBase(policyName, roleName, sgName string) string {
-	return fmt.Sprintf(`
+	return ConfigCompose(ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "%s"
@@ -1901,7 +1903,7 @@ resource "aws_security_group" "sg_for_lambda" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-`, policyName, roleName, sgName)
+`, policyName, roleName, sgName))
 }
 
 func ConfigVPCWithSubnets(rName string, subnetCount int) string {

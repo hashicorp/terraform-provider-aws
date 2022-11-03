@@ -20,6 +20,15 @@ resource "aws_sesv2_dedicated_ip_pool" "example" {
 }
 ```
 
+### Managed Pool
+
+```terraform
+resource "aws_sesv2_dedicated_ip_pool" "example" {
+  pool_name    = "my-managed-pool"
+  scaling_mode = "MANAGED"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -28,6 +37,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `scaling_mode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`. If omitted, the AWS API will default to a standard pool.
 * `tags` - (Optional) A map of tags to assign to the pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

@@ -147,6 +147,12 @@ func ResourceTask() *schema.Resource {
 							Default:      datasync.PreserveDevicesNone,
 							ValidateFunc: validation.StringInSlice(datasync.PreserveDevices_Values(), false),
 						},
+						"security_descriptor_copy_flags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(datasync.SmbSecurityDescriptorCopyFlags_Values(), false),
+						},
 						"task_queueing": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -385,19 +391,20 @@ func flattenOptions(options *datasync.Options) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"atime":                  aws.StringValue(options.Atime),
-		"bytes_per_second":       aws.Int64Value(options.BytesPerSecond),
-		"gid":                    aws.StringValue(options.Gid),
-		"log_level":              aws.StringValue(options.LogLevel),
-		"mtime":                  aws.StringValue(options.Mtime),
-		"overwrite_mode":         aws.StringValue(options.OverwriteMode),
-		"posix_permissions":      aws.StringValue(options.PosixPermissions),
-		"preserve_deleted_files": aws.StringValue(options.PreserveDeletedFiles),
-		"preserve_devices":       aws.StringValue(options.PreserveDevices),
-		"task_queueing":          aws.StringValue(options.TaskQueueing),
-		"transfer_mode":          aws.StringValue(options.TransferMode),
-		"uid":                    aws.StringValue(options.Uid),
-		"verify_mode":            aws.StringValue(options.VerifyMode),
+		"atime":                          aws.StringValue(options.Atime),
+		"bytes_per_second":               aws.Int64Value(options.BytesPerSecond),
+		"gid":                            aws.StringValue(options.Gid),
+		"log_level":                      aws.StringValue(options.LogLevel),
+		"mtime":                          aws.StringValue(options.Mtime),
+		"overwrite_mode":                 aws.StringValue(options.OverwriteMode),
+		"posix_permissions":              aws.StringValue(options.PosixPermissions),
+		"preserve_deleted_files":         aws.StringValue(options.PreserveDeletedFiles),
+		"preserve_devices":               aws.StringValue(options.PreserveDevices),
+		"security_descriptor_copy_flags": aws.StringValue(options.SecurityDescriptorCopyFlags),
+		"task_queueing":                  aws.StringValue(options.TaskQueueing),
+		"transfer_mode":                  aws.StringValue(options.TransferMode),
+		"uid":                            aws.StringValue(options.Uid),
+		"verify_mode":                    aws.StringValue(options.VerifyMode),
 	}
 
 	return []interface{}{m}
@@ -425,8 +432,12 @@ func expandOptions(l []interface{}) *datasync.Options {
 		VerifyMode:           aws.String(m["verify_mode"].(string)),
 	}
 
-	if v, ok := m["bytes_per_second"]; ok && v.(int) > 0 {
-		options.BytesPerSecond = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_per_second"].(int); ok && v != 0 {
+		options.BytesPerSecond = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["security_descriptor_copy_flags"].(string); ok && v != "" {
+		options.SecurityDescriptorCopyFlags = aws.String(v)
 	}
 
 	return options
