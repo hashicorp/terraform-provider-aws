@@ -306,7 +306,12 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(resourceResourceLFTagsRead(ctx, d, meta), diags...)
 }
 
+// when tags are removed, the api response is null -> {"LFTagOnDatabase":null,"LFTagsOnColumns":null,"LFTagsOnTable":null}
+// when a null response is received, force re-creation of the tag by assigning a dummy tag value
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// track the resourceType that is read to avoid null response confusion
+	var resourceType = "none"
+
 	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GetResourceLFTagsInput{
@@ -320,14 +325,23 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		resourceType = "database"
 	}
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+		resourceType = "table"
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
+		resourceType = "table_with_columns"
+	}
+
+	// if tags are deleted outside of terraform, the original terraform LFTags support re-creation the tags
+	var origLFTags []*lakeformation.LFTagPair
+	if v, ok := d.GetOk("lf_tag"); ok && v.(*schema.Set).Len() > 0 {
+		origLFTags = expandLFTagPairs(v.(*schema.Set).List())
 	}
 
 	output, err := conn.GetResourceLFTags(input)
@@ -338,7 +352,15 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 
 	if len(output.LFTagOnDatabase) > 0 {
 		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagOnDatabase)); err != nil {
+			log.Println(ResNameLFTags)
 			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
+		}
+	} else {
+		// database tag(s) were removed outside of terraform. re-create them
+		if resourceType == "database" {
+			if err := d.Set("lf_tag", flattenNullLFTagPairs(origLFTags)); err != nil {
+				return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
+			}
 		}
 	}
 
@@ -352,11 +374,25 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 				return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 			}
 		}
+	} else {
+		// table_with_columns tag(s) were removed outside of terraform. re-create them
+		if resourceType == "table_with_columns" {
+			if err := d.Set("lf_tag", flattenNullLFTagPairs(origLFTags)); err != nil {
+				return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
+			}
+		}
 	}
 
 	if len(output.LFTagsOnTable) > 0 {
 		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagsOnTable)); err != nil {
 			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
+		}
+	} else {
+		// table tag(s) were removed outside of terraform. re-create them
+		if resourceType == "table" {
+			if err := d.Set("lf_tag", flattenNullLFTagPairs(origLFTags)); err != nil {
+				return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
+			}
 		}
 	}
 
@@ -521,6 +557,49 @@ func flattenLFTagPairs(apiObjects []*lakeformation.LFTagPair) []interface{} {
 		}
 
 		tfList = append(tfList, flattenLFTagPair(apiObject))
+	}
+
+	return tfList
+}
+
+// force terraform to re-create a removed tag by building a dummy tag value (pair)
+func flattenNullLFTagPair(apiObject *lakeformation.LFTagPair) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap["catalog_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TagKey; v != nil {
+		tfMap["key"] = aws.StringValue(v)
+	}
+
+	// ASSume that TagWasRemovedRecreateIt is not an actual value
+	if v := apiObject.TagValues; len(v) > 0 {
+		tfMap["value"] = "TagWasRemovedRecreateIt"
+	}
+
+	return tfMap
+}
+
+// force terraform to re-create a removed tag by building a dummy tag value (pairs)
+func flattenNullLFTagPairs(apiObjects []*lakeformation.LFTagPair) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenNullLFTagPair(apiObject))
 	}
 
 	return tfList
