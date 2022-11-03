@@ -202,6 +202,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `aggregation_config` - (Optional) Aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
 * `file_type` - (Optional) File type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefix_config` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
+* `preserve_source_data_typing` - (Optional, Boolean) Whether the data types from the source system need to be preserved (Only valid for `Parquet` file type)
 
 ##### Salesforce Destination Properties
 
