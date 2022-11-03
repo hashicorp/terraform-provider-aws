@@ -88,11 +88,7 @@ func testAccCheckRuleGroupNamespaceExists(n string) resource.TestCheckFunc {
 
 		_, err := tfamp.FindRuleGroupNamespaceByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -147,8 +143,8 @@ groups:
 
 func testAccRuleGroupNamespaceConfig_basic(data string) string {
 	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-}
+resource "aws_prometheus_workspace" "test" {}
+
 resource "aws_prometheus_rule_group_namespace" "test" {
   workspace_id = aws_prometheus_workspace.test.id
   name         = "rules"

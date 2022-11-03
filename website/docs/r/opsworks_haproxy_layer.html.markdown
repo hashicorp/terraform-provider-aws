@@ -23,7 +23,7 @@ resource "aws_opsworks_haproxy_layer" "lb" {
 
 The following arguments are supported:
 
-* `stack_id` - (Required) The id of the stack the layer will belong to.
+* `stack_id` - (Required) ID of the stack the layer will belong to.
 * `stats_password` - (Required) The password to use for HAProxy stats.
 * `name` - (Optional) A human-readable name for the layer.
 * `auto_assign_elastic_ips` - (Optional) Whether to automatically assign an elastic IP address to the layer's instances.

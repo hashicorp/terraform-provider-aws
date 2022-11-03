@@ -11,6 +11,7 @@ on:
       - .ci/scripts/providerlint.sh
       - .go-version
       - .ci/.golangci.yml
+      - .ci/tools/go.mod
       - .markdownlint.yml
       - internal/**
       - docs/index.md
@@ -21,7 +22,6 @@ on:
       - GNUmakefile
       - main.go
       - names/**
-      - tools/**
       - website/**
 
 env:

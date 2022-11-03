@@ -1042,11 +1042,7 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindClusterByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -1060,11 +1056,7 @@ func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFun
 			return fmt.Errorf("MemoryDB Snapshot %s not found", snapshotName)
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -1073,7 +1065,7 @@ func testAccClusterConfig_baseNetwork(rName string) string {
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		`
 resource "aws_memorydb_subnet_group" "test" {
-  subnet_ids = aws_subnet.test.*.id
+  subnet_ids = aws_subnet.test[*].id
 }
 `,
 	)

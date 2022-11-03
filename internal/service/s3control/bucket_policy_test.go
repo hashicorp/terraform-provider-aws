@@ -168,11 +168,7 @@ func testAccCheckBucketPolicyExists(resourceName string) resource.TestCheckFunc 
 
 		_, err = conn.GetBucketPolicy(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

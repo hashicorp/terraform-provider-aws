@@ -1326,11 +1326,7 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 			return nil
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -1451,7 +1447,7 @@ resource "aws_route_table" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  subnet_id      = element(aws_subnet.test[*].id, count.index)
   route_table_id = aws_route_table.test.id
 }
 
@@ -1564,7 +1560,7 @@ resource "aws_route_table" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  subnet_id      = element(aws_subnet.test[*].id, count.index)
   route_table_id = aws_route_table.test.id
 }
 
@@ -3850,7 +3846,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  subnet_id      = element(aws_subnet.test[*].id, count.index)
   route_table_id = aws_route_table.test.id
 }
 

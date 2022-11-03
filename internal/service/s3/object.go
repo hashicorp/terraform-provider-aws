@@ -232,7 +232,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading S3 Object (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
@@ -252,7 +252,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("metadata", metadata); err != nil {
-		return fmt.Errorf("error setting metadata: %s", err)
+		return fmt.Errorf("setting metadata: %s", err)
 	}
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
@@ -281,24 +281,24 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+		return fmt.Errorf("listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	tags, ok := tagsRaw.(tftags.KeyValueTags)
 
 	if !ok {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
+		return fmt.Errorf("listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -321,7 +321,7 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			ACL:    aws.String(d.Get("acl").(string)),
 		})
 		if err != nil {
-			return fmt.Errorf("error putting S3 object ACL: %s", err)
+			return fmt.Errorf("putting S3 object ACL: %s", err)
 		}
 	}
 
@@ -334,7 +334,7 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("error putting S3 object lock legal hold: %s", err)
+			return fmt.Errorf("putting S3 object lock legal hold: %s", err)
 		}
 	}
 
@@ -360,7 +360,7 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.PutObjectRetention(req)
 		if err != nil {
-			return fmt.Errorf("error putting S3 object lock retention: %s", err)
+			return fmt.Errorf("putting S3 object lock retention: %s", err)
 		}
 	}
 
@@ -368,7 +368,7 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := ObjectUpdateTags(conn, bucket, key, o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -393,7 +393,7 @@ func resourceObjectDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+		return fmt.Errorf("deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	return nil
@@ -430,11 +430,11 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 		source := v.(string)
 		path, err := homedir.Expand(source)
 		if err != nil {
-			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
+			return fmt.Errorf("expanding homedir in source (%s): %s", source, err)
 		}
 		file, err := os.Open(path)
 		if err != nil {
-			return fmt.Errorf("Error opening S3 object source (%s): %s", path, err)
+			return fmt.Errorf("opening S3 object source (%s): %s", path, err)
 		}
 
 		body = file
@@ -453,7 +453,7 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
 		contentRaw, err := base64.StdEncoding.DecodeString(content)
 		if err != nil {
-			return fmt.Errorf("error decoding content_base64: %s", err)
+			return fmt.Errorf("decoding content_base64: %s", err)
 		}
 		body = bytes.NewReader(contentRaw)
 	} else {
@@ -533,7 +533,7 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := uploader.Upload(input); err != nil {
-		return fmt.Errorf("Error uploading object to S3 bucket (%s): %s", bucket, err)
+		return fmt.Errorf("uploading object to S3 bucket (%s): %s", bucket, err)
 	}
 
 	d.SetId(key)
@@ -710,7 +710,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 
 	if lastErr != nil {
 		if !ignoreObjectErrors {
-			return nObjects, fmt.Errorf("error deleting at least one object version, last error: %s", lastErr)
+			return nObjects, fmt.Errorf("deleting at least one object version, last error: %s", lastErr)
 		}
 
 		lastErr = nil
@@ -752,7 +752,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 
 	if lastErr != nil {
 		if !ignoreObjectErrors {
-			return nObjects, fmt.Errorf("error deleting at least one object delete marker, last error: %s", lastErr)
+			return nObjects, fmt.Errorf("deleting at least one object delete marker, last error: %s", lastErr)
 		}
 
 		lastErr = nil

@@ -183,11 +183,7 @@ func testAccCheckProvisioningTemplateExists(n string) resource.TestCheckFunc {
 
 		_, err := tfiot.FindProvisioningTemplateByName(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

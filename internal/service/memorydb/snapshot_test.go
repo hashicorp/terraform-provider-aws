@@ -262,11 +262,7 @@ func testAccCheckSnapshotExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindSnapshotByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -275,7 +271,7 @@ func testAccSnapshotConfigBase(rName string) string {
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
-  subnet_ids = aws_subnet.test.*.id
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {

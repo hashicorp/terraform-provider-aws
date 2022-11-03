@@ -90,11 +90,7 @@ func testAccCheckFleetStackAssociationExists(resourceName string) resource.TestC
 			return fmt.Errorf("AppStream Fleet Stack Association %q does not exist", rs.Primary.ID)
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

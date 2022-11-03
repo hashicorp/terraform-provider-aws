@@ -197,11 +197,7 @@ func DeleteSecurityConfiguration(conn *glue.Glue, name string) error {
 		return nil
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandCloudWatchEncryption(l []interface{}) *glue.CloudWatchEncryption {

@@ -43,10 +43,10 @@ about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/Use
 ```terraform
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
+  db_name              = "mydb"
   engine               = "mysql"
   engine_version       = "5.7"
   instance_class       = "db.t3.micro"
-  name                 = "mydb"
   username             = "foo"
   password             = "foobarbaz"
   parameter_group_name = "default.mysql5.7"
@@ -97,6 +97,7 @@ encoding in Oracle and Microsoft SQL instances (collation). This can't be change
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
 or [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
+* `custom_iam_instance_profile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
@@ -124,8 +125,7 @@ Note that for Amazon Aurora instances the engine version must match the [DB clus
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
-* `iam_database_authentication_enabled` - (Optional) Specifies whether or
-mappings of AWS Identity and Access Management (IAM) accounts to database
+* `iam_database_authentication_enabled` - (Optional) Specifies whether mappings of AWS Identity and Access Management (IAM) accounts to database
 accounts is enabled.
 * `identifier` - (Optional, Forces new resource) The name of the RDS instance,
 if omitted, Terraform will assign a random, unique identifier. Required if `restore_to_point_in_time` is specified.
@@ -157,6 +157,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
+* `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.
@@ -165,7 +166,7 @@ is provided) Password for the master DB user. Note that this may show up in
 logs, and it will be stored in the state file.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
-* `performance_insights_retention_period` - (Optional) The amount of time in days to retain Performance Insights data. Either 7 (7 days) or 731 (2 years). When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
+* `performance_insights_retention_period` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
 * `port` - (Optional) The port on which the DB accepts connections.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly
 accessible. Default is `false`.
@@ -269,7 +270,7 @@ In addition to all arguments above, the following attributes are exported:
 * `availability_zone` - The availability zone of the instance.
 * `backup_retention_period` - The backup retention period.
 * `backup_window` - The backup window.
-* `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
+* `ca_cert_identifier` - Identifier of the CA certificate for the
 DB instance.
 * `db_name` - The database name.
 * `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
@@ -288,7 +289,7 @@ in a Route 53 Alias record).
 * `port` - The database port.
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
-* `storage_encrypted` - Specifies whether the DB instance is encrypted.
+* `storage_encrypted` - Whether the DB instance is encrypted.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `username` - The master username for the database.
 

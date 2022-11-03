@@ -516,5 +516,4 @@ func TestExpandValidityValue(t *testing.T) {
 			t.Errorf("%s, %q: expected %d, got %d", testcase.Type, testcase.Value, testcase.Expected, i)
 		}
 	}
-
 }

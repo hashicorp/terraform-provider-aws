@@ -137,11 +137,7 @@ func testAccCheckReplicationConfigurationExists(n string) resource.TestCheckFunc
 
 		_, err := tfefs.FindReplicationConfigurationByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

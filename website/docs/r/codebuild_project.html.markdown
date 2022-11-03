@@ -349,7 +349,7 @@ Credentials for access to a private Docker registry.
 * `location` - (Optional) Location of the source code from git or s3.
 * `report_build_status` - (Optional) Whether to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is `GITHUB`, `BITBUCKET`, or `GITHUB_ENTERPRISE`.
 * `build_status_config` - (Optional) Contains information that defines how the build project reports the build status to the source provider. This option is only used when the source provider is `GITHUB`, `GITHUB_ENTERPRISE`, or `BITBUCKET`.
-* `source_identifier` - (Required) Source identifier. Source data will be put inside a folder named as this parameter inside AWS CodeBuild source directory
+* `source_identifier` - (Required) An identifier for this project source. The identifier can only contain alphanumeric characters and underscores, and must be less than 128 characters in length.
 * `type` - (Required) Type of repository that contains the source code to be built. Valid values: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET` or `S3`.
 
 #### secondary_sources: auth

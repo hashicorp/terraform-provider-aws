@@ -2,28 +2,38 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
+	"reflect"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(primary interface{ Meta() interface{} }) tfsdk.Provider {
-	return &provider{
+func New(primary interface{ Meta() interface{} }) provider.Provider {
+	return &fwprovider{
 		Primary: primary,
 	}
 }
 
-type provider struct {
+type fwprovider struct {
 	Primary interface{ Meta() interface{} }
 }
 
 // GetSchema returns the schema for this provider's configuration.
-func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	// This schema must match exactly the Terraform Protocol v5 (Terraform Plugin SDK v2) provider's schema.
@@ -164,7 +174,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -199,6 +209,11 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 						Optional:    true,
 						Description: "An identifier for the assumed role session.",
 					},
+					"source_identity": {
+						Type:        types.StringType,
+						Optional:    true,
+						Description: "Source identity specified by the principal assuming the role.",
+					},
 					"tags": {
 						Type:        types.MapType{ElemType: types.StringType},
 						Optional:    true,
@@ -216,7 +231,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -291,36 +306,75 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 // Configure is called at the beginning of the provider lifecycle, when
 // Terraform sends to the provider the values the user specified in the
 // provider configuration block.
-func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
+func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
+	v := p.Primary.Meta()
+	response.DataSourceData = v
+	response.ResourceData = v
 }
 
-// GetResources returns a mapping of resource names to type
-// implementations.
-func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	resources := make(map[string]tfsdk.ResourceType)
+// DataSources returns a slice of functions to instantiate each DataSource
+// implementation.
+//
+// The data source type name is determined by the DataSource implementing
+// the Metadata method. All data sources must have unique names.
+func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var dataSources []func() datasource.DataSource
 
-	return resources, diags
-}
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		for _, v := range sp.FrameworkDataSources(ctx) {
+			v, err := v(ctx)
 
-// GetDataSources returns a mapping of data source name to types
-// implementations.
-func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	dataSources := make(map[string]tfsdk.DataSourceType)
+			if err != nil {
+				tflog.Warn(ctx, "creating data source", map[string]interface{}{
+					"service_package_name": sp.ServicePackageName(),
+					"error":                err.Error(),
+				})
 
-	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
-	t, err := meta.NewDataSourceARNType(ctx)
+				continue
+			}
 
-	if err != nil {
-		diags.AddError("UhOh", err.Error())
-		return nil, diags
+			dataSources = append(dataSources, func() datasource.DataSource {
+				return newWrappedDataSource(v)
+			})
+		}
 	}
 
-	dataSources["aws_arn"] = t
+	return dataSources
+}
 
-	return dataSources, diags
+// Resources returns a slice of functions to instantiate each Resource
+// implementation.
+//
+// The resource type name is determined by the Resource implementing
+// the Metadata method. All resources must have unique names.
+func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	var resources []func() resource.Resource
+
+	resources = append(resources, func() resource.Resource {
+		return medialive.NewResourceMultiplexProgram(ctx)
+	})
+
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		for _, v := range sp.FrameworkResources(ctx) {
+			v, err := v(ctx)
+
+			if err != nil {
+				tflog.Warn(ctx, "creating resource", map[string]interface{}{
+					"service_package_name": sp.ServicePackageName(),
+					"error":                err.Error(),
+				})
+
+				continue
+			}
+
+			resources = append(resources, func() resource.Resource {
+				return newWrappedResource(v)
+			})
+		}
+	}
+
+	return resources
 }
 
 func endpointsBlock() tfsdk.Block {
@@ -338,4 +392,92 @@ func endpointsBlock() tfsdk.Block {
 		Attributes:  endpointsAttributes,
 		NestingMode: tfsdk.BlockNestingModeSet,
 	}
+}
+
+// wrappedDataSource wraps a data source, adding common functionality.
+type wrappedDataSource struct {
+	inner    datasource.DataSourceWithConfigure
+	typeName string
+}
+
+func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
+	return &wrappedDataSource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return w.inner.GetSchema(ctx)
+}
+
+func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	w.inner.Configure(ctx, request, response)
+}
+
+// wrappedResource wraps a resource, adding common functionality.
+type wrappedResource struct {
+	inner    intf.ResourceWithConfigureAndImportState
+	typeName string
+}
+
+func newWrappedResource(inner intf.ResourceWithConfigureAndImportState) intf.ResourceWithConfigureAndImportState {
+	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return w.inner.GetSchema(ctx)
+}
+
+func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
+
+	w.inner.Create(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create exit", w.typeName))
+}
+
+func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
+
+	w.inner.Update(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update exit", w.typeName))
+}
+
+func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
+
+	w.inner.Delete(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete exit", w.typeName))
+}
+
+func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	w.inner.ImportState(ctx, request, response)
 }

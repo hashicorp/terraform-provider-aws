@@ -432,11 +432,8 @@ func testAccCheckModelExists(n string) resource.TestCheckFunc {
 			ModelName: aws.String(rs.Primary.ID),
 		}
 		_, err := conn.DescribeModel(DescribeModelOpts)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

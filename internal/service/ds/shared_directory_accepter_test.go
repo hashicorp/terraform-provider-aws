@@ -51,7 +51,6 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckSharedDirectoryAccepterExists(n string) resource.TestCheckFunc {
@@ -69,11 +68,7 @@ func testAccCheckSharedDirectoryAccepterExists(n string) resource.TestCheckFunc 
 
 		_, err := tfds.FindSharedDirectory(context.Background(), conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

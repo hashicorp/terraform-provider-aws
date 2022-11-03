@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,6 +45,22 @@ func statusDBProxyEndpoint(conn *rds.RDS, id string) resource.StateRefreshFunc {
 
 		if output == nil {
 			return nil, proxyEndpointStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func statusDBCluster(conn *rds.RDS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBClusterByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.Status), nil
@@ -155,5 +172,21 @@ func statusDBProxy(conn *rds.RDS, name string) resource.StateRefreshFunc {
 		}
 
 		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindReservedDBInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }

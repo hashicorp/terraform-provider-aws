@@ -106,8 +106,6 @@ func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	mt := output.MountTargets[0]
 
-	log.Printf("[DEBUG] Found EFS mount target: %#v", mt)
-
 	d.SetId(aws.StringValue(mt.MountTargetId))
 
 	fsARN := arn.ARN{
@@ -134,11 +132,11 @@ func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EFS Mount Target (%s) security groups: %w", d.Id(), err)
 	}
 	err = d.Set("security_groups", flex.FlattenStringSet(sgResp.SecurityGroups))
 	if err != nil {
-		return err
+		return fmt.Errorf("setting security_groups: %w", err)
 	}
 
 	return nil

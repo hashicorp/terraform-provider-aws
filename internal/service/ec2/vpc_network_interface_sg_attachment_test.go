@@ -138,11 +138,7 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resourc
 
 		_, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -305,7 +301,7 @@ resource "aws_security_group" "test" {
 resource "aws_network_interface_sg_attachment" "test" {
   count                = 4
   network_interface_id = aws_network_interface.test.id
-  security_group_id    = aws_security_group.test.*.id[count.index]
+  security_group_id    = aws_security_group.test[count.index].id
 }
 `, rName)
 }

@@ -88,11 +88,7 @@ func testAccCheckAlertManagerDefinitionExists(n string) resource.TestCheckFunc {
 
 		_, err := tfamp.FindAlertManagerDefinitionByID(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -142,8 +138,8 @@ alertmanager_config: |
 
 func testAccAlertManagerDefinitionConfig_basic(definition string) string {
 	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-}
+resource "aws_prometheus_workspace" "test" {}
+
 resource "aws_prometheus_alert_manager_definition" "test" {
   workspace_id = aws_prometheus_workspace.test.id
   definition   = %[1]q

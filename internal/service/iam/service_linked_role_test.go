@@ -319,7 +319,6 @@ func testAccCheckServiceLinkedRoleDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
@@ -337,11 +336,7 @@ func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
 
 		_, err = tfiam.FindRoleByName(conn, roleName)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

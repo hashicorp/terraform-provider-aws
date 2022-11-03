@@ -8,7 +8,6 @@ description: |-
 
 # Resource: aws_service_discovery_http_namespace
 
-
 ## Example Usage
 
 ```terraform

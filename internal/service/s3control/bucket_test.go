@@ -177,11 +177,7 @@ func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 
 		_, err = conn.GetBucket(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -200,7 +196,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName)
 }
 
-func testAccBucketConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccBucketConfig_tags1(rName, tagKey1, tagValue1 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -219,7 +215,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccBucketConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBucketConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	tfjson "github.com/hashicorp/terraform-json"
-	testing "github.com/mitchellh/go-testing-interface"
+	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest"
@@ -114,7 +114,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 
 	logging.HelperResourceDebug(ctx, "Starting TestSteps")
 
-	// use this to track last step succesfully applied
+	// use this to track last step successfully applied
 	// acts as default for import tests
 	var appliedCfg string
 
@@ -152,29 +152,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 		}
 
 		if step.Config != "" && !step.Destroy && len(step.Taint) > 0 {
-			var state *terraform.State
-
-			err := runProviderCommand(ctx, t, func() error {
-				var err error
-
-				state, err = getState(ctx, t, wd)
-
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}, wd, providers)
-
-			if err != nil {
-				logging.HelperResourceError(ctx,
-					"TestStep error reading prior state before tainting resources",
-					map[string]interface{}{logging.KeyError: err},
-				)
-				t.Fatalf("TestStep %d/%d error reading prior state before tainting resources: %s", stepNumber, len(c.Steps), err)
-			}
-
-			err = testStepTaint(ctx, state, step)
+			err := testStepTaint(ctx, step, wd)
 
 			if err != nil {
 				logging.HelperResourceError(ctx,
@@ -263,6 +241,45 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 			continue
 		}
 
+		if step.RefreshState {
+			logging.HelperResourceTrace(ctx, "TestStep is RefreshState mode")
+
+			err := testStepNewRefreshState(ctx, t, wd, step, providers)
+			if step.ExpectError != nil {
+				logging.HelperResourceDebug(ctx, "Checking TestStep ExpectError")
+				if err == nil {
+					logging.HelperResourceError(ctx,
+						"Error running refresh: expected an error but got none",
+					)
+					t.Fatalf("Step %d/%d error running refresh: expected an error but got none", stepNumber, len(c.Steps))
+				}
+				if !step.ExpectError.MatchString(err.Error()) {
+					logging.HelperResourceError(ctx,
+						fmt.Sprintf("Error running refresh: expected an error with pattern (%s)", step.ExpectError.String()),
+						map[string]interface{}{logging.KeyError: err},
+					)
+					t.Fatalf("Step %d/%d error running refresh, expected an error with pattern (%s), no match on: %s", stepNumber, len(c.Steps), step.ExpectError.String(), err)
+				}
+			} else {
+				if err != nil && c.ErrorCheck != nil {
+					logging.HelperResourceDebug(ctx, "Calling TestCase ErrorCheck")
+					err = c.ErrorCheck(err)
+					logging.HelperResourceDebug(ctx, "Called TestCase ErrorCheck")
+				}
+				if err != nil {
+					logging.HelperResourceError(ctx,
+						"Error running refresh",
+						map[string]interface{}{logging.KeyError: err},
+					)
+					t.Fatalf("Step %d/%d error running refresh: %s", stepNumber, len(c.Steps), err)
+				}
+			}
+
+			logging.HelperResourceDebug(ctx, "Finished TestStep")
+
+			continue
+		}
+
 		if step.Config != "" {
 			logging.HelperResourceTrace(ctx, "TestStep is Config mode")
 
@@ -300,7 +317,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 				}
 			}
 
-			appliedCfg = step.Config
+			appliedCfg = step.mergedConfig(ctx, c)
 
 			logging.HelperResourceDebug(ctx, "Finished TestStep")
 

@@ -603,11 +603,8 @@ func testAccCheckExperienceExists(name string) resource.TestCheckFunc {
 		}
 
 		_, err = tfkendra.FindExperienceByID(context.Background(), conn, id, indexId)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

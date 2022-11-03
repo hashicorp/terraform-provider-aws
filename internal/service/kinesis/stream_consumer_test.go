@@ -161,11 +161,7 @@ func testAccStreamConsumerExists(n string) resource.TestCheckFunc {
 
 		_, err := tfkinesis.FindStreamConsumerByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

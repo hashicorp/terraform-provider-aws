@@ -51,7 +51,6 @@ In addition to all arguments above, the following attributes are exported:
 * `type` - DNS type of the resource record sets that Amazon Route 53 creates when you use a traffic policy to create a traffic policy instance.
 * `version` - Version number of the traffic policy. This value is automatically incremented by AWS after each update of this resource.
 
-
 ## Import
 
 Route53 Traffic Policy can be imported using the `id` and `version`, e.g.

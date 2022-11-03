@@ -60,7 +60,7 @@ The following arguments are supported:
 * `inbound_calls_enabled` - (Required) Specifies whether inbound calls are enabled.
 * `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
-<!-- * `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false` -->
+<!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ## Attributes Reference
 
@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identifier of the instance.
 * `arn` - Amazon Resource Name (ARN) of the instance.
-* `created_time` - Specifies when the instance was created.
+* `created_time` - When the instance was created.
 * `service_role` - The service role of the instance.
 * `status` - The state of the instance.
 

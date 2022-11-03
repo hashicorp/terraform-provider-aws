@@ -293,11 +293,7 @@ func testAccCheckRoleAssociationExists(n string) resource.TestCheckFunc {
 
 		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -331,11 +331,7 @@ func testAccCheckProtectionGroupExists(name string) resource.TestCheckFunc {
 
 		_, err := conn.DescribeProtectionGroup(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Move Roadmap Items To Working Board
-        uses: alex-page/github-project-automation-plus@v0.8.1
+        uses: alex-page/github-project-automation-plus@v0.8.2
         if: github.event.issue.milestone.title == 'Roadmap'
         with:
           project: AWS Provider Working Board

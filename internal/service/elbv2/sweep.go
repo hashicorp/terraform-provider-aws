@@ -22,6 +22,7 @@ func init() {
 		Dependencies: []string{
 			"aws_api_gateway_vpc_link",
 			"aws_vpc_endpoint_service",
+			"aws_lb_listener",
 		},
 	})
 
@@ -31,6 +32,11 @@ func init() {
 		Dependencies: []string{
 			"aws_lb",
 		},
+	})
+
+	resource.AddTestSweepers("aws_lb_listener", &resource.Sweeper{
+		Name: "aws_lb_listener",
+		F:    sweepListeners,
 	})
 }
 
@@ -107,4 +113,67 @@ func sweepTargetGroups(region string) error {
 		return fmt.Errorf("retrieving LB Target Groups: %w", err)
 	}
 	return nil
+}
+
+func sweepListeners(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).ELBV2Conn
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
+		if page == nil || len(page.LoadBalancers) == 0 {
+			log.Print("[DEBUG] No LBs to sweep")
+			return false
+		}
+
+		for _, loadBalancer := range page.LoadBalancers {
+			err = conn.DescribeListenersPages(&elbv2.DescribeListenersInput{
+				LoadBalancerArn: loadBalancer.LoadBalancerArn,
+			}, func(page *elbv2.DescribeListenersOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, listener := range page.Listeners {
+					if listener == nil {
+						continue
+					}
+
+					r := ResourceListener()
+					d := r.Data(nil)
+					d.SetId(aws.StringValue(listener.ListenerArn))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				errs = multierror.Append(errs, fmt.Errorf("failed to describe LB Listeners (%s): %w", region, err))
+				continue
+			}
+		}
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing ELBv2 Listeners for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping ELBv2 Listeners for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping ELBv2 Listener sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }

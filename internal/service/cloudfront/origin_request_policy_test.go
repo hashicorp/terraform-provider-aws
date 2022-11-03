@@ -176,11 +176,7 @@ func testAccCheckOriginRequestPolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tfcloudfront.FindOriginRequestPolicyByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
