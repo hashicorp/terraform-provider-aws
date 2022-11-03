@@ -385,7 +385,6 @@ func testAccCheckConfigurationSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("The configuration set was not created")
 		}
 		return nil
-
 	}
 }
 

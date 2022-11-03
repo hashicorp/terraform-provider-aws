@@ -83,7 +83,6 @@ The following attribute is exported:
 * `burst_limit` - Absolute maximum number of times API Gateway allows the API to be called per second (RPS).
 * `rate_limit` - Number of times API Gateway allows the API to be called per second on average (RPS).
 
-
 ## Import
 
 API Gateway Accounts can be imported using the word `api-gateway-account`, e.g.,

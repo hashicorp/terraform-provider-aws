@@ -182,5 +182,4 @@ func ValidStreamName(v interface{}, k string) (ws []string, errors []error) {
 	}
 
 	return
-
 }

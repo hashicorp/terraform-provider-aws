@@ -147,7 +147,6 @@ The following arguments are supported:
 * `repository` - (Optional) Repository for an Amplify app.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 An `auto_branch_creation_config` block supports the following arguments:
 
 * `basic_auth_credentials` - (Optional) Basic authorization credentials for the autocreated branch.

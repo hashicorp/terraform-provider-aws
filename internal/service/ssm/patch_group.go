@@ -96,7 +96,6 @@ func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("patch_group", group.PatchGroup)
 
 	return nil
-
 }
 
 func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {

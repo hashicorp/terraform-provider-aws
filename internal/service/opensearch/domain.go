@@ -722,7 +722,6 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] OpenSearch domain %q created", d.Id())
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-
 		log.Printf("[DEBUG] Modifying config for OpenSearch domain %q", d.Id())
 
 		inputUpdateDomainConfig := &opensearchservice.UpdateDomainConfigInput{

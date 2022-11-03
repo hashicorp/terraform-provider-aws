@@ -57,7 +57,6 @@ func resourceRDSDBInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		StackId:          aws.String(stackID),
 	}
 
-	log.Printf("[DEBUG] Registering OpsWorks RDS DB Instance: %s", input)
 	_, err := client.RegisterRdsDbInstance(input)
 
 	if err != nil {
@@ -106,7 +105,6 @@ func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		input.DbUser = aws.String(d.Get("db_user").(string))
 	}
 
-	log.Printf("[DEBUG] Updating OpsWorks RDS DB Instance: %s", input)
 	_, err := client.UpdateRdsDbInstance(input)
 
 	if err != nil {

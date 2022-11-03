@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindProjectByName(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, name string) (*cloudwatchevidently.Project, error) {
+func FindProjectByNameOrARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string) (*cloudwatchevidently.Project, error) {
 	input := &cloudwatchevidently.GetProjectInput{
-		Project: aws.String(name),
+		Project: aws.String(nameOrARN),
 	}
 
 	output, err := conn.GetProjectWithContext(ctx, input)

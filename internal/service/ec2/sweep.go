@@ -314,6 +314,7 @@ func init() {
 		F:    sweepVPCEndpoints,
 		Dependencies: []string{
 			"aws_route_table",
+			"aws_sagemaker_workforce",
 		},
 	})
 
@@ -353,42 +354,9 @@ func init() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr_allocation", &resource.Sweeper{
-		Name: "aws_vpc_ipam_pool_cidr_allocation",
-		F:    sweepIPAMPoolCIDRAllocations,
-	})
-
-	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr", &resource.Sweeper{
-		Name: "aws_vpc_ipam_pool_cidr",
-		F:    sweepIPAMPoolCIDRs,
-		Dependencies: []string{
-			"aws_vpc_ipam_pool_cidr_allocation",
-			"aws_vpc",
-		},
-	})
-
-	resource.AddTestSweepers("aws_vpc_ipam_pool", &resource.Sweeper{
-		Name: "aws_vpc_ipam_pool",
-		F:    sweepIPAMPools,
-		Dependencies: []string{
-			"aws_vpc_ipam_pool_cidr",
-		},
-	})
-
-	resource.AddTestSweepers("aws_vpc_ipam_scope", &resource.Sweeper{
-		Name: "aws_vpc_ipam_scope",
-		F:    sweepIPAMScopes,
-		Dependencies: []string{
-			"aws_vpc_ipam_pool",
-		},
-	})
-
 	resource.AddTestSweepers("aws_vpc_ipam", &resource.Sweeper{
 		Name: "aws_vpc_ipam",
 		F:    sweepIPAMs,
-		Dependencies: []string{
-			"aws_vpc_ipam_scope",
-		},
 	})
 
 	resource.AddTestSweepers("aws_ami", &resource.Sweeper{
@@ -2401,236 +2369,6 @@ func sweepCustomerGateways(region string) error {
 	return nil
 }
 
-func sweepIPAMPoolCIDRAllocations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeIpamPoolsInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	err = conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.IpamPools {
-			poolID := aws.StringValue(v.IpamPoolId)
-			input := &ec2.GetIpamPoolAllocationsInput{
-				IpamPoolId: v.IpamPoolId,
-			}
-
-			err := conn.GetIpamPoolAllocationsPages(input, func(page *ec2.GetIpamPoolAllocationsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, v := range page.IpamPoolAllocations {
-					r := ResourceIPAMPoolCIDRAllocation()
-					d := r.Data(nil)
-					d.SetId(encodeIPAMPoolCIDRAllocationID(aws.StringValue(v.IpamPoolAllocationId), poolID))
-					d.Set("ipam_pool_id", poolID)
-					d.Set("ipam_pool_allocation_id", v.IpamPoolAllocationId)
-					d.Set("cidr", v.Cidr)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pool (%s) Allocations (%s): %w", poolID, region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IPAM Pool Allocations sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pools (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IPAM Pool Allocations (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepIPAMPoolCIDRs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeIpamPoolsInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	err = conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.IpamPools {
-			poolID := aws.StringValue(v.IpamPoolId)
-			input := &ec2.GetIpamPoolCidrsInput{
-				IpamPoolId: aws.String(poolID),
-			}
-
-			err := conn.GetIpamPoolCidrsPages(input, func(page *ec2.GetIpamPoolCidrsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, v := range page.IpamPoolCidrs {
-					r := ResourceIPAMPoolCIDR()
-					d := r.Data(nil)
-					d.SetId(encodeIPAMPoolCIDRId(aws.StringValue(v.Cidr), poolID))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pool (%s) CIDRs (%s): %w", poolID, region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IPAM Pool sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pools (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IPAM Pool CIDRs (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepIPAMPools(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeIpamPoolsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	err = conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.IpamPools {
-			r := ResourceIPAMPool()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.IpamPoolId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IPAM Pool sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IPAM Pools (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping IPAM Pools (%s): %w", region, err)
-	}
-
-	return nil
-}
-
-func sweepIPAMScopes(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeIpamScopesInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	err = conn.DescribeIpamScopesPages(input, func(page *ec2.DescribeIpamScopesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.IpamScopes {
-			scopeID := aws.StringValue(v.IpamScopeId)
-
-			if aws.BoolValue(v.IsDefault) {
-				log.Printf("[DEBUG] Skipping default IPAM Scope (%s)", scopeID)
-				continue
-			}
-
-			r := ResourceIPAMScope()
-			d := r.Data(nil)
-			d.SetId(scopeID)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IPAM Scope sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IPAM Scopes (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping IPAM Scopes (%s): %w", region, err)
-	}
-
-	return nil
-}
-
 func sweepIPAMs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -2649,6 +2387,7 @@ func sweepIPAMs(region string) error {
 			r := ResourceIPAM()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamId))
+			d.Set("cascade", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

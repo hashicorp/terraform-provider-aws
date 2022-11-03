@@ -55,7 +55,6 @@ resource "aws_glue_crawler" "example" {
 }
 ```
 
-
 ### Catalog Target Example
 
 ```terraform
@@ -180,7 +179,6 @@ The following arguments are supported:
 ~> **Note:** `deletion_behavior` of catalog target doesn't support `DEPRECATE_IN_DATABASE`.
 
 -> **Note:** `configuration` for catalog target crawlers will have `{ ... "Grouping": { "TableGroupingPolicy": "CombineCompatibleSchemas"} }` by default.
-
 
 ### MongoDB Target
 

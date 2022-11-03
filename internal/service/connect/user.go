@@ -176,7 +176,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Connect User %s", input)
 	output, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {

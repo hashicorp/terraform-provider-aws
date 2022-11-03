@@ -151,7 +151,6 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChanges("filter") {
 		in.Filter = expandFilter(d.Get("filter").(*schema.Set))
-
 	}
 
 	log.Printf("[DEBUG] Updating AccessAnalyzer ArchiveRule (%s): %#v", d.Id(), in)

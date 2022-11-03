@@ -163,8 +163,7 @@ func testAccRegionDataSourceConfig_endpoint() string {
 	return `
 data "aws_partition" "test" {}
 
-data "aws_regions" "test" {
-}
+data "aws_regions" "test" {}
 
 data "aws_region" "test" {
   endpoint = "ec2.${tolist(data.aws_regions.test.names)[0]}.${data.aws_partition.test.dns_suffix}"
@@ -176,8 +175,7 @@ func testAccRegionDataSourceConfig_endpointAndName() string {
 	return `
 data "aws_partition" "test" {}
 
-data "aws_regions" "test" {
-}
+data "aws_regions" "test" {}
 
 data "aws_region" "test" {
   endpoint = "ec2.${tolist(data.aws_regions.test.names)[0]}.${data.aws_partition.test.dns_suffix}"
@@ -188,8 +186,7 @@ data "aws_region" "test" {
 
 func testAccRegionDataSourceConfig_name() string {
 	return `
-data "aws_regions" "test" {
-}
+data "aws_regions" "test" {}
 
 data "aws_region" "test" {
   name = tolist(data.aws_regions.test.names)[0]

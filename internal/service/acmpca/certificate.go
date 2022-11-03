@@ -28,6 +28,8 @@ func ResourceCertificate() *schema.Resource {
 		Read:   resourceCertificateRead,
 		Delete: resourceCertificateRevoke,
 
+		// Expects ACM PCA ARN format, e.g:
+		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile(`arn:.+:certificate-authority/[^/]+`)

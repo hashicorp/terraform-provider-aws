@@ -99,7 +99,6 @@ func testAccCheckIPAMOrganizationAdminAccountExists(n string, org *organizations
 
 		if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
 			return fmt.Errorf("organization DelegatedAdministrator %q does not exist", rs.Primary.ID)
-
 		}
 
 		output_account := output.DelegatedAdministrators[0]

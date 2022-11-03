@@ -13,8 +13,6 @@ Provides details about a specific Nat Gateway.
 ## Example Usage
 
 ```terraform
-variable "subnet_id" {}
-
 data "aws_nat_gateway" "default" {
   subnet_id = aws_subnet.public.id
 }
