@@ -20,7 +20,7 @@ var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|\d{12})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
-func Valid4ByteASNString(v interface{}, k string) (ws []string, errors []error) {
+func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	asn, err := strconv.ParseInt(value, 10, 64)

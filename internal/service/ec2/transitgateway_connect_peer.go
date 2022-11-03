@@ -50,7 +50,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.Valid4ByteASNString,
+				ValidateFunc: verify.Valid4ByteASN,
 			},
 			"inside_cidr_blocks": {
 				Type:     schema.TypeSet,

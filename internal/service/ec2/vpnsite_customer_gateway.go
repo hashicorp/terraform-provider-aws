@@ -37,7 +37,7 @@ func ResourceCustomerGateway() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.Valid4ByteASNString,
+				ValidateFunc: verify.Valid4ByteASN,
 			},
 			"certificate_arn": {
 				Type:         schema.TypeString,

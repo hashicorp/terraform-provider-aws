@@ -162,7 +162,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"asn": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: verify.Valid4ByteASNString,
+										ValidateFunc: verify.Valid4ByteASN,
 									},
 									"inside_cidr_blocks": {
 										Type:     schema.TypeList,
