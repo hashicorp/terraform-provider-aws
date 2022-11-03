@@ -49,6 +49,10 @@ The following arguments are required:
   `UBUNTU`, and
   `WINDOWS`.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 The Systems Manager Default Patch Baseline can be imported using the patch baseline ID, patch baseline ARN, or the operating system value, e.g.,
