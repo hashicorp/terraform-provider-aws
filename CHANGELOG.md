@@ -12,6 +12,7 @@ FEATURES:
 * **New Resource:** `aws_lightsail_lb_stickiness_policy` ([#27514](https://github.com/hashicorp/terraform-provider-aws/issues/27514))
 * **New Resource:** `aws_sagemaker_servicecatalog_portfolio_status` ([#27548](https://github.com/hashicorp/terraform-provider-aws/issues/27548))
 * **New Resource:** `aws_sesv2_email_identity_feedback_attributes` ([#27433](https://github.com/hashicorp/terraform-provider-aws/issues/27433))
+* **New Resource:** `aws_ssm_default_patch_baseline` ([#27610](https://github.com/hashicorp/terraform-provider-aws/issues/27610))
 
 ENHANCEMENTS:
 
