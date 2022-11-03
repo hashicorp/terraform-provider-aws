@@ -549,7 +549,7 @@ func TestAccCognitoIDPUserPoolClient_authSessionValidity(t *testing.T) {
 				Config: testAccUserPoolClientConfig_authSessionValidity(rName, 15),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "15"),
 				),
 			},
 		},
