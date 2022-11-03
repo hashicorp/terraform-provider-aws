@@ -9,35 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func TestValid4ByteAsn(t *testing.T) {
-	validAsns := []int{
-		0,
-		1,
-		65534,
-		65535,
-		4294967294,
-		4294967295,
-	}
-	for _, v := range validAsns {
-		_, errors := Valid4ByteASN(v, "bgp_asn")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid ASN: %q", v, errors)
-		}
-	}
-
-	invalidAsns := []int{
-		-1,
-		4294967296,
-		9999999999,
-	}
-	for _, v := range invalidAsns {
-		_, errors := Valid4ByteASN(v, "bgp_asn")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid ASN", v)
-		}
-	}
-}
-
 func TestValid4ByteASNString(t *testing.T) {
 	validAsns := []string{
 		"0",
