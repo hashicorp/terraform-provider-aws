@@ -901,8 +901,8 @@ func testAccUserPoolClientConfig_authSessionValidity(rName string, validity int)
 resource "aws_cognito_user_pool_client" "test" {
   name                  = %[1]q
   auth_session_validity = %[2]d
-  user_pool_id        = aws_cognito_user_pool.test.id
-  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+  user_pool_id          = aws_cognito_user_pool.test.id
+  explicit_auth_flows   = ["ADMIN_NO_SRP_AUTH"]
 }
 `, rName, validity)
 }
