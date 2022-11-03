@@ -339,7 +339,6 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error deleting WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
 			}
 		}
-
 	}
 
 	if d.HasChange("tags_all") {

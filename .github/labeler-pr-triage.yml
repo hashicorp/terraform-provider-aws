@@ -271,6 +271,9 @@ service/connectcontactlens:
 service/connectparticipant:
   - 'internal/service/connectparticipant/**/*'
   - 'website/**/connectparticipant_*'
+service/controltower:
+  - 'internal/service/controltower/**/*'
+  - 'website/**/controltower_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -660,7 +663,7 @@ service/mediaconvert:
   - 'website/**/media_convert_*'
 service/medialive:
   - 'internal/service/medialive/**/*'
-  - 'website/**/media_live_*'
+  - 'website/**/medialive_*'
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'

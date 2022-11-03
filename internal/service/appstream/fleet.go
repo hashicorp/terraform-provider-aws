@@ -4,20 +4,24 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceFleet() *schema.Resource {
@@ -26,9 +30,16 @@ func ResourceFleet() *schema.Resource {
 		ReadWithoutTimeout:   resourceFleetRead,
 		UpdateWithoutTimeout: resourceFleetUpdate,
 		DeleteWithoutTimeout: resourceFleetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			resourceFleetCustDiff,
+			verify.SetTagsDiff,
+		),
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -91,10 +102,12 @@ func ResourceFleet() *schema.Resource {
 						"directory_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"organizational_unit_distinguished_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -327,8 +340,12 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("arn", fleet.Arn)
 
-	if err = d.Set("compute_capacity", flattenComputeCapacity(fleet.ComputeCapacityStatus)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "compute_capacity", d.Id(), err))
+	if fleet.ComputeCapacityStatus != nil {
+		if err = d.Set("compute_capacity", []interface{}{flattenComputeCapacity(fleet.ComputeCapacityStatus)}); err != nil {
+			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "compute_capacity", err)
+		}
+	} else {
+		d.Set("compute_capacity", nil)
 	}
 
 	d.Set("created_time", aws.TimeValue(fleet.CreatedTime).Format(time.RFC3339))
@@ -336,8 +353,12 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("display_name", fleet.DisplayName)
 	d.Set("disconnect_timeout_in_seconds", fleet.DisconnectTimeoutInSeconds)
 
-	if err = d.Set("domain_join_info", flattenDomainInfo(fleet.DomainJoinInfo)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "domain_join_info", d.Id(), err))
+	if fleet.DomainJoinInfo != nil {
+		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(fleet.DomainJoinInfo)}); err != nil {
+			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "domain_join_info", err)
+		}
+	} else {
+		d.Set("domain_join_info", nil)
 	}
 
 	d.Set("idle_disconnect_timeout_in_seconds", fleet.IdleDisconnectTimeoutInSeconds)
@@ -352,8 +373,12 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("state", fleet.State)
 	d.Set("stream_view", fleet.StreamView)
 
-	if err = d.Set("vpc_config", flattenVPCConfig(fleet.VpcConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Fleet (%s): %w", "vpc_config", d.Id(), err))
+	if fleet.VpcConfig != nil {
+		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
+			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "vpc_config", err)
+		}
+	} else {
+		d.Set("vpc_config", nil)
 	}
 
 	tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
@@ -525,6 +550,17 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
+func resourceFleetCustDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.HasChange("domain_join_info") {
+		o, n := diff.GetChange("domain_join_info")
+
+		if reflect.DeepEqual(expandDomainJoinInfo(o.([]interface{})), expandDomainJoinInfo(n.([]interface{}))) {
+			return diff.Clear("domain_join_info")
+		}
+	}
+	return nil
+}
+
 func expandComputeCapacity(tfList []interface{}) *appstream.ComputeCapacity {
 	if len(tfList) == 0 {
 		return nil
@@ -537,21 +573,41 @@ func expandComputeCapacity(tfList []interface{}) *appstream.ComputeCapacity {
 		apiObject.DesiredInstances = aws.Int64(int64(v.(int)))
 	}
 
+	if reflect.DeepEqual(&appstream.ComputeCapacity{}, apiObject) {
+		return nil
+	}
+
 	return apiObject
 }
 
-func flattenComputeCapacity(apiObject *appstream.ComputeCapacityStatus) []interface{} {
+func flattenComputeCapacity(apiObject *appstream.ComputeCapacityStatus) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := map[string]interface{}{}
-	tfList["desired_instances"] = aws.Int64Value(apiObject.Desired)
-	tfList["available"] = aws.Int64Value(apiObject.Available)
-	tfList["in_use"] = aws.Int64Value(apiObject.InUse)
-	tfList["running"] = aws.Int64Value(apiObject.Running)
+	tfMap := map[string]interface{}{}
 
-	return []interface{}{tfList}
+	if v := apiObject.Desired; v != nil {
+		tfMap["desired_instances"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Available; v != nil {
+		tfMap["available"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.InUse; v != nil {
+		tfMap["in_use"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Running; v != nil {
+		tfMap["running"] = aws.Int64Value(v)
+	}
+
+	if reflect.DeepEqual(map[string]interface{}{}, tfMap) {
+		return nil
+	}
+
+	return tfMap
 }
 
 func expandDomainJoinInfo(tfList []interface{}) *appstream.DomainJoinInfo {
@@ -561,27 +617,47 @@ func expandDomainJoinInfo(tfList []interface{}) *appstream.DomainJoinInfo {
 
 	apiObject := &appstream.DomainJoinInfo{}
 
-	tfMap := tfList[0].(map[string]interface{})
-	if v, ok := tfMap["directory_name"]; ok {
+	tfMap, ok := tfList[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	if v, ok := tfMap["directory_name"]; ok && v != "" {
 		apiObject.DirectoryName = aws.String(v.(string))
 	}
-	if v, ok := tfMap["organizational_unit_distinguished_name"]; ok {
+
+	if v, ok := tfMap["organizational_unit_distinguished_name"]; ok && v != "" {
 		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
+	}
+
+	if reflect.DeepEqual(&appstream.DomainJoinInfo{}, apiObject) {
+		return nil
 	}
 
 	return apiObject
 }
 
-func flattenDomainInfo(apiObject *appstream.DomainJoinInfo) []interface{} {
+func flattenDomainInfo(apiObject *appstream.DomainJoinInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := map[string]interface{}{}
-	tfList["directory_name"] = aws.StringValue(apiObject.DirectoryName)
-	tfList["organizational_unit_distinguished_name"] = aws.StringValue(apiObject.OrganizationalUnitDistinguishedName)
+	tfMap := map[string]interface{}{}
 
-	return []interface{}{tfList}
+	if v := apiObject.DirectoryName; v != nil && aws.StringValue(v) != "" {
+		tfMap["directory_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OrganizationalUnitDistinguishedName; v != nil && aws.StringValue(v) != "" {
+		tfMap["organizational_unit_distinguished_name"] = aws.StringValue(v)
+	}
+
+	if reflect.DeepEqual(map[string]interface{}{}, tfMap) {
+		return nil
+	}
+
+	return tfMap
 }
 
 func expandVPCConfig(tfList []interface{}) *appstream.VpcConfig {
@@ -595,21 +671,36 @@ func expandVPCConfig(tfList []interface{}) *appstream.VpcConfig {
 	if v, ok := tfMap["security_group_ids"]; ok {
 		apiObject.SecurityGroupIds = flex.ExpandStringList(v.([]interface{}))
 	}
+
 	if v, ok := tfMap["subnet_ids"]; ok {
 		apiObject.SubnetIds = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if reflect.DeepEqual(&appstream.VpcConfig{}, apiObject) {
+		return nil
 	}
 
 	return apiObject
 }
 
-func flattenVPCConfig(apiObject *appstream.VpcConfig) []interface{} {
+func flattenVPCConfig(apiObject *appstream.VpcConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := map[string]interface{}{}
-	tfList["security_group_ids"] = aws.StringValueSlice(apiObject.SecurityGroupIds)
-	tfList["subnet_ids"] = aws.StringValueSlice(apiObject.SubnetIds)
+	tfMap := map[string]interface{}{}
 
-	return []interface{}{tfList}
+	if v := apiObject.SecurityGroupIds; v != nil {
+		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+	}
+
+	if reflect.DeepEqual(map[string]interface{}{}, tfMap) {
+		return nil
+	}
+
+	return tfMap
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -113,11 +114,11 @@ const (
 	CarrierGatewayDeletedTimeout = 5 * time.Minute
 )
 
-func WaitCarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+func WaitCarrierGatewayCreated(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.CarrierGatewayStatePending},
 		Target:  []string{ec2.CarrierGatewayStateAvailable},
-		Refresh: StatusCarrierGatewayState(conn, carrierGatewayID),
+		Refresh: StatusCarrierGatewayState(conn, id),
 		Timeout: CarrierGatewayAvailableTimeout,
 	}
 
@@ -130,11 +131,11 @@ func WaitCarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.C
 	return nil, err
 }
 
-func WaitCarrierGatewayDeleted(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+func WaitCarrierGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.CarrierGatewayStateDeleting},
 		Target:  []string{},
-		Refresh: StatusCarrierGatewayState(conn, carrierGatewayID),
+		Refresh: StatusCarrierGatewayState(conn, id),
 		Timeout: CarrierGatewayDeletedTimeout,
 	}
 
@@ -370,12 +371,14 @@ func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destin
 	return nil, err
 }
 
-func WaitFleet(conn *ec2.EC2, id string, pending, target []string, timeout time.Duration) (*ec2.FleetData, error) {
+func WaitFleet(conn *ec2.EC2, id string, pending, target []string, timeout, delay time.Duration) (*ec2.FleetData, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: pending,
-		Target:  target,
-		Refresh: StatusFleetState(conn, id),
-		Timeout: timeout,
+		Pending:    pending,
+		Target:     target,
+		Refresh:    StatusFleetState(conn, id),
+		Timeout:    timeout,
+		Delay:      delay,
+		MinTimeout: 1 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -1371,9 +1374,28 @@ func WaitTransitGatewayRouteDeleted(conn *ec2.EC2, transitGatewayRouteTableID, d
 }
 
 const (
-	TransitGatewayRouteTableCreatedTimeout = 10 * time.Minute
-	TransitGatewayRouteTableDeletedTimeout = 10 * time.Minute
+	TransitGatewayRouteTableCreatedTimeout  = 10 * time.Minute
+	TransitGatewayRouteTableDeletedTimeout  = 10 * time.Minute
+	TransitGatewayPolicyTableCreatedTimeout = 10 * time.Minute
+	TransitGatewayPolicyTableDeletedTimeout = 10 * time.Minute
 )
+
+func WaitTransitGatewayPolicyTableCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayPolicyTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPolicyTableStatePending},
+		Target:  []string{ec2.TransitGatewayPolicyTableStateAvailable},
+		Timeout: TransitGatewayPolicyTableCreatedTimeout,
+		Refresh: StatusTransitGatewayPolicyTableState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPolicyTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func WaitTransitGatewayRouteTableCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayRouteTable, error) {
 	stateConf := &resource.StateChangeConf{
@@ -1386,6 +1408,23 @@ func WaitTransitGatewayRouteTableCreated(conn *ec2.EC2, id string) (*ec2.Transit
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayPolicyTableDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayPolicyTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPolicyTableStateAvailable, ec2.TransitGatewayPolicyTableStateDeleting},
+		Target:  []string{},
+		Timeout: TransitGatewayPolicyTableDeletedTimeout,
+		Refresh: StatusTransitGatewayPolicyTableState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPolicyTable); ok {
 		return output, err
 	}
 
@@ -1410,9 +1449,46 @@ func WaitTransitGatewayRouteTableDeleted(conn *ec2.EC2, id string) (*ec2.Transit
 }
 
 const (
-	TransitGatewayRouteTableAssociationCreatedTimeout = 5 * time.Minute
-	TransitGatewayRouteTableAssociationDeletedTimeout = 10 * time.Minute
+	TransitGatewayPolicyTableAssociationCreatedTimeout = 5 * time.Minute
+	TransitGatewayPolicyTableAssociationDeletedTimeout = 10 * time.Minute
+	TransitGatewayRouteTableAssociationCreatedTimeout  = 5 * time.Minute
+	TransitGatewayRouteTableAssociationDeletedTimeout  = 10 * time.Minute
 )
+
+func WaitTransitGatewayPolicyTableAssociationCreated(conn *ec2.EC2, transitGatewayPolicyTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayPolicyTableAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAssociationStateAssociating},
+		Target:  []string{ec2.TransitGatewayAssociationStateAssociated},
+		Timeout: TransitGatewayPolicyTableAssociationCreatedTimeout,
+		Refresh: StatusTransitGatewayPolicyTableAssociationState(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPolicyTableAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayPolicyTableAssociationDeleted(conn *ec2.EC2, transitGatewayPolicyTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayPolicyTableAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{ec2.TransitGatewayAssociationStateAssociated, ec2.TransitGatewayAssociationStateDisassociating},
+		Target:         []string{},
+		Timeout:        TransitGatewayPolicyTableAssociationDeletedTimeout,
+		Refresh:        StatusTransitGatewayPolicyTableAssociationState(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID),
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPolicyTableAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func WaitTransitGatewayRouteTableAssociationCreated(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	stateConf := &resource.StateChangeConf{
@@ -2207,15 +2283,15 @@ const (
 	ManagedPrefixListTimeout = 15 * time.Minute
 )
 
-func WaitManagedPrefixListCreated(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+func WaitManagedPrefixListCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateCreateInProgress},
 		Target:  []string{ec2.PrefixListStateCreateComplete},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: StatusManagedPrefixListState(conn, id),
+		Refresh: StatusManagedPrefixListState(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
 		if state := aws.StringValue(output.State); state == ec2.PrefixListStateCreateFailed {
@@ -2228,15 +2304,15 @@ func WaitManagedPrefixListCreated(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 	return nil, err
 }
 
-func WaitManagedPrefixListModified(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+func WaitManagedPrefixListModified(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateModifyInProgress},
 		Target:  []string{ec2.PrefixListStateModifyComplete},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: StatusManagedPrefixListState(conn, id),
+		Refresh: StatusManagedPrefixListState(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
 		if state := aws.StringValue(output.State); state == ec2.PrefixListStateModifyFailed {
@@ -2249,20 +2325,41 @@ func WaitManagedPrefixListModified(conn *ec2.EC2, id string) (*ec2.ManagedPrefix
 	return nil, err
 }
 
-func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+func WaitManagedPrefixListDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateDeleteInProgress},
 		Target:  []string{},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: StatusManagedPrefixListState(conn, id),
+		Refresh: StatusManagedPrefixListState(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
 		if state := aws.StringValue(output.State); state == ec2.PrefixListStateDeleteFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
 		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNetworkInsightsAnalysisCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInsightsAnalysis, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.AnalysisStatusRunning},
+		Target:     []string{ec2.AnalysisStatusSucceeded},
+		Timeout:    timeout,
+		Refresh:    StatusNetworkInsightsAnalysis(ctx, conn, id),
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NetworkInsightsAnalysis); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 
 		return output, err
 	}
@@ -2421,6 +2518,25 @@ func WaitSpotFleetRequestFulfilled(conn *ec2.EC2, id string, timeout time.Durati
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
+		if activityStatus := aws.StringValue(output.ActivityStatus); activityStatus == ec2.ActivityStatusError {
+			var errs *multierror.Error
+
+			input := &ec2.DescribeSpotFleetRequestHistoryInput{
+				SpotFleetRequestId: aws.String(id),
+				StartTime:          aws.Time(time.UnixMilli(0)),
+			}
+
+			if output, err := FindSpotFleetRequestHistoryRecords(conn, input); err == nil {
+				for _, v := range output {
+					if eventType := aws.StringValue(v.EventType); eventType == ec2.EventTypeError || eventType == ec2.EventTypeInformation {
+						errs = multierror.Append(errs, errors.New(v.String()))
+					}
+				}
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 
@@ -2640,6 +2756,224 @@ func waitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration)
 	if output, ok := outputRaw.(*ec2.SnapshotTierStatus); ok {
 		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamStateCreateInProgress},
+		Target:  []string{ec2.IpamStateCreateComplete},
+		Refresh: StatusIPAMState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete, ec2.IpamStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamStateModifyInProgress},
+		Target:  []string{ec2.IpamStateModifyComplete},
+		Refresh: StatusIPAMState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateCreateInProgress},
+		Target:  []string{ec2.IpamPoolStateCreateComplete},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateCreateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateDeleteFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateModifyInProgress},
+		Target:  []string{ec2.IpamPoolStateModifyComplete},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateModifyFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolCIDRCreated(conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolCidrStatePendingProvision},
+		Target:  []string{ec2.IpamPoolCidrStateProvisioned},
+		Refresh: StatusIPAMPoolCIDRState(conn, cidrBlock, poolID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if state, failureReason := aws.StringValue(output.State), output.FailureReason; state == ec2.IpamPoolCidrStateFailedProvision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolCidrStatePendingDeprovision, ec2.IpamPoolCidrStateProvisioned},
+		Target:  []string{},
+		Refresh: StatusIPAMPoolCIDRState(conn, cidrBlock, poolID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if state, failureReason := aws.StringValue(output.State), output.FailureReason; state == ec2.IpamPoolCidrStateFailedDeprovision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateCreateInProgress},
+		Target:  []string{ec2.IpamScopeStateCreateComplete},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateCreateComplete, ec2.IpamScopeStateModifyComplete, ec2.IpamScopeStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateModifyInProgress},
+		Target:  []string{ec2.IpamScopeStateModifyComplete},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
 		return output, err
 	}
 

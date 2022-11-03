@@ -86,7 +86,6 @@ func TestAccRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {

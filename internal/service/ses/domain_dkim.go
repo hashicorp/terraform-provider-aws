@@ -83,6 +83,5 @@ func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDKIMDelete(d *schema.ResourceData, meta interface{}) error {
-
 	return nil
 }

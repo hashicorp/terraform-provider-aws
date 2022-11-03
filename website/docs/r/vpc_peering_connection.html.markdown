@@ -75,7 +75,6 @@ resource "aws_vpc" "bar" {
 
 Basic usage with region:
 
-
 ```terraform
 resource "aws_vpc_peering_connection" "foo" {
   peer_owner_id = var.peer_owner_id
@@ -144,7 +143,6 @@ In addition to all arguments above, the following attributes are exported:
 If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
-
 
 ## Timeouts
 

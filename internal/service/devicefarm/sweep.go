@@ -35,7 +35,7 @@ func sweepProjects(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DeviceFarmConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &devicefarm.ListProjectsInput{}
@@ -89,7 +89,7 @@ func sweepTestGridProjects(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DeviceFarmConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &devicefarm.ListTestGridProjectsInput{}

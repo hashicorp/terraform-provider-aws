@@ -264,7 +264,7 @@ The `iam_instance_profile` block supports the following:
 
 This configuration block supports the following:
 
-~> **NOTE**: Both `memory_mib.min` and `vcpu_count.min` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 * `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -311,7 +311,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
 
     ```
     Valid names:
@@ -403,7 +403,7 @@ The `metadata_options` block supports the following:
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
 * `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
-* `instance_metadata_tags` - (optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
+* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
@@ -472,7 +472,6 @@ Each `tag_specifications` block supports the following:
 
 * `resource_type` - The type of resource to tag.
 * `tags` - A map of tags to assign to the resource.
-
 
 ## Attributes Reference
 

@@ -1093,9 +1093,10 @@ func checkKeysAgainstSchemaFlags(k string, keys []string, topSchemaMap schemaMap
 	return nil
 }
 
+var validFieldNameRe = regexp.MustCompile("^[a-z0-9_]+$")
+
 func isValidFieldName(name string) bool {
-	re := regexp.MustCompile("^[a-z0-9_]+$")
-	return re.MatchString(name)
+	return validFieldNameRe.MatchString(name)
 }
 
 // resourceDiffer is an interface that is used by the private diff functions.
@@ -1735,15 +1736,7 @@ func (m schemaMap) validate(
 	// The SDK has to allow the unknown value through initially, so that
 	// Required fields set via an interpolated value are accepted.
 	if !isWhollyKnown(raw) {
-		if schema.Deprecated != "" {
-			return append(diags, diag.Diagnostic{
-				Severity:      diag.Warning,
-				Summary:       "Argument is deprecated",
-				Detail:        schema.Deprecated,
-				AttributePath: path,
-			})
-		}
-		return diags
+		return nil
 	}
 
 	err = validateConflictingAttributes(k, schema, c)
@@ -1946,7 +1939,7 @@ func (m schemaMap) validateList(
 		return append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "Too many list items",
-			Detail:        fmt.Sprintf("Attribute supports %d item maximum, but config has %d declared.", schema.MaxItems, rawV.Len()),
+			Detail:        fmt.Sprintf("Attribute %s supports %d item maximum, but config has %d declared.", k, schema.MaxItems, rawV.Len()),
 			AttributePath: path,
 		})
 	}
@@ -1955,7 +1948,7 @@ func (m schemaMap) validateList(
 		return append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "Not enough list items",
-			Detail:        fmt.Sprintf("Attribute requires %d item minimum, but config has only %d declared.", schema.MinItems, rawV.Len()),
+			Detail:        fmt.Sprintf("Attribute %s requires %d item minimum, but config has only %d declared.", k, schema.MinItems, rawV.Len()),
 			AttributePath: path,
 		})
 	}
@@ -2134,7 +2127,7 @@ func validateMapValues(k string, m map[string]interface{}, schema *Schema, path 
 				})
 			}
 		default:
-			panic(fmt.Sprintf("Unknown validation type: %#v", schema.Type))
+			panic(fmt.Sprintf("Unknown validation type: %#v", valueType))
 		}
 	}
 	return diags

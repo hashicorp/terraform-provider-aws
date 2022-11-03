@@ -68,7 +68,7 @@ type CoreNetworkEdgeLocation struct {
 	InsideCidrBlocks interface{} `json:"inside-cidr-blocks,omitempty"`
 }
 
-func (c *CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
+func (c CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	type Alias CoreNetworkPolicySegmentAction
 
 	var share interface{}

@@ -909,7 +909,6 @@ func testAccCheckSMBFileShareDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckSMBFileShareExists(resourceName string, smbFileShare *storagegateway.SMBFileShareInfo) resource.TestCheckFunc {

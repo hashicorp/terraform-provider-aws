@@ -62,7 +62,6 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 }
 
 func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),

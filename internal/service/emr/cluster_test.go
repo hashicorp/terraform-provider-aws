@@ -995,7 +995,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix("tf-emr-bootstrap")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),

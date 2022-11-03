@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_comprehend_entity_recognizer
 
-Terraform resource for managing an AWS Comprehend EntityRecognizer.
+Terraform resource for managing an AWS Comprehend Entity Recognizer.
 
 ## Example Usage
 
@@ -152,9 +152,9 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_comprehend_entity_recognizer` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-* `create` - (Optional, Default: `20m`)
-* `update` - (Optional, Default: `20m`)
-* `delete` - (Optional, Default: `20m`)
+* `create` - (Optional, Default: `60m`)
+* `update` - (Optional, Default: `60m`)
+* `delete` - (Optional, Default: `30m`)
 
 ## Import
 
