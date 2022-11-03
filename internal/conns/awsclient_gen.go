@@ -327,7 +327,7 @@ type AWSClient struct {
 	SupportedPlatforms        []string
 	TerraformVersion          string
 
-	ssmClient lazyClient[*ssm_sdkv2.Client, *ssm_sdkv2.Options]
+	ssmClient lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA

@@ -277,7 +277,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.ssmClient.init(&cfg, ssm.NewFromConfig)
+	client.ssmClient.init(&cfg, func() *ssm.Client {
+		return ssm.NewFromConfig(cfg, func(o *ssm.Options) {
+			if endpoint := c.Endpoints[names.SSM]; endpoint != "" {
+				o.EndpointResolver = ssm.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
 
 	// sts
 	stsConfig := &aws.Config{
