@@ -286,26 +286,35 @@ yamllint:
 	@yamllint .
 
 .PHONY: \
-	providerlint \
 	build \
 	gen \
-	generate-changelog \
-	gh-workflows-lint \
-	golangci-lint \
 	sweep \
 	test \
 	testacc \
+	testacc-lint \
+	testacc-lint-fix \
 	fmt \
+	fumpt \
 	fmtcheck \
+	gencheck \
+	generate-changelog \
+	depscheck \
+	docs-lint \
+	docs-lint-fix \
+	docscheck \
 	lint \
+	gh-workflows-lint \
+	golangci-lint \
+	providerlint \
+	importlint \
 	tools \
 	test-compile \
 	website-link-check \
+	website-link-check-ghrc \
 	website-lint \
 	website-lint-fix \
-	depscheck \
-	docscheck \
 	semgrep \
+	semall \
 	skaff \
 	tfsdk2fw \
-	fumpt
+	yamllint
