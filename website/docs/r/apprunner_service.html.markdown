@@ -176,9 +176,23 @@ The `authentication_configuration` block supports the following arguments:
 
 The `network_configuration` block supports the following arguments:
 
-* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
+* `ingress_configuration` - (Optional) Network configuration settings for inbound network traffic. See [Ingress Configuration](#ingress-configuration) below for more details.
+* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic. See [Egress Configuration](#egress-configuration) below for more details.
 * `egress_type` - (Optional) Type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
 * `vpc_connector_arn` - ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
+
+### Ingress Configuration
+
+The `encryption_configuration` block supports the following argument:
+
+* `is_publicly_accessible` - (Required) Specifies whether your App Runner service is publicly accessible. To make the service publicly accessible set it to True. To make the service privately accessible, from only within an Amazon VPC set it to False.
+
+### Egress Configuration
+
+The `egress_configuration` block supports the following argument:
+
+* `egress_type` - The type of egress configuration. Valid values are: `DEFAULT` and `VPC`.
+* `vpc_connector_arn` - The Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when `EgressType = VPC`.
 
 ### Observability Configuration
 
