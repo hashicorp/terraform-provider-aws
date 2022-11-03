@@ -113,18 +113,51 @@ The following arguments are optional:
 
 ### CDI Input Specification
 
+* `resolution` - (Required) - Maximum CDI input resolution.
 
 ### Destinations
 
+* `id` - (Required) User-specified id. Ths is used in an output group or an output.
+* `media_package_settings` - (Optional) Destination settings for a MediaPackage output; one destination for both encoders. See [Media Package Settings](#media-package-settings) for more details.
+* `multiplex_settings` - (Optional) Destination settings for a Multiplex output; one destination for both encoders. See [Multiplex Settings](#multiplex-settings) for more details.
+* `settings` - (Optional) Destination settings for a standard output; one destination for each redundant encoder. See [Settings](#settings) for more details.
 
 ### Encoder Settings
 
+* `audio_descriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 
 ### Input Attachments
 
-
 ### Maintenance
 
+### Media Package Settings 
+
+* `channel_id` - (Required) ID of the channel in MediaPackage that is the destination for this output group.
+
+### Multiplex Settings
+
+* `multiplex_id` - (Required) The ID of the Multiplex that the encoder is providing output to.
+* `program_name` - (Optional) The program name of the Multiplex program that the encoder is providing output to.
+
+### Settings
+
+* `password_param` - (Optional) Key used to extract the password from EC2 Parameter store.
+* `stream_name` - (Optional) Stream name RTMP destinations (URLs of type rtmp://)
+* `url` - (Optional) A URL specifying a destination.
+* `username` - (Optional) Username for destination.
+
+### Audio Descriptions
+
+* `audio_selector_name` - (Required) The name of the audio selector used as the source for this AudioDescription.
+* `name` - (Required) The name of this audio description.
+* `audio_normalization_settings` - (Optional) Advanced audio normalization settings. See [Audio Normalization Settings](#audio-normalization-settings) for more details.
+* `audio_type`
+
+### Audio Normalization Settings
+
+* `algorithm` - (Optional) Audio normalization algorithm to use. itu17701 conforms to the CALM Act specification, itu17702 to the EBU R-128 specification.
+* `algorithm_control` - (Optional) Algorithm control for the audio description.
+* `target_lkfs` - (Optional) Target LKFS (loudness) to adjust volume to.
 
 ## Attributes Reference
 
