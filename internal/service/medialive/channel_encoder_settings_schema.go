@@ -960,6 +960,14 @@ func channelEncoderSettingsSchema() *schema.Schema {
 												},
 											},
 										},
+										"multiplex_group_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{},
+											},
+										},
 										"ms_smooth_group_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
@@ -2371,8 +2379,44 @@ func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interf
 	if v, ok := m["archive_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.ArchiveGroupSettings = expandArchiveGroupSettings(v)
 	}
-
+	if v, ok := m["media_package_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.MediaPackageGroupSettings = expandMediaPackageGroupSettings(v)
+	}
+	if v, ok := m["multiplex_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.MultiplexGroupSettings = &types.MultiplexGroupSettings{} // only unexported fields
+	}
 	// TODO implement rest of output group settings
+
+	return &o
+}
+
+func expandDestination(in []interface{}) *types.OutputLocationRef {
+	if len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]interface{})
+
+	var out types.OutputLocationRef
+	if v, ok := m["destination_ref_id"].(string); ok && v != "" {
+		out.DestinationRefId = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandMediaPackageGroupSettings(tfList []interface{}) *types.MediaPackageGroupSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var o types.MediaPackageGroupSettings
+
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		o.Destination = expandDestination(v)
+	}
 
 	return &o
 }
@@ -2387,15 +2431,7 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 	var o types.ArchiveGroupSettings
 
 	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
-		o.Destination = func() *types.OutputLocationRef {
-			de := v[0].(map[string]interface{})
-
-			var inner types.OutputLocationRef
-			if v, ok := de["destination_ref_id"].(string); ok && v != "" {
-				inner.DestinationRefId = aws.String(v)
-			}
-			return &inner
-		}()
+		o.Destination = expandDestination(v)
 	}
 
 	return &o
