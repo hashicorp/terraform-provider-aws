@@ -64,18 +64,25 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			SDKVersion:        l[names.ColSDKVersion],
+		if l[names.ColClientSDKV1] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "1",
+				GoPackage:         l[names.ColGoV1Package],
+			})
 		}
-
-		if l[names.ColSDKVersion] == "1" {
-			s.GoPackage = l[names.ColGoV1Package]
-		} else {
-			s.GoPackage = l[names.ColGoV2Package]
-		}
-
-		td.Services = append(td.Services, s)
+		// if l[names.ColClientSDKV2] != "" {
+		// 	sd := ServiceDatum{
+		// 		ProviderNameUpper: l[names.ColProviderNameUpper],
+		// 		SDKVersion:        "2",
+		// 		GoPackage:         l[names.ColGoV2Package],
+		// 	}
+		// 	if l[names.ColClientSDKV1] != "" {
+		// 		// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`
+		// 		sd.GoPackage = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+		// 	}
+		// 	td.Services = append(td.Services, sd)
+		// }
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {

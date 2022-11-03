@@ -43,7 +43,7 @@ func sweepInputs(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).MediaLiveConn
+	conn := client.(*conns.AWSClient).MediaLiveClient
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputsInput{}
 	var errs *multierror.Error
@@ -93,7 +93,7 @@ func sweepInputSecurityGroups(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).MediaLiveConn
+	conn := client.(*conns.AWSClient).MediaLiveClient
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputSecurityGroupsInput{}
 	var errs *multierror.Error
@@ -143,7 +143,7 @@ func sweepMultiplexes(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).MediaLiveConn
+	conn := client.(*conns.AWSClient).MediaLiveClient
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListMultiplexesInput{}
 	var errs *multierror.Error
