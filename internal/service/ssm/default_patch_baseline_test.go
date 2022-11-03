@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -166,6 +167,26 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 	})
 }
 
+func testAccSSMDefaultPatchBaseline_wrongOperatingSystem(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SSMEndpointID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName, types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu))),
+			},
+		},
+	})
+}
+
 func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
 	resourceName := "aws_ssm_default_patch_baseline.test"
@@ -273,7 +294,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultPatchBaselineConfig_crossRegion(rName),
+				Config: testAccDefaultPatchBaselineConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(resourceName, &main),
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
@@ -371,13 +392,26 @@ func testAccDefaultPatchBaselineImportStateIdFunc(resourceName string) resource.
 }
 
 func testAccDefaultPatchBaselineConfig_basic(rName string) string {
-	return testAccDefaultPatchBaselineConfig_operatingSystem(rName, types.OperatingSystemWindows)
+	return fmt.Sprintf(`
+resource "aws_ssm_default_patch_baseline" "test" {
+  baseline_id      = aws_ssm_patch_baseline.test.id
+  operating_system = aws_ssm_patch_baseline.test.operating_system
+}
+
+resource "aws_ssm_patch_baseline" "test" {
+  name = %[1]q
+
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+}
+`, rName)
 }
 
 func testAccDefaultPatchBaselineConfig_operatingSystem(rName string, os types.OperatingSystem) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_default_patch_baseline" "test" {
-  baseline_id = aws_ssm_patch_baseline.test.id
+  baseline_id      = aws_ssm_patch_baseline.test.id
+  operating_system = aws_ssm_patch_baseline.test.operating_system
 }
 
 resource "aws_ssm_patch_baseline" "test" {
@@ -390,10 +424,28 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName, os)
 }
 
+func testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName string, baselineOS, defaultOS types.OperatingSystem) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_default_patch_baseline" "test" {
+  baseline_id      = aws_ssm_patch_baseline.test.id
+  operating_system = %[3]q
+}
+
+resource "aws_ssm_patch_baseline" "test" {
+  name             = %[1]q
+  operating_system = %[2]q
+
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+}
+`, rName, baselineOS, defaultOS)
+}
+
 func testAccDefaultPatchBaselineConfig_patchBaselineARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_default_patch_baseline" "test" {
-  baseline_id = aws_ssm_patch_baseline.test.arn
+  baseline_id      = aws_ssm_patch_baseline.test.arn
+  operating_system = aws_ssm_patch_baseline.test.operating_system
 }
 
 resource "aws_ssm_patch_baseline" "test" {
@@ -408,7 +460,8 @@ resource "aws_ssm_patch_baseline" "test" {
 func testAccDefaultPatchBaselineConfig_systemDefault() string {
 	return `
 resource "aws_ssm_default_patch_baseline" "test" {
-  baseline_id = data.aws_ssm_patch_baseline.test.id
+  baseline_id      = data.aws_ssm_patch_baseline.test.id
+  operating_system = data.aws_ssm_patch_baseline.test.operating_system
 }
 
 data "aws_ssm_patch_baseline" "test" {
@@ -422,7 +475,8 @@ data "aws_ssm_patch_baseline" "test" {
 func testAccDefaultPatchBaselineConfig_updated(rName string, os types.OperatingSystem) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_default_patch_baseline" "test" {
-  baseline_id = aws_ssm_patch_baseline.updated.id
+  baseline_id      = aws_ssm_patch_baseline.updated.id
+  operating_system = aws_ssm_patch_baseline.updated.operating_system
 }
 
 resource "aws_ssm_patch_baseline" "test" {
@@ -443,12 +497,13 @@ resource "aws_ssm_patch_baseline" "updated" {
 `, rName, os)
 }
 
-func testAccDefaultPatchBaselineConfig_crossRegion(rName string) string {
+func testAccDefaultPatchBaselineConfig_multiRegion(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 resource "aws_ssm_default_patch_baseline" "test" {
-  baseline_id = aws_ssm_patch_baseline.test.id
+  baseline_id      = aws_ssm_patch_baseline.test.id
+  operating_system = aws_ssm_patch_baseline.test.operating_system
 }
 
 resource "aws_ssm_patch_baseline" "test" {
@@ -461,7 +516,8 @@ resource "aws_ssm_patch_baseline" "test" {
 resource "aws_ssm_default_patch_baseline" "alternate" {
   provider = awsalternate
 
-  baseline_id = aws_ssm_patch_baseline.alternate.id
+  baseline_id      = aws_ssm_patch_baseline.alternate.id
+  operating_system = aws_ssm_patch_baseline.alternate.operating_system
 }
 
 resource "aws_ssm_patch_baseline" "alternate" {

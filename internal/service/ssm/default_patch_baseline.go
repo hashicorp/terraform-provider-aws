@@ -30,9 +30,8 @@ const (
 
 func ResourceDefaultPatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceDefaultPatchBaselineRegister,
+		CreateWithoutTimeout: resourceDefaultPatchBaselineCreate,
 		ReadWithoutTimeout:   resourceDefaultPatchBaselineRead,
-		UpdateWithoutTimeout: resourceDefaultPatchBaselineRegister,
 		DeleteWithoutTimeout: resourceDefaultPatchBaselineDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -60,11 +59,19 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 			"baseline_id": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ForceNew:         true,
 				DiffSuppressFunc: diffSuppressPatchBaselineID,
 				ValidateFunc: validation.Any(
 					validatePatchBaselineID,
 					validatePatchBaselineARN,
 				),
+			},
+
+			"operating_system": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.OperatingSystem](),
 			},
 		},
 	}
@@ -156,25 +163,32 @@ const (
 	ResNameDefaultPatchBaseline = "Default Patch Baseline"
 )
 
-func resourceDefaultPatchBaselineRegister(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SSMClient()
 
 	baselineID := d.Get("baseline_id").(string)
+
+	patchBaseline, err := findPatchBaselineByID(ctx, conn, baselineID)
+	if err != nil {
+		return create.DiagErrorMessage(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
+			create.ProblemStandardMessage(names.SSM, create.ErrActionReading, resNamePatchBaseline, baselineID, err),
+		)
+	}
+	if pbOS, cOS := string(patchBaseline.OperatingSystem), d.Get("operating_system"); pbOS != cOS {
+		return create.DiagErrorMessage(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
+			fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", pbOS, cOS),
+		)
+	}
+
 	in := &ssm.RegisterDefaultPatchBaselineInput{
 		BaselineId: aws.String(baselineID),
 	}
-	_, err := conn.RegisterDefaultPatchBaseline(ctx, in)
+	_, err = conn.RegisterDefaultPatchBaseline(ctx, in)
 	if err != nil {
 		return create.DiagError(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID, err)
 	}
 
 	// We need to retrieve the Operating System from the Patch Baseline to store for the ID
-	patchBaseline, err := findPatchBaselineByID(ctx, conn, baselineID)
-	if err != nil {
-		return create.DiagError(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
-			create.Error(names.SSM, create.ErrActionReading, resNamePatchBaseline, baselineID, err),
-		)
-	}
 
 	d.SetId(string(patchBaseline.OperatingSystem))
 
@@ -195,6 +209,7 @@ func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set("baseline_id", out.BaselineId)
+	d.Set("operating_system", out.OperatingSystem)
 
 	return nil
 }

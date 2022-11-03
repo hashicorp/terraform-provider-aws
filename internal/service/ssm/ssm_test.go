@@ -14,6 +14,7 @@ func TestAccSSM_serial(t *testing.T) {
 			"update":               testAccSSMDefaultPatchBaseline_update,
 			"deleteDefault":        testAccSSMPatchBaseline_deleteDefault,
 			"multiRegion":          testAccSSMDefaultPatchBaseline_multiRegion,
+			"wrongOperatingSystem": testAccSSMDefaultPatchBaseline_wrongOperatingSystem,
 		},
 		"PatchBaseline": {
 			"deleteDefault": testAccSSMPatchBaseline_deleteDefault,
