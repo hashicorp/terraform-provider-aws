@@ -835,8 +835,7 @@ func updateSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData, ruleType st
 // group rules and returns EC2 API compatible objects. This function will error
 // if it finds invalid permissions input, namely a protocol of "-1" with either
 // to_port or from_port set to a non-zero value.
-func ExpandIPPerms(
-	group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
+func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
 	vpc := aws.StringValue(group.VpcId) != ""
 
 	perms := make([]*ec2.IpPermission, len(configured))
@@ -939,6 +938,58 @@ func ExpandIPPerms(
 	}
 
 	return perms, nil
+}
+
+// Like ec2.GroupIdentifier but with additional rule description.
+type GroupIdentifier struct {
+	// The ID of the security group.
+	GroupId *string
+
+	// The name of the security group.
+	GroupName *string
+
+	Description *string
+}
+
+// Flattens an array of UserSecurityGroups into a []*GroupIdentifier
+func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
+	result := make([]*GroupIdentifier, 0, len(list))
+	for _, g := range list {
+		var userId *string
+		if aws.StringValue(g.UserId) != "" && (ownerId == nil || aws.StringValue(ownerId) != aws.StringValue(g.UserId)) {
+			userId = g.UserId
+		}
+		// userid nil here for same vpc groups
+
+		vpc := aws.StringValue(g.GroupName) == ""
+		var id *string
+		if vpc {
+			id = g.GroupId
+		} else {
+			id = g.GroupName
+		}
+
+		// id is groupid for vpcs
+		// id is groupname for non vpc (classic)
+
+		if userId != nil {
+			id = aws.String(*userId + "/" + *id)
+		}
+
+		if vpc {
+			result = append(result, &GroupIdentifier{
+				GroupId:     id,
+				Description: g.Description,
+			})
+		} else {
+			result = append(result, &GroupIdentifier{
+				GroupId:     g.GroupId,
+				GroupName:   id,
+				Description: g.Description,
+			})
+		}
+	}
+	return result
 }
 
 // MatchRules receives the group id, type of rules, and the local / remote maps
