@@ -458,7 +458,7 @@ resource "aws_appconfig_environment" "test" {
   application_id = aws_appconfig_application.test.id
 
   dynamic "monitor" {
-    for_each = aws_cloudwatch_metric_alarm.test.*.arn
+    for_each = aws_cloudwatch_metric_alarm.test[*].arn
     content {
       alarm_arn      = monitor.value
       alarm_role_arn = aws_iam_role.test.arn

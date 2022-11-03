@@ -504,6 +504,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_contact_flow_module":         connect.DataSourceContactFlowModule(),
 			"aws_connect_hours_of_operation":          connect.DataSourceHoursOfOperation(),
 			"aws_connect_instance":                    connect.DataSourceInstance(),
+			"aws_connect_instance_storage_config":     connect.DataSourceInstanceStorageConfig(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
 			"aws_connect_queue":                       connect.DataSourceQueue(),

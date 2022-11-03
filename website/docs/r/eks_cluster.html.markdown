@@ -123,7 +123,7 @@ data "tls_certificate" "example" {
 
 resource "aws_iam_openid_connect_provider" "example" {
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = data.tls_certificate.example.certificates.*.sha1_fingerprint
+  thumbprint_list = data.tls_certificate.example.certificates[*].sha1_fingerprint
   url             = data.tls_certificate.example.url
 }
 
