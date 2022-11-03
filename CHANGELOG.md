@@ -62,6 +62,7 @@ ENHANCEMENTS:
 * resource/aws_network_interface_attachment: Added import capabilities for the resource ([#27364](https://github.com/hashicorp/terraform-provider-aws/issues/27364))
 * resource/aws_sesv2_dedicated_ip_pool: Add `scaling_mode` attribute ([#27388](https://github.com/hashicorp/terraform-provider-aws/issues/27388))
 * resource/aws_ssm_parameter: Support `aws:ssm:integration` as a valid value for `data_type` ([#27329](https://github.com/hashicorp/terraform-provider-aws/issues/27329))
+* resource/aws_appflow_flow: Add support for preserving source data types in the S3 output config ([#26372](https://github.com/hashicorp/terraform-provider-aws/issues/26372))
 
 BUG FIXES:
 
