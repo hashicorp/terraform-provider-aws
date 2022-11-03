@@ -695,7 +695,7 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get("name").(string)),
@@ -756,7 +756,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -819,7 +819,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateChannelInput{
@@ -877,7 +877,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
