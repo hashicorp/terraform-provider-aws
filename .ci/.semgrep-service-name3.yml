@@ -2069,6 +2069,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)SSM"
+            - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
+            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: ssm-in-test-name

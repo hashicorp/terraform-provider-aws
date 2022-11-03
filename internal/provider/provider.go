@@ -2099,6 +2099,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_ssm_activation":                ssm.ResourceActivation(),
 			"aws_ssm_association":               ssm.ResourceAssociation(),
+			"aws_ssm_default_patch_baseline":    ssm.ResourceDefaultPatchBaseline(),
 			"aws_ssm_document":                  ssm.ResourceDocument(),
 			"aws_ssm_maintenance_window":        ssm.ResourceMaintenanceWindow(),
 			"aws_ssm_maintenance_window_target": ssm.ResourceMaintenanceWindowTarget(),

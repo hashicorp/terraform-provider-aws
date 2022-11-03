@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -274,6 +275,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
 		}
+	})
+
+	client.ssmClient.init(&cfg, func() *ssm.Client {
+		return ssm.NewFromConfig(cfg, func(o *ssm.Options) {
+			if endpoint := c.Endpoints[names.SSM]; endpoint != "" {
+				o.EndpointResolver = ssm.EndpointResolverFromURL(endpoint)
+			}
+		})
 	})
 
 	// sts
