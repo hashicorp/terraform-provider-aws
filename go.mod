@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.128
+	github.com/aws/aws-sdk-go v1.44.129
 	github.com/aws/aws-sdk-go-v2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.19
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.2
@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.24.2
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.11
 	github.com/beevik/etree v1.1.0
@@ -64,6 +64,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
 	github.com/aws/smithy-go v1.13.4 // indirect
@@ -78,7 +79,7 @@ require (
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-hclog v1.2.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.4 // indirect
-	github.com/hashicorp/go-uuid v1.0.3 // indirect
+	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/hc-install v0.4.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.17.3 // indirect

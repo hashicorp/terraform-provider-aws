@@ -69,7 +69,7 @@ const (
 )
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient
 
 	identityStoreId := d.Get("identity_store_id").(string)
 

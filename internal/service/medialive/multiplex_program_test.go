@@ -178,7 +178,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 }
 
 func testAccCheckMultiplexProgramDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -219,7 +219,7 @@ func testAccCheckMultiplexProgramExists(name string, multiplexprogram *medialive
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplexProgram, rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 		ctx := context.Background()
 		resp, err := tfmedialive.FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 

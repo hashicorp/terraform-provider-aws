@@ -1,20 +1,33 @@
-## 4.38.0 (Unreleased)
+## 4.39.0 (Unreleased)
+## 4.38.0 (November  3, 2022)
 
 FEATURES:
 
+* **New Data Source:** `aws_connect_instance_storage_config` ([#27308](https://github.com/hashicorp/terraform-provider-aws/issues/27308))
+* **New Resource:** `aws_apprunner_vpc_ingress_connection` ([#27600](https://github.com/hashicorp/terraform-provider-aws/issues/27600))
+* **New Resource:** `aws_connect_phone_number` ([#26364](https://github.com/hashicorp/terraform-provider-aws/issues/26364))
+* **New Resource:** `aws_evidently_segment` ([#27159](https://github.com/hashicorp/terraform-provider-aws/issues/27159))
 * **New Resource:** `aws_fsx_file_cache` ([#27384](https://github.com/hashicorp/terraform-provider-aws/issues/27384))
 * **New Resource:** `aws_lightsail_disk` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
 * **New Resource:** `aws_lightsail_disk_attachment` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
 * **New Resource:** `aws_lightsail_lb_stickiness_policy` ([#27514](https://github.com/hashicorp/terraform-provider-aws/issues/27514))
 * **New Resource:** `aws_sagemaker_servicecatalog_portfolio_status` ([#27548](https://github.com/hashicorp/terraform-provider-aws/issues/27548))
 * **New Resource:** `aws_sesv2_email_identity_feedback_attributes` ([#27433](https://github.com/hashicorp/terraform-provider-aws/issues/27433))
+* **New Resource:** `aws_ssm_default_patch_baseline` ([#27610](https://github.com/hashicorp/terraform-provider-aws/issues/27610))
 
 ENHANCEMENTS:
 
+* data-source/aws_networkmanager_core_network_policy_document: Add plan-time validation for `core_network_configuration.edge_locations.asn` ([#27305](https://github.com/hashicorp/terraform-provider-aws/issues/27305))
 * resource/aws_ami_copy: Add `imds_support` attribute ([#27561](https://github.com/hashicorp/terraform-provider-aws/issues/27561))
 * resource/aws_ami_from_instance: Add `imds_support` attribute ([#27561](https://github.com/hashicorp/terraform-provider-aws/issues/27561))
+* resource/aws_apprunner_service: Add `ingress_configuration` argument block. ([#27600](https://github.com/hashicorp/terraform-provider-aws/issues/27600))
+* resource/aws_batch_compute_environment: Add `eks_configuration` configuration block ([#27499](https://github.com/hashicorp/terraform-provider-aws/issues/27499))
+* resource/aws_batch_compute_environment: Allow deletion of AWS Batch compute environments in `INVALID` state ([#26931](https://github.com/hashicorp/terraform-provider-aws/issues/26931))
 * resource/aws_budgets_budget: Add `auto_adjust_data` configuration block ([#27474](https://github.com/hashicorp/terraform-provider-aws/issues/27474))
 * resource/aws_budgets_budget: Add `planned_limit` configuration block ([#25766](https://github.com/hashicorp/terraform-provider-aws/issues/25766))
+* resource/aws_cognito_user_pool: Add `deletion_protection` argument ([#27612](https://github.com/hashicorp/terraform-provider-aws/issues/27612))
+* resource/aws_cognito_user_pool_client: Add `auth_session_validity` argument ([#27620](https://github.com/hashicorp/terraform-provider-aws/issues/27620))
+* resource/aws_lb_target_group: Add support for `target_failover` and `stickiness` attributes for GENEVE protocol target groups ([#27334](https://github.com/hashicorp/terraform-provider-aws/issues/27334))
 * resource/aws_sagemaker_domain: Add `domain_settings`, `app_security_group_management`, `default_user_settings.r_session_app_settings`, and `default_user_settings.canvas_app_settings` arguments. ([#27542](https://github.com/hashicorp/terraform-provider-aws/issues/27542))
 * resource/aws_sagemaker_user_profile: Add `user_settings.r_session_app_settings` and `user_settings.canvas_app_settings` arguments. ([#27542](https://github.com/hashicorp/terraform-provider-aws/issues/27542))
 * resource/aws_sagemaker_workforce: Add `workforce_vpc_config` argument ([#27538](https://github.com/hashicorp/terraform-provider-aws/issues/27538))

@@ -25,6 +25,7 @@ const (
 type ServiceDatum struct {
 	SDKVersion        string
 	GoPackage         string
+	GoPackageOverride string
 	ProviderNameUpper string
 	ClientTypeName    string
 }
@@ -53,7 +54,7 @@ func main() {
 	td := TemplateData{}
 
 	for i, l := range data {
-		if i < 1 { // no header
+		if i < 1 { // skip header
 			continue
 		}
 
@@ -65,20 +66,27 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			SDKVersion:        l[names.ColSDKVersion],
+		if l[names.ColClientSDKV1] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "1",
+				GoPackage:         l[names.ColGoV1Package],
+				ClientTypeName:    l[names.ColGoV1ClientTypeName],
+			})
 		}
-
-		if l[names.ColSDKVersion] == "1" {
-			s.GoPackage = l[names.ColGoV1Package]
-			s.ClientTypeName = l[names.ColGoV1ClientTypeName]
-		} else {
-			s.GoPackage = l[names.ColGoV2Package]
-			s.ClientTypeName = "Client"
+		if l[names.ColClientSDKV2] != "" {
+			sd := ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "2",
+				GoPackage:         l[names.ColGoV2Package],
+				ClientTypeName:    "Client",
+			}
+			if l[names.ColClientSDKV1] != "" {
+				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`
+				sd.GoPackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+			}
+			td.Services = append(td.Services, sd)
 		}
-
-		td.Services = append(td.Services, s)
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {
@@ -89,8 +97,7 @@ func main() {
 }
 
 func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("error opening file (%s): %s", filename, err)
 	}
