@@ -162,10 +162,11 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the patch baseline.
 * `description` - (Optional) The description of the patch baseline.
-* `operating_system` - (Optional) Defines the operating system the patch baseline applies to.
+* `operating_system` - (Optional) The operating system the patch baseline applies to.
   Valid values are
   `AMAZON_LINUX`,
   `AMAZON_LINUX_2`,
+  `AMAZON_LINUX_2022`,
   `CENTOS`,
   `DEBIAN`,
   `MACOS`,
@@ -177,7 +178,7 @@ The following arguments are supported:
   `UBUNTU`, and
   `WINDOWS`.
   The default value is `WINDOWS`.
-* `approved_patches_compliance_level` - (Optional) Defines the compliance level for approved patches.
+* `approved_patches_compliance_level` - (Optional) The compliance level for approved patches.
   This means that if an approved patch is reported as missing, this is the severity of the compliance violation.
   Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`.
   The default value is `UNSPECIFIED`.
@@ -215,7 +216,7 @@ The `approval_rule` block supports:
   Valid combinations of these Keys and the `operating_system` value can be found in the [SSM DescribePatchProperties API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribePatchProperties.html).
   Valid Values are exact values for the patch property given as the key, or a wildcard `*`, which matches all values.
     * `PATCH_SET` defaults to `OS` if unspecified
-* `compliance_level` - (Optional) Defines the compliance level for patches approved by this rule.
+* `compliance_level` - (Optional) The compliance level for patches approved by this rule.
   Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, and `UNSPECIFIED`.
   The default value is `UNSPECIFIED`.
 * `enable_non_security` - (Optional) Boolean enabling the application of non-security updates.
