@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_connect_instance_storage_config` ([#27308](https://github.com/hashicorp/terraform-provider-aws/issues/27308))
+* **New Resource:** `aws_apprunner_vpc_ingress_connection` ([#27600](https://github.com/hashicorp/terraform-provider-aws/issues/27600))
 * **New Resource:** `aws_fsx_file_cache` ([#27384](https://github.com/hashicorp/terraform-provider-aws/issues/27384))
 * **New Resource:** `aws_lightsail_disk` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
 * **New Resource:** `aws_lightsail_disk_attachment` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
@@ -14,8 +15,12 @@ ENHANCEMENTS:
 
 * resource/aws_ami_copy: Add `imds_support` attribute ([#27561](https://github.com/hashicorp/terraform-provider-aws/issues/27561))
 * resource/aws_ami_from_instance: Add `imds_support` attribute ([#27561](https://github.com/hashicorp/terraform-provider-aws/issues/27561))
+* resource/aws_apprunner_service: Add `ingress_configuration` argument block. ([#27600](https://github.com/hashicorp/terraform-provider-aws/issues/27600))
+* resource/aws_batch_compute_environment: Add `eks_configuration` configuration block ([#27499](https://github.com/hashicorp/terraform-provider-aws/issues/27499))
+* resource/aws_batch_compute_environment: Allow deletion of AWS Batch compute environments in `INVALID` state ([#26931](https://github.com/hashicorp/terraform-provider-aws/issues/26931))
 * resource/aws_budgets_budget: Add `auto_adjust_data` configuration block ([#27474](https://github.com/hashicorp/terraform-provider-aws/issues/27474))
 * resource/aws_budgets_budget: Add `planned_limit` configuration block ([#25766](https://github.com/hashicorp/terraform-provider-aws/issues/25766))
+* resource/aws_cognito_user_pool: Add `deletion_protection` argument ([##27612](https://github.com/hashicorp/terraform-provider-aws/issues/#27612))
 * resource/aws_lb_target_group: Add support for `target_failover` and `stickiness` attributes for GENEVE protocol target groups ([#27334](https://github.com/hashicorp/terraform-provider-aws/issues/27334))
 * resource/aws_sagemaker_domain: Add `domain_settings`, `app_security_group_management`, `default_user_settings.r_session_app_settings`, and `default_user_settings.canvas_app_settings` arguments. ([#27542](https://github.com/hashicorp/terraform-provider-aws/issues/27542))
 * resource/aws_sagemaker_user_profile: Add `user_settings.r_session_app_settings` and `user_settings.canvas_app_settings` arguments. ([#27542](https://github.com/hashicorp/terraform-provider-aws/issues/27542))
