@@ -36,6 +36,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
 				),
 			},
 			{

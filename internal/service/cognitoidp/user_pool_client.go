@@ -104,6 +104,7 @@ func ResourceUserPoolClient() *schema.Resource {
 			"auth_session_validity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Default:      3,
 				ValidateFunc: validation.IntBetween(3, 15),
 			},
 			"callback_urls": {
