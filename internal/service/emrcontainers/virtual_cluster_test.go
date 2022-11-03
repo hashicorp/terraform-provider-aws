@@ -17,7 +17,7 @@ import (
 
 func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 	var v emrcontainers.VirtualCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
@@ -72,7 +72,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 
 func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 	var v emrcontainers.VirtualCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
@@ -105,7 +105,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 
 func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 	var v emrcontainers.VirtualCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
@@ -378,9 +378,13 @@ provider "kubernetes" {
   host                   = aws_eks_cluster.test.endpoint
   cluster_ca_certificate = base64decode(aws_eks_cluster.test.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.cluster.token
+
+  alias = "emr"
 }
 
 resource "kubernetes_role" "emrcontainers_role" {
+  provider = kubernetes.emr
+
   metadata {
     name      = "emr-containers"
     namespace = "default"
@@ -430,6 +434,8 @@ resource "kubernetes_role" "emrcontainers_role" {
 }
 
 resource "kubernetes_role_binding" "emrcontainers_rolemapping" {
+  provider = kubernetes.emr
+
   metadata {
     name      = "emr-containers"
     namespace = "default"
@@ -449,6 +455,8 @@ resource "kubernetes_role_binding" "emrcontainers_rolemapping" {
 }
 
 resource "kubernetes_config_map" "aws_auth" {
+  provider = kubernetes.emr
+
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"
