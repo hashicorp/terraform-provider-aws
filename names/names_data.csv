@@ -293,7 +293,7 @@ route53-recovery-control-config,route53recoverycontrolconfig,route53recoverycont
 route53-recovery-readiness,route53recoveryreadiness,route53recoveryreadiness,route53recoveryreadiness,,route53recoveryreadiness,,,Route53RecoveryReadiness,Route53RecoveryReadiness,x,1,,,aws_route53recoveryreadiness_,,route53recoveryreadiness_,Route 53 Recovery Readiness,Amazon,,,,,
 route53resolver,route53resolver,route53resolver,route53resolver,,route53resolver,,,Route53Resolver,Route53Resolver,,1,,aws_route53_resolver_,aws_route53resolver_,,route53_resolver_,Route 53 Resolver,Amazon,,,,,
 s3api,s3api,s3,s3,,s3,,s3api,S3,S3,x,1,,aws_(canonical_user_id|s3_bucket|s3_object),aws_s3_,,s3_bucket;s3_object;canonical_user_id,S3 (Simple Storage),Amazon,,,AWS_S3_ENDPOINT,TF_AWS_S3_ENDPOINT,
-s3control,s3control,s3control,s3control,,s3control,,,S3Control,S3Control,,1,,aws_(s3_account_|s3control_|s3_access_),aws_s3control_,,s3control;s3_account_;s3_access_,S3 Control,Amazon,,,,,
+s3control,s3control,s3control,s3control,,s3control,,,S3Control,S3Control,,1,2,aws_(s3_account_|s3control_|s3_access_),aws_s3control_,,s3control;s3_account_;s3_access_,S3 Control,Amazon,,,,,
 glacier,glacier,glacier,glacier,,glacier,,,Glacier,Glacier,,1,,,aws_glacier_,,glacier_,S3 Glacier,Amazon,,,,,
 s3outposts,s3outposts,s3outposts,s3outposts,,s3outposts,,,S3Outposts,S3Outposts,,1,,,aws_s3outposts_,,s3outposts_,S3 on Outposts,Amazon,,,,,
 sagemaker,sagemaker,sagemaker,sagemaker,,sagemaker,,,SageMaker,SageMaker,,1,,,aws_sagemaker_,,sagemaker_,SageMaker,Amazon,,,,,

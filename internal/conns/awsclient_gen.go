@@ -2,7 +2,6 @@
 package conns
 
 import (
-	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -12,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -313,7 +313,6 @@ import (
 
 type AWSClient struct {
 	AccountID                 string
-	Config                    *awsv2.Config
 	DefaultTagsConfig         *tftags.DefaultConfig
 	DNSSuffix                 string
 	IgnoreTagsConfig          *tftags.IgnoreConfig
@@ -573,6 +572,7 @@ type AWSClient struct {
 	Route53ResolverConn              *route53resolver.Route53Resolver
 	S3Conn                           *s3.S3
 	S3ControlConn                    *s3control.S3Control
+	S3ControlClient                  *s3control_sdkv2.Client
 	S3OutpostsConn                   *s3outposts.S3Outposts
 	SESConn                          *ses.SES
 	SESV2Client                      *sesv2.Client

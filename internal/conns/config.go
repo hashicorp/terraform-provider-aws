@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
@@ -191,7 +192,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	c.clientConns(client, sess)
 
 	client.AccountID = accountID
-	client.Config = &cfg
 	client.DefaultTagsConfig = c.DefaultTagsConfig
 	client.DNSSuffix = DNSSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
@@ -255,6 +255,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		} else if partition == endpoints.AwsPartitionID {
 			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
 			o.Region = endpoints.UsEast1RegionID
+		}
+	})
+
+	client.S3ControlClient = s3control.NewFromConfig(cfg, func(o *s3control.Options) {
+		if endpoint := c.Endpoints[names.S3Control]; endpoint != "" {
+			o.EndpointResolver = s3control.EndpointResolverFromURL(endpoint)
 		}
 	})
 

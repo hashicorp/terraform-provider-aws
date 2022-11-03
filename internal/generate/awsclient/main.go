@@ -25,6 +25,7 @@ const (
 type ServiceDatum struct {
 	SDKVersion        string
 	GoPackage         string
+	GoPackageOverride string
 	ProviderNameUpper string
 	ClientTypeName    string
 }
@@ -74,12 +75,17 @@ func main() {
 			})
 		}
 		if l[names.ColClientSDKV2] != "" {
-			td.Services = append(td.Services, ServiceDatum{
+			sd := ServiceDatum{
 				ProviderNameUpper: l[names.ColProviderNameUpper],
 				SDKVersion:        "2",
 				GoPackage:         l[names.ColGoV2Package],
 				ClientTypeName:    "Client",
-			})
+			}
+			if l[names.ColClientSDKV1] != "" {
+				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`
+				sd.GoPackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+			}
+			td.Services = append(td.Services, sd)
 		}
 	}
 
