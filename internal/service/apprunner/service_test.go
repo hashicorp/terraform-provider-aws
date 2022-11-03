@@ -296,6 +296,8 @@ func TestAccAppRunnerService_ImageRepository_networkConfiguration(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.egress_type", "VPC"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_configuration.0.egress_configuration.0.vpc_connector_arn", vpcConnectorResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.0.is_publicly_accessible", "false"),
 				),
 			},
 			{
@@ -653,15 +655,7 @@ resource "aws_apprunner_service" "test" {
 }
 
 func testAccServiceConfig_ImageRepository_networkConfiguration(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
@@ -671,18 +665,9 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
-  subnets            = [aws_subnet.test.id]
+  subnets            = aws_subnet.test[*].id
   security_groups    = [aws_security_group.test.id]
 }
 
@@ -693,6 +678,10 @@ resource "aws_apprunner_service" "test" {
     egress_configuration {
       egress_type       = "VPC"
       vpc_connector_arn = aws_apprunner_vpc_connector.test.arn
+    }
+
+    ingress_configuration {
+      is_publicly_accessible = false
     }
   }
 
@@ -707,7 +696,7 @@ resource "aws_apprunner_service" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_ImageRepository_observabilityConfiguration(rName string) string {
