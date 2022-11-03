@@ -125,7 +125,7 @@ func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceD
 		return nil, fmt.Errorf("no active Receipt Rule Set found")
 	}
 
-	if *response.Metadata.Name != d.Id() {
+	if aws.StringValue(response.Metadata.Name) != d.Id() {
 		return nil, fmt.Errorf("SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found", d.Id())
 	}
 
