@@ -72,6 +72,7 @@ The following arguments are optional:
 * `admin_create_user_config` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
 * `auto_verified_attributes` - (Optional) Attributes to be auto-verified. Valid values: `email`, `phone_number`.
+* `deletion_protection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `device_configuration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.

@@ -68,12 +68,46 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "estimated_number_of_users", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "INACTIVE"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPool_deletionProtection(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_deletionProtection(rName, "ACTIVE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "ACTIVE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_deletionProtection(rName, "INACTIVE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "INACTIVE"),
+				),
 			},
 		},
 	})
@@ -1569,6 +1603,15 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccUserPoolConfig_deletionProtection(rName, active string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name                = %[1]q
+  deletion_protection = %[2]q
+}
+`, rName, active)
 }
 
 func testAccUserPoolConfig_accountRecoverySingle(rName string) string {
