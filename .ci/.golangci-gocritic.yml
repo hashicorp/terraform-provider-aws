@@ -8,6 +8,16 @@ linters:
   enable:
     - gocritic
 
+linters-settings:
+  gocritic:
+    enabled-tags:
+      - diagnostic
+    disabled-tags:
+      - style
+      - performance
+      - experimental
+      - opinionated
+
 run:
   timeout: 10m
   go: 1.18
