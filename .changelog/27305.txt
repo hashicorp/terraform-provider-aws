@@ -1,3 +1,3 @@
-```release-note:note
-Add plan-time validation for `aws_networkmanager_core_network_policy_document.core_network_configuration.edge_locations[].asn`
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add plan-time validation for `core_network_configuration.edge_locations.asn`
 ```
