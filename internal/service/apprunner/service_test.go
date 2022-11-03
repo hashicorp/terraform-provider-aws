@@ -29,7 +29,7 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_imageRepository(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
@@ -51,6 +51,8 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.egress_type", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.vpc_connector_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.ingress_configuration.0.is_publicly_accessible", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_url"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
