@@ -600,7 +600,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 		map[string]interface{}{
 			"protocol":    "-1",
 			"from_port":   0,
-			"to_port":     0,
+			"to_port":     65535,
 			"cidr_blocks": []interface{}{"0.0.0.0/0"},
 			"security_groups": schema.NewSet(hash, []interface{}{
 				"sg-11111",
@@ -646,6 +646,13 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 			aws.Int64Value(exp.FromPort))
 	}
 
+	if aws.Int64Value(exp.ToPort) != aws.Int64Value(perm.ToPort) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.Int64Value(perm.ToPort),
+			aws.Int64Value(exp.ToPort))
+	}
+
 	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
@@ -658,30 +665,6 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
 			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
 			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
-	}
-
-	// Now test the error case. This *should* error when either from_port
-	// or to_port is not zero, but protocol is "-1".
-	errorCase := []interface{}{
-		map[string]interface{}{
-			"protocol":    "-1",
-			"from_port":   0,
-			"to_port":     65535,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
-				"sg-11111",
-				"foo/sg-22222",
-			}),
-		},
-	}
-	securityGroups := &ec2.SecurityGroup{
-		GroupId: aws.String("foo"),
-		VpcId:   aws.String("bar"),
-	}
-
-	_, expandErr := tfec2.ExpandIPPerms(securityGroups, errorCase)
-	if expandErr == nil {
-		t.Fatal("ExpandIPPerms should have errored!")
 	}
 }
 

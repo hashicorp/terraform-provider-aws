@@ -843,19 +843,12 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 		var perm ec2.IpPermission
 		m := mRaw.(map[string]interface{})
 
-		perm.FromPort = aws.Int64(int64(m["from_port"].(int)))
-		perm.ToPort = aws.Int64(int64(m["to_port"].(int)))
 		perm.IpProtocol = aws.String(m["protocol"].(string))
 
-		// When protocol is "-1", AWS won't store any ports for the
-		// rule, but also won't error if the user specifies ports other
-		// than '0'. Force the user to make a deliberate '0' port
-		// choice when specifying a "-1" protocol, and tell them about
-		// AWS's behavior in the error message.
-		if aws.StringValue(perm.IpProtocol) == "-1" && (aws.Int64Value(perm.FromPort) != 0 || aws.Int64Value(perm.ToPort) != 0) {
-			return nil, fmt.Errorf(
-				"from_port (%d) and to_port (%d) must both be 0 to use the 'ALL' \"-1\" protocol!",
-				*perm.FromPort, *perm.ToPort)
+		// InvalidParameterValue: When protocol is ALL, you cannot specify from-port.
+		if v := aws.StringValue(perm.IpProtocol); v != "-1" {
+			perm.FromPort = aws.Int64(int64(m["from_port"].(int)))
+			perm.ToPort = aws.Int64(int64(m["to_port"].(int)))
 		}
 
 		var groups []string
