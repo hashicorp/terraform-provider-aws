@@ -2,7 +2,12 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -13,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -70,6 +76,13 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 				Type:     types.StringType,
 				Required: true,
 			},
+			"security_group_id": {
+				Type:     types.StringType,
+				Optional: true,
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.RequiresReplace(),
+				},
+			},
 			"tags":     tftags.TagsAttribute(),
 			"tags_all": tftags.TagsAttributeComputed(),
 			"to_port": {
@@ -101,11 +114,43 @@ func (r *resourceSecurityGroupIngressRule) Create(ctx context.Context, request r
 		return
 	}
 
-	// conn := r.meta.EC2Conn
+	conn := r.meta.EC2Conn
 	defaultTagsConfig := r.meta.DefaultTagsConfig
 	ignoreTagsConfig := r.meta.IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
+	input := &ec2.AuthorizeSecurityGroupIngressInput{
+		GroupId:       aws.String(data.SecurityGroupID.Value),
+		IpPermissions: []*ec2.IpPermission{r.expandIPPermission(ctx, &data)},
+	}
+
+	output, err := conn.AuthorizeSecurityGroupIngressWithContext(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError("creating EC2 Security Group Ingress Rule", err.Error())
+
+		return
+	}
+
+	data.ID = types.String{Value: aws.StringValue(output.SecurityGroupRules[0].SecurityGroupRuleId)}
+
+	if len(tags) > 0 {
+		if err := UpdateTagsWithContext(ctx, conn, data.ID.Value, nil, tags); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("adding EC2 Security Group Ingress Rule (%s) tags", data.ID.Value), err.Error())
+
+			return
+		}
+	}
+
+	// Set values for unknowns.
+	arn := arn.ARN{
+		Partition: r.meta.Partition,
+		Service:   ec2.ServiceName,
+		Region:    r.meta.Region,
+		AccountID: r.meta.AccountID,
+		Resource:  fmt.Sprintf("security-group-rule/%s", data.ID.Value),
+	}.String()
+	data.ARN = types.String{Value: arn}
 	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -122,13 +167,38 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 		return
 	}
 
-	// conn := r.meta.EC2Conn
-	// defaultTagsConfig := r.meta.DefaultTagsConfig
-	// ignoreTagsConfig := r.meta.IgnoreTagsConfig
+	conn := r.meta.EC2Conn
+	defaultTagsConfig := r.meta.DefaultTagsConfig
+	ignoreTagsConfig := r.meta.IgnoreTagsConfig
 
-	// tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.RemoveDefaultConfig(defaultTagsConfig).Map())
-	// data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	output, err := FindSecurityGroupRuleByID(ctx, conn, data.ID.Value)
+
+	if tfresource.NotFound(err) {
+		tflog.Warn(ctx, "EC2 Security Group Ingress Rule not found, removing from state", map[string]interface{}{
+			"id": data.ID.Value,
+		})
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Security Group Ingress Rule (%s)", data.ID.Value), err.Error())
+
+		return
+	}
+
+	data.CIDRIPv4 = flex.ToFrameworkStringValue(ctx, output.CidrIpv4)
+	data.CIDRIPv6 = flex.ToFrameworkStringValue(ctx, output.CidrIpv6)
+	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
+	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
+	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
+	data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
+
+	// TODO null vs. empty
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.RemoveDefaultConfig(defaultTagsConfig).Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -172,11 +242,25 @@ func (r *resourceSecurityGroupIngressRule) Delete(ctx context.Context, request r
 		return
 	}
 
-	// conn := r.meta.EC2Conn
+	conn := r.meta.EC2Conn
 
-	tflog.Debug(ctx, "deleting SWF Domain", map[string]interface{}{
+	tflog.Debug(ctx, "deleting EC2 Security Group Ingress Rule", map[string]interface{}{
 		"id": data.ID.Value,
 	})
+	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
+		GroupId:              aws.String(data.SecurityGroupID.Value),
+		SecurityGroupRuleIds: aws.StringSlice([]string{data.ID.Value}),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupRuleIdNotFound) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Security Group Ingress Rule (%s)", data.ID.Value), err.Error())
+
+		return
+	}
 }
 
 // ImportState is called when the provider must import the state of a resource instance.
@@ -230,15 +314,54 @@ func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, reque
 	response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMap(ctx, allTags.Map()))...)
 }
 
+func (r *resourceSecurityGroupIngressRule) expandIPPermission(_ context.Context, data *resourceSecurityGroupIngressRuleData) *ec2.IpPermission {
+	apiObject := &ec2.IpPermission{}
+
+	if !data.CIDRIPv4.IsNull() {
+		apiObject.IpRanges = []*ec2.IpRange{{
+			CidrIp: aws.String(data.CIDRIPv4.Value),
+		}}
+
+		if !data.Description.IsNull() {
+			apiObject.IpRanges[0].Description = aws.String(data.Description.Value)
+		}
+	}
+
+	if !data.CIDRIPv6.IsNull() {
+		apiObject.Ipv6Ranges = []*ec2.Ipv6Range{{
+			CidrIpv6: aws.String(data.CIDRIPv6.Value),
+		}}
+
+		if !data.Description.IsNull() {
+			apiObject.IpRanges[0].Description = aws.String(data.Description.Value)
+		}
+	}
+
+	if !data.FromPort.IsNull() {
+		apiObject.FromPort = aws.Int64(data.FromPort.Value)
+	}
+
+	if !data.IPProtocol.IsNull() {
+		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
+	}
+
+	if !data.ToPort.IsNull() {
+		apiObject.ToPort = aws.Int64(data.ToPort.Value)
+	}
+
+	return apiObject
+}
+
 type resourceSecurityGroupIngressRuleData struct {
-	ARN         types.String `tfsdk:"arn"`
-	CIDRIPv4    types.String `tfsdk:"cidr_ipv4"`
-	CIDRIPv6    types.String `tfsdk:"cidr_ipv6"`
-	Description types.String `tfsdk:"description"`
-	FromPort    types.Int64  `tfsdk:"from_port"`
-	ID          types.String `tfsdk:"id"`
-	IPProtocol  types.String `tfsdk:"ip_protocol"`
-	Tags        types.Map    `tfsdk:"tags"`
-	TagsAll     types.Map    `tfsdk:"tags_all"`
-	ToPort      types.Int64  `tfsdk:"to_port"`
+	ARN             types.String `tfsdk:"arn"`
+	CIDRIPv4        types.String `tfsdk:"cidr_ipv4"`
+	CIDRIPv6        types.String `tfsdk:"cidr_ipv6"`
+	Description     types.String `tfsdk:"description"`
+	FromPort        types.Int64  `tfsdk:"from_port"`
+	ID              types.String `tfsdk:"id"`
+	IPProtocol      types.String `tfsdk:"ip_protocol"`
+	SecurityGroupID types.String `tfsdk:"security_group_id"`
+	Tags            types.Map    `tfsdk:"tags"`
+	TagsAll         types.Map    `tfsdk:"tags_all"`
+	ToPort          types.Int64  `tfsdk:"to_port"`
 }
