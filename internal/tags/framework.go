@@ -18,10 +18,9 @@ func TagsAttribute() tfsdk.Attribute {
 	}
 }
 
-func TagsAttributeComputed() tfsdk.Attribute {
+func TagsAttributeComputedOnly() tfsdk.Attribute {
 	return tfsdk.Attribute{
 		Type:     types.MapType{ElemType: types.StringType},
-		Optional: true,
 		Computed: true,
 	}
 }
