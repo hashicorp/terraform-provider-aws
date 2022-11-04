@@ -685,6 +685,98 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	}
 }
 
+func TestExpandIPPerms_AllProtocol(t *testing.T) {
+	hash := schema.HashString
+
+	expanded := []interface{}{
+		map[string]interface{}{
+			"protocol":    "all",
+			"from_port":   0,
+			"to_port":     0,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+		},
+	}
+	group := &ec2.SecurityGroup{
+		GroupId: aws.String("foo"),
+		VpcId:   aws.String("bar"),
+	}
+
+	perms, err := tfec2.ExpandIPPerms(group, expanded)
+	if err != nil {
+		t.Fatalf("error expanding perms: %v", err)
+	}
+
+	expected := []ec2.IpPermission{
+		{
+			IpProtocol: aws.String("-1"),
+			FromPort:   aws.Int64(0),
+			ToPort:     aws.Int64(0),
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					UserId:  aws.String("foo"),
+					GroupId: aws.String("sg-22222"),
+				},
+				{
+					GroupId: aws.String("sg-11111"),
+				},
+			},
+		},
+	}
+
+	exp := expected[0]
+	perm := perms[0]
+
+	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.Int64Value(perm.FromPort),
+			aws.Int64Value(exp.FromPort))
+	}
+
+	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.IpRanges[0].CidrIp),
+			aws.StringValue(exp.IpRanges[0].CidrIp))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].UserId) != aws.StringValue(perm.UserIdGroupPairs[0].UserId) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
+			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
+	}
+
+	// Now test the error case. This *should* error when either from_port
+	// or to_port is not zero, but protocol is "all".
+	errorCase := []interface{}{
+		map[string]interface{}{
+			"protocol":    "all",
+			"from_port":   0,
+			"to_port":     65535,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+		},
+	}
+	securityGroups := &ec2.SecurityGroup{
+		GroupId: aws.String("foo"),
+		VpcId:   aws.String("bar"),
+	}
+
+	_, expandErr := tfec2.ExpandIPPerms(securityGroups, errorCase)
+	if expandErr == nil {
+		t.Fatal("ExpandIPPerms should have errored!")
+	}
+}
+
 func TestExpandIPPerms_nonVPC(t *testing.T) {
 	hash := schema.HashString
 
