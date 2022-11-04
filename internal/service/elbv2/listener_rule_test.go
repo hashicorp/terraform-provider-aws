@@ -3195,9 +3195,9 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  certificate_body = %[2]q
+  certificate_body = "%[2]s"
   name             = var.rName
-  private_key      = %[3]q
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {
