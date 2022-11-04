@@ -2202,6 +2202,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
 		ServicePackages: []intf.ServicePackageData{
+			ec2.ServicePackageData,
 			globalaccelerator.ServicePackageData,
 			//medialive.ServicePackageData,
 			meta.ServicePackageData,
