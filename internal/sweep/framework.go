@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -73,7 +73,7 @@ func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithCon
 	schema, diags := resource.GetSchema(ctx)
 
 	if diags.HasError() {
-		return errs.NewDiagnosticsError(diags)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	// Simple Terraform State that contains just the resource ID.
@@ -86,7 +86,7 @@ func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithCon
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	if response.Diagnostics.HasError() {
-		return errs.NewDiagnosticsError(response.Diagnostics)
+		return fwdiag.DiagnosticsError(response.Diagnostics)
 	}
 
 	return nil
