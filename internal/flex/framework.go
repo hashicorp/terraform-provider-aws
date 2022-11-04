@@ -52,6 +52,8 @@ func ExpandFrameworkStringValueMap(ctx context.Context, set types.Map) map[strin
 	return m
 }
 
+// FlattenFrameworkStringList is the Plugin Framework variant of FlattenStringList.
+// In particular, a nil slice is converted to an empty (non-null) List.
 func FlattenFrameworkStringList(_ context.Context, vs []*string) types.List {
 	elems := make([]attr.Value, len(vs))
 
@@ -62,6 +64,8 @@ func FlattenFrameworkStringList(_ context.Context, vs []*string) types.List {
 	return types.List{ElemType: types.StringType, Elems: elems}
 }
 
+// FlattenFrameworkStringValueList is the Plugin Framework variant of FlattenStringValueList.
+// In particular, a nil slice is converted to an empty (non-null) List.
 func FlattenFrameworkStringValueList(_ context.Context, vs []string) types.List {
 	elems := make([]attr.Value, len(vs))
 
@@ -72,6 +76,8 @@ func FlattenFrameworkStringValueList(_ context.Context, vs []string) types.List 
 	return types.List{ElemType: types.StringType, Elems: elems}
 }
 
+// FlattenFrameworkStringValueSet is the Plugin Framework variant of FlattenStringValueSet.
+// In particular, a nil slice is converted to an empty (non-null) Set.
 func FlattenFrameworkStringValueSet(_ context.Context, vs []string) types.Set {
 	elems := make([]attr.Value, len(vs))
 
@@ -82,6 +88,8 @@ func FlattenFrameworkStringValueSet(_ context.Context, vs []string) types.Set {
 	return types.Set{ElemType: types.StringType, Elems: elems}
 }
 
+// FlattenFrameworkStringValueMap has no Plugin SDK equivalent as schema.ResourceData.Set can be passed string value maps directly.
+// In particular, a nil map is converted to an empty (non-null) Map.
 func FlattenFrameworkStringValueMap(_ context.Context, m map[string]string) types.Map {
 	elems := make(map[string]attr.Value, len(m))
 
