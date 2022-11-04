@@ -100,6 +100,16 @@ func FlattenFrameworkStringValueMap(_ context.Context, m map[string]string) type
 	return types.Map{ElemType: types.StringType, Elems: elems}
 }
 
+// ToFrameworkInt64Value converts an int64 pointer to a Framework Int64 value.
+// A nil int64 pointer is converted to a null Int64.
+func ToFrameworkInt64Value(_ context.Context, v *int64) types.Int64 {
+	if v == nil {
+		return types.Int64{Null: true}
+	}
+
+	return types.Int64{Value: *v}
+}
+
 // ToFrameworkStringValue converts a string pointer to a Framework String value.
 // A nil string pointer is converted to a null String.
 func ToFrameworkStringValue(_ context.Context, v *string) types.String {

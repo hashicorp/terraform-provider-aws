@@ -282,6 +282,40 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 	}
 }
 
+func TestToFrameworkInt64Value(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *int64
+		expected types.Int64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    aws.Int64(42),
+			expected: types.Int64{Value: 42},
+		},
+		"zero int64": {
+			input:    aws.Int64(0),
+			expected: types.Int64{Value: 0},
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.Int64{Null: true},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ToFrameworkInt64Value(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestToFrameworkStringValue(t *testing.T) {
 	t.Parallel()
 
