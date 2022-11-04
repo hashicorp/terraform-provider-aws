@@ -99,3 +99,13 @@ func FlattenFrameworkStringValueMap(_ context.Context, m map[string]string) type
 
 	return types.Map{ElemType: types.StringType, Elems: elems}
 }
+
+// ToFrameworkStringValue converts a string pointer to a Framework String value.
+// A nil string pointer is converted to a null String.
+func ToFrameworkStringValue(_ context.Context, v *string) types.String {
+	if v == nil {
+		return types.String{Null: true}
+	}
+
+	return types.String{Value: *v}
+}

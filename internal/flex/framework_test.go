@@ -281,3 +281,37 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 		})
 	}
 }
+
+func TestToFrameworkStringValue(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    aws.String("TEST"),
+			expected: types.String{Value: "TEST"},
+		},
+		"empty string": {
+			input:    aws.String(""),
+			expected: types.String{Value: ""},
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.String{Null: true},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ToFrameworkStringValue(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
