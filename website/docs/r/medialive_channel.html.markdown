@@ -97,9 +97,8 @@ The following arguments are required:
 * `channel_class` - (Required) Concise argument description.
 * `destinations` - (Required) Destinations for channel. See [Destinations](#destinations) for more details.
 * `encoder_settings` - (Required) Encoder settings. See [Encoder Settings](#encoder-settings) for more details.
-* `input_specification` - (Required) Specification of network and file inputs for the channel. 
+* `input_specification` - (Required) Specification of network and file inputs for the channel.
 * `name` - (Required) Name of the Channel.
-
 
 The following arguments are optional:
 
@@ -130,7 +129,7 @@ The following arguments are optional:
 
 ### Maintenance
 
-### Media Package Settings 
+### Media Package Settings
 
 * `channel_id` - (Required) ID of the channel in MediaPackage that is the destination for this output group.
 
@@ -163,8 +162,8 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - ID of the Channel.
 * `arn` - ARN of the Channel.
+* `channel_id` - ID of the Channel.
 
 ## Timeouts
 

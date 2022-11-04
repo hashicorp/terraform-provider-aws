@@ -64,6 +64,10 @@ func ResourceChannel() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.ChannelClass](),
 			},
+			"channel_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"destinations": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -773,6 +777,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
 	d.Set("channel_class", out.ChannelClass)
+	d.Set("channel_id", out.Id)
 	d.Set("log_level", out.LogLevel)
 	d.Set("role_arn", out.RoleArn)
 
