@@ -42,7 +42,7 @@ func (d *dataSourceDefaultTags) GetSchema(context.Context) (tfsdk.Schema, diag.D
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsAttributeComputed(),
+			"tags": tftags.TagsAttributeComputedOnly(),
 		},
 	}
 

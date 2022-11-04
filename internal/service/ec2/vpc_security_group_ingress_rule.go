@@ -84,7 +84,7 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 				},
 			},
 			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputed(),
+			"tags_all": tftags.TagsAttributeComputedOnly(),
 			"to_port": {
 				Type:     types.Int64Type,
 				Optional: true,
