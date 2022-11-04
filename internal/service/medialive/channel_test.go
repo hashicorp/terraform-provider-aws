@@ -73,6 +73,84 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 	})
 }
 
+func TestAccMediaLiveChannel_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var channel medialive.DescribeChannelOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := fmt.Sprintf("%s-updated", rName)
+	resourceName := "aws_medialive_channel.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			testAccChannelsPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_update(rName, "AVC", "HD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.codec", "AVC"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.input_resolution", "HD"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.maximum_bitrate", "MAX_20_MBPS"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_attachments.*", map[string]string{
+						"input_attachment_name": "example-input1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "destinations.*", map[string]string{
+						"id": "destination1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.timecode_config.0.source", "EMBEDDED"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.audio_descriptions.*", map[string]string{
+						"audio_selector_name": "test-audio-selector",
+						"name":                "test-audio-description",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
+						"name": "test-video-name",
+					}),
+				),
+			},
+			{
+				Config: testAccChannelConfig_update(rNameUpdated, "MPEG2", "UHD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.codec", "MPEG2"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.input_resolution", "UHD"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.maximum_bitrate", "MAX_20_MBPS"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_attachments.*", map[string]string{
+						"input_attachment_name": "example-input1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "destinations.*", map[string]string{
+						"id": "destination1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.timecode_config.0.source", "EMBEDDED"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.audio_descriptions.*", map[string]string{
+						"audio_selector_name": "test-audio-selector",
+						"name":                "test-audio-description",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
+						"name": "test-video-name",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -264,10 +342,8 @@ resource "aws_iam_role_policy" "test" {
 `, rName)
 }
 
-func testAccChannelConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		fmt.Sprintf(`
+func testAccChannelBaseS3Config(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test1" {
   bucket = "%[1]s-1"
 }
@@ -285,7 +361,11 @@ resource "aws_s3_bucket_acl" "test2" {
   bucket = aws_s3_bucket.test2.id
   acl    = "private"
 }
+`, rName)
+}
 
+func testAccChannelBaseMultiplexConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_medialive_input_security_group" "test" {
   whitelist_rules {
     cidr = "10.0.0.8/32"
@@ -306,6 +386,16 @@ resource "aws_medialive_input" "test" {
   }
 }
 
+
+`, rName)
+}
+
+func testAccChannelConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccChannelBaseConfig(rName),
+		testAccChannelBaseS3Config(rName),
+		testAccChannelBaseMultiplexConfig(rName),
+		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
   channel_class = "STANDARD"
@@ -381,48 +471,93 @@ resource "aws_medialive_channel" "test" {
 `, rName))
 }
 
+func testAccChannelConfig_update(rName, codec, inputResolution string) string {
+	return acctest.ConfigCompose(
+		testAccChannelBaseConfig(rName),
+		testAccChannelBaseS3Config(rName),
+		testAccChannelBaseMultiplexConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_channel" "test" {
+  name          = %[1]q
+  channel_class = "STANDARD"
+  role_arn      = aws_iam_role.test.arn
+
+  input_specification {
+    codec            = %[2]q
+    input_resolution = %[3]q
+    maximum_bitrate  = "MAX_20_MBPS"
+  }
+
+  input_attachments {
+    input_attachment_name = "example-input1"
+    input_id              = aws_medialive_input.test.id
+  }
+
+  destinations {
+    id = "destination1"
+
+    settings {
+      url = "s3://${aws_s3_bucket.test1.id}/test1"
+    }
+
+    settings {
+      url = "s3://${aws_s3_bucket.test2.id}/test2"
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+      source = "EMBEDDED"
+    }
+
+    audio_descriptions {
+      audio_selector_name = "test-audio-selector"
+      name                = "test-audio-description"
+    }
+
+    video_descriptions {
+      name = "test-video-name"
+    }
+
+    output_groups {
+      output_group_settings {
+        archive_group_settings {
+          destination {
+            destination_ref_id = "destination1"
+          }
+        }
+      }
+
+      outputs {
+        output_name             = "test-output-name"
+        video_description_name  = "test-video-name"
+        audio_description_names = ["test-audio-description"]
+        output_settings {
+          archive_output_settings {
+            name_modifier = "_1"
+            extension     = "m2ts"
+            container_settings {
+              m2ts_settings {
+                audio_buffer_model = "ATSC"
+                buffer_model       = "MULTIPLEX"
+                rate_mode          = "CBR"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, codec, inputResolution))
+}
+
 func testAccChannelConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
 		testAccChannelBaseConfig(rName),
+		testAccChannelBaseS3Config(rName),
+		testAccChannelBaseMultiplexConfig(rName),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test1" {
-  bucket = "%[1]s-1"
-}
-
-resource "aws_s3_bucket_acl" "test1" {
-  bucket = aws_s3_bucket.test1.id
-  acl    = "private"
-}
-
-resource "aws_s3_bucket" "test2" {
-  bucket = "%[1]s-2"
-}
-
-resource "aws_s3_bucket_acl" "test2" {
-  bucket = aws_s3_bucket.test2.id
-  acl    = "private"
-}
-
-resource "aws_medialive_input_security_group" "test" {
-  whitelist_rules {
-    cidr = "10.0.0.8/32"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_medialive_input" "test" {
-  name                  = %[1]q
-  input_security_groups = [aws_medialive_input_security_group.test.id]
-  type                  = "UDP_PUSH"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
   channel_class = "STANDARD"
@@ -505,45 +640,9 @@ resource "aws_medialive_channel" "test" {
 func testAccChannelConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
 		testAccChannelBaseConfig(rName),
+		testAccChannelBaseS3Config(rName),
+		testAccChannelBaseMultiplexConfig(rName),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test1" {
-  bucket = "%[1]s-1"
-}
-
-resource "aws_s3_bucket_acl" "test1" {
-  bucket = aws_s3_bucket.test1.id
-  acl    = "private"
-}
-
-resource "aws_s3_bucket" "test2" {
-  bucket = "%[1]s-2"
-}
-
-resource "aws_s3_bucket_acl" "test2" {
-  bucket = aws_s3_bucket.test2.id
-  acl    = "private"
-}
-
-resource "aws_medialive_input_security_group" "test" {
-  whitelist_rules {
-    cidr = "10.0.0.8/32"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_medialive_input" "test" {
-  name                  = %[1]q
-  input_security_groups = [aws_medialive_input_security_group.test.id]
-  type                  = "UDP_PUSH"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
   channel_class = "STANDARD"

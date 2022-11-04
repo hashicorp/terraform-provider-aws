@@ -175,7 +175,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaLive Channel can be imported using the `id`, e.g.,
+MediaLive Channel can be imported using the `channel_id`, e.g.,
 
 ```
 $ terraform import aws_medialive_channel.example 1234567
