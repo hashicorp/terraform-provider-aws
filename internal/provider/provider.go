@@ -1018,6 +1018,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_appmesh_virtual_service": appmesh.ResourceVirtualService(),
 
 			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
+			"aws_apprunner_vpc_ingress_connection":             apprunner.ResourceVPCIngressConnection(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
 			"aws_apprunner_observability_configuration":        apprunner.ResourceObservabilityConfiguration(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
@@ -1213,6 +1214,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_instance_storage_config":     connect.ResourceInstanceStorageConfig(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
+			"aws_connect_phone_number":                connect.ResourcePhoneNumber(),
 			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
@@ -1515,6 +1517,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
 
 			"aws_evidently_project": evidently.ResourceProject(),
+			"aws_evidently_segment": evidently.ResourceSegment(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
@@ -2096,6 +2099,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_ssm_activation":                ssm.ResourceActivation(),
 			"aws_ssm_association":               ssm.ResourceAssociation(),
+			"aws_ssm_default_patch_baseline":    ssm.ResourceDefaultPatchBaseline(),
 			"aws_ssm_document":                  ssm.ResourceDocument(),
 			"aws_ssm_maintenance_window":        ssm.ResourceMaintenanceWindow(),
 			"aws_ssm_maintenance_window_target": ssm.ResourceMaintenanceWindowTarget(),

@@ -176,7 +176,7 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 }
 
 func testAccCheckGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -213,7 +213,7 @@ func testAccCheckGroupMembershipExists(name string, groupMembership *identitysto
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroupMembership, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
 		ctx := context.Background()
 		resp, err := conn.DescribeGroupMembership(ctx, &identitystore.DescribeGroupMembershipInput{
 			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),

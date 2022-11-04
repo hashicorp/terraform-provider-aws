@@ -14398,6 +14398,12 @@ var awsPartition = partition{
 					Region: "me-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "me-central-1",
+					Variant: dualStackVariant,
+				}: endpoint{
+					Hostname: "lambda.me-central-1.api.aws",
+				},
+				endpointKey{
 					Region: "me-south-1",
 				}: endpoint{},
 				endpointKey{

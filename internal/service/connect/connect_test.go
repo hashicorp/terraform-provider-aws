@@ -59,6 +59,14 @@ func TestAccConnect_serial(t *testing.T) {
 			"disappears":       testAccLambdaFunctionAssociation_disappears,
 			"dataSource_basic": testAccLambdaFunctionAssociationDataSource_basic,
 		},
+		"PhoneNumber": {
+			"basic":       testAccPhoneNumber_basic,
+			"disappears":  testAccPhoneNumber_disappears,
+			"tags":        testAccPhoneNumber_tags,
+			"description": testAccPhoneNumber_description,
+			"prefix":      testAccPhoneNumber_prefix,
+			"targetARN":   testAccPhoneNumber_targetARN,
+		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,
 		},

@@ -130,7 +130,7 @@ func testAccCheckEnablerDestroy(s *terraform.State) error {
 		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, errors.New("not in state"))
 	}
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
 
 	st, err := tfinspector2.FindAccountStatuses(context.Background(), conn, id)
 	if err != nil {
@@ -148,7 +148,7 @@ func testAccCheckEnablerDestroy(s *terraform.State) error {
 
 func testAccCheckEnablerExists(t []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
 
 		id := tfinspector2.EnablerID([]string{acctest.Provider.Meta().(*conns.AWSClient).AccountID}, t)
 		st, err := tfinspector2.FindAccountStatuses(context.Background(), conn, id)

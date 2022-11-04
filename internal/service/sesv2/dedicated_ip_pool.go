@@ -70,7 +70,7 @@ const (
 )
 
 func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client
 
 	in := &sesv2.CreateDedicatedIpPoolInput{
 		PoolName: aws.String(d.Get("pool_name").(string)),
@@ -98,7 +98,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client
 
 	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -135,7 +135,7 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client
 
 	if d.HasChanges("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -149,7 +149,7 @@ func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPPool %s", d.Id())
 	_, err := conn.DeleteDedicatedIpPool(ctx, &sesv2.DeleteDedicatedIpPoolInput{
