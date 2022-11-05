@@ -16,7 +16,7 @@ description: |-
 
 ```terraform
 data "aws_organizations_accounts" "example" {
-  parent_id="ou-8dgp-84bcaox2"
+  parent_id = "ou-8dgp-84bcaox2"
 }
 ```
 
