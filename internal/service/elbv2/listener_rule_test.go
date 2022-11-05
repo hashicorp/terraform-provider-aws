@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"golang.org/x/exp/slices"
 )
 
 func TestLBListenerARNFromRuleARN(t *testing.T) {
@@ -1299,7 +1300,7 @@ func testAccCheckListenerRuleActionOrderDisappears(rule *elbv2.Rule, actionOrder
 
 		for i, action := range rule.Actions {
 			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
-				newActions = append(rule.Actions[:i], rule.Actions[i+1:]...)
+				newActions = slices.Delete(rule.Actions, i, i+1)
 				break
 			}
 		}
@@ -3194,9 +3195,9 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  certificate_body = %[2]q
+  certificate_body = "%[2]s"
   name             = var.rName
-  private_key      = %[3]q
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {

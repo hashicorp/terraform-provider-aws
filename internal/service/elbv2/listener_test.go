@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"golang.org/x/exp/slices"
 )
 
 func TestAccELBV2Listener_basic(t *testing.T) {
@@ -595,7 +596,7 @@ func testAccCheckListenerDefaultActionOrderDisappears(listener *elbv2.Listener, 
 
 		for i, action := range listener.DefaultActions {
 			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
-				newDefaultActions = append(listener.DefaultActions[:i], listener.DefaultActions[i+1:]...)
+				newDefaultActions = slices.Delete(listener.DefaultActions, i, i+1)
 				break
 			}
 		}
