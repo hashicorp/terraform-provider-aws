@@ -35,9 +35,10 @@ func TestAccRedshiftPartner_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"account_id", "cluster_identifier"},
 			},
 		},
 	})
