@@ -1889,6 +1889,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
 			"aws_redshift_hsm_configuration":             redshift.ResourceHSMConfiguration(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),
+			"aws_redshift_partner":                       redshift.ResourcePartner(),
 			"aws_redshift_scheduled_action":              redshift.ResourceScheduledAction(),
 			"aws_redshift_security_group":                redshift.ResourceSecurityGroup(),
 			"aws_redshift_snapshot_copy_grant":           redshift.ResourceSnapshotCopyGrant(),
