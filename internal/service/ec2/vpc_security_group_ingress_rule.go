@@ -69,8 +69,10 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 			},
 			"id": {
 				Type:     types.StringType,
-				Optional: true,
 				Computed: true,
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.UseStateForUnknown(),
+				},
 			},
 			"ip_protocol": {
 				Type:     types.StringType,
@@ -439,3 +441,4 @@ type resourceSecurityGroupIngressRuleData struct {
 // * Ensure at least one "target" is specified
 // * ForceNew if target type changes
 // * All protocol => No FromPort/ToPort
+// Add security_group_rule_id attribute; ID = SGID/SGRID
