@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var ErrMailFromRequired = errors.New("mail from domain is required if behavior on MX failure is REJECT_MESSAGE")
+
 func ResourceEmailIdentityMailFromAttributes() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityMailFromAttributesCreate,
@@ -67,8 +69,8 @@ func resourceEmailIdentityMailFromAttributesCreate(ctx context.Context, d *schem
 		in.BehaviorOnMxFailure = types.BehaviorOnMxFailure(v.(string))
 	}
 
-	if in.BehaviorOnMxFailure == types.BehaviorOnMxFailureRejectMessage && in.MailFromDomain == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityMailFromAttributes, d.Get("email_identity").(string), errors.New("mail from is required if behavior on mx failure is REJECT_MESSAGE"))
+	if in.BehaviorOnMxFailure == types.BehaviorOnMxFailureRejectMessage && (in.MailFromDomain == nil || aws.ToString(in.MailFromDomain) == "") {
+		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityMailFromAttributes, d.Get("email_identity").(string), ErrMailFromRequired)
 	}
 
 	out, err := conn.PutEmailIdentityMailFromAttributes(ctx, in)
@@ -125,6 +127,10 @@ func resourceEmailIdentityMailFromAttributesUpdate(ctx context.Context, d *schem
 	if d.HasChanges("behavior_on_mx_failure", "mail_from_domain") {
 		in.BehaviorOnMxFailure = types.BehaviorOnMxFailure((d.Get("behavior_on_mx_failure").(string)))
 		in.MailFromDomain = aws.String(d.Get("mail_from_domain").(string))
+
+		if in.BehaviorOnMxFailure == types.BehaviorOnMxFailureRejectMessage && (in.MailFromDomain == nil || aws.ToString(in.MailFromDomain) == "") {
+			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentityMailFromAttributes, d.Get("email_identity").(string), ErrMailFromRequired)
+		}
 
 		update = true
 	}
