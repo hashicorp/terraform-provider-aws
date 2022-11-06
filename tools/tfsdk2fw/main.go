@@ -214,7 +214,7 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 	} else {
 		resource.Schema["id"] = &schema.Schema{
 			Type:     schema.TypeString,
-			Optional: true,
+			Optional: e.IsDataSource,
 			Computed: true,
 		}
 	}
@@ -466,6 +466,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
+	if attributeName == "id" && isTopLevelAttribute && !e.IsDataSource {
+		planModifiers = append(planModifiers, "resource.UseStateForUnknown()")
 	}
 
 	if property.ForceNew {
