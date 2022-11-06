@@ -230,23 +230,17 @@ func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
-	if d.HasChanges(
-		"cognito_identity_providers",
-		"supported_login_providers",
-		"openid_connect_provider_arns",
-		"saml_provider_arns",
-	) {
+	if d.HasChangesExcept("tags_all", "tags") {
 		params := &cognitoidentity.IdentityPool{
 			IdentityPoolId:                 aws.String(d.Id()),
 			AllowUnauthenticatedIdentities: aws.Bool(d.Get("allow_unauthenticated_identities").(bool)),
 			AllowClassicFlow:               aws.Bool(d.Get("allow_classic_flow").(bool)),
 			IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
+			CognitoIdentityProviders:       expandIdentityProviders(d.Get("cognito_identity_providers").(*schema.Set)),
+			SupportedLoginProviders:        expandSupportedLoginProviders(d.Get("supported_login_providers").(map[string]interface{})),
+			OpenIdConnectProviderARNs:      flex.ExpandStringSet(d.Get("openid_connect_provider_arns").(*schema.Set)),
+			SamlProviderARNs:               flex.ExpandStringList(d.Get("saml_provider_arns").([]interface{})),
 		}
-
-		params.CognitoIdentityProviders = expandIdentityProviders(d.Get("cognito_identity_providers").(*schema.Set))
-		params.SupportedLoginProviders = expandSupportedLoginProviders(d.Get("supported_login_providers").(map[string]interface{}))
-		params.OpenIdConnectProviderARNs = flex.ExpandStringSet(d.Get("openid_connect_provider_arns").(*schema.Set))
-		params.SamlProviderARNs = flex.ExpandStringList(d.Get("saml_provider_arns").([]interface{}))
 
 		_, err := conn.UpdateIdentityPool(params)
 		if err != nil {
