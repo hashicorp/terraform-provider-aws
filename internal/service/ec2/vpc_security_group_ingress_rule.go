@@ -143,14 +143,7 @@ func (r *resourceSecurityGroupIngressRule) Create(ctx context.Context, request r
 	}
 
 	// Set values for unknowns.
-	arn := arn.ARN{
-		Partition: r.meta.Partition,
-		Service:   ec2.ServiceName,
-		Region:    r.meta.Region,
-		AccountID: r.meta.AccountID,
-		Resource:  fmt.Sprintf("security-group-rule/%s", data.ID.Value),
-	}.String()
-	data.ARN = types.String{Value: arn}
+	data.ARN = r.arn(ctx, data.ID.Value)
 	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -188,11 +181,13 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 		return
 	}
 
+	data.ARN = r.arn(ctx, data.ID.Value)
 	data.CIDRIPv4 = flex.ToFrameworkStringValue(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.ToFrameworkStringValue(ctx, output.CidrIpv6)
 	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
 	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
 	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
+	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
 	data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
 
 	// If planned tags are null and no tags are returned, propagate null.
@@ -345,6 +340,17 @@ func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, reque
 	response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMap(ctx, allTags.Map()))...)
 }
 
+func (r *resourceSecurityGroupIngressRule) arn(_ context.Context, id string) types.String {
+	arn := arn.ARN{
+		Partition: r.meta.Partition,
+		Service:   ec2.ServiceName,
+		Region:    r.meta.Region,
+		AccountID: r.meta.AccountID,
+		Resource:  fmt.Sprintf("security-group-rule/%s", id),
+	}.String()
+	return types.String{Value: arn}
+}
+
 func (r *resourceSecurityGroupIngressRule) expandIPPermission(_ context.Context, data *resourceSecurityGroupIngressRuleData) *ec2.IpPermission {
 	apiObject := &ec2.IpPermission{}
 
@@ -432,3 +438,4 @@ type resourceSecurityGroupIngressRuleData struct {
 // * ReferencedGroupId
 // * Ensure at least one "target" is specified
 // * ForceNew if target type changes
+// * All protocol => No FromPort/ToPort
