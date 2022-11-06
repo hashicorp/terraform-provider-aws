@@ -2129,6 +2129,20 @@ func FindSecurityGroupRuleByID(ctx context.Context, conn *ec2.EC2, id string) (*
 	return output, nil
 }
 
+func FindSecurityGroupIngressRuleByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.SecurityGroupRule, error) {
+	output, err := FindSecurityGroupRuleByID(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if aws.BoolValue(output.IsEgress) {
+		return nil, &resource.NotFoundError{}
+	}
+
+	return output, nil
+}
+
 func FindSpotFleetInstances(conn *ec2.EC2, input *ec2.DescribeSpotFleetInstancesInput) ([]*ec2.ActiveInstance, error) {
 	var output []*ec2.ActiveInstance
 

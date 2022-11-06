@@ -171,7 +171,7 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	defaultTagsConfig := r.meta.DefaultTagsConfig
 	ignoreTagsConfig := r.meta.IgnoreTagsConfig
 
-	output, err := FindSecurityGroupRuleByID(ctx, conn, data.ID.Value)
+	output, err := FindSecurityGroupIngressRuleByID(ctx, conn, data.ID.Value)
 
 	if tfresource.NotFound(err) {
 		tflog.Warn(ctx, "EC2 Security Group Ingress Rule not found, removing from state", map[string]interface{}{
