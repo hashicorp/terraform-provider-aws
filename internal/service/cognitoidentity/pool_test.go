@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 )
 
 func TestAccCognitoIdentityPool_basic(t *testing.T) {
@@ -390,6 +391,29 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIdentityPool_disappears(t *testing.T) {
+	var v1 cognitoidentity.IdentityPool
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_cognito_identity_pool.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPoolExists(resourceName, &v1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidentity.ResourcePool(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
