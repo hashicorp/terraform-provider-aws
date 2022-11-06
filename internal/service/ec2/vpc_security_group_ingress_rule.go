@@ -195,9 +195,13 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
 	data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
 
-	// TODO null vs. empty
+	// If planned tags are null and no tags are returned, propagate null.
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.RemoveDefaultConfig(defaultTagsConfig).Map())
+	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 && data.Tags.IsNull() {
+		data.Tags = types.Map{ElemType: types.StringType, Null: true}
+	} else {
+		data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
+	}
 	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
