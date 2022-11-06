@@ -224,9 +224,36 @@ func (r *resourceSecurityGroupIngressRule) Update(ctx context.Context, request r
 		return
 	}
 
-	// conn := r.meta.EC2Conn
+	conn := r.meta.EC2Conn
+
+	if !new.CIDRIPv4.Equal(old.CIDRIPv4) ||
+		!new.CIDRIPv6.Equal(old.CIDRIPv6) ||
+		!new.Description.Equal(old.Description) ||
+		!new.FromPort.Equal(old.FromPort) ||
+		!new.IPProtocol.Equal(old.IPProtocol) ||
+		!new.ToPort.Equal(old.ToPort) {
+		input := &ec2.ModifySecurityGroupRulesInput{
+			SecurityGroupRules: []*ec2.SecurityGroupRuleUpdate{{
+				SecurityGroupRule:   r.expandSecurityGroupRuleRequest(ctx, &new),
+				SecurityGroupRuleId: aws.String(new.ID.Value),
+			}},
+		}
+
+		_, err := conn.ModifySecurityGroupRulesWithContext(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating EC2 Security Group Ingress Rule (%s)", new.ID.Value), err.Error())
+
+			return
+		}
+	}
 
 	if !new.TagsAll.Equal(old.TagsAll) {
+		if err := UpdateTagsWithContext(ctx, conn, new.ID.Value, old.TagsAll, new.TagsAll); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating EC2 Security Group Ingress Rule (%s) tags", new.ID.Value), err.Error())
+
+			return
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -356,6 +383,36 @@ func (r *resourceSecurityGroupIngressRule) expandIPPermission(_ context.Context,
 	return apiObject
 }
 
+func (r *resourceSecurityGroupIngressRule) expandSecurityGroupRuleRequest(_ context.Context, data *resourceSecurityGroupIngressRuleData) *ec2.SecurityGroupRuleRequest {
+	apiObject := &ec2.SecurityGroupRuleRequest{}
+
+	if !data.CIDRIPv4.IsNull() {
+		apiObject.CidrIpv4 = aws.String(data.CIDRIPv4.Value)
+	}
+
+	if !data.CIDRIPv6.IsNull() {
+		apiObject.CidrIpv6 = aws.String(data.CIDRIPv6.Value)
+	}
+
+	if !data.Description.IsNull() {
+		apiObject.Description = aws.String(data.Description.Value)
+	}
+
+	if !data.FromPort.IsNull() {
+		apiObject.FromPort = aws.Int64(data.FromPort.Value)
+	}
+
+	if !data.IPProtocol.IsNull() {
+		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
+	}
+
+	if !data.ToPort.IsNull() {
+		apiObject.ToPort = aws.Int64(data.ToPort.Value)
+	}
+
+	return apiObject
+}
+
 type resourceSecurityGroupIngressRuleData struct {
 	ARN             types.String `tfsdk:"arn"`
 	CIDRIPv4        types.String `tfsdk:"cidr_ipv4"`
@@ -369,3 +426,9 @@ type resourceSecurityGroupIngressRuleData struct {
 	TagsAll         types.Map    `tfsdk:"tags_all"`
 	ToPort          types.Int64  `tfsdk:"to_port"`
 }
+
+// TODO
+// * PrefixListId
+// * ReferencedGroupId
+// * Ensure at least one "target" is specified
+// * ForceNew if target type changes
