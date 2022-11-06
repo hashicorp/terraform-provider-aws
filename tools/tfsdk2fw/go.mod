@@ -38,6 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.11 // indirect
