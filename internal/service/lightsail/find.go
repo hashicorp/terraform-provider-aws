@@ -387,7 +387,7 @@ func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.L
 	return out.LoadBalancer.ConfigurationOptions, nil
 }
 
-func FindLoadBalancerHttpsRedirectionPolicyById(ctx context.Context, conn *lightsail.Lightsail, id string) (*bool, error) {
+func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *lightsail.Lightsail, id string) (*bool, error) {
 	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(id)}
 	out, err := conn.GetLoadBalancerWithContext(ctx, in)
 
