@@ -1729,6 +1729,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lightsail_lb_attachment":                        lightsail.ResourceLoadBalancerAttachment(),
 			"aws_lightsail_lb_certificate":                       lightsail.ResourceLoadBalancerCertificate(),
 			"aws_lightsail_lb_certificate_attachment":            lightsail.ResourceLoadBalancerCertificateAttachment(),
+			"aws_lightsail_lb_https_redirection_policy":          lightsail.ResourceLoadBalancerHttpsRedirectionPolicy(),
 			"aws_lightsail_lb_stickiness_policy":                 lightsail.ResourceLoadBalancerStickinessPolicy(),
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
