@@ -111,7 +111,7 @@ func resourceVpnAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager VPN Attachment: %s", input)
+	log.Printf("[DEBUG] Creating Network Manager VPN Attachment (%s, %s)", coreNetworkID, vpnARN)
 	output, err := conn.CreateSiteToSiteVpnAttachmentWithContext(ctx, input)
 
 	if err != nil {
@@ -135,7 +135,7 @@ func resourceVpnAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	vpnAttachment, err := FindVpnAttachmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Network Manager VPN Attachment %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Network Manager VPN Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -166,7 +166,7 @@ func resourceVpnAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("Setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
