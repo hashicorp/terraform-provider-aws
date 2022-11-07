@@ -239,6 +239,7 @@ func (r *resourceSecurityGroupIngressRule) Update(ctx context.Context, request r
 		!new.IPProtocol.Equal(old.IPProtocol) ||
 		!new.ToPort.Equal(old.ToPort) {
 		input := &ec2.ModifySecurityGroupRulesInput{
+			GroupId: aws.String(new.SecurityGroupID.Value),
 			SecurityGroupRules: []*ec2.SecurityGroupRuleUpdate{{
 				SecurityGroupRule:   r.expandSecurityGroupRuleRequest(ctx, &new),
 				SecurityGroupRuleId: aws.String(new.ID.Value),

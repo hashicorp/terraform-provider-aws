@@ -118,6 +118,40 @@ func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
+	var v ec2.SecurityGroupRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_description(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_description(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSecurityGroupIngressRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -234,4 +268,19 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  cidr_ipv4   = "10.0.0.0/8"
+  from_port   = 80
+  ip_protocol = "tcp"
+  to_port     = 8080
+
+  description = %[1]q
+}
+`, description))
 }
