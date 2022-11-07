@@ -468,7 +468,6 @@ type resourceSecurityGroupIngressRuleData struct {
 }
 
 // TODO
-// * PrefixListId
 // * ReferencedGroupId
 // * Ensure at least one "target" is specified
 // * ForceNew if target type changes

@@ -2,9 +2,11 @@ package ec2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -120,7 +122,7 @@ func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
-	var v ec2.SecurityGroupRule
+	var v1, v2 ec2.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 
@@ -133,7 +135,7 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupIngressRuleConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -145,7 +147,8 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupIngressRuleConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
+					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -154,7 +157,7 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
-	var v ec2.SecurityGroupRule
+	var v1, v2 ec2.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_ingress_rule.test"
 	vpcEndpoint1ResourceName := "aws_vpc_endpoint.test1"
@@ -169,7 +172,7 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupIngressRuleConfig_prefixListID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
@@ -190,7 +193,8 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupIngressRuleConfig_prefixListIDUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
+					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
@@ -205,6 +209,16 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckSecurityGroupIngressRuleNotRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.SecurityGroupRuleId) != aws.StringValue(j.SecurityGroupRuleId) {
+			return errors.New("EC2 Security Group Rule was recreated")
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckSecurityGroupIngressRuleDestroy(s *terraform.State) error {
