@@ -1985,6 +1985,42 @@ func TestAccEC2SecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 	})
 }
 
+func TestAccEC2SecurityGroup_vpcAllEgress(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityGroupConfig_vpcAllEgress(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"protocol":      "-1",
+						"from_port":     "0",
+						"to_port":       "0",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
 func testAccSecurityGroupCheckVPCIDExists(group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if aws.StringValue(group.VpcId) == "" {
@@ -3941,6 +3977,34 @@ resource "aws_security_group" "test" {
   }
 }
 `
+
+func testAccSecurityGroupConfig_vpcAllEgress(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  egress {
+    protocol    = "all"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
 
 const testAccSecurityGroupPrefixListEgressConfig = `
 data "aws_region" "current" {}
