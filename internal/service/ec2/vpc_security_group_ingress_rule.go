@@ -84,6 +84,13 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 					resource.RequiresReplace(),
 				},
 			},
+			"security_group_rule_id": {
+				Type:     types.StringType,
+				Computed: true,
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.UseStateForUnknown(),
+				},
+			},
 			"tags":     tftags.TagsAttribute(),
 			"tags_all": tftags.TagsAttributeComputedOnly(),
 			"to_port": {
@@ -133,7 +140,8 @@ func (r *resourceSecurityGroupIngressRule) Create(ctx context.Context, request r
 		return
 	}
 
-	data.ID = types.String{Value: aws.StringValue(output.SecurityGroupRules[0].SecurityGroupRuleId)}
+	securityGroupRuleID := aws.StringValue(output.SecurityGroupRules[0].SecurityGroupRuleId)
+	data.ID = types.String{Value: securityGroupRuleID}
 
 	if len(tags) > 0 {
 		if err := UpdateTagsWithContext(ctx, conn, data.ID.Value, nil, tags); err != nil {
@@ -144,7 +152,8 @@ func (r *resourceSecurityGroupIngressRule) Create(ctx context.Context, request r
 	}
 
 	// Set values for unknowns.
-	data.ARN = r.arn(ctx, data.ID.Value)
+	data.ARN = r.arn(ctx, securityGroupRuleID)
+	data.SecurityGroupRuleID = types.String{Value: securityGroupRuleID}
 	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -189,6 +198,7 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
 	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
 	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
+	data.SecurityGroupRuleID = flex.ToFrameworkStringValue(ctx, output.SecurityGroupRuleId)
 	data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
 
 	// If planned tags are null and no tags are returned, propagate null.
@@ -421,17 +431,18 @@ func (r *resourceSecurityGroupIngressRule) expandSecurityGroupRuleRequest(_ cont
 }
 
 type resourceSecurityGroupIngressRuleData struct {
-	ARN             types.String `tfsdk:"arn"`
-	CIDRIPv4        types.String `tfsdk:"cidr_ipv4"`
-	CIDRIPv6        types.String `tfsdk:"cidr_ipv6"`
-	Description     types.String `tfsdk:"description"`
-	FromPort        types.Int64  `tfsdk:"from_port"`
-	ID              types.String `tfsdk:"id"`
-	IPProtocol      types.String `tfsdk:"ip_protocol"`
-	SecurityGroupID types.String `tfsdk:"security_group_id"`
-	Tags            types.Map    `tfsdk:"tags"`
-	TagsAll         types.Map    `tfsdk:"tags_all"`
-	ToPort          types.Int64  `tfsdk:"to_port"`
+	ARN                 types.String `tfsdk:"arn"`
+	CIDRIPv4            types.String `tfsdk:"cidr_ipv4"`
+	CIDRIPv6            types.String `tfsdk:"cidr_ipv6"`
+	Description         types.String `tfsdk:"description"`
+	FromPort            types.Int64  `tfsdk:"from_port"`
+	ID                  types.String `tfsdk:"id"`
+	IPProtocol          types.String `tfsdk:"ip_protocol"`
+	SecurityGroupID     types.String `tfsdk:"security_group_id"`
+	SecurityGroupRuleID types.String `tfsdk:"security_group_rule_id"`
+	Tags                types.Map    `tfsdk:"tags"`
+	TagsAll             types.Map    `tfsdk:"tags_all"`
+	ToPort              types.Int64  `tfsdk:"to_port"`
 }
 
 // TODO
@@ -440,4 +451,3 @@ type resourceSecurityGroupIngressRuleData struct {
 // * Ensure at least one "target" is specified
 // * ForceNew if target type changes
 // * All protocol => No FromPort/ToPort
-// Add security_group_rule_id attribute; ID = SGID/SGRID
