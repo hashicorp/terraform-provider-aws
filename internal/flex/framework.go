@@ -119,3 +119,14 @@ func ToFrameworkStringValue(_ context.Context, v *string) types.String {
 
 	return types.String{Value: *v}
 }
+
+// ToFrameworkStringValueWithTransform converts a string pointer to a Framework String value.
+// A nil string pointer is converted to a null String.
+// A non-nil string pointer has its value transformed by `f`.
+func ToFrameworkStringValueWithTransform(_ context.Context, v *string, f func(string) string) types.String {
+	if v == nil {
+		return types.String{Null: true}
+	}
+
+	return types.String{Value: f(*v)}
+}
