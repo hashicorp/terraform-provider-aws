@@ -255,7 +255,7 @@ func FindVpnAttachmentByID(ctx context.Context, conn *networkmanager.NetworkMana
 	return output.SiteToSiteVpnAttachment, nil
 }
 
-func StatusVpnAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func statusVpnAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVpnAttachmentByID(ctx, conn, id)
 
@@ -276,7 +276,7 @@ func waitVpnAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkM
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Timeout: timeout,
-		Refresh: StatusVpnAttachmentState(ctx, conn, id),
+		Refresh: statusVpnAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -293,7 +293,7 @@ func waitVpnAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkM
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        StatusVpnAttachmentState(ctx, conn, id),
+		Refresh:        statusVpnAttachmentState(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
@@ -311,7 +311,7 @@ func waitVpnAttachmentAvailable(ctx context.Context, conn *networkmanager.Networ
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable},
 		Timeout: timeout,
-		Refresh: StatusVpnAttachmentState(ctx, conn, id),
+		Refresh: statusVpnAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
