@@ -23,7 +23,7 @@ resource "aws_sesv2_email_identity_mail_from_attributes" "example" {
   email_identity = aws_sesv2_email_identity.example.email_identity
 
   behavior_on_mx_failure = "REJECT_MESSAGE"
-  mail_from_domain       = "test.${aws_sesv2_email_identity.test.email_identity}"
+  mail_from_domain       = "subdomain.${aws_sesv2_email_identity.example.email_identity}"
 }
 ```
 
