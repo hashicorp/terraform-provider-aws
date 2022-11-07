@@ -386,3 +386,25 @@ func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.L
 
 	return out.LoadBalancer.ConfigurationOptions, nil
 }
+
+func FindLoadBalancerHttpsRedirectionPolicyById(ctx context.Context, conn *lightsail.Lightsail, id string) (*bool, error) {
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(id)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoadBalancer.HttpsRedirectionEnabled == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.LoadBalancer.HttpsRedirectionEnabled, nil
+}
