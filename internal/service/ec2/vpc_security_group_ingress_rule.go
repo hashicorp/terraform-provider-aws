@@ -77,6 +77,9 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 			"ip_protocol": {
 				Type:     types.StringType,
 				Required: true,
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					NormalizeIPProtocol(),
+				},
 			},
 			"prefix_list_id": {
 				Type:     types.StringType,
@@ -205,7 +208,7 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	data.CIDRIPv6 = flex.ToFrameworkStringValue(ctx, output.CidrIpv6)
 	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
 	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
-	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
+	data.IPProtocol = flex.ToFrameworkStringValueWithTransform(ctx, output.IpProtocol, ProtocolForValue)
 	data.PrefixListID = flex.ToFrameworkStringValue(ctx, output.PrefixListId)
 	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
@@ -404,7 +407,7 @@ func (r *resourceSecurityGroupIngressRule) expandIPPermission(_ context.Context,
 	}
 
 	if !data.IPProtocol.IsNull() {
-		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
+		apiObject.IpProtocol = aws.String(ProtocolForValue(data.IPProtocol.Value))
 	}
 
 	if !data.PrefixListID.IsNull() {
@@ -512,3 +515,52 @@ type resourceSecurityGroupIngressRuleData struct {
 // * Ensure at least one "target" is specified
 // * ForceNew if target type changes
 // * All protocol => No FromPort/ToPort
+
+type normalizeIPProtocol struct{}
+
+func NormalizeIPProtocol() tfsdk.AttributePlanModifier {
+	return normalizeIPProtocol{}
+}
+
+func (m normalizeIPProtocol) Description(context.Context) string {
+	return "Resolve differences between IP protocol names and numbers"
+}
+
+func (m normalizeIPProtocol) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m normalizeIPProtocol) Modify(ctx context.Context, request tfsdk.ModifyAttributePlanRequest, response *tfsdk.ModifyAttributePlanResponse) {
+	if request.AttributeState == nil {
+		response.AttributePlan = request.AttributePlan
+
+		return
+	}
+
+	// If the current value is semantically equivalent to the planned value
+	// then return the current value, else return the planned value.
+
+	var planned types.String
+
+	response.Diagnostics = append(response.Diagnostics, tfsdk.ValueAs(ctx, request.AttributePlan, &planned)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var current types.String
+
+	response.Diagnostics = append(response.Diagnostics, tfsdk.ValueAs(ctx, request.AttributeState, &current)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if ProtocolForValue(current.Value) == ProtocolForValue(planned.Value) {
+		response.AttributePlan = request.AttributeState
+
+		return
+	}
+
+	response.AttributePlan = request.AttributePlan
+}

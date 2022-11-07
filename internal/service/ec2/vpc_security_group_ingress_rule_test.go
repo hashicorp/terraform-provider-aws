@@ -9,6 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,6 +22,62 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func TestNormalizeIPProtocol(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		plannedValue  attr.Value
+		currentValue  attr.Value
+		expectedValue attr.Value
+		expectError   bool
+	}
+	tests := map[string]testCase{
+		"planned name, current number (equivalent)": {
+			plannedValue:  types.String{Value: "icmp"},
+			currentValue:  types.String{Value: "1"},
+			expectedValue: types.String{Value: "1"},
+		},
+		"planned number, current name (equivalent)": {
+			plannedValue:  types.String{Value: "1"},
+			currentValue:  types.String{Value: "icmp"},
+			expectedValue: types.String{Value: "icmp"},
+		},
+		"planned name, current number (not equivalent)": {
+			plannedValue:  types.String{Value: "icmp"},
+			currentValue:  types.String{Value: "2"},
+			expectedValue: types.String{Value: "icmp"},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			request := tfsdk.ModifyAttributePlanRequest{
+				AttributePath:  path.Root("test"),
+				AttributePlan:  test.plannedValue,
+				AttributeState: test.currentValue,
+			}
+			response := tfsdk.ModifyAttributePlanResponse{
+				AttributePlan: request.AttributePlan,
+			}
+			tfec2.NormalizeIPProtocol().Modify(ctx, request, &response)
+
+			if !response.Diagnostics.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if response.Diagnostics.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			}
+
+			if diff := cmp.Diff(response.AttributePlan, test.expectedValue); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
 
 func TestAccVPCSecurityGroupIngressRule_basic(t *testing.T) {
 	var v ec2.SecurityGroupRule
@@ -117,6 +178,61 @@ func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
+	var v1, v2 ec2.SecurityGroupRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v1),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "0.0.0.0/0"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "53"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "udp"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "53"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4Updated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
+					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "10.0.0.0/16"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
 				),
 			},
 		},
@@ -438,6 +554,32 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 53
+  ip_protocol = "udp"
+  to_port     = 53
+}
+`)
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4Updated(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  cidr_ipv4   = "10.0.0.0/16"
+  from_port   = -1
+  ip_protocol = "1"
+  to_port     = -1
+}
+`)
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_description(rName, description string) string {
