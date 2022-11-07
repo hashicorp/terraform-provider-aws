@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
+// Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
 func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
 	for _, v := range dtos {
@@ -34,28 +34,32 @@ type GroupIdentifier struct {
 // group rules and returns EC2 API compatible objects. This function will error
 // if it finds invalid permissions input, namely a protocol of "-1" with either
 // to_port or from_port set to a non-zero value.
-func ExpandIPPerms(
-	group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
-	vpc := group.VpcId != nil && *group.VpcId != ""
+// Takes the result of flatmap.Expand for an array of ingress/egress security
+// group rules and returns EC2 API compatible objects. This function will error
+// if it finds invalid permissions input, namely a protocol of "-1" with either
+// to_port or from_port set to a non-zero value.
+func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
+	vpc := aws.StringValue(group.VpcId) != ""
 
 	perms := make([]*ec2.IpPermission, len(configured))
 	for i, mRaw := range configured {
 		var perm ec2.IpPermission
 		m := mRaw.(map[string]interface{})
 
-		perm.FromPort = aws.Int64(int64(m["from_port"].(int)))
-		perm.ToPort = aws.Int64(int64(m["to_port"].(int)))
-		perm.IpProtocol = aws.String(m["protocol"].(string))
+		perm.IpProtocol = aws.String(ProtocolForValue(m["protocol"].(string)))
 
-		// When protocol is "-1", AWS won't store any ports for the
-		// rule, but also won't error if the user specifies ports other
-		// than '0'. Force the user to make a deliberate '0' port
-		// choice when specifying a "-1" protocol, and tell them about
-		// AWS's behavior in the error message.
-		if *perm.IpProtocol == "-1" && (*perm.FromPort != 0 || *perm.ToPort != 0) {
+		if protocol, fromPort, toPort := aws.StringValue(perm.IpProtocol), m["from_port"].(int), m["to_port"].(int); protocol != "-1" {
+			perm.FromPort = aws.Int64(int64(fromPort))
+			perm.ToPort = aws.Int64(int64(toPort))
+		} else if fromPort != 0 || toPort != 0 {
+			// When protocol is "-1", AWS won't store any ports for the
+			// rule, but also won't error if the user specifies ports other
+			// than '0'. Force the user to make a deliberate '0' port
+			// choice when specifying a "-1" protocol, and tell them about
+			// AWS's behavior in the error message.
 			return nil, fmt.Errorf(
 				"from_port (%d) and to_port (%d) must both be 0 to use the 'ALL' \"-1\" protocol!",
-				*perm.FromPort, *perm.ToPort)
+				fromPort, toPort)
 		}
 
 		var groups []string
