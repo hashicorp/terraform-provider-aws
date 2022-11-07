@@ -36,6 +36,7 @@ func TestAccVPCSecurityGroupIngressRule_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -146,6 +147,60 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
+	var v ec2.SecurityGroupRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+	vpcEndpoint1ResourceName := "aws_vpc_endpoint.test1"
+	vpcEndpoint2ResourceName := "aws_vpc_endpoint.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_prefixListID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", vpcEndpoint1ResourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_prefixListIDUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", vpcEndpoint2ResourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
 		},
@@ -283,4 +338,54 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   description = %[1]q
 }
 `, description))
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_prefixListIDBase(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test1" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test2" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_prefixListID(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_prefixListIDBase(rName), `
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  prefix_list_id = aws_vpc_endpoint.test1.prefix_list_id
+  from_port      = 80
+  ip_protocol    = "tcp"
+  to_port        = 8080
+}
+`)
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_prefixListIDUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_prefixListIDBase(rName), `
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  prefix_list_id = aws_vpc_endpoint.test2.prefix_list_id
+  from_port      = 80
+  ip_protocol    = "tcp"
+  to_port        = 8080
+}
+`)
 }

@@ -77,6 +77,10 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 				Type:     types.StringType,
 				Required: true,
 			},
+			"prefix_list_id": {
+				Type:     types.StringType,
+				Optional: true,
+			},
 			"security_group_id": {
 				Type:     types.StringType,
 				Optional: true,
@@ -197,6 +201,7 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
 	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
 	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
+	data.PrefixListID = flex.ToFrameworkStringValue(ctx, output.PrefixListId)
 	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.ToFrameworkStringValue(ctx, output.SecurityGroupRuleId)
 	data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
@@ -237,6 +242,7 @@ func (r *resourceSecurityGroupIngressRule) Update(ctx context.Context, request r
 		!new.Description.Equal(old.Description) ||
 		!new.FromPort.Equal(old.FromPort) ||
 		!new.IPProtocol.Equal(old.IPProtocol) ||
+		!new.PrefixListID.Equal(old.PrefixListID) ||
 		!new.ToPort.Equal(old.ToPort) {
 		input := &ec2.ModifySecurityGroupRulesInput{
 			GroupId: aws.String(new.SecurityGroupID.Value),
@@ -394,6 +400,16 @@ func (r *resourceSecurityGroupIngressRule) expandIPPermission(_ context.Context,
 		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
 	}
 
+	if !data.PrefixListID.IsNull() {
+		apiObject.PrefixListIds = []*ec2.PrefixListId{{
+			PrefixListId: aws.String(data.PrefixListID.Value),
+		}}
+
+		if !data.Description.IsNull() {
+			apiObject.PrefixListIds[0].Description = aws.String(data.Description.Value)
+		}
+	}
+
 	if !data.ToPort.IsNull() {
 		apiObject.ToPort = aws.Int64(data.ToPort.Value)
 	}
@@ -424,6 +440,10 @@ func (r *resourceSecurityGroupIngressRule) expandSecurityGroupRuleRequest(_ cont
 		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
 	}
 
+	if !data.PrefixListID.IsNull() {
+		apiObject.PrefixListId = aws.String(data.PrefixListID.Value)
+	}
+
 	if !data.ToPort.IsNull() {
 		apiObject.ToPort = aws.Int64(data.ToPort.Value)
 	}
@@ -439,6 +459,7 @@ type resourceSecurityGroupIngressRuleData struct {
 	FromPort            types.Int64  `tfsdk:"from_port"`
 	ID                  types.String `tfsdk:"id"`
 	IPProtocol          types.String `tfsdk:"ip_protocol"`
+	PrefixListID        types.String `tfsdk:"prefix_list_id"`
 	SecurityGroupID     types.String `tfsdk:"security_group_id"`
 	SecurityGroupRuleID types.String `tfsdk:"security_group_rule_id"`
 	Tags                types.Map    `tfsdk:"tags"`
