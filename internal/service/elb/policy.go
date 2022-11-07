@@ -102,13 +102,12 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 
-	if tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
-		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
+		log.Printf("[WARN] Load Balancer (%s) not found, removing from state", loadBalancerName)
 		d.SetId("")
 		return nil
 	}
-
-	if tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -130,7 +129,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("policy_type_name", policyTypeName)
 	d.Set("load_balancer_name", loadBalancerName)
 	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policyAttributes)); err != nil {
-		return fmt.Errorf("error setting policy_attribute: %w", err)
+		return fmt.Errorf("setting policy_attribute: %w", err)
 	}
 
 	return nil

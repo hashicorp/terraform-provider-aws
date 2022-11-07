@@ -160,12 +160,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										ValidateFunc: verify.ValidRegionName,
 									},
 									"asn": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ValidateFunc: validation.Any(
-											validation.IntBetween(64512, 65534),
-											validation.IntBetween(4200000000, 4294967294),
-										),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.Valid4ByteASN,
 									},
 									"inside_cidr_blocks": {
 										Type:     schema.TypeList,
@@ -311,7 +308,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 }
 
 func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
-
 	mergedDoc := &CoreNetworkPolicyDoc{
 		Version: d.Get("version").(string),
 	}
@@ -409,7 +405,6 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		}
 
 		sgmtActions[i] = sgmtAction
-
 	}
 	return sgmtActions, nil
 }
@@ -454,7 +449,6 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 
 	// adjust
 	return aPolicies, nil
-
 }
 
 func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*CoreNetworkAttachmentPolicyCondition, error) {
@@ -611,7 +605,6 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 	locMap := make(map[string]struct{})
 
 	for i, edgeLocationsRaw := range tfList {
-
 		cfgEdgeLocation, ok := edgeLocationsRaw.(map[string]interface{})
 		edgeLocation := &CoreNetworkEdgeLocation{}
 
@@ -629,8 +622,14 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 			locMap[edgeLocation.Location] = struct{}{}
 		}
 
-		if v, ok := cfgEdgeLocation["asn"]; ok {
-			edgeLocation.Asn = v.(int)
+		if v, ok := cfgEdgeLocation["asn"].(string); ok && v != "" {
+			v, err := strconv.ParseInt(v, 10, 64)
+
+			if err != nil {
+				return nil, err
+			}
+
+			edgeLocation.Asn = v
 		}
 
 		if cidrs := cfgEdgeLocation["inside_cidr_blocks"].([]interface{}); len(cidrs) > 0 {

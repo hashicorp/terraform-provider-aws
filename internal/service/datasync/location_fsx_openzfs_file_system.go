@@ -156,7 +156,7 @@ func resourceLocationFSxOpenZFSFileSystemRead(d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindFsxOpenZfsLocationByARN(conn, d.Id())
+	output, err := FindFSxOpenZFSLocationByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Fsx OpenZfs (%s) not found, removing from state", d.Id())

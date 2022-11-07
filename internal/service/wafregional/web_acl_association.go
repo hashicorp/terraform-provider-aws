@@ -89,7 +89,7 @@ func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) err
 
 	output, err := conn.GetWebACLForResource(input)
 
-	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
 		d.SetId("")
 		return nil
@@ -99,7 +99,7 @@ func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error getting WAF Regional Web ACL for resource (%s): %s", resourceArn, err)
 	}
 
-	if output == nil || output.WebACLSummary == nil {
+	if !d.IsNewResource() && (output == nil || output.WebACLSummary == nil) {
 		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
 		d.SetId("")
 		return nil

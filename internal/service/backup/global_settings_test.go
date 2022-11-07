@@ -21,12 +21,12 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupGlobalSettingsConfig("true"),
+				Config: testAccGlobalSettingsConfig_basic("true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
@@ -39,7 +39,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupGlobalSettingsConfig("false"),
+				Config: testAccGlobalSettingsConfig_basic("false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
@@ -47,7 +47,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBackupGlobalSettingsConfig("true"),
+				Config: testAccGlobalSettingsConfig_basic("true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(&settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
@@ -60,7 +60,6 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 
 func testAccCheckGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 		resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
 		if err != nil {
@@ -73,7 +72,7 @@ func testAccCheckGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOut
 	}
 }
 
-func testAccBackupGlobalSettingsConfig(setting string) string {
+func testAccGlobalSettingsConfig_basic(setting string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_global_settings" "test" {
   global_settings = {

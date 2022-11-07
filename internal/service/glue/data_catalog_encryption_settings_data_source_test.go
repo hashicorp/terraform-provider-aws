@@ -9,18 +9,18 @@ import (
 )
 
 func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
-	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests")
+	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests due to potential KMS key corruption")
 
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
 	dataSourceName := "data.aws_glue_data_catalog_encryption_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogEncryptionSettingsDataSourceConfig(),
+				Config: testAccDataCatalogEncryptionSettingsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "catalog_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_catalog_encryption_settings", resourceName, "data_catalog_encryption_settings"),
@@ -30,7 +30,7 @@ func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataCatalogEncryptionSettingsDataSourceConfig() string {
+func testAccDataCatalogEncryptionSettingsDataSourceConfig_basic() string { //nolint:unused // This function is used in a skipped acceptance test
 	return `
 resource "aws_glue_data_catalog_encryption_settings" "test" {
   data_catalog_encryption_settings {

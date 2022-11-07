@@ -21,10 +21,10 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
@@ -51,10 +51,10 @@ func TestAccAppRunnerConnection_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
@@ -73,10 +73,10 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),

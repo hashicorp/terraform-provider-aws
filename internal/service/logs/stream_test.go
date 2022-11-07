@@ -20,13 +20,13 @@ func TestAccLogsStream_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &ls),
 				),
@@ -47,13 +47,13 @@ func TestAccLogsStream_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &ls),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceStream(), resourceName),
@@ -72,13 +72,13 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(resourceName, &ls),
 					testAccCheckGroupExists(logGroupResourceName, &lg),
@@ -129,13 +129,12 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Stream (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch Log Stream (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {
 			return fmt.Errorf("Bad: LogStream still exists: %q", rs.Primary.ID)
 		}
-
 	}
 
 	return nil
@@ -179,7 +178,7 @@ func TestValidateStreamName(t *testing.T) {
 	}
 }
 
-func testAccStreamConfig(rName string) string {
+func testAccStreamConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q

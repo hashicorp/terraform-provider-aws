@@ -76,9 +76,9 @@ func TestAvailabilityZonesSort(t *testing.T) {
 
 func TestAccEC2AvailabilityZonesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAvailabilityZonesDataSourceConfig_basic,
@@ -94,12 +94,12 @@ func TestAccEC2AvailabilityZonesDataSource_allAvailabilityZones(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesAllAvailabilityZonesConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_all(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesMeta(dataSourceName),
 				),
@@ -112,12 +112,12 @@ func TestAccEC2AvailabilityZonesDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesFilterConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesMeta(dataSourceName),
 				),
@@ -131,12 +131,12 @@ func TestAccEC2AvailabilityZonesDataSource_excludeNames(t *testing.T) {
 	excludeDataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesExcludeNamesConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_excludeNames(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
@@ -150,12 +150,12 @@ func TestAccEC2AvailabilityZonesDataSource_excludeZoneIDs(t *testing.T) {
 	excludeDataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesExcludeZoneIDsConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_excludeZoneIDs(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
@@ -166,9 +166,9 @@ func TestAccEC2AvailabilityZonesDataSource_excludeZoneIDs(t *testing.T) {
 
 func TestAccEC2AvailabilityZonesDataSource_stateFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAvailabilityZonesDataSourceConfig_state,
@@ -306,7 +306,7 @@ const testAccAvailabilityZonesDataSourceConfig_basic = `
 data "aws_availability_zones" "availability_zones" {}
 `
 
-func testAccCheckAvailabilityZonesAllAvailabilityZonesConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_all() string {
 	return `
 data "aws_availability_zones" "test" {
   all_availability_zones = true
@@ -314,7 +314,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAvailabilityZonesFilterConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_filter() string {
 	return `
 data "aws_availability_zones" "test" {
   filter {
@@ -325,7 +325,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAvailabilityZonesExcludeNamesConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_excludeNames() string {
 	return `
 data "aws_availability_zones" "all" {}
 
@@ -335,7 +335,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAvailabilityZonesExcludeZoneIDsConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_excludeZoneIDs() string {
 	return `
 data "aws_availability_zones" "all" {}
 

@@ -44,7 +44,7 @@ The following arguments are required:
 
 * `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 * `endpoint_type` - (Required) Type of endpoint. Valid values are `source`, `target`.
-* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `azuredb`, `db2`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`.
+* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `azuredb`, `db2`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
 * `kms_key_arn` - (Required when `engine_name` is `mongodb`, optional otherwise) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 
 The following arguments are optional:
@@ -58,13 +58,14 @@ The following arguments are optional:
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
 * `password` - (Optional) Password to be used to login to the endpoint database.
 * `port` - (Optional) Port used by the endpoint database.
+* `redshift_settings` - (Optional) Configuration block for Redshift settings. See below.
 * `s3_settings` - (Optional) Configuration block for S3 settings. See below.
 * `secrets_manager_access_role_arn` - (Optional) ARN of the IAM role that specifies AWS DMS as the trusted entity and has the required permissions to access the value in SecretsManagerSecret.
-* `secrets_manager_arn` - (Optional) Full ARN, partial ARN, or friendly name of the SecretsManagerSecret that contains the endpoint connection details. Supported only for `engine_name` as `oracle` and `postgres`.
+* `secrets_manager_arn` - (Optional) Full ARN, partial ARN, or friendly name of the SecretsManagerSecret that contains the endpoint connection details. Supported only for `engine_name` as `aurora`, `aurora-postgresql`, `mariadb`, `mongodb`, `mysql`, `oracle`, `postgres`, `redshift` or `sqlserver`.
 * `server_name` - (Optional) Host name of the server.
 * `service_access_role` - (Optional) ARN used by the service access IAM role for dynamodb endpoints.
 * `ssl_mode` - (Optional, Default: none) SSL mode to use for the connection. Valid values are `none`, `require`, `verify-ca`, `verify-full`
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) User name to be used to login to the endpoint database.
 
 ### elasticsearch_settings
@@ -124,6 +125,28 @@ The following arguments are optional:
 * `extract_doc_id` - (Optional) Document ID. Use this setting when `nesting_level` is set to `none`. Default is `false`.
 * `nesting_level` - (Optional) Specifies either document or table mode. Default is `none`. Valid values are `one` (table mode) and `none` (document mode).
 
+### redis_settings
+
+-> Additional information can be found in the [Using Redis as a target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redis.html).
+
+* `auth_password` - (Optional) The password provided with the auth-role and auth-token options of the AuthType setting for a Redis target endpoint.
+* `auth_type` - (Required) The type of authentication to perform when connecting to a Redis target. Options include `none`, `auth-token`, and `auth-role`. The `auth-token` option requires an `auth_password` value to be provided. The `auth-role` option requires `auth_user_name` and `auth_password` values to be provided.
+* `auth_user_name` - (Optional) The username provided with the `auth-role` option of the AuthType setting for a Redis target endpoint.
+* `server_name` - (Required) Fully qualified domain name of the endpoint.
+* `port` - (Required) Transmission Control Protocol (TCP) port for the endpoint.
+* `ssl_ca_certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the certificate authority (CA) that DMS uses to connect to your Redis target endpoint.
+* `ssl_security_protocol`- (Optional) The plaintext option doesn't provide Transport Layer Security (TLS) encryption for traffic between endpoint and database. Options include `plaintext`, `ssl-encryption`. The default is `ssl-encryption`.
+
+### redshift_settings
+
+-> Additional information can be found in the [Using Amazon Redshift as a Target for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html).
+
+* `bucket_folder` - (Optional) Custom S3 Bucket Object prefix for intermediate storage.
+* `bucket_name` - (Optional) Custom S3 Bucket name for intermediate storage.
+* `encryption_mode` - (Optional) The server-side encryption mode that you want to encrypt your intermediate .csv object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
+* `server_side_encryption_kms_key_id` - (Optional) If you set encryptionMode to `SSE_KMS`, set this parameter to the Amazon Resource Name (ARN) for the AWS KMS key.
+* `service_access_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to read from or write to the S3 Bucket for intermediate storage.
+
 ### s3_settings
 
 -> Additional information can be found in the [Using Amazon S3 as a Source for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.S3.html) and [Using Amazon S3 as a Target for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html).
@@ -164,13 +187,16 @@ The following arguments are optional:
 * `service_access_role_arn` - (Optional) ARN of the IAM Role with permissions to read from or write to the S3 Bucket.
 * `timestamp_column_name` - (Optional) Column to add with timestamp information to the endpoint data for an Amazon S3 target.
 * `use_csv_no_sup_value` - (Optional) Whether to use `csv_no_sup_value` for columns not included in the supplemental log.
+* `use_task_start_time_for_full_load_timestamp` - (Optional) When set to true, uses the task start time as the timestamp column value instead of the time data is written to target.
+  For full load, when set to true, each row of the timestamp column contains the task start time. For CDC loads, each row of the timestamp column contains the transaction commit time.
+  When set to false, the full load timestamp in the timestamp column increments with the time data arrives at the target. Default is `false`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `endpoint_arn` - ARN for the endpoint.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

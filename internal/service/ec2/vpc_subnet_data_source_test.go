@@ -25,13 +25,13 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 	ds6ResourceName := "data.aws_subnet.by_az_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_basic(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", snResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", snResourceName, "owner_id"),
@@ -142,15 +142,15 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6Filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIPv6DataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6(rName, rInt),
 			},
 			{
-				Config: testAccSubnetIPv6WithDataSourceFilterDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6Filter(rName, rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block"),
@@ -165,15 +165,15 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetIPv6DataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6(rName, rInt),
 			},
 			{
-				Config: testAccSubnetIPv6WithDataSourceIPv6CIDRBlockDataSourceConfig(rName, rInt),
+				Config: testAccVPCSubnetDataSourceConfig_ipv6IPv6CIDRBlock(rName, rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 				),
@@ -182,7 +182,7 @@ func TestAccVPCSubnetDataSource_ipv6ByIPv6CIDRBlock(t *testing.T) {
 	})
 }
 
-func testAccSubnetDataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetDataSourceConfig_basic(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -246,7 +246,7 @@ data "aws_subnet" "by_az_id" {
 `, rName, rInt)
 }
 
-func testAccSubnetIPv6DataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetDataSourceConfig_ipv6(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -279,7 +279,7 @@ resource "aws_subnet" "test" {
 `, rName, rInt)
 }
 
-func testAccSubnetIPv6WithDataSourceFilterDataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetDataSourceConfig_ipv6Filter(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -319,7 +319,7 @@ data "aws_subnet" "by_ipv6_cidr" {
 `, rName, rInt)
 }
 
-func testAccSubnetIPv6WithDataSourceIPv6CIDRBlockDataSourceConfig(rName string, rInt int) string {
+func testAccVPCSubnetDataSourceConfig_ipv6IPv6CIDRBlock(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

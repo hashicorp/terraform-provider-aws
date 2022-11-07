@@ -19,10 +19,10 @@ func testAccStandardsSubscription_basic(t *testing.T) {
 	resourceName := "aws_securityhub_standards_subscription.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStandardsSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsSubscriptionConfig_basic,
@@ -44,10 +44,10 @@ func testAccStandardsSubscription_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_standards_subscription.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStandardsSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsSubscriptionConfig_basic,

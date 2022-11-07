@@ -88,7 +88,7 @@ func resourceTestGridProjectCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		input.VpcConfig = expandTestGridProjectVpcConfig(v.([]interface{}))
+		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating DeviceFarm Test Grid Project: %s", name)
@@ -115,7 +115,7 @@ func resourceTestGridProjectRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindTestGridProjectByArn(conn, d.Id())
+	project, err := FindTestGridProjectByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Test Grid Project (%s) not found, removing from state", d.Id())
@@ -131,7 +131,7 @@ func resourceTestGridProjectRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("name", project.Name)
 	d.Set("arn", arn)
 	d.Set("description", project.Description)
-	if err := d.Set("vpc_config", flattenTestGridProjectVpcConfig(project.VpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenTestGridProjectVPCConfig(project.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
@@ -208,7 +208,7 @@ func resourceTestGridProjectDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func expandTestGridProjectVpcConfig(l []interface{}) *devicefarm.TestGridVpcConfig {
+func expandTestGridProjectVPCConfig(l []interface{}) *devicefarm.TestGridVpcConfig {
 	if len(l) == 0 {
 		return nil
 	}
@@ -224,7 +224,7 @@ func expandTestGridProjectVpcConfig(l []interface{}) *devicefarm.TestGridVpcConf
 	return config
 }
 
-func flattenTestGridProjectVpcConfig(conf *devicefarm.TestGridVpcConfig) []interface{} {
+func flattenTestGridProjectVPCConfig(conf *devicefarm.TestGridVpcConfig) []interface{} {
 	if conf == nil {
 		return []interface{}{}
 	}

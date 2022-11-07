@@ -120,7 +120,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] SageMaker App create config: %#v", *input)
 	output, err := conn.CreateApp(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker App: %w", err)
+		return fmt.Errorf("creating SageMaker App: %w", err)
 	}
 
 	appArn := aws.StringValue(output.AppArn)
@@ -132,7 +132,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(appArn)
 
 	if _, err := WaitAppInService(conn, domainID, userProfileName, appType, appName); err != nil {
-		return fmt.Errorf("error waiting for SageMaker App (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker App (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceAppRead(d, meta)
@@ -155,7 +155,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker App (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker App (%s): %w", d.Id(), err)
 	}
 
 	if aws.StringValue(app.Status) == sagemaker.AppStatusDeleted {
@@ -172,24 +172,24 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_profile_name", app.UserProfileName)
 
 	if err := d.Set("resource_spec", flattenDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
-		return fmt.Errorf("error setting resource_spec for SageMaker App (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting resource_spec for SageMaker App (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker App (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker App (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -202,7 +202,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker App (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker App (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -225,20 +225,19 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteApp(input); err != nil {
-
 		if tfawserr.ErrMessageContains(err, "ValidationException", "has already been deleted") ||
 			tfawserr.ErrMessageContains(err, "ValidationException", "previously failed and was automatically deleted") {
 			return nil
 		}
 
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("error deleting SageMaker App (%s): %w", d.Id(), err)
+			return fmt.Errorf("deleting SageMaker App (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitAppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("error waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
 		}
 	}
 

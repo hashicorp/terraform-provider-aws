@@ -17,16 +17,16 @@ func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret_rotation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretRotationDataSourceConfig_NonExistent,
+				Config:      testAccSecretRotationDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
 			},
 			{
-				Config: testAccSecretRotationDataSourceConfig_Default(rName, 7),
+				Config: testAccSecretRotationDataSourceConfig_default(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_enabled", resourceName, "rotation_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_lambda_arn", resourceName, "rotation_lambda_arn"),
@@ -37,13 +37,13 @@ func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccSecretRotationDataSourceConfig_NonExistent = `
+const testAccSecretRotationDataSourceConfig_nonExistent = `
 data "aws_secretsmanager_secret_rotation" "test" {
   secret_id = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccSecretRotationDataSourceConfig_Default(rName string, automaticallyAfterDays int) string {
+func testAccSecretRotationDataSourceConfig_default(rName string, automaticallyAfterDays int) string {
 	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test" {
@@ -51,7 +51,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test" {

@@ -24,13 +24,13 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleConfig(rName),
+				Config: testAccVPCNetworkACLRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resource1Name),
 					testAccCheckNetworkACLRuleExists(resource2Name),
@@ -91,13 +91,13 @@ func TestAccVPCNetworkACLRule_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleConfig(rName),
+				Config: testAccVPCNetworkACLRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACLRule(), resourceName),
@@ -113,13 +113,13 @@ func TestAccVPCNetworkACLRule_Disappears_networkACL(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleConfig(rName),
+				Config: testAccVPCNetworkACLRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), "aws_network_acl.test"),
@@ -135,13 +135,13 @@ func TestAccVPCNetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleIngressEgressSameNumberMissingConfig(rName),
+				Config: testAccVPCNetworkACLRuleConfig_ingressEgressSameNumberMissing(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACLRule(), resourceName),
@@ -157,13 +157,13 @@ func TestAccVPCNetworkACLRule_ipv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleIPv6Config(rName),
+				Config: testAccVPCNetworkACLRuleConfig_ipv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
@@ -191,13 +191,13 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleIPv6ICMPConfig(rName),
+				Config: testAccVPCNetworkACLRuleConfig_ipv6ICMP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
@@ -228,13 +228,13 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleConfig_ipv6VPCNotAssignGeneratedIPv6CIDRBlockUpdate(rName),
+				Config: testAccVPCNetworkACLRuleConfig_ipv6NotAssignGeneratedIPv6CIDRBlockUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &v),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
@@ -242,7 +242,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 				),
 			},
 			{
-				Config: testAccNetworkACLRuleConfig_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(rName),
+				Config: testAccVPCNetworkACLRuleConfig_ipv6AssignGeneratedIPv6CIDRBlockUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &v),
 					testAccCheckNetworkACLRuleExists(resourceName),
@@ -265,13 +265,13 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleAllProtocolConfig(rName),
+				Config: testAccVPCNetworkACLRuleConfig_allProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
@@ -285,7 +285,7 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccNetworkACLRuleAllProtocolNoRealUpdateConfig(rName),
+				Config:   testAccVPCNetworkACLRuleConfig_allProtocolNoRealUpdate(rName),
 				PlanOnly: true,
 			},
 		},
@@ -297,13 +297,13 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLRuleTCPProtocolConfig(rName),
+				Config: testAccVPCNetworkACLRuleConfig_tcpProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
@@ -317,7 +317,7 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccNetworkACLRuleTCPProtocolNoRealUpdateConfig(rName),
+				Config:   testAccVPCNetworkACLRuleConfig_tcpProtocolNoRealUpdate(rName),
 				PlanOnly: true,
 			},
 		},
@@ -390,15 +390,11 @@ func testAccCheckNetworkACLRuleExists(n string) resource.TestCheckFunc {
 
 		_, err = tfec2.FindNetworkACLEntryByThreePartKey(conn, naclID, egress, ruleNumber)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccNetworkACLRuleConfig(rName string) string {
+func testAccVPCNetworkACLRuleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -449,7 +445,7 @@ resource "aws_network_acl_rule" "test3" {
 `, rName)
 }
 
-func testAccNetworkACLRuleAllProtocolNoRealUpdateConfig(rName string) string {
+func testAccVPCNetworkACLRuleConfig_allProtocolNoRealUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -480,7 +476,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName)
 }
 
-func testAccNetworkACLRuleTCPProtocolNoRealUpdateConfig(rName string) string {
+func testAccVPCNetworkACLRuleConfig_tcpProtocolNoRealUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -511,7 +507,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName)
 }
 
-func testAccNetworkACLRuleAllProtocolConfig(rName string) string {
+func testAccVPCNetworkACLRuleConfig_allProtocol(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -542,7 +538,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName)
 }
 
-func testAccNetworkACLRuleTCPProtocolConfig(rName string) string {
+func testAccVPCNetworkACLRuleConfig_tcpProtocol(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -573,7 +569,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName)
 }
 
-func testAccNetworkACLRuleIPv6Config(rName string) string {
+func testAccVPCNetworkACLRuleConfig_ipv6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -604,7 +600,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName)
 }
 
-func testAccNetworkACLRuleIngressEgressSameNumberMissingConfig(rName string) string {
+func testAccVPCNetworkACLRuleConfig_ingressEgressSameNumberMissing(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -646,7 +642,7 @@ resource "aws_network_acl_rule" "test2" {
 `, rName)
 }
 
-func testAccNetworkACLRuleIPv6ICMPConfig(rName string) string {
+func testAccVPCNetworkACLRuleConfig_ipv6ICMP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -676,7 +672,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName, rName)
 }
 
-func testAccNetworkACLRuleConfig_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(rName string) string {
+func testAccVPCNetworkACLRuleConfig_ipv6AssignGeneratedIPv6CIDRBlockUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
@@ -707,7 +703,7 @@ resource "aws_network_acl_rule" "test" {
 `, rName)
 }
 
-func testAccNetworkACLRuleConfig_ipv6VPCNotAssignGeneratedIPv6CIDRBlockUpdate(rName string) string {
+func testAccVPCNetworkACLRuleConfig_ipv6NotAssignGeneratedIPv6CIDRBlockUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = false

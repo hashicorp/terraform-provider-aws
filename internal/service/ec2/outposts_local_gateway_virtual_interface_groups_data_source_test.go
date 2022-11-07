@@ -14,12 +14,12 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupsDataSource_basic(t *tes
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayVirtualInterfaceGroupsDataSourceConfig(),
+				Config: testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", "2"),
@@ -33,12 +33,12 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupsDataSource_filter(t *te
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayVirtualInterfaceGroupsFilterDataSourceConfig(),
+				Config: testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", "2"),
@@ -53,12 +53,12 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupsDataSource_tags(t *test
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayVirtualInterfaceGroupsTagsDataSourceConfig(rName),
+				Config: testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", "2"),
@@ -68,13 +68,13 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupsDataSource_tags(t *test
 	})
 }
 
-func testAccLocalGatewayVirtualInterfaceGroupsDataSourceConfig() string {
+func testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_basic() string {
 	return `
 data "aws_ec2_local_gateway_virtual_interface_groups" "test" {}
 `
 }
 
-func testAccLocalGatewayVirtualInterfaceGroupsFilterDataSourceConfig() string {
+func testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_filter() string {
 	return `
 data "aws_ec2_local_gateways" "test" {}
 
@@ -87,7 +87,7 @@ data "aws_ec2_local_gateway_virtual_interface_groups" "test" {
 `
 }
 
-func testAccLocalGatewayVirtualInterfaceGroupsTagsDataSourceConfig(rName string) string {
+func testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "test" {}
 

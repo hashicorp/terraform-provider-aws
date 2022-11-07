@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectSecurityProfileDataSource_securityProfileID(t *testing.T) {
+func testAccSecurityProfileDataSource_securityProfileID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
 	datasourceName := "data.aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityProfileDataSourceConfig_SecurityProfileID(rName, rName2),
+				Config: testAccSecurityProfileDataSourceConfig_id(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -38,19 +38,19 @@ func TestAccConnectSecurityProfileDataSource_securityProfileID(t *testing.T) {
 	})
 }
 
-func TestAccConnectSecurityProfileDataSource_name(t *testing.T) {
+func testAccSecurityProfileDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
 	datasourceName := "data.aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityProfileDataSourceConfig_Name(rName, rName2),
+				Config: testAccSecurityProfileDataSourceConfig_name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -92,7 +92,7 @@ resource "aws_connect_security_profile" "test" {
 `, rName, rName2)
 }
 
-func testAccSecurityProfileDataSourceConfig_SecurityProfileID(rName, rName2 string) string {
+func testAccSecurityProfileDataSourceConfig_id(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccSecurityProfileBaseDataSourceConfig(rName, rName2),
 		`
@@ -103,7 +103,7 @@ data "aws_connect_security_profile" "test" {
 `)
 }
 
-func testAccSecurityProfileDataSourceConfig_Name(rName, rName2 string) string {
+func testAccSecurityProfileDataSourceConfig_name(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccSecurityProfileBaseDataSourceConfig(rName, rName2),
 		`

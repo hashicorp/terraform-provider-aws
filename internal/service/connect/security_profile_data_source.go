@@ -73,7 +73,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 		input.SecurityProfileId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		securityProfileSummary, err := dataSourceGetConnectSecurityProfileSummaryByName(ctx, conn, instanceID, name)
+		securityProfileSummary, err := dataSourceGetSecurityProfileSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Summary by name (%s): %w", name, err))
@@ -125,7 +125,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func dataSourceGetConnectSecurityProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.SecurityProfileSummary, error) {
+func dataSourceGetSecurityProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.SecurityProfileSummary, error) {
 	var result *connect.SecurityProfileSummary
 
 	input := &connect.ListSecurityProfilesInput{

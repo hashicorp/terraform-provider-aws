@@ -21,7 +21,6 @@ func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
-
 			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
 				options.UserPoolId = aws.String(v.(string))
 			}
@@ -79,6 +78,9 @@ func expandEBSOptions(m map[string]interface{}) *opensearchservice.EBSOptions {
 		if ebsEnabled.(bool) {
 			if v, ok := m["iops"]; ok && v.(int) > 0 {
 				options.Iops = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["throughput"]; ok && v.(int) > 0 {
+				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
@@ -164,6 +166,9 @@ func flattenEBSOptions(o *opensearchservice.EBSOptions) []map[string]interface{}
 	if aws.BoolValue(o.EBSEnabled) {
 		if o.Iops != nil {
 			m["iops"] = aws.Int64Value(o.Iops)
+		}
+		if o.Throughput != nil {
+			m["throughput"] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
 			m["volume_size"] = aws.Int64Value(o.VolumeSize)

@@ -22,13 +22,13 @@ func TestAccVPCNetworkACL_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLConfig(rName),
+				Config: testAccVPCNetworkACLConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-acl/acl-.+`)),
@@ -55,13 +55,13 @@ func TestAccVPCNetworkACL_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLConfig(rName),
+				Config: testAccVPCNetworkACLConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), resourceName),
@@ -78,13 +78,13 @@ func TestAccVPCNetworkACL_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLTags1Config(rName, "key1", "value1"),
+				Config: testAccVPCNetworkACLConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -97,7 +97,7 @@ func TestAccVPCNetworkACL_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCNetworkACLConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -106,7 +106,7 @@ func TestAccVPCNetworkACL_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNetworkACLTags1Config(rName, "key2", "value2"),
+				Config: testAccVPCNetworkACLConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -123,13 +123,13 @@ func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLEgressModeBlocksConfig(rName),
+				Config: testAccVPCNetworkACLConfig_egressModeBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
@@ -141,7 +141,7 @@ func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLEgressModeNoBlocksConfig(rName),
+				Config: testAccVPCNetworkACLConfig_egressModeNoBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
@@ -153,7 +153,7 @@ func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLEgressModeZeroedConfig(rName),
+				Config: testAccVPCNetworkACLConfig_egressModeZeroed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
@@ -174,13 +174,13 @@ func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLIngressModeBlocksConfig(rName),
+				Config: testAccVPCNetworkACLConfig_ingressModeBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
@@ -192,7 +192,7 @@ func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLIngressModeNoBlocksConfig(rName),
+				Config: testAccVPCNetworkACLConfig_ingressModeNoBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
@@ -204,7 +204,7 @@ func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLIngressModeZeroedConfig(rName),
+				Config: testAccVPCNetworkACLConfig_ingressModeZeroed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -225,13 +225,13 @@ func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLEgressNIngressConfig(rName),
+				Config: testAccVPCNetworkACLConfig_egressNIngress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -267,13 +267,13 @@ func TestAccVPCNetworkACL_OnlyIngressRules_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLIngressConfig(rName),
+				Config: testAccVPCNetworkACLConfig_ingress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -301,13 +301,13 @@ func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLIngressConfig(resourceName),
+				Config: testAccVPCNetworkACLConfig_ingress(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
@@ -331,7 +331,7 @@ func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLIngressChangeConfig(rName),
+				Config: testAccVPCNetworkACLConfig_ingressChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
@@ -355,13 +355,13 @@ func TestAccVPCNetworkACL_caseSensitivityNoChanges(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLCaseSensitiveConfig(rName),
+				Config: testAccVPCNetworkACLConfig_caseSensitive(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 				),
@@ -381,13 +381,13 @@ func TestAccVPCNetworkACL_onlyEgressRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLEgressConfig(rName),
+				Config: testAccVPCNetworkACLConfig_egress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 				),
@@ -407,13 +407,13 @@ func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLSubnetConfig(rName),
+				Config: testAccVPCNetworkACLConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -426,7 +426,7 @@ func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLSubnetChangeConfig(rName),
+				Config: testAccVPCNetworkACLConfig_subnetChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -435,7 +435,6 @@ func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCNetworkACL_subnets(t *testing.T) {
@@ -444,13 +443,13 @@ func TestAccVPCNetworkACL_subnets(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLSubnet_SubnetIDs(rName),
+				Config: testAccVPCNetworkACLConfig_subnetSubnetIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -464,7 +463,7 @@ func TestAccVPCNetworkACL_subnets(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLSubnet_SubnetIDsUpdate(rName),
+				Config: testAccVPCNetworkACLConfig_subnetSubnetIDsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
@@ -483,13 +482,13 @@ func TestAccVPCNetworkACL_subnetsDelete(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLSubnet_SubnetIDs(resourceName),
+				Config: testAccVPCNetworkACLConfig_subnetSubnetIDs(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -503,7 +502,7 @@ func TestAccVPCNetworkACL_subnetsDelete(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkACLSubnet_SubnetIDsDeleteOne(rName),
+				Config: testAccVPCNetworkACLConfig_subnetSubnetIDsDeleteOne(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -520,13 +519,13 @@ func TestAccVPCNetworkACL_ipv6Rules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLIPv6Config(rName),
+				Config: testAccVPCNetworkACLConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
@@ -556,13 +555,13 @@ func TestAccVPCNetworkACL_ipv6ICMPRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLIPv6ICMPConfig(rName),
+				Config: testAccVPCNetworkACLConfig_ipv6ICMP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 				),
@@ -577,13 +576,13 @@ func TestAccVPCNetworkACL_ipv6VPCRules(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLIPv6VPCConfig(rName),
+				Config: testAccVPCNetworkACLConfig_ipv6VPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
@@ -607,13 +606,13 @@ func TestAccVPCNetworkACL_espProtocol(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLEsp(rName),
+				Config: testAccVPCNetworkACLConfig_esp(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(resourceName, &v),
 				),
@@ -676,7 +675,7 @@ func testAccCheckNetworkACLExists(n string, v *ec2.NetworkAcl) resource.TestChec
 	}
 }
 
-func testAccNetworkACLConfig(rName string) string {
+func testAccVPCNetworkACLConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -692,7 +691,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIPv6ICMPConfig(rName string) string {
+func testAccVPCNetworkACLConfig_ipv6ICMP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -723,7 +722,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIPv6Config(rName string) string {
+func testAccVPCNetworkACLConfig_ipv6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -764,7 +763,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIPv6VPCConfig(rName string) string {
+func testAccVPCNetworkACLConfig_ipv6VPC(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -794,7 +793,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIngressConfig(rName string) string {
+func testAccVPCNetworkACLConfig_ingress(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -844,7 +843,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLCaseSensitiveConfig(rName string) string {
+func testAccVPCNetworkACLConfig_caseSensitive(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -885,7 +884,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIngressChangeConfig(rName string) string {
+func testAccVPCNetworkACLConfig_ingressChange(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -926,7 +925,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLEgressConfig(rName string) string {
+func testAccVPCNetworkACLConfig_egress(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
@@ -992,7 +991,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLEgressNIngressConfig(rName string) string {
+func testAccVPCNetworkACLConfig_egressNIngress(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.3.0.0/16"
@@ -1040,7 +1039,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLSubnetConfig(rName string) string {
+func testAccVPCNetworkACLConfig_subnet(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1090,7 +1089,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLSubnetChangeConfig(rName string) string {
+func testAccVPCNetworkACLConfig_subnetChange(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1131,7 +1130,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLSubnet_SubnetIDs(rName string) string {
+func testAccVPCNetworkACLConfig_subnetSubnetIDs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1170,7 +1169,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLSubnet_SubnetIDsUpdate(rName string) string {
+func testAccVPCNetworkACLConfig_subnetSubnetIDsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1231,7 +1230,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLSubnet_SubnetIDsDeleteOne(rName string) string {
+func testAccVPCNetworkACLConfig_subnetSubnetIDsDeleteOne(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1261,7 +1260,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLEsp(rName string) string {
+func testAccVPCNetworkACLConfig_esp(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1290,7 +1289,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLEgressModeBlocksConfig(rName string) string {
+func testAccVPCNetworkACLConfig_egressModeBlocks(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1328,7 +1327,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLEgressModeNoBlocksConfig(rName string) string {
+func testAccVPCNetworkACLConfig_egressModeNoBlocks(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1348,7 +1347,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLEgressModeZeroedConfig(rName string) string {
+func testAccVPCNetworkACLConfig_egressModeZeroed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1370,7 +1369,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIngressModeBlocksConfig(rName string) string {
+func testAccVPCNetworkACLConfig_ingressModeBlocks(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1408,7 +1407,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIngressModeNoBlocksConfig(rName string) string {
+func testAccVPCNetworkACLConfig_ingressModeNoBlocks(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1428,7 +1427,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLIngressModeZeroedConfig(rName string) string {
+func testAccVPCNetworkACLConfig_ingressModeZeroed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1450,7 +1449,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccVPCNetworkACLConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1470,7 +1469,7 @@ resource "aws_network_acl" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccNetworkACLTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCNetworkACLConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

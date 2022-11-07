@@ -80,7 +80,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -743,7 +743,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -1113,12 +1113,11 @@ func ResourceFlow() *schema.Resource {
 							},
 						},
 						"task_properties": {
-							Type:         schema.TypeMap,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(appflow.OperatorPropertiesKeys_Values(), false),
+							Type:     schema.TypeMap,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+								ValidateFunc: validation.StringLenBetween(0, 2048),
 							},
 						},
 						"task_type": {
@@ -1248,7 +1247,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	out, err := FindFlowByArn(ctx, conn, d.Id())
+	out, err := FindFlowByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
@@ -1359,7 +1358,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	out, _ := FindFlowByArn(ctx, conn, d.Id())
+	out, _ := FindFlowByARN(ctx, conn, d.Id())
 
 	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
 
@@ -2484,7 +2483,7 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.Sch
 	if v, ok := tfMap["schedule_start_time"].(string); ok && v != "" {
 		v, _ := time.Parse(time.RFC3339, v)
 
-		a.ScheduleEndTime = aws.Time(v)
+		a.ScheduleStartTime = aws.Time(v)
 	}
 
 	if v, ok := tfMap["timezone"].(string); ok && v != "" {
@@ -3538,7 +3537,7 @@ func flattenTriggerProperties(triggerProperties *appflow.TriggerProperties) map[
 	m := map[string]interface{}{}
 
 	if v := triggerProperties.Scheduled; v != nil {
-		m["trigger_properties"] = []interface{}{flattenScheduled(v)}
+		m["scheduled"] = []interface{}{flattenScheduled(v)}
 	}
 
 	return m

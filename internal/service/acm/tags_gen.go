@@ -2,22 +2,28 @@
 package acm
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acm/acmiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *acm.ACM, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn acmiface.ACMAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn acmiface.ACMAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &acm.ListTagsForCertificateInput{
 		CertificateArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForCertificate(input)
+	output, err := conn.ListTagsForCertificateWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +64,10 @@ func KeyValueTags(tags []*acm.Tag) tftags.KeyValueTags {
 // UpdateTags updates acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *acm.ACM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn acmiface.ACMAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn acmiface.ACMAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +77,10 @@ func UpdateTags(conn *acm.ACM, identifier string, oldTagsMap interface{}, newTag
 			Tags:           Tags(removedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.RemoveTagsFromCertificate(input)
+		_, err := conn.RemoveTagsFromCertificateWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +90,10 @@ func UpdateTags(conn *acm.ACM, identifier string, oldTagsMap interface{}, newTag
 			Tags:           Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTagsToCertificate(input)
+		_, err := conn.AddTagsToCertificateWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

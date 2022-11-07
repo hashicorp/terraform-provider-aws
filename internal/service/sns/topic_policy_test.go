@@ -1,6 +1,7 @@
 package sns_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -21,19 +22,18 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTopicPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -51,17 +51,16 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTopicPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -70,13 +69,11 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicPolicyUpdatedConfig(rName),
+				Config: testAccTopicPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile("SNS:DeleteTopic")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("SNS:DeleteTopic")),
 				),
 			},
 		},
@@ -89,13 +86,13 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTopicPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(topicResourceName, &attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), topicResourceName),
@@ -112,13 +109,13 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTopicPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicPolicyBasicConfig(rName),
+				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
@@ -135,23 +132,22 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTopicPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicPolicyEquivalentConfig(rName),
+				Config: testAccTopicPolicyConfig_equivalent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
 			{
-				Config:   testAccTopicPolicyEquivalent2Config(rName),
+				Config:   testAccTopicPolicyConfig_equivalent2(rName),
 				PlanOnly: true,
 			},
 		},
@@ -166,7 +162,7 @@ func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
+		_, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -182,7 +178,7 @@ func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccTopicPolicyBasicConfig(rName string) string {
+func testAccTopicPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -216,7 +212,7 @@ POLICY
 `, rName)
 }
 
-func testAccTopicPolicyUpdatedConfig(rName string) string {
+func testAccTopicPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -251,7 +247,7 @@ POLICY
 `, rName)
 }
 
-func testAccTopicPolicyEquivalentConfig(rName string) string {
+func testAccTopicPolicyConfig_equivalent(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -282,7 +278,7 @@ resource "aws_sns_topic_policy" "test" {
 `, rName)
 }
 
-func testAccTopicPolicyEquivalent2Config(rName string) string {
+func testAccTopicPolicyConfig_equivalent2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q

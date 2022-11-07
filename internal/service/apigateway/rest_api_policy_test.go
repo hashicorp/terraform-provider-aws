@@ -23,13 +23,13 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIPolicyConfig(rName),
+				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"execute-api:Invoke".+`)),
@@ -42,7 +42,7 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"policy"},
 			},
 			{
-				Config: testAccRestAPIPolicyUpdatedConfig(rName),
+				Config: testAccRestAPIPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
@@ -57,13 +57,13 @@ func TestAccAPIGatewayRestAPIPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIPolicyConfig(rName),
+				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPIPolicy(), resourceName),
@@ -80,13 +80,13 @@ func TestAccAPIGatewayRestAPIPolicy_Disappears_restAPI(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIPolicyConfig(rName),
+				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
@@ -163,7 +163,7 @@ func testAccCheckRestAPIPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRestAPIPolicyConfig(rName string) string {
+func testAccRestAPIPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -187,7 +187,7 @@ resource "aws_api_gateway_rest_api_policy" "test" {
 `, rName)
 }
 
-func testAccRestAPIPolicyUpdatedConfig(rName string) string {
+func testAccRestAPIPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q

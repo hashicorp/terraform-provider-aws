@@ -1,6 +1,7 @@
 package servicediscovery_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func TestAccServiceDiscoveryInstance_private(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -25,16 +26,12 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					testAccInstanceBaseConfig(rName),
-					testAccInstancePrivateNamespaceConfig(rName, domainName),
-					testAccInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"10.0.0.1\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
-				),
+				Config: testAccInstanceConfig_private(rName, domainName, "AWS_INSTANCE_IPV4 = \"10.0.0.1\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
@@ -44,11 +41,7 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					testAccInstanceBaseConfig(rName),
-					testAccInstancePrivateNamespaceConfig(rName, domainName),
-					testAccInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"10.0.0.2\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
-				),
+				Config: testAccInstanceConfig_private(rName, domainName, "AWS_INSTANCE_IPV4 = \"10.0.0.2\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
@@ -68,7 +61,7 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_public(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -78,16 +71,12 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					testAccInstanceBaseConfig(rName),
-					testAccInstancePublicNamespaceConfig(rName, domainName),
-					testAccInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value\""),
-				),
+				Config: testAccInstanceConfig_public(rName, domainName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
@@ -97,11 +86,7 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					testAccInstanceBaseConfig(rName),
-					testAccInstancePublicNamespaceConfig(rName, domainName),
-					testAccInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value updated\""),
-				),
+				Config: testAccInstanceConfig_public(rName, domainName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value updated\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
@@ -121,7 +106,7 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_http(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -131,16 +116,12 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					testAccInstanceBaseConfig(rName),
-					testAccInstanceHTTPNamespaceConfig(rName, domainName),
-					testAccInstanceConfig(rName, "AWS_EC2_INSTANCE_ID = aws_instance.test_instance.id"),
-				),
+				Config: testAccInstanceConfig_http(rName, domainName, "AWS_EC2_INSTANCE_ID = aws_instance.test.id"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
@@ -149,11 +130,7 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					testAccInstanceBaseConfig(rName),
-					testAccInstanceHTTPNamespaceConfig(rName, domainName),
-					testAccInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"172.18.0.12\""),
-				),
+				Config: testAccInstanceConfig_http(rName, domainName, "AWS_INSTANCE_IPV4 = \"172.18.0.12\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
@@ -171,111 +148,11 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 	})
 }
 
-func testAccInstanceBaseConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "sd_register_instance" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %q
-  }
-}`, rName)
-}
-
-func testAccInstancePrivateNamespaceConfig(rName, domainName string) string {
-	return fmt.Sprintf(`
-resource "aws_service_discovery_private_dns_namespace" "sd_register_instance" {
-  name        = %[2]q
-  description = %[1]q
-  vpc         = aws_vpc.sd_register_instance.id
-}
-
-resource "aws_service_discovery_service" "sd_register_instance" {
-  name = %[1]q
-
-  dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.sd_register_instance.id
-
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
-
-    routing_policy = "MULTIVALUE"
-  }
-
-  health_check_custom_config {
-    failure_threshold = 1
-  }
-}`, rName, domainName)
-}
-
-func testAccInstancePublicNamespaceConfig(rName, domainName string) string {
-	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "sd_register_instance" {
-  name = %[2]q
-}
-
-resource "aws_service_discovery_service" "sd_register_instance" {
-  name = %[1]q
-
-  dns_config {
-    namespace_id = aws_service_discovery_public_dns_namespace.sd_register_instance.id
-
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
-
-    routing_policy = "MULTIVALUE"
-  }
-
-  health_check_custom_config {
-    failure_threshold = 1
-  }
-}`, rName, domainName)
-}
-
-func testAccInstanceHTTPNamespaceConfig(rName, domainName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
-resource "aws_instance" "test_instance" {
-  instance_type = "t2.micro"
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_service_discovery_http_namespace" "sd_register_instance" {
-  name = %[2]q
-}
-
-resource "aws_service_discovery_service" "sd_register_instance" {
-  name         = %[1]q
-  namespace_id = aws_service_discovery_http_namespace.sd_register_instance.id
-}`, rName, domainName))
-}
-
-func testAccInstanceConfig(instanceID string, attributes string) string {
-	return fmt.Sprintf(`
-resource "aws_service_discovery_instance" "instance" {
-  service_id  = aws_service_discovery_service.sd_register_instance.id
-  instance_id = %[1]q
-
-  attributes = {
-    %[2]s
-  }
-}`, instanceID, attributes)
-}
-
-func testAccCheckInstanceExists(name string) resource.TestCheckFunc {
+func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -284,13 +161,9 @@ func testAccCheckInstanceExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(context.Background(), conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -313,7 +186,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(context.Background(), conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -327,4 +200,128 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccInstanceConfig_base(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName)
+}
+
+func testAccInstanceConfig_private(rName, domainName, attributes string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_base(rName),
+		testAccInstanceConfig_privateNamespace(rName, domainName),
+		testAccInstanceConfig_basic(rName, attributes),
+	)
+}
+
+func testAccInstanceConfig_public(rName, domainName, attributes string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_base(rName),
+		testAccInstanceConfig_publicNamespace(rName, domainName),
+		testAccInstanceConfig_basic(rName, attributes),
+	)
+}
+
+func testAccInstanceConfig_http(rName, domainName, attributes string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_base(rName),
+		testAccInstanceConfig_httpNamespace(rName, domainName),
+		testAccInstanceConfig_basic(rName, attributes),
+	)
+}
+
+func testAccInstanceConfig_privateNamespace(rName, domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name        = %[2]q
+  description = %[1]q
+  vpc         = aws_vpc.test.id
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[1]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}`, rName, domainName)
+}
+
+func testAccInstanceConfig_publicNamespace(rName, domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_public_dns_namespace" "test" {
+  name = %[2]q
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[1]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_public_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}`, rName, domainName)
+}
+
+func testAccInstanceConfig_httpNamespace(rName, domainName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  instance_type = "t2.micro"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[2]q
+}
+
+resource "aws_service_discovery_service" "test" {
+  name         = %[1]q
+  namespace_id = aws_service_discovery_http_namespace.test.id
+}`, rName, domainName))
+}
+
+func testAccInstanceConfig_basic(instanceID string, attributes string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_instance" "test" {
+  service_id  = aws_service_discovery_service.test.id
+  instance_id = %[1]q
+
+  attributes = {
+    %[2]s
+  }
+}`, instanceID, attributes)
 }

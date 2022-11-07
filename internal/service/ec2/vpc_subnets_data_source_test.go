@@ -14,15 +14,15 @@ func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetsDataSourceConfig(rName),
+				Config: testAccVPCSubnetsDataSourceConfig_basic(rName),
 			},
 			{
-				Config: testAccSubnetsWithDataSourceDataSourceConfig(rName),
+				Config: testAccVPCSubnetsDataSourceConfig_dataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", "4"),
 					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", "2"),
@@ -38,12 +38,12 @@ func TestAccVPCSubnetsDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetsDataSource_filter(rName),
+				Config: testAccVPCSubnetsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.test", "ids.#", "2"),
 				),
@@ -52,7 +52,7 @@ func TestAccVPCSubnetsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccSubnetsDataSourceConfig(rName string) string {
+func testAccVPCSubnetsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
@@ -108,8 +108,8 @@ resource "aws_subnet" "test_private_b" {
 `, rName))
 }
 
-func testAccSubnetsWithDataSourceDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccSubnetsDataSourceConfig(rName), `
+func testAccVPCSubnetsDataSourceConfig_dataSource(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSubnetsDataSourceConfig_basic(rName), `
 data "aws_subnets" "selected" {
   filter {
     name   = "vpc-id"
@@ -144,7 +144,7 @@ data "aws_subnets" "none" {
 `)
 }
 
-func testAccSubnetsDataSource_filter(rName string) string {
+func testAccVPCSubnetsDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

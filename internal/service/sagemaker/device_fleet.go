@@ -113,7 +113,7 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateDeviceFleet(input)
 	}, "ValidationException")
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Device Fleet %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker Device Fleet %s: %w", name, err)
 	}
 
 	d.SetId(name)
@@ -134,7 +134,7 @@ func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Device Fleet (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Device Fleet (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(deviceFleet.DeviceFleetArn)
@@ -148,24 +148,24 @@ func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_iot_role_alias", len(iotAlias) > 0)
 
 	if err := d.Set("output_config", flattenFeatureDeviceFleetOutputConfig(deviceFleet.OutputConfig)); err != nil {
-		return fmt.Errorf("error setting output_config for SageMaker Device Fleet (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting output_config for SageMaker Device Fleet (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Device Fleet (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Device Fleet (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -189,7 +189,7 @@ func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %s", input.String())
 		_, err := conn.UpdateDeviceFleet(input)
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker Device Fleet: %w", err)
+			return fmt.Errorf("updating SageMaker Device Fleet: %w", err)
 		}
 	}
 
@@ -197,7 +197,7 @@ func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Device Fleet (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Device Fleet (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -215,7 +215,7 @@ func resourceDeviceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "DeviceFleet with name") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Device Fleet (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Device Fleet (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -15,12 +15,12 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrebuiltECRImageConfig_basic,
+				Config: testAccPrebuiltECRImageDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
@@ -37,12 +37,12 @@ func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrebuiltECRImageConfig_explicitRegion,
+				Config: testAccPrebuiltECRImageDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
@@ -53,13 +53,13 @@ func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
 	})
 }
 
-const testAccPrebuiltECRImageConfig_basic = `
+const testAccPrebuiltECRImageDataSourceConfig_basic = `
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
   repository_name = "kmeans"
 }
 `
 
-const testAccPrebuiltECRImageConfig_explicitRegion = `
+const testAccPrebuiltECRImageDataSourceConfig_explicitRegion = `
 data "aws_region" "current" {}
 
 data "aws_sagemaker_prebuilt_ecr_image" "test" {

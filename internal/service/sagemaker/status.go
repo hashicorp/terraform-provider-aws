@@ -25,22 +25,14 @@ const (
 // StatusNotebookInstance fetches the NotebookInstance and its Status
 func StatusNotebookInstance(conn *sagemaker.SageMaker, notebookName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &sagemaker.DescribeNotebookInstanceInput{
-			NotebookInstanceName: aws.String(notebookName),
-		}
+		output, err := FindNotebookInstanceByName(conn, notebookName)
 
-		output, err := conn.DescribeNotebookInstance(input)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-			return nil, notebookInstanceStatusNotFound, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, sagemaker.NotebookInstanceStatusFailed, err
-		}
-
-		if output == nil {
-			return nil, notebookInstanceStatusNotFound, nil
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.NotebookInstanceStatus), nil
@@ -254,5 +246,21 @@ func StatusProject(conn *sagemaker.SageMaker, name string) resource.StateRefresh
 		}
 
 		return output, aws.StringValue(output.ProjectStatus), nil
+	}
+}
+
+func StatusWorkforce(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindWorkforceByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }

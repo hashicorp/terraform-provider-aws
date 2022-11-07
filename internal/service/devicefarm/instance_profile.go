@@ -110,7 +110,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instaceProf, err := FindInstanceProfileByArn(conn, d.Id())
+	instaceProf, err := FindInstanceProfileByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Instance Profile (%s) not found, removing from state", d.Id())

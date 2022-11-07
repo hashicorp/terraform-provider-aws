@@ -16,12 +16,12 @@ func TestAccCodeCommitRepositoryDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_codecommit_repository.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRepositoryDataSourceConfig(rName),
+				Config: testAccRepositoryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "clone_url_http", resourceName, "clone_url_http"),
@@ -33,7 +33,7 @@ func TestAccCodeCommitRepositoryDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckRepositoryDataSourceConfig(rName string) string {
+func testAccRepositoryDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "default" {
   repository_name = "%s"

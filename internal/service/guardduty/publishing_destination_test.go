@@ -22,10 +22,10 @@ func testAccPublishingDestination_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.gd_key"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublishingDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishingDestinationConfig_basic(bucketName),
@@ -50,10 +50,10 @@ func testAccPublishingDestination_disappears(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublishingDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishingDestinationConfig_basic(bucketName),
@@ -207,7 +207,6 @@ func testAccCheckPublishingDestinationExists(name string) resource.TestCheckFunc
 }
 
 func testAccCheckPublishingDestinationDestroy(s *terraform.State) error {
-
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {

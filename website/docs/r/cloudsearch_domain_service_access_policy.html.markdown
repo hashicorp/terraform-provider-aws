@@ -53,11 +53,10 @@ No additional attributes are exported.
 
 ## Timeouts
 
-`aws_cloudsearch_domain_service_access_policy` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `update` - (Default `20 minutes`) How long to wait for the CloudSearch domain service access policy to be created or updated.
-* `delete` - (Default `20 minutes`) How long to wait for the CloudSearch domain service access policy to be deleted.
+* `update` - (Default `20m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

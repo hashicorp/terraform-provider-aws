@@ -19,13 +19,13 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccDomainServiceAccessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainServiceAccessPolicyConfig(rName),
+				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainServiceAccessPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
@@ -45,13 +45,13 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudsearch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccDomainServiceAccessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainServiceAccessPolicyConfig(rName),
+				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainServiceAccessPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
@@ -63,7 +63,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainServiceAccessPolicyConfigUpdated(rName),
+				Config: testAccDomainServiceAccessPolicyConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainServiceAccessPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
@@ -88,11 +88,7 @@ func testAccDomainServiceAccessPolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tfcloudsearch.FindAccessPolicyByName(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -120,7 +116,7 @@ func testAccDomainServiceAccessPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDomainServiceAccessPolicyConfig(rName string) string {
+func testAccDomainServiceAccessPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = %[1]q
@@ -148,7 +144,7 @@ POLICY
 `, rName)
 }
 
-func testAccDomainServiceAccessPolicyConfigUpdated(rName string) string {
+func testAccDomainServiceAccessPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = %[1]q

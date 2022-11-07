@@ -11,17 +11,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:aws-in-func-name
+func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	dataSourceName := "data.aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImageDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageARNDataSourceConfig(),
+				Config: testAccImageDataSourceConfig_arn(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
@@ -50,13 +50,13 @@ func TestAccImageBuilderImageDataSource_ARN_self(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImageDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageARNSelfDataSourceConfig(rName),
+				Config: testAccImageDataSourceConfig_arnSelf(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "build_version_arn", resourceName, "arn"),
@@ -84,13 +84,13 @@ func TestAccImageBuilderImageDataSource_ARN_containerRecipeARN(t *testing.T) {
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImageDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageARNContainerRecipeARNDataSourceConfig(rName),
+				Config: testAccImageDataSourceConfig_arnContainerRecipeARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
@@ -100,7 +100,7 @@ func TestAccImageBuilderImageDataSource_ARN_containerRecipeARN(t *testing.T) {
 	})
 }
 
-func testAccImageARNDataSourceConfig() string {
+func testAccImageDataSourceConfig_arn() string {
 	return `
 data "aws_partition" "current" {}
 
@@ -112,7 +112,7 @@ data "aws_imagebuilder_image" "test" {
 `
 }
 
-func testAccImageARNSelfDataSourceConfig(rName string) string {
+func testAccImageDataSourceConfig_arnSelf(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
   arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
@@ -228,7 +228,7 @@ data "aws_imagebuilder_image" "test" {
 `, rName)
 }
 
-func testAccImageARNContainerRecipeARNDataSourceConfig(rName string) string {
+func testAccImageDataSourceConfig_arnContainerRecipeARN(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

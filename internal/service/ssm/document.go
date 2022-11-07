@@ -267,14 +267,14 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeDocumentOutput, err := conn.DescribeDocument(describeDocumentInput)
 
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
-		log.Printf("[WARN] SSM Document not found so removing from state")
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing SSM Document (%s): %s", d.Id(), err)
+		return fmt.Errorf("error describing SSM Document (%s): %w", d.Id(), err)
 	}
 
 	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
@@ -288,13 +288,19 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	getDocumentOutput, err := conn.GetDocument(getDocumentInput)
-
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument, ssm.ErrCodeInvalidDocumentVersion) {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting SSM Document (%s): %w", d.Id(), err)
 	}
 
-	if getDocumentOutput == nil {
-		return fmt.Errorf("error getting SSM Document (%s): empty result", d.Id())
+	if !d.IsNewResource() && getDocumentOutput == nil {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	doc := describeDocumentOutput.Document
@@ -337,7 +343,6 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 
 	params := make([]map[string]interface{}, 0)
 	for i := 0; i < len(doc.Parameters); i++ {
-
 		dp := doc.Parameters[i]
 		param := make(map[string]interface{})
 
@@ -477,7 +482,6 @@ func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 		results = append(results, s)
 	}
 	return results
-
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
@@ -524,7 +528,6 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 		if err := modifyDocumentPermissions(conn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
 			return fmt.Errorf("error modifying SSM document permissions: %s", err)
 		}
-
 	}
 
 	return nil
@@ -579,7 +582,6 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 	accountIdsToRemove := make([]interface{}, 0)
 
 	if permission["account_ids"] != nil {
-
 		if v, ok := permission["account_ids"]; ok && v.(string) != "" {
 			parts := strings.Split(v.(string), ",")
 			accountIdsToRemove = make([]interface{}, len(parts))
@@ -591,16 +593,13 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 		if err := modifyDocumentPermissions(conn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
 			return fmt.Errorf("error removing SSM document permissions: %s", err)
 		}
-
 	}
 
 	return nil
 }
 
 func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []interface{}, accountIdstoRemove []interface{}) error {
-
 	if accountIdsToAdd != nil {
-
 		accountIdsToAddBatch := make([]string, 0, documentPermissionsBatchLimit)
 		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdsToAdd {
@@ -625,7 +624,6 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 	}
 
 	if accountIdstoRemove != nil {
-
 		accountIdsToRemoveBatch := make([]string, 0, documentPermissionsBatchLimit)
 		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdstoRemove {
@@ -647,7 +645,6 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 				return err
 			}
 		}
-
 	}
 
 	return nil
@@ -707,7 +704,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-//Validates that type and account_ids are defined
+// Validates that type and account_ids are defined
 func ValidDocumentPermissions(v map[string]interface{}) (errors []error) {
 	k := "permissions"
 	t, hasType := v["type"].(string)

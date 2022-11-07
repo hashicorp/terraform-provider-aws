@@ -19,13 +19,13 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckResourcePolicyResourceBasic1Config(rName),
+				Config: testAccResourcePolicyConfig_basic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
@@ -38,7 +38,7 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckResourcePolicyResourceBasic2Config(rName),
+				Config: testAccResourcePolicyConfig_basic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
@@ -55,13 +55,13 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckResourcePolicyResourceOrderConfig(rName),
+				Config: testAccResourcePolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
@@ -69,7 +69,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckResourcePolicyResourceNewOrderConfig(rName),
+				Config: testAccResourcePolicyConfig_newOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
@@ -117,7 +117,7 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 		_, exists, err := tflogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Resource Policy (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch Log Resource Policy (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {
@@ -128,7 +128,7 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckResourcePolicyResourceBasic1Config(rName string) string {
+func testAccResourcePolicyConfig_basic1(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -155,7 +155,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 `, rName)
 }
 
-func testAccCheckResourcePolicyResourceBasic2Config(rName string) string {
+func testAccResourcePolicyConfig_basic2(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -182,7 +182,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 `, rName)
 }
 
-func testAccCheckResourcePolicyResourceOrderConfig(rName string) string {
+func testAccResourcePolicyConfig_order(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -210,7 +210,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 `, rName)
 }
 
-func testAccCheckResourcePolicyResourceNewOrderConfig(rName string) string {
+func testAccResourcePolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

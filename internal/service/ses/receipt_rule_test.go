@@ -28,12 +28,12 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
+				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -74,12 +74,12 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleS3ActionConfig(rName),
+				Config: testAccReceiptRuleConfig_s3Action(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -111,12 +111,12 @@ func TestAccSESReceiptRule_snsAction(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleSNSActionConfig(rName),
+				Config: testAccReceiptRuleConfig_snsAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
@@ -148,12 +148,12 @@ func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleSNSActionEncodingConfig(rName),
+				Config: testAccReceiptRuleConfig_snsActionEncoding(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
@@ -185,12 +185,12 @@ func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleLambdaActionConfig(rName),
+				Config: testAccReceiptRuleConfig_lambdaAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "1"),
@@ -222,12 +222,12 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleStopActionConfig(rName),
+				Config: testAccReceiptRuleConfig_stopAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "1"),
@@ -258,12 +258,12 @@ func TestAccSESReceiptRule_order(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleOrderConfig(rName),
+				Config: testAccReceiptRuleConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", "second"),
@@ -291,12 +291,12 @@ func TestAccSESReceiptRule_actions(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleActionsConfig(rName),
+				Config: testAccReceiptRuleConfig_actions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_header_action.*", map[string]string{
@@ -334,12 +334,12 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReceiptRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
+				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
@@ -347,7 +347,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccReceiptRuleBasicConfig(rName, acctest.DefaultEmailAddress),
+				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(resourceName, &rule),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
@@ -381,11 +381,9 @@ func testAccCheckReceiptRuleDestroy(s *terraform.State) error {
 		if !ok {
 			return err
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckReceiptRuleExists(n string, rule *ses.ReceiptRule) resource.TestCheckFunc {
@@ -451,7 +449,7 @@ func testAccPreCheckReceiptRule(t *testing.T) {
 	}
 }
 
-func testAccReceiptRuleBasicConfig(rName, email string) string {
+func testAccReceiptRuleConfig_basic(rName, email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -468,7 +466,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, email)
 }
 
-func testAccReceiptRuleS3ActionConfig(rName string) string {
+func testAccReceiptRuleConfig_s3Action(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -500,7 +498,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
-func testAccReceiptRuleSNSActionConfig(rName string) string {
+func testAccReceiptRuleConfig_snsAction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -526,7 +524,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
-func testAccReceiptRuleSNSActionEncodingConfig(rName string) string {
+func testAccReceiptRuleConfig_snsActionEncoding(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -553,7 +551,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
-func testAccReceiptRuleLambdaActionConfig(rName string) string {
+func testAccReceiptRuleConfig_lambdaAction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -583,7 +581,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test" {
@@ -610,7 +608,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
-func testAccReceiptRuleStopActionConfig(rName string) string {
+func testAccReceiptRuleConfig_stopAction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -637,7 +635,7 @@ resource "aws_ses_receipt_rule" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
-func testAccReceiptRuleOrderConfig(rName string) string {
+func testAccReceiptRuleConfig_order(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q
@@ -656,7 +654,7 @@ resource "aws_ses_receipt_rule" "test1" {
 `, rName)
 }
 
-func testAccReceiptRuleActionsConfig(rName string) string {
+func testAccReceiptRuleConfig_actions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q

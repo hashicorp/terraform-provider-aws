@@ -16,12 +16,12 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableBasicDataSourceConfig(rName),
+				Config: testAccTableDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "read_capacity", resourceName, "read_capacity"),
@@ -45,7 +45,7 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccTableBasicDataSourceConfig(tableName string) string {
+func testAccTableDataSourceConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"

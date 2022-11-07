@@ -78,7 +78,7 @@ func resourceVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
 func resourceVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	output, err := FindBackupVaultAccessPolicyByName(conn, d.Id())
+	output, err := FindVaultAccessPolicyByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Policy (%s) not found, removing from state", d.Id())

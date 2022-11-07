@@ -32,6 +32,27 @@ func FindHealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck
 	return output.HealthCheck, nil
 }
 
+func FindHostedZoneByID(conn *route53.Route53, id string) (*route53.GetHostedZoneOutput, error) {
+	input := &route53.GetHostedZoneInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetHostedZone(input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || output.HostedZone == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
 	input := &route53.GetDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
@@ -81,10 +102,31 @@ func FindKeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*r
 	hostedZoneID, name, err := KeySigningKeyParseResourceID(resourceID)
 
 	if err != nil {
-		return nil, fmt.Errorf("error parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)
+		return nil, fmt.Errorf("parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)
 	}
 
 	return FindKeySigningKey(conn, hostedZoneID, name)
+}
+
+func FindQueryLoggingConfigByID(ctx context.Context, conn *route53.Route53, id string) (*route53.QueryLoggingConfig, error) {
+	input := &route53.GetQueryLoggingConfigInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetQueryLoggingConfigWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig, route53.ErrCodeNoSuchHostedZone) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || output.QueryLoggingConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.QueryLoggingConfig, nil
 }
 
 func FindTrafficPolicyByID(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicy, error) {

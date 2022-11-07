@@ -27,17 +27,17 @@ func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecretDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigSecrets_filter(rName),
+				Config: testAccSecretsDataSourceConfig_filter2(rName),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccConfigSecretsWithDataSource_filter(rName),
+				Config: testAccSecretsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -49,7 +49,7 @@ func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccConfigSecrets_filter(rName string) string {
+func testAccSecretsDataSourceConfig_filter2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -57,9 +57,9 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccConfigSecretsWithDataSource_filter(rName string) string {
+func testAccSecretsDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigSecrets_filter(rName),
+		testAccSecretsDataSourceConfig_filter2(rName),
 		`
 data "aws_secretsmanager_secrets" "test" {
   filter {

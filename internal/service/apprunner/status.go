@@ -12,14 +12,18 @@ const (
 	AutoScalingConfigurationStatusActive   = "active"
 	AutoScalingConfigurationStatusInactive = "inactive"
 
-	VpcConnectorStatusActive   = "ACTIVE"
-	VpcConnectorStatusInactive = "INACTIVE"
-
 	CustomDomainAssociationStatusActive                          = "active"
 	CustomDomainAssociationStatusCreating                        = "creating"
 	CustomDomainAssociationStatusDeleting                        = "deleting"
 	CustomDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 	CustomDomainAssociationStatusBindingCertificate              = "binding_certificate"
+
+	ObservabilityConfigurationStatusActive   = "ACTIVE"
+	ObservabilityConfigurationStatusInactive = "INACTIVE"
+
+	VPCIngressConnectionStatusActive          = "AVAILABLE"
+	VPCIngressConnectionStatusPendingDeletion = "PENDING_DELETION"
+	VPCIngressConnectionStatusDeleted         = "DELETED"
 )
 
 func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
@@ -42,23 +46,43 @@ func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunn
 	}
 }
 
-func StatusVpcConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+func StatusObservabilityConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &apprunner.DescribeVpcConnectorInput{
-			VpcConnectorArn: aws.String(arn),
+		input := &apprunner.DescribeObservabilityConfigurationInput{
+			ObservabilityConfigurationArn: aws.String(arn),
 		}
 
-		output, err := conn.DescribeVpcConnectorWithContext(ctx, input)
+		output, err := conn.DescribeObservabilityConfigurationWithContext(ctx, input)
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil || output.VpcConnector == nil {
+		if output == nil || output.ObservabilityConfiguration == nil {
 			return nil, "", nil
 		}
 
-		return output.VpcConnector, aws.StringValue(output.VpcConnector.Status), nil
+		return output.ObservabilityConfiguration, aws.StringValue(output.ObservabilityConfiguration.Status), nil
+	}
+}
+
+func StatusVPCIngressConnection(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &apprunner.DescribeVpcIngressConnectionInput{
+			VpcIngressConnectionArn: aws.String(arn),
+		}
+
+		output, err := conn.DescribeVpcIngressConnectionWithContext(ctx, input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.VpcIngressConnection == nil {
+			return nil, "", nil
+		}
+
+		return output.VpcIngressConnection, aws.StringValue(output.VpcIngressConnection.Status), nil
 	}
 }
 

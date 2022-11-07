@@ -61,7 +61,7 @@ func FindBotAssociationV1ByNameAndRegionWithContext(ctx context.Context, conn *c
 	return result, nil
 }
 
-func FindLambdaFunctionAssociationByArnWithContext(ctx context.Context, conn *connect.Connect, instanceID string, functionArn string) (string, error) {
+func FindLambdaFunctionAssociationByARNWithContext(ctx context.Context, conn *connect.Connect, instanceID string, functionArn string) (string, error) {
 	var result string
 
 	input := &connect.ListLambdaFunctionsInput{

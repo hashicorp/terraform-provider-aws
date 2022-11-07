@@ -186,7 +186,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("canary_settings"); ok {
-		input.CanarySettings = expandApiGatewayStageCanarySettings(v.([]interface{}), deploymentId)
+		input.CanarySettings = expandStageCanarySettings(v.([]interface{}), deploymentId)
 	}
 
 	if len(tags) > 0 {
@@ -240,7 +240,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Received API Gateway Stage: %s", stage)
 
-	if err := d.Set("access_log_settings", flattenApiGatewayStageAccessLogSettings(stage.AccessLogSettings)); err != nil {
+	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return fmt.Errorf("error setting access_log_settings: %s", err)
 	}
 
@@ -260,7 +260,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 	d.Set("web_acl_arn", stage.WebAclArn)
 
-	if err := d.Set("canary_settings", flattenApiGatewayStageCanarySettings(stage.CanarySettings)); err != nil {
+	if err := d.Set("canary_settings", flattenCanarySettings(stage.CanarySettings)); err != nil {
 		return fmt.Errorf("error setting canary_settings: %w", err)
 	}
 
@@ -491,7 +491,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenApiGatewayStageAccessLogSettings(accessLogSettings *apigateway.AccessLogSettings) []map[string]interface{} {
+func flattenAccessLogSettings(accessLogSettings *apigateway.AccessLogSettings) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 	if accessLogSettings != nil {
 		result = append(result, map[string]interface{}{
@@ -502,7 +502,7 @@ func flattenApiGatewayStageAccessLogSettings(accessLogSettings *apigateway.Acces
 	return result
 }
 
-func expandApiGatewayStageCanarySettings(l []interface{}, deploymentId string) *apigateway.CanarySettings {
+func expandStageCanarySettings(l []interface{}, deploymentId string) *apigateway.CanarySettings {
 	if len(l) == 0 {
 		return nil
 	}
@@ -528,7 +528,7 @@ func expandApiGatewayStageCanarySettings(l []interface{}, deploymentId string) *
 	return canarySettings
 }
 
-func flattenApiGatewayStageCanarySettings(canarySettings *apigateway.CanarySettings) []interface{} {
+func flattenCanarySettings(canarySettings *apigateway.CanarySettings) []interface{} {
 	settings := make(map[string]interface{})
 
 	if canarySettings == nil {

@@ -18,13 +18,13 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMPRuleGroupNamespaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),
+				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data", defaultRuleGroupNamespace()),
@@ -36,14 +36,14 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAMPRuleGroupNamespace(anotherRuleGroupNamespace()),
+				Config: testAccRuleGroupNamespaceConfig_basic(anotherRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data", anotherRuleGroupNamespace()),
 				),
 			},
 			{
-				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),
+				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data", defaultRuleGroupNamespace()),
@@ -56,13 +56,13 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMPRuleGroupNamespaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMPRuleGroupNamespace(defaultRuleGroupNamespace()),
+				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupNamespaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceRuleGroupNamespace(), resourceName),
@@ -86,17 +86,13 @@ func testAccCheckRuleGroupNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
-		_, err := tfamp.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccCheckAMPRuleGroupNamespaceDestroy(s *terraform.State) error {
+func testAccCheckRuleGroupNamespaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -104,7 +100,7 @@ func testAccCheckAMPRuleGroupNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfamp.FindRuleGroupNamespaceByArn(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -145,10 +141,10 @@ groups:
 `
 }
 
-func testAccAMPRuleGroupNamespace(data string) string {
+func testAccRuleGroupNamespaceConfig_basic(data string) string {
 	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-}
+resource "aws_prometheus_workspace" "test" {}
+
 resource "aws_prometheus_rule_group_namespace" "test" {
   workspace_id = aws_prometheus_workspace.test.id
   name         = "rules"

@@ -27,13 +27,13 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
@@ -45,11 +45,11 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAliasImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAliasImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccAliasUsingFunctionNameConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Config:   testAccAliasConfig_usingFunctionName(roleName, policyName, attachmentName, funcName, aliasName),
 				PlanOnly: true,
 			},
 		},
@@ -63,13 +63,13 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasUsingFunctionNameConfig(rName, rName, rName, rName, rName),
+				Config: testAccAliasConfig_usingFunctionName(rName, rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
@@ -81,7 +81,7 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAliasImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAliasImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -104,13 +104,13 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 	functionArnResourcePartUpdate := fmt.Sprintf("function:%s:%s", funcName, aliasNameUpdate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
@@ -120,11 +120,11 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAliasImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAliasImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasNameUpdate),
+				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasNameUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
@@ -149,13 +149,13 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
@@ -165,11 +165,11 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAliasImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAliasImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAliasWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Config: testAccAliasConfig_routing(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
@@ -178,7 +178,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName),
+				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
@@ -205,7 +205,6 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Lambda alias was not deleted")
 		}
-
 	}
 
 	return nil
@@ -286,7 +285,7 @@ func testAccCheckAliasRoutingDoesNotExistConfig(mapping *lambda.AliasConfigurati
 	}
 }
 
-func testAccAliasImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAliasImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -297,7 +296,7 @@ func testAccAliasImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 	}
 }
 
-func testAccAliasBaseConfig(roleName, policyName, attachmentName string) string {
+func testAccAliasConfig_base(roleName, policyName, attachmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
@@ -348,16 +347,16 @@ resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
 `, roleName, policyName, attachmentName)
 }
 
-func testAccAliasConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
+func testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName string) string {
 	return acctest.ConfigCompose(
-		testAccAliasBaseConfig(roleName, policyName, attachmentName),
+		testAccAliasConfig_base(roleName, policyName, attachmentName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest.zip"
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -371,16 +370,16 @@ resource "aws_lambda_alias" "test" {
 `, funcName, aliasName))
 }
 
-func testAccAliasUsingFunctionNameConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
+func testAccAliasConfig_usingFunctionName(roleName, policyName, attachmentName, funcName, aliasName string) string {
 	return acctest.ConfigCompose(
-		testAccAliasBaseConfig(roleName, policyName, attachmentName),
+		testAccAliasConfig_base(roleName, policyName, attachmentName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest.zip"
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -394,16 +393,16 @@ resource "aws_lambda_alias" "test" {
 `, funcName, aliasName))
 }
 
-func testAccAliasWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
+func testAccAliasConfig_routing(roleName, policyName, attachmentName, funcName, aliasName string) string {
 	return acctest.ConfigCompose(
-		testAccAliasBaseConfig(roleName, policyName, attachmentName),
+		testAccAliasConfig_base(roleName, policyName, attachmentName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest_modified.zip"
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest_modified.zip")
   publish          = "true"
 }

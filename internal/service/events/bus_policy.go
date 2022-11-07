@@ -113,8 +113,8 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if tfresource.NotFound(err) {
-		log.Printf("[WARN] Policy on {%s} EventBus not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Policy on EventBridge Bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -142,7 +142,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, error) {
 	if output == nil || output.Policy == nil {
 		return nil, &resource.NotFoundError{
-			Message:      fmt.Sprintf("Policy for EventBridge Bus %s not found", *output.Name),
+			Message:      fmt.Sprintf("Policy for EventBridge Bus (%s) not found", *output.Name),
 			LastResponse: output,
 		}
 	}
@@ -168,11 +168,6 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
 	_, err = conn.PutPermission(&input)
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] EventBridge Bus %q not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("error updating policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}

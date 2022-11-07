@@ -733,7 +733,7 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 		WindowTaskId: aws.String(d.Id()),
 	}
 	resp, err := conn.GetMaintenanceWindowTask(params)
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -825,14 +825,8 @@ func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	_, err := conn.UpdateMaintenanceWindowTask(params)
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("Error updating Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
+		return fmt.Errorf("error updating Maintenance Window (%s) Task (%s): %w", windowID, d.Id(), err)
 	}
 
 	return resourceMaintenanceWindowTaskRead(d, meta)
@@ -853,7 +847,7 @@ func resourceMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deregistering SSM Maintenance Window Task (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deregistering SSM Maintenance Window Task (%s): %w", d.Id(), err)
 	}
 
 	return nil

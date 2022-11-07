@@ -22,9 +22,9 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 
 	// Run a resource test to setup our KMS key
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretsDataSourceConfig_key,
@@ -67,12 +67,12 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 		dataSourceName := "data.aws_kms_secrets.test"
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { acctest.PreCheck(t) },
-			ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-			ProviderFactories: acctest.ProviderFactories,
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccCheckSecretsSecretDataSource(*encryptedPayload),
+					Config: testAccSecretsDataSourceConfig_secret(*encryptedPayload),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", "1"),
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.secret1", plaintext),
@@ -92,7 +92,7 @@ resource "aws_kms_key" "test" {
 }
 `
 
-func testAccCheckSecretsSecretDataSource(payload string) string {
+func testAccSecretsDataSourceConfig_secret(payload string) string {
 	return testAccSecretsDataSourceConfig_key + fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {

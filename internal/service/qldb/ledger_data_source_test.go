@@ -16,12 +16,12 @@ func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerDataSourceConfig(rName),
+				Config: testAccLedgerDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "deletion_protection", resourceName, "deletion_protection"),
@@ -35,7 +35,7 @@ func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccLedgerDataSourceConfig(rName string) string {
+func testAccLedgerDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q

@@ -31,6 +31,12 @@ func ResourceLocationEFS() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"access_point_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"ec2_config": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -42,13 +48,16 @@ func ResourceLocationEFS() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 						"subnet_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -57,7 +66,19 @@ func ResourceLocationEFS() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: verify.ValidARN,
+			},
+			"file_system_access_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"in_transit_encryption": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(datasync.EfsInTransitEncryption_Values(), false),
 			},
 			"subdirectory": {
 				Type:     schema.TypeString,
@@ -99,10 +120,22 @@ func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
+	if v, ok := d.GetOk("access_point_arn"); ok {
+		input.AccessPointArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("file_system_access_role_arn"); ok {
+		input.FileSystemAccessRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("in_transit_encryption"); ok {
+		input.InTransitEncryption = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] Creating DataSync Location EFS: %s", input)
 	output, err := conn.CreateLocationEfs(input)
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location EFS: %s", err)
+		return fmt.Errorf("error creating DataSync Location EFS: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
@@ -129,7 +162,7 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location EFS (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading DataSync Location EFS (%s): %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
@@ -141,11 +174,14 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", output.LocationArn)
 
 	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
-		return fmt.Errorf("error setting ec2_config: %s", err)
+		return fmt.Errorf("error setting ec2_config: %w", err)
 	}
 
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
+	d.Set("access_point_arn", output.AccessPointArn)
+	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
+	d.Set("in_transit_encryption", output.InTransitEncryption)
 
 	tags, err := ListTags(conn, d.Id())
 
@@ -174,7 +210,7 @@ func resourceLocationEFSUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Location EFS (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating DataSync Location EFS (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -196,7 +232,7 @@ func resourceLocationEFSDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location EFS (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting DataSync Location EFS (%s): %w", d.Id(), err)
 	}
 
 	return nil

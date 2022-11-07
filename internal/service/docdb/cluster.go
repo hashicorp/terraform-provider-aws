@@ -445,7 +445,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
 		}
 
-		log.Printf("[DEBUG] DocDB Cluster create options: %s", createOpts)
 		var resp *docdb.CreateDBClusterOutput
 		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error
@@ -521,7 +520,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describing DocDB Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
 		log.Printf("[WARN] DocDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -543,13 +542,13 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if dbc == nil {
+	if !d.IsNewResource() && dbc == nil {
 		log.Printf("[WARN] DocDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	globalCluster, err := findGlobalClusterByArn(context.TODO(), conn, aws.StringValue(dbc.DBClusterArn))
+	globalCluster, err := findGlobalClusterByARN(context.TODO(), conn, aws.StringValue(dbc.DBClusterArn))
 
 	// Ignore the following API error for regions/partitions that do not support DocDB Global Clusters:
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
@@ -753,7 +752,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return resourceClusterRead(d, meta)
@@ -908,7 +906,6 @@ func waitForClusterUpdate(conn *docdb.DocDB, id string, timeout time.Duration) e
 }
 
 func buildCloudWatchLogsExportConfiguration(d *schema.ResourceData) *docdb.CloudwatchLogsExportConfiguration {
-
 	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
 	o := oraw.([]interface{})
 	n := nraw.([]interface{})

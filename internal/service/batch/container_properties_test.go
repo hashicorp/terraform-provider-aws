@@ -6,7 +6,7 @@ import (
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
-func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
+func TestEquivalentContainerPropertiesJSON(t *testing.T) {
 	testCases := []struct {
 		Name              string
 		ApiJson           string

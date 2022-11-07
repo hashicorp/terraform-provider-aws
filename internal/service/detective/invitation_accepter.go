@@ -55,7 +55,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DetectiveConn
 
-	graphArn, err := FindInvitationByGraphArn(ctx, conn, d.Id())
+	graphArn, err := FindInvitationByGraphARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Detective InvitationAccepter (%s) not found, removing from state", d.Id())
@@ -65,10 +65,6 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 
 	if err != nil {
 		return diag.Errorf("error listing Detective InvitationAccepter (%s): %s", d.Id(), err)
-	}
-
-	if err != nil {
-		return diag.Errorf("error reading Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("graph_arn", graphArn)

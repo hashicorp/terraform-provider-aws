@@ -1,10 +1,10 @@
 package opsworks
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -56,15 +56,13 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading OpsWorks user profile: %s", d.Id())
 
 	resp, err := client.DescribeUserProfiles(req)
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks user profile (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() == "ResourceNotFoundException" {
-				log.Printf("[DEBUG] OpsWorks user profile (%s) not found", d.Id())
-				d.SetId("")
-				return nil
-			}
-		}
-		return err
+		return fmt.Errorf("error reading OpsWorks User Profile (%s): %w", d.Id(), err)
 	}
 
 	for _, profile := range resp.UserProfiles {
@@ -90,7 +88,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := client.CreateUserProfile(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating OpsWorks User Profile (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(resp.IamUserArn))
@@ -112,7 +110,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.UpdateUserProfile(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating OpsWorks User Profile (%s): %w", d.Id(), err)
 	}
 
 	return resourceUserProfileRead(d, meta)
@@ -134,5 +132,9 @@ func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	return err
+	if err != nil {
+		return fmt.Errorf("error deleting OpsWorks User Profile (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }

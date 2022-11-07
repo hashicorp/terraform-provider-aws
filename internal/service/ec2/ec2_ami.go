@@ -31,9 +31,8 @@ const (
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAMICreate,
-		// The Read, Update and Delete operations are shared with aws_ami_copy
-		// and aws_ami_from_instance, since they differ only in how the image
-		// is created.
+		// The Read, Update and Delete operations are shared with aws_ami_copy and aws_ami_from_instance,
+		// since they differ only in how the image is created.
 		Read:   resourceAMIRead,
 		Update: resourceAMIUpdate,
 		Delete: resourceAMIDelete,
@@ -48,6 +47,7 @@ func ResourceAMI() *schema.Resource {
 			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
+		// Keep in sync with aws_ami_copy's and aws_ami_from_instance's schemas.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:         schema.TypeString,
@@ -198,6 +198,12 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"imds_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true, // this attribute can only be set at registration time
+				ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
+			},
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -250,10 +256,16 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "simple",
+				Default:  SriovNetSupportSimple,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.TpmSupportValues_Values(), false),
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -292,12 +304,20 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 		input.BootMode = aws.String(v)
 	}
 
+	if v := d.Get("imds_support").(string); v != "" {
+		input.ImdsSupport = aws.String(v)
+	}
+
 	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
 		input.KernelId = aws.String(kernelId)
 	}
 
 	if ramdiskId := d.Get("ramdisk_id").(string); ramdiskId != "" {
 		input.RamdiskId = aws.String(ramdiskId)
+	}
+
+	if v := d.Get("tpm_support").(string); v != "" {
+		input.TpmSupport = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
@@ -409,6 +429,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("image_location", image.ImageLocation)
 	d.Set("image_owner_alias", image.ImageOwnerAlias)
 	d.Set("image_type", image.ImageType)
+	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
 	d.Set("name", image.Name)
 	d.Set("owner_id", image.OwnerId)
@@ -419,6 +440,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("root_device_name", image.RootDeviceName)
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
+	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
@@ -485,7 +507,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 		ImageId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return nil
 	}
 

@@ -15,7 +15,6 @@ import (
 )
 
 func ResourceAPIKey() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceAPIKeyCreate,
 		Read:   resourceAPIKeyRead,
@@ -129,7 +128,6 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceAPIKeyRead(d, meta)
-
 }
 
 func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {

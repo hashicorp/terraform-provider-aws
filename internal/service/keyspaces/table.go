@@ -164,7 +164,7 @@ func ResourceTable() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"clustering_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
@@ -210,15 +210,15 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-z0-9]+$`),
-											"The type must consist of lower case alphanumerics.",
+											regexp.MustCompile(`^[a-z0-9]+(\<[a-z0-9]+(, *[a-z0-9]+){0,1}\>)?$`),
+											"The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'.",
 										),
 									},
 								},
 							},
 						},
 						"partition_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
@@ -802,16 +802,16 @@ func expandSchemaDefinition(tfMap map[string]interface{}) *keyspaces.SchemaDefin
 
 	apiObject := &keyspaces.SchemaDefinition{}
 
+	if v, ok := tfMap["clustering_key"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ClusteringKeys = expandClusteringKeys(v)
+	}
+
 	if v, ok := tfMap["column"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.AllColumns = expandColumnDefinitions(v.List())
 	}
 
-	if v, ok := tfMap["clustering_key"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.ClusteringKeys = expandClusteringKeys(v.List())
-	}
-
-	if v, ok := tfMap["partition_key"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.PartitionKeys = expandPartitionKeys(v.List())
+	if v, ok := tfMap["partition_key"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PartitionKeys = expandPartitionKeys(v)
 	}
 
 	if v, ok := tfMap["static_column"].(*schema.Set); ok && v.Len() > 0 {

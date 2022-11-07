@@ -22,13 +22,13 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningJobConfig(rName),
+				Config: testAccSigningJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(profileResourceName, &conf),
 					testAccCheckSigningJobExists(resourceName, &job),
@@ -39,10 +39,9 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
-func testAccSigningJobConfig(rName string) string {
+func testAccSigningJobConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

@@ -142,9 +142,11 @@ The following arguments are optional:
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows (code, implicit, client_credentials).
 * `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin).
 * `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics for collecting metrics for this user pool. [Detailed below](#analytics_configuration).
+* `auth_session_validity` - (Optional) Amazon Cognito creates a session token for each API request in an authentication flow. AuthSessionValidity is the duration, in minutes, of that session token. Your user pool native user must respond to each authentication challenge before the session expires. Valid values between `3` and `15`. Default value is `3`.
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
 * `default_redirect_uri` - (Optional) Default redirect URI. Must be in the list of callback URLs.
 * `enable_token_revocation` - (Optional) Enables or disables token revocation.
+* `enable_propagate_additional_user_context_data` - (Optional) Activates the propagation of additional user context data.
 * `explicit_auth_flows` - (Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH).
 * `generate_secret` - (Optional) Should an application secret be generated.
 * `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. This value will be overridden if you have entered a value in `token_validity_units`.

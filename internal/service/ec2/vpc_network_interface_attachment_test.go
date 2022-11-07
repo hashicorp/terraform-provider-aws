@@ -16,13 +16,13 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckENIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceAttachmentConfig(rName),
+				Config: testAccVPCNetworkInterfaceAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists("aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
@@ -32,13 +32,18 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func testAccNetworkInterfaceAttachmentConfig(rName string) string {
+func testAccVPCNetworkInterfaceAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

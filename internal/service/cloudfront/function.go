@@ -167,7 +167,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			IfMatch: aws.String(etag),
 		}
 
-		log.Printf("[INFO] Updating Cloudfront Function: %s", d.Id())
+		log.Printf("[INFO] Updating CloudFront Function: %s", d.Id())
 		output, err := conn.UpdateFunction(input)
 
 		if err != nil {

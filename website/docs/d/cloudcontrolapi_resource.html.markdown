@@ -28,7 +28,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role to assume for operations.
+* `role_arn` - (Optional) ARN of the IAM Role to assume for operations.
 * `type_version_id` - (Optional) Identifier of the CloudFormation resource type version.
 
 ## Attributes Reference

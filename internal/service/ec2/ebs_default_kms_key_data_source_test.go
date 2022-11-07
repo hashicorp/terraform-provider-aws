@@ -10,12 +10,12 @@ import (
 
 func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSDefaultKMSKeyDataSourceConfig,
+				Config: testAccEBSDefaultKMSKeyDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSDefaultKMSKey("data.aws_ebs_default_kms_key.current"),
 				),
@@ -24,6 +24,6 @@ func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccEBSDefaultKMSKeyDataSourceConfig = `
+const testAccEBSDefaultKMSKeyDataSourceConfig_basic = `
 data "aws_ebs_default_kms_key" "current" {}
 `

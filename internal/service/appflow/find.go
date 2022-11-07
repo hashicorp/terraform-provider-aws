@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindFlowByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.FlowDefinition, error) {
+func FindFlowByARN(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.FlowDefinition, error) {
 	in := &appflow.ListFlowsInput{}
 	var result *appflow.FlowDefinition
 
@@ -53,7 +53,7 @@ func FindFlowByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*app
 	return result, nil
 }
 
-func FindConnectorProfileByArn(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.ConnectorProfile, error) {
+func FindConnectorProfileByARN(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.ConnectorProfile, error) {
 	params := &appflow.DescribeConnectorProfilesInput{}
 	var result *appflow.ConnectorProfile
 

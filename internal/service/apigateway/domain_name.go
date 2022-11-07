@@ -213,7 +213,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
+		params.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("regional_certificate_arn"); ok {
@@ -294,7 +294,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("security_policy", domainName.SecurityPolicy)
 	d.Set("ownership_verification_certificate_arn", domainName.OwnershipVerificationCertificateArn)
 
-	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
+	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
 	}
 

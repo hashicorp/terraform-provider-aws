@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccWavelengthCarrierGateway_basic(t *testing.T) {
@@ -23,13 +22,13 @@ func TestAccWavelengthCarrierGateway_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCarrierGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCarrierGatewayConfig_basic(rName),
+				Config: testAccWavelengthCarrierGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`carrier-gateway/cagw-.+`)),
@@ -53,13 +52,13 @@ func TestAccWavelengthCarrierGateway_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCarrierGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCarrierGatewayConfig_basic(rName),
+				Config: testAccWavelengthCarrierGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCarrierGateway(), resourceName),
@@ -76,13 +75,13 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCarrierGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCarrierGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCarrierGatewayConfig_tags1(rName, "key1", "value1"),
+				Config: testAccWavelengthCarrierGatewayConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -95,7 +94,7 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCarrierGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWavelengthCarrierGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -104,7 +103,7 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCarrierGatewayConfig_tags1(rName, "key2", "value2"),
+				Config: testAccWavelengthCarrierGatewayConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -123,21 +122,17 @@ func testAccCheckCarrierGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := tfec2.FindCarrierGatewayByID(conn, rs.Primary.ID)
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidCarrierGatewayIDNotFound) {
+		_, err := tfec2.FindCarrierGatewayByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
-		if out == nil {
-			continue
-		}
-		if state := aws.StringValue(out.State); state != ec2.CarrierGatewayStateDeleted {
-			return fmt.Errorf("EC2 Carrier Gateway in incorrect state. Expected: %s, got: %s", ec2.CarrierGatewayStateDeleted, state)
-		}
 
-		return err
+		return fmt.Errorf("EC2 Carrier Gateway %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -151,22 +146,18 @@ func testAccCheckCarrierGatewayExists(n string, v *ec2.CarrierGateway) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EC2 Carrier Gateway ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := tfec2.FindCarrierGatewayByID(conn, rs.Primary.ID)
+
+		output, err := tfec2.FindCarrierGatewayByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if out == nil {
-			return fmt.Errorf("EC2 Carrier Gateway not found")
-		}
-		if state := aws.StringValue(out.State); state != ec2.CarrierGatewayStateAvailable {
-			return fmt.Errorf("EC2 Carrier Gateway in incorrect state. Expected: %s, got: %s", ec2.CarrierGatewayStateAvailable, state)
-		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}
@@ -197,7 +188,7 @@ func testAccPreCheckWavelengthZoneAvailable(t *testing.T) {
 	}
 }
 
-func testAccCarrierGatewayConfig_basic(rName string) string {
+func testAccWavelengthCarrierGatewayConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -213,7 +204,7 @@ resource "aws_ec2_carrier_gateway" "test" {
 `, rName)
 }
 
-func testAccCarrierGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccWavelengthCarrierGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -233,7 +224,7 @@ resource "aws_ec2_carrier_gateway" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccCarrierGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccWavelengthCarrierGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

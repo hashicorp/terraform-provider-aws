@@ -291,13 +291,13 @@ func resourceHealthCheckCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateHealthCheck(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route53 Health Check (%s): %w", d.Id(), err)
+		return fmt.Errorf("creating Route53 Health Check (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(resp.HealthCheck.Id))
 
 	if err := UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, tags); err != nil {
-		return fmt.Errorf("error setting Route53 Health Check (%s) tags: %w", d.Id(), err)
+		return fmt.Errorf("setting Route53 Health Check (%s) tags: %w", d.Id(), err)
 	}
 
 	return resourceHealthCheckRead(d, meta)
@@ -317,7 +317,7 @@ func resourceHealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route53 Health Check (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Route53 Health Check (%s): %w", d.Id(), err)
 	}
 
 	healthCheckConfig := output.HealthCheckConfig
@@ -335,7 +335,7 @@ func resourceHealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
 
 	if err := d.Set("child_healthchecks", flex.FlattenStringList(healthCheckConfig.ChildHealthChecks)); err != nil {
-		return fmt.Errorf("error setting child_healthchecks: %w", err)
+		return fmt.Errorf("setting child_healthchecks: %w", err)
 	}
 
 	d.Set("child_health_threshold", healthCheckConfig.HealthThreshold)
@@ -352,18 +352,18 @@ func resourceHealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id(), route53.TagResourceTypeHealthcheck)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Route53 Health Check (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for Route53 Health Check (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -448,7 +448,7 @@ func resourceHealthCheckUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateHealthCheck(updateHealthCheck)
 
 		if err != nil {
-			return fmt.Errorf("error updating Route53 Health Check (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating Route53 Health Check (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -456,7 +456,7 @@ func resourceHealthCheckUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, o, n); err != nil {
-			return fmt.Errorf("error updating Route53 Health Check (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating Route53 Health Check (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -474,7 +474,7 @@ func resourceHealthCheckDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Health Check (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Route53 Health Check (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -23,13 +23,13 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig(rName),
+				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "parametergroup/"+rName),
@@ -64,13 +64,13 @@ func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig(rName),
+				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceParameterGroup(), resourceName),
@@ -86,13 +86,13 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_withParameter0(rName),
+				Config: testAccParameterGroupConfig_none(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
@@ -104,7 +104,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_withParameter1(rName, "timeout", "0"), // 0 is the default value
+				Config: testAccParameterGroupConfig_one(rName, "timeout", "0"), // 0 is the default value
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
@@ -123,7 +123,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"parameter"},
 			},
 			{
-				Config: testAccParameterGroupConfig_withParameter1(rName, "timeout", "20"),
+				Config: testAccParameterGroupConfig_one(rName, "timeout", "20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
@@ -139,7 +139,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_withParameter2(rName, "timeout", "20", "activerehashing", "no"),
+				Config: testAccParameterGroupConfig_multiple(rName, "timeout", "20", "activerehashing", "no"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
@@ -159,7 +159,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_withParameter1(rName, "timeout", "20"),
+				Config: testAccParameterGroupConfig_one(rName, "timeout", "20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
@@ -175,7 +175,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_withParameter0(rName),
+				Config: testAccParameterGroupConfig_none(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
@@ -195,13 +195,13 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSubnetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_withTags0(rName),
+				Config: testAccParameterGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -214,7 +214,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccParameterGroupConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -231,7 +231,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccParameterGroupConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -246,7 +246,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_withTags0(rName),
+				Config: testAccParameterGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -301,15 +301,11 @@ func testAccCheckParameterGroupExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindParameterGroupByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccParameterGroupConfig(rName string) string {
+func testAccParameterGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -332,7 +328,7 @@ resource "aws_memorydb_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupConfig_withParameter0(rName string) string {
+func testAccParameterGroupConfig_none(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -341,7 +337,7 @@ resource "aws_memorydb_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupConfig_withParameter1(rName, paramName1, paramValue1 string) string {
+func testAccParameterGroupConfig_one(rName, paramName1, paramValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -355,7 +351,7 @@ resource "aws_memorydb_parameter_group" "test" {
 `, rName, paramName1, paramValue1)
 }
 
-func testAccParameterGroupConfig_withParameter2(rName, paramName1, paramValue1, paramName2, paramValue2 string) string {
+func testAccParameterGroupConfig_multiple(rName, paramName1, paramValue1, paramName2, paramValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -374,7 +370,7 @@ resource "aws_memorydb_parameter_group" "test" {
 `, rName, paramName1, paramValue1, paramName2, paramValue2)
 }
 
-func testAccParameterGroupConfig_withTags0(rName string) string {
+func testAccParameterGroupConfig_tags0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -383,7 +379,7 @@ resource "aws_memorydb_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupConfig_withTags1(rName, tagKey1, tagValue1 string) string {
+func testAccParameterGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -396,7 +392,7 @@ resource "aws_memorydb_parameter_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccParameterGroupConfig_withTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccParameterGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q

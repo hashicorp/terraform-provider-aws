@@ -13,13 +13,13 @@ func TestAccSESDomainIdentityDataSource_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainIdentityDataSourceConfig(domain),
+				Config: testAccDomainIdentityDataSourceConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainIdentityExists("aws_ses_domain_identity.test"),
 					testAccCheckDomainIdentityARN("data.aws_ses_domain_identity.test", domain),
@@ -29,7 +29,7 @@ func TestAccSESDomainIdentityDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDomainIdentityDataSourceConfig(domain string) string {
+func testAccDomainIdentityDataSourceConfig_basic(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
   domain = "%s"

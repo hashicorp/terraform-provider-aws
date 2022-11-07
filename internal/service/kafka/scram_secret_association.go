@@ -54,7 +54,7 @@ func resourceScramSecretAssociationCreate(d *schema.ResourceData, meta interface
 	clusterArn := d.Get("cluster_arn").(string)
 	secretArnList := flex.ExpandStringSet(d.Get("secret_arn_list").(*schema.Set))
 
-	output, err := associateMSKClusterSecrets(conn, clusterArn, secretArnList)
+	output, err := associateClusterSecrets(conn, clusterArn, secretArnList)
 	if err != nil {
 		return fmt.Errorf("error associating scram secret(s) to MSK cluster (%s): %w", clusterArn, err)
 	}
@@ -98,7 +98,7 @@ func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface
 
 	if newSet.Len() > 0 {
 		if newSecrets := newSet.Difference(oldSet); newSecrets.Len() > 0 {
-			output, err := associateMSKClusterSecrets(conn, d.Id(), flex.ExpandStringSet(newSecrets))
+			output, err := associateClusterSecrets(conn, d.Id(), flex.ExpandStringSet(newSecrets))
 			if err != nil {
 				return fmt.Errorf("error associating scram secret(s) with MSK cluster (%s): %w", d.Id(), err)
 			}
@@ -111,7 +111,7 @@ func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface
 
 	if oldSet.Len() > 0 {
 		if deleteSecrets := oldSet.Difference(newSet); deleteSecrets.Len() > 0 {
-			output, err := disassociateMSKClusterSecrets(conn, d.Id(), flex.ExpandStringSet(deleteSecrets))
+			output, err := disassociateClusterSecrets(conn, d.Id(), flex.ExpandStringSet(deleteSecrets))
 			if err != nil {
 				return fmt.Errorf("error disassociating scram secret(s) from MSK cluster (%s): %w", d.Id(), err)
 			}
@@ -138,7 +138,7 @@ func resourceScramSecretAssociationDelete(d *schema.ResourceData, meta interface
 	}
 
 	if len(secretArnList) > 0 {
-		output, err := disassociateMSKClusterSecrets(conn, d.Id(), secretArnList)
+		output, err := disassociateClusterSecrets(conn, d.Id(), secretArnList)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
 				return nil
@@ -153,7 +153,7 @@ func resourceScramSecretAssociationDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func associateMSKClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchAssociateScramSecretOutput, error) {
+func associateClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchAssociateScramSecretOutput, error) {
 	output := &kafka.BatchAssociateScramSecretOutput{}
 
 	for i := 0; i < len(secretArnList); i += ScramSecretBatchSize {
@@ -176,7 +176,7 @@ func associateMSKClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnL
 	return output, nil
 }
 
-func disassociateMSKClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchDisassociateScramSecretOutput, error) {
+func disassociateClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchDisassociateScramSecretOutput, error) {
 	output := &kafka.BatchDisassociateScramSecretOutput{}
 
 	for i := 0; i < len(secretArnList); i += ScramSecretBatchSize {

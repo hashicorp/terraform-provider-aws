@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 )
 
-// Custom Cloudfront listing functions using similar formatting as other service generated code.
+// Custom CloudFront listing functions using similar formatting as other service generated code.
 
 func ListCachePoliciesPages(conn *cloudfront.CloudFront, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool) error {
 	for {
@@ -105,6 +105,23 @@ func ListResponseHeadersPoliciesPages(conn *cloudfront.CloudFront, input *cloudf
 		}
 
 		input.Marker = output.ResponseHeadersPolicyList.NextMarker
+	}
+	return nil
+}
+
+func ListOriginAccessControlsPages(conn *cloudfront.CloudFront, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool) error {
+	for {
+		output, err := conn.ListOriginAccessControls(input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.OriginAccessControlList.NextMarker) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.Marker = output.OriginAccessControlList.NextMarker
 	}
 	return nil
 }

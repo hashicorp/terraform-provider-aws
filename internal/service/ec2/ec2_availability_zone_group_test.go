@@ -19,10 +19,10 @@ func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 	localZone := "us-west-2-lax-1" // lintignore:AWSAT003
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAvailabilityZoneGroupConfig_optInStatus(localZone, ec2.AvailabilityZoneOptInStatusOptedIn),
@@ -38,13 +38,13 @@ func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 			// InvalidOptInStatus: Opting out of Local Zones is not currently supported. Contact AWS Support for additional assistance.
 			/*
 				{
-					Config: testAccEc2AvailabilityZoneGroupConfigOptInStatus(ec2.AvailabilityZoneOptInStatusNotOptedIn),
+					Config: testAccAvailabilityZoneGroupConfig_optInStatus(ec2.AvailabilityZoneOptInStatusNotOptedIn),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(resourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusNotOptedIn),
 					),
 				},
 				{
-					Config: testAccEc2AvailabilityZoneGroupConfigOptInStatus(ec2.AvailabilityZoneOptInStatusOptedIn),
+					Config: testAccAvailabilityZoneGroupConfig_optInStatus(ec2.AvailabilityZoneOptInStatusOptedIn),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(resourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					),

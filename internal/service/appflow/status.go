@@ -11,7 +11,7 @@ import (
 
 func FlowStatus(ctx context.Context, conn *appflow.Appflow, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindFlowByArn(ctx, conn, id)
+		out, err := FindFlowByARN(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -16,12 +16,12 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_batch_compute_environment.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentDataSourceConfig(rName),
+				Config: testAccComputeEnvironmentDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_name", resourceName, "compute_environment_name"),
@@ -36,7 +36,7 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccComputeEnvironmentDataSourceConfig(rName string) string {
+func testAccComputeEnvironmentDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

@@ -29,13 +29,13 @@ func testAccLoggingOptions_basic(t *testing.T) {
 	resourceName := "aws_iot_logging_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingOptionsConfig(rName),
+				Config: testAccLoggingOptionsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
@@ -51,13 +51,13 @@ func testAccLoggingOptions_update(t *testing.T) {
 	resourceName := "aws_iot_logging_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingOptionsConfig(rName),
+				Config: testAccLoggingOptionsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
@@ -65,7 +65,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLoggingOptionsUpdatedConfig(rName),
+				Config: testAccLoggingOptionsConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "true"),
@@ -117,7 +117,7 @@ EOF
 `, rName)
 }
 
-func testAccLoggingOptionsConfig(rName string) string {
+func testAccLoggingOptionsConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccLoggingOptionsBaseConfig(rName), `
 resource "aws_iot_logging_options" "test" {
   default_log_level = "WARN"
@@ -128,7 +128,7 @@ resource "aws_iot_logging_options" "test" {
 `)
 }
 
-func testAccLoggingOptionsUpdatedConfig(rName string) string {
+func testAccLoggingOptionsConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccLoggingOptionsBaseConfig(rName), `
 resource "aws_iot_logging_options" "test" {
   default_log_level = "DISABLED"

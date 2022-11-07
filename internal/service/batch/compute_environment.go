@@ -25,6 +25,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 		Read:   resourceComputeEnvironmentRead,
 		Update: resourceComputeEnvironmentUpdate,
 		Delete: resourceComputeEnvironmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -165,7 +166,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"spot_iam_fleet_role": {
@@ -195,6 +196,28 @@ func ResourceComputeEnvironment() *schema.Resource {
 			"ecs_cluster_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"eks_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"eks_cluster_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"kubernetes_namespace": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"service_role": {
 				Type:         schema.TypeString,
@@ -249,7 +272,11 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ComputeResources = expandBatchComputeResource(v.([]interface{})[0].(map[string]interface{}))
+		input.ComputeResources = expandComputeResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("eks_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EksConfiguration = expandEKSConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -306,11 +333,19 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("type", computeEnvironmentType)
 
 	if computeEnvironment.ComputeResources != nil {
-		if err := d.Set("compute_resources", []interface{}{flattenBatchComputeResource(computeEnvironment.ComputeResources)}); err != nil {
+		if err := d.Set("compute_resources", []interface{}{flattenComputeResource(computeEnvironment.ComputeResources)}); err != nil {
 			return fmt.Errorf("error setting compute_resources: %w", err)
 		}
 	} else {
 		d.Set("compute_resources", nil)
+	}
+
+	if computeEnvironment.EksConfiguration != nil {
+		if err := d.Set("eks_configuration", []interface{}{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
+			return fmt.Errorf("error setting eks_configuration: %w", err)
+		}
+	} else {
+		d.Set("eks_configuration", nil)
 	}
 
 	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -404,7 +439,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if _, err := waitComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("error waiting for Batch Compute Environment (%s) disable: %w", d.Id(), err)
+			log.Printf("[WARN] error waiting for Batch Compute Environment (%s) disable: %s", d.Id(), err)
 		}
 	}
 
@@ -459,7 +494,7 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 	return nil
 }
 
-func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeResource {
+func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -485,7 +520,7 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	}
 
 	if v, ok := tfMap["ec2_configuration"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Ec2Configuration = expandBatchEc2Configurations(v)
+		apiObject.Ec2Configuration = expandEC2Configurations(v)
 	}
 
 	if v, ok := tfMap["ec2_key_pair"].(string); ok && v != "" {
@@ -505,7 +540,7 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	}
 
 	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplate = expandBatchLaunchTemplateSpecification(v[0].(map[string]interface{}))
+		apiObject.LaunchTemplate = expandLaunchTemplateSpecification(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["max_vcpus"].(int); ok && v != 0 {
@@ -541,7 +576,25 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	return apiObject
 }
 
-func expandBatchEc2Configuration(tfMap map[string]interface{}) *batch.Ec2Configuration {
+func expandEKSConfiguration(tfMap map[string]interface{}) *batch.EksConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &batch.EksConfiguration{}
+
+	if v, ok := tfMap["eks_cluster_arn"].(string); ok && v != "" {
+		apiObject.EksClusterArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["kubernetes_namespace"].(string); ok && v != "" {
+		apiObject.KubernetesNamespace = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandEC2Configuration(tfMap map[string]interface{}) *batch.Ec2Configuration {
 	if tfMap == nil {
 		return nil
 	}
@@ -559,7 +612,7 @@ func expandBatchEc2Configuration(tfMap map[string]interface{}) *batch.Ec2Configu
 	return apiObject
 }
 
-func expandBatchEc2Configurations(tfList []interface{}) []*batch.Ec2Configuration {
+func expandEC2Configurations(tfList []interface{}) []*batch.Ec2Configuration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -573,7 +626,7 @@ func expandBatchEc2Configurations(tfList []interface{}) []*batch.Ec2Configuratio
 			continue
 		}
 
-		apiObject := expandBatchEc2Configuration(tfMap)
+		apiObject := expandEC2Configuration(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -585,7 +638,7 @@ func expandBatchEc2Configurations(tfList []interface{}) []*batch.Ec2Configuratio
 	return apiObjects
 }
 
-func expandBatchLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -607,7 +660,7 @@ func expandBatchLaunchTemplateSpecification(tfMap map[string]interface{}) *batch
 	return apiObject
 }
 
-func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]interface{} {
+func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -627,7 +680,7 @@ func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]in
 	}
 
 	if v := apiObject.Ec2Configuration; v != nil {
-		tfMap["ec2_configuration"] = flattenBatchEc2Configurations(v)
+		tfMap["ec2_configuration"] = flattenEC2Configurations(v)
 	}
 
 	if v := apiObject.Ec2KeyPair; v != nil {
@@ -647,7 +700,7 @@ func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]in
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {
-		tfMap["launch_template"] = []interface{}{flattenBatchLaunchTemplateSpecification(v)}
+		tfMap["launch_template"] = []interface{}{flattenLaunchTemplateSpecification(v)}
 	}
 
 	if v := apiObject.MaxvCpus; v != nil {
@@ -681,7 +734,25 @@ func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]in
 	return tfMap
 }
 
-func flattenBatchEc2Configuration(apiObject *batch.Ec2Configuration) map[string]interface{} {
+func flattenEKSConfiguration(apiObject *batch.EksConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EksClusterArn; v != nil {
+		tfMap["eks_cluster_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.KubernetesNamespace; v != nil {
+		tfMap["kubernetes_namespace"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEC2Configuration(apiObject *batch.Ec2Configuration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -699,7 +770,7 @@ func flattenBatchEc2Configuration(apiObject *batch.Ec2Configuration) map[string]
 	return tfMap
 }
 
-func flattenBatchEc2Configurations(apiObjects []*batch.Ec2Configuration) []interface{} {
+func flattenEC2Configurations(apiObjects []*batch.Ec2Configuration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -711,13 +782,13 @@ func flattenBatchEc2Configurations(apiObjects []*batch.Ec2Configuration) []inter
 			continue
 		}
 
-		tfList = append(tfList, flattenBatchEc2Configuration(apiObject))
+		tfList = append(tfList, flattenEC2Configuration(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenBatchLaunchTemplateSpecification(apiObject *batch.LaunchTemplateSpecification) map[string]interface{} {
+func flattenLaunchTemplateSpecification(apiObject *batch.LaunchTemplateSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

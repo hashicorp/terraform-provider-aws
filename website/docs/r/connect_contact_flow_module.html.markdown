@@ -114,7 +114,7 @@ The following arguments are supported:
 * `filename` - (Optional) The path to the Contact Flow Module source within the local filesystem. Conflicts with `content`.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) Specifies the name of the Contact Flow Module.
-* `tags` - (Optional) Tags to apply to the Contact Flow Module. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Contact Flow Module. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -123,7 +123,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the Contact Flow Module.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Contact Flow Module separated by a colon (`:`).
 * `contact_flow_module_id` - The identifier of the Contact Flow Module.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

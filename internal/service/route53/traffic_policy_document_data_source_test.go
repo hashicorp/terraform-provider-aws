@@ -15,12 +15,12 @@ import (
 
 func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyDocumentDataSourceConfig,
+				Config: testAccTrafficPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicySameJSON("data.aws_route53_traffic_policy_document.test",
 						testAccTrafficPolicyDocumentConfigExpectedJSON()),
@@ -32,12 +32,12 @@ func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 
 func TestAccRoute53TrafficPolicyDocumentDataSource_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyDocumentDataSourceConfigComplete,
+				Config: testAccTrafficPolicyDocumentDataSourceConfig_complete,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicySameJSON("data.aws_route53_traffic_policy_document.test",
 						testAccTrafficPolicyDocumentConfigCompleteExpectedJSON()),
@@ -124,6 +124,20 @@ func testAccTrafficPolicyDocumentConfigCompleteExpectedJSON() string {
         {
           "RuleReference":"region_selector",
           "Country":"US"
+        },
+        {
+          "RuleReference":"geoproximity_selector",
+          "Country":"UK"
+        }
+      ]
+    },
+    "geoproximity_selector": {
+      "RuleType": "geoproximity",
+      "GeoproximityLocations": [
+        {
+          "EndpointReference": "denied_message",
+          "Latitude": "51.50",
+          "Longitude": "-0.07"
         }
       ]
     },
@@ -162,7 +176,7 @@ func testAccTrafficPolicyDocumentConfigCompleteExpectedJSON() string {
 }`, acctest.Region(), acctest.AlternateRegion())
 }
 
-const testAccTrafficPolicyDocumentDataSourceConfig = `
+const testAccTrafficPolicyDocumentDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_route53_traffic_policy_document" "test" {
@@ -195,7 +209,7 @@ data "aws_route53_traffic_policy_document" "test" {
 }
 `
 
-const testAccTrafficPolicyDocumentDataSourceConfigComplete = `
+const testAccTrafficPolicyDocumentDataSourceConfig_complete = `
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -244,7 +258,23 @@ data "aws_route53_traffic_policy_document" "test" {
       rule_reference = "region_selector"
       country        = "US"
     }
+    location {
+      rule_reference = "geoproximity_selector"
+      country        = "UK"
+    }
   }
+
+  rule {
+    id   = "geoproximity_selector"
+    type = "geoproximity"
+
+    geo_proximity_location {
+      longitude          = "-0.07"
+      latitude           = "51.50"
+      endpoint_reference = "denied_message"
+    }
+  }
+
   rule {
     id   = "region_selector"
     type = "latency"
@@ -258,6 +288,7 @@ data "aws_route53_traffic_policy_document" "test" {
       rule_reference = "west_coast_region"
     }
   }
+
   rule {
     id   = "east_coast_region"
     type = "failover"
@@ -269,6 +300,7 @@ data "aws_route53_traffic_policy_document" "test" {
       endpoint_reference = "east_coast_lb2"
     }
   }
+
   rule {
     id   = "west_coast_region"
     type = "failover"

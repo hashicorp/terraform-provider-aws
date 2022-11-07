@@ -60,13 +60,6 @@ The following arguments are supported:
 * `account_id` - (Optional) The AWS account ID for the owner of the Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `details` - (Required) A configuration block containing details about the policy for the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Default `15 minutes`) Used when creating the Multi-Region Access Point Policy.
-* `update` - (Default `15 minutes`) Used when updating the Multi-Region Access Point Policy.
-
 ### Details Configuration
 
 The `details` block supports the following:
@@ -83,6 +76,13 @@ In addition to all arguments above, the following attributes are exported:
 * `established` - The last established policy for the Multi-Region Access Point.
 * `id` - The AWS account ID and access point name separated by a colon (`:`).
 * `proposed` - The proposed policy for the Multi-Region Access Point.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
 
 ## Import
 

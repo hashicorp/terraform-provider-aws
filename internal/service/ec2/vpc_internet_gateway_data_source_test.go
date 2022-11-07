@@ -19,12 +19,12 @@ func TestAccVPCInternetGatewayDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayDataSourceConfig(rName),
+				Config: testAccVPCInternetGatewayDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "internet_gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", igwResourceName, "owner_id"),
@@ -44,7 +44,7 @@ func TestAccVPCInternetGatewayDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccInternetGatewayDataSourceConfig(rName string) string {
+func testAccVPCInternetGatewayDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

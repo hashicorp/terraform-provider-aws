@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindApiCacheByID(conn *appsync.AppSync, id string) (*appsync.ApiCache, error) {
+func FindAPICacheByID(conn *appsync.AppSync, id string) (*appsync.ApiCache, error) {
 	input := &appsync.GetApiCacheInput{
 		ApiId: aws.String(id),
 	}
@@ -56,7 +56,7 @@ func FindDomainNameByID(conn *appsync.AppSync, id string) (*appsync.DomainNameCo
 	return out.DomainNameConfig, nil
 }
 
-func FindDomainNameApiAssociationByID(conn *appsync.AppSync, id string) (*appsync.ApiAssociation, error) {
+func FindDomainNameAPIAssociationByID(conn *appsync.AppSync, id string) (*appsync.ApiAssociation, error) {
 	input := &appsync.GetApiAssociationInput{
 		DomainName: aws.String(id),
 	}

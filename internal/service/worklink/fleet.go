@@ -141,7 +141,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.CreateFleet(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Worklink Fleet: %s", err)
+		return fmt.Errorf("Error creating WorkLink Fleet: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.FleetArn))
@@ -172,12 +172,12 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
+			log.Printf("[WARN] WorkLink Fleet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error describe worklink fleet: %s", err)
+		return fmt.Errorf("error describing WorkLink Fleet (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", d.Id())
@@ -193,7 +193,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe worklink audit stream configuration: %s", err)
+		return fmt.Errorf("error describing WorkLink Fleet (%s) audit stream configuration: %w", d.Id(), err)
 	}
 	d.Set("audit_stream_arn", auditStreamConfigurationResp.AuditStreamArn)
 
@@ -201,28 +201,27 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe worklink company network configuration: %s", err)
+		return fmt.Errorf("error describing WorkLink Fleet (%s) company network configuration: %w", d.Id(), err)
 	}
 	if err := d.Set("network", flattenNetworkConfigResponse(companyNetworkConfigurationResp)); err != nil {
-		return fmt.Errorf("Error setting network: %s", err)
+		return fmt.Errorf("error setting network: %w", err)
 	}
 
 	identityProviderConfigurationResp, err := conn.DescribeIdentityProviderConfiguration(&worklink.DescribeIdentityProviderConfigurationInput{
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe worklink company network configuration: %s", err)
+		return fmt.Errorf("error describing WorkLink Fleet (%s) identity provider configuration: %w", d.Id(), err)
 	}
-
 	if err := d.Set("identity_provider", flattenIdentityProviderConfigResponse(identityProviderConfigurationResp)); err != nil {
-		return fmt.Errorf("Error setting identity_provider: %s", err)
+		return fmt.Errorf("error setting identity_provider: %w", err)
 	}
 
 	devicePolicyConfigurationResp, err := conn.DescribeDevicePolicyConfiguration(&worklink.DescribeDevicePolicyConfigurationInput{
 		FleetArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error describe worklink device policy configuration: %s", err)
+		return fmt.Errorf("error describing WorkLink Fleet (%s) device policy configuration: %w", d.Id(), err)
 	}
 	d.Set("device_ca_certificate", strings.TrimSpace(aws.StringValue(devicePolicyConfigurationResp.DeviceCaCertificate)))
 
@@ -244,12 +243,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("display_name", "optimize_for_end_user_location") {
 		_, err := conn.UpdateFleetMetadata(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error updating worklink fleet: %s", err)
+			return fmt.Errorf("error updating WorkLink Fleet (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -291,7 +285,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Worklink Fleet resource share %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleting WorkLink Fleet resource share (%s): %w", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -305,9 +299,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Worklink Fleet (%s) to become deleted: %s",
-			d.Id(), err)
+		return fmt.Errorf("error waiting for WorkLink Fleet (%s) to become deleted: %w", d.Id(), err)
 	}
 
 	return nil
@@ -340,14 +332,8 @@ func updateAuditStreamConfiguration(conn *worklink.WorkLink, d *schema.ResourceD
 		return nil
 	}
 
-	log.Printf("[DEBUG] Update audit stream configuration option: %#v", input)
 	if _, err := conn.UpdateAuditStreamConfiguration(input); err != nil {
-		if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error Updating Worklink Audit Stream Configuration: %s", err)
+		return fmt.Errorf("error updating WorkLink Fleet (%s) Audit Stream Configuration: %w", d.Id(), err)
 	}
 
 	return nil
@@ -368,14 +354,8 @@ func updateCompanyNetworkConfiguration(conn *worklink.WorkLink, d *schema.Resour
 			SubnetIds:        flex.ExpandStringSet(config["subnet_ids"].(*schema.Set)),
 			VpcId:            aws.String(config["vpc_id"].(string)),
 		}
-		log.Printf("[DEBUG] Update company network configuration option: %#v", input)
 		if _, err := conn.UpdateCompanyNetworkConfiguration(input); err != nil {
-			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error Updating Worklink Network Configuration: %s", err)
+			return fmt.Errorf("error updating WorkLink Fleet (%s) Company Network Configuration: %w", d.Id(), err)
 		}
 	}
 	return nil
@@ -391,14 +371,8 @@ func updateDevicePolicyConfiguration(conn *worklink.WorkLink, d *schema.Resource
 		return nil
 	}
 
-	log.Printf("[DEBUG] Update device policy configuration option: %#v", input)
 	if _, err := conn.UpdateDevicePolicyConfiguration(input); err != nil {
-		if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error Updating Worklink Device Policy Configuration: %s", err)
+		return fmt.Errorf("error updating WorkLink Fleet (%s) Device Policy Configuration: %w", d.Id(), err)
 	}
 	return nil
 }
@@ -418,14 +392,8 @@ func updateIdentityProviderConfiguration(conn *worklink.WorkLink, d *schema.Reso
 			IdentityProviderType:         aws.String(config["type"].(string)),
 			IdentityProviderSamlMetadata: aws.String(config["saml_metadata"].(string)),
 		}
-		log.Printf("[DEBUG] Update identity provider configuration option: %#v", input)
 		if _, err := conn.UpdateIdentityProviderConfiguration(input); err != nil {
-			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
-				log.Printf("[WARN] Worklink Fleet (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error Updating Identity Provider Configuration: %s", err)
+			return fmt.Errorf("error updating WorkLink Fleet (%s) Identity Provider Configuration: %w", d.Id(), err)
 		}
 	}
 

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +23,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 		Read:   resourceEBSSnapshotRead,
 		Update: resourceEBSSnapshotUpdate,
 		Delete: resourceEBSSnapshotDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,13 +76,10 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Optional: true,
 			},
 			"storage_tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringInSlice(ec2.TargetStorageTier_Values(), false),
-					validation.StringInSlice([]string{"standard"}, false), //Enum slice does not include `standard` type.
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(append(ec2.TargetStorageTier_Values(), TargetStorageTierStandard), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -108,45 +105,43 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	request := &ec2.CreateSnapshotInput{
-		VolumeId:          aws.String(d.Get("volume_id").(string)),
+	volumeID := d.Get("volume_id").(string)
+	input := &ec2.CreateSnapshotInput{
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
+		VolumeId:          aws.String(volumeID),
 	}
+
 	if v, ok := d.GetOk("description"); ok {
-		request.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("outpost_arn"); ok {
-		request.OutpostArn = aws.String(v.(string))
+		input.OutpostArn = aws.String(v.(string))
 	}
 
-	var res *ec2.Snapshot
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		res, err = conn.CreateSnapshot(request)
+	log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+		func() (interface{}, error) {
+			return conn.CreateSnapshot(input)
+		},
+		errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
 
-		if tfawserr.ErrMessageContains(err, "SnapshotCreationPerVolumeRateExceeded", "The maximum per volume CreateSnapshot request rate has been exceeded") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		res, err = conn.CreateSnapshot(request)
-	}
 	if err != nil {
-		return fmt.Errorf("error creating EBS Snapshot: %w", err)
+		return fmt.Errorf("creating EBS Snapshot (%s): %w", volumeID, err)
 	}
 
-	d.SetId(aws.StringValue(res.SnapshotId))
+	d.SetId(aws.StringValue(outputRaw.(*ec2.Snapshot).SnapshotId))
 
-	err = resourceEBSSnapshotWaitForAvailable(d, conn)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return nil, conn.WaitUntilSnapshotCompleted(&ec2.DescribeSnapshotsInput{
+				SnapshotIds: aws.StringSlice([]string{d.Id()}),
+			})
+		},
+		errCodeResourceNotReady)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("waiting for EBS Snapshot (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {
@@ -156,12 +151,11 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("error setting EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
+			return fmt.Errorf("updating EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
 		}
 
-		_, err = WaitEBSSnapshotTierArchive(conn, d.Id())
-		if err != nil {
-			return fmt.Errorf("Error waiting for EBS Snapshot (%s) Storage Tier to be archived: %w", d.Id(), err)
+		if _, err := waitEBSSnapshotTierArchive(conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
+			return fmt.Errorf("waiting for EBS Snapshot (%s) Storage Tier archive: %w", d.Id(), err)
 		}
 	}
 
@@ -173,18 +167,25 @@ func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	snapshot, err := FindSnapshotById(conn, d.Id())
+	snapshot, err := FindSnapshotByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EBS Snapshot (%s) Not found - removing from state", d.Id())
+		log.Printf("[WARN] EBS Snapshot %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EBS Snapshot (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EBS Snapshot (%s): %w", d.Id(), err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set("description", snapshot.Description)
 	d.Set("encrypted", snapshot.Encrypted)
@@ -200,21 +201,12 @@ func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
-
-	snapshotArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
-		Service:   ec2.ServiceName,
-	}.String()
-
-	d.Set("arn", snapshotArn)
 
 	return nil
 }
@@ -223,20 +215,18 @@ func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("storage_tier") {
-		tier := d.Get("storage_tier").(string)
-		if tier == ec2.TargetStorageTierArchive {
+		if tier := d.Get("storage_tier").(string); tier == ec2.TargetStorageTierArchive {
 			_, err := conn.ModifySnapshotTier(&ec2.ModifySnapshotTierInput{
 				SnapshotId:  aws.String(d.Id()),
 				StorageTier: aws.String(tier),
 			})
 
 			if err != nil {
-				return fmt.Errorf("error upadating EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
+				return fmt.Errorf("updating EBS Snapshot (%s) Storage Tier: %w", d.Id(), err)
 			}
 
-			_, err = WaitEBSSnapshotTierArchive(conn, d.Id())
-			if err != nil {
-				return fmt.Errorf("Error waiting for EBS Snapshot (%s) Storage Tier to be archived: %w", d.Id(), err)
+			if _, err := waitEBSSnapshotTierArchive(conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
+				return fmt.Errorf("waiting for EBS Snapshot (%s) Storage Tier archive: %w", d.Id(), err)
 			}
 		} else {
 			input := &ec2.RestoreSnapshotTierInput{
@@ -255,15 +245,16 @@ func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 			_, err := conn.RestoreSnapshotTier(input)
 
 			if err != nil {
-				return fmt.Errorf("error restoring EBS Snapshot (%s): %w", d.Id(), err)
+				return fmt.Errorf("restoring EBS Snapshot (%s): %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return fmt.Errorf("updating EBS Snapshot (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -280,33 +271,13 @@ func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 	}, errCodeInvalidSnapshotInUse)
 
-	if err != nil {
-		return fmt.Errorf("error deleting EBS Snapshot (%s): %w", d.Id(), err)
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+		return nil
 	}
 
-	return nil
-}
-
-func resourceEBSSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) error {
-	log.Printf("Waiting for Snapshot %s to become available...", d.Id())
-	input := &ec2.DescribeSnapshotsInput{
-		SnapshotIds: []*string{aws.String(d.Id())},
-	}
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		err := conn.WaitUntilSnapshotCompleted(input)
-		if err == nil {
-			return nil
-		}
-		if tfawserr.ErrCodeEquals(err, "ResourceNotReady") {
-			return resource.RetryableError(fmt.Errorf("EBS Snapshot - waiting for snapshot to become available"))
-		}
-		return resource.NonRetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		err = conn.WaitUntilSnapshotCompleted(input)
-	}
 	if err != nil {
-		return fmt.Errorf("Error waiting for EBS snapshot to complete: %w", err)
+		return fmt.Errorf("deleting EBS Snapshot (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }

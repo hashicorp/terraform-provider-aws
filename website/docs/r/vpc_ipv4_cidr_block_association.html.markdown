@@ -35,19 +35,18 @@ The following arguments are supported:
 * `ipv4_netmask_length` - (Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a `ipv4_ipam_pool_id`.
 * `vpc_id` - (Required) The ID of the VPC to make the association with.
 
-## Timeouts
-
-`aws_vpc_ipv4_cidr_block_association` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `10 minutes`) Used for creating the association
-- `delete` - (Default `10 minutes`) Used for destroying the association
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC CIDR association
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
