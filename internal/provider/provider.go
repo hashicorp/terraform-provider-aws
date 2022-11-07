@@ -1885,6 +1885,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
 			"aws_redshift_cluster_iam_roles":             redshift.ResourceClusterIAMRoles(),
 			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
+			"aws_redshift_endpoint_authorization":        redshift.ResourceEndpointAuthorization(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
 			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
 			"aws_redshift_hsm_configuration":             redshift.ResourceHSMConfiguration(),
