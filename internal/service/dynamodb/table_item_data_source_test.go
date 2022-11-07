@@ -1,13 +1,6 @@
 package dynamodb_test
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	"fmt"
 	"testing"
 
@@ -131,13 +124,13 @@ func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
 func testAccTableItemDataSourceConfig_basic(tableName, hashKey, item string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 10
   write_capacity = 10
-  hash_key       = "%s"
+  hash_key       = %[2]q
 
   attribute {
-    name = "%s"
+    name = %[3]q
     type = "S"
   }
 }
@@ -147,7 +140,7 @@ resource "aws_dynamodb_table_item" "test" {
   hash_key   = aws_dynamodb_table.test.hash_key
 
   item = <<ITEM
-%s
+%[4]s
 ITEM
 }
 
@@ -155,7 +148,7 @@ data "aws_dynamodb_table_item" "test" {
   table_name = aws_dynamodb_table.test.name
 
   key        = <<KEY
-%s
+%[5]s
 KEY
   depends_on = [aws_dynamodb_table_item.test]
 }
@@ -165,13 +158,13 @@ KEY
 func testAccTableItemDataSourceConfig_projectionExpression(tableName, hashKey, item, projectionExpression, key string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 10
   write_capacity = 10
-  hash_key       = "%s"
+  hash_key       = %[2]q
 
   attribute {
-    name = "%s"
+    name = %[3]q
     type = "S"
   }
 }
@@ -181,15 +174,15 @@ resource "aws_dynamodb_table_item" "test" {
   hash_key   = aws_dynamodb_table.test.hash_key
 
   item = <<ITEM
-%s
+%[4]s
 ITEM
 }
 
 data "aws_dynamodb_table_item" "test" {
   table_name            = aws_dynamodb_table.test.name
-  projection_expression = "%s"
+  projection_expression = %[5]q
   key                   = <<KEY
-%s
+%[6]s
 KEY
   depends_on            = [aws_dynamodb_table_item.test]
 }
@@ -199,13 +192,13 @@ KEY
 func testAccTableItemDataSourceConfig_expressionAttributeNames(tableName, hashKey, item string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 10
   write_capacity = 10
-  hash_key       = "%s"
+  hash_key       = %[2]q
 
   attribute {
-    name = "%s"
+    name = %[3]q
     type = "S"
   }
 }
@@ -215,7 +208,7 @@ resource "aws_dynamodb_table_item" "test" {
   hash_key   = aws_dynamodb_table.test.hash_key
 
   item = <<ITEM
-%s
+%[4]s
 ITEM
 }
 
@@ -226,7 +219,7 @@ data "aws_dynamodb_table_item" "test" {
   }
   projection_expression = "#P"
   key                   = <<KEY
-%s
+%[5]s
 KEY
   depends_on            = [aws_dynamodb_table_item.test]
 }

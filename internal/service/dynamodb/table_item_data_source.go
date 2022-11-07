@@ -2,7 +2,6 @@ package dynamodb
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -62,23 +61,21 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	id := buildTableItemDataSourceID(tableName, key)
-
-	log.Printf("[DEBUG] DynamoDB item get: %s | %s", tableName, id)
-
 	in := &dynamodb.GetItemInput{
-		TableName:      aws.String(tableName),
 		ConsistentRead: aws.Bool(true),
 		Key:            key,
+		TableName:      aws.String(tableName),
 	}
 
 	if v, ok := d.GetOk("expression_attribute_names"); ok && len(v.(map[string]interface{})) > 0 {
 		in.ExpressionAttributeNames = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
+
 	if v, ok := d.GetOk("projection_expression"); ok {
 		in.ProjectionExpression = aws.String(v.(string))
 	}
 
-	out, err := conn.GetItem(in)
+	out, err := conn.GetItemWithContext(ctx, in)
 
 	if err != nil {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
@@ -90,8 +87,8 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(id)
 
-	d.Set("projection_expression", in.ProjectionExpression)
 	d.Set("expression_attribute_names", aws.StringValueMap(in.ExpressionAttributeNames))
+	d.Set("projection_expression", in.ProjectionExpression)
 	d.Set("table_name", tableName)
 
 	itemAttrs, err := flattenTableItemAttributes(out.Item)
@@ -99,6 +96,7 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
+
 	d.Set("item", itemAttrs)
 
 	return nil
@@ -112,5 +110,6 @@ func buildTableItemDataSourceID(tableName string, attrs map[string]*dynamodb.Att
 		id = append(id, aws.StringValue(element.S))
 		id = append(id, aws.StringValue(element.N))
 	}
+
 	return strings.Join(id, "|")
 }
