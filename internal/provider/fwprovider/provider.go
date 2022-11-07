@@ -478,5 +478,22 @@ func (w *wrappedResource) Configure(ctx context.Context, request resource.Config
 }
 
 func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	// w.inner.ImportState(ctx, request, response)
+	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
+		v.ImportState(ctx, request, response)
+
+		return
+	}
+
+	response.Diagnostics.AddError(
+		"Resource Import Not Implemented",
+		"This resource does not support import. Please contact the provider developer for additional information.",
+	)
+}
+
+func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
+		v.ModifyPlan(ctx, request, response)
+
+		return
+	}
 }
