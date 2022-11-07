@@ -198,9 +198,38 @@ The following arguments are optional:
 * `sid` - (Required) The Nielsen Source ID to include in the watermark.
 
 ### Output Groups
-* `output_group_settings` - (Required) Settings associated with the output group.
+
+* `output_group_settings` - (Required) Settings associated with the output group. See [Output Group Settings](#output-group-settings) for more details.
 * `outputs` - (Required) List of outputs.
 * `name` - (Optional) Custom output group name defined by the user.
+
+### Output Group Settings
+
+* `archive_group_settings` - (Optional) Archive group settings. See [Archive Group Settings](#archive-group-settings) for more details.
+* `media_package_group_settings` - (Optional) Media package group settings. See [Media Package Group Settings](#media-package-group-settings) for more details.
+* `multiplex_group_sttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
+
+### Archive Group Settings
+
+* `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
+* `archive_cdn_settings` - (Optional) Parameters that control the interactions with the CDN. See [Archive CDN Settings](#archive-cdn-settings) for more details.
+* `rollover_interval` - (Optional) Number of seconds to write to archive file before closing and starting a new one.
+
+### Media Package Group Settings
+
+* `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
+
+### Destination
+
+* `destination_ref_id` - (Required) Reference ID for the destination.
+
+### Archive CDN Settings
+
+* `archive_s3_settings` - (Optional) Archive S3 Settings. See [Archive S3 Settings](#archive-s3-settings) for more details.
+
+### Archive S3 Settings
+
+* `canned_acl` - (Optional) Specify the canned ACL to apply to each S3 request.
 
 ## Attributes Reference
 

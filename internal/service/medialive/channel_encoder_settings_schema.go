@@ -2433,8 +2433,42 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
 		o.Destination = expandDestination(v)
 	}
+	if v, ok := m["archive_cdn_settings"].([]interface{}); ok && len(v) > 0 {
+		o.ArchiveCdnSettings = expandArchiveCDNSettings(v)
+	}
+	if v, ok := m["rollover_interval"].(int); ok {
+		o.RolloverInterval = int32(v)
+	}
 
 	return &o
+}
+
+func expandArchiveCDNSettings(tfList []interface{}) *types.ArchiveCdnSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.ArchiveCdnSettings
+	if v, ok := m["archive_s3_settings"].([]interface{}); ok && len(v) > 0 {
+		out.ArchiveS3Settings = func(in []interface{}) *types.ArchiveS3Settings {
+			if len(in) == 0 {
+				return nil
+			}
+
+			m := in[0].(map[string]interface{})
+
+			var o types.ArchiveS3Settings
+			if v, ok := m["canned_acl"].(string); ok && v != "" {
+				o.CannedAcl = types.S3CannedAcl(v)
+			}
+
+			return &o
+		}(v)
+	}
+
+	return &out
 }
 
 func expandAudioWatermarkSettings(tfList []interface{}) *types.AudioWatermarkSettings {
