@@ -435,7 +435,6 @@ func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCNetworkACL_subnets(t *testing.T) {

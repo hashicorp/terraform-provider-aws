@@ -62,7 +62,6 @@ In addition to all arguments above, the following attributes are exported:
 
   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
 
-
 ## Import
 
 Instance Profiles can be imported using the `name`, e.g.,

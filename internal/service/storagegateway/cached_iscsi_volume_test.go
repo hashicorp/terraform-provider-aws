@@ -509,7 +509,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 `, rName))
 }
 
-func testAccCachediSCSIVolumeConfig_sourceARN(rName string) string {
+func testAccCachediSCSIVolumeConfig_sourceARN(rName string) string { //nolint:unused // This function is used in a skipped accteptance test.
 	return acctest.ConfigCompose(
 		testAccCachediSCSIVolumeBaseConfig(rName),
 		fmt.Sprintf(`

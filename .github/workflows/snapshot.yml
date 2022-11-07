@@ -35,7 +35,7 @@ jobs:
           *)
             ARTIFACT="${GITHUB_REF}";;
           esac
-          echo "::set-output name=artifact::$ARTIFACT-$(date -u +'%Y-%m-%dT%H-%M')"
+          echo "artifact=$ARTIFACT-$(date -u +'%Y-%m-%dT%H-%M')" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v3
         with:
           name: ${{steps.naming.outputs.artifact}}

@@ -88,7 +88,6 @@ func testAccCheckDestinationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {

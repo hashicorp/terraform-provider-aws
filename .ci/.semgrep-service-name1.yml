@@ -75,6 +75,64 @@ rules:
             - pattern-regex: "(?i)Connect"
             - pattern-not-regex: .*uickConnect.*
     severity: WARNING
+  - id: controltower-in-func-name
+    languages:
+      - go
+    message: Do not use "ControlTower" in func name inside controltower package
+    paths:
+      include:
+        - internal/service/controltower
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ControlTower"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: controltower-in-test-name
+    languages:
+      - go
+    message: Include "ControlTower" in test name
+    paths:
+      include:
+        - internal/service/controltower/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccControlTower"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: controltower-in-const-name
+    languages:
+      - go
+    message: Do not use "ControlTower" in const name inside controltower package
+    paths:
+      include:
+        - internal/service/controltower
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ControlTower"
+    severity: WARNING
+  - id: controltower-in-var-name
+    languages:
+      - go
+    message: Do not use "ControlTower" in var name inside controltower package
+    paths:
+      include:
+        - internal/service/controltower
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ControlTower"
+    severity: WARNING
   - id: costandusagereportservice-in-func-name
     languages:
       - go
@@ -2190,6 +2248,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Events"
     severity: WARNING
+  - id: evidently-in-func-name
+    languages:
+      - go
+    message: Do not use "Evidently" in func name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Evidently"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: evidently-in-test-name
+    languages:
+      - go
+    message: Include "Evidently" in test name
+    paths:
+      include:
+        - internal/service/evidently/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccEvidently"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: evidently-in-const-name
+    languages:
+      - go
+    message: Do not use "Evidently" in const name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Evidently"
+    severity: WARNING
+  - id: evidently-in-var-name
+    languages:
+      - go
+    message: Do not use "Evidently" in var name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Evidently"
+    severity: WARNING
   - id: firehose-in-func-name
     languages:
       - go
@@ -2973,32 +3089,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccImageBuilder"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: imagebuilder-in-const-name
-    languages:
-      - go
-    message: Do not use "ImageBuilder" in const name inside imagebuilder package
-    paths:
-      include:
-        - internal/service/imagebuilder
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ImageBuilder"
-    severity: WARNING
-  - id: imagebuilder-in-var-name
-    languages:
-      - go
-    message: Do not use "ImageBuilder" in var name inside imagebuilder package
-    paths:
-      include:
-        - internal/service/imagebuilder
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ImageBuilder"
     severity: WARNING

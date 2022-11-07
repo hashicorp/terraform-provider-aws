@@ -34,4 +34,4 @@ data "aws_emr_release_labels" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `release_labels` - The returned release labels.
+* `release_labels` - Returned release labels.

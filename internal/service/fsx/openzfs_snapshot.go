@@ -169,7 +169,6 @@ func resourceOpenzfsSnapshotUpdate(d *schema.ResourceData, meta interface{}) err
 		if _, err := waitSnapshotUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx OpenZFS Snapshot (%s) update: %w", d.Id(), err)
 		}
-
 	}
 
 	return resourceOpenzfsSnapshotRead(d, meta)

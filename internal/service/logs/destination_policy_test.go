@@ -68,7 +68,6 @@ func testAccCheckDestinationPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {

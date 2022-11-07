@@ -721,7 +721,6 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// unneeded records.
 	err = conn.ListResourceRecordSetsPages(lopts, func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
 		for _, recordSet := range resp.ResourceRecordSets {
-
 			responseName := strings.ToLower(CleanRecordName(*recordSet.Name))
 			responseType := strings.ToUpper(aws.StringValue(recordSet.Type))
 

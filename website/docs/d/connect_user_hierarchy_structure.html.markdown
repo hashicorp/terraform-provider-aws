@@ -28,18 +28,18 @@ The following arguments are supported:
 
 In addition to all of the argument above, the following attributes are exported:
 
-* `hierarchy_structure` - A block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
+* `hierarchy_structure` - Block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
 
 A `hierarchy_structure` block supports the following attributes:
 
-* `level_one` - A block that defines the details of level one. The level block is documented below.
-* `level_two` - A block that defines the details of level two. The level block is documented below.
-* `level_three` - A block that defines the details of level three. The level block is documented below.
-* `level_four` - A block that defines the details of level four. The level block is documented below.
-* `level_five` - A block that defines the details of level five. The level block is documented below.
+* `level_one` - Details of level one. See below.
+* `level_two` - Details of level two. See below.
+* `level_three` - Details of level three. See below.
+* `level_four` - Details of level four. See below.
+* `level_five` - Details of level five. See below.
 
 Each level block supports the following attributes:
 
-* `arn` -  The Amazon Resource Name (ARN) of the hierarchy level.
+* `arn` -  ARN of the hierarchy level.
 * `id` -  The identifier of the hierarchy level.
-* `name` - The name of the user hierarchy level. Must not be more than 50 characters.
+* `name` - Name of the user hierarchy level. Must not be more than 50 characters.

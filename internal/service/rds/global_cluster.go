@@ -72,6 +72,10 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"engine_version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -202,15 +206,28 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("database_name", globalCluster.DatabaseName)
 	d.Set("deletion_protection", globalCluster.DeletionProtection)
 	d.Set("engine", globalCluster.Engine)
-	d.Set("engine_version", globalCluster.EngineVersion)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return fmt.Errorf("error setting global_cluster_members: %w", err)
 	}
-
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
 	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
+
+	oldEngineVersion := d.Get("engine_version").(string)
+	newEngineVersion := aws.StringValue(globalCluster.EngineVersion)
+
+	// For example a configured engine_version of "5.6.10a" and a returned engine_version of "5.6.global_10a".
+	if oldParts, newParts := strings.Split(oldEngineVersion, "."), strings.Split(newEngineVersion, "."); len(oldParts) == 3 && //nolint:gocritic // Ignore 'badCond'
+		len(oldParts) == len(newParts) &&
+		oldParts[0] == newParts[0] &&
+		oldParts[1] == newParts[1] &&
+		strings.HasSuffix(newParts[2], oldParts[2]) {
+		d.Set("engine_version", oldEngineVersion)
+		d.Set("engine_version_actual", newEngineVersion)
+	} else {
+		d.Set("engine_version", newEngineVersion)
+		d.Set("engine_version_actual", newEngineVersion)
+	}
 
 	return nil
 }
@@ -583,7 +600,7 @@ func globalClusterUpgradeMajorEngineVersion(meta interface{}, clusterID string, 
 			useConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(clusterRegion))
 		}
 
-		if err := waitForClusterUpdate(useConn, dbi, timeout); err != nil {
+		if err := WaitForClusterUpdate(useConn, dbi, timeout); err != nil {
 			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster (%s) to update: %s", dbi, err)
 		}
 	}
@@ -691,7 +708,7 @@ func globalClusterUpgradeMinorEngineVersion(meta interface{}, clusterMembers *sc
 		}
 
 		log.Printf("[INFO] Waiting for RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", clusterID, dbi, engineVersion)
-		if err := waitForClusterUpdate(useConn, dbi, timeout); err != nil {
+		if err := WaitForClusterUpdate(useConn, dbi, timeout); err != nil {
 			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster Cluster (%s) to update: %s", dbi, err)
 		}
 	}
@@ -738,4 +755,61 @@ func globalClusterUpgradeEngineVersion(d *schema.ResourceData, meta interface{},
 	}
 
 	return nil
+}
+
+var resourceClusterUpdatePendingStates = []string{
+	"backing-up",
+	"configuring-iam-database-auth",
+	"modifying",
+	"renaming",
+	"resetting-master-credentials",
+	"upgrading",
+}
+
+func WaitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    resourceClusterUpdatePendingStates,
+		Target:     []string{"available"},
+		Refresh:    resourceClusterStateRefreshFunc(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
+			DBClusterIdentifier: aws.String(dbClusterIdentifier),
+		})
+
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+			return 42, "destroyed", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var dbc *rds.DBCluster
+
+		for _, c := range resp.DBClusters {
+			if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
+				dbc = c
+			}
+		}
+
+		if dbc == nil {
+			return 42, "destroyed", nil
+		}
+
+		if dbc.Status != nil {
+			log.Printf("[DEBUG] DB Cluster status (%s): %s", dbClusterIdentifier, *dbc.Status)
+		}
+
+		return dbc, aws.StringValue(dbc.Status), nil
+	}
 }

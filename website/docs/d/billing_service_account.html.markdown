@@ -63,5 +63,5 @@ POLICY
 
 ## Attributes Reference
 
-* `id` - The ID of the AWS billing service account.
-* `arn` - The ARN of the AWS billing service account.
+* `id` - ID of the AWS billing service account.
+* `arn` - ARN of the AWS billing service account.

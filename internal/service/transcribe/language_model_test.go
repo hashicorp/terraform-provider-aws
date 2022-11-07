@@ -134,7 +134,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 }
 
 func testAccCheckLanguageModelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transcribe_language_model" {
@@ -166,7 +166,7 @@ func testAccCheckLanguageModelExists(name string, languageModel *types.LanguageM
 			return fmt.Errorf("No Transcribe LanguageModel is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 		resp, err := tftranscribe.FindLanguageModelByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
@@ -180,7 +180,7 @@ func testAccCheckLanguageModelExists(name string, languageModel *types.LanguageM
 }
 
 func testAccLanguageModelsPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	input := &transcribe.ListLanguageModelsInput{}
 

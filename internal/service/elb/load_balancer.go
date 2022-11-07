@@ -917,7 +917,6 @@ func ValidHeathCheckTarget(v interface{}, k string) (ws []string, errors []error
 				"than 1024 characters in the Health Check target: %s",
 				k, value))
 		}
-
 	}
 
 	return ws, errors

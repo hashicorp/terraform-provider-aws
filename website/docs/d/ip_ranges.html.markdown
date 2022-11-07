@@ -55,10 +55,10 @@ CIDR blocks, Terraform will fail.
 
 ## Attributes Reference
 
-* `cidr_blocks` - The lexically ordered list of CIDR blocks.
-* `ipv6_cidr_blocks` - The lexically ordered list of IPv6 CIDR blocks.
-* `create_date` - The publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
-* `sync_token` - The publication time of the IP ranges, in Unix epoch time format
+* `cidr_blocks` - Lexically ordered list of CIDR blocks.
+* `ipv6_cidr_blocks` - Lexically ordered list of IPv6 CIDR blocks.
+* `create_date` - Publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
+* `sync_token` - Publication time of the IP ranges, in Unix epoch time format
   (e.g., `1470267965`).
 
 [1]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html

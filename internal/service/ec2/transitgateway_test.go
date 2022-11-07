@@ -84,6 +84,16 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"DifferentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
 			"Tags":             testAccTransitGatewayPeeringAttachmentAccepter_Tags,
 		},
+		"PolicyTable": {
+			"basic":                    testAccTransitGatewayPolicyTable_basic,
+			"disappears":               testAccTransitGatewayPolicyTable_disappears,
+			"disappearsTransitGateway": testAccTransitGatewayPolicyTable_disappears_TransitGateway,
+			"Tags":                     testAccTransitGatewayPolicyTable_Tags,
+		},
+		"PolicyTableAssociation": {
+			"basic":      testAccTransitGatewayPolicyTableAssociation_basic,
+			"disappears": testAccTransitGatewayPolicyTableAssociation_disappears,
+		},
 		"PrefixListReference": {
 			"basic":                      testAccTransitGatewayPrefixListReference_basic,
 			"disappears":                 testAccTransitGatewayPrefixListReference_disappears,
@@ -231,7 +241,7 @@ func testAccTransitGateway_AmazonSideASN(t *testing.T) {
 				Config: testAccTransitGatewayConfig_amazonSideASN(rName, 64514),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
-					testAccCheckTransitGatewayRecreated(&transitGateway1, &transitGateway2),
+					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", "64514"),
 				),
 			},

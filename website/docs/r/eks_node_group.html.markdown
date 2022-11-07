@@ -21,12 +21,12 @@ resource "aws_eks_node_group" "example" {
 
   scaling_config {
     desired_size = 1
-    max_size     = 1
+    max_size     = 2
     min_size     = 1
   }
 
   update_config {
-    max_unavailable = 2
+    max_unavailable = 1
   }
 
   # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
@@ -58,6 +58,25 @@ resource "aws_eks_node_group" "example" {
   lifecycle {
     ignore_changes = [scaling_config[0].desired_size]
   }
+}
+```
+
+### Tracking the latest EKS Node Group AMI releases
+
+You can have the node group track the latest version of the Amazon EKS optimized Amazon Linux AMI for a given EKS version by querying an Amazon provided SSM parameter. Replace `amazon-linux-2` in the parameter name below with `amazon-linux-2-gpu` to retrieve the  accelerated AMI version and `amazon-linux-2-arm64` to retrieve the Arm version.
+
+```
+data aws_ssm_parameter "eks_ami_release_version" {
+    name = /aws/service/eks/optimized-ami/${aws_eks_cluster.example.version}/amazon-linux-2/recommended/release_version"
+}
+
+resource "aws_eks_node_group" "example" {
+  cluster_name    = aws_eks_cluster.example.name
+  node_group_name = "example"
+  version         = aws_eks_cluster.example.version
+  release_version = nonsensitive(data.aws_ssm_parameter.eks_ami_release_version.value)
+  node_role_arn   = aws_iam_role.example.arn
+  subnet_ids      = aws_subnet.example[*].id
 }
 ```
 

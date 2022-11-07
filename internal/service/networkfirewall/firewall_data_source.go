@@ -195,7 +195,6 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if input.FirewallArn == nil && input.FirewallName == nil {
-
 		return diag.FromErr(fmt.Errorf("must specify either arn, name, or both"))
 	}
 

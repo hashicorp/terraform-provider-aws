@@ -2413,7 +2413,6 @@ ec2_tag_set {
   }
 }
 `
-
 	} else {
 		tagGroupOrFilter = `
 ec2_tag_filter {
@@ -2422,7 +2421,6 @@ ec2_tag_filter {
   value = "filtervalue"
 }
 `
-
 	}
 
 	return testAccDeploymentGroupConfig_base2(rName) + fmt.Sprintf(`
@@ -2447,7 +2445,6 @@ ec2_tag_set {
   }
 }
 `
-
 	} else {
 		tagGroupOrFilter = `
 ec2_tag_filter {
@@ -2456,7 +2453,6 @@ ec2_tag_filter {
   value = "anotherfiltervalue"
 }
 `
-
 	}
 
 	return testAccDeploymentGroupConfig_base2(rName) + fmt.Sprintf(`

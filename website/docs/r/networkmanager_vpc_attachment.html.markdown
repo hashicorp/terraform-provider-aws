@@ -44,11 +44,11 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the attachment.
-* `attachment_id` - The ID of the attachment.
 * `attachment_policy_rule_number` - The policy rule number associated with the attachment.
 * `attachment_type` - The type of attachment.
 * `core_network_arn` - The ARN of a core network.
 * `edge_location` - The Region where the edge is located.
+* `id` - The ID of the attachment.
 * `owner_account_id` - The ID of the attachment account owner.
 * `resource_arn` - The attachment resource ARN.
 * `segment_name` - The name of the segment attachment.
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-NetworkManager VpcAttachment can be imported using the `attachment_id`, e.g.,
+`aws_networkmanager_vpc_attachment` can be imported using the attachment ID, e.g.
 
 ```
 $ terraform import aws_networkmanager_vpc_attachment.example attachment-0f8fa60d2238d1bd8

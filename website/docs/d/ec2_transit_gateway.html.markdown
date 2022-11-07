@@ -40,7 +40,7 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) The name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
+* `name` - (Required) Name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
@@ -48,7 +48,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `amazon_side_asn` - Private Autonomous System Number (ASN) for the Amazon side of a BGP session
-* `arn` - EC2 Transit Gateway Amazon Resource Name (ARN)
+* `arn` - EC2 Transit Gateway ARN
 * `association_default_route_table_id` - Identifier of the default association route table
 * `auto_accept_shared_attachments` - Whether resource attachment requests are automatically accepted
 * `default_route_table_association` - Whether resource attachments are automatically associated with the default association route table
