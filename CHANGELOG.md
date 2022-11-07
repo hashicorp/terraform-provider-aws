@@ -1,13 +1,27 @@
 ## 4.39.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_secretsmanager_secret_rotation: Remove unused `tags` attribute ([#27656](https://github.com/hashicorp/terraform-provider-aws/issues/27656))
+
 FEATURES:
 
 * **New Data Source:** `aws_dynamodb_table_item` ([#27504](https://github.com/hashicorp/terraform-provider-aws/issues/27504))
+* **New Resource:** `aws_lightsail_lb_https_redirection_policy` ([#27679](https://github.com/hashicorp/terraform-provider-aws/issues/27679))
 * **New Resource:** `aws_redshift_endpoint_authorization` ([#27654](https://github.com/hashicorp/terraform-provider-aws/issues/27654))
+* **New Resource:** `aws_redshift_partner` ([#27665](https://github.com/hashicorp/terraform-provider-aws/issues/27665))
+
+ENHANCEMENTS:
+
+* resource/aws_security_group: Do not pass `from_port` or `to_port` values to the AWS API if a `rule`'s `protocol` value is `-1` or `all` ([#27642](https://github.com/hashicorp/terraform-provider-aws/issues/27642))
+* resource/aws_wafv2_rule_group: Correct maximum nesting level for `and_statement`, `not_statement`, `or_statement` and `rate_based_statement` ([#27682](https://github.com/hashicorp/terraform-provider-aws/issues/27682))
 
 BUG FIXES:
 
+* resource/aws_cognito_identity_pool: Fix deletion of identity pool on tags-only update ([#27669](https://github.com/hashicorp/terraform-provider-aws/issues/27669))
+* resource/aws_dynamodb_table: Correctly set `stream_arn` as Computed when `stream_enabled` changes ([#27664](https://github.com/hashicorp/terraform-provider-aws/issues/27664))
 * resource/aws_s3_bucket: Attributes `arn` and `hosted_zone_id` were incorrectly settable but ignored ([#27597](https://github.com/hashicorp/terraform-provider-aws/issues/27597))
+* resource/aws_security_group: Return an error if a `rule`'s `protocol` value is `all` and `from_port` or `to_port` are not `0` ([#27642](https://github.com/hashicorp/terraform-provider-aws/issues/27642))
 
 ## 4.38.0 (November  3, 2022)
 
