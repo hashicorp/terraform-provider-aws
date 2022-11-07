@@ -2314,7 +2314,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 			a.AudioTypeControl = types.AudioDescriptionAudioTypeControl(v)
 		}
 		if v, ok := m["audio_watermark_settings"].([]interface{}); ok && len(v) > 0 {
-			a.AudioWatermarkingSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsAudioWatermarkSettings(v)
+			a.AudioWatermarkingSettings = expandAudioWatermarkSettings(v)
 		}
 		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
 			a.CodecSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsCodecSettings(v)
@@ -2436,6 +2436,41 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 
 	return &o
 }
+
+func expandAudioWatermarkSettings(tfList []interface{}) *types.AudioWatermarkSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var o types.AudioWatermarkSettings
+	if v, ok := m["nielsen_watermark_settings"].([]interface{}); ok && len(v) > 0 {
+		o.NielsenWatermarksSettings = func(n []interface{}) *types.NielsenWatermarksSettings {
+			if len(n) == 0 {
+				return nil
+			}
+
+			inner := n[0].(map[string]interface{})
+
+			var ns types.NielsenWatermarksSettings
+			if v, ok := inner["nielsen_distribution_type"].(string); ok && v != "" {
+				ns.NielsenDistributionType = types.NielsenWatermarksDistributionTypes(v)
+			}
+			if v, ok := inner["nielsen_cbet_settings"].([]interface{}); ok && len(v) > 0 {
+				ns.NielsenCbetSettings = expandNielsenCbetSettings(v)
+			}
+			if v, ok := inner["nielsen_naes_ii_nw_settings"].([]interface{}); ok && len(v) > 0 {
+				ns.NielsenNaesIiNwSettings = expandNielsenNaseIiNwSettings(v)
+			}
+
+			return &ns
+		}(v)
+	}
+
+	return &o
+}
+
 func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []interface{}) []types.Output {
 	if tfList == nil {
 		return nil
@@ -2785,6 +2820,45 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 	}
 
 	return videoDesc
+}
+
+func expandNielsenCbetSettings(tfList []interface{}) *types.NielsenCBET {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.NielsenCBET
+	if v, ok := m["cbet_check_digit_string"].(string); ok && v != "" {
+		out.CbetCheckDigitString = aws.String(v)
+	}
+	if v, ok := m["cbet_stepaside"].(string); ok && v != "" {
+		out.CbetStepaside = types.NielsenWatermarksCbetStepaside(v)
+	}
+	if v, ok := m["csid"].(string); ok && v != "" {
+		out.Csid = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandNielsenNaseIiNwSettings(tfList []interface{}) *types.NielsenNaesIiNw {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.NielsenNaesIiNw
+	if v, ok := m["check_digit_string"].(string); ok && v != "" {
+		out.CheckDigitString = aws.String(v)
+	}
+	if v, ok := m["sid"].(float32); ok {
+		out.Sid = float64(v)
+	}
+
+	return &out
 }
 
 func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface{} {
@@ -3158,9 +3232,41 @@ func flattenAudioWatermarkSettings(ns *types.AudioWatermarkSettings) []interface
 				return nil
 			}
 
-			m := map[string]interface{}{}
+			m := map[string]interface{}{
+				"nielsen_distribution_type":   string(n.NielsenDistributionType),
+				"nielsen_cbet_settings":       flattenNielsenCbetSettings(n.NielsenCbetSettings),
+				"nielsen_naes_ii_nw_settings": flattenNielsenNaesIiNwSettings(n.NielsenNaesIiNwSettings),
+			}
+
 			return []interface{}{m}
 		}(ns.NielsenWatermarksSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNielsenCbetSettings(in *types.NielsenCBET) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"cbet_check_digit_string": aws.ToString(in.CbetCheckDigitString),
+		"cbet_stepaside":          string(in.CbetStepaside),
+		"csid":                    aws.ToString(in.Csid),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNielsenNaesIiNwSettings(in *types.NielsenNaesIiNw) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"check_digit_string": aws.ToString(in.CheckDigitString),
+		"sid":                float32(in.Sid),
 	}
 
 	return []interface{}{m}

@@ -150,13 +150,36 @@ The following arguments are optional:
 * `audio_selector_name` - (Required) The name of the audio selector used as the source for this AudioDescription.
 * `name` - (Required) The name of this audio description.
 * `audio_normalization_settings` - (Optional) Advanced audio normalization settings. See [Audio Normalization Settings](#audio-normalization-settings) for more details.
-* `audio_type`
+* `audio_type` - (Optional) Applies only if audioTypeControl is useConfigured. The values for audioType are defined in ISO-IEC 13818-1.
+* `audio_type_control` - (Optional) Determined how audio type is determined.
+* `audio_watermark_settings` - (Optional) Settings to configure one or more solutions that insert audio watermarks in the audio encode. See [Audio Watermark Settings](#audio-watermark-settings) for more details.
 
 ### Audio Normalization Settings
 
 * `algorithm` - (Optional) Audio normalization algorithm to use. itu17701 conforms to the CALM Act specification, itu17702 to the EBU R-128 specification.
 * `algorithm_control` - (Optional) Algorithm control for the audio description.
 * `target_lkfs` - (Optional) Target LKFS (loudness) to adjust volume to.
+
+### Audio Watermark Settings
+
+* `nielsen_watermark_settings` - (Optional) Settings to configure Nielsen Watermarks in the audio encode. See [Nielsen Watermark Settings](#nielsen-watermark-settings) for more details.
+
+### Nielsen Watermark Settings
+
+* `nielsen_cbet_settings` - (Optional) Used to insert watermarks of type Nielsen CBET. See [Nielsen CBET Settings](#nielsen-cbet-settings) for more details.
+* `nielsen_distribution_type` - (Optional) Distribution types to assign to the watermarks. Options are `PROGRAM_CONTENT` and `FINAL_DISTRIBUTOR`.
+* `nielsen_naes_ii_nw_settings` - (Optional) Used to insert watermarks of type Nielsen NAES, II (N2) and Nielsen NAES VI (NW). See [Nielsen NAES II NW Settings](#nielsen-naes-ii-nw-settings) for more details.
+
+### Nielsen CBET Settings
+
+* `cbet_check_digit` - (Required) CBET check digits to use for the watermark.
+* `cbet_stepaside` - (Required) Determines the method of CBET insertion mode when prior encoding is detected on the same layer.
+* `csid` - (Required) CBET source ID to use in the watermark.
+
+### Nielsen NAES II NW Settings
+
+* `check_digit` - (Required) Check digit string for the watermark.
+* `sid` - (Required) The Nielsen Source ID to include in the watermark.
 
 ## Attributes Reference
 
