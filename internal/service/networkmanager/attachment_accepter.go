@@ -40,10 +40,13 @@ func ResourceAttachmentAccepter() *schema.Resource {
 			// querying attachments requires knowing the type ahead of time
 			// therefore type is required in provider, though not on the API
 			"attachment_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(networkmanager.AttachmentType_Values(), false),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					networkmanager.AttachmentTypeVpc,
+					networkmanager.AttachmentTypeSiteToSiteVpn,
+				}, false),
 			},
 			"core_network_arn": {
 				Type:     schema.TypeString,
