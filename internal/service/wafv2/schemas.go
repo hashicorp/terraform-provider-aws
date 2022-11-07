@@ -59,14 +59,14 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         statementSchema(level - 1),
+				"and_statement":                         statementSchema(level),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
-				"not_statement":                         statementSchema(level - 1),
-				"or_statement":                          statementSchema(level - 1),
-				"rate_based_statement":                  rateBasedStatementSchema(level - 1),
+				"not_statement":                         statementSchema(level),
+				"or_statement":                          statementSchema(level),
+				"rate_based_statement":                  rateBasedStatementSchema(level),
 				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
