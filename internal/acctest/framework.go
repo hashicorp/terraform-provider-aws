@@ -3,6 +3,8 @@ package acctest
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
@@ -33,12 +35,22 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 		return errs.NewDiagnosticsError(diags)
 	}
 
-	// Simple Terraform State that contains just the resource ID.
+	// Construct a simple Framework State that contains just top-level attributes.
 	state := tfsdk.State{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
-	state.SetAttribute(ctx, path.Root("id"), is.ID)
+
+	for name, v := range is.Attributes {
+		if strings.Contains(name, ".") {
+			continue
+		}
+
+		if err := errs.NewDiagnosticsError(state.SetAttribute(ctx, path.Root(name), v)); err != nil {
+			log.Printf("[WARN] %s(%s): %s", name, v, err)
+		}
+	}
+
 	response := fwresource.DeleteResponse{}
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 

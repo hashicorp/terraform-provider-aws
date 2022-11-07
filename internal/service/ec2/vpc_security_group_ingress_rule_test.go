@@ -49,7 +49,6 @@ func TestAccVPCSecurityGroupIngressRule_basic(t *testing.T) {
 	})
 }
 
-/*
 func TestAccVPCSecurityGroupIngressRule_disappears(t *testing.T) {
 	var v ec2.SecurityGroupRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,7 +71,6 @@ func TestAccVPCSecurityGroupIngressRule_disappears(t *testing.T) {
 		},
 	})
 }
-*/
 
 func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 	var v ec2.SecurityGroupRule
