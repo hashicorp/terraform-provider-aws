@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lightsail_lb_https_redirection_policy
 
-Configures Https Redirection for a Lightsail Load Balancer. A valid Certificate must be attached to the load balancer in order to enable https redirection. 
+Configures Https Redirection for a Lightsail Load Balancer. A valid Certificate must be attached to the load balancer in order to enable https redirection.
 
 ## Example Usage
 
@@ -34,8 +34,8 @@ resource "aws_lightsail_lb_certificate_attachment" "test" {
 }
 
 resource "aws_lightsail_lb_https_redirection_policy" "test" {
-  lb_name         = aws_lightsail_lb.test.name
-  enabled         = true
+  lb_name = aws_lightsail_lb.test.name
+  enabled = true
 }
 ```
 

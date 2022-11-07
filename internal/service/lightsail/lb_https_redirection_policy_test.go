@@ -41,8 +41,8 @@ resource "aws_lightsail_lb" "test" {
   instance_port     = "80"
 }
 resource "aws_lightsail_lb_https_redirection_policy" "test" {
-  enabled         = %[2]s
-  lb_name         = aws_lightsail_lb.test.name
+  enabled = %[2]s
+  lb_name = aws_lightsail_lb.test.name
 }
 `, rName, enabled)
 }
