@@ -3,6 +3,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -78,6 +79,10 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 				Required: true,
 			},
 			"prefix_list_id": {
+				Type:     types.StringType,
+				Optional: true,
+			},
+			"referenced_security_group_id": {
 				Type:     types.StringType,
 				Optional: true,
 			},
@@ -202,6 +207,7 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
 	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
 	data.PrefixListID = flex.ToFrameworkStringValue(ctx, output.PrefixListId)
+	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.ToFrameworkStringValue(ctx, output.SecurityGroupRuleId)
 	data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
@@ -243,6 +249,7 @@ func (r *resourceSecurityGroupIngressRule) Update(ctx context.Context, request r
 		!new.FromPort.Equal(old.FromPort) ||
 		!new.IPProtocol.Equal(old.IPProtocol) ||
 		!new.PrefixListID.Equal(old.PrefixListID) ||
+		!new.ReferencedSecurityGroupID.Equal(old.ReferencedSecurityGroupID) ||
 		!new.ToPort.Equal(old.ToPort) {
 		input := &ec2.ModifySecurityGroupRulesInput{
 			GroupId: aws.String(new.SecurityGroupID.Value),
@@ -410,6 +417,22 @@ func (r *resourceSecurityGroupIngressRule) expandIPPermission(_ context.Context,
 		}
 	}
 
+	if !data.ReferencedSecurityGroupID.IsNull() {
+		apiObject.UserIdGroupPairs = []*ec2.UserIdGroupPair{{}}
+
+		// [UserID/]GroupID.
+		if parts := strings.Split(data.ReferencedSecurityGroupID.Value, "/"); len(parts) == 2 {
+			apiObject.UserIdGroupPairs[0].GroupId = aws.String(parts[1])
+			apiObject.UserIdGroupPairs[0].UserId = aws.String(parts[0])
+		} else {
+			apiObject.UserIdGroupPairs[0].GroupId = aws.String(data.ReferencedSecurityGroupID.Value)
+		}
+
+		if !data.Description.IsNull() {
+			apiObject.UserIdGroupPairs[0].Description = aws.String(data.Description.Value)
+		}
+	}
+
 	if !data.ToPort.IsNull() {
 		apiObject.ToPort = aws.Int64(data.ToPort.Value)
 	}
@@ -444,6 +467,10 @@ func (r *resourceSecurityGroupIngressRule) expandSecurityGroupRuleRequest(_ cont
 		apiObject.PrefixListId = aws.String(data.PrefixListID.Value)
 	}
 
+	if !data.ReferencedSecurityGroupID.IsNull() {
+		apiObject.ReferencedGroupId = aws.String(data.ReferencedSecurityGroupID.Value)
+	}
+
 	if !data.ToPort.IsNull() {
 		apiObject.ToPort = aws.Int64(data.ToPort.Value)
 	}
@@ -451,24 +478,37 @@ func (r *resourceSecurityGroupIngressRule) expandSecurityGroupRuleRequest(_ cont
 	return apiObject
 }
 
+func (r *resourceSecurityGroupIngressRule) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
+	if apiObject == nil {
+		return types.String{Null: true}
+	}
+
+	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == r.meta.AccountID {
+		return flex.ToFrameworkStringValue(ctx, apiObject.GroupId)
+	}
+
+	// [UserID/]GroupID.
+	return types.String{Value: strings.Join([]string{aws.StringValue(apiObject.UserId), aws.StringValue(apiObject.GroupId)}, "/")}
+}
+
 type resourceSecurityGroupIngressRuleData struct {
-	ARN                 types.String `tfsdk:"arn"`
-	CIDRIPv4            types.String `tfsdk:"cidr_ipv4"`
-	CIDRIPv6            types.String `tfsdk:"cidr_ipv6"`
-	Description         types.String `tfsdk:"description"`
-	FromPort            types.Int64  `tfsdk:"from_port"`
-	ID                  types.String `tfsdk:"id"`
-	IPProtocol          types.String `tfsdk:"ip_protocol"`
-	PrefixListID        types.String `tfsdk:"prefix_list_id"`
-	SecurityGroupID     types.String `tfsdk:"security_group_id"`
-	SecurityGroupRuleID types.String `tfsdk:"security_group_rule_id"`
-	Tags                types.Map    `tfsdk:"tags"`
-	TagsAll             types.Map    `tfsdk:"tags_all"`
-	ToPort              types.Int64  `tfsdk:"to_port"`
+	ARN                       types.String `tfsdk:"arn"`
+	CIDRIPv4                  types.String `tfsdk:"cidr_ipv4"`
+	CIDRIPv6                  types.String `tfsdk:"cidr_ipv6"`
+	Description               types.String `tfsdk:"description"`
+	FromPort                  types.Int64  `tfsdk:"from_port"`
+	ID                        types.String `tfsdk:"id"`
+	IPProtocol                types.String `tfsdk:"ip_protocol"`
+	PrefixListID              types.String `tfsdk:"prefix_list_id"`
+	ReferencedSecurityGroupID types.String `tfsdk:"referenced_security_group_id"`
+	SecurityGroupID           types.String `tfsdk:"security_group_id"`
+	SecurityGroupRuleID       types.String `tfsdk:"security_group_rule_id"`
+	Tags                      types.Map    `tfsdk:"tags"`
+	TagsAll                   types.Map    `tfsdk:"tags_all"`
+	ToPort                    types.Int64  `tfsdk:"to_port"`
 }
 
 // TODO
-// * ReferencedGroupId
 // * Ensure at least one "target" is specified
 // * ForceNew if target type changes
 // * All protocol => No FromPort/ToPort
