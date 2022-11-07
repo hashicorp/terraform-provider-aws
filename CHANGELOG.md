@@ -1,4 +1,14 @@
 ## 4.39.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_dynamodb_table_item` ([#27504](https://github.com/hashicorp/terraform-provider-aws/issues/27504))
+* **New Resource:** `aws_redshift_endpoint_authorization` ([#27654](https://github.com/hashicorp/terraform-provider-aws/issues/27654))
+
+BUG FIXES:
+
+* resource/aws_s3_bucket: Attributes `arn` and `hosted_zone_id` were incorrectly settable but ignored ([#27597](https://github.com/hashicorp/terraform-provider-aws/issues/27597))
+
 ## 4.38.0 (November  3, 2022)
 
 FEATURES:
