@@ -391,3 +391,40 @@ func FindEndpointAuthorizationById(conn *redshift.Redshift, id string) (*redshif
 
 	return output.EndpointAuthorizationList[0], nil
 }
+
+func FindPartnerById(conn *redshift.Redshift, id string) (*redshift.PartnerIntegrationInfo, error) {
+	account, clusterId, dbName, partnerName, err := DecodePartnerID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &redshift.DescribePartnersInput{
+		AccountId:         aws.String(account),
+		ClusterIdentifier: aws.String(clusterId),
+		DatabaseName:      aws.String(dbName),
+		PartnerName:       aws.String(partnerName),
+	}
+
+	output, err := conn.DescribePartners(input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.PartnerIntegrationInfoList) == 0 || output.PartnerIntegrationInfoList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.PartnerIntegrationInfoList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.PartnerIntegrationInfoList[0], nil
+}
