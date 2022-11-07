@@ -13,5 +13,5 @@ const (
 	ResLoadBalancerCertificate            = "Load Balancer Certificate"
 	ResLoadBalancerCertificateAttachment  = "Load Balancer Certificate Attachment"
 	ResLoadBalancerStickinessPolicy       = "Load Balancer StickinessPolicy"
-	ResLoadBalancerHttpsRedirectionPolicy = "Load Balancer Https Redirection Policy"
+	ResLoadBalancerHTTPSRedirectionPolicy = "Load Balancer HTTPS Redirection Policy"
 )
