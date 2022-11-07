@@ -85,7 +85,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	aType := d.Get("attachment_type")
 
 	switch aType {
-	case "VPC":
+	case networkmanager.AttachmentTypeVpc:
 		vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
@@ -96,7 +96,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 		d.SetId(attachmentID)
 
-	case "SITE_TO_SITE_VPN":
+	case networkmanager.AttachmentTypeSiteToSiteVpn:
 		vpnAttachment, err := FindVpnAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
@@ -123,12 +123,12 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		switch aType {
-		case "VPC":
+		case networkmanager.AttachmentTypeVpc:
 			if _, err := waitVPCAttachmentCreated(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", attachmentID, err)
 			}
 
-		case "SITE_TO_SITE_VPN":
+		case networkmanager.AttachmentTypeSiteToSiteVpn:
 			if _, err := waitVpnAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager VPN Attachment (%s) create: %s", attachmentID, err)
 			}
@@ -142,7 +142,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	switch aType := d.Get("attachment_type"); aType {
-	case "VPC":
+	case networkmanager.AttachmentTypeVpc:
 		vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -165,7 +165,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("segment_name", a.SegmentName)
 		d.Set("state", a.State)
 
-	case "SITE_TO_SITE_VPN":
+	case networkmanager.AttachmentTypeSiteToSiteVpn:
 		vpnAttachment, err := FindVpnAttachmentByID(ctx, conn, d.Id())
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
