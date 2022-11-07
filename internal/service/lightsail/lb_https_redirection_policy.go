@@ -93,7 +93,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *sche
 		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerHTTPSRedirectionPolicy, d.Id(), err)
 	}
 
-	d.Set("enabled", *out)
+	d.Set("enabled", out)
 	d.Set("lb_name", d.Id())
 
 	return nil
