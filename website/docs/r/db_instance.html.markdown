@@ -29,7 +29,7 @@ server reboots. See the AWS Docs on [RDS Maintenance][2] for more information.
 the raw state as plain-text. [Read more about sensitive data in
 state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-> **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds?in=terraform/modules&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
 ## RDS Instance Class Types
 Amazon RDS supports three types of instance classes: Standard, Memory Optimized,
