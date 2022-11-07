@@ -16,7 +16,7 @@ Terraform resource for managing an AWS IVS (Interactive Video) Playback Key Pair
 
 ```terraform
 resource "aws_ivs_playback_key_pair" "example" {
-  # key.pem is a file that contains an ECDSA public key in PEM format.
+  # public-key.pem is a file that contains an ECDSA public key in PEM format.
   public_key = file("./public-key.pem")
 }
 ```
@@ -28,6 +28,7 @@ The following arguments are required:
 * `public_key` - (Required) Public portion of a customer-generated key pair. Must be an ECDSA public key in PEM format.
 
 The following arguments are optional:
+
 * `name` - (Optional) Playback Key Pair name.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
