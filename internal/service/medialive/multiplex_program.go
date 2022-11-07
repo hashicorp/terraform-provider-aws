@@ -19,7 +19,6 @@ import (
 	resourceHelper "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,7 +27,7 @@ func init() {
 	registerFrameworkResourceFactory(newResourceMultiplexProgram)
 }
 
-func newResourceMultiplexProgram(_ context.Context) (intf.ResourceWithConfigureAndImportState, error) {
+func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &multiplexProgram{}, nil
 }
 

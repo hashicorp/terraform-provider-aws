@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +25,7 @@ func init() {
 }
 
 // newResourceSecurityGroupIngressRule instantiates a new Resource for the aws_vpc_security_group_ingress_rule resource.
-func newResourceSecurityGroupIngressRule(context.Context) (intf.ResourceWithConfigureAndImportState, error) {
+func newResourceSecurityGroupIngressRule(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSecurityGroupIngressRule{}, nil
 }
 
