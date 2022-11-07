@@ -124,10 +124,26 @@ The following arguments are optional:
 ### Encoder Settings
 
 * `audio_descriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
+* `output_groups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 
 ### Input Attachments
 
+* `input_attachment_name` - (Optional) User-specified name for the attachment.
+* `input_id` - (Required) The ID of the input.
+* `input_settings` - (Optional) Settings of an input. See [Input Settings](#input-settings) for more details
+
+### Input Settings
+
+* `audio_selectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+
+### Audio Selectors
+
+* `name` - (Required) The name of the audio selector.
+
 ### Maintenance
+
+* `maintenance_day` - (Optional) The day of the week to use for maintenance.
+* `maintenance_start_time` - (Optional) The hour maintenance will start.
 
 ### Media Package Settings
 
@@ -180,6 +196,11 @@ The following arguments are optional:
 
 * `check_digit` - (Required) Check digit string for the watermark.
 * `sid` - (Required) The Nielsen Source ID to include in the watermark.
+
+### Output Groups
+* `output_group_settings` - (Required) Settings associated with the output group.
+* `outputs` - (Required) List of outputs.
+* `name` - (Optional) Custom output group name defined by the user.
 
 ## Attributes Reference
 
