@@ -345,6 +345,28 @@ func (r *resourceSecurityGroupIngressRule) ImportState(ctx context.Context, requ
 //
 // Any errors will prevent further resource-level plan modifications.
 func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	// When you modify a rule, you cannot change the rule's source type.
+	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
+		var old, new resourceSecurityGroupIngressRuleData
+
+		response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if new, old := new.sourceAttributeName(), old.sourceAttributeName(); new != old {
+			response.RequiresReplace = []path.Path{path.Root(old), path.Root(new)}
+		}
+	}
+
+	// Calculate new `tags_all` value.
 	defaultTagsConfig := r.meta.DefaultTagsConfig
 	ignoreTagsConfig := r.meta.IgnoreTagsConfig
 
@@ -528,6 +550,21 @@ type resourceSecurityGroupIngressRuleData struct {
 // * ForceNew if target type changes
 // * Validations (CIDR blocks etc.)
 // * All protocol => No FromPort/ToPort
+
+func (d *resourceSecurityGroupIngressRuleData) sourceAttributeName() string {
+	switch {
+	case !d.CIDRIPv4.IsNull():
+		return "cidr_ipv4"
+	case !d.CIDRIPv6.IsNull():
+		return "cidr_ipv6"
+	case !d.PrefixListID.IsNull():
+		return "prefix_list_id"
+	case !d.ReferencedSecurityGroupID.IsNull():
+		return "referenced_security_group_id"
+	}
+
+	return ""
+}
 
 type normalizeIPProtocol struct{}
 
