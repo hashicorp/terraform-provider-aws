@@ -1,25 +1,91 @@
 package acctest
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/hex"
 	"encoding/pem"
 	"math/big"
 	"strings"
+	"testing"
 	"time"
 )
 
 const (
-	pemBlockTypeCertificate        = `CERTIFICATE`
-	pemBlockTypeRsaPrivateKey      = `RSA PRIVATE KEY`
-	pemBlockTypePublicKey          = `PUBLIC KEY`
-	pemBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
+	PEMBlockTypeCertificate        = `CERTIFICATE`
+	PEMBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
+	PEMBlockTypeECPrivateKey       = `EC PRIVATE KEY`
+	PEMBlockTypeRSAPrivateKey      = `RSA PRIVATE KEY`
+	PEMBlockTypePublicKey          = `PUBLIC KEY`
 )
 
 var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
+
+// TLSECDSAPublicKeyPEM generates an ECDSA private key PEM string using the specified elliptic curve.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: private_key_pem = "%[1]s"
+func TLSECDSAPrivateKeyPEM(t *testing.T, curveName string) string {
+	curve := ellipticCurveForName(curveName)
+
+	if curve == nil {
+		t.Fatalf("unsupported elliptic curve: %s", curveName)
+	}
+
+	key, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bytes, err := x509.MarshalECPrivateKey(key)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	block := &pem.Block{
+		Bytes: bytes,
+		Type:  PEMBlockTypeECPrivateKey,
+	}
+
+	return string(pem.EncodeToMemory(block))
+}
+
+// TLSECDSAPublicKeyPEM generates an ECDSA public key PEM string and fingerprint.
+func TLSECDSAPublicKeyPEM(t *testing.T, keyPem string) (string, string) {
+	keyBlock, _ := pem.Decode([]byte(keyPem))
+
+	key, err := x509.ParseECPrivateKey(keyBlock.Bytes)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	block := &pem.Block{
+		Bytes: publicKeyBytes,
+		Type:  PEMBlockTypePublicKey,
+	}
+
+	md5sum := md5.Sum(publicKeyBytes)
+	hexarray := make([]string, len(md5sum))
+	for i, c := range md5sum {
+		hexarray[i] = hex.EncodeToString([]byte{c})
+	}
+
+	return string(pem.EncodeToMemory(block)), strings.Join(hexarray, ":")
+}
 
 // TLSRSAPrivateKeyPEM generates a RSA private key PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
@@ -34,7 +100,7 @@ func TLSRSAPrivateKeyPEM(bits int) string {
 
 	block := &pem.Block{
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
-		Type:  pemBlockTypeRsaPrivateKey,
+		Type:  PEMBlockTypeRSAPrivateKey,
 	}
 
 	return string(pem.EncodeToMemory(block))
@@ -62,7 +128,7 @@ func TLSRSAPublicKeyPEM(keyPem string) string {
 
 	block := &pem.Block{
 		Bytes: publicKeyBytes,
-		Type:  pemBlockTypePublicKey,
+		Type:  PEMBlockTypePublicKey,
 	}
 
 	return string(pem.EncodeToMemory(block))
@@ -128,7 +194,7 @@ func TLSRSAX509LocallySignedCertificatePEM(caKeyPem, caCertificatePem, keyPem, c
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -187,7 +253,7 @@ func TLSRSAX509SelfSignedCACertificatePEM(keyPem string) string {
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -249,7 +315,7 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(keyPem stri
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -297,7 +363,7 @@ func TLSRSAX509SelfSignedCertificatePEM(keyPem, commonName string) string {
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -330,12 +396,12 @@ func TLSRSAX509CertificateRequestPEM(keyBits int, commonName string) (string, st
 
 	csrBlock := &pem.Block{
 		Bytes: csrBytes,
-		Type:  pemBlockTypeCertificateRequest,
+		Type:  PEMBlockTypeCertificateRequest,
 	}
 
 	keyBlock := &pem.Block{
 		Bytes: x509.MarshalPKCS1PrivateKey(keyBytes),
-		Type:  pemBlockTypeRsaPrivateKey,
+		Type:  PEMBlockTypeRSAPrivateKey,
 	}
 
 	return string(pem.EncodeToMemory(csrBlock)), string(pem.EncodeToMemory(keyBlock))
@@ -343,4 +409,19 @@ func TLSRSAX509CertificateRequestPEM(keyBits int, commonName string) (string, st
 
 func TLSPEMEscapeNewlines(pem string) string {
 	return strings.ReplaceAll(pem, "\n", "\\n")
+}
+
+func ellipticCurveForName(name string) elliptic.Curve {
+	switch name {
+	case "P-224":
+		return elliptic.P224()
+	case "P-256":
+		return elliptic.P256()
+	case "P-384":
+		return elliptic.P384()
+	case "P-521":
+		return elliptic.P521()
+	}
+
+	return nil
 }
