@@ -1970,7 +1970,7 @@ func testAccClusterConfig_storageMode(rName string, storageMode string, kafkaVer
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   storage_mode           = %[2]q
-  kafka_version          = %[2]q
+  kafka_version          = %[3]q
   number_of_broker_nodes = 3
 
   broker_node_group_info {
