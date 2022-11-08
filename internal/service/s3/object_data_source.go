@@ -258,6 +258,7 @@ func isContentTypeAllowed(contentType *string) bool {
 	allowedContentTypes := []*regexp.Regexp{
 		regexp.MustCompile("^text/.+"),
 		regexp.MustCompile("^application/json$"),
+		regexp.MustCompile("^application/xml$"),
 	}
 
 	for _, r := range allowedContentTypes {
