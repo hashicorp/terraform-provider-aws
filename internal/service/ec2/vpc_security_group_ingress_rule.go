@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwvalidators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -55,10 +56,16 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 			"cidr_ipv4": {
 				Type:     types.StringType,
 				Optional: true,
+				Validators: []tfsdk.AttributeValidator{
+					fwvalidators.IPv4CIDRNetworkAddress(),
+				},
 			},
 			"cidr_ipv6": {
 				Type:     types.StringType,
 				Optional: true,
+				Validators: []tfsdk.AttributeValidator{
+					fwvalidators.IPv6CIDRNetworkAddress(),
+				},
 			},
 			"description": {
 				Type:     types.StringType,
@@ -547,8 +554,6 @@ type resourceSecurityGroupIngressRuleData struct {
 }
 
 // TODO
-// * ForceNew if target type changes
-// * Validations (CIDR blocks etc.)
 // * All protocol => No FromPort/ToPort
 
 func (d *resourceSecurityGroupIngressRuleData) sourceAttributeName() string {
