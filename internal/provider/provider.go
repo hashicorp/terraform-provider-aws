@@ -530,7 +530,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_directory_service_directory": ds.DataSourceDirectory(),
 
-			"aws_dynamodb_table": dynamodb.DataSourceTable(),
+			"aws_dynamodb_table":      dynamodb.DataSourceTable(),
+			"aws_dynamodb_table_item": dynamodb.DataSourceTableItem(),
 
 			"aws_ami":                                        ec2.DataSourceAMI(),
 			"aws_ami_ids":                                    ec2.DataSourceAMIIDs(),
@@ -1728,6 +1729,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lightsail_lb_attachment":                        lightsail.ResourceLoadBalancerAttachment(),
 			"aws_lightsail_lb_certificate":                       lightsail.ResourceLoadBalancerCertificate(),
 			"aws_lightsail_lb_certificate_attachment":            lightsail.ResourceLoadBalancerCertificateAttachment(),
+			"aws_lightsail_lb_https_redirection_policy":          lightsail.ResourceLoadBalancerHTTPSRedirectionPolicy(),
 			"aws_lightsail_lb_stickiness_policy":                 lightsail.ResourceLoadBalancerStickinessPolicy(),
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
@@ -1885,10 +1887,12 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
 			"aws_redshift_cluster_iam_roles":             redshift.ResourceClusterIAMRoles(),
 			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
+			"aws_redshift_endpoint_authorization":        redshift.ResourceEndpointAuthorization(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
 			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
 			"aws_redshift_hsm_configuration":             redshift.ResourceHSMConfiguration(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),
+			"aws_redshift_partner":                       redshift.ResourcePartner(),
 			"aws_redshift_scheduled_action":              redshift.ResourceScheduledAction(),
 			"aws_redshift_security_group":                redshift.ResourceSecurityGroup(),
 			"aws_redshift_snapshot_copy_grant":           redshift.ResourceSnapshotCopyGrant(),
