@@ -241,6 +241,99 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 	})
 }
 
+func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
+					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PublicIpv4"),
+					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "remote_ipv6_network_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "routes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_ike_versions"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_inside_cidr"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_lifetime_seconds", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase2_dh_group_numbers"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase2_encryption_algorithms"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase2_integrity_algorithms"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_preshared_key"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_startup_action", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_vgw_inside_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_bgp_holdtime", "30"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_ike_versions"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_inside_cidr"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_dh_group_numbers"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_encryption_algorithms"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_integrity_algorithms"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase1_lifetime_seconds", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase2_dh_group_numbers"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase2_encryption_algorithms"),
+					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase2_integrity_algorithms"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_lifetime_seconds", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_preshared_key"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_fuzz_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_margin_time_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_replay_window_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_startup_action", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_vgw_inside_address"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_inside_ip_version", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "vgw_telemetry.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -1620,6 +1713,25 @@ resource "aws_customer_gateway" "test" {
 
 resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn)
+}
+
+func testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
   type                = "ipsec.1"
 }
