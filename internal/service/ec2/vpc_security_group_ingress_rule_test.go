@@ -483,10 +483,75 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *tes
 	})
 }
 
+func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
+	var v1, v2 ec2.SecurityGroupRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v1),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "0.0.0.0/0"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "53"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "udp"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "53"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
+					testAccCheckSecurityGroupIngressRuleRecreated(&v2, &v1),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_ipv6", "2001:db8:85a3::/64"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSecurityGroupIngressRuleNotRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.SecurityGroupRuleId) != aws.StringValue(j.SecurityGroupRuleId) {
 			return errors.New("EC2 Security Group Rule was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckSecurityGroupIngressRuleRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.SecurityGroupRuleId) == aws.StringValue(j.SecurityGroupRuleId) {
+			return errors.New("EC2 Security Group Rule was not recreated")
 		}
 
 		return nil
