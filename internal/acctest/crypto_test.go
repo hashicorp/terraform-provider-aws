@@ -10,7 +10,7 @@ import (
 func TestTLSRSAPrivateKeyPEM(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 
-	if !strings.Contains(key, acctest.PEMBlockTypeRsaPrivateKey) {
+	if !strings.Contains(key, acctest.PEMBlockTypeRSAPrivateKey) {
 		t.Errorf("key does not contain RSA PRIVATE KEY: %s", key)
 	}
 }
@@ -60,7 +60,16 @@ func TestTLSRSAX509CertificateRequestPEM(t *testing.T) {
 		t.Errorf("certificate does not contain CERTIFICATE REQUEST: %s", csr)
 	}
 
-	if !strings.Contains(key, acctest.PEMBlockTypeRsaPrivateKey) {
+	if !strings.Contains(key, acctest.PEMBlockTypeRSAPrivateKey) {
 		t.Errorf("certificate does not contain RSA PRIVATE KEY: %s", key)
+	}
+}
+
+func TestTLSECDSAPublicKeyPEM(t *testing.T) {
+	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+	publicKey, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
+
+	if !strings.Contains(publicKey, acctest.PEMBlockTypePublicKey) {
+		t.Errorf("key does not contain PUBLIC KEY: %s", publicKey)
 	}
 }
