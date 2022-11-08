@@ -1601,7 +1601,7 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
-	kmsKeyReplicaResourceName := "aws_kms_key.alt_test"
+	kmsKeyReplicaResourceName := "aws_kms_key.replica"
 	// kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1636,7 +1636,7 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 	kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
-	kmsKeyReplicaResourceName := "aws_kms_key.alt_test"
+	kmsKeyReplicaResourceName := "aws_kms_key.replica"
 	kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1651,7 +1651,7 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replicaAmazonManagedKey(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
@@ -1661,7 +1661,7 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 			},
 			{
 				Config: testAccTableConfig_replicaCMK(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
@@ -3138,7 +3138,7 @@ resource "aws_kms_key" "test" {
   description = %[1]q
 }
 
-resource "aws_kms_key" "alt_test" {
+resource "aws_kms_key" "replica" {
   provider    = "awsalternate"
   description = "%[1]s-2"
 }
@@ -3157,7 +3157,7 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.alternate.name
-    kms_key_arn = aws_kms_key.alt_test.arn
+    kms_key_arn = aws_kms_key.replica.arn
   }
 
   server_side_encryption {
@@ -3199,22 +3199,22 @@ resource "aws_dynamodb_table" "test" {
   stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
-	name = "TestTableHashKey"
-	type = "S"
+    name = "TestTableHashKey"
+    type = "S"
   }
 
   replica {
-	region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.name
   }
 
   server_side_encryption {
-	enabled = true
+    enabled = true
   }
 
   timeouts {
-	create = "20m"
-	update = "20m"
-	delete = "20m"
+    create = "20m"
+    update = "20m"
+    delete = "20m"
   }
 }
 `, rName))

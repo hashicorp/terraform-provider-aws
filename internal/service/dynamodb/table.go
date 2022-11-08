@@ -51,13 +51,13 @@ func ResourceTable() *schema.Resource {
 
 		//TODO: Add a custom diff if it is just the kms keys changing maybe check the replica update function?
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				return validStreamSpec(diff)
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				return validateTableAttributes(diff)
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
 					if isTableOptionDisabled(o) && isTableOptionDisabled(n) {
@@ -66,7 +66,7 @@ func ResourceTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("point_in_time_recovery") {
 					o, n := diff.GetChange("point_in_time_recovery")
 					if isTableOptionDisabled(o) && isTableOptionDisabled(n) {
@@ -75,7 +75,7 @@ func ResourceTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("stream_enabled") {
 					if err := diff.SetNewComputed("stream_arn"); err != nil {
 						return fmt.Errorf("error setting stream_arn to computed: %s", err)
@@ -83,7 +83,7 @@ func ResourceTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if v := diff.Get("restore_source_name"); v != "" {
 					return nil
 				}
