@@ -990,7 +990,7 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_storageMode(rName, "LOCAL"),
+				Config: testAccClusterConfig_storageMode(rName, "LOCAL", "2.7.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
@@ -998,7 +998,7 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_storageMode(rName, "TIERED"),
+				Config: testAccClusterConfig_storageMode(rName, "TIERED", "2.8.2.tiered"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
@@ -1965,12 +1965,12 @@ resource "aws_msk_cluster" "test" {
 `, rName, enhancedMonitoring))
 }
 
-func testAccClusterConfig_storageMode(rName string, storageMode string) string {
+func testAccClusterConfig_storageMode(rName string, storageMode string, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   storage_mode           = %[2]q
-  kafka_version          = "3.3.1"
+  kafka_version          = %[2]q
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -1980,7 +1980,7 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 }
-`, rName, storageMode))
+`, rName, storageMode, kafkaVersion))
 }
 
 func testAccClusterConfig_numberOfBrokerNodes(rName string, brokerCount int) string {
