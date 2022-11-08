@@ -124,9 +124,14 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	resp, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return conn.GetBucketEncryptionWithContext(ctx, input)
-	})
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(
+		propagationTimeout,
+		func() (interface{}, error) {
+			return conn.GetBucketEncryptionWithContext(ctx, input)
+		},
+		s3.ErrCodeNoSuchBucket,
+		ErrCodeServerSideEncryptionConfigurationNotFound,
+	)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeServerSideEncryptionConfigurationNotFound) {
 		log.Printf("[WARN] S3 Bucket Server-Side Encryption Configuration (%s) not found, removing from state", d.Id())
