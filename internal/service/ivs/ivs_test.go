@@ -7,10 +7,10 @@ import (
 func TestAccIVS_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"PlaybackKeyPair": {
-			"basic":      testAccIVSPlaybackKeyPair_basic,
-			"update":     testAccIVSPlaybackKeyPair_update,
-			"tags":       testAccIVSPlaybackKeyPair_tags,
-			"disappears": testAccIVSPlaybackKeyPair_disappears,
+			"basic":      testAccPlaybackKeyPair_basic,
+			"update":     testAccPlaybackKeyPair_update,
+			"tags":       testAccPlaybackKeyPair_tags,
+			"disappears": testAccPlaybackKeyPair_disappears,
 		},
 	}
 

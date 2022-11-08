@@ -26,7 +26,7 @@ import (
 // multiple playback key pairs cannot use the same public key, so using a static
 // test fixture file is discouraged.
 
-func testAccIVSPlaybackKeyPair_basic(t *testing.T) {
+func testAccPlaybackKeyPair_basic(t *testing.T) {
 	var playbackKeyPair ivs.PlaybackKeyPair
 	resourceName := "aws_ivs_playback_key_pair.test"
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
@@ -62,7 +62,7 @@ func testAccIVSPlaybackKeyPair_basic(t *testing.T) {
 	})
 }
 
-func testAccIVSPlaybackKeyPair_update(t *testing.T) {
+func testAccPlaybackKeyPair_update(t *testing.T) {
 	var v1, v2 ivs.PlaybackKeyPair
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -103,7 +103,7 @@ func testAccIVSPlaybackKeyPair_update(t *testing.T) {
 	})
 }
 
-func testAccIVSPlaybackKeyPair_tags(t *testing.T) {
+func testAccPlaybackKeyPair_tags(t *testing.T) {
 	var v1, v2, v3 ivs.PlaybackKeyPair
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivs_playback_key_pair.test"
@@ -155,7 +155,7 @@ func testAccIVSPlaybackKeyPair_tags(t *testing.T) {
 	})
 }
 
-func testAccIVSPlaybackKeyPair_disappears(t *testing.T) {
+func testAccPlaybackKeyPair_disappears(t *testing.T) {
 	var playbackkeypair ivs.PlaybackKeyPair
 	resourceName := "aws_ivs_playback_key_pair.test"
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
