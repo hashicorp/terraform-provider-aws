@@ -28,7 +28,7 @@ func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Dynam
 
 func statusTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := findTableByName(conn, tableName)
+		table, err := FindTableByName(conn, tableName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -158,7 +158,7 @@ func statusTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshF
 
 func statusTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := findTableByName(conn, tableName)
+		table, err := FindTableByName(conn, tableName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

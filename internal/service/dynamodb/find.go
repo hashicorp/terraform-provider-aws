@@ -41,7 +41,7 @@ func FindKinesisDataStreamDestination(ctx context.Context, conn *dynamodb.Dynamo
 	return result, nil
 }
 
-func findTableByName(conn *dynamodb.DynamoDB, name string) (*dynamodb.TableDescription, error) {
+func FindTableByName(conn *dynamodb.DynamoDB, name string) (*dynamodb.TableDescription, error) {
 	input := &dynamodb.DescribeTableInput{
 		TableName: aws.String(name),
 	}
@@ -67,7 +67,7 @@ func findTableByName(conn *dynamodb.DynamoDB, name string) (*dynamodb.TableDescr
 }
 
 func findGSIByTwoPartKey(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
-	table, err := findTableByName(conn, tableName)
+	table, err := FindTableByName(conn, tableName)
 
 	if err != nil {
 		return nil, err

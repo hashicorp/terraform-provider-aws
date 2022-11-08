@@ -618,7 +618,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	table, err := findTableByName(conn, d.Id())
+	table, err := FindTableByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id())
