@@ -514,6 +514,7 @@ type resourceSecurityGroupIngressRuleData struct {
 // TODO
 // * Ensure at least one "target" is specified
 // * ForceNew if target type changes
+// * Validations (CIDR blocks etc.)
 // * All protocol => No FromPort/ToPort
 
 type normalizeIPProtocol struct{}
