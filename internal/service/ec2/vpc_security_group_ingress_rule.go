@@ -208,7 +208,7 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	data.CIDRIPv6 = flex.ToFrameworkStringValue(ctx, output.CidrIpv6)
 	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
 	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
-	data.IPProtocol = flex.ToFrameworkStringValueWithTransform(ctx, output.IpProtocol, ProtocolForValue)
+	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
 	data.PrefixListID = flex.ToFrameworkStringValue(ctx, output.PrefixListId)
 	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
@@ -407,7 +407,7 @@ func (r *resourceSecurityGroupIngressRule) expandIPPermission(_ context.Context,
 	}
 
 	if !data.IPProtocol.IsNull() {
-		apiObject.IpProtocol = aws.String(ProtocolForValue(data.IPProtocol.Value))
+		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
 	}
 
 	if !data.PrefixListID.IsNull() {
