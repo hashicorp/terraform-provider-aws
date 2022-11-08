@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	pemBlockTypeCertificate        = `CERTIFICATE`
-	pemBlockTypeRsaPrivateKey      = `RSA PRIVATE KEY`
-	pemBlockTypePublicKey          = `PUBLIC KEY`
-	pemBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
+	PEMBlockTypeCertificate        = `CERTIFICATE`
+	PEMBlockTypeRsaPrivateKey      = `RSA PRIVATE KEY`
+	PEMBlockTypePublicKey          = `PUBLIC KEY`
+	PEMBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
 )
 
 var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
@@ -34,7 +34,7 @@ func TLSRSAPrivateKeyPEM(bits int) string {
 
 	block := &pem.Block{
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
-		Type:  pemBlockTypeRsaPrivateKey,
+		Type:  PEMBlockTypeRsaPrivateKey,
 	}
 
 	return string(pem.EncodeToMemory(block))
@@ -62,7 +62,7 @@ func TLSRSAPublicKeyPEM(keyPem string) string {
 
 	block := &pem.Block{
 		Bytes: publicKeyBytes,
-		Type:  pemBlockTypePublicKey,
+		Type:  PEMBlockTypePublicKey,
 	}
 
 	return string(pem.EncodeToMemory(block))
@@ -128,7 +128,7 @@ func TLSRSAX509LocallySignedCertificatePEM(caKeyPem, caCertificatePem, keyPem, c
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -187,7 +187,7 @@ func TLSRSAX509SelfSignedCACertificatePEM(keyPem string) string {
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -249,7 +249,7 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(keyPem stri
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -297,7 +297,7 @@ func TLSRSAX509SelfSignedCertificatePEM(keyPem, commonName string) string {
 
 	certificateBlock := &pem.Block{
 		Bytes: certificateBytes,
-		Type:  pemBlockTypeCertificate,
+		Type:  PEMBlockTypeCertificate,
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
@@ -330,12 +330,12 @@ func TLSRSAX509CertificateRequestPEM(keyBits int, commonName string) (string, st
 
 	csrBlock := &pem.Block{
 		Bytes: csrBytes,
-		Type:  pemBlockTypeCertificateRequest,
+		Type:  PEMBlockTypeCertificateRequest,
 	}
 
 	keyBlock := &pem.Block{
 		Bytes: x509.MarshalPKCS1PrivateKey(keyBytes),
-		Type:  pemBlockTypeRsaPrivateKey,
+		Type:  PEMBlockTypeRsaPrivateKey,
 	}
 
 	return string(pem.EncodeToMemory(csrBlock)), string(pem.EncodeToMemory(keyBlock))
