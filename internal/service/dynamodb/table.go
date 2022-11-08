@@ -964,9 +964,8 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	log.Printf("[DEBUG] DynamoDB delete table: %s", d.Id())
-
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
+		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
 		if err := deleteReplicas(conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
 			if !tfawserr.ErrMessageContains(err, "ValidationException", "request was not found") {
@@ -975,11 +974,14 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	log.Printf("[DEBUG] Deleting DynamoDB Table: %s", d.Id())
 	err := deleteTable(conn, d.Id())
+
+	if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
-			return nil
-		}
 		return create.Error(names.DynamoDB, create.ErrActionDeleting, ResNameTable, d.Id(), err)
 	}
 
@@ -1392,32 +1394,24 @@ func deleteTable(conn *dynamodb.DynamoDB, tableName string) error {
 		TableName: aws.String(tableName),
 	}
 
-	err := resource.Retry(deleteTableTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteTable(input)
-		if err != nil {
-			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
-				return resource.RetryableError(err)
-			}
-			// This handles multiple scenarios in the DynamoDB API:
-			// 1. Updating a table immediately before deletion may return:
-			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
-			// 2. Removing a table from a DynamoDB global table may return:
-			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
-			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
-				return resource.NonRetryableError(err)
-			}
-			return resource.NonRetryableError(err)
+	_, err := tfresource.RetryWhen(deleteTableTimeout, func() (interface{}, error) {
+		return conn.DeleteTable(input)
+	}, func(err error) (bool, error) {
+		// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
+		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
+			return true, err
 		}
-		return nil
-	})
+		// This handles multiple scenarios in the DynamoDB API:
+		// 1. Updating a table immediately before deletion may return:
+		//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
+		// 2. Removing a table from a DynamoDB global table may return:
+		//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
+			return true, err
+		}
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteTable(input)
-	}
+		return false, err
+	})
 
 	return err
 }
