@@ -20,6 +20,9 @@ import (
 	"github.com/mitchellh/cli"
 )
 
+// TODO
+// * timeouts
+
 var (
 	dataSourceType = flag.String("data-source", "", "Data Source type")
 	resourceType   = flag.String("resource", "", "Resource type")
