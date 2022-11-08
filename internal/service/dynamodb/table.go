@@ -618,12 +618,10 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-		TableName: aws.String(d.Id()),
-	})
+	table, err := findTableByName(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Dynamodb Table (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -631,17 +629,6 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), err)
 	}
-
-	if result == nil || result.Table == nil {
-		if d.IsNewResource() {
-			return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), errors.New("empty output after creation"))
-		}
-		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	table := result.Table
 
 	d.Set("arn", table.TableArn)
 	d.Set("name", table.TableName)
