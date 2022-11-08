@@ -65,6 +65,46 @@ resource "aws_backup_framework" "Example" {
     name = "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED"
   }
 
+  control {
+    name = "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_VAULT_LOCK"
+
+    input_parameter {
+      name  = "maxRetentionDays"
+      value = "100"
+    }
+
+    input_parameter {
+      name  = "minRetentionDays"
+      value = "1"
+    }
+
+    scope {
+      compliance_resource_types = [
+        "EBS"
+      ]
+    }
+  }
+
+  control {
+    name = "BACKUP_LAST_RECOVERY_POINT_CREATED"
+
+    input_parameter {
+      name  = "recoveryPointAgeUnit"
+      value = "days"
+    }
+
+    input_parameter {
+      name  = "recoveryPointAgeValue"
+      value = "1"
+    }
+
+    scope {
+      compliance_resource_types = [
+        "EBS"
+      ]
+    }
+  }
+
   tags = {
     "Name" = "Example Framework"
   }
