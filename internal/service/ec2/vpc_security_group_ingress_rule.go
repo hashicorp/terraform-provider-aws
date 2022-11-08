@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -368,6 +369,18 @@ func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, reque
 	response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMap(ctx, allTags.Map()))...)
 }
 
+// ConfigValidators returns a list of functions which will all be performed during validation.
+func (r *resourceSecurityGroupIngressRule) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("cidr_ipv4"),
+			path.MatchRoot("cidr_ipv6"),
+			path.MatchRoot("prefix_list_id"),
+			path.MatchRoot("referenced_security_group_id"),
+		),
+	}
+}
+
 func (r *resourceSecurityGroupIngressRule) arn(_ context.Context, id string) types.String {
 	arn := arn.ARN{
 		Partition: r.meta.Partition,
@@ -512,7 +525,6 @@ type resourceSecurityGroupIngressRuleData struct {
 }
 
 // TODO
-// * Ensure at least one "target" is specified
 // * ForceNew if target type changes
 // * Validations (CIDR blocks etc.)
 // * All protocol => No FromPort/ToPort

@@ -497,3 +497,11 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 		return
 	}
 }
+
+func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
