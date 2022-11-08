@@ -30,7 +30,7 @@ func statusTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefres
 	return func() (interface{}, string, error) {
 		table, err := findTableByName(conn, tableName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -98,9 +98,9 @@ func statusReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) reso
 
 func statusGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		gsi, err := findGSIByTableNameIndexName(conn, tableName, indexName)
+		gsi, err := findGSIByTwoPartKey(conn, tableName, indexName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -160,7 +160,7 @@ func statusTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRef
 	return func() (interface{}, string, error) {
 		table, err := findTableByName(conn, tableName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 

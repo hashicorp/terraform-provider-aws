@@ -57,10 +57,7 @@ func waitKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb
 
 func waitTableActive(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.TableStatusCreating,
-			dynamodb.TableStatusUpdating,
-		},
+		Pending: []string{dynamodb.TableStatusCreating, dynamodb.TableStatusUpdating},
 		Target: []string{
 			dynamodb.TableStatusActive,
 		},
@@ -79,10 +76,7 @@ func waitTableActive(conn *dynamodb.DynamoDB, tableName string, timeout time.Dur
 
 func waitTableDeleted(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.TableStatusActive,
-			dynamodb.TableStatusDeleting,
-		},
+		Pending: []string{dynamodb.TableStatusActive, dynamodb.TableStatusDeleting},
 		Target:  []string{},
 		Timeout: maxDuration(deleteTableTimeout, timeout),
 		Refresh: statusTable(conn, tableName),
@@ -136,13 +130,8 @@ func waitReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string, timeo
 
 func waitGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) (*dynamodb.GlobalSecondaryIndexDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.IndexStatusCreating,
-			dynamodb.IndexStatusUpdating,
-		},
-		Target: []string{
-			dynamodb.IndexStatusActive,
-		},
+		Pending: []string{dynamodb.IndexStatusCreating, dynamodb.IndexStatusUpdating},
+		Target:  []string{dynamodb.IndexStatusActive},
 		Timeout: maxDuration(updateTableTimeout, timeout),
 		Refresh: statusGSI(conn, tableName, indexName),
 	}
@@ -158,11 +147,7 @@ func waitGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string, timeout
 
 func waitGSIDeleted(conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) (*dynamodb.GlobalSecondaryIndexDescription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.IndexStatusActive,
-			dynamodb.IndexStatusDeleting,
-			dynamodb.IndexStatusUpdating,
-		},
+		Pending: []string{dynamodb.IndexStatusActive, dynamodb.IndexStatusDeleting, dynamodb.IndexStatusUpdating},
 		Target:  []string{},
 		Timeout: maxDuration(updateTableTimeout, timeout),
 		Refresh: statusGSI(conn, tableName, indexName),
@@ -237,15 +222,8 @@ func waitTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool, ti
 
 func waitSSEUpdated(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.SSEStatusDisabling,
-			dynamodb.SSEStatusEnabling,
-			dynamodb.SSEStatusUpdating,
-		},
-		Target: []string{
-			dynamodb.SSEStatusDisabled,
-			dynamodb.SSEStatusEnabled,
-		},
+		Pending: []string{dynamodb.SSEStatusDisabling, dynamodb.SSEStatusEnabling, dynamodb.SSEStatusUpdating},
+		Target:  []string{dynamodb.SSEStatusDisabled, dynamodb.SSEStatusEnabled},
 		Timeout: maxDuration(updateTableTimeout, timeout),
 		Refresh: statusTableSES(conn, tableName),
 	}
