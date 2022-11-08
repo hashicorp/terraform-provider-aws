@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_lightsail_instance: Add ipv6 Support
+resource/aws_lightsail_instance: Add `ip_address_type` argument
 ```
 
 ```release-note:bug
