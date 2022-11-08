@@ -125,6 +125,8 @@ The following arguments are optional:
 
 * `audio_descriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 * `output_groups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
+* `timecode_config` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
+* `video_descriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
 
 ### Input Attachments
 
@@ -200,7 +202,7 @@ The following arguments are optional:
 ### Output Groups
 
 * `output_group_settings` - (Required) Settings associated with the output group. See [Output Group Settings](#output-group-settings) for more details.
-* `outputs` - (Required) List of outputs.
+* `outputs` - (Required) List of outputs. See [Outputs](#outputs) for more details.
 * `name` - (Optional) Custom output group name defined by the user.
 
 ### Output Group Settings
@@ -208,6 +210,29 @@ The following arguments are optional:
 * `archive_group_settings` - (Optional) Archive group settings. See [Archive Group Settings](#archive-group-settings) for more details.
 * `media_package_group_settings` - (Optional) Media package group settings. See [Media Package Group Settings](#media-package-group-settings) for more details.
 * `multiplex_group_sttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
+* `rtmp_group_settings` - (Optional) RTMP group settings. See [RTMP Group Settings](#rtmp-group-settings) for more details.
+* `udp_group_sttings` - (Optional) UDP group settings. See [UDP Group Settings](#udp-group-settings) for more details.
+
+### Outputs
+
+* `output_settings` - (Required) Settings for output. See [Output Settings](#output-settings) for more details.
+* `audio_description_names` - (Optional) The names of the audio descriptions used as audio sources for the output.
+* `caption_description_names` - (Optional) The names of the caption descriptions used as audio sources for the output.
+* `output_name` - (Required) The name used to identify an output.
+* `video_description_name` - (Optional) The name of the video description used as audio sources for the output.
+
+### Timecode Config
+
+* `source` - (Optional) The source for the timecode that will be associated with the events outputs.
+* `sync_threshold` - (Optional) Threshold in frames beyond which output timecode is resynchronized to the input timecode.
+
+### Video Descriptions
+
+* `height` - Output video height in pixels.
+* `respond_to_afd` - (Optional) Indicate how to respond to the AFD values that might be in the input video.
+* `scaling_behavior` - (Optional) Behavior on how to scale.
+* `sharpness` - (Optional) Changes the strength of the anti-alias filter used for scaling.
+* `width` - (Optional) Output video width in pixels.
 
 ### Archive Group Settings
 
@@ -218,6 +243,22 @@ The following arguments are optional:
 ### Media Package Group Settings
 
 * `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
+
+### RTMP Group Settings
+
+* `ad_markers` - (Optional) The ad marker type for this output group.
+* `authentication_scheme` - (Optional) Authentication scheme to use when connecting with CDN.
+* `cache_full_behavior` - (Optional) Controls behavior when content cache fills up.
+* `cache_length` - (Optional) Cache length in seconds, is used to calculate buffer size.
+* `caption_data` - (Optional) Controls the types of data that passes to onCaptionInfo outputs.
+* `input_loss_action` - (Optional) Controls the behavior of the RTMP group if input becomes unavailable.
+* `restart_delay` - (Optional) Number of seconds to wait until a restart is initiated.
+
+### UDP Group Settings
+
+* `input_loss_action` - (Optional) Specifies behavior of last resort when input video os lost.
+* `timed_metadata_id3_frame` - (Optional) Indicates ID3 frame that has the timecode.
+* `timed_metadta_id3_perios`- (Optional) Timed metadata interval in seconds.
 
 ### Destination
 
@@ -230,6 +271,49 @@ The following arguments are optional:
 ### Archive S3 Settings
 
 * `canned_acl` - (Optional) Specify the canned ACL to apply to each S3 request.
+
+### Output Settings
+
+* `archive_output_settings` - (Optional) Archive output settings. See [Archive Output Settings](#archive-output-settings) for more details.
+* `media_package_output_settings` - (Optional) Media package output settings. This can be set as an empty block.
+* `multiplex_output_settings` - (Optional) Multiplex output settings. See [Multiplex Output Settings](#multiplex-output-settings) for more details.
+* `rtmp_output_settings` - (Optional) RTMP output settings. See [RTMP Output Settings](#rtmp-output-settings) for more details.
+* `udp_output_settings` - (Optional) UDP output settings. See [UDP Output Settings](#udp-output-settings) for more details
+
+### Archive Output Settings
+
+* `container_settings` - (Required) Settings specific to the container type of the file. See [Container Settings](#container-settings) for more details.
+* `extension` - (Optional) Output file extension.
+* `name_modifier` - (Optional) String concatenated to the end of the destination filename. Required for multiple outputs of the same type.
+
+### Multiplex Output Settings
+
+* `destination` - (Required) Destination is a multiplex. See [Destination](#destination) for more details.
+
+### RTMP Output Settings
+
+- `destination` - (Required) The RTMP endpoint excluding the stream name. See [Destination](#destination) for more details.
+- `certificate_mode` - (Optional) Setting to allow self signed or verified RTMP certificates.
+- `connection_retry_interval` - (Optional) Number of seconds to wait before retrying connection to the flash media server if the connection is lost.
+- `num_retries` - (Optional) Number of retry attempts.
+
+### Container Settings
+
+* `m2ts_settings` - (Optional) M2ts Settings. See [M2ts Settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-medialive-channel-m2tssettings.html) for more details.
+* `raw_settings`- (Optional) Raw Settings. This can be set as an empty block.
+
+### UDP Output Settings
+
+* `container_settings` - (Required) UDP container settings. See [Container Settings](#container-settings) for more details.
+* `destination` - (Required) Destination address and port number for RTP or UDP packets. See [Destination](#destination) for more details.
+* `buffer_msec` - (Optional) UDP output buffering in milliseconds.
+* `fec_output_setting` - (Optional) Settings for enabling and adjusting Forward Error Correction on UDP outputs. See [FEC Output Settings](#fec-output-settings) for more details.
+
+### FEC Output Settings
+
+* `column_depth` - (Optional) The height of the FEC protection matrix.
+* `include_fec` - (Optional) Enables column oly or column and row based FEC.
+* `row_length` - (Optional) The width of the FEC protection matrix.
 
 ## Attributes Reference
 

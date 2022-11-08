@@ -1629,14 +1629,14 @@ func outputSettingsSchema() *schema.Schema {
 					},
 				},
 				// This is in the API and Go SDK docs, but has no exported fields.
-				// "media_package_output_settings": {
-				// 	Type:     schema.TypeList,
-				//  Optional: true,
-				// 	MaxItems: 1,
-				// 	Elem: &schema.Resource{
-				// 		Schema: map[string]*schema.Schema{},
-				// 	},
-				// },
+				"media_package_output_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{},
+					},
+				},
 				"ms_smooth_output_settings": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1832,13 +1832,14 @@ func hlsSettingsSchema() *schema.Schema {
 					},
 				},
 				// This is in the API and Go SDK docs, but has no exported fields.
-				// "frame_capture_hls_settings": {
-				// 	Type:     schema.TypeList,
-				// 	MaxItems: 1,
-				// 	Elem: &schema.Resource{
-				// 		Schema: map[string]*schema.Schema{},
-				// 	},
-				// },
+				"frame_capture_hls_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{},
+					},
+				},
 				"standard_hls_settings": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -2305,7 +2306,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 			a.Name = aws.String(v)
 		}
 		if v, ok := m["audio_normalization_settings"].([]interface{}); ok && len(v) > 0 {
-			a.AudioNormalizationSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsAudioNormalizationSettings(v)
+			a.AudioNormalizationSettings = expandAudioDescriptionsAudioNormalizationSettings(v)
 		}
 		if v, ok := m["audio_type"].(string); ok && v != "" {
 			a.AudioType = types.AudioType(v)
@@ -2367,6 +2368,27 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 	return outputGroups
 }
 
+func expandAudioDescriptionsAudioNormalizationSettings(tfList []interface{}) *types.AudioNormalizationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioNormalizationSettings
+	if v, ok := m["algorithm"].(string); ok && v != "" {
+		out.Algorithm = types.AudioNormalizationAlgorithm(v)
+	}
+	if v, ok := m["algorithm_control"].(string); ok && v != "" {
+		out.AlgorithmControl = types.AudioNormalizationAlgorithmControl(v)
+	}
+	if v, ok := m["target_lkfs"].(float32); ok {
+		out.TargetLkfs = float64(v)
+	}
+
+	return &out
+}
+
 func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interface{}) *types.OutputGroupSettings {
 	if tfList == nil {
 		return nil
@@ -2384,6 +2406,12 @@ func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interf
 	}
 	if v, ok := m["multiplex_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.MultiplexGroupSettings = &types.MultiplexGroupSettings{} // only unexported fields
+	}
+	if v, ok := m["rtmp_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.RtmpGroupSettings = expandRtmpGroupSettings(v)
+	}
+	if v, ok := m["udp_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.UdpGroupSettings = expandUdpGroupSettings(v)
 	}
 	// TODO implement rest of output group settings
 
@@ -2505,6 +2533,73 @@ func expandAudioWatermarkSettings(tfList []interface{}) *types.AudioWatermarkSet
 	return &o
 }
 
+func expandRtmpGroupSettings(tfList []interface{}) *types.RtmpGroupSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.RtmpGroupSettings
+	if v, ok := m["ad_markers"].([]interface{}); ok && len(v) > 0 {
+		out.AdMarkers = expandAdMarkers(v)
+	}
+	if v, ok := m["authentication_scheme"].(string); ok && v != "" {
+		out.AuthenticationScheme = types.AuthenticationScheme(v)
+	}
+	if v, ok := m["cache_full_behavior"].(string); ok && v != "" {
+		out.CacheFullBehavior = types.RtmpCacheFullBehavior(v)
+	}
+	if v, ok := m["cache_length"].(int); ok {
+		out.CacheLength = int32(v)
+	}
+	if v, ok := m["caption_data"].(string); ok && v != "" {
+		out.CaptionData = types.RtmpCaptionData(v)
+	}
+	if v, ok := m["input_loss_action"].(string); ok && v != "" {
+		out.InputLossAction = types.InputLossActionForRtmpOut(v)
+	}
+	if v, ok := m["restart_delay"].(int); ok {
+		out.RestartDelay = int32(v)
+	}
+
+	return &out
+}
+
+func expandUdpGroupSettings(tfList []interface{}) *types.UdpGroupSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.UdpGroupSettings
+	if v, ok := m["input_loss_action"].(string); ok && v != "" {
+		out.InputLossAction = types.InputLossActionForUdpOut(v)
+	}
+	if v, ok := m["timed_metadata_id3_frame"].(string); ok && v != "" {
+		out.TimedMetadataId3Frame = types.UdpTimedMetadataId3Frame(v)
+	}
+	if v, ok := m["timed_metadata_id3_period"].(int); ok {
+		out.TimedMetadataId3Period = int32(v)
+	}
+
+	return &out
+}
+
+func expandAdMarkers(tfList []interface{}) []types.RtmpAdMarkers {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.RtmpAdMarkers
+	for _, v := range tfList {
+		out = append(out, types.RtmpAdMarkers(v.(string)))
+	}
+
+	return out
+}
+
 func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []interface{}) []types.Output {
 	if tfList == nil {
 		return nil
@@ -2550,6 +2645,30 @@ func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
 	if v, ok := m["archive_output_settings"].([]interface{}); ok && len(v) > 0 {
 		os.ArchiveOutputSettings = expandOutputsOutputSettingsArchiveOutputSettings(v)
 	}
+	if v, ok := m["media_package_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.MediaPackageOutputSettings = &types.MediaPackageOutputSettings{} // no exported fields
+	}
+	if v, ok := m["multiplex_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.MultiplexOutputSettings = func(inner []interface{}) *types.MultiplexOutputSettings {
+			if len(inner) == 0 {
+				return nil
+			}
+
+			data := inner[0].(map[string]interface{})
+			var mos types.MultiplexOutputSettings
+			if v, ok := data["destination"].([]interface{}); ok && len(v) > 0 {
+				mos.Destination = expandDestination(v)
+			}
+			return &mos
+		}(v)
+	}
+
+	if v, ok := m["rtmp_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.RtmpOutputSettings = expandOutputsOutputSettingsRtmpOutputSettings(v)
+	}
+	if v, ok := m["udp_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.UdpOutputSettings = expandOutputsOutputSettingsUdpOutputSettings(v)
+	}
 
 	return &os
 }
@@ -2574,6 +2693,54 @@ func expandOutputsOutputSettingsArchiveOutputSettings(tfList []interface{}) *typ
 	return &settings
 }
 
+func expandOutputsOutputSettingsRtmpOutputSettings(tfList []interface{}) *types.RtmpOutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var settings types.RtmpOutputSettings
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		settings.Destination = expandDestination(v)
+	}
+	if v, ok := m["certificate_mode"].(string); ok && v != "" {
+		settings.CertificateMode = types.RtmpOutputCertificateMode(v)
+	}
+	if v, ok := m["connection_retry_interval"].(int); ok {
+		settings.ConnectionRetryInterval = int32(v)
+	}
+	if v, ok := m["num_retries"].(int); ok {
+		settings.NumRetries = int32(v)
+	}
+
+	return &settings
+}
+
+func expandOutputsOutputSettingsUdpOutputSettings(tfList []interface{}) *types.UdpOutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var settings types.UdpOutputSettings
+	if v, ok := m["container_settings"].([]interface{}); ok && len(v) > 0 {
+		settings.ContainerSettings = expandOutputsOutputSettingsUdpSettingsContainerSettings(v)
+	}
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		settings.Destination = expandDestination(v)
+	}
+	if v, ok := m["buffer_msec"].(int); ok {
+		settings.BufferMsec = int32(v)
+	}
+	if v, ok := m["fec_output_settings"].([]interface{}); ok && len(v) > 0 {
+		settings.FecOutputSettings = expandFecOutputSettings(v)
+	}
+
+	return &settings
+}
+
 func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []interface{}) *types.ArchiveContainerSettings {
 	if tfList == nil {
 		return nil
@@ -2589,6 +2756,42 @@ func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []interf
 	if v, ok := m["raw_settings"].([]interface{}); ok && len(v) > 0 {
 		settings.RawSettings = &types.RawSettings{}
 	}
+	return &settings
+}
+
+func expandOutputsOutputSettingsUdpSettingsContainerSettings(tfList []interface{}) *types.UdpContainerSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var settings types.UdpContainerSettings
+	if v, ok := m["m2ts_settings"].([]interface{}); ok && len(v) > 0 {
+		settings.M2tsSettings = expandM2tsSettings(v)
+	}
+
+	return &settings
+}
+
+func expandFecOutputSettings(tfList []interface{}) *types.FecOutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var settings types.FecOutputSettings
+	if v, ok := m["column_depth"].(int); ok {
+		settings.ColumnDepth = int32(v)
+	}
+	if v, ok := m["column_depth"].(string); ok && v != "" {
+		settings.IncludeFec = types.FecOutputIncludeFec(v)
+	}
+	if v, ok := m["row_length"].(int); ok {
+		settings.RowLength = int32(v)
+	}
+
 	return &settings
 }
 
@@ -2834,8 +3037,8 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
 			d.CodecSettings = nil // TODO expandChannelEncoderSettingsVideoDescriptionsCodecSettings(v)
 		}
-		if v, ok := m["height"].(int32); ok {
-			d.Height = v
+		if v, ok := m["height"].(int); ok {
+			d.Height = int32(v)
 		}
 		if v, ok := m["respond_to_afd"].(string); ok && v != "" {
 			d.RespondToAfd = types.VideoDescriptionRespondToAfd(v)
@@ -2843,11 +3046,11 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 		if v, ok := m["scaling_behavior"].(string); ok && v != "" {
 			d.ScalingBehavior = types.VideoDescriptionScalingBehavior(v)
 		}
-		if v, ok := m["sharpness"].(int32); ok {
-			d.Sharpness = v
+		if v, ok := m["sharpness"].(int); ok {
+			d.Sharpness = int32(v)
 		}
-		if v, ok := m["width"].(int32); ok {
-			d.Width = v
+		if v, ok := m["width"].(int); ok {
+			d.Width = int32(v)
 		}
 
 		videoDesc = append(videoDesc, d)
@@ -2904,7 +3107,7 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 		"audio_descriptions": flattenAudioDescriptions(apiObject.AudioDescriptions),
 		"output_groups":      flattenOutputGroups(apiObject.OutputGroups),
 		"timecode_config":    flattenTimecodeConfig(apiObject.TimecodeConfig),
-		"video_descriptions": flattenVideoDescriptions(apiObject.VideoDescriptions), // TODO
+		"video_descriptions": flattenVideoDescriptions(apiObject.VideoDescriptions),
 		// TODO avail_blanking
 		// TODO avail_configuration
 		// TODO blackout_slate
@@ -2967,7 +3170,16 @@ func flattenOutputGroupSettings(os *types.OutputGroupSettings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"archive_group_settings": flattenOutputGroupSettingsArchiveGroupSettings(os.ArchiveGroupSettings),
+		"archive_group_settings":       flattenOutputGroupSettingsArchiveGroupSettings(os.ArchiveGroupSettings),
+		"media_package_group_settings": flattenOutputGroupSettingsMediaPackageGroupSettings(os.MediaPackageGroupSettings),
+		"multiplex_group_settings": func(inner *types.MultiplexGroupSettings) []interface{} {
+			if inner == nil {
+				return nil
+			}
+			return []interface{}{} // no exported attributes
+		}(os.MultiplexGroupSettings),
+		"rtmp_group_settings": flattenOutputGroupSettingsRtmpGroupSettings(os.RtmpGroupSettings),
+		"udp_group_settings":  flattenOutputGroupSettingsUdpGroupSettings(os.UdpGroupSettings),
 	}
 
 	return []interface{}{m}
@@ -3002,7 +3214,26 @@ func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
 
 	m := map[string]interface{}{
 		"archive_output_settings": flattenOutputsOutputSettingsArchiveOutputSettings(in.ArchiveOutputSettings),
+		"media_package_output_settings": func(inner *types.MediaPackageOutputSettings) []interface{} {
+			if inner == nil {
+				return nil
+			}
+			return []interface{}{} // no exported attributes
+		}(in.MediaPackageOutputSettings),
+		"multiplex_output_settings": func(inner *types.MultiplexOutputSettings) []interface{} {
+			if inner == nil {
+				return nil
+			}
+			data := map[string]interface{}{
+				"destination": flattenDestination(inner.Destination),
+			}
+
+			return []interface{}{data} // no exported attributes
+		}(in.MultiplexOutputSettings),
+		"rtmp_output_settings": flattenOutputsOutputSettingsRtmpOutputSettings(in.RtmpOutputSettings),
+		"udp_output_settings":  flattenOutputsOutputSettingsUdpOutputSettings(in.UdpOutputSettings),
 	}
+
 	return []interface{}{m}
 }
 
@@ -3020,6 +3251,36 @@ func flattenOutputsOutputSettingsArchiveOutputSettings(in *types.ArchiveOutputSe
 	return []interface{}{m}
 }
 
+func flattenOutputsOutputSettingsRtmpOutputSettings(in *types.RtmpOutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"destination":               flattenDestination(in.Destination),
+		"certificate_mode":          string(in.CertificateMode),
+		"connection_retry_interval": int(in.ConnectionRetryInterval),
+		"num_retries":               int(in.NumRetries),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputsOutputSettingsUdpOutputSettings(in *types.UdpOutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"container_settings":  flattenOutputsOutputSettingsUdpOutputSettingsContainerSettings(in.ContainerSettings),
+		"destination":         flattenDestination(in.Destination),
+		"buffer_msec":         int(in.BufferMsec),
+		"fec_output_settings": flattenFecOutputSettings(in.FecOutputSettings),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in *types.ArchiveContainerSettings) []interface{} {
 	if in == nil {
 		return nil
@@ -3028,6 +3289,32 @@ func flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in *type
 	m := map[string]interface{}{
 		"m2ts_settings": flattenM2tsSettings(in.M2tsSettings),
 		"raw_settings":  []interface{}{}, // attribute has no exported fields
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputsOutputSettingsUdpOutputSettingsContainerSettings(in *types.UdpContainerSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"m2ts_settings": flattenM2tsSettings(in.M2tsSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFecOutputSettings(in *types.FecOutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"column_depth": int(in.ColumnDepth),
+		"include_fec":  string(in.IncludeFec),
+		"row_length":   int(in.RowLength),
 	}
 
 	return []interface{}{m}
@@ -3144,6 +3431,63 @@ func flattenOutputGroupSettingsArchiveGroupSettings(as *types.ArchiveGroupSettin
 	}
 
 	return []interface{}{m}
+}
+
+func flattenOutputGroupSettingsMediaPackageGroupSettings(mp *types.MediaPackageGroupSettings) []interface{} {
+	if mp == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"destination": flattenDestination(mp.Destination),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputGroupSettingsRtmpGroupSettings(rt *types.RtmpGroupSettings) []interface{} {
+	if rt == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"ad_markers":            flattenAdMakers(rt.AdMarkers),
+		"authentication_scheme": string(rt.AuthenticationScheme),
+		"cache_full_behavior":   string(rt.CacheFullBehavior),
+		"cache_length":          int(rt.CacheLength),
+		"caption_data":          string(rt.CaptionData),
+		"input_loss_action":     string(rt.InputLossAction),
+		"restart_delay":         int(rt.RestartDelay),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputGroupSettingsUdpGroupSettings(in *types.UdpGroupSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"input_loss_action":         string(in.InputLossAction),
+		"timed_metadata_id3_frame":  string(in.TimedMetadataId3Frame),
+		"timed_metadata_id3_period": int(in.TimedMetadataId3Period),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAdMakers(l []types.RtmpAdMarkers) []string {
+	if len(l) == 0 {
+		return nil
+	}
+
+	var out []string
+	for _, v := range l {
+		out = append(out, string(v))
+	}
+
+	return out
 }
 
 func flattenDestination(des *types.OutputLocationRef) []interface{} {

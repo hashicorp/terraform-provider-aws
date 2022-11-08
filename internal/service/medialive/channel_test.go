@@ -121,15 +121,15 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccChannelConfig_update(rNameUpdated, "MPEG2", "UHD"),
+				Config: testAccChannelConfig_update(rNameUpdated, "AVC", "HD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
 					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "input_specification.0.codec", "MPEG2"),
-					resource.TestCheckResourceAttr(resourceName, "input_specification.0.input_resolution", "UHD"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.codec", "AVC"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.input_resolution", "HD"),
 					resource.TestCheckResourceAttr(resourceName, "input_specification.0.maximum_bitrate", "MAX_20_MBPS"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_attachments.*", map[string]string{
 						"input_attachment_name": "example-input1",
