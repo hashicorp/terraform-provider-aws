@@ -2,17 +2,9 @@ package ivs_test
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/md5"
-	"crypto/rand"
-	"crypto/x509"
-	"encoding/hex"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,7 +29,8 @@ import (
 func testAccIVSPlaybackKeyPair_basic(t *testing.T) {
 	var playbackKeyPair ivs.PlaybackKeyPair
 	resourceName := "aws_ivs_playback_key_pair.test"
-	publicKeyPEM, fingerprint := ecdsaPublicKeyPEM()
+	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+	publicKeyPEM, fingerprint := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -74,8 +67,10 @@ func testAccIVSPlaybackKeyPair_update(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivs_playback_key_pair.test"
-	publicKeyPEM1, fingerprint1 := ecdsaPublicKeyPEM()
-	publicKeyPEM2, fingerprint2 := ecdsaPublicKeyPEM()
+	privateKey1 := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+	publicKeyPEM1, fingerprint1 := acctest.TLSECDSAPublicKeyPEM(t, privateKey1)
+	privateKey2 := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+	publicKeyPEM2, fingerprint2 := acctest.TLSECDSAPublicKeyPEM(t, privateKey2)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -112,7 +107,8 @@ func testAccIVSPlaybackKeyPair_tags(t *testing.T) {
 	var v1, v2, v3 ivs.PlaybackKeyPair
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ivs_playback_key_pair.test"
-	publicKeyPEM, _ := ecdsaPublicKeyPEM()
+	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+	publicKeyPEM, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -161,9 +157,9 @@ func testAccIVSPlaybackKeyPair_tags(t *testing.T) {
 
 func testAccIVSPlaybackKeyPair_disappears(t *testing.T) {
 	var playbackkeypair ivs.PlaybackKeyPair
-
 	resourceName := "aws_ivs_playback_key_pair.test"
-	publicKey, _ := ecdsaPublicKeyPEM()
+	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
+	publicKey, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -251,34 +247,6 @@ func testAccPlaybackKeyPairPreCheck(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func ecdsaPublicKeyPEM() (string, string) {
-	privateKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-
-	if err != nil {
-		//lintignore:R009
-		panic(err)
-	}
-
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-
-	if err != nil {
-		//lintignore:R009
-		panic(err)
-	}
-
-	block := &pem.Block{
-		Bytes: publicKeyBytes,
-		Type:  "PUBLIC KEY",
-	}
-
-	md5sum := md5.Sum(publicKeyBytes)
-	hexarray := make([]string, len(md5sum))
-	for i, c := range md5sum {
-		hexarray[i] = hex.EncodeToString([]byte{c})
-	}
-	return string(pem.EncodeToMemory(block)), strings.Join(hexarray, ":")
 }
 
 func testAccCheckPlaybackKeyPairRecreated(before, after *ivs.PlaybackKeyPair) resource.TestCheckFunc {
