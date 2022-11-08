@@ -146,7 +146,7 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `1m`)
 - `update` - (Default `1m`)
