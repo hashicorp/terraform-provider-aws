@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -74,6 +75,9 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 			"from_port": {
 				Type:     types.Int64Type,
 				Optional: true,
+				Validators: []tfsdk.AttributeValidator{
+					int64validator.Between(-1, 65535),
+				},
 			},
 			"id": {
 				Type:     types.StringType,
@@ -116,6 +120,9 @@ func (r *resourceSecurityGroupIngressRule) GetSchema(context.Context) (tfsdk.Sch
 			"to_port": {
 				Type:     types.Int64Type,
 				Optional: true,
+				Validators: []tfsdk.AttributeValidator{
+					int64validator.Between(-1, 65535),
+				},
 			},
 		},
 	}
@@ -215,13 +222,23 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 	data.CIDRIPv4 = flex.ToFrameworkStringValue(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.ToFrameworkStringValue(ctx, output.CidrIpv6)
 	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
-	data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
 	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
 	data.PrefixListID = flex.ToFrameworkStringValue(ctx, output.PrefixListId)
 	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.ToFrameworkStringValue(ctx, output.SecurityGroupRuleId)
-	data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
+
+	// If planned from_port or to_port are null and values of -1 are returned, propagate null.
+	if v := aws.Int64Value(output.FromPort); v == -1 && data.FromPort.IsNull() {
+		data.FromPort = types.Int64{Null: true}
+	} else {
+		data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
+	}
+	if v := aws.Int64Value(output.ToPort); v == -1 && data.ToPort.IsNull() {
+		data.ToPort = types.Int64{Null: true}
+	} else {
+		data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
+	}
 
 	// If planned tags are null and no tags are returned, propagate null.
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -552,9 +569,6 @@ type resourceSecurityGroupIngressRuleData struct {
 	TagsAll                   types.Map    `tfsdk:"tags_all"`
 	ToPort                    types.Int64  `tfsdk:"to_port"`
 }
-
-// TODO
-// * All protocol => No FromPort/ToPort
 
 func (d *resourceSecurityGroupIngressRuleData) sourceAttributeName() string {
 	switch {
