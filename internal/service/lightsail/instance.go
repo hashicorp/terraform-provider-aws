@@ -283,6 +283,10 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			IpAddressType: aws.String(d.Get("ip_address_type").(string)),
 		})
 
+		if err != nil {
+			return err
+		}
+
 		if len(resp.Operations) == 0 {
 			return fmt.Errorf("No operations found for CreateInstance request")
 		}
