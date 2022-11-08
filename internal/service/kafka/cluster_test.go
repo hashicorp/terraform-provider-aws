@@ -1969,9 +1969,9 @@ func testAccClusterConfig_storageMode(rName string, storageMode string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
   storage_mode           = %[2]q
+  kafka_version          = "3.3.1"
+  number_of_broker_nodes = 3
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
