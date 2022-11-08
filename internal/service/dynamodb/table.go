@@ -379,6 +379,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	tableName := d.Get("name").(string)
 	keySchemaMap := map[string]interface{}{
 		"hash_key": d.Get("hash_key").(string),
 	}
@@ -388,10 +389,10 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
-	if _, ok := d.GetOk("restore_source_name"); ok {
+	if v, ok := d.GetOk("restore_source_name"); ok {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
-			TargetTableName: aws.String(d.Get("name").(string)),
-			SourceTableName: aws.String(d.Get("restore_source_name").(string)),
+			SourceTableName: aws.String(v.(string)),
+			TargetTableName: aws.String(tableName),
 		}
 
 		if v, ok := d.GetOk("restore_date_time"); ok {
@@ -470,7 +471,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 		}
 
 		if output == nil || output.TableDescription == nil {
@@ -478,9 +479,9 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	} else {
 		input := &dynamodb.CreateTableInput{
-			TableName:   aws.String(d.Get("name").(string)),
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 			KeySchema:   expandKeySchema(keySchemaMap),
+			TableName:   aws.String(tableName),
 		}
 
 		if len(tags) > 0 {
@@ -513,7 +514,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
 				if err := validateGSIProvisionedThroughput(gsi, billingMode); err != nil {
-					return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+					return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 				}
 
 				gsiObject := expandGlobalSecondaryIndex(gsi, billingMode)
@@ -537,40 +538,28 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			input.TableClass = aws.String(v.(string))
 		}
 
-		var output *dynamodb.CreateTableOutput
-		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
-			var err error
-			output, err = conn.CreateTable(input)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, "ThrottlingException", "") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
+		_, err := tfresource.RetryWhen(createTableTimeout, func() (interface{}, error) {
+			return conn.CreateTable(input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+				return true, err
 			}
-			return nil
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
 		})
 
-		if tfresource.TimedOut(err) {
-			output, err = conn.CreateTable(input)
-		}
-
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
-		}
-
-		if output == nil || output.TableDescription == nil {
-			return errors.New("error creating DynamoDB Table: empty response")
+			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 		}
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(tableName)
 
 	var output *dynamodb.TableDescription
 	var err error
