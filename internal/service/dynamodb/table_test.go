@@ -2477,7 +2477,8 @@ data "aws_kms_alias" "dynamodb" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -2501,7 +2502,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccTableConfig_initialStateEncryptionBYOK(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -3135,12 +3137,14 @@ data "aws_region" "alternate" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_kms_key" "replica" {
-  provider    = "awsalternate"
-  description = "%[1]s-2"
+  provider                = "awsalternate"
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -3642,7 +3646,8 @@ resource "aws_dynamodb_table" "source" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -3682,7 +3687,8 @@ resource "aws_dynamodb_table" "source" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
