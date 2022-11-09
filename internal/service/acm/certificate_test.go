@@ -1371,7 +1371,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateConfig_privateKeyNoChain(withoutChainDomain),
+				Config: testAccCertificateConfig_privateKeyNoChain(t, withoutChainDomain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v3),
 					testAccCheckCertficateNotRecreated(&v2, &v3),
@@ -1443,7 +1443,7 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_privateKeyNoChain("1.2.3.4"),
+				Config: testAccCertificateConfig_privateKeyNoChain(t, "1.2.3.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
@@ -1789,7 +1789,7 @@ resource "aws_acm_certificate" "test" {
 `, domainName, subjectAlternativeNames, validationMethod)
 }
 
-func testAccCertificateConfig_privateKeyNoChain(commonName string) string {
+func testAccCertificateConfig_privateKeyNoChain(t *testing.T, commonName string) string {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
