@@ -402,6 +402,12 @@ func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, reque
 		return
 	}
 
+	if planTags.IsUnknown() {
+		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), tftags.Unknown)...)
+
+		return
+	}
+
 	resourceTags := tftags.New(planTags)
 
 	if defaultTagsConfig.TagsEqual(resourceTags) {
