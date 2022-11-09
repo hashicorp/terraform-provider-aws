@@ -1,6 +1,7 @@
 package budgets_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -21,10 +22,10 @@ func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName),
@@ -61,10 +62,10 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName),
@@ -97,7 +98,7 @@ func testAccBudgetActionExists(resourceName string, config *budgets.Action) reso
 			return err
 		}
 
-		output, err := tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		output, err := tfbudgets.FindActionByThreePartKey(context.Background(), conn, accountID, actionID, budgetName)
 
 		if err != nil {
 			return err
@@ -123,7 +124,7 @@ func testAccBudgetActionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		_, err = tfbudgets.FindActionByThreePartKey(context.Background(), conn, accountID, actionID, budgetName)
 
 		if tfresource.NotFound(err) {
 			continue

@@ -20,12 +20,12 @@ data "aws_networkmanager_global_network" "example" {
 
 ## Argument Reference
 
-* `global_network_id` - (Required) The id of the specific global network to retrieve.
+* `global_network_id` - (Required) ID of the specific global network to retrieve.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the global network.
-* `description` - The description of the global network.
-* `tags` - A map of resource tags.
+* `arn` - ARN of the global network.
+* `description` - Description of the global network.
+* `tags` - Map of resource tags.

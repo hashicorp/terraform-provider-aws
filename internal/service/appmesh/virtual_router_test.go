@@ -21,10 +21,10 @@ func testAccVirtualRouter_basic(t *testing.T) {
 	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVirtualRouterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualRouterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
@@ -75,10 +75,10 @@ func testAccVirtualRouter_tags(t *testing.T) {
 	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVirtualRouterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualRouterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualRouterConfig_tags(meshName, vrName, "foo", "bar", "good", "bad"),

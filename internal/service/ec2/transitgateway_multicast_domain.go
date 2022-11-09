@@ -95,13 +95,13 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 	output, err := conn.CreateTransitGatewayMulticastDomainWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating EC2 Transit Gateway Multicast Domain: %s", err)
+		return diag.Errorf("creating EC2 Transit Gateway Multicast Domain: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayMulticastDomain.TransitGatewayMulticastDomainId))
 
 	if _, err := WaitTransitGatewayMulticastDomainCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Multicast Domain (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for EC2 Transit Gateway Multicast Domain (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceTransitGatewayMulticastDomainRead(ctx, d, meta)
@@ -121,7 +121,7 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Multicast Domain (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EC2 Transit Gateway Multicast Domain (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", multicastDomain.TransitGatewayMulticastDomainArn)
@@ -135,11 +135,11 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -152,7 +152,7 @@ func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating EC2 Transit Gateway Multicast Domain (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating EC2 Transit Gateway Multicast Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -171,7 +171,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	}
 
 	if err != nil {
-		return diag.Errorf("error listing EC2 Transit Gateway Multicast Groups (%s): %s", d.Id(), err)
+		return diag.Errorf("listing EC2 Transit Gateway Multicast Groups (%s): %s", d.Id(), err)
 	}
 
 	var diags diag.Diagnostics
@@ -205,7 +205,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	}
 
 	if err != nil {
-		return diag.Errorf("error listing EC2 Transit Gateway Multicast Domain Associations (%s): %s", d.Id(), err)
+		return diag.Errorf("listing EC2 Transit Gateway Multicast Domain Associations (%s): %s", d.Id(), err)
 	}
 
 	for _, v := range associations {
@@ -230,11 +230,11 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting EC2 Transit Gateway Multicast Domain (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting EC2 Transit Gateway Multicast Domain (%s): %s", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayMulticastDomainDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Multicast Domain (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for EC2 Transit Gateway Multicast Domain (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

@@ -74,101 +74,101 @@ resource "aws_appmesh_virtual_gateway" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the virtual gateway. Must be between 1 and 255 characters in length.
-* `mesh_name` - (Required) The name of the service mesh in which to create the virtual gateway. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `spec` - (Required) The virtual gateway specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) Name to use for the virtual gateway. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) Name of the service mesh in which to create the virtual gateway. Must be between 1 and 255 characters in length.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
+* `spec` - (Required) Virtual gateway specification to apply.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
-* `listener` - (Required) The listeners that the mesh endpoint is expected to receive inbound traffic from. You can specify one listener.
-* `backend_defaults` - (Optional) The defaults for backends.
-* `logging` - (Optional) The inbound and outbound access logging information for the virtual gateway.
+* `listener` - (Required) Listeners that the mesh endpoint is expected to receive inbound traffic from. You can specify one listener.
+* `backend_defaults` - (Optional) Defaults for backends.
+* `logging` - (Optional) Inbound and outbound access logging information for the virtual gateway.
 
 The `backend_defaults` object supports the following:
 
-* `client_policy` - (Optional) The default client policy for virtual gateway backends.
+* `client_policy` - (Optional) Default client policy for virtual gateway backends.
 
 The `client_policy` object supports the following:
 
-* `tls` - (Optional) The Transport Layer Security (TLS) client policy.
+* `tls` - (Optional) Transport Layer Security (TLS) client policy.
 
 The `tls` object supports the following:
 
-* `certificate` (Optional) The virtual gateway's client's Transport Layer Security (TLS) certificate.
+* `certificate` (Optional) Virtual gateway's client's Transport Layer Security (TLS) certificate.
 * `enforce` - (Optional) Whether the policy is enforced. Default is `true`.
 * `ports` - (Optional) One or more ports that the policy is enforced for.
-* `validation` - (Required) The TLS validation context.
+* `validation` - (Required) TLS validation context.
 
 The `certificate` object supports the following:
 
-* `file` - (Optional) A local file certificate.
+* `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate chain for the certificate.
-* `private_key` - (Required) The private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
+* `certificate_chain` - (Required) Certificate chain for the certificate.
+* `private_key` - (Required) Private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
 The `validation` object supports the following:
 
-* `subject_alternative_names` - (Optional) The SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
-* `trust` - (Required) The TLS validation context trust.
+* `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
+* `trust` - (Required) TLS validation context trust.
 
 The `subject_alternative_names` object supports the following:
 
-* `match` - (Required) The criteria for determining a SAN's match.
+* `match` - (Required) Criteria for determining a SAN's match.
 
 The `match` object supports the following:
 
-* `exact` - (Required) The values sent must match the specified values exactly.
+* `exact` - (Required) Values sent must match the specified values exactly.
 
 The `trust` object supports the following:
 
-* `acm` - (Optional) The TLS validation context trust for an AWS Certificate Manager (ACM) certificate.
-* `file` - (Optional) The TLS validation context trust for a local file certificate.
-* `sds` - (Optional) The TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
+* `acm` - (Optional) TLS validation context trust for an AWS Certificate Manager (ACM) certificate.
+* `file` - (Optional) TLS validation context trust for a local file certificate.
+* `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `acm` object supports the following:
 
-* `certificate_authority_arns` - (Required) One or more ACM Amazon Resource Name (ARN)s.
+* `certificate_authority_arns` - (Required) One or more ACM ARNs.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
+* `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
+* `secret_name` - (Required) Name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
 The `listener` object supports the following:
 
-* `port_mapping` - (Required) The port mapping information for the listener.
-* `connection_pool` - (Optional) The connection pool information for the listener.
-* `health_check` - (Optional) The health check information for the listener.
-* `tls` - (Optional) The Transport Layer Security (TLS) properties for the listener
+* `port_mapping` - (Required) Port mapping information for the listener.
+* `connection_pool` - (Optional) Connection pool information for the listener.
+* `health_check` - (Optional) Health check information for the listener.
+* `tls` - (Optional) Transport Layer Security (TLS) properties for the listener
 
 The `logging` object supports the following:
 
-* `access_log` - (Optional) The access log configuration for a virtual gateway.
+* `access_log` - (Optional) Access log configuration for a virtual gateway.
 
 The `access_log` object supports the following:
 
-* `file` - (Optional) The file object to send virtual gateway access logs to.
+* `file` - (Optional) File object to send virtual gateway access logs to.
 
 The `file` object supports the following:
 
-* `path` - (Required) The file path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
+* `path` - (Required) File path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
 
 The `port_mapping` object supports the following:
 
-* `port` - (Required) The port used for the port mapping.
-* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
+* `port` - (Required) Port used for the port mapping.
+* `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
 
 The `connection_pool` object supports the following:
 
@@ -191,75 +191,75 @@ The `http2` connection pool object supports the following:
 
 The `health_check` object supports the following:
 
-* `healthy_threshold` - (Required) The number of consecutive successful health checks that must occur before declaring listener healthy.
-* `interval_millis`- (Required) The time period in milliseconds between each health check execution.
-* `protocol` - (Required) The protocol for the health check request. Valid values are `http`, `http2`, and `grpc`.
-* `timeout_millis` - (Required) The amount of time to wait when receiving a response from the health check, in milliseconds.
-* `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual gateway unhealthy.
-* `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
-* `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
+* `healthy_threshold` - (Required) Number of consecutive successful health checks that must occur before declaring listener healthy.
+* `interval_millis`- (Required) Time period in milliseconds between each health check execution.
+* `protocol` - (Required) Protocol for the health check request. Valid values are `http`, `http2`, and `grpc`.
+* `timeout_millis` - (Required) Amount of time to wait when receiving a response from the health check, in milliseconds.
+* `unhealthy_threshold` - (Required) Number of consecutive failed health checks that must occur before declaring a virtual gateway unhealthy.
+* `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
+* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
 The `tls` object supports the following:
 
-* `certificate` - (Required) The listener's TLS certificate.
-* `mode`- (Required) The listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
-* `validation`- (Optional) The listener's Transport Layer Security (TLS) validation context.
+* `certificate` - (Required) Listener's TLS certificate.
+* `mode`- (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
+* `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
 
 The `certificate` object supports the following:
 
 * `acm` - (Optional) An AWS Certificate Manager (ACM) certificate.
-* `file` - (optional) A local file certificate.
+* `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `acm` object supports the following:
 
-* `certificate_arn` - (Required) The Amazon Resource Name (ARN) for the certificate.
+* `certificate_arn` - (Required) ARN for the certificate.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate chain for the certificate. Must be between 1 and 255 characters in length.
-* `private_key` - (Required) The private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
+* `certificate_chain` - (Required) Certificate chain for the certificate. Must be between 1 and 255 characters in length.
+* `private_key` - (Required) Private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
+* `secret_name` - (Required) Name of the secret secret requested from the Secret Discovery Service provider representing Transport Layer Security (TLS) materials like a certificate or certificate chain.
 
 The `validation` object supports the following:
 
-* `subject_alternative_names` - (Optional) The SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
-* `trust` - (Required) The TLS validation context trust.
+* `subject_alternative_names` - (Optional) SANs for a virtual gateway's listener's Transport Layer Security (TLS) validation context.
+* `trust` - (Required) TLS validation context trust.
 
 The `subject_alternative_names` object supports the following:
 
-* `match` - (Required) The criteria for determining a SAN's match.
+* `match` - (Required) Criteria for determining a SAN's match.
 
 The `match` object supports the following:
 
-* `exact` - (Required) The values sent must match the specified values exactly.
+* `exact` - (Required) Values sent must match the specified values exactly.
 
 The `trust` object supports the following:
 
-* `file` - (Optional) The TLS validation context trust for a local file certificate.
-* `sds` - (Optional) The TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
+* `file` - (Optional) TLS validation context trust for a local file certificate.
+* `sds` - (Optional) TLS validation context trust for a [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
+* `certificate_chain` - (Required) Certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `sds` object supports the following:
 
-* `secret_name` - (Required) The name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
+* `secret_name` - (Required) Name of the secret for a virtual gateway's Transport Layer Security (TLS) Secret Discovery Service validation context trust.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the virtual gateway.
-* `arn` - The ARN of the virtual gateway.
-* `created_date` - The creation date of the virtual gateway.
-* `last_updated_date` - The last update date of the virtual gateway.
-* `resource_owner` - The resource owner's AWS account ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `id` - ID of the virtual gateway.
+* `arn` - ARN of the virtual gateway.
+* `created_date` - Creation date of the virtual gateway.
+* `last_updated_date` - Last update date of the virtual gateway.
+* `resource_owner` - Resource owner's AWS account ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

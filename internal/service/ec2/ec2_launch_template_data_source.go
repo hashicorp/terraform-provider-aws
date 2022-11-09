@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -16,6 +17,10 @@ import (
 func DataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLaunchTemplateRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -795,7 +800,7 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("name", lt.LaunchTemplateName)
 
-	if err := flattenResponseLaunchTemplateData(d, ltv.LaunchTemplateData); err != nil {
+	if err := flattenResponseLaunchTemplateData(conn, d, ltv.LaunchTemplateData); err != nil {
 		return err
 	}
 

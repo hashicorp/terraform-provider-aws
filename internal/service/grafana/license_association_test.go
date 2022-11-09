@@ -20,10 +20,10 @@ func testAccLicenseAssociation_freeTrial(t *testing.T) {
 	workspaceResourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckLicenseAssociationDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckLicenseAssociationDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseAssociationConfig_basic(rName, managedgrafana.LicenseTypeEnterpriseFreeTrial),
@@ -62,11 +62,7 @@ func testAccCheckLicenseAssociationExists(name string) resource.TestCheckFunc {
 
 		_, err := tfgrafana.FindLicensedWorkspaceByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

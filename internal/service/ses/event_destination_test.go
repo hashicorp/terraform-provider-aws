@@ -28,9 +28,9 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEventDestinationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
@@ -82,9 +82,9 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEventDestinationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
@@ -125,11 +125,9 @@ func testAccCheckEventDestinationDestroy(s *terraform.State) error {
 		if found {
 			return fmt.Errorf("The configuration set still exists")
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resource.TestCheckFunc {

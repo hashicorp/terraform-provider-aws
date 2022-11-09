@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -137,23 +138,23 @@ func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error
 
 	out, err := conn.DescribeDeliveryChannels(&input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchDeliveryChannelException) {
-		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Delivery Channel", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Delivery Channel", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && len(out.DeliveryChannels) < 1 {
-		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Delivery Channel", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && len(out.DeliveryChannels) < 1 {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Delivery Channel", d.Id(), errors.New("not found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
 	}
 
 	if len(out.DeliveryChannels) > 1 {

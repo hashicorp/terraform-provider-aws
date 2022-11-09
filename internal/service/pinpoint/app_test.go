@@ -20,10 +20,10 @@ func TestAccPinpointApp_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_generatedName,
@@ -46,10 +46,10 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_campaignHookLambda(rName),
@@ -74,10 +74,10 @@ func TestAccPinpointApp_limits(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_limits(rName),
@@ -102,10 +102,10 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_quietTime(rName),
@@ -130,10 +130,10 @@ func TestAccPinpointApp_tags(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRAMResourceShareDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRAMResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_tag1(rName, "key1", "value1"),
@@ -236,7 +236,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   publish       = true
 }
 

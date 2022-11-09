@@ -22,7 +22,7 @@ data "aws_msk_broker_nodes" "example" {
 
 The following arguments are supported:
 
-* `cluster_arn` - (Required) The ARN of the cluster the nodes belong to.
+* `cluster_arn` - (Required) ARN of the cluster the nodes belong to.
 
 ## Attribute Reference
 
@@ -32,9 +32,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Nodes
 
-* `attached_eni_id` - The attached elastic network interface of the broker
-* `broker_id` - The ID of the broker
-* `client_subnet` - The client subnet to which this broker node belongs
+* `attached_eni_id` - Attached elastic network interface of the broker
+* `broker_id` - ID of the broker
+* `client_subnet` - Client subnet to which this broker node belongs
 * `client_vpc_ip_address` - The client virtual private cloud (VPC) IP address
 * `endpoints` - Set of endpoints for accessing the broker. This does not include ports
-* `node_arn` - The Amazon Resource Name (ARN) of the node
+* `node_arn` - ARN of the node

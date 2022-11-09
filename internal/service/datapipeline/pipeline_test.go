@@ -22,10 +22,10 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_basic(rName1),
@@ -57,10 +57,10 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_description(rName, "test description"),
@@ -92,10 +92,10 @@ func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_basic(rName),
@@ -115,10 +115,10 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
@@ -257,7 +257,6 @@ func testAccPipelineConfig_basic(rName string) string {
 resource "aws_datapipeline_pipeline" "default" {
   name = "%[1]s"
 }`, rName)
-
 }
 
 func testAccPipelineConfig_description(rName, description string) string {
@@ -266,7 +265,6 @@ resource "aws_datapipeline_pipeline" "default" {
   name        = "%[1]s"
   description = %[2]q
 }`, rName, description)
-
 }
 
 func testAccPipelineConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -279,5 +277,4 @@ resource "aws_datapipeline_pipeline" "default" {
     %[4]s = %[5]q
   }
 }`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-
 }

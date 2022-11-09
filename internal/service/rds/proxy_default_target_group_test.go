@@ -26,10 +26,10 @@ func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
@@ -65,10 +65,10 @@ func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_emptyConnectionPoolConfig(rName),
@@ -104,10 +104,10 @@ func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_connectionBorrowTimeout(rName, 120),
@@ -142,10 +142,10 @@ func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_initQuery(rName, "SET x=1, y=2"),
@@ -180,10 +180,10 @@ func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_maxConnectionsPercent(rName, 100),
@@ -218,10 +218,10 @@ func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_maxIdleConnectionsPercent(rName, 50),
@@ -257,10 +257,10 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 	sessionPinningFilters := "EXCLUDE_VARIABLE_SETS"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
@@ -296,10 +296,10 @@ func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
@@ -395,7 +395,7 @@ resource "aws_db_proxy" "test" {
   require_tls            = true
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"

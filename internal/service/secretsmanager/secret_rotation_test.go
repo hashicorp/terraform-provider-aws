@@ -21,10 +21,10 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecretRotationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy,
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
 			{
@@ -129,7 +129,7 @@ resource "aws_lambda_function" "test1" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test1" {
@@ -145,7 +145,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "%[1]s-2"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test2" {

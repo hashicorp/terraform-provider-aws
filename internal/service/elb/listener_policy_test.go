@@ -22,10 +22,10 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 	lbName := rChar
 	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckListenerPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerPolicyConfig_basic0(lbName, mcName),

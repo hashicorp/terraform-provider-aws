@@ -1,6 +1,7 @@
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,10 +23,10 @@ import (
 
 func ResourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePatchBaselineCreate,
-		Read:   resourcePatchBaselineRead,
-		Update: resourcePatchBaselineUpdate,
-		Delete: resourcePatchBaselineDelete,
+		Create:               resourcePatchBaselineCreate,
+		Read:                 resourcePatchBaselineRead,
+		Update:               resourcePatchBaselineUpdate,
+		DeleteWithoutTimeout: resourcePatchBaselineDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -218,6 +221,10 @@ func ResourcePatchBaseline() *schema.Resource {
 	}
 }
 
+const (
+	resNamePatchBaseline = "Patch Baseline"
+)
+
 func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -325,7 +332,7 @@ func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChangesExcept("tags", "tags_all") {
 		_, err := conn.UpdatePatchBaseline(params)
 		if err != nil {
-			return fmt.Errorf("error updating SSM Patch Baseline (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating SSM Patch Baseline (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -333,12 +340,13 @@ func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Patch Baseline (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating SSM Patch Baseline (%s) tags: %w", d.Id(), err)
 		}
 	}
 
 	return resourcePatchBaselineRead(d, meta)
 }
+
 func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -368,15 +376,15 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
 
 	if err := d.Set("global_filter", flattenPatchFilterGroup(resp.GlobalFilters)); err != nil {
-		return fmt.Errorf("Error setting global filters error: %#v", err)
+		return fmt.Errorf("setting global filters: %w", err)
 	}
 
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(resp.ApprovalRules)); err != nil {
-		return fmt.Errorf("Error setting approval rules error: %#v", err)
+		return fmt.Errorf("setting approval rules: %w", err)
 	}
 
 	if err := d.Set("source", flattenPatchSource(resp.Sources)); err != nil {
-		return fmt.Errorf("Error setting patch sources error: %#v", err)
+		return fmt.Errorf("setting patch sources: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -391,24 +399,24 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSM Patch Baseline (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing tags for SSM Patch Baseline (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
-func resourcePatchBaselineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Deleting SSM Patch Baseline: %s", d.Id())
@@ -418,11 +426,19 @@ func resourcePatchBaselineDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	_, err := conn.DeletePatchBaseline(params)
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceInUseException) {
+		// Reset the default patch baseline before retrying
+		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient), d.Get("operating_system").(string))...)
+		if diags.HasError() {
+			return
+		}
+		_, err = conn.DeletePatchBaseline(params)
+	}
 	if err != nil {
-		return fmt.Errorf("error deleting SSM Patch Baseline (%s): %s", d.Id(), err)
+		diags = errs.AppendErrorf(diags, "deleting SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return
 }
 
 func expandPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup {

@@ -1,7 +1,7 @@
 ---
 subcategory: "Redshift Data"
 layout: "aws"
-page_title: "AWS: aws_redshiftdata_.subnet_group"
+page_title: "AWS: aws_redshiftdata_statement"
 description: |-
   Provides a Redshift Data Statement execution resource.
 ---

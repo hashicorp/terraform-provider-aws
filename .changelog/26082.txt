@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iam_role_policy: Add plan time validation to `role` argument
+```

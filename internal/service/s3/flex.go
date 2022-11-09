@@ -1107,7 +1107,6 @@ func FlattenReplicationRuleDestinationReplicationTime(rt *s3.ReplicationTime) []
 	}
 
 	return []interface{}{m}
-
 }
 
 func FlattenReplicationRuleDestinationReplicationTimeValue(rtv *s3.ReplicationTimeValue) []interface{} {
@@ -1210,7 +1209,6 @@ func FlattenReplicationRuleFilterAndOperator(op *s3.ReplicationRuleAndOperator) 
 	}
 
 	return []interface{}{m}
-
 }
 
 func FlattenReplicationRuleFilterTag(tag *s3.Tag) []interface{} {
@@ -1229,7 +1227,6 @@ func FlattenReplicationRuleFilterTag(tag *s3.Tag) []interface{} {
 	}
 
 	return []interface{}{m}
-
 }
 
 func FlattenReplicationRuleSourceSelectionCriteria(ssc *s3.SourceSelectionCriteria) []interface{} {

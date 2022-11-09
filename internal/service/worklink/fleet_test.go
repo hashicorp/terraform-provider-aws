@@ -22,10 +22,10 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(suffix),
@@ -50,10 +50,10 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_displayName(suffix, "display1"),
@@ -83,10 +83,10 @@ func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, false),
@@ -116,10 +116,10 @@ func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_auditStreamARN(rName),
@@ -142,10 +142,10 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_network(rName, "192.168.0.0/16"),
@@ -185,10 +185,10 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_deviceCaCertificate(rName),
@@ -219,10 +219,10 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_identityProvider(rName, idpEntityId),
@@ -250,10 +250,10 @@ func TestAccWorkLinkFleet_disappears(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName),

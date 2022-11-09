@@ -17,8 +17,8 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationDataSourceConfig_resourceOnly,

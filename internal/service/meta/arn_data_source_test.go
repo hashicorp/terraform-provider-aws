@@ -4,60 +4,63 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
 func TestAccMetaARNDataSource_basic(t *testing.T) {
-	resourceName := "data.aws_arn.test"
-
-	testARN := arn.ARN{
-		AccountID: "123456789012",
-		Partition: endpoints.AwsPartitionID,
-		Region:    endpoints.EuWest1RegionID,
-		Resource:  "db:mysql-db",
-		Service:   "rds",
-	}
+	arn := "arn:aws:rds:eu-west-1:123456789012:db:mysql-db" // lintignore:AWSAT003,AWSAT005
+	dataSourceName := "data.aws_arn.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccARNDataSourceConfig_basic(testARN.String()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccARNDataSource(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account", testARN.AccountID),
-					resource.TestCheckResourceAttr(resourceName, "partition", testARN.Partition),
-					resource.TestCheckResourceAttr(resourceName, "region", testARN.Region),
-					resource.TestCheckResourceAttr(resourceName, "resource", testARN.Resource),
-					resource.TestCheckResourceAttr(resourceName, "service", testARN.Service),
+				Config: testAccARNDataSourceConfig_basic(arn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "account", "123456789012"),
+					resource.TestCheckResourceAttr(dataSourceName, "id", arn),
+					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
+					resource.TestCheckResourceAttr(dataSourceName, "region", "eu-west-1"), // lintignore:AWSAT003
+					resource.TestCheckResourceAttr(dataSourceName, "resource", "db:mysql-db"),
+					resource.TestCheckResourceAttr(dataSourceName, "service", "rds"),
 				),
 			},
 		},
 	})
 }
 
-func testAccARNDataSource(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
+func TestAccMetaARNDataSource_s3Bucket(t *testing.T) {
+	arn := "arn:aws:s3:::my_corporate_bucket/Development/*" // lintignore:AWSAT005
+	dataSourceName := "data.aws_arn.test"
 
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccARNDataSourceConfig_basic(arn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "account", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "id", arn),
+					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
+					resource.TestCheckResourceAttr(dataSourceName, "region", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "resource", "my_corporate_bucket/Development/*"),
+					resource.TestCheckResourceAttr(dataSourceName, "service", "s3"),
+				),
+			},
+		},
+	})
 }
 
 func testAccARNDataSourceConfig_basic(arn string) string {
 	return fmt.Sprintf(`
 data "aws_arn" "test" {
-  arn = %q
+  arn = %[1]q
 }
 `, arn)
 }

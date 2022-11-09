@@ -19,10 +19,10 @@ func TestAccCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityConfig_basic,
@@ -50,10 +50,10 @@ func TestAccCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityConfig_noComment,
@@ -80,10 +80,10 @@ func TestAccCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityConfig_basic,

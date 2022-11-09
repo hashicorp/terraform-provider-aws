@@ -11,6 +11,7 @@ import (
 )
 
 func testAccTransitGatewayVPNAttachmentDataSource_idAndVPNConnectionID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -21,12 +22,12 @@ func testAccTransitGatewayVPNAttachmentDataSource_idAndVPNConnectionID(t *testin
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPNAttachmentDataSourceConfig_idAndConnectionID2(rBgpAsn),
+				Config: testAccTransitGatewayVPNAttachmentDataSourceConfig_idAndVPNConnectionID(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -38,6 +39,7 @@ func testAccTransitGatewayVPNAttachmentDataSource_idAndVPNConnectionID(t *testin
 }
 
 func testAccTransitGatewayVPNAttachmentDataSource_filter(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -48,12 +50,12 @@ func testAccTransitGatewayVPNAttachmentDataSource_filter(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPNAttachmentDataSourceConfig_filter(rBgpAsn),
+				Config: testAccTransitGatewayVPNAttachmentDataSourceConfig_filter(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -64,21 +66,21 @@ func testAccTransitGatewayVPNAttachmentDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPNAttachmentBaseDataSourceConfig(rBgpAsn int) string {
+func testAccTransitGatewayVPNAttachmentDataSourceConfig_base(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
-    Name = "tf-acc-test-ec2-vpn-connection-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
 resource "aws_customer_gateway" "test" {
-  bgp_asn    = %[1]d
+  bgp_asn    = %[2]d
   ip_address = "178.0.0.1"
   type       = "ipsec.1"
 
   tags = {
-    Name = "tf-acc-test-ec2-vpn-connection-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
@@ -88,28 +90,28 @@ resource "aws_vpn_connection" "test" {
   type                = aws_customer_gateway.test.type
 
   tags = {
-    Name = "tf-acc-test-ec2-vpn-connection-transit-gateway-id"
+    Name = %[1]q
   }
 }
-`, rBgpAsn)
+`, rName, rBgpAsn)
 }
 
-func testAccTransitGatewayVPNAttachmentDataSourceConfig_idAndConnectionID2(rBgpAsn int) string {
-	return testAccTransitGatewayVPNAttachmentBaseDataSourceConfig(rBgpAsn) + `
+func testAccTransitGatewayVPNAttachmentDataSourceConfig_idAndVPNConnectionID(rName string, rBgpAsn int) string {
+	return acctest.ConfigCompose(testAccTransitGatewayVPNAttachmentDataSourceConfig_base(rName, rBgpAsn), `
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpn_connection_id  = aws_vpn_connection.test.id
 }
-`
+`)
 }
 
-func testAccTransitGatewayVPNAttachmentDataSourceConfig_filter(rBgpAsn int) string {
-	return testAccTransitGatewayVPNAttachmentBaseDataSourceConfig(rBgpAsn) + `
+func testAccTransitGatewayVPNAttachmentDataSourceConfig_filter(rName string, rBgpAsn int) string {
+	return acctest.ConfigCompose(testAccTransitGatewayVPNAttachmentDataSourceConfig_base(rName, rBgpAsn), `
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   filter {
     name   = "resource-id"
     values = [aws_vpn_connection.test.id]
   }
 }
-`
+`)
 }

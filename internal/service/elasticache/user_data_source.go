@@ -73,5 +73,4 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_name", user.UserName)
 
 	return nil
-
 }

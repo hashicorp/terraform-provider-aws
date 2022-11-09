@@ -74,6 +74,11 @@ func ResourceCanary() *schema.Resource {
 					return strings.TrimPrefix(new, "s3://") == old
 				},
 			},
+			"delete_lambda": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"engine_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -549,7 +554,8 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting Synthetics Canary: (%s)", d.Id())
 	_, err := conn.DeleteCanary(&synthetics.DeleteCanaryInput{
-		Name: aws.String(d.Id()),
+		Name:         aws.String(d.Id()),
+		DeleteLambda: aws.Bool(d.Get("delete_lambda").(bool)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeResourceNotFoundException) {

@@ -33,7 +33,7 @@ func sweepDatabases(region string) error {
 	}
 	var errs *multierror.Error
 
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	for {
 		output, err := conn.ListDatabases(input)
 

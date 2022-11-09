@@ -23,10 +23,10 @@ func testAccUserProfile_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_basic(rName),
@@ -55,10 +55,10 @@ func testAccUserProfile_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tags1(rName, "key1", "value1"),
@@ -100,10 +100,10 @@ func testAccUserProfile_tensorboardAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tensorBoardAppSettings(rName),
@@ -130,10 +130,10 @@ func testAccUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tensorBoardAppSettingsImage(rName),
@@ -161,10 +161,10 @@ func testAccUserProfile_kernelGatewayAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettings(rName),
@@ -191,10 +191,10 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettingsLifecycle(rName),
@@ -218,7 +218,6 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 }
 
 func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -229,10 +228,10 @@ func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettingsImage(rName, baseImage),
@@ -261,10 +260,10 @@ func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_jupyterServerAppSettings(rName),
@@ -291,10 +290,10 @@ func testAccUserProfile_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_basic(rName),
@@ -326,7 +325,7 @@ func testAccCheckUserProfileDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
 		}
 
 		userProfileArn := aws.StringValue(userProfile.UserProfileArn)
@@ -365,25 +364,8 @@ func testAccCheckUserProfileExists(n string, userProfile *sagemaker.DescribeUser
 	}
 }
 
-func testAccUserProfileBaseConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccUserProfileConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
@@ -405,7 +387,7 @@ resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
   auth_mode   = "IAM"
   vpc_id      = aws_vpc.test.id
-  subnet_ids  = [aws_subnet.test.id]
+  subnet_ids  = aws_subnet.test[*].id
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
@@ -415,20 +397,20 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserProfileConfig_basic(rName string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
@@ -437,11 +419,11 @@ resource "aws_sagemaker_user_profile" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccUserProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
@@ -451,11 +433,11 @@ resource "aws_sagemaker_user_profile" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccUserProfileConfig_tensorBoardAppSettings(rName string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
@@ -470,11 +452,11 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserProfileConfig_tensorBoardAppSettingsImage(rName string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_image" "test" {
   image_name = %[1]q
   role_arn   = aws_iam_role.test.arn
@@ -495,11 +477,11 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserProfileConfig_jupyterServerAppSettings(rName string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
@@ -514,11 +496,11 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserProfileConfig_kernelGatewayAppSettings(rName string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
@@ -533,11 +515,11 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserProfileConfig_kernelGatewayAppSettingsLifecycle(rName string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
   studio_lifecycle_config_app_type = "JupyterServer"
@@ -561,11 +543,11 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccUserProfileConfig_kernelGatewayAppSettingsImage(rName, baseImage string) string {
-	return testAccUserProfileBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -604,5 +586,5 @@ resource "aws_sagemaker_user_profile" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, baseImage)
+`, rName, baseImage))
 }

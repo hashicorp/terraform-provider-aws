@@ -116,7 +116,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 
 	_, err := conn.CreateDBClusterParameterGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating Neptune Cluster Parameter Group (%s): %w", groupName, err)
+		return fmt.Errorf("creating Neptune Cluster Parameter Group (%s): %w", groupName, err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
@@ -124,7 +124,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
 		err := modifyClusterParameterGroupParameters(conn, d.Id(), expandParameters(v.(*schema.Set).List()))
 		if err != nil {
-			return fmt.Errorf("error modifying Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+			return fmt.Errorf("modifying Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -148,12 +148,12 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	if describeResp == nil || len(describeResp.DBClusterParameterGroups) == 0 {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading Neptune Cluster Parameter Group (%s): not found", d.Id())
+			return fmt.Errorf("reading Neptune Cluster Parameter Group (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
@@ -179,24 +179,24 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
-		return fmt.Errorf("error setting neptune parameter: %w", err)
+		return fmt.Errorf("setting neptune parameter: %w", err)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -222,7 +222,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 		if len(parameters) > 0 {
 			err := modifyClusterParameterGroupParameters(conn, d.Id(), parameters)
 			if err != nil {
-				return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) parameter: %w", d.Id(), err)
+				return fmt.Errorf("updating Neptune Cluster Parameter Group (%s) parameter: %w", d.Id(), err)
 			}
 		}
 	}
@@ -231,7 +231,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating Neptune Cluster Parameter Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -250,7 +250,7 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	return nil

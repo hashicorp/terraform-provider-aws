@@ -23,10 +23,10 @@ func TestAccElastiCacheParameterGroup_basic(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
@@ -54,10 +54,10 @@ func TestAccElastiCacheParameterGroup_addParameter(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "appendonly", "yes"),
@@ -101,10 +101,10 @@ func TestAccElastiCacheParameterGroup_removeAllParameters(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_2(rName, "redis2.8", "appendonly", "yes", "appendfsync", "always"),
@@ -140,10 +140,10 @@ func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_allParameter
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory", "0"),
@@ -180,10 +180,10 @@ func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_remainingPar
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_2(rName, "redis3.2", "reserved-memory", "0", "tcp-keepalive", "360"),
@@ -228,10 +228,10 @@ func TestAccElastiCacheParameterGroup_switchReservedMemoryParameter(t *testing.T
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory", "0"),
@@ -272,10 +272,10 @@ func TestAccElastiCacheParameterGroup_updateReservedMemoryParameter(t *testing.T
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "reserved-memory", "0"),
@@ -315,10 +315,10 @@ func TestAccElastiCacheParameterGroup_uppercaseName(t *testing.T) {
 	rName := fmt.Sprintf("TF-ELASTIPG-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "appendonly", "yes"),
@@ -342,10 +342,10 @@ func TestAccElastiCacheParameterGroup_description(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_description(rName, "description1"),
@@ -369,10 +369,10 @@ func TestAccElastiCacheParameterGroup_tags(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_tags1(rName, "redis2.8", "key1", "value1"),
@@ -440,7 +440,6 @@ func testAccCheckParameterGroupDestroy(s *terraform.State) error {
 
 func testAccCheckParameterGroupAttributes(v *elasticache.CacheParameterGroup, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.CacheParameterGroupName != rName {
 			return fmt.Errorf("bad name: %#v", v.CacheParameterGroupName)
 		}

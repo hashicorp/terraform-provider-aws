@@ -23,9 +23,9 @@ func TestAccIdentityStoreGroupDataSource_displayName(t *testing.T) {
 			testAccPreCheckSSOAdminInstances(t)
 			testAccPreCheckGroupName(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_displayName(name),
@@ -50,9 +50,9 @@ func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
 			testAccPreCheckGroupName(t)
 			testAccPreCheckGroupID(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_id(name, groupID),
@@ -67,10 +67,10 @@ func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
 
 func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_nonExistent,
