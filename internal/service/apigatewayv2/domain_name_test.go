@@ -22,7 +22,7 @@ func TestAccAPIGatewayV2DomainName_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -61,7 +61,7 @@ func TestAccAPIGatewayV2DomainName_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -88,7 +88,7 @@ func TestAccAPIGatewayV2DomainName_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -147,7 +147,7 @@ func TestAccAPIGatewayV2DomainName_updateCertificate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -333,7 +333,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domain)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
