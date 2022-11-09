@@ -170,7 +170,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count                   = %[2]d
+  count = %[2]d
 
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
