@@ -29,7 +29,6 @@ func describeSpotFleetInstancesPagesWithContext(ctx context.Context, conn *ec2.E
 	}
 	return nil
 }
-
 func describeSpotFleetRequestHistoryPages(conn *ec2.EC2, input *ec2.DescribeSpotFleetRequestHistoryInput, fn func(*ec2.DescribeSpotFleetRequestHistoryOutput, bool) bool) error {
 	return describeSpotFleetRequestHistoryPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func describeSpotFleetRequestHistoryPagesWithContext(ctx context.Context, conn *
 	}
 	return nil
 }
-
 func describeVPCEndpointServicesPages(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServicesInput, fn func(*ec2.DescribeVpcEndpointServicesOutput, bool) bool) error {
 	return describeVPCEndpointServicesPagesWithContext(context.Background(), conn, input, fn)
 }

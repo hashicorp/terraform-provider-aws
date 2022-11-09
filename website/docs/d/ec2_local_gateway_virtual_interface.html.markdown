@@ -45,3 +45,9 @@ In addition to all arguments above, the following attributes are exported:
 * `peer_address` - Peer address.
 * `peer_bgp_asn` - Border Gateway Protocol (BGP) Autonomous System Number (ASN) of the peer.
 * `vlan` - Virtual Local Area Network.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

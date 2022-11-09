@@ -186,12 +186,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_mskconnect_connector` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20 minutes`) How long to wait for the MSK Connect Connector to be created.
-* `update` - (Default `20 minutes`) How long to wait for the MSK Connect Connector to be created.
-* `delete` - (Default `10 minutes`) How long to wait for the MSK Connect Connector to be created.
+* `create` - (Default `20m`)
+* `update` - (Default `20m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

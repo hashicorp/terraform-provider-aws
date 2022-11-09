@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -114,7 +115,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	resp, err := conn.CreateAnomalySubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionCreating, ResAnomalySubscription, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionCreating, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	if resp == nil || resp.SubscriptionArn == nil {
@@ -134,13 +135,13 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResAnomalySubscription, d.Id())
+		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalySubscription, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	d.Set("account_id", subscription.AccountId)
@@ -155,16 +156,16 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	return nil
@@ -184,7 +185,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.HasChange("monitor_arn_list") {
-		input.MonitorArnList = aws.StringSlice(d.Get("monitor_arn_list").([]string))
+		input.MonitorArnList = aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})))
 		requestUpdate = true
 	}
 
@@ -202,7 +203,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		o, n := d.GetChange("tags")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
 
@@ -210,7 +211,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
 
@@ -218,7 +219,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalySubscription, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
 
@@ -235,7 +236,7 @@ func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionDeleting, ResAnomalySubscription, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionDeleting, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	return nil
@@ -249,7 +250,6 @@ func expandAnomalySubscriptionMonitorARNList(rawMonitorArnList []interface{}) []
 	var monitorArns []string
 
 	for _, arn := range rawMonitorArnList {
-
 		monitorArns = append(monitorArns, arn.(string))
 	}
 

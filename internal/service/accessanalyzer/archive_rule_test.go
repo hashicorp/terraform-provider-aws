@@ -25,9 +25,9 @@ func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckArchiveRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckArchiveRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveRuleConfig_basic(rName),
@@ -80,9 +80,9 @@ filter {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckArchiveRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckArchiveRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filters),
@@ -127,9 +127,9 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckArchiveRuleDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckArchiveRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveRuleConfig_basic(rName),
@@ -166,7 +166,7 @@ func testAccCheckArchiveRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Expected AccessAnalyzer ArchiveRule to be destroyed, %s found", rs.Primary.ID)
+		return fmt.Errorf("expected AccessAnalyzer ArchiveRule to be destroyed, %s found", rs.Primary.ID)
 	}
 
 	return nil
@@ -192,7 +192,7 @@ func testAccCheckArchiveRuleExists(name string, archiveRule *accessanalyzer.Arch
 		resp, err := tfaccessanalyzer.FindArchiveRule(context.Background(), conn, analyzerName, ruleName)
 
 		if err != nil {
-			return fmt.Errorf("Error describing AccessAnalyzer ArchiveRule: %s", err.Error())
+			return fmt.Errorf("describing AccessAnalyzer ArchiveRule: %s", err.Error())
 		}
 
 		*archiveRule = *resp

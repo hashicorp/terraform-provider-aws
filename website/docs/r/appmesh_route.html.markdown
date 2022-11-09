@@ -139,74 +139,74 @@ resource "aws_appmesh_route" "serviceb" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the route. Must be between 1 and 255 characters in length.
-* `mesh_name` - (Required) The name of the service mesh in which to create the route. Must be between 1 and 255 characters in length.
-* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
-* `virtual_router_name` - (Required) The name of the virtual router in which to create the route. Must be between 1 and 255 characters in length.
-* `spec` - (Required) The route specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) Name to use for the route. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) Name of the service mesh in which to create the route. Must be between 1 and 255 characters in length.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
+* `virtual_router_name` - (Required) Name of the virtual router in which to create the route. Must be between 1 and 255 characters in length.
+* `spec` - (Required) Route specification to apply.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
-* `grpc_route` - (Optional) The gRPC routing information for the route.
-* `http2_route` - (Optional) The HTTP/2 routing information for the route.
-* `http_route` - (Optional) The HTTP routing information for the route.
-* `priority` - (Optional) The priority for the route, between `0` and `1000`.
+* `grpc_route` - (Optional) GRPC routing information for the route.
+* `http2_route` - (Optional) HTTP/2 routing information for the route.
+* `http_route` - (Optional) HTTP routing information for the route.
+* `priority` - (Optional) Priority for the route, between `0` and `1000`.
 Routes are matched based on the specified value, where `0` is the highest priority.
-* `tcp_route` - (Optional) The TCP routing information for the route.
+* `tcp_route` - (Optional) TCP routing information for the route.
 
 The `grpc_route` object supports the following:
 
-* `action` - (Required) The action to take if a match is determined.
-* `match` - (Required) The criteria for determining an gRPC request match.
-* `retry_policy` - (Optional) The retry policy.
-* `timeout` - (Optional) The types of timeouts.
+* `action` - (Required) Action to take if a match is determined.
+* `match` - (Required) Criteria for determining an gRPC request match.
+* `retry_policy` - (Optional) Retry policy.
+* `timeout` - (Optional) Types of timeouts.
 
 The `http2_route` and `http_route` objects supports the following:
 
-* `action` - (Required) The action to take if a match is determined.
-* `match` - (Required) The criteria for determining an HTTP request match.
-* `retry_policy` - (Optional) The retry policy.
-* `timeout` - (Optional) The types of timeouts.
+* `action` - (Required) Action to take if a match is determined.
+* `match` - (Required) Criteria for determining an HTTP request match.
+* `retry_policy` - (Optional) Retry policy.
+* `timeout` - (Optional) Types of timeouts.
 
 The `tcp_route` object supports the following:
 
-* `action` - (Required) The action to take if a match is determined.
-* `timeout` - (Optional) The types of timeouts.
+* `action` - (Required) Action to take if a match is determined.
+* `timeout` - (Optional) Types of timeouts.
 
 The `action` object supports the following:
 
-* `weighted_target` - (Required) The targets that traffic is routed to when a request matches the route.
+* `weighted_target` - (Required) Targets that traffic is routed to when a request matches the route.
 You can specify one or more targets and their relative weights with which to distribute traffic.
 
 The `timeout` object supports the following:
 
-* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
 
 The `idle` object supports the following:
 
-* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
-* `value` - (Required) The number of time units. Minimum value of `0`.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
 
 The `grpc_route`'s `match` object supports the following:
 
-* `metadata` - (Optional) The data to match from the gRPC request.
-* `method_name` - (Optional) The method name to match from the request. If you specify a name, you must also specify a `service_name`.
-* `service_name` - (Optional) The fully qualified domain name for the service to match from the request.
+* `metadata` - (Optional) Data to match from the gRPC request.
+* `method_name` - (Optional) Method name to match from the request. If you specify a name, you must also specify a `service_name`.
+* `service_name` - (Optional) Fully qualified domain name for the service to match from the request.
 
 The `metadata` object supports the following:
 
-* `name` - (Required) The name of the route. Must be between 1 and 50 characters in length.
+* `name` - (Required) Name of the route. Must be between 1 and 50 characters in length.
 * `invert` - (Optional) If `true`, the match is on the opposite of the `match` criteria. Default is `false`.
-* `match` - (Optional) The data to match from the request.
+* `match` - (Optional) Data to match from the request.
 
 The `metadata`'s `match` object supports the following:
 
-* `exact` - (Optional) The value sent by the client must match the specified value exactly. Must be between 1 and 255 characters in length.
-* `prefix` - (Optional) The value sent by the client must begin with the specified characters. Must be between 1 and 255 characters in length.
-* `range`- (Optional) The object that specifies the range of numbers that the value sent by the client must be included in.
-* `regex` - (Optional) The value sent by the client must include the specified characters. Must be between 1 and 255 characters in length.
-* `suffix` - (Optional) The value sent by the client must end with the specified characters. Must be between 1 and 255 characters in length.
+* `exact` - (Optional) Value sent by the client must match the specified value exactly. Must be between 1 and 255 characters in length.
+* `prefix` - (Optional) Value sent by the client must begin with the specified characters. Must be between 1 and 255 characters in length.
+* `range`- (Optional) Object that specifies the range of numbers that the value sent by the client must be included in.
+* `regex` - (Optional) Value sent by the client must include the specified characters. Must be between 1 and 255 characters in length.
+* `suffix` - (Optional) Value sent by the client must end with the specified characters. Must be between 1 and 255 characters in length.
 
 The `grpc_route`'s `retry_policy` object supports the following:
 
@@ -214,47 +214,47 @@ The `grpc_route`'s `retry_policy` object supports the following:
 Valid values: `cancelled`, `deadline-exceeded`, `internal`, `resource-exhausted`, `unavailable`.
 * `http_retry_events` - (Optional) List of HTTP retry events.
 Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
-* `max_retries` - (Required) The maximum number of retries.
-* `per_retry_timeout` - (Required) The per-retry timeout.
+* `max_retries` - (Required) Maximum number of retries.
+* `per_retry_timeout` - (Required) Per-retry timeout.
 * `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
 
 The `grpc_route`'s `timeout` object supports the following:
 
-* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) The per request timeout.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `per_request` - (Optional) Per request timeout.
 
 The `idle` and `per_request` objects support the following:
 
-* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
-* `value` - (Required) The number of time units. Minimum value of `0`.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
 
 The `http2_route` and `http_route`'s `match` object supports the following:
 
-* `prefix` - (Required) Specifies the path with which to match requests.
+* `prefix` - (Required) Path with which to match requests.
 This parameter must always start with /, which by itself matches all requests to the virtual router service name.
-* `header` - (Optional) The client request headers to match on.
-* `method` - (Optional) The client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
-* `scheme` - (Optional) The client request header scheme to match on. Valid values: `http`, `https`.
+* `header` - (Optional) Client request headers to match on.
+* `method` - (Optional) Client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
+* `scheme` - (Optional) Client request header scheme to match on. Valid values: `http`, `https`.
 
 The `http2_route` and `http_route`'s `retry_policy` object supports the following:
 
 * `http_retry_events` - (Optional) List of HTTP retry events.
 Valid values: `client-error` (HTTP status code 409), `gateway-error` (HTTP status codes 502, 503, and 504), `server-error` (HTTP status codes 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511), `stream-error` (retry on refused stream).
-* `max_retries` - (Required) The maximum number of retries.
-* `per_retry_timeout` - (Required) The per-retry timeout.
+* `max_retries` - (Required) Maximum number of retries.
+* `per_retry_timeout` - (Required) Per-retry timeout.
 * `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
 
 You must specify at least one value for `http_retry_events`, or at least one value for `tcp_retry_events`.
 
 The `http2_route` and `http_route`'s `timeout` object supports the following:
 
-* `idle` - (Optional) The idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
-* `per_request` - (Optional) The per request timeout.
+* `idle` - (Optional) Idle timeout. An idle timeout bounds the amount of time that a connection may be idle.
+* `per_request` - (Optional) Per request timeout.
 
 The `idle` and `per_request` objects support the following:
 
-* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
-* `value` - (Required) The number of time units. Minimum value of `0`.
+* `unit` - (Required) Unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) Number of time units. Minimum value of `0`.
 
 The `per_retry_timeout` object supports the following:
 
@@ -263,38 +263,38 @@ The `per_retry_timeout` object supports the following:
 
 The `weighted_target` object supports the following:
 
-* `virtual_node` - (Required) The virtual node to associate with the weighted target. Must be between 1 and 255 characters in length.
-* `weight` - (Required) The relative weight of the weighted target. An integer between 0 and 100.
+* `virtual_node` - (Required) Virtual node to associate with the weighted target. Must be between 1 and 255 characters in length.
+* `weight` - (Required) Relative weight of the weighted target. An integer between 0 and 100.
 
 The `header` object supports the following:
 
-* `name` - (Required) A name for the HTTP header in the client request that will be matched on.
+* `name` - (Required) Name for the HTTP header in the client request that will be matched on.
 * `invert` - (Optional) If `true`, the match is on the opposite of the `match` method and value. Default is `false`.
-* `match` - (Optional) The method and value to match the header value sent with a request. Specify one match method.
+* `match` - (Optional) Method and value to match the header value sent with a request. Specify one match method.
 
 The `header`'s `match` object supports the following:
 
-* `exact` - (Optional) The header value sent by the client must match the specified value exactly.
-* `prefix` - (Optional) The header value sent by the client must begin with the specified characters.
-* `range`- (Optional) The object that specifies the range of numbers that the header value sent by the client must be included in.
-* `regex` - (Optional) The header value sent by the client must include the specified characters.
-* `suffix` - (Optional) The header value sent by the client must end with the specified characters.
+* `exact` - (Optional) Header value sent by the client must match the specified value exactly.
+* `prefix` - (Optional) Header value sent by the client must begin with the specified characters.
+* `range`- (Optional) Object that specifies the range of numbers that the header value sent by the client must be included in.
+* `regex` - (Optional) Header value sent by the client must include the specified characters.
+* `suffix` - (Optional) Header value sent by the client must end with the specified characters.
 
 The `range` object supports the following:
 
-* `end` - (Required) The end of the range.
-* `start` - (Requited) The start of the range.
+* `end` - (Required) End of the range.
+* `start` - (Requited) Start of the range.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the route.
-* `arn` - The ARN of the route.
-* `created_date` - The creation date of the route.
-* `last_updated_date` - The last update date of the route.
-* `resource_owner` - The resource owner's AWS account ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `id` - ID of the route.
+* `arn` - ARN of the route.
+* `created_date` - Creation date of the route.
+* `last_updated_date` - Last update date of the route.
+* `resource_owner` - Resource owner's AWS account ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

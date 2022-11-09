@@ -65,7 +65,6 @@ The `content_config_permissions` object supports the following:
 * `grantee` - The AWS user or group that you want to have access to transcoded files and playlists.
 * `grantee_type` - Specify the type of value that appears in the `content_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
 
-
 The `notifications` object supports the following:
 
 * `completed` - The topic ARN for the Amazon SNS topic that you want to notify when Elastic Transcoder has finished processing a job in this pipeline.

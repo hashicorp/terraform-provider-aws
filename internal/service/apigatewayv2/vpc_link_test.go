@@ -23,10 +23,10 @@ func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName1),
@@ -65,10 +65,10 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName),
@@ -88,10 +88,10 @@ func TestAccAPIGatewayV2VPCLink_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_tags(rName),
@@ -241,7 +241,7 @@ func testAccVPCLinkConfig_basic(rName string) string {
 resource "aws_apigatewayv2_vpc_link" "test" {
   name               = %[1]q
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test.*.id
+  subnet_ids         = aws_subnet.test[*].id
 }
 `, rName)
 }
@@ -251,7 +251,7 @@ func testAccVPCLinkConfig_tags(rName string) string {
 resource "aws_apigatewayv2_vpc_link" "test" {
   name               = %[1]q
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test.*.id
+  subnet_ids         = aws_subnet.test[*].id
 
   tags = {
     Key1 = "Value1"

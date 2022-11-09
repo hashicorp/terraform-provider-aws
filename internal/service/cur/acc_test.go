@@ -40,13 +40,19 @@ func testAccPreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderCurConfigure.Do(func() {
-		testAccProviderCur = provider.Provider()
+		ctx := context.Background()
+		var err error
+		testAccProviderCur, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": testAccGetRegion(),
 		}
 
-		diags := testAccProviderCur.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderCur.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -51,16 +52,16 @@ func ResourceRegisteredDomain() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"contact_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(contactTypeValues(types.ContactType("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ContactType](),
 				},
 				"country_code": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(countryCodeValues(types.CountryCode("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.CountryCode](),
 				},
 				"email": {
 					Type:         schema.TypeString,
@@ -241,7 +242,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 }
 
 func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
@@ -327,7 +328,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -418,7 +419,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
 		var adminContact, registrantContact, techContact *types.ContactDetail
@@ -709,8 +710,8 @@ func statusOperation(ctx context.Context, conn *route53domains.Client, id string
 
 func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: operationStatusValues(types.OperationStatusSubmitted, types.OperationStatusInProgress),
-		Target:  operationStatusValues(types.OperationStatusSuccessful),
+		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
+		Target:  enum.Slice(types.OperationStatusSuccessful),
 		Timeout: timeout,
 		Refresh: statusOperation(ctx, conn, id),
 	}
@@ -964,35 +965,4 @@ func flattenNameservers(apiObjects []types.Nameserver) []interface{} {
 	}
 
 	return tfList
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func contactTypeValues(input ...types.ContactType) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func countryCodeValues(input ...types.CountryCode) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func operationStatusValues(input ...types.OperationStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }

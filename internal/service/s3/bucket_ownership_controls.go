@@ -3,6 +3,7 @@ package s3
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceBucketOwnershipControls() *schema.Resource {
@@ -140,7 +142,13 @@ func resourceBucketOwnershipControlsDelete(d *schema.ResourceData, meta interfac
 		Bucket: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteBucketOwnershipControls(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+		5*time.Minute,
+		func() (any, error) {
+			return conn.DeleteBucketOwnershipControls(input)
+		},
+		"OperationAborted",
+	)
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		return nil

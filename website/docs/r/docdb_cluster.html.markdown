@@ -1,7 +1,7 @@
 ---
 subcategory: "DocDB (DocumentDB)"
 layout: "aws"
-page_title: "AWS: aws_docdb"
+page_title: "AWS: aws_docdb_cluster"
 description: |-
   Manages a DocDB Aurora Cluster
 ---
@@ -72,7 +72,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot.
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false`.
-* `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster
 
@@ -87,16 +87,15 @@ In addition to all arguments above, the following attributes are exported:
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 * `id` - The DocDB Cluster Identifier
 * `reader_endpoint` - A read-only endpoint for the DocDB cluster, automatically load-balanced across replicas
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_docdb_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120 minutes`) Used for Cluster creation
-- `update` - (Default `120 minutes`) Used for Cluster modifications
-- `delete` - (Default `120 minutes`) Used for destroying cluster. This includes
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 any cleanup task during the destroying process.
 
 ## Import

@@ -27,10 +27,10 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 	serviceResourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomDomainAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),
@@ -64,10 +64,10 @@ func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomDomainAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),

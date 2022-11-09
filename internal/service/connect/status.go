@@ -28,3 +28,44 @@ func statusInstance(ctx context.Context, conn *connect.Connect, instanceId strin
 		return output, aws.StringValue(output.Instance.InstanceStatus), nil
 	}
 }
+
+func statusPhoneNumber(ctx context.Context, conn *connect.Connect, phoneNumberId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &connect.DescribePhoneNumberInput{
+			PhoneNumberId: aws.String(phoneNumberId),
+		}
+
+		output, err := conn.DescribePhoneNumberWithContext(ctx, input)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			return output, connect.ErrCodeResourceNotFoundException, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status), nil
+	}
+}
+
+func statusVocabulary(ctx context.Context, conn *connect.Connect, instanceId, vocabularyId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &connect.DescribeVocabularyInput{
+			InstanceId:   aws.String(instanceId),
+			VocabularyId: aws.String(vocabularyId),
+		}
+
+		output, err := conn.DescribeVocabularyWithContext(ctx, input)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			return output, connect.ErrCodeResourceNotFoundException, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Vocabulary.State), nil
+	}
+}

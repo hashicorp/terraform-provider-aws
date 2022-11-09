@@ -603,7 +603,6 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 			workmailActionList = append(workmailActionList, workmailAction)
 		}
-
 	}
 
 	err = d.Set("add_header_action", addHeaderActionList)

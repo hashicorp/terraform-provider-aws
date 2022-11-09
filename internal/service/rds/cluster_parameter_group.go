@@ -322,7 +322,6 @@ func resourceClusterParameterGroupDeleteRefreshFunc(
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	return func() (interface{}, string, error) {
-
 		deleteOpts := rds.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: aws.String(d.Id()),
 		}

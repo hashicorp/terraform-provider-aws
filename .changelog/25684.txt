@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_msk_serverless_cluster
+```

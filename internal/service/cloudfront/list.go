@@ -108,3 +108,20 @@ func ListResponseHeadersPoliciesPages(conn *cloudfront.CloudFront, input *cloudf
 	}
 	return nil
 }
+
+func ListOriginAccessControlsPages(conn *cloudfront.CloudFront, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool) error {
+	for {
+		output, err := conn.ListOriginAccessControls(input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.OriginAccessControlList.NextMarker) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.Marker = output.OriginAccessControlList.NextMarker
+	}
+	return nil
+}

@@ -23,10 +23,10 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rName),
@@ -60,10 +60,10 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_tags1(rName, "key1", "value1"),
@@ -105,10 +105,10 @@ func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rName),
@@ -128,10 +128,10 @@ func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rName),

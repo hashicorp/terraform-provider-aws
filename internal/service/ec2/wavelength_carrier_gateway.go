@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -20,6 +21,7 @@ func ResourceCarrierGateway() *schema.Resource {
 		Read:   resourceCarrierGatewayRead,
 		Update: resourceCarrierGatewayUpdate,
 		Delete: resourceCarrierGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -31,15 +33,12 @@ func ResourceCarrierGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -55,23 +54,22 @@ func resourceCarrierGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateCarrierGatewayInput{
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "carrier-gateway"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCarrierGateway),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Carrier Gateway: %s", input)
 	output, err := conn.CreateCarrierGateway(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Carrier Gateway: %w", err)
+		return fmt.Errorf("creating EC2 Carrier Gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.CarrierGateway.CarrierGatewayId))
 
-	_, err = WaitCarrierGatewayAvailable(conn, d.Id())
+	_, err = WaitCarrierGatewayCreated(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Carrier Gateway (%s) to become available: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Carrier Gateway (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceCarrierGatewayRead(d, meta)
@@ -84,42 +82,37 @@ func resourceCarrierGatewayRead(d *schema.ResourceData, meta interface{}) error 
 
 	carrierGateway, err := FindCarrierGatewayByID(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCarrierGatewayIDNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Carrier Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Carrier Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Carrier Gateway (%s): %w", d.Id(), err)
 	}
 
-	if carrierGateway == nil || aws.StringValue(carrierGateway.State) == ec2.CarrierGatewayStateDeleted {
-		log.Printf("[WARN] EC2 Carrier Gateway (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
+	ownerID := aws.StringValue(carrierGateway.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(carrierGateway.OwnerId),
+		AccountID: ownerID,
 		Resource:  fmt.Sprintf("carrier-gateway/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("owner_id", carrierGateway.OwnerId)
+	d.Set("owner_id", ownerID)
 	d.Set("vpc_id", carrierGateway.VpcId)
 
 	tags := KeyValueTags(carrierGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -132,7 +125,7 @@ func resourceCarrierGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Carrier Gateway (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Carrier Gateway (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -147,18 +140,18 @@ func resourceCarrierGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		CarrierGatewayId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCarrierGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Carrier Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Carrier Gateway (%s): %w", d.Id(), err)
 	}
 
 	_, err = WaitCarrierGatewayDeleted(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Carrier Gateway (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Carrier Gateway (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

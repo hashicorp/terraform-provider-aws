@@ -19,10 +19,10 @@ func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_basic(rName),
@@ -51,10 +51,10 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_s3Export(rName),
@@ -101,10 +101,10 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_tags1(rName, "key1", "value1"),
@@ -147,10 +147,10 @@ func TestAccCodeBuildReportGroup_deleteReports(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_delete(rName),
@@ -175,10 +175,10 @@ func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 	resourceName := "aws_codebuild_report_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckReportGroup(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportGroupConfig_basic(rName),
@@ -224,7 +224,6 @@ func testAccCheckReportGroupDestroy(s *terraform.State) error {
 		if resp != nil {
 			return fmt.Errorf("Found Report Group %s", rs.Primary.ID)
 		}
-
 	}
 	return nil
 }

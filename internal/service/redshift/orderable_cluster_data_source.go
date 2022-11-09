@@ -75,7 +75,7 @@ func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Orderable Cluster Options: %w", err)
+		return fmt.Errorf("reading Redshift Orderable Cluster Options: %w", err)
 	}
 
 	if len(orderableClusterOptions) == 0 {

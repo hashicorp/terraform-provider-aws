@@ -6,7 +6,6 @@ import (
 )
 
 func FindGroupMembership(conn *quicksight.QuickSight, listInput *quicksight.ListGroupMembershipsInput, userName string) (bool, error) {
-
 	found := false
 
 	for {

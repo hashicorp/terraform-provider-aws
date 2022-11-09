@@ -326,7 +326,7 @@ func resourceEndpointConfigurationCreate(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
 	_, err := conn.CreateEndpointConfig(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Endpoint Configuration: %w", err)
+		return fmt.Errorf("creating SageMaker Endpoint Configuration: %w", err)
 	}
 	d.SetId(name)
 
@@ -347,7 +347,7 @@ func resourceEndpointConfigurationRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", endpointConfig.EndpointConfigArn)
@@ -355,31 +355,31 @@ func resourceEndpointConfigurationRead(d *schema.ResourceData, meta interface{})
 	d.Set("kms_key_arn", endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
-		return fmt.Errorf("error setting production_variants for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting production_variants for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("data_capture_config", flattenDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
-		return fmt.Errorf("error setting data_capture_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting data_capture_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
-		return fmt.Errorf("error setting async_inference_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting async_inference_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, aws.StringValue(endpointConfig.EndpointConfigArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -392,7 +392,7 @@ func resourceEndpointConfigurationUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Endpoint Configuration (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Endpoint Configuration (%s) tags: %w", d.Id(), err)
 		}
 	}
 	return resourceEndpointConfigurationRead(d, meta)
@@ -413,7 +413,7 @@ func resourceEndpointConfigurationDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

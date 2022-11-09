@@ -163,11 +163,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error retrieving Redshift Event Subscription %s: %w", d.Id(), err)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading Redshift Event Subscription (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Event Subscription (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -192,11 +188,11 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -227,7 +223,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

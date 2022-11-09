@@ -557,11 +557,7 @@ func addSecretReplicas(conn *secretsmanager.SecretsManager, id string, forceOver
 
 	_, err := conn.ReplicateSecretToRegions(input)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRegionType {

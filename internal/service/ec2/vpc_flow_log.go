@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ func ResourceFlowLog() *schema.Resource {
 		Read:   resourceLogFlowRead,
 		Update: resourceLogFlowUpdate,
 		Delete: resourceLogFlowDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -66,7 +68,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
@@ -114,21 +116,33 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"traffic_type": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TrafficType_Values(), false),
+			},
+			"transit_gateway_attachment_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+			},
+			"transit_gateway_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"vpc_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 		},
 
@@ -152,6 +166,14 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 			Type: ec2.FlowLogsResourceTypeVpc,
 		},
 		{
+			ID:   d.Get("transit_gateway_id").(string),
+			Type: ec2.FlowLogsResourceTypeTransitGateway,
+		},
+		{
+			ID:   d.Get("transit_gateway_attachment_id").(string),
+			Type: ec2.FlowLogsResourceTypeTransitGatewayAttachment,
+		},
+		{
 			ID:   d.Get("subnet_id").(string),
 			Type: ec2.FlowLogsResourceTypeSubnet,
 		},
@@ -168,10 +190,16 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input := &ec2.CreateFlowLogsInput{
+		ClientToken:        aws.String(resource.UniqueId()),
 		LogDestinationType: aws.String(d.Get("log_destination_type").(string)),
 		ResourceIds:        aws.StringSlice([]string{resourceID}),
 		ResourceType:       aws.String(resourceType),
-		TrafficType:        aws.String(d.Get("traffic_type").(string)),
+	}
+
+	if resourceType != ec2.FlowLogsResourceTypeTransitGateway && resourceType != ec2.FlowLogsResourceTypeTransitGatewayAttachment {
+		if v, ok := d.GetOk("traffic_type"); ok {
+			input.TrafficType = aws.String(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("destination_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -202,7 +230,6 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
 
-	log.Printf("[DEBUG] Creating Flow Log: %s", input)
 	output, err := conn.CreateFlowLogs(input)
 
 	if err == nil && output != nil {
@@ -210,7 +237,7 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Flow Log (%s): %w", resourceID, err)
+		return fmt.Errorf("creating Flow Log (%s): %w", resourceID, err)
 	}
 
 	d.SetId(aws.StringValue(output.FlowLogIds[0]))
@@ -232,7 +259,7 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Flow Log (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Flow Log (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -245,7 +272,7 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
-			return fmt.Errorf("error setting destination_options: %w", err)
+			return fmt.Errorf("setting destination_options: %w", err)
 		}
 	} else {
 		d.Set("destination_options", nil)
@@ -256,26 +283,33 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("log_format", fl.LogFormat)
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-	d.Set("traffic_type", fl.TrafficType)
-
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set("vpc_id", resourceID)
+	case strings.HasPrefix(resourceID, "tgw-"):
+		if strings.HasPrefix(resourceID, "tgw-attach-") {
+			d.Set("transit_gateway_attachment_id", resourceID)
+		} else {
+			d.Set("transit_gateway_id", resourceID)
+		}
 	case strings.HasPrefix(resourceID, "subnet-"):
 		d.Set("subnet_id", resourceID)
 	case strings.HasPrefix(resourceID, "eni-"):
 		d.Set("eni_id", resourceID)
+	}
+	if !strings.HasPrefix(aws.StringValue(fl.ResourceId), "tgw-") {
+		d.Set("traffic_type", fl.TrafficType)
 	}
 
 	tags := KeyValueTags(fl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -287,7 +321,7 @@ func resourceLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Flow Log (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating Flow Log (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -311,7 +345,7 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Flow Log (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Flow Log (%s): %w", d.Id(), err)
 	}
 
 	return nil

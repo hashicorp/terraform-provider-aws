@@ -361,7 +361,6 @@ func WaitForGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error 
 // Use a marker to iterate over all grants in "pages"
 // NB: This function only retries on AWS Errors
 func findGrantByID(conn *kms.KMS, keyId string, grantId string, marker *string) (*kms.GrantListEntry, error) {
-
 	input := kms.ListGrantsInput{
 		KeyId:  aws.String(keyId),
 		Limit:  aws.Int64(100),
@@ -429,7 +428,6 @@ func grantConstraintsIsValid(constraints *schema.Set) bool {
 	}
 
 	return constraintCount <= 1
-
 }
 
 func expandGrantConstraints(configured *schema.Set) *kms.GrantConstraints {

@@ -22,16 +22,13 @@ github_actions:
   - '.github/*.yml'
   - '.github/workflows/*.yml'
 linter:
+  - '.ci/**/*'
   - '.github/workflows/acctest-terraform-lint.yml'
+  - '.github/workflows/providerlint.yml'
+  - '.github/workflows/semgrep-ci.yml'
   - '.github/workflows/terraform_provider.yml'
   - '.github/workflows/website.yml'
-  - '.golangci.yml'
-  - '.markdownlinkcheck.json'
-  - '.markdownlint.yml'
-  - '.semgrep.yml'
-  - '.tflint.hcl'
-  - 'providerlint/**/*'
-  - 'staticcheck.conf'
+  - '.github/workflows/workflow-lint.yml'
 pre-service-packages:
   - '**/data_source_aws_*'
   - '**/resource_aws_*'
@@ -274,6 +271,9 @@ service/connectcontactlens:
 service/connectparticipant:
   - 'internal/service/connectparticipant/**/*'
   - 'website/**/connectparticipant_*'
+service/controltower:
+  - 'internal/service/controltower/**/*'
+  - 'website/**/controltower_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -663,7 +663,7 @@ service/mediaconvert:
   - 'website/**/media_convert_*'
 service/medialive:
   - 'internal/service/medialive/**/*'
-  - 'website/**/media_live_*'
+  - 'website/**/medialive_*'
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'
@@ -806,6 +806,9 @@ service/redshift:
 service/redshiftdata:
   - 'internal/service/redshiftdata/**/*'
   - 'website/**/redshiftdata_*'
+service/redshiftserverless:
+  - 'internal/service/redshiftserverless/**/*'
+  - 'website/**/redshiftserverless_*'
 service/rekognition:
   - 'internal/service/rekognition/**/*'
   - 'website/**/rekognition_*'
@@ -821,6 +824,9 @@ service/resourcegroupstaggingapi:
 service/robomaker:
   - 'internal/service/robomaker/**/*'
   - 'website/**/robomaker_*'
+service/rolesanywhere:
+  - 'internal/service/rolesanywhere/**/*'
+  - 'website/**/rolesanywhere_*'
 service/route53:
   - 'internal/service/route53/**/*'
   - 'website/**/route53_delegation_*'

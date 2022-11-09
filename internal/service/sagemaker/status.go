@@ -35,10 +35,6 @@ func StatusNotebookInstance(conn *sagemaker.SageMaker, notebookName string) reso
 			return nil, "", err
 		}
 
-		if aws.StringValue(output.NotebookInstanceStatus) == sagemaker.NotebookInstanceStatusFailed {
-			return output, sagemaker.NotebookInstanceStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
-		}
-
 		return output, aws.StringValue(output.NotebookInstanceStatus), nil
 	}
 }
@@ -250,5 +246,21 @@ func StatusProject(conn *sagemaker.SageMaker, name string) resource.StateRefresh
 		}
 
 		return output, aws.StringValue(output.ProjectStatus), nil
+	}
+}
+
+func StatusWorkforce(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindWorkforceByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }

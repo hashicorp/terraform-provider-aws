@@ -1,7 +1,9 @@
 package names
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"testing"
 )
@@ -216,7 +218,7 @@ func TestServicesForDirectories(t *testing.T) {
 				t.Errorf("error reading working directory: %s", err)
 			}
 
-			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); os.IsNotExist(err) {
+			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); errors.Is(err, fs.ErrNotExist) {
 				for _, service := range nonExisting {
 					if service == testCase {
 						t.Skipf("skipping %s because not yet implemented", testCase)
@@ -450,7 +452,7 @@ func TestAWSGoV1ClientName(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := AWSGoV1ClientName(testCase.Input)
+			got, err := AWSGoV1ClientTypeName(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)

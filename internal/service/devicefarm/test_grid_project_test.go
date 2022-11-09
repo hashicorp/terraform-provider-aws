@@ -30,9 +30,9 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_project(rName),
@@ -74,9 +74,9 @@ func TestAccDeviceFarmTestGridProject_vpc(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_projectVPC(rName),
@@ -109,9 +109,9 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_projectTags1(rName, "key1", "value1"),
@@ -160,9 +160,9 @@ func TestAccDeviceFarmTestGridProject_disappears(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectTestGridProjectDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_project(rName),
@@ -269,8 +269,8 @@ resource "aws_devicefarm_test_grid_project" "test" {
 
   vpc_config {
     vpc_id             = aws_vpc.test.id
-    subnet_ids         = aws_subnet.test.*.id
-    security_group_ids = aws_security_group.test.*.id
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
 }
 `, rName))
