@@ -18,7 +18,7 @@ import (
 
 func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
@@ -50,7 +50,7 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17639
 func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
@@ -84,7 +84,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 	certificates := make([]string, 4)
 	for i := 0; i < 4; i++ {
 		keys[i] = acctest.TLSRSAPrivateKeyPEM(t, 2048)
-		certificates[i] = acctest.TLSRSAX509SelfSignedCertificatePEM(keys[i], "example.com")
+		certificates[i] = acctest.TLSRSAX509SelfSignedCertificatePEM(t, keys[i], "example.com")
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -153,7 +153,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 
 func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

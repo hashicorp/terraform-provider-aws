@@ -256,7 +256,7 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -325,7 +325,7 @@ func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 	var listener1 elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
 
@@ -441,7 +441,7 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -485,7 +485,7 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 	var conf elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -532,7 +532,7 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 	var listener elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
 
@@ -565,7 +565,7 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
 	var listener elbv2.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener.test"
 
