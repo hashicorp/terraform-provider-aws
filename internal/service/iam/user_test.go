@@ -245,7 +245,7 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
-					testAccCheckUserUploadSigningCertificate(&user),
+					testAccCheckUserUploadSigningCertificate(t, &user),
 				),
 			},
 			{
@@ -667,7 +667,7 @@ func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput)
 	}
 }
 
-func testAccCheckUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+func testAccCheckUserUploadSigningCertificate(t *testing.T, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
