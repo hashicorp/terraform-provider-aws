@@ -262,7 +262,7 @@ func flattenS3DestinationConfiguration(apiObject *ivs.S3DestinationConfiguration
 	m := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		m["bucket_name"] = *v
+		m["bucket_name"] = aws.StringValue(v)
 	}
 
 	return []interface{}{m}
@@ -276,11 +276,11 @@ func flattenThumbnailConfiguration(apiObject *ivs.ThumbnailConfiguration) []inte
 	m := map[string]interface{}{}
 
 	if v := apiObject.RecordingMode; v != nil {
-		m["recording_mode"] = *v
+		m["recording_mode"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TargetIntervalSeconds; v != nil {
-		m["target_interval_seconds"] = *v
+		m["target_interval_seconds"] = aws.Int64Value(v)
 	}
 
 	return []interface{}{m}
