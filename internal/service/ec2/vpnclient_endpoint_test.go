@@ -758,7 +758,7 @@ func testAccCheckClientVPNEndpointExists(name string, v *ec2.ClientVpnEndpoint) 
 }
 
 func testAccClientVPNEndpointConfig_acmCertificateBase(n string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	return fmt.Sprintf(`
