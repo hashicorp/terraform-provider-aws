@@ -17,25 +17,21 @@ Information about an RDS engine version.
 ```terraform
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
-  preferred_versions = ["5.7.42", "5.7.19", "5.7.17"]
+  preferred_versions = ["8.0.27", "8.0.26"]
 }
 ```
 
-### With Filters
+### With `filter`
 
 ```terraform
 data "aws_rds_engine_version" "test" {
-  engine             = "mysql"
-  preferred_versions = ["5.7.42", "5.7.19", "5.7.17"]
+  engine      = "aurora-postgresql"
+  version     = "10.14"
+  include_all = true
 
   filter {
     name   = "engine-mode"
-    values = ["provisioned"]
-  }
-
-  filter {
-    name   = "status"
-    values = ["available"]
+    values = ["serverless"]
   }
 }
 ```
