@@ -265,6 +265,7 @@ The `weighted_target` object supports the following:
 
 * `virtual_node` - (Required) Virtual node to associate with the weighted target. Must be between 1 and 255 characters in length.
 * `weight` - (Required) Relative weight of the weighted target. An integer between 0 and 100.
+* `port` - (Optional) The port that will be targeted on the Virtual Node. Required if the Virtual Node has multiple listeners.
 
 The `header` object supports the following:
 

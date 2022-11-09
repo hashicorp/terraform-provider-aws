@@ -69,6 +69,7 @@ The `grpc_route`, `http_route` and `http2_route`'s `action` object supports the 
 The `target` object supports the following:
 
 * `virtual_service` - (Required) Virtual service gateway route target.
+* `port` - (Optional) The port that will be targeted on the service's backend. Required if the service's Virtual Node or Virtual Router has multiple listeners.
 
 The `virtual_service` object supports the following:
 
