@@ -326,7 +326,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 }
 
 func testAccTrustAnchorConfig_certificateBundle(rName string) string {
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(caKey)
 
 	return fmt.Sprintf(`
@@ -343,7 +343,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 }
 
 func testAccTrustAnchorConfig_enabled(rName string, enabled bool) string {
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(caKey)
 
 	return fmt.Sprintf(`
