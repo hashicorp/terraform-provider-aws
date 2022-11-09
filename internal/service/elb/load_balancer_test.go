@@ -325,7 +325,7 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := fmt.Sprintf("tf-acctest-%s", sdkacctest.RandString(10))
 	resourceName := "aws_elb.test"
 
