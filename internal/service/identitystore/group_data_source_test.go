@@ -2,36 +2,36 @@ package identitystore_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccIdentityStoreGroupDataSource_displayName(t *testing.T) {
+	resourceName := "aws_identitystore_group.test"
 	dataSourceName := "data.aws_identitystore_group.test"
-	name := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheckGroupName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_displayName(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "display_name", name),
+					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
 				),
 			},
 		},
@@ -39,26 +39,24 @@ func TestAccIdentityStoreGroupDataSource_displayName(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
+	resourceName := "aws_identitystore_group.test"
 	dataSourceName := "data.aws_identitystore_group.test"
-	name := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
-	groupID := os.Getenv("AWS_IDENTITY_STORE_GROUP_ID")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheckGroupName(t)
-			testAccPreCheckGroupID(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupDataSourceConfig_id(name, groupID),
+				Config: testAccGroupDataSourceConfig_id(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "group_id", groupID),
-					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
 				),
 			},
 		},
@@ -70,7 +68,7 @@ func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_nonExistent,
@@ -80,49 +78,46 @@ func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
 	})
 }
 
-func testAccPreCheckGroupName(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
-		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
-			"This is required until ListGroups API returns results without filtering by name.")
-	}
-}
-
-func testAccPreCheckGroupID(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_GROUP_ID") == "" {
-		t.Skip("AWS_IDENTITY_STORE_GROUP_ID env var must be set for AWS Identity Store Group acceptance test. " +
-			"This is required until ListGroups API returns results without filtering by name.")
-	}
-}
-
 func testAccGroupDataSourceConfig_displayName(name string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
+resource "aws_identitystore_group" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  display_name      = %[1]q
+}
+
 data "aws_identitystore_group" "test" {
   filter {
     attribute_path  = "DisplayName"
-    attribute_value = %q
+    attribute_value = aws_identitystore_group.test.display_name
   }
+
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 }
 `, name)
 }
 
-func testAccGroupDataSourceConfig_id(name, id string) string {
+func testAccGroupDataSourceConfig_id(name string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_group" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  display_name      = %[1]q
+}
 
 data "aws_identitystore_group" "test" {
   filter {
     attribute_path  = "DisplayName"
-    attribute_value = %q
+    attribute_value = aws_identitystore_group.test.display_name
   }
 
-  group_id = %q
+  group_id = aws_identitystore_group.test.group_id
 
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 }
-`, name, id)
+`, name)
 }
 
 const testAccGroupDataSourceConfig_nonExistent = `
