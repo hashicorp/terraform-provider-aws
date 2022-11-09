@@ -15,6 +15,7 @@ import (
 
 func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_resolver_firewall_rules.test"
+	resourceName := "aws_route53_resolver_firewall_rule.test"
 
 	propagationSleep := func() resource.TestCheckFunc {
 		return func(s *terraform.State) error {
@@ -40,8 +41,9 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccFirewallRulesDataSourceConfig_basic(rName, fqdn, action, priority),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
@@ -55,8 +57,9 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccFirewallRulesDataSourceConfig_filter(rName, fqdn, action, priority),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
@@ -70,8 +73,9 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccFirewallRulesDataSourceConfig_filter_action(rName, fqdn, action, priority),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
@@ -85,8 +89,9 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccFirewallRulesDataSourceConfig_filter_priority(rName, fqdn, action, priority),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
@@ -102,7 +107,7 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority string) string {
+func testAccFirewallRulesDataSourceConfig_base(rName, domain, action, priority string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_firewall_rule_group" "test" {
   name = %[1]q
@@ -120,13 +125,13 @@ resource "aws_route53_resolver_firewall_rule" "test" {
   firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test.id
   priority                = %[4]q
 }
-`, rName, fqdn, action, priority)
+`, rName, domain, action, priority)
 }
 
 func testAccFirewallRulesDataSourceConfig_basic(rName, fqdn, action, priority string) string {
 	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), `
 data "aws_route53_resolver_firewall_rules" "test" {
-  id = aws_route53_resolver_firewall_rule_group.test.id
+  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
 }
 `)
 }
@@ -134,9 +139,9 @@ data "aws_route53_resolver_firewall_rules" "test" {
 func testAccFirewallRulesDataSourceConfig_filter(rName, fqdn, action, priority string) string {
 	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
 data "aws_route53_resolver_firewall_rules" "test" {
-  id       = aws_route53_resolver_firewall_rule_group.test.id
-  action   = %[1]q
-  priority = %[2]q
+  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
+  action                 = %[1]q
+  priority               = %[2]q
 }
 `, action, priority))
 }
@@ -144,8 +149,8 @@ data "aws_route53_resolver_firewall_rules" "test" {
 func testAccFirewallRulesDataSourceConfig_filter_action(rName, fqdn, action, priority string) string {
 	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
 data "aws_route53_resolver_firewall_rules" "test" {
-  id     = aws_route53_resolver_firewall_rule_group.test.id
-  action = %[1]q
+  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
+  action                 = %[1]q
 }
 `, action))
 }
@@ -153,8 +158,8 @@ data "aws_route53_resolver_firewall_rules" "test" {
 func testAccFirewallRulesDataSourceConfig_filter_priority(rName, fqdn, action, priority string) string {
 	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
 data "aws_route53_resolver_firewall_rules" "test" {
-  id       = aws_route53_resolver_firewall_rule_group.test.id
-  priority = %[1]q
+  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
+  priority               = %[1]q
 }
 `, priority))
 }

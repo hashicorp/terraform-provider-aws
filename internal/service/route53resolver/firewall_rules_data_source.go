@@ -13,17 +13,13 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceResolverFirewallFirewallRulesRead,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"priority": {
-				Type:     schema.TypeInt,
-				Optional: true,
+			"firewall_rule_group_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"firewall_rules": {
 				Type:     schema.TypeList,
@@ -81,6 +77,10 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 					},
 				},
 			},
+			"priority": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -89,7 +89,7 @@ func dataSourceResolverFirewallFirewallRulesRead(d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.ListFirewallRulesInput{
-		FirewallRuleGroupId: aws.String(d.Get("id").(string)),
+		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 	}
 
 	var results []*route53resolver.FirewallRule
@@ -123,7 +123,8 @@ func dataSourceResolverFirewallFirewallRulesRead(d *schema.ResourceData, meta in
 	if err := d.Set("firewall_rules", flattenFirewallRules(results)); err != nil {
 		return fmt.Errorf("error setting firewall rule details: %w", err)
 	}
-	d.SetId(aws.StringValue(aws.String(d.Get("id").(string))))
+
+	d.SetId(aws.StringValue(aws.String(d.Get("firewall_rule_group_id").(string))))
 
 	return nil
 }
