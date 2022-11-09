@@ -521,21 +521,21 @@ func TestAccVPCSecurityGroupIngressRule_defaultAndIgnoreTags(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v),
-					testAccCheckSecurityGroupIngressRuleUpdateTags(&v, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckSecurityGroupIngressRuleUpdateTags(&v, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
-					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
+					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigIgnoreTagsKeys("ignorekey1"),
-					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
+					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
