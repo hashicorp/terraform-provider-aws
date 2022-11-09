@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,6 +14,10 @@ import (
 func DataSourceInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceInstanceTypeOfferingsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -57,39 +62,22 @@ func dataSourceInstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{
 	var locations []string
 	var locationTypes []string
 
-	err := conn.DescribeInstanceTypeOfferingsPages(input, func(page *ec2.DescribeInstanceTypeOfferingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, instanceTypeOffering := range page.InstanceTypeOfferings {
-			if instanceTypeOffering == nil {
-				continue
-			}
-
-			instanceTypes = append(instanceTypes, aws.StringValue(instanceTypeOffering.InstanceType))
-			locations = append(locations, aws.StringValue(instanceTypeOffering.Location))
-			locationTypes = append(locationTypes, aws.StringValue(instanceTypeOffering.LocationType))
-		}
-
-		return !lastPage
-	})
+	instanceTypeOfferings, err := FindInstanceTypeOfferings(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Instance Type Offerings: %w", err)
+		return fmt.Errorf("reading EC2 Instance Type Offerings: %w", err)
 	}
 
-	if err := d.Set("instance_types", instanceTypes); err != nil {
-		return fmt.Errorf("error setting instance_types: %w", err)
-	}
-	if err := d.Set("locations", locations); err != nil {
-		return fmt.Errorf("error setting locations: %w", err)
-	}
-	if err := d.Set("location_types", locationTypes); err != nil {
-		return fmt.Errorf("error setting location_types: %w", err)
+	for _, instanceTypeOffering := range instanceTypeOfferings {
+		instanceTypes = append(instanceTypes, aws.StringValue(instanceTypeOffering.InstanceType))
+		locations = append(locations, aws.StringValue(instanceTypeOffering.Location))
+		locationTypes = append(locationTypes, aws.StringValue(instanceTypeOffering.LocationType))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("instance_types", instanceTypes)
+	d.Set("locations", locations)
+	d.Set("location_types", locationTypes)
 
 	return nil
 }

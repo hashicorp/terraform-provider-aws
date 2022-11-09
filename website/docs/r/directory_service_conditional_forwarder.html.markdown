@@ -28,7 +28,7 @@ resource "aws_directory_service_conditional_forwarder" "example" {
 
 The following arguments are supported:
 
-* `directory_id` - (Required) The id of directory.
+* `directory_id` - (Required) ID of directory.
 * `dns_ips` - (Required) A list of forwarder IP addresses.
 * `remote_domain_name` - (Required) The fully qualified domain name of the remote domain for which forwarders will be used.
 

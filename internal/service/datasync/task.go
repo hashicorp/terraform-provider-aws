@@ -64,6 +64,24 @@ func ResourceTask() *schema.Resource {
 					},
 				},
 			},
+			"includes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.FilterType_Values(), false),
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -128,6 +146,12 @@ func ResourceTask() *schema.Resource {
 							Optional:     true,
 							Default:      datasync.PreserveDevicesNone,
 							ValidateFunc: validation.StringInSlice(datasync.PreserveDevices_Values(), false),
+						},
+						"security_descriptor_copy_flags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(datasync.SmbSecurityDescriptorCopyFlags_Values(), false),
 						},
 						"task_queueing": {
 							Type:         schema.TypeString,
@@ -208,6 +232,10 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Excludes = expandFilterRules(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("includes"); ok {
+		input.Includes = expandFilterRules(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
 	}
@@ -255,6 +283,9 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
 		return fmt.Errorf("error setting excludes: %w", err)
 	}
+	if err := d.Set("includes", flattenFilterRules(output.Includes)); err != nil {
+		return fmt.Errorf("error setting includes: %w", err)
+	}
 	d.Set("name", output.Name)
 	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
 		return fmt.Errorf("error setting options: %w", err)
@@ -298,6 +329,10 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChanges("excludes") {
 			input.Excludes = expandFilterRules(d.Get("excludes").([]interface{}))
+		}
+
+		if d.HasChanges("includes") {
+			input.Includes = expandFilterRules(d.Get("includes").([]interface{}))
 		}
 
 		if d.HasChanges("name") {
@@ -356,19 +391,20 @@ func flattenOptions(options *datasync.Options) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"atime":                  aws.StringValue(options.Atime),
-		"bytes_per_second":       aws.Int64Value(options.BytesPerSecond),
-		"gid":                    aws.StringValue(options.Gid),
-		"log_level":              aws.StringValue(options.LogLevel),
-		"mtime":                  aws.StringValue(options.Mtime),
-		"overwrite_mode":         aws.StringValue(options.OverwriteMode),
-		"posix_permissions":      aws.StringValue(options.PosixPermissions),
-		"preserve_deleted_files": aws.StringValue(options.PreserveDeletedFiles),
-		"preserve_devices":       aws.StringValue(options.PreserveDevices),
-		"task_queueing":          aws.StringValue(options.TaskQueueing),
-		"transfer_mode":          aws.StringValue(options.TransferMode),
-		"uid":                    aws.StringValue(options.Uid),
-		"verify_mode":            aws.StringValue(options.VerifyMode),
+		"atime":                          aws.StringValue(options.Atime),
+		"bytes_per_second":               aws.Int64Value(options.BytesPerSecond),
+		"gid":                            aws.StringValue(options.Gid),
+		"log_level":                      aws.StringValue(options.LogLevel),
+		"mtime":                          aws.StringValue(options.Mtime),
+		"overwrite_mode":                 aws.StringValue(options.OverwriteMode),
+		"posix_permissions":              aws.StringValue(options.PosixPermissions),
+		"preserve_deleted_files":         aws.StringValue(options.PreserveDeletedFiles),
+		"preserve_devices":               aws.StringValue(options.PreserveDevices),
+		"security_descriptor_copy_flags": aws.StringValue(options.SecurityDescriptorCopyFlags),
+		"task_queueing":                  aws.StringValue(options.TaskQueueing),
+		"transfer_mode":                  aws.StringValue(options.TransferMode),
+		"uid":                            aws.StringValue(options.Uid),
+		"verify_mode":                    aws.StringValue(options.VerifyMode),
 	}
 
 	return []interface{}{m}
@@ -396,8 +432,12 @@ func expandOptions(l []interface{}) *datasync.Options {
 		VerifyMode:           aws.String(m["verify_mode"].(string)),
 	}
 
-	if v, ok := m["bytes_per_second"]; ok && v.(int) > 0 {
-		options.BytesPerSecond = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_per_second"].(int); ok && v != 0 {
+		options.BytesPerSecond = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["security_descriptor_copy_flags"].(string); ok && v != "" {
+		options.SecurityDescriptorCopyFlags = aws.String(v)
 	}
 
 	return options

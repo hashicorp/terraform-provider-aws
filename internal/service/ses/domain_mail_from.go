@@ -76,11 +76,11 @@ func resourceDomainMailFromRead(d *schema.ResourceData, meta interface{}) error 
 	out, err := conn.GetIdentityMailFromDomainAttributes(readOpts)
 
 	if err != nil {
-		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: %s", domainName, err)
+		return fmt.Errorf("fetching SES MAIL FROM domain attributes for %s: %s", domainName, err)
 	}
 
 	if out == nil {
-		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: empty response", domainName)
+		return fmt.Errorf("fetching SES MAIL FROM domain attributes for %s: empty response", domainName)
 	}
 
 	attributes, ok := out.MailFromDomainAttributes[domainName]

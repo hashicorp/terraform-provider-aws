@@ -24,19 +24,33 @@ package {{ .ServicePackage }}_test
 
 import (
 {{- if .IncludeComments }}
-	// TIP: ==== IMPORT ====
-    // This is a common set of imports but not customized to your code
-	// since your code hasn't been written yet. Make sure you, your IDE, or
+	// TIP: ==== IMPORTS ====
+	// This is a common set of imports but not customized to your code since
+	// your code hasn't been written yet. Make sure you, your IDE, or
 	// goimports -w <file> fixes these imports.
+	//
+	// The provider linter wants your imports to be in two groups: first,
+	// standard library (i.e., "fmt" or "strings"), second, everything else.
+{{- end }}
+{{- if and .IncludeComments .AWSGoSDKV2 }}
+	//
+	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
+	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// need to import types and reference the nested types, e.g., as
+	// types.<Type Name>.
 {{- end }}
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
-
+{{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types" {{- if .IncludeComments }} // TIP: Some v2 packages use a separate package for types while some do not.{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
+{{- else }}
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+{{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -44,6 +58,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 {{- if .IncludeComments }}
 
 	// TIP: You will often need to import the package that this test file lives
@@ -51,6 +66,9 @@ import (
     // any normal context constants, variables, or functions.
 {{- end }}
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"
+{{- if .AWSGoSDKV2 }}
+	"github.com/hashicorp/terraform-provider-aws/names"
+{{- end }}
 )
 {{ if .IncludeComments }}
 // TIP: File Structure. The basic outline for all test files should be as
@@ -149,7 +167,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 
 	var {{ .DataSourceLower }} {{ .ServicePackage }}.Describe{{ .DataSource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "aws_{{ .ServicePackage }}_{{ .DataSourceLower }}.test"
+	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -157,9 +175,13 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .DataSource }}Destroy,
+		{{- if .AWSGoSDKV2 }}
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		{{- else }}
+		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		{{- end }}
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
@@ -186,8 +208,8 @@ data "aws_security_group" "test" {
   name = %[1]q
 }
 
-data "aws_{{ .ServicePackage }}_{{ .DataSourceLower }}" "test" {
-  {{ .DataSourceLower }}_name             = %[1]q
+data "aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}" "test" {
+  {{ .DataSourceSnake }}_name             = %[1]q
   engine_type             = "Active{{ .Service }}"
   engine_version          = %[2]q
   host_instance_type      = "{{ .ServicePackage }}.t2.micro"

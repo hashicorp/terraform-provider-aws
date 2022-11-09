@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,16 +22,14 @@ func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_automated_backups_replication.test"
 
-	var providers []*schema.Provider
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
@@ -58,16 +55,14 @@ func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_automated_backups_replication.test"
 
-	var providers []*schema.Provider
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName),
@@ -93,16 +88,14 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_automated_backups_replication.test"
 
-	var providers []*schema.Provider
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName),
@@ -119,9 +112,54 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 		},
 	})
 }
-
-func testAccInstanceAutomatedBackupsReplicationConfig_basic(rName string) string {
+func testAccInstanceAutomatedBackupsReplicationConfig_base(rName string, storageEncrypted bool) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+
+  provider = "awsalternate"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+
+  provider = "awsalternate"
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  cidr_block        = "10.1.${count.index}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  provider = "awsalternate"
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  provider = "awsalternate"
+}
+
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   identifier              = %[1]q
@@ -133,60 +171,35 @@ resource "aws_db_instance" "test" {
   password                = "mustbeeightcharacters"
   backup_retention_period = 7
   skip_final_snapshot     = true
+  storage_encrypted       = %[2]t
+  db_subnet_group_name    = aws_db_subnet_group.test.name
 
   provider = "awsalternate"
 }
+`, rName, storageEncrypted))
+}
 
+func testAccInstanceAutomatedBackupsReplicationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, false), `
 resource "aws_db_instance_automated_backups_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
 }
-`, rName))
+`)
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  allocated_storage       = 10
-  identifier              = %[1]q
-  engine                  = "postgres"
-  engine_version          = "13.4"
-  instance_class          = "db.t3.micro"
-  name                    = "mydb"
-  username                = "masterusername"
-  password                = "mustbeeightcharacters"
-  backup_retention_period = 7
-  skip_final_snapshot     = true
-
-  provider = "awsalternate"
-}
-
+	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, false), `
 resource "aws_db_instance_automated_backups_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   retention_period       = 14
 }
-`, rName))
+`)
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, true), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
-}
-
-resource "aws_db_instance" "test" {
-  allocated_storage       = 10
-  identifier              = %[1]q
-  engine                  = "postgres"
-  engine_version          = "13.4"
-  instance_class          = "db.t3.micro"
-  name                    = "mydb"
-  username                = "masterusername"
-  password                = "mustbeeightcharacters"
-  backup_retention_period = 7
-  storage_encrypted       = true
-  skip_final_snapshot     = true
-
-  provider = "awsalternate"
 }
 
 resource "aws_db_instance_automated_backups_replication" "test" {
@@ -211,11 +224,7 @@ func testAccCheckInstanceAutomatedBackupsReplicationExist(n string) resource.Tes
 
 		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

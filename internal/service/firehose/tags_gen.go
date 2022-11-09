@@ -2,22 +2,28 @@
 package firehose
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/firehose/firehoseiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists firehose service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *firehose.Firehose, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn firehoseiface.FirehoseAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn firehoseiface.FirehoseAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &firehose.ListTagsForDeliveryStreamInput{
 		DeliveryStreamName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForDeliveryStream(input)
+	output, err := conn.ListTagsForDeliveryStreamWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +64,10 @@ func KeyValueTags(tags []*firehose.Tag) tftags.KeyValueTags {
 // UpdateTags updates firehose service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *firehose.Firehose, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn firehoseiface.FirehoseAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn firehoseiface.FirehoseAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +77,10 @@ func UpdateTags(conn *firehose.Firehose, identifier string, oldTagsMap interface
 			TagKeys:            aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagDeliveryStream(input)
+		_, err := conn.UntagDeliveryStreamWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +90,10 @@ func UpdateTags(conn *firehose.Firehose, identifier string, oldTagsMap interface
 			Tags:               Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagDeliveryStream(input)
+		_, err := conn.TagDeliveryStreamWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

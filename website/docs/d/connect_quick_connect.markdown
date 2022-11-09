@@ -44,30 +44,30 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Quick Connect.
-* `description` - Specifies the description of the Quick Connect.
-* `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Quick Connect separated by a colon (`:`).
+* `arn` - ARN of the Quick Connect.
+* `description` - Description of the Quick Connect.
+* `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Quick Connect separated by a colon (`:`).
 * `quick_connect_config` - A block that defines the configuration information for the Quick Connect: `quick_connect_type` and one of `phone_config`, `queue_config`, `user_config` . The Quick Connect Config block is documented below.
-* `quick_connect_id` - The identifier for the Quick Connect.
-* `tags` - A map of tags to assign to the Quick Connect.
+* `quick_connect_id` - Identifier for the Quick Connect.
+* `tags` - Map of tags to assign to the Quick Connect.
 
 A `quick_connect_config` block contains the following arguments:
 
-* `quick_connect_type` - Specifies the configuration type of the Quick Connect. Valid values are `PHONE_NUMBER`, `QUEUE`, `USER`.
-* `phone_config` - Specifies the phone configuration of the Quick Connect. This is returned only if `quick_connect_type` is `PHONE_NUMBER`. The `phone_config` block is documented below.
-* `queue_config` - Specifies the queue configuration of the Quick Connect. This is returned only if `quick_connect_type` is `QUEUE`. The `queue_config` block is documented below.
-* `user_config` - Specifies the user configuration of the Quick Connect. This is returned only if `quick_connect_type` is `USER`. The `user_config` block is documented below.
+* `quick_connect_type` - Configuration type of the Quick Connect. Valid values are `PHONE_NUMBER`, `QUEUE`, `USER`.
+* `phone_config` - Phone configuration of the Quick Connect. This is returned only if `quick_connect_type` is `PHONE_NUMBER`. The `phone_config` block is documented below.
+* `queue_config` - Queue configuration of the Quick Connect. This is returned only if `quick_connect_type` is `QUEUE`. The `queue_config` block is documented below.
+* `user_config` - User configuration of the Quick Connect. This is returned only if `quick_connect_type` is `USER`. The `user_config` block is documented below.
 
 A `phone_config` block contains the following arguments:
 
-* `phone_number` - Specifies the phone number in in E.164 format.
+* `phone_number` - Phone number in in E.164 format.
 
 A `queue_config` block contains the following arguments:
 
-* `contact_flow_id` - Specifies the identifier of the contact flow.
-* `queue_id` - Specifies the identifier for the queue.
+* `contact_flow_id` - Identifier of the contact flow.
+* `queue_id` - Identifier for the queue.
 
 A `user_config` block contains the following arguments:
 
-* `contact_flow_id` - Specifies the identifier of the contact flow.
-* `user_id` - Specifies the identifier for the user.
+* `contact_flow_id` - Identifier of the contact flow.
+* `user_id` - Identifier for the user.

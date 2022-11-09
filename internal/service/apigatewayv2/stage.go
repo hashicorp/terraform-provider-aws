@@ -197,7 +197,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		ApiId: aws.String(apiId),
 	})
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+		return fmt.Errorf("reading API Gateway v2 API (%s): %s", apiId, err)
 	}
 
 	protocolType := aws.StringValue(apiOutput.ProtocolType)
@@ -233,7 +233,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating API Gateway v2 stage: %s", req)
 	resp, err := conn.CreateStage(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 stage: %s", err)
+		return fmt.Errorf("creating API Gateway v2 stage: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.StageName))
@@ -257,13 +257,13 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 stage (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading API Gateway v2 stage (%s): %s", d.Id(), err)
 	}
 
 	stageName := aws.StringValue(resp.StageName)
 	err = d.Set("access_log_settings", flattenAccessLogSettings(resp.AccessLogSettings))
 	if err != nil {
-		return fmt.Errorf("error setting access_log_settings: %s", err)
+		return fmt.Errorf("setting access_log_settings: %s", err)
 	}
 	region := meta.(*conns.AWSClient).Region
 	resourceArn := arn.ARN{
@@ -277,7 +277,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("client_certificate_id", resp.ClientCertificateId)
 	err = d.Set("default_route_settings", flattenDefaultRouteSettings(resp.DefaultRouteSettings))
 	if err != nil {
-		return fmt.Errorf("error setting default_route_settings: %s", err)
+		return fmt.Errorf("setting default_route_settings: %s", err)
 	}
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
@@ -292,29 +292,29 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", stageName)
 	err = d.Set("route_settings", flattenRouteSettings(resp.RouteSettings))
 	if err != nil {
-		return fmt.Errorf("error setting route_settings: %s", err)
+		return fmt.Errorf("setting route_settings: %s", err)
 	}
 	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
 	if err != nil {
-		return fmt.Errorf("error setting stage_variables: %s", err)
+		return fmt.Errorf("setting stage_variables: %s", err)
 	}
 
 	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiId),
 	})
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+		return fmt.Errorf("reading API Gateway v2 API (%s): %s", apiId, err)
 	}
 
 	switch aws.StringValue(apiOutput.ProtocolType) {
@@ -343,7 +343,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 			ApiId: aws.String(apiId),
 		})
 		if err != nil {
-			return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+			return fmt.Errorf("reading API Gateway v2 API (%s): %s", apiId, err)
 		}
 
 		protocolType := aws.StringValue(apiOutput.ProtocolType)
@@ -388,7 +388,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 					continue
 				}
 				if err != nil {
-					return fmt.Errorf("error deleting API Gateway v2 stage (%s) route settings (%s): %w", d.Id(), routeKey, err)
+					return fmt.Errorf("deleting API Gateway v2 stage (%s) route settings (%s): %w", d.Id(), routeKey, err)
 				}
 			}
 
@@ -411,14 +411,14 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Updating API Gateway v2 stage: %s", req)
 		_, err = conn.UpdateStage(req)
 		if err != nil {
-			return fmt.Errorf("error updating API Gateway v2 stage (%s): %s", d.Id(), err)
+			return fmt.Errorf("updating API Gateway v2 stage (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating API Gateway v2 stage (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating API Gateway v2 stage (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -437,7 +437,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 stage (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting API Gateway v2 stage (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -446,7 +446,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceStageImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/stage-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/stage-name'", d.Id())
 	}
 
 	apiId := parts[0]

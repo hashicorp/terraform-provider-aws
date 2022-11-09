@@ -3,7 +3,7 @@ package cloudformation
 import "time"
 
 const (
-	ResStack = "Stack"
+	ResNameStack = "Stack"
 )
 
 const (

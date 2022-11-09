@@ -5,14 +5,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
@@ -25,9 +24,9 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
@@ -45,7 +44,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_noDNS(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
-					resource.TestCheckNoResourceAttr(resourceName, "network_services"),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", "0"),
 				),
 			},
 			// Test Enable DNS service
@@ -75,9 +74,9 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key1", "value1"),
@@ -123,9 +122,9 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),
@@ -137,76 +136,6 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckTrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID set for %s", name)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
-			TrafficMirrorFilterIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if 0 == len(out.TrafficMirrorFilters) {
-			return fmt.Errorf("Traffic mirror filter %s not found", rs.Primary.ID)
-		}
-
-		*traffic = *out.TrafficMirrorFilters[0]
-
-		return nil
-	}
-}
-
-func testAccVPCTrafficMirrorFilterConfig_basic(description string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  description = "%s"
-
-  network_services = ["amazon-dns"]
-}
-`, description)
-}
-
-func testAccVPCTrafficMirrorFilterConfig_noDNS(description string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  description = "%s"
-}
-`, description)
-}
-
-func testAccVPCTrafficMirrorFilterConfig_tags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccVPCTrafficMirrorFilterConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccPreCheckTrafficMirrorFilter(t *testing.T) {
@@ -231,13 +160,9 @@ func testAccCheckTrafficMirrorFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
-			TrafficMirrorFilterIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+		_, err := tfec2.FindTrafficMirrorFilterByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorFilterId.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -245,10 +170,72 @@ func testAccCheckTrafficMirrorFilterDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if len(out.TrafficMirrorFilters) != 0 {
-			return fmt.Errorf("Traffic mirror filter %s still not destroyed", rs.Primary.ID)
-		}
+		return fmt.Errorf("EC2 Traffic Mirror Filter %s still exists", rs.Primary.ID)
 	}
 
 	return nil
+}
+
+func testAccCheckTrafficMirrorFilterExists(n string, v *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Traffic Mirror Filter ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		output, err := tfec2.FindTrafficMirrorFilterByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccVPCTrafficMirrorFilterConfig_basic(description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  description = %[1]q
+
+  network_services = ["amazon-dns"]
+}
+`, description)
+}
+
+func testAccVPCTrafficMirrorFilterConfig_noDNS(description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  description = %[1]q
+}
+`, description)
+}
+
+func testAccVPCTrafficMirrorFilterConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccVPCTrafficMirrorFilterConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

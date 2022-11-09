@@ -2,22 +2,28 @@
 package elb
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elb/elbiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists elb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *elb.ELB, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn elbiface.ELBAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn elbiface.ELBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &elb.DescribeTagsInput{
 		LoadBalancerNames: aws.StringSlice([]string{identifier}),
 	}
 
-	output, err := conn.DescribeTags(input)
+	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -73,7 +79,10 @@ func KeyValueTags(tags []*elb.Tag) tftags.KeyValueTags {
 // UpdateTags updates elb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn elbiface.ELBAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn elbiface.ELBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -83,10 +92,10 @@ func UpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, newTag
 			Tags:              TagKeys(removedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.RemoveTags(input)
+		_, err := conn.RemoveTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -96,10 +105,10 @@ func UpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, newTag
 			Tags:              Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTags(input)
+		_, err := conn.AddTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

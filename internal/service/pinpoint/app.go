@@ -311,10 +311,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {

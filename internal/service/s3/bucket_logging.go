@@ -278,7 +278,6 @@ func expandBucketLoggingTargetGrants(l []interface{}) []*s3.TargetGrant {
 		}
 
 		grants = append(grants, grant)
-
 	}
 
 	return grants

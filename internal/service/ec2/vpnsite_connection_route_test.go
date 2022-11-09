@@ -20,10 +20,10 @@ func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
@@ -41,10 +41,10 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
@@ -109,11 +109,7 @@ func testAccVPNConnectionRouteExists(n string) resource.TestCheckFunc {
 
 		_, err = tfec2.FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

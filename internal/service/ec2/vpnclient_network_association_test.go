@@ -27,10 +27,10 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNNetworkAssociationConfig_basic(rName),
@@ -40,7 +40,7 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
-					testAccCheckDefaultSecurityGroupExists(defaultSecurityGroupResourceName, &group),
+					testAccCheckSecurityGroupExists(defaultSecurityGroupResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
@@ -67,10 +67,10 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNNetworkAssociationConfig_multipleSubnets(rName),
@@ -82,7 +82,7 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceNames[0], "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "subnet_id", subnetResourceNames[0], "id"),
 					resource.TestCheckResourceAttrPair(resourceNames[1], "subnet_id", subnetResourceNames[1], "id"),
-					testAccCheckDefaultSecurityGroupExists(defaultSecurityGroupResourceName, &group),
+					testAccCheckSecurityGroupExists(defaultSecurityGroupResourceName, &group),
 					resource.TestCheckResourceAttr(resourceNames[0], "security_groups.#", "1"),
 					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceNames[0], "security_groups.*", &group),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "vpc_id", vpcResourceName, "id"),
@@ -110,10 +110,10 @@ func testAccClientVPNNetworkAssociation_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNNetworkAssociationConfig_basic(rName),
@@ -136,17 +136,17 @@ func testAccClientVPNNetworkAssociation_securityGroups(t *testing.T) {
 	securityGroup2ResourceName := "aws_security_group.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNNetworkAssociationConfig_twoSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc1),
-					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group11),
-					testAccCheckDefaultSecurityGroupExists(securityGroup2ResourceName, &group12),
+					testAccCheckSecurityGroupExists(securityGroup1ResourceName, &group11),
+					testAccCheckSecurityGroupExists(securityGroup2ResourceName, &group12),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group11),
 					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group12),
@@ -162,7 +162,7 @@ func testAccClientVPNNetworkAssociation_securityGroups(t *testing.T) {
 				Config: testAccClientVPNNetworkAssociationConfig_oneSecurityGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc2),
-					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group21),
+					testAccCheckSecurityGroupExists(securityGroup1ResourceName, &group21),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group21),
 				),
@@ -177,10 +177,10 @@ func testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNNetworkAssociationConfig_twoSecurityGroupsOnEndpoint(rName),

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -20,6 +20,10 @@ import (
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceInstanceRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"ami": {
@@ -166,6 +170,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"host_resource_group_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -259,6 +267,26 @@ func DataSourceInstance() *schema.Resource {
 			"private_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"private_dns_name_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_resource_name_dns_aaaa_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"enable_resource_name_dns_a_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"hostname_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"public_dns": {
 				Type:     schema.TypeString,
@@ -418,6 +446,14 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 // Populate instance attribute fields with the returned instance
 func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) error {
 	d.SetId(aws.StringValue(instance.InstanceId))
+
+	instanceType := aws.StringValue(instance.InstanceType)
+	instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+	if err != nil {
+		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
+	}
+
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
 	if instance.Placement != nil {
@@ -435,9 +471,12 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	if instance.Placement.HostId != nil {
 		d.Set("host_id", instance.Placement.HostId)
 	}
+	if instance.Placement.HostResourceGroupArn != nil {
+		d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
+	}
 
 	d.Set("ami", instance.ImageId)
-	d.Set("instance_type", instance.InstanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
@@ -555,7 +594,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
-	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
+	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
@@ -593,6 +632,14 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %w", err)
+	}
+
+	if instance.PrivateDnsNameOptions != nil {
+		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+		}
+	} else {
+		d.Set("private_dns_name_options", nil)
 	}
 
 	return nil

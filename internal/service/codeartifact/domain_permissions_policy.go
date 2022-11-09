@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -107,13 +108,13 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 		DomainOwner: aws.String(domainOwner),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeArtifact, names.ErrActionReading, ResDomainPermissionsPolicy, d.Id())
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeArtifact, names.ErrActionReading, ResDomainPermissionsPolicy, d.Id(), err)
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)

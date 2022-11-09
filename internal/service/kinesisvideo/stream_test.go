@@ -24,10 +24,10 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 	rInt2 := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rInt1),
@@ -66,10 +66,10 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 	rName2 := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_options(rInt, rName1, "video/h264"),
@@ -108,10 +108,10 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_tags1(rInt, "key1", "value1"),
@@ -154,10 +154,10 @@ func TestAccKinesisVideoStream_disappears(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rInt),
@@ -253,7 +253,6 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 		}
 
 		return nil
-
 	}
 
 	return nil

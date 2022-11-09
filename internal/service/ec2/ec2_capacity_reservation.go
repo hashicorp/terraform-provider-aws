@@ -16,11 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	// There is no constant in the SDK for this resource type
-	resourceTypeCapacityReservation = "capacity-reservation"
-)
-
 func ResourceCapacityReservation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCapacityReservationCreate,
@@ -97,6 +92,11 @@ func ResourceCapacityReservation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement_group_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"tenancy": {
@@ -121,7 +121,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
 		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get("instance_type").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, resourceTypeCapacityReservation),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
@@ -144,6 +144,10 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("outpost_arn"); ok {
 		input.OutpostArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("placement_group_arn"); ok {
+		input.PlacementGroupArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {
@@ -199,6 +203,7 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("instance_type", reservation.InstanceType)
 	d.Set("outpost_arn", reservation.OutpostArn)
 	d.Set("owner_id", reservation.OwnerId)
+	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)
 
 	tags := KeyValueTags(reservation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

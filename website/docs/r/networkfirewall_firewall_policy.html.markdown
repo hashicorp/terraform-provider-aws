@@ -66,7 +66,7 @@ The following arguments are supported:
 
 * `name` - (Required, Forces new resource) A friendly name of the firewall policy.
 
-* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Firewall Policy
 
@@ -102,6 +102,12 @@ The `stateful_rule_group_reference` block supports the following arguments:
 * `priority` - (Optional) An integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
 
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateful rule group.
+
+* `override` - (Optional) Configuration block for override values
+
+#### Override
+
+* `action` - (Optional) The action that changes the rule group from DROP to ALERT . This only applies to managed rule groups.
 
 ### Stateless Custom Action
 
@@ -145,7 +151,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the firewall policy.
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating a firewall policy.
 

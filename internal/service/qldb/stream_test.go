@@ -22,10 +22,10 @@ func TestAccQLDBStream_basic(t *testing.T) {
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rName),
@@ -53,10 +53,10 @@ func TestAccQLDBStream_disappears(t *testing.T) {
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rName),
@@ -76,10 +76,10 @@ func TestAccQLDBStream_tags(t *testing.T) {
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_tags1(rName, "key1", "value1"),
@@ -116,10 +116,10 @@ func TestAccQLDBStream_withEndTime(t *testing.T) {
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_endTime(rName),
@@ -149,7 +149,7 @@ func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
 
-		output, err := tfqldb.FindStream(context.TODO(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
+		output, err := tfqldb.FindStream(context.Background(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -169,7 +169,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfqldb.FindStream(context.TODO(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
+		_, err := tfqldb.FindStream(context.Background(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

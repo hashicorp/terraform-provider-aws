@@ -21,20 +21,20 @@ data "aws_networkmanager_link" "example" {
 
 ## Argument Reference
 
-* `global_network_id` - (Required) The ID of the Global Network of the link to retrieve.
-* `link_id` - (Required) The id of the specific link to retrieve.
+* `global_network_id` - (Required) ID of the Global Network of the link to retrieve.
+* `link_id` - (Required) ID of the specific link to retrieve.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the link.
-* `bandwidth` - The upload speed and download speed of the link as documented below
-* `description` - The description of the link.
-* `provider_name` - The provider of the link.
-* `site_id` - The ID of the site.
+* `arn` - ARN of the link.
+* `bandwidth` - Upload speed and download speed of the link as documented below
+* `description` - Description of the link.
+* `provider_name` - Provider of the link.
+* `site_id` - ID of the site.
 * `tags` - Key-value tags for the link.
-* `type` - The type of the link.
+* `type` - Type of the link.
 
 The `bandwidth` object supports the following:
 

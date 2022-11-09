@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -74,6 +76,12 @@ func ResourceVPNConnection() *schema.Resource {
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
 				RequiredWith: []string{"transit_gateway_id"},
 			},
+			"outside_ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
+			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -120,9 +128,13 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed: true,
 			},
 			"transit_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpn_gateway_id"},
+			},
+			"transport_transit_gateway_attachment_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"tunnel_inside_ip_version": {
 				Type:         schema.TypeString,
@@ -191,6 +203,39 @@ func ResourceVPNConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
 				RequiredWith: []string{"transit_gateway_id"},
+			},
+			"tunnel1_log_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"tunnel1_phase1_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -372,6 +417,39 @@ func ResourceVPNConnection() *schema.Resource {
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
 				RequiredWith: []string{"transit_gateway_id"},
 			},
+			"tunnel2_log_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"tunnel2_phase1_dh_group_numbers": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -530,13 +608,16 @@ func ResourceVPNConnection() *schema.Resource {
 				},
 			},
 			"vpn_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"transit_gateway_id"},
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			customizeDiffValidateOutsideIPAddressType,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -692,23 +773,29 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_acceleration", v.EnableAcceleration)
 		d.Set("local_ipv4_network_cidr", v.LocalIpv4NetworkCidr)
 		d.Set("local_ipv6_network_cidr", v.LocalIpv6NetworkCidr)
+		d.Set("outside_ip_address_type", v.OutsideIpAddressType)
 		d.Set("remote_ipv4_network_cidr", v.RemoteIpv4NetworkCidr)
 		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
 		d.Set("static_routes_only", v.StaticRoutesOnly)
+		d.Set("transport_transit_gateway_attachment_id", v.TransportTransitGatewayAttachmentId)
 		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 			if len(v.TunnelOptions) > i {
-				flattenTunnelOption(d, prefix, v.TunnelOptions[i])
+				if err := flattenTunnelOption(d, prefix, v.TunnelOptions[i]); err != nil {
+					return err
+				}
 			}
 		}
 	} else {
 		d.Set("enable_acceleration", nil)
 		d.Set("local_ipv4_network_cidr", nil)
 		d.Set("local_ipv6_network_cidr", nil)
+		d.Set("outside_ip_address_type", nil)
 		d.Set("remote_ipv4_network_cidr", nil)
 		d.Set("remote_ipv6_network_cidr", nil)
 		d.Set("static_routes_only", nil)
+		d.Set("transport_transit_gateway_attachment_id", nil)
 		d.Set("tunnel_inside_ip_version", nil)
 	}
 
@@ -882,6 +969,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		apiObject.EnableAcceleration = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("outside_ip_address_type"); ok {
+		apiObject.OutsideIpAddressType = aws.String(v.(string))
+	}
+
 	if v := d.Get("tunnel_inside_ip_version").(string); v == ec2.TunnelInsideIpVersionIpv6 {
 		if v, ok := d.GetOk("local_ipv6_network_cidr"); ok {
 			apiObject.LocalIpv6NetworkCidr = aws.String(v.(string))
@@ -908,6 +999,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		apiObject.StaticRoutesOnly = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("transport_transit_gateway_attachment_id"); ok {
+		apiObject.TransportTransitGatewayAttachmentId = aws.String(v.(string))
+	}
+
 	apiObject.TunnelOptions = []*ec2.VpnTunnelOptionsSpecification{
 		expandVPNTunnelOptionsSpecification(d, "tunnel1_"),
 		expandVPNTunnelOptionsSpecification(d, "tunnel2_"),
@@ -931,6 +1026,10 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		for _, v := range v.(*schema.Set).List() {
 			apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
 		}
+	}
+
+	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_dh_group_numbers"); ok {
@@ -1008,6 +1107,45 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	return apiObject
 }
 
+func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *ec2.VpnTunnelLogOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.VpnTunnelLogOptionsSpecification{}
+
+	if v, ok := tfMap["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *ec2.CloudWatchLogOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.CloudWatchLogOptionsSpecification{}
+
+	if v, ok := tfMap["log_enabled"].(bool); ok {
+		apiObject.LogEnabled = aws.Bool(v)
+	}
+
+	// No ARN or format if not enabled.
+	if aws.BoolValue(apiObject.LogEnabled) {
+		if v, ok := tfMap["log_group_arn"].(string); ok && v != "" {
+			apiObject.LogGroupArn = aws.String(v)
+		}
+
+		if v, ok := tfMap["log_output_format"].(string); ok && v != "" {
+			apiObject.LogOutputFormat = aws.String(v)
+		}
+	}
+
+	return apiObject
+}
+
 func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.ModifyVpnTunnelOptionsSpecification {
 	apiObject := &ec2.ModifyVpnTunnelOptionsSpecification{}
 	hasChange := false
@@ -1041,6 +1179,14 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			for _, v := range defaultVPNTunnelOptionsIKEVersions {
 				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v)})
 			}
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "log_options"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		hasChange = true
@@ -1203,9 +1349,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	return apiObject
 }
 
-func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.TunnelOption) {
+func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.TunnelOption) error {
 	if apiObject == nil {
-		return
+		return nil
 	}
 
 	var s []*string
@@ -1219,6 +1365,14 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	}
 	d.Set(prefix+"ike_versions", aws.StringValueSlice(s))
 	s = nil
+
+	if apiObject.LogOptions != nil {
+		if err := d.Set(prefix+"log_options", []interface{}{flattenVPNTunnelLogOptions(apiObject.LogOptions)}); err != nil {
+			return fmt.Errorf("setting %s: %w", prefix+"log_options", err)
+		}
+	} else {
+		d.Set(prefix+"log_options", nil)
+	}
 
 	for _, v := range apiObject.Phase1DHGroupNumbers {
 		i = append(i, v.Value)
@@ -1264,6 +1418,8 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"startup_action", apiObject.StartupAction)
 	d.Set(prefix+"inside_cidr", apiObject.TunnelInsideCidr)
 	d.Set(prefix+"inside_ipv6_cidr", apiObject.TunnelInsideIpv6Cidr)
+
+	return nil
 }
 
 func flattenVPNStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{} {
@@ -1304,6 +1460,46 @@ func flattenVPNStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
 	}
 
 	return tfList
+}
+
+func flattenVPNTunnelLogOptions(apiObject *ec2.VpnTunnelLogOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CloudWatchLogOptions; v != nil {
+		tfMap["cloudwatch_log_options"] = []interface{}{flattenCloudWatchLogOptions(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCloudWatchLogOptions(apiObject *ec2.CloudWatchLogOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LogEnabled; v != nil {
+		enabled := aws.BoolValue(v)
+		tfMap["log_enabled"] = enabled
+
+		// No ARN or format if not enabled.
+		if enabled {
+			if v := apiObject.LogGroupArn; v != nil {
+				tfMap["log_group_arn"] = aws.StringValue(v)
+			}
+
+			if v := apiObject.LogOutputFormat; v != nil {
+				tfMap["log_output_format"] = aws.StringValue(v)
+			}
+		}
+	}
+
+	return tfMap
 }
 
 func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
@@ -1491,4 +1687,16 @@ func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 		validation.IsCIDRNetwork(126, 126),
 		validation.StringMatch(regexp.MustCompile(`^fd00:`), "must be within fd00::/8"),
 	)
+}
+
+// customizeDiffValidateOutsideIPAddressType validates that if provided `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` must be provided
+func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == OutsideIPAddressTypePublicIPv4 {
+		return nil
+	}
+
+	if v, ok := diff.GetOk("transport_transit_gateway_attachment_id"); !ok || v.(string) != "" {
+		return nil
+	}
+	return fmt.Errorf("`transport_transit_gateway_attachment_id` must be provided if `outside_ip_address_type` is `PrivateIpv4`")
 }

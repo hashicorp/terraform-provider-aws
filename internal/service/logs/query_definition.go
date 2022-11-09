@@ -91,7 +91,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 	result, err := FindQueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudWatch query definition (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("reading CloudWatch query definition (%s): %w", d.Id(), err))
 	}
 
 	if result == nil {
@@ -104,7 +104,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("query_string", result.QueryString)
 	d.Set("query_definition_id", result.QueryDefinitionId)
 	if err := d.Set("log_group_names", aws.StringValueSlice(result.LogGroupNames)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting log_group_names: %w", err))
+		return diag.FromErr(fmt.Errorf("setting log_group_names: %w", err))
 	}
 
 	return nil
