@@ -3575,7 +3575,7 @@ resource "aws_cloudfront_distribution" "test" {
 // CloudFront Distribution ACM Certificates must be created in us-east-1
 func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(commonName string) string {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
 	return testAccRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
