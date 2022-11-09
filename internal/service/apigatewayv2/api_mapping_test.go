@@ -54,7 +54,7 @@ func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificate
 			{
 				Config: "# Empty config",
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIMappingCreateCertificate(rName, certificateArn),
+					testAccCheckAPIMappingCreateCertificate(t, rName, certificateArn),
 				),
 			},
 		},
@@ -155,7 +155,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	})
 }
 
-func testAccCheckAPIMappingCreateCertificate(rName string, certificateArn *string) resource.TestCheckFunc {
+func testAccCheckAPIMappingCreateCertificate(t *testing.T, rName string, certificateArn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey, fmt.Sprintf("%s.example.com", rName))
