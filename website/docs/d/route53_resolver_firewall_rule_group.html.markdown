@@ -14,17 +14,17 @@ This data source allows to retrieve details about a specific a Route 53 Resolver
 
 ## Example Usage
 
-The following example shows how to get a firewall rule group from its id.
+The following example shows how to get a firewall rule group from its ID.
 
 ```terraform
 data "aws_route53_resolver_firewall_rule_group" "example" {
-  id = "rslvr-frg-example"
+  firewall_rule_group_id = "rslvr-frg-example"
 }
 ```
 
 ## Argument Reference
 
-* `id` - (Required) The ID of the rule group.
+* `firewall_rule_group_id` - (Required) The ID of the rule group.
 
 The following attribute is additionally exported:
 

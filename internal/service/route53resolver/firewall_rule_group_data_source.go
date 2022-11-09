@@ -1,24 +1,36 @@
 package route53resolver
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceFirewallRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFirewallRuleGroupRead,
+		ReadWithoutTimeout: dataSourceFirewallRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"creation_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"creator_request_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"firewall_rule_group_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			"modification_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -26,8 +38,16 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"rule_count": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"share_status": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"status": {
@@ -38,58 +58,32 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creator_request_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"share_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"modification_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
-func dataSourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	input := &route53resolver.GetFirewallRuleGroupInput{
-		FirewallRuleGroupId: aws.String(d.Get("id").(string)),
-	}
-
-	output, err := conn.GetFirewallRuleGroup(input)
+	id := d.Get("firewall_rule_group_id").(string)
+	ruleGroup, err := FindFirewallRuleGroupByID(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("error getting Route53 Firewall Rule Group: %w", err)
+		return diag.Errorf("reading Route53 Resolver Firewall Rule Group (%s): %s", id, err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("no  Route53 Firewall Rule Group found matching criteria; try different search")
-	}
-
-	d.SetId(aws.StringValue(output.FirewallRuleGroup.Id))
-	d.Set("arn", output.FirewallRuleGroup.Arn)
-	d.Set("creation_time", output.FirewallRuleGroup.CreationTime)
-	d.Set("creator_request_id", output.FirewallRuleGroup.CreatorRequestId)
-	d.Set("modification_time", output.FirewallRuleGroup.ModificationTime)
-	d.Set("name", output.FirewallRuleGroup.Name)
-	d.Set("owner_id", output.FirewallRuleGroup.OwnerId)
-	d.Set("rule_count", output.FirewallRuleGroup.RuleCount)
-	d.Set("share_status", output.FirewallRuleGroup.ShareStatus)
-	d.Set("status", output.FirewallRuleGroup.Status)
-	d.Set("status_message", output.FirewallRuleGroup.StatusMessage)
+	d.SetId(aws.StringValue(ruleGroup.Id))
+	d.Set("arn", ruleGroup.Arn)
+	d.Set("creation_time", ruleGroup.CreationTime)
+	d.Set("creator_request_id", ruleGroup.CreatorRequestId)
+	d.Set("firewall_rule_group_id", ruleGroup.Id)
+	d.Set("modification_time", ruleGroup.ModificationTime)
+	d.Set("name", ruleGroup.Name)
+	d.Set("owner_id", ruleGroup.OwnerId)
+	d.Set("rule_count", ruleGroup.RuleCount)
+	d.Set("share_status", ruleGroup.ShareStatus)
+	d.Set("status", ruleGroup.Status)
+	d.Set("status_message", ruleGroup.StatusMessage)
 
 	return nil
 }
