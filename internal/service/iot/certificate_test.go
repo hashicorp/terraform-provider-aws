@@ -58,7 +58,7 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 }
 
 func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "testcert")
 
 	resource.ParallelTest(t, resource.TestCase{
