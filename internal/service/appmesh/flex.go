@@ -187,6 +187,9 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 					weightedTarget.Weight = aws.Int64(int64(vWeight))
 				}
+				if vPort, ok := mWeightedTarget["port"].(int); ok {
+					weightedTarget.Port = aws.Int64(int64(vPort))
+				}
 
 				weightedTargets = append(weightedTargets, weightedTarget)
 			}
@@ -350,6 +353,9 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 				}
 				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 					weightedTarget.Weight = aws.Int64(int64(vWeight))
+				}
+				if vPort, ok := mWeightedTarget["port"].(int); ok {
+					weightedTarget.Port = aws.Int64(int64(vPort))
 				}
 
 				weightedTargets = append(weightedTargets, weightedTarget)
@@ -562,6 +568,9 @@ func expandTCPRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 				}
 				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 					weightedTarget.Weight = aws.Int64(int64(vWeight))
+				}
+				if vPort, ok := mWeightedTarget["port"].(int); ok {
+					weightedTarget.Port = aws.Int64(int64(vPort))
 				}
 
 				weightedTargets = append(weightedTargets, weightedTarget)
@@ -1204,6 +1213,7 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 				mWeightedTarget := map[string]interface{}{
 					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
 					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+					"port":         int(aws.Int64Value(weightedTarget.Port)),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1303,6 +1313,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 				mWeightedTarget := map[string]interface{}{
 					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
 					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+					"port":         int(aws.Int64Value(weightedTarget.Port)),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1436,6 +1447,7 @@ func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 				mWeightedTarget := map[string]interface{}{
 					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
 					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+					"port":         int(aws.Int64Value(weightedTarget.Port)),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
