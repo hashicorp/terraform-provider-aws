@@ -18,13 +18,13 @@ The following example shows how to get a firewall rule group association from it
 
 ```terraform
 data "aws_route53_resolver_firewall_rule_group_association" "example" {
-  id = "rslvr-frgassoc-example"
+  firewall_rule_group_association_id = "rslvr-frgassoc-example"
 }
 ```
 
 ## Argument Reference
 
-* `id` - (Required) The identifier for the association.
+* `firewall_rule_group_association_id` - (Required) The identifier for the association.
 
 The following attribute is additionally exported:
 

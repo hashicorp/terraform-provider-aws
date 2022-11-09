@@ -1,16 +1,18 @@
 package route53resolver_test
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccRoute53ResolverRuleGroupAssociationDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_route53_resolver_firewall_rule_group_association.test"
+	resourceName := "aws_route53_resolver_firewall_rule_group_association.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -18,48 +20,30 @@ func TestAccRoute53ResolverRuleGroupAssociationDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupAssociationDataSourceConfig_basic(),
+				Config: testAccRuleGroupAssociationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "route53resolver", regexp.MustCompile(`firewall-rule-group-association/.+`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creator_request_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rule_group_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_association_id", resourceName, "id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "modification_time"),
-					resource.TestMatchResourceAttr(dataSourceName, "mutation_protection", regexp.MustCompile(`ENABLED|DISABLED`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "priority"),
-					resource.TestMatchResourceAttr(dataSourceName, "status", regexp.MustCompile(`COMPLETE|DELETING|UPDATING`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "mutation_protection", resourceName, "mutation_protection"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "priority", resourceName, "priority"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status_message"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
 				),
 			},
 		},
 	})
 }
 
-func testAccRuleGroupAssociationDataSourceConfig_basic() string {
-	return `
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-}
-
-resource "aws_route53_resolver_firewall_rule_group" "test" {
-  name = "test"
-}
-
-resource "aws_route53_resolver_firewall_rule_group_association" "test" {
-  name                   = "test"
-  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
-  priority               = 200
-  vpc_id                 = aws_vpc.test.id
-}
-
+func testAccRuleGroupAssociationDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallRuleGroupAssociationConfig_basic(rName), `
 data "aws_route53_resolver_firewall_rule_group_association" "test" {
-  id = aws_route53_resolver_firewall_rule_group_association.test.id
+  firewall_rule_group_association_id = aws_route53_resolver_firewall_rule_group_association.test.id
 }
-
-`
+`)
 }

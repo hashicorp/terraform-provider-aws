@@ -13,10 +13,6 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceRuleGroupAssociationRead,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -32,6 +28,10 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 			"firewall_rule_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"firewall_rule_group_association_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"managed_owner_name": {
 				Type:     schema.TypeString,
@@ -73,7 +73,7 @@ func dataSourceRuleGroupAssociationRead(d *schema.ResourceData, meta interface{}
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.GetFirewallRuleGroupAssociationInput{
-		FirewallRuleGroupAssociationId: aws.String(d.Get("id").(string)),
+		FirewallRuleGroupAssociationId: aws.String(d.Get("firewall_rule_group_association_id").(string)),
 	}
 
 	output, err := conn.GetFirewallRuleGroupAssociation(input)
@@ -86,19 +86,21 @@ func dataSourceRuleGroupAssociationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("no  Route53 Firewall Rule Group Association found matching criteria; try different search")
 	}
 
-	d.SetId(aws.StringValue(output.FirewallRuleGroupAssociation.Id))
-	d.Set("arn", output.FirewallRuleGroupAssociation.Arn)
-	d.Set("creation_time", output.FirewallRuleGroupAssociation.CreationTime)
-	d.Set("creator_request_id", output.FirewallRuleGroupAssociation.CreatorRequestId)
-	d.Set("firewall_rule_group_id", output.FirewallRuleGroupAssociation.FirewallRuleGroupId)
-	d.Set("managed_owner_name", output.FirewallRuleGroupAssociation.ManagedOwnerName)
-	d.Set("modification_time", output.FirewallRuleGroupAssociation.ModificationTime)
-	d.Set("mutation_protection", output.FirewallRuleGroupAssociation.MutationProtection)
-	d.Set("name", output.FirewallRuleGroupAssociation.Name)
-	d.Set("priority", output.FirewallRuleGroupAssociation.Priority)
-	d.Set("status", output.FirewallRuleGroupAssociation.Status)
-	d.Set("status_message", output.FirewallRuleGroupAssociation.StatusMessage)
-	d.Set("vpc_id", output.FirewallRuleGroupAssociation.VpcId)
+	ruleGroupAssociation := output.FirewallRuleGroupAssociation
+	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
+	d.Set("arn", ruleGroupAssociation.Arn)
+	d.Set("creation_time", ruleGroupAssociation.CreationTime)
+	d.Set("creator_request_id", ruleGroupAssociation.CreatorRequestId)
+	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
+	d.Set("firewall_rule_group_association_id", ruleGroupAssociation.Id)
+	d.Set("managed_owner_name", ruleGroupAssociation.ManagedOwnerName)
+	d.Set("modification_time", ruleGroupAssociation.ModificationTime)
+	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
+	d.Set("name", ruleGroupAssociation.Name)
+	d.Set("priority", ruleGroupAssociation.Priority)
+	d.Set("status", ruleGroupAssociation.Status)
+	d.Set("status_message", ruleGroupAssociation.StatusMessage)
+	d.Set("vpc_id", ruleGroupAssociation.VpcId)
 
 	return nil
 }
