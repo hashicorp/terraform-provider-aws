@@ -240,10 +240,10 @@ func (r *resourceSecurityGroupIngressRule) Read(ctx context.Context, request res
 		data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
 	}
 
-	// If planned tags are null and no tags are returned, propagate null.
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 && data.Tags.IsNull() {
-		data.Tags = types.Map{ElemType: types.StringType, Null: true}
+	// AWS APIs often return empty lists of tags when none have been configured.
+	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
+		data.Tags = tftags.Null
 	} else {
 		data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
 	}
@@ -369,7 +369,6 @@ func (r *resourceSecurityGroupIngressRule) ImportState(ctx context.Context, requ
 //
 // Any errors will prevent further resource-level plan modifications.
 func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	// When you modify a rule, you cannot change the rule's source type.
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		var old, new resourceSecurityGroupIngressRuleData
 
@@ -385,6 +384,7 @@ func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, reque
 			return
 		}
 
+		// When you modify a rule, you cannot change the rule's source type.
 		if new, old := new.sourceAttributeName(), old.sourceAttributeName(); new != old {
 			response.RequiresReplace = []path.Path{path.Root(old), path.Root(new)}
 		}
@@ -402,23 +402,21 @@ func (r *resourceSecurityGroupIngressRule) ModifyPlan(ctx context.Context, reque
 		return
 	}
 
-	if planTags.IsUnknown() {
+	if !planTags.IsUnknown() {
+		resourceTags := tftags.New(planTags)
+
+		if defaultTagsConfig.TagsEqual(resourceTags) {
+			response.Diagnostics.AddError(
+				`"tags" are identical to those in the "default_tags" configuration block of the provider`,
+				"please de-duplicate and try again")
+		}
+
+		allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
+
+		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMap(ctx, allTags.Map()))...)
+	} else {
 		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), tftags.Unknown)...)
-
-		return
 	}
-
-	resourceTags := tftags.New(planTags)
-
-	if defaultTagsConfig.TagsEqual(resourceTags) {
-		response.Diagnostics.AddError(
-			`"tags" are identical to those in the "default_tags" configuration block of the provider`,
-			"please de-duplicate and try again")
-	}
-
-	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-
-	response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMap(ctx, allTags.Map()))...)
 }
 
 // ConfigValidators returns a list of functions which will all be performed during validation.
