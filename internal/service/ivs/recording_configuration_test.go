@@ -290,8 +290,8 @@ func testAccRecordingConfigurationPreCheck(t *testing.T) {
 func testAccRecordingConfigurationConfig_s3Bucket(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-	bucket        = %[1]q
-	force_destroy = true
+  bucket        = %[1]q
+  force_destroy = true
 }
 `, bucketName)
 }
@@ -301,11 +301,11 @@ func testAccRecordingConfigurationConfig_basic(bucketName string) string {
 		testAccRecordingConfigurationConfig_s3Bucket(bucketName),
 		`
 resource "aws_ivs_recording_configuration" "test" {
-	destination_configuration {
-		s3 {
-			bucket_name = aws_s3_bucket.test.id
-		}
-	}
+  destination_configuration {
+    s3 {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
 }
 `)
 }
@@ -315,12 +315,12 @@ func testAccRecordingConfigurationConfig_name(bucketName, rName string) string {
 		testAccRecordingConfigurationConfig_s3Bucket(bucketName),
 		fmt.Sprintf(`
 resource "aws_ivs_recording_configuration" "test" {
-	name = %[1]q
-	destination_configuration {
-		s3 {
-			bucket_name = aws_s3_bucket.test.id
-		}
-	}
+  name = %[1]q
+  destination_configuration {
+    s3 {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
 }
 `, rName))
 }
@@ -330,17 +330,17 @@ func testAccRecordingConfigurationConfig_update(bucketName, rName, recordingReco
 		testAccRecordingConfigurationConfig_s3Bucket(bucketName),
 		fmt.Sprintf(`
 resource "aws_ivs_recording_configuration" "test" {
-	name = %[1]q
-	destination_configuration {
-		s3 {
-			bucket_name = aws_s3_bucket.test.id
-		}
-	}
-	recording_reconnect_window_seconds = %[2]s
-	thumbnail_configuration {
-        recording_mode          = %[3]q
-        target_interval_seconds = %[4]s
+  name = %[1]q
+  destination_configuration {
+    s3 {
+      bucket_name = aws_s3_bucket.test.id
     }
+  }
+  recording_reconnect_window_seconds = %[2]s
+  thumbnail_configuration {
+    recording_mode          = %[3]q
+    target_interval_seconds = %[4]s
+  }
 }
 `, rName, recordingReconnectWindowSeconds, recordingMode, targetIntervalSeconds))
 }
@@ -350,14 +350,14 @@ func testAccRecordingConfigurationConfig_tags1(bucketName, tagKey1, tagValue1 st
 		testAccRecordingConfigurationConfig_s3Bucket(bucketName),
 		fmt.Sprintf(`
 resource "aws_ivs_recording_configuration" "test" {
-	destination_configuration {
-		s3 {
-			bucket_name = aws_s3_bucket.test.id
-		}
-	}
-	tags = {
-		%[1]q = %[2]q
-	}
+  destination_configuration {
+    s3 {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+  tags = {
+    %[1]q = %[2]q
+  }
 }
 `, tagKey1, tagValue1))
 }
@@ -367,15 +367,15 @@ func testAccRecordingConfigurationConfig_tags2(bucketName, tagKey1, tagValue1, t
 		testAccRecordingConfigurationConfig_s3Bucket(bucketName),
 		fmt.Sprintf(`
 resource "aws_ivs_recording_configuration" "test" {
-	destination_configuration {
-		s3 {
-			bucket_name = aws_s3_bucket.test.id
-		}
-	}
-	tags = {
-		%[1]q = %[2]q
-		%[3]q = %[4]q
-	}
+  destination_configuration {
+    s3 {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
