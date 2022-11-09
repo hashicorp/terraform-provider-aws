@@ -30,6 +30,7 @@ func TestAccIdentityStoreGroupDataSource_displayName(t *testing.T) {
 			{
 				Config: testAccGroupDataSourceConfig_displayName(name),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
@@ -56,6 +57,7 @@ func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
 			{
 				Config: testAccGroupDataSourceConfig_id(name),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
@@ -87,6 +89,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_identitystore_group" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
   display_name      = %[1]q
+  description       = "Acceptance Test"
 }
 
 data "aws_identitystore_group" "test" {
@@ -107,6 +110,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_identitystore_group" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
   display_name      = %[1]q
+  description       = "Acceptance Test"
 }
 
 data "aws_identitystore_group" "test" {

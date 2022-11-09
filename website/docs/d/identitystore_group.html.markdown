@@ -83,6 +83,7 @@ The following arguments are supported by the `unique_attribute` configuration bl
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the group in the Identity Store.
+* `description` - Description of the specified group.
 * `display_name` - Group's display name value.
 * `external_ids` - List of identifiers issued to this resource by an external identity provider.
   * `id` - The identifier issued to this resource by an external identity provider.

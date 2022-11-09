@@ -68,6 +68,10 @@ func DataSourceGroup() *schema.Resource {
 					},
 				},
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"display_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -194,6 +198,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(group.GroupId))
 
+	d.Set("description", group.Description)
 	d.Set("display_name", group.DisplayName)
 	d.Set("group_id", group.GroupId)
 
