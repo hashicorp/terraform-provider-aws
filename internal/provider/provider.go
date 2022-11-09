@@ -1652,7 +1652,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
 			"aws_iot_topic_rule_destination":     iot.ResourceTopicRuleDestination(),
 
-			"aws_ivs_playback_key_pair": ivs.ResourcePlaybackKeyPair(),
+			"aws_ivs_playback_key_pair":       ivs.ResourcePlaybackKeyPair(),
+			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
 
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),

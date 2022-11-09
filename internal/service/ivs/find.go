@@ -32,3 +32,26 @@ func FindPlaybackKeyPairByID(ctx context.Context, conn *ivs.IVS, id string) (*iv
 
 	return out.KeyPair, nil
 }
+
+func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.IVS, id string) (*ivs.RecordingConfiguration, error) {
+	in := &ivs.GetRecordingConfigurationInput{
+		Arn: aws.String(id),
+	}
+	out, err := conn.GetRecordingConfigurationWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.RecordingConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.RecordingConfiguration, nil
+}

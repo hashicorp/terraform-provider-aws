@@ -41,3 +41,37 @@ func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.IVS, id string, t
 
 	return nil, err
 }
+
+func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{statusCreating},
+		Target:                    []string{statusActive},
+		Refresh:                   statusRecordingConfiguration(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivs.RecordingConfiguration); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{statusActive},
+		Target:  []string{},
+		Refresh: statusRecordingConfiguration(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivs.RecordingConfiguration); ok {
+		return out, err
+	}
+
+	return nil, err
+}

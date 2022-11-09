@@ -10,6 +10,9 @@ import (
 
 const (
 	statusNormal = "Normal"
+
+	statusActive   = "ACTIVE"
+	statusCreating = "CREATING"
 )
 
 func statusPlaybackKeyPair(ctx context.Context, conn *ivs.IVS, id string) resource.StateRefreshFunc {
@@ -24,5 +27,20 @@ func statusPlaybackKeyPair(ctx context.Context, conn *ivs.IVS, id string) resour
 		}
 
 		return out, statusNormal, nil
+	}
+}
+
+func statusRecordingConfiguration(ctx context.Context, conn *ivs.IVS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindRecordingConfigurationByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, *out.State, nil
 	}
 }
