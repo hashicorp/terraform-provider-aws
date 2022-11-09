@@ -12,6 +12,17 @@ Information about an RDS engine version.
 
 ## Example Usage
 
+### Basic Usage
+
+```terraform
+data "aws_rds_engine_version" "test" {
+  engine             = "mysql"
+  preferred_versions = ["5.7.42", "5.7.19", "5.7.17"]
+}
+```
+
+### With Filters
+
 ```terraform
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
