@@ -1,7 +1,6 @@
 package route53resolver_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -41,13 +40,9 @@ func TestAccRoute53ResolverFirewallRuleGroupDataSource_basic(t *testing.T) {
 }
 
 func testAccFirewallRuleGroupDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_rule_group" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccFirewallRuleGroupConfig_basic(rName), `
 data "aws_route53_resolver_firewall_rule_group" "test" {
   firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
 }
-`, rName)
+`)
 }
