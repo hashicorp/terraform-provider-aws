@@ -99,7 +99,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 	customEndpoint := fmt.Sprintf("%s.example.com", rName)
 	certResourceName := "aws_acm_certificate.test"
-	certKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	certKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(certKey, customEndpoint)
 
 	resource.ParallelTest(t, resource.TestCase{
