@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccRoute53ResolverFirewallRuleGroupDataSource_basic(t *testing.T) {
+func TestAccRoute53ResolverRuleGroupAssociationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_route53_resolver_firewall_rule_group.test"
-	resourceName := "aws_route53_resolver_firewall_rule_group.test"
+	dataSourceName := "data.aws_route53_resolver_firewall_rule_group_association.test"
+	resourceName := "aws_route53_resolver_firewall_rule_group_association.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -20,29 +20,30 @@ func TestAccRoute53ResolverFirewallRuleGroupDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallRuleGroupDataSourceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Config: testAccRuleGroupAssociationDataSourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creator_request_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_association_id", resourceName, "id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "modification_time"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "mutation_protection", resourceName, "mutation_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "rule_count", "0"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "share_status", resourceName, "share_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "priority", resourceName, "priority"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status_message"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
 				),
 			},
 		},
 	})
 }
 
-func testAccFirewallRuleGroupDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallRuleGroupConfig_basic(rName), `
-data "aws_route53_resolver_firewall_rule_group" "test" {
-  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
+func testAccRuleGroupAssociationDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallRuleGroupAssociationConfig_basic(rName), `
+data "aws_route53_resolver_firewall_rule_group_association" "test" {
+  firewall_rule_group_association_id = aws_route53_resolver_firewall_rule_group_association.test.id
 }
 `)
 }

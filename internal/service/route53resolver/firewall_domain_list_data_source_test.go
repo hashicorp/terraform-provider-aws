@@ -1,7 +1,6 @@
 package route53resolver_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -14,8 +13,7 @@ func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_route53_resolver_firewall_domain_list.test"
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
-	domainName1 := acctest.RandomFQDomainName()
-	domainName2 := acctest.RandomFQDomainName()
+	domainName := acctest.RandomFQDomainName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -23,7 +21,7 @@ func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallDomainListDataSourceConfig_basic(rName, domainName1, domainName2),
+				Config: testAccFirewallDomainListDataSourceConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
@@ -40,15 +38,10 @@ func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFirewallDomainListDataSourceConfig_basic(rName, domain1, domain2 string) string {
-	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_domain_list" "test" {
-  name    = %[1]q
-  domains = [%[2]q, %[3]q]
-}
-
+func testAccFirewallDomainListDataSourceConfig_basic(rName, domain string) string {
+	return acctest.ConfigCompose(testAccFirewallDomainListConfig_domains(rName, domain), `
 data "aws_route53_resolver_firewall_domain_list" "test" {
   firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.test.id
 }
-`, rName, domain1, domain2)
+`)
 }
