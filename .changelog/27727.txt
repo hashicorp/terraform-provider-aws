@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_transfer_server: Add support for `on_partial_upload` block on the `workflow_details` attribute.
+```
+
+```release-note:bug
+resource/aws_transfer_server: Allow the removal of `workflow_details` attribute.
+```

@@ -195,9 +195,29 @@ func ResourceServer() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"on_upload": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"execution_role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"workflow_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"on_partial_upload": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"execution_role": {
@@ -795,16 +815,23 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 }
 
 func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {
-	if tfMap == nil {
-		return nil
+	apiObject := &transfer.WorkflowDetails{
+		OnPartialUpload: []*transfer.WorkflowDetail{},
+		OnUpload:        []*transfer.WorkflowDetail{},
+	}
+
+	if len(tfMap) == 0 || tfMap[0] == nil {
+		return apiObject
 	}
 
 	tfMapRaw := tfMap[0].(map[string]interface{})
 
-	apiObject := &transfer.WorkflowDetails{}
-
 	if v, ok := tfMapRaw["on_upload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.OnUpload = expandWorkflowDetail(v)
+	}
+
+	if v, ok := tfMapRaw["on_partial_upload"].([]interface{}); ok && len(v) > 0 {
+		apiObject.OnPartialUpload = expandWorkflowDetail(v)
 	}
 
 	return apiObject
@@ -819,6 +846,10 @@ func flattenWorkflowDetails(apiObject *transfer.WorkflowDetails) []interface{} {
 
 	if v := apiObject.OnUpload; v != nil {
 		tfMap["on_upload"] = flattenWorkflowDetail(v)
+	}
+
+	if v := apiObject.OnPartialUpload; v != nil {
+		tfMap["on_partial_upload"] = flattenWorkflowDetail(v)
 	}
 
 	return []interface{}{tfMap}

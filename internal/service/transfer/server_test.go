@@ -1001,6 +1001,8 @@ func testAccServer_workflowDetails(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_upload.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.execution_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.workflow_id", "aws_transfer_workflow.test", "id"),
 				),
 			},
 			{
@@ -1017,6 +1019,15 @@ func testAccServer_workflowDetails(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_upload.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.execution_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.workflow_id", "aws_transfer_workflow.test2", "id"),
+				),
+			},
+			{
+				Config: testAccServerConfig_workflowRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "0"),
 				),
 			},
 		},
@@ -1706,6 +1717,10 @@ resource "aws_transfer_server" "test" {
       execution_role = aws_iam_role.test.arn
       workflow_id    = aws_transfer_workflow.test.id
     }
+    on_partial_upload {
+      execution_role = aws_iam_role.test.arn
+      workflow_id    = aws_transfer_workflow.test.id
+    }
   }
 }
 `, rName)
@@ -1758,7 +1773,47 @@ resource "aws_transfer_server" "test" {
       execution_role = aws_iam_role.test.arn
       workflow_id    = aws_transfer_workflow.test2.id
     }
+    on_partial_upload {
+      execution_role = aws_iam_role.test.arn
+      workflow_id    = aws_transfer_workflow.test2.id
+    }
   }
+}
+`, rName)
+}
+
+func testAccServerConfig_workflowRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_transfer_workflow" "test2" {
+  steps {
+    delete_step_details {
+      name                 = "test"
+      source_file_location = "$${original.file}"
+    }
+    type = "DELETE"
+  }
+}
+
+resource "aws_transfer_server" "test" {
 }
 `, rName)
 }

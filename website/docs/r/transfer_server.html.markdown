@@ -123,6 +123,7 @@ The following arguments are supported:
 ### Workflow Details
 
 * `on_upload` - (Optional) A trigger that starts a workflow: the workflow begins to execute after a file is uploaded. See Workflow Detail below.
+* `on_partial_upload` - (Optional) A trigger that starts a workflow if a file is only partially uploaded. See Workflow Detail below.
 
 #### Workflow Detail
 
