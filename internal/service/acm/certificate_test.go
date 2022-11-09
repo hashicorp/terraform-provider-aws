@@ -1335,11 +1335,11 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, commonName)
-	newCaKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(newCaKey)
 	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(newCaKey, newCaCertificate, key, commonName)
 	withoutChainDomain := acctest.RandomDomainName()
@@ -1395,9 +1395,9 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, commonName)
 
 	var v acm.CertificateDetail
@@ -1465,9 +1465,9 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
 func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
-	key1 := acctest.TLSRSAPrivateKeyPEM(2048)
+	key1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(key1, "1.2.3.4")
-	key2 := acctest.TLSRSAPrivateKeyPEM(2048)
+	key2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(key2, "5.6.7.8")
 	var v acm.CertificateDetail
 
@@ -1790,7 +1790,7 @@ resource "aws_acm_certificate" "test" {
 }
 
 func testAccCertificateConfig_privateKeyNoChain(commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
 
 	return fmt.Sprintf(`

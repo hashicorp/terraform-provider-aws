@@ -208,7 +208,7 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
-	key := acctest.TLSRSAPrivateKeyPEM(4096)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, acctest.RandomDomain().String())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
