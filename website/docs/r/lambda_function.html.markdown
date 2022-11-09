@@ -280,6 +280,7 @@ The following arguments are optional:
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
+* `snap_start` - (Optional) Snap start settings block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
 * `tracing_config` - (Optional) Configuration block. Detailed below.
@@ -314,6 +315,12 @@ Container image configuration values that override the values in the container i
 * `entry_point` - (Optional) Entry point to your application, which is typically the location of the runtime executable.
 * `working_directory` - (Optional) Working directory.
 
+### snap_start
+
+Snap start settings for low-latency startups. This feature is currently only supported for `java11` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
+
+* `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
+
 ### tracing_config
 
 * `mode` - (Required) Whether to to sample and trace a subset of incoming requests with AWS X-Ray. Valid values are `PassThrough` and `Active`. If `PassThrough`, Lambda will only trace the request from an upstream service if it contains a tracing header with "sampled=1". If `Active`, Lambda will respect any tracing header it receives from an upstream service. If no tracing header is received, Lambda will call X-Ray for a tracing decision.
@@ -338,6 +345,7 @@ In addition to all arguments above, the following attributes are exported:
 * `qualified_invoke_arn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
+* `snap_start.optimization_status` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `source_code_size` - Size in bytes of the function .zip file.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
