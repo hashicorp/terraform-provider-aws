@@ -14,10 +14,6 @@ func DataSourceFirewallDomainList() *schema.Resource {
 		Read: dataSourceFirewallDomainListRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -33,6 +29,10 @@ func DataSourceFirewallDomainList() *schema.Resource {
 			"domain_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"firewall_domain_list_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -62,7 +62,7 @@ func dataSourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.GetFirewallDomainListInput{
-		FirewallDomainListId: aws.String(d.Get("id").(string)),
+		FirewallDomainListId: aws.String(d.Get("firewall_domain_list_id").(string)),
 	}
 
 	output, err := conn.GetFirewallDomainList(input)
@@ -75,16 +75,18 @@ func dataSourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("no Route53 Firewall Domain List found matching criteria; try different search")
 	}
 
-	d.SetId(aws.StringValue(output.FirewallDomainList.Id))
-	d.Set("arn", output.FirewallDomainList.Arn)
-	d.Set("creation_time", output.FirewallDomainList.CreationTime)
-	d.Set("creator_request_id", output.FirewallDomainList.CreatorRequestId)
-	d.Set("domain_count", output.FirewallDomainList.DomainCount)
-	d.Set("name", output.FirewallDomainList.Name)
-	d.Set("managed_owner_name", output.FirewallDomainList.ManagedOwnerName)
-	d.Set("modification_time", output.FirewallDomainList.ModificationTime)
-	d.Set("status", output.FirewallDomainList.Status)
-	d.Set("status_message", output.FirewallDomainList.StatusMessage)
+	firewallDomainList := output.FirewallDomainList
+	d.SetId(aws.StringValue(firewallDomainList.Id))
+	d.Set("arn", firewallDomainList.Arn)
+	d.Set("creation_time", firewallDomainList.CreationTime)
+	d.Set("creator_request_id", firewallDomainList.CreatorRequestId)
+	d.Set("domain_count", firewallDomainList.DomainCount)
+	d.Set("firewall_domain_list_id", firewallDomainList.Id)
+	d.Set("name", firewallDomainList.Name)
+	d.Set("managed_owner_name", firewallDomainList.ManagedOwnerName)
+	d.Set("modification_time", firewallDomainList.ModificationTime)
+	d.Set("status", firewallDomainList.Status)
+	d.Set("status_message", firewallDomainList.StatusMessage)
 
 	return nil
 }

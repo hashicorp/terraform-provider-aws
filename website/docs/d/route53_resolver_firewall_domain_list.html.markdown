@@ -14,17 +14,17 @@ This data source allows to retrieve details about a specific a Route 53 Resolver
 
 ## Example Usage
 
-The following example shows how to get a firewall domain list from its id.
+The following example shows how to get a firewall domain list from its ID.
 
 ```terraform
 data "aws_route53_resolver_firewall_domain_list" "example" {
-  id = "rslvr-fdl-example"
+  firewall_domain_list_id = "rslvr-fdl-example"
 }
 ```
 
 ## Argument Reference
 
-* `id` - (Required) The ID of the domain list.
+* `firewall_domain_list_id` - (Required) The ID of the domain list.
 
 The following attribute is additionally exported:
 
