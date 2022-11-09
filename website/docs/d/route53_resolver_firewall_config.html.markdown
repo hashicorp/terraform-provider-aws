@@ -14,7 +14,7 @@ This data source allows to find a details about a specific a Route 53 Resolver D
 
 ## Example Usage
 
-The following example shows how to get a firewall config using the VPC id.
+The following example shows how to get a firewall config using the VPC ID.
 
 ```terraform
 data "aws_route53_resolver_firewall_config" "example" {
@@ -23,7 +23,6 @@ data "aws_route53_resolver_firewall_config" "example" {
 ```
 
 ## Argument Reference
-
 
 * `resource_id` - (Required) The ID of the VPC from Amazon VPC that the configuration is for.
 
