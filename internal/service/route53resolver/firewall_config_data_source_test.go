@@ -1,7 +1,6 @@
 package route53resolver_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -33,24 +32,9 @@ func TestAccRoute53ResolverFirewallConfigDataSource_basic(t *testing.T) {
 }
 
 func testAccFirewallConfigDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route53_resolver_firewall_config" "test" {
-  resource_id        = aws_vpc.test.id
-  firewall_fail_open = "ENABLED"
-}
-
+	return acctest.ConfigCompose(testAccFirewallConfigConfig_basic(rName), `
 data "aws_route53_resolver_firewall_config" "test" {
   resource_id = aws_vpc.test.id
 }
-`, rName)
+`)
 }
