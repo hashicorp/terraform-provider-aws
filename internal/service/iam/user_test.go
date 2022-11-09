@@ -672,7 +672,7 @@ func testAccCheckUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 		input := &iam.UploadSigningCertificateInput{
 			CertificateBody: aws.String(certificate),
