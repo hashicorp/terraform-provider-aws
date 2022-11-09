@@ -121,7 +121,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -200,7 +200,7 @@ func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -230,7 +230,7 @@ func TestAccAPIGatewayDomainName_tags(t *testing.T) {
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -278,7 +278,7 @@ func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -347,7 +347,7 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_ownership(t *testing.T)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domain)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
 	var v apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"

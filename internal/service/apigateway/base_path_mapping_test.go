@@ -72,7 +72,7 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 	name := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -102,7 +102,7 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 	name := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -131,7 +131,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	name := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -182,7 +182,7 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },

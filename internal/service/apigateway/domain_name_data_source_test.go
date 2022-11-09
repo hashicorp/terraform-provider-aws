@@ -15,7 +15,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 	rName := acctest.RandomSubdomain()
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
