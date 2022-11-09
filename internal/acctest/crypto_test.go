@@ -54,7 +54,7 @@ func TestTLSRSAX509SelfSignedCertificatePEM(t *testing.T) {
 }
 
 func TestTLSRSAX509CertificateRequestPEM(t *testing.T) {
-	csr, key := acctest.TLSRSAX509CertificateRequestPEM(2048, "example.com")
+	csr, key := acctest.TLSRSAX509CertificateRequestPEM(t, 2048, "example.com")
 
 	if !strings.Contains(csr, acctest.PEMBlockTypeCertificateRequest) {
 		t.Errorf("certificate does not contain CERTIFICATE REQUEST: %s", csr)

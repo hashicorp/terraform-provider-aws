@@ -354,11 +354,11 @@ func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string)
 // and a RSA private key PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: certificate_signing_request_pem = "%[1]s" private_key_pem = "%[2]s"
-func TLSRSAX509CertificateRequestPEM(keyBits int, commonName string) (string, string) {
+func TLSRSAX509CertificateRequestPEM(t *testing.T, keyBits int, commonName string) (string, string) {
 	keyBytes, err := rsa.GenerateKey(rand.Reader, keyBits)
+
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	csr := x509.CertificateRequest{
@@ -370,9 +370,9 @@ func TLSRSAX509CertificateRequestPEM(keyBits int, commonName string) (string, st
 	}
 
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &csr, keyBytes)
+
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	csrBlock := &pem.Block{
