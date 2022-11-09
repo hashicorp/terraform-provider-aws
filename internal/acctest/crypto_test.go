@@ -17,7 +17,7 @@ func TestTLSRSAPrivateKeyPEM(t *testing.T) {
 
 func TestTLSRSAPublicKeyPEM(t *testing.T) {
 	privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	publicKey := acctest.TLSRSAPublicKeyPEM(privateKey)
+	publicKey := acctest.TLSRSAPublicKeyPEM(t, privateKey)
 
 	if !strings.Contains(publicKey, acctest.PEMBlockTypePublicKey) {
 		t.Errorf("key does not contain PUBLIC KEY: %s", publicKey)

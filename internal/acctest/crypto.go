@@ -108,21 +108,19 @@ func TLSRSAPrivateKeyPEM(t *testing.T, bits int) string {
 // TLSRSAPublicKeyPEM generates a RSA public key PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: public_key_pem = "%[1]s"
-func TLSRSAPublicKeyPEM(keyPem string) string {
+func TLSRSAPublicKeyPEM(t *testing.T, keyPem string) string {
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	block := &pem.Block{
