@@ -84,3 +84,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the group in the Identity Store.
 * `display_name` - Group's display name value.
+* `external_ids` - List of identifiers issued to this resource by an external identity provider.
+  * `id` - The identifier issued to this resource by an external identity provider.
+  * `issuer` - The issuer for an external identifier.

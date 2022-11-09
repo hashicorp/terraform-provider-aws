@@ -32,6 +32,7 @@ func TestAccIdentityStoreGroupDataSource_displayName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
 				),
 			},
 		},
@@ -57,6 +58,7 @@ func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
 				),
 			},
 		},

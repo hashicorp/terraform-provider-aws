@@ -72,6 +72,22 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"external_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"issuer": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"filter": {
 				Deprecated:    "Use the alternate_identifier attribute instead.",
 				Type:          schema.TypeList,
@@ -177,8 +193,13 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(group.GroupId))
+
 	d.Set("display_name", group.DisplayName)
 	d.Set("group_id", group.GroupId)
+
+	if err := d.Set("external_ids", flattenExternalIds(group.ExternalIds)); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameGroup, d.Id(), err)
+	}
 
 	return nil
 }
