@@ -3,7 +3,6 @@ package dynamodb
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -387,8 +386,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
-
 	if v, ok := d.GetOk("restore_source_name"); ok {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
 			SourceTableName: aws.String(v.(string)),
@@ -402,11 +399,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if attr, ok := d.GetOk("restore_to_latest_time"); ok {
 			input.UseLatestRestorableTime = aws.Bool(attr.(bool))
-		}
-
-		if v, ok := d.GetOk("local_secondary_index"); ok {
-			lsiSet := v.(*schema.Set)
-			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
 		}
 
 		billingModeOverride := d.Get("billing_mode").(string)
@@ -446,36 +438,24 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]interface{}))
 		}
 
-		var output *dynamodb.RestoreTableToPointInTimeOutput
-		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
-			var err error
-			output, err = conn.RestoreTableToPointInTime(input)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
+		_, err := tfresource.RetryWhen(createTableTimeout, func() (interface{}, error) {
+			return conn.RestoreTableToPointInTime(input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+				return true, err
 			}
-			return nil
-		})
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
 
-		if tfresource.TimedOut(err) {
-			output, err = conn.RestoreTableToPointInTime(input)
-		}
+			return false, err
+		})
 
 		if err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
-		}
-
-		if output == nil || output.TableDescription == nil {
-			return errors.New("error creating DynamoDB Table: empty response")
 		}
 	} else {
 		input := &dynamodb.CreateTableInput{
