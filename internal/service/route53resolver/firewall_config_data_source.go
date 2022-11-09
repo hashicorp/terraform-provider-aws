@@ -14,21 +14,17 @@ func DataSourceFirewallConfig() *schema.Resource {
 		Read: dataSourceFirewallConfigRead,
 
 		Schema: map[string]*schema.Schema{
-			"resource_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"firewall_fail_open": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"resource_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
