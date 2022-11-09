@@ -97,6 +97,7 @@ val services = mapOf(
     "iot" to ServiceSpec("IoT Core"),
     "iotanalytics" to ServiceSpec("IoT Analytics"),
     "iotevents" to ServiceSpec("IoT Events"),
+    "ivs" to ServiceSpec("IVS (Interactive Video)"),
     "kafka" to ServiceSpec("Managed Streaming for Kafka", vpcLock = true),
     "kafkaconnect" to ServiceSpec("Managed Streaming for Kafka Connect"),
     "keyspaces" to ServiceSpec("Keyspaces (for Apache Cassandra)"),

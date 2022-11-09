@@ -63,7 +63,6 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Multiplex.
-* `example_attribute` - Concise description.
 
 ## Timeouts
 

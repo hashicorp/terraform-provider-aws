@@ -108,6 +108,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
@@ -1651,6 +1652,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
 			"aws_iot_topic_rule_destination":     iot.ResourceTopicRuleDestination(),
 
+			"aws_ivs_playback_key_pair": ivs.ResourcePlaybackKeyPair(),
+
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
@@ -1757,6 +1760,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 
+			"aws_medialive_channel":              medialive.ResourceChannel(),
 			"aws_medialive_input":                medialive.ResourceInput(),
 			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
 			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
