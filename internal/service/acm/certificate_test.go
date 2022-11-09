@@ -1336,11 +1336,11 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
 	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(newCaKey)
+	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, newCaKey)
 	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, newCaKey, newCaCertificate, key, commonName)
 	withoutChainDomain := acctest.RandomDomainName()
 	var v1, v2, v3 acm.CertificateDetail
@@ -1396,7 +1396,7 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
 
