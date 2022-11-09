@@ -1,17 +1,18 @@
 package route53resolver
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceFirewallConfig() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFirewallConfigRead,
+		ReadWithoutTimeout: dataSourceFirewallConfigRead,
 
 		Schema: map[string]*schema.Schema{
 			"firewall_fail_open": {
@@ -30,27 +31,24 @@ func DataSourceFirewallConfig() *schema.Resource {
 	}
 }
 
-func dataSourceFirewallConfigRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.GetFirewallConfigInput{
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 	}
 
-	output, err := conn.GetFirewallConfig(input)
+	output, err := conn.GetFirewallConfigWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Route53 Firewall Config: %w", err)
+		return diag.Errorf("reading Route53 Resolver Firewall Config: %s", err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("no  Route53 Firewall Config found matching criteria; try different search")
-	}
-
-	d.SetId(aws.StringValue(output.FirewallConfig.Id))
-	d.Set("firewall_fail_open", output.FirewallConfig.FirewallFailOpen)
-	d.Set("owner_id", output.FirewallConfig.OwnerId)
-	d.Set("resource_id", output.FirewallConfig.ResourceId)
+	firewallConfig := output.FirewallConfig
+	d.SetId(aws.StringValue(firewallConfig.Id))
+	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
+	d.Set("owner_id", firewallConfig.OwnerId)
+	d.Set("resource_id", firewallConfig.ResourceId)
 
 	return nil
 }
