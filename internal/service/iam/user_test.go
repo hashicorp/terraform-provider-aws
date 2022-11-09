@@ -671,7 +671,7 @@ func testAccCheckUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		key := acctest.TLSRSAPrivateKeyPEM(2048)
+		key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 		input := &iam.UploadSigningCertificateInput{

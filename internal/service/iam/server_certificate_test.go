@@ -21,7 +21,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -60,7 +60,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,7 +110,7 @@ func TestAccIAMServerCertificate_Name_prefix(t *testing.T) {
 
 	resourceName := "aws_iam_server_certificate.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,7 +133,7 @@ func TestAccIAMServerCertificate_disappears(t *testing.T) {
 	var cert iam.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -198,7 +198,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 	resourceName := "aws_iam_server_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
