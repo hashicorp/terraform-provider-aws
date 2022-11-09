@@ -228,7 +228,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating API Gateway v2 integration: %s", req)
 	resp, err := conn.CreateIntegration(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 integration: %s", err)
+		return fmt.Errorf("creating API Gateway v2 integration: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.IntegrationId))
@@ -249,7 +249,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 integration: %s", err)
+		return fmt.Errorf("reading API Gateway v2 integration: %s", err)
 	}
 
 	d.Set("connection_id", resp.ConnectionId)
@@ -266,20 +266,20 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
 	err = d.Set("request_parameters", flex.PointersMapToStringList(resp.RequestParameters))
 	if err != nil {
-		return fmt.Errorf("error setting request_parameters: %s", err)
+		return fmt.Errorf("setting request_parameters: %s", err)
 	}
 	err = d.Set("request_templates", flex.PointersMapToStringList(resp.RequestTemplates))
 	if err != nil {
-		return fmt.Errorf("error setting request_templates: %s", err)
+		return fmt.Errorf("setting request_templates: %s", err)
 	}
 	err = d.Set("response_parameters", flattenIntegrationResponseParameters(resp.ResponseParameters))
 	if err != nil {
-		return fmt.Errorf("error setting response_parameters: %s", err)
+		return fmt.Errorf("setting response_parameters: %s", err)
 	}
 	d.Set("template_selection_expression", resp.TemplateSelectionExpression)
 	d.Set("timeout_milliseconds", resp.TimeoutInMillis)
 	if err := d.Set("tls_config", flattenTLSConfig(resp.TlsConfig)); err != nil {
-		return fmt.Errorf("error setting tls_config: %s", err)
+		return fmt.Errorf("setting tls_config: %s", err)
 	}
 
 	return nil
@@ -385,7 +385,7 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating API Gateway v2 integration: %s", req)
 	_, err := conn.UpdateIntegration(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 integration: %s", err)
+		return fmt.Errorf("updating API Gateway v2 integration: %s", err)
 	}
 
 	return resourceIntegrationRead(d, meta)
@@ -403,7 +403,7 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 integration: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 integration: %s", err)
 	}
 
 	return nil
@@ -412,7 +412,7 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceIntegrationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/integration-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id'", d.Id())
 	}
 
 	apiId := parts[0]

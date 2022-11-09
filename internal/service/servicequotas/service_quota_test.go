@@ -25,9 +25,9 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 			testAccPreCheck(t)
 			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
@@ -62,9 +62,9 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 			testAccPreCheck(t)
 			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_sameValue(unsetQuotaServiceCode, unsetQuotaQuotaCode),
@@ -114,10 +114,10 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_value(serviceCode, quotaCode, value),
@@ -158,10 +158,10 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 	resourceName := "aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode),
@@ -187,10 +187,10 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 
 func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAssumeRoleARN(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaConfig_permissionError("elasticloadbalancing", "L-53DA6B97"),
@@ -200,7 +200,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	})
 }
 
-// nosemgrep: servicequotas-in-func-name
+// nosemgrep:ci.servicequotas-in-func-name
 func testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {

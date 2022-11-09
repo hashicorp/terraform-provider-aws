@@ -1,6 +1,6 @@
 package transfer
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -457,11 +457,9 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		old, new := d.GetChange("endpoint_type")
 
-		if old, new := old.(string), new.(string); new != old && new == transfer.EndpointTypeVpc {
+		if old, new := old.(string), new.(string); new == transfer.EndpointTypeVpc {
 			newEndpointTypeVpc = true
-		} else if new == old && new == transfer.EndpointTypeVpc {
-			newEndpointTypeVpc = true
-			oldEndpointTypeVpc = true
+			oldEndpointTypeVpc = old == new
 		}
 
 		var addressAllocationIDs []*string

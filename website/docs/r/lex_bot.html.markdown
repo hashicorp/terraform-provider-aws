@@ -110,13 +110,13 @@ are documented under [message](#message).
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 5 mins) Used when creating the bot
-* `update` - (Defaults to 5 mins) Used when updating the bot
-* `delete` - (Defaults to 5 mins) Used when deleting the bot
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Attributes Reference
 

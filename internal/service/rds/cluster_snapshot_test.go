@@ -21,10 +21,10 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_basic(rName),
@@ -61,10 +61,10 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_tags1(rName, "key1", "value1"),
@@ -251,7 +251,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {
@@ -305,7 +305,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {

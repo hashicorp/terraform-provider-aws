@@ -19,10 +19,10 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_basic(rName),
@@ -39,10 +39,10 @@ func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_lagOn(rName),
@@ -60,10 +60,10 @@ func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_multiple(rName),
@@ -113,13 +113,7 @@ func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("No ID is set")
 		}
 
-		err := tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 	}
 }
 

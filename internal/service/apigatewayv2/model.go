@@ -83,7 +83,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating API Gateway v2 model: %s", req)
 	resp, err := conn.CreateModel(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 model: %s", err)
+		return fmt.Errorf("creating API Gateway v2 model: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ModelId))
@@ -104,7 +104,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 model: %s", err)
+		return fmt.Errorf("reading API Gateway v2 model: %s", err)
 	}
 
 	d.Set("content_type", resp.ContentType)
@@ -138,7 +138,7 @@ func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating API Gateway v2 model: %s", req)
 	_, err := conn.UpdateModel(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 model: %s", err)
+		return fmt.Errorf("updating API Gateway v2 model: %s", err)
 	}
 
 	return resourceModelRead(d, meta)
@@ -156,7 +156,7 @@ func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 model: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 model: %s", err)
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceModelImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/model-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/model-id'", d.Id())
 	}
 
 	d.SetId(parts[1])

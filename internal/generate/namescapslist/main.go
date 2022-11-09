@@ -108,8 +108,8 @@ func readBadCaps() []CapsDatum {
 }
 
 func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// If the file doesn't exist, create it, or truncate the file
+	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("error opening file (%s): %s", filename, err)
 	}

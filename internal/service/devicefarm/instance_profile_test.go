@@ -30,9 +30,9 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceProfileDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
@@ -76,9 +76,9 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceProfileDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_tags1(rName, "key1", "value1"),
@@ -127,9 +127,9 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceProfileDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),

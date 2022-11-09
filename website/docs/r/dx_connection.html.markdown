@@ -28,7 +28,7 @@ The following arguments are supported:
 * `location` - (Required) The AWS Direct Connect location where the connection is located. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `name` - (Required) The name of the connection.
 * `provider_name` - (Optional) The name of the service provider associated with the connection.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -40,7 +40,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
 * `owner_account_id` - The ID of the AWS account that owns the connection.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vlan_id` - The VLAN ID.
 
 ## Import
 

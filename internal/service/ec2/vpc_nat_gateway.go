@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -70,6 +71,7 @@ func resourceNATGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateNatGatewayInput{
+		ClientToken:       aws.String(resource.UniqueId()),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNatgateway),
 	}
 
@@ -85,17 +87,16 @@ func resourceNATGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 NAT Gateway: %s", input)
 	output, err := conn.CreateNatGateway(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 NAT Gateway: %w", err)
+		return fmt.Errorf("creating EC2 NAT Gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.NatGateway.NatGatewayId))
 
 	if _, err := WaitNATGatewayCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 NAT Gateway (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 NAT Gateway (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceNATGatewayRead(d, meta)
@@ -115,7 +116,7 @@ func resourceNATGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 NAT Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 NAT Gateway (%s): %w", d.Id(), err)
 	}
 
 	address := ng.NatGatewayAddresses[0]
@@ -130,11 +131,11 @@ func resourceNATGatewayRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -147,7 +148,7 @@ func resourceNATGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 NAT Gateway (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 NAT Gateway (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -167,11 +168,11 @@ func resourceNATGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 NAT Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 NAT Gateway (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitNATGatewayDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 NAT Gateway (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 NAT Gateway (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

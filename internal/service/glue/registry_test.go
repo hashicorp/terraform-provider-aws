@@ -22,10 +22,10 @@ func TestAccGlueRegistry_basic(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegistryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryConfig_basic(rName),
@@ -53,10 +53,10 @@ func TestAccGlueRegistry_description(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegistryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryConfig_description(rName, "First Description"),
@@ -87,10 +87,10 @@ func TestAccGlueRegistry_tags(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegistryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryConfig_tags1(rName, "key1", "value1"),
@@ -133,10 +133,10 @@ func TestAccGlueRegistry_disappears(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegistryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryConfig_basic(rName),
@@ -207,7 +207,6 @@ func testAccCheckRegistryDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		if output != nil && aws.StringValue(output.RegistryArn) == rs.Primary.ID {

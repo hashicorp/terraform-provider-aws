@@ -75,6 +75,7 @@ Connect Customer Profiles
 Connect Participant
 Connect Voice ID
 Connect Wisdom
+Control Tower
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
@@ -121,9 +122,9 @@ Elemental MediaStore Data
 Elemental MediaTailor
 EventBridge
 EventBridge Schemas
+FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
 FSx
-Fault Injection Simulator
 FinSpace
 FinSpace Data
 Forecast
@@ -234,11 +235,13 @@ RDS Performance Insights (PI)
 Recycle Bin (RBin)
 Redshift
 Redshift Data
+Redshift Serverless
 Rekognition
 Resilience Hub
 Resource Groups
 Resource Groups Tagging
 RoboMaker
+Roles Anywhere
 Route 53
 Route 53 Domains
 Route 53 Recovery Cluster

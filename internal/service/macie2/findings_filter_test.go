@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
@@ -21,16 +20,16 @@ func testAccFindingsFilter_basic(t *testing.T) {
 	resourceName := "aws_macie2_findings_filter.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -50,16 +49,16 @@ func testAccFindingsFilter_Name_Generated(t *testing.T) {
 	resourceName := "aws_macie2_findings_filter.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -78,16 +77,16 @@ func testAccFindingsFilter_NamePrefix(t *testing.T) {
 	namePrefix := "tf-acc-test-prefix-"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_namePrefix(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 				),
 			},
@@ -105,16 +104,16 @@ func testAccFindingsFilter_disappears(t *testing.T) {
 	resourceName := "aws_macie2_findings_filter.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
@@ -132,16 +131,16 @@ func testAccFindingsFilter_complete(t *testing.T) {
 	descriptionUpdated := "this is a description updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_complete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
@@ -160,7 +159,7 @@ func testAccFindingsFilter_complete(t *testing.T) {
 				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -179,7 +178,7 @@ func testAccFindingsFilter_complete(t *testing.T) {
 				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -213,16 +212,16 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_complete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, "name"),
@@ -240,7 +239,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 				Config: testAccFindingsFilterConfig_completeMultipleCriterion(descriptionUpdated, macie2.FindingsFilterActionNoop, startDate, endDate, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -289,16 +288,16 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 	secondNumber := "13"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_complete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, "name"),
@@ -316,7 +315,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 				Config: testAccFindingsFilterConfig_completeMultipleCriterionNumber(descriptionUpdated, macie2.FindingsFilterActionNoop, firstNumber, secondNumber, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -356,16 +355,16 @@ func testAccFindingsFilter_withTags(t *testing.T) {
 	description := "this is a description"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFindingsFilterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingsFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingsFilterConfig_tags(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -443,7 +442,6 @@ func testAccCheckFindingsFilterDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccFindingsFilterConfig_nameGenerated() string {

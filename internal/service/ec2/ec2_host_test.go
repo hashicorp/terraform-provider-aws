@@ -20,10 +20,10 @@ func TestAccEC2Host_basic(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(),
@@ -53,10 +53,10 @@ func TestAccEC2Host_disappears(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(),
@@ -76,10 +76,10 @@ func TestAccEC2Host_instanceFamily(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_instanceFamily(rName),
@@ -123,10 +123,10 @@ func TestAccEC2Host_tags(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_tags1("key1", "value1"),
@@ -169,10 +169,10 @@ func TestAccEC2Host_outpost(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_outpost(rName),
@@ -242,7 +242,7 @@ func testAccCheckHostDestroy(s *terraform.State) error {
 func testAccHostConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ec2_host" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[1]
   instance_type     = "a1.large"
 }
 `)

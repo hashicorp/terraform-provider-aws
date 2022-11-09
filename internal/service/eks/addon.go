@@ -33,6 +33,12 @@ func ResourceAddon() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"addon_name": {
 				Type:         schema.TypeString,
@@ -146,7 +152,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	_, err = waitAddonCreated(ctx, conn, clusterName, addonName)
+	_, err = waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
@@ -248,7 +254,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID)
+		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			if d.Get("resolve_conflicts") != eks.ResolveConflictsOverwrite {
@@ -298,7 +304,7 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error deleting EKS Add-On (%s): %w", d.Id(), err))
 	}
 
-	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName)
+	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) to delete: %w", d.Id(), err))

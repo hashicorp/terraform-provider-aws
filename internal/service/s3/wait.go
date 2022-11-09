@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	bucketCreatedTimeout                          = 2 * time.Minute
 	bucketVersioningStableTimeout                 = 1 * time.Minute
 	lifecycleConfigurationExtraRetryDelay         = 5 * time.Second
 	lifecycleConfigurationRulesPropagationTimeout = 3 * time.Minute

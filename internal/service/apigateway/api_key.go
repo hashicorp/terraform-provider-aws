@@ -89,7 +89,7 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:        Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway API Key: %s", err)
+		return fmt.Errorf("creating API Gateway API Key: %s", err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))

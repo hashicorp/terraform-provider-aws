@@ -42,7 +42,8 @@ instance (see list below)
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `user_data` - (Optional) launch script to configure server with additional user data
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `ip_address_type` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack` | `ipv4`.
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Availability Zones
 Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
@@ -110,7 +111,7 @@ In addition to all arguments above, the following attributes are exported:
 * `public_ip_address` - The public IP address of the instance.
 * `is_static_ip` - A Boolean value indicating whether this instance has a static IP assigned to it.
 * `username` - The user name for connecting to the instance (e.g., ec2-user).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

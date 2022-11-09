@@ -86,7 +86,7 @@ func sweepCertifcates(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListCertificatesInput{}
@@ -132,7 +132,7 @@ func sweepPolicyAttachments(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListPoliciesInput{}
@@ -198,7 +198,7 @@ func sweepPolicies(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListPoliciesInput{}
@@ -244,7 +244,7 @@ func sweepRoleAliases(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListRoleAliasesInput{}
@@ -290,7 +290,7 @@ func sweepThingPrincipalAttachments(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListThingsInput{}
@@ -356,7 +356,7 @@ func sweepThings(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListThingsInput{}
@@ -402,7 +402,7 @@ func sweepThingTypes(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListThingTypesInput{}
@@ -494,7 +494,7 @@ func sweepThingGroups(region string) error {
 	}
 	conn := client.(*conns.AWSClient).IoTConn
 	input := &iot.ListThingGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListThingGroupsPages(input, func(page *iot.ListThingGroupsOutput, lastPage bool) bool {
 		if page == nil {
@@ -537,7 +537,7 @@ func sweepTopicRuleDestinations(region string) error {
 	}
 	conn := client.(*conns.AWSClient).IoTConn
 	input := &iot.ListTopicRuleDestinationsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListTopicRuleDestinationsPages(input, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
 		if page == nil {

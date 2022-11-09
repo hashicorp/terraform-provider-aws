@@ -22,10 +22,10 @@ func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStaticIPAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
@@ -58,10 +58,10 @@ func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStaticIPAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),

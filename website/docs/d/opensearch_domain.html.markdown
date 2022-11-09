@@ -24,7 +24,6 @@ The following arguments are supported:
 
 * `domain_name` – (Required) Name of the domain.
 
-
 ## Attributes Reference
 
 The following attributes are exported:
@@ -40,9 +39,9 @@ The following attributes are exported:
     * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
         * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
         * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
-            * `value` - An integer specifying the value of the duration of an Auto-Tune maintenance window.
-            * `unit` - Unit of time specifying the duration of an Auto-Tune maintenance window.
-        * `cron_expression_for_recurrence` - A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
+            * `value` - Duration of an Auto-Tune maintenance window.
+            * `unit` - Unit of time.
+        * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
 * `cluster_config` - Cluster configuration of the domain.
     * `cold_storage_options` - Configuration block containing cold storage configuration.
@@ -55,7 +54,7 @@ The following attributes are exported:
     * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
     * `zone_awareness_config` - Configuration block containing zone awareness settings.
         * `availability_zone_count` - Number of availability zones used.
-    * `warm_enabled` - Indicates warm storage is enabled.
+    * `warm_enabled` - Warm storage is enabled.
     * `warm_count` - Number of warm nodes in the cluster.
     * `warm_type` - Instance type for the OpenSearch cluster's warm nodes.
 * `cognito_options` - Domain Amazon Cognito Authentication options for Kibana.
@@ -68,6 +67,7 @@ The following attributes are exported:
 * `domain_id` – Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
     * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
+    * `throughput` - The throughput (in MiB/s) of the EBS volumes attached to data nodes.
     * `volume_type` - Type of EBS volumes attached to data nodes.
     * `volume_size` - Size of EBS volumes attached to data nodes (in GB).
     * `iops` - Baseline input/output (I/O) performance of EBS volumes attached to data nodes.

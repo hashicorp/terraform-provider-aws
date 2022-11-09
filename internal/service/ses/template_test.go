@@ -22,10 +22,10 @@ func TestAccSESTemplate_basic(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateConfig_resourceBasic1(rName),
@@ -47,16 +47,15 @@ func TestAccSESTemplate_basic(t *testing.T) {
 }
 
 func TestAccSESTemplate_update(t *testing.T) {
-	acctest.Skip(t, "Skip due to SES.UpdateTemplate eventual consistency issues")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_template.test"
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateConfig_resourceBasic1(rName),
@@ -104,10 +103,10 @@ func TestAccSESTemplate_disappears(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateConfig_resourceBasic1(rName),

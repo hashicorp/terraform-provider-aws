@@ -16,9 +16,9 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_basic(rName),
@@ -55,9 +55,9 @@ func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_launchTemplate(rName),

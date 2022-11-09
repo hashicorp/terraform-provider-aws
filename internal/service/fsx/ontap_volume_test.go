@@ -22,10 +22,10 @@ func TestAccFSxOntapVolume_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName),
@@ -60,10 +60,10 @@ func TestAccFSxOntapVolume_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName),
@@ -84,10 +84,10 @@ func TestAccFSxOntapVolume_name(t *testing.T) {
 	rName2 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName),
@@ -121,10 +121,10 @@ func TestAccFSxOntapVolume_junctionPath(t *testing.T) {
 	jPath2 := "/path2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_junctionPath(rName, jPath1),
@@ -158,10 +158,10 @@ func TestAccFSxOntapVolume_securityStyle(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_securityStyle(rName, "UNIX"),
@@ -206,10 +206,10 @@ func TestAccFSxOntapVolume_size(t *testing.T) {
 	size2 := 2048
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_size(rName, size1),
@@ -243,10 +243,10 @@ func TestAccFSxOntapVolume_storageEfficiency(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_storageEfficiency(rName, true),
@@ -280,10 +280,10 @@ func TestAccFSxOntapVolume_tags(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_tags1(rName, "key1", "value1"),
@@ -327,10 +327,10 @@ func TestAccFSxOntapVolume_tieringPolicy(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOntapVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOntapVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_tieringPolicyNoCooling(rName, "NONE"),

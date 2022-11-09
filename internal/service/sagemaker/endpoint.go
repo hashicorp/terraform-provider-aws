@@ -189,7 +189,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] SageMaker Endpoint create config: %#v", *createOpts)
 	_, err := conn.CreateEndpoint(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Endpoint: %s", err)
+		return fmt.Errorf("creating SageMaker Endpoint: %s", err)
 	}
 
 	d.SetId(name)
@@ -199,7 +199,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := conn.WaitUntilEndpointInService(describeInput); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be in service: %w", name, err)
+		return fmt.Errorf("waiting for SageMaker Endpoint (%s) to be in service: %w", name, err)
 	}
 
 	return resourceEndpointRead(d, meta)
@@ -219,7 +219,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Endpoint (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Endpoint (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", endpoint.EndpointName)
@@ -227,23 +227,23 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", endpoint.EndpointArn)
 
 	if err := d.Set("deployment_config", flattenEndpointDeploymentConfig(endpoint.LastDeploymentConfig)); err != nil {
-		return fmt.Errorf("error setting deployment_config for SageMaker Endpoint (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting deployment_config for SageMaker Endpoint (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, aws.StringValue(endpoint.EndpointArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -256,7 +256,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Endpoint (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Endpoint (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -272,7 +272,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[INFO] Modifying endpoint_config_name attribute for %s: %#v", d.Id(), modifyOpts)
 		if _, err := conn.UpdateEndpoint(modifyOpts); err != nil {
-			return fmt.Errorf("error updating SageMaker Endpoint (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Endpoint (%s): %w", d.Id(), err)
 		}
 
 		describeInput := &sagemaker.DescribeEndpointInput{
@@ -281,7 +281,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := conn.WaitUntilEndpointInService(describeInput)
 		if err != nil {
-			return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be in service: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker Endpoint (%s) to be in service: %w", d.Id(), err)
 		}
 	}
 
@@ -303,7 +303,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Endpoint (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Endpoint (%s): %w", d.Id(), err)
 	}
 
 	describeInput := &sagemaker.DescribeEndpointInput{
@@ -311,7 +311,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := conn.WaitUntilEndpointDeleted(describeInput); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Endpoint (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
@@ -493,7 +493,6 @@ func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []interfa
 	alarms := make([]*sagemaker.Alarm, 0, len(configured))
 
 	for _, alarmRaw := range configured {
-
 		m := alarmRaw.(map[string]interface{})
 
 		alarm := &sagemaker.Alarm{

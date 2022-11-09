@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -23,7 +22,6 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_private_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
@@ -37,9 +35,9 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckHostedPrivateVirtualInterfaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
@@ -82,7 +80,6 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_private_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
@@ -96,9 +93,9 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckHostedPrivateVirtualInterfaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedPrivateVirtualInterfaceConfig_accepterTags(connectionId, rName, bgpAsn, vlan),

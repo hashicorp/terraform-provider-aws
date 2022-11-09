@@ -35,13 +35,13 @@ resource "aws_appstream_image_builder" "test_fleet" {
 
 The following arguments are required:
 
-* `instance_type` - (Required) The instance type to use when launching the image builder.
+* `instance_type` - (Required) Instance type to use when launching the image builder.
 * `name` - (Required) Unique name for the image builder.
 
 The following arguments are optional:
 
 * `access_endpoint` - (Optional) Set of interface VPC endpoint (interface endpoint) objects. Maximum of 4. See below.
-* `appstream_agent_version` - (Optional) The version of the AppStream 2.0 agent to use for this image builder.
+* `appstream_agent_version` - (Optional) Version of the AppStream 2.0 agent to use for this image builder.
 * `description` - (Optional) Description to display.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream image builder.
 * `domain_join_info` - (Optional) Configuration block for the name of the directory and organizational unit (OU) to use to join the image builder to a Microsoft Active Directory domain. See below.
@@ -50,7 +50,7 @@ The following arguments are optional:
 * `image_arn` - (Optional, Required if `image_name` not provided) ARN of the public, private, or shared image to use.
 * `image_name` - (Optional, Required if `image_arn` not provided) Name of the image used to create the image builder.
 * `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
-* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `access_endpoint`
 
@@ -79,9 +79,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the appstream image builder.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
-* `id` - The name of the image builder.
+* `id` - Name of the image builder.
 * `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

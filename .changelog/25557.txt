@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_model: Add `repository_auth_config` arguments in support of [Private Docker Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html)
+```

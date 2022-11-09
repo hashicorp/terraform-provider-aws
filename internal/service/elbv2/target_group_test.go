@@ -85,10 +85,10 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_backwardsCompatibility(rName),
@@ -128,10 +128,10 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolVersion(rName),
@@ -173,10 +173,10 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcHealthCheck(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_grpcProtocolVersion(rName),
@@ -197,10 +197,10 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcUpdate(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
@@ -228,10 +228,10 @@ func TestAccELBV2TargetGroup_HealthCheck_tcp(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCPIntervalUpdated(rName),
@@ -254,16 +254,50 @@ func TestAccELBV2TargetGroup_HealthCheck_tcp(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_ipAddressType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "ip"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_tls(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolTLS(rName),
@@ -282,10 +316,10 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/healthz", 2),
@@ -341,10 +375,10 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 0),
@@ -374,10 +408,10 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
@@ -419,10 +453,10 @@ func TestAccELBV2TargetGroup_udp(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basicUdp(rName),
@@ -451,10 +485,10 @@ func TestAccELBV2TargetGroup_ForceNew_name(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rNameBefore, 200),
@@ -480,10 +514,10 @@ func TestAccELBV2TargetGroup_ForceNew_port(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
@@ -509,10 +543,10 @@ func TestAccELBV2TargetGroup_ForceNew_protocol(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
@@ -538,10 +572,10 @@ func TestAccELBV2TargetGroup_ForceNew_vpc(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
@@ -565,10 +599,10 @@ func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albDefaults(rName),
@@ -626,10 +660,10 @@ protocol = "TCP"
     `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_nlbDefaults(rName, healthCheckInvalid1),
@@ -675,10 +709,10 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
@@ -710,10 +744,10 @@ func TestAccELBV2TargetGroup_Name_generated(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_generatedName(rName),
@@ -731,10 +765,10 @@ func TestAccELBV2TargetGroup_Name_prefix(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_namePrefix(rName),
@@ -753,10 +787,10 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCP(rName),
@@ -826,10 +860,10 @@ func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *t
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCP(rName),
@@ -855,10 +889,10 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCP(rName),
@@ -884,10 +918,10 @@ func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_preserveClientIP(rName, true),
@@ -913,10 +947,10 @@ func TestAccELBV2TargetGroup_Geneve_basic(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolGeneve(rName),
@@ -924,6 +958,7 @@ func TestAccELBV2TargetGroup_Geneve_basic(t *testing.T) {
 					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -947,10 +982,10 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolGeneve(rName),
@@ -981,16 +1016,110 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip_proto"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip_proto"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "rebalance"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "rebalance"),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "rebalance"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "no_rebalance"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "no_rebalance"),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "no_rebalance"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "HTTP"),
@@ -1011,10 +1140,10 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "TCP"),
@@ -1051,10 +1180,10 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "source_ip", true),
@@ -1081,10 +1210,10 @@ func TestAccELBV2TargetGroup_Stickiness_invalidNLB(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", true),
@@ -1112,10 +1241,10 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "lb_cookie", true),
@@ -1147,10 +1276,10 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", false),
@@ -1198,10 +1327,10 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_tags1(rName, "key1", "value1"),
@@ -1238,10 +1367,10 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_appStickiness(targetGroupName, false, false),
@@ -1326,10 +1455,10 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
@@ -1391,10 +1520,10 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickiness(rName, false, false),
@@ -1477,10 +1606,10 @@ func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
@@ -1502,10 +1631,10 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
@@ -1547,10 +1676,10 @@ func TestAccELBV2TargetGroup_ALBAlias_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
@@ -1576,10 +1705,10 @@ func TestAccELBV2TargetGroup_ALBAlias_changePortForceNew(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
@@ -1605,10 +1734,10 @@ func TestAccELBV2TargetGroup_ALBAlias_changeProtocolForceNew(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
@@ -1634,10 +1763,10 @@ func TestAccELBV2TargetGroup_ALBAlias_changeVPCForceNew(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
@@ -1661,10 +1790,10 @@ func TestAccELBV2TargetGroup_ALBAlias_generatedName(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albGeneratedName(rName),
@@ -1682,10 +1811,10 @@ func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLambda(rName),
@@ -1717,10 +1846,10 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
@@ -1766,10 +1895,10 @@ func TestAccELBV2TargetGroup_ALBAlias_missingPortProtocolVPC(t *testing.T) {
 	rName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_albMissingPort(rName),
@@ -1793,10 +1922,10 @@ func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albNamePrefix(rName),
@@ -1815,10 +1944,10 @@ func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 30),
@@ -1844,10 +1973,10 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
@@ -1876,10 +2005,10 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
@@ -1939,10 +2068,10 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, false, ""),
@@ -1981,10 +2110,10 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckATargetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albStickiness(rName, false, false),
@@ -2164,8 +2293,64 @@ resource "aws_lb_target_group" "test" {
     port     = 80
     protocol = "HTTP"
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
+}
+
+func testAccTargetGroupConfig_protocolGeneveSticky(rName, stickinessType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+  stickiness {
+    enabled = true
+    type    = %[2]q
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, stickinessType)
+}
+
+func testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, failoverType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+  target_failover {
+    on_deregistration = %[2]q
+    on_unhealthy      = %[2]q
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, failoverType)
 }
 
 func testAccTargetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -2338,6 +2523,40 @@ resource "aws_lb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_ipAddressType(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "TLS"
+  vpc_id   = aws_vpc.test.id
+
+  target_type     = "ip"
+  ip_address_type = "ipv6"
+
+  health_check {
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
 
   tags = {
     Name = %[1]q
@@ -3145,7 +3364,7 @@ func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.Te
 		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
 		}
 
 		if targetGroup == nil {

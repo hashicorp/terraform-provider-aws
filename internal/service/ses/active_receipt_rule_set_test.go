@@ -23,7 +23,8 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 			"disappears": testAccActiveReceiptRuleSet_disappears,
 		},
 		"DataSource": {
-			"basic": testAccActiveReceiptRuleSetDataSource_basic,
+			"basic":           testAccActiveReceiptRuleSetDataSource_basic,
+			"noActiveRuleSet": testAccActiveReceiptRuleSetDataSource_noActiveRuleSet,
 		},
 	}
 
@@ -50,9 +51,9 @@ func testAccActiveReceiptRuleSet_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckActiveReceiptRuleSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActiveReceiptRuleSetConfig_basic(rName),
@@ -75,9 +76,9 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckActiveReceiptRuleSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActiveReceiptRuleSetConfig_basic(rName),
@@ -107,11 +108,9 @@ func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
 		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) == rs.Primary.ID) {
 			return fmt.Errorf("Active receipt rule set still exists")
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {
