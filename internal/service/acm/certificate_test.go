@@ -1466,9 +1466,9 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	key1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(key1, "1.2.3.4")
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key1, "1.2.3.4")
 	key2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(key2, "5.6.7.8")
+	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key2, "5.6.7.8")
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1791,7 +1791,7 @@ resource "aws_acm_certificate" "test" {
 
 func testAccCertificateConfig_privateKeyNoChain(commonName string) string {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
