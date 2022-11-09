@@ -75,3 +75,55 @@ func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.IVS, id st
 
 	return nil, err
 }
+
+func waitChannelCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.Channel, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusNormal},
+		Refresh:                   statusChannel(ctx, conn, id, nil),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivs.Channel); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitChannelUpdated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration, updateDetails *ivs.UpdateChannelInput) (*ivs.Channel, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{statusChangePending},
+		Target:                    []string{statusUpdated},
+		Refresh:                   statusChannel(ctx, conn, id, updateDetails),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivs.Channel); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitChannelDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.Channel, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{statusNormal},
+		Target:  []string{},
+		Refresh: statusChannel(ctx, conn, id, nil),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivs.Channel); ok {
+		return out, err
+	}
+
+	return nil, err
+}
