@@ -252,21 +252,19 @@ func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 // See https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html#signature-verification.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: root_certificate_pem = "%[1]s"
-func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(keyPem string) string {
+func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.T, keyPem string) string {
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes)
@@ -274,8 +272,7 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(keyPem stri
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	certificate := &x509.Certificate{
@@ -297,8 +294,7 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(keyPem stri
 	certificateBytes, err := x509.CreateCertificate(rand.Reader, certificate, certificate, &key.PublicKey, key)
 
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	certificateBlock := &pem.Block{
