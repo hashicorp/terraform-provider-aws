@@ -1,17 +1,18 @@
 package route53resolver
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRuleGroupAssociationRead,
+		ReadWithoutTimeout: dataSourceRuleGroupAssociationRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -69,24 +70,16 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 	}
 }
 
-func dataSourceRuleGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	input := &route53resolver.GetFirewallRuleGroupAssociationInput{
-		FirewallRuleGroupAssociationId: aws.String(d.Get("firewall_rule_group_association_id").(string)),
-	}
-
-	output, err := conn.GetFirewallRuleGroupAssociation(input)
+	id := d.Get("firewall_rule_group_association_id").(string)
+	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("error getting Route53 Firewall Rule Group Association: %w", err)
+		return diag.Errorf("reading Route53 Resolver Firewall Rule Group Association (%s): %s", id, err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("no  Route53 Firewall Rule Group Association found matching criteria; try different search")
-	}
-
-	ruleGroupAssociation := output.FirewallRuleGroupAssociation
 	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
 	d.Set("arn", ruleGroupAssociation.Arn)
 	d.Set("creation_time", ruleGroupAssociation.CreationTime)
