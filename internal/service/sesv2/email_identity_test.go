@@ -185,10 +185,10 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
 
-	key1 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(2048)))
+	key1 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key2 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(2048)))
+	key2 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
