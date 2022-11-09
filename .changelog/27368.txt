@@ -9,3 +9,11 @@ resource/aws_appmesh_virtual_router: Allow for multiple `listener` blocks
 ```release-note:enhancement
 resource/aws_appmesh_virtual_gateway: Allow for multiple `listener` blocks
 ```
+
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: Add `port` to `target` block, which is required when target Virtual Nodes or Virtual Routers have multiple listeners
+```
+
+```release-note:enhancement
+resource/aws_appmesh_route: Add `port` to `weighted_target` block, which is required when target Virtual Nodes have multiple listeners
+```
