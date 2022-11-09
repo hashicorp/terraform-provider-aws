@@ -7,7 +7,10 @@ BREAKING CHANGES:
 FEATURES:
 
 * **New Data Source:** `aws_dynamodb_table_item` ([#27504](https://github.com/hashicorp/terraform-provider-aws/issues/27504))
+* **New Data Source:** `aws_route53_resolver_firewall_config` ([#25496](https://github.com/hashicorp/terraform-provider-aws/issues/25496))
+* **New Data Source:** `aws_route53_resolver_firewall_domain_list` ([#25509](https://github.com/hashicorp/terraform-provider-aws/issues/25509))
 * **New Resource:** `aws_ivs_playback_key_pair` ([#27678](https://github.com/hashicorp/terraform-provider-aws/issues/27678))
+* **New Resource:** `aws_ivs_recording_configuration` ([#27718](https://github.com/hashicorp/terraform-provider-aws/issues/27718))
 * **New Resource:** `aws_lightsail_lb_https_redirection_policy` ([#27679](https://github.com/hashicorp/terraform-provider-aws/issues/27679))
 * **New Resource:** `aws_medialive_channel` ([#26810](https://github.com/hashicorp/terraform-provider-aws/issues/26810))
 * **New Resource:** `aws_redshift_endpoint_authorization` ([#27654](https://github.com/hashicorp/terraform-provider-aws/issues/27654))
