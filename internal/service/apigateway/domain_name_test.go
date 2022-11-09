@@ -167,7 +167,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, domainWildcard)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
