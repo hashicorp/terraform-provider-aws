@@ -17,8 +17,8 @@ import (
 )
 
 func TestAccELBBackendServerPolicy_basic(t *testing.T) {
-	privateKey1 := acctest.TLSRSAPrivateKeyPEM(2048)
-	privateKey2 := acctest.TLSRSAPrivateKeyPEM(2048)
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	publicKey1 := acctest.TLSRSAPublicKeyPEM(privateKey1)
 	publicKey2 := acctest.TLSRSAPublicKeyPEM(privateKey2)
 	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey1, "example.com")

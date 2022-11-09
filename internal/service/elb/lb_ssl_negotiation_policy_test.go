@@ -21,7 +21,7 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,7 +47,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
