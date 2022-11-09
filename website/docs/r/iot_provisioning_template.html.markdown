@@ -86,7 +86,7 @@ The following arguments are supported:
 * `enabled` - (Optional) True to enable the fleet provisioning template, otherwise false.
 * `pre_provisioning_hook` - (Optional) Creates a pre-provisioning hook template. Details below.
 * `provisioning_role_arn` - (Required) The role ARN for the role associated with the fleet provisioning template. This IoT role grants permission to provision a device.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `template_body` - (Required) The JSON formatted contents of the fleet provisioning template.
 
 ### pre_provisioning_hook
@@ -102,7 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN that identifies the provisioning template.
 * `default_version_id` - The default version of the fleet provisioning template.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

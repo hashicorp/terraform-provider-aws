@@ -3,8 +3,8 @@ package codebuild
 import "time"
 
 const (
-	ResReportGroup = "Report Group"
-	ResWebhook     = "Webhook"
+	ResNameReportGroup = "Report Group"
+	ResNameWebhook     = "Webhook"
 )
 
 const (

@@ -20,10 +20,10 @@ func TestAccCodeCommitApprovalRuleTemplate_basic(t *testing.T) {
 	resourceName := "aws_codecommit_approval_rule_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApprovalRuleTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
@@ -52,10 +52,10 @@ func TestAccCodeCommitApprovalRuleTemplate_disappears(t *testing.T) {
 	resourceName := "aws_codecommit_approval_rule_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApprovalRuleTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
@@ -74,10 +74,10 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 	resourceName := "aws_codecommit_approval_rule_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApprovalRuleTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
@@ -110,10 +110,10 @@ func TestAccCodeCommitApprovalRuleTemplate_updateName(t *testing.T) {
 	resourceName := "aws_codecommit_approval_rule_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApprovalRuleTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
@@ -164,11 +164,7 @@ func testAccCheckApprovalRuleTemplateExists(name string) resource.TestCheckFunc 
 			ApprovalRuleTemplateName: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

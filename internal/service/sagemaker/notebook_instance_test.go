@@ -8,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
@@ -27,33 +27,76 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotebookInstanceExists(resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
+					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
-					resource.TestCheckResourceAttr(resourceName, "volume_size", "5"),
-					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
-					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttr(resourceName, "volume_size", "5"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerNotebookInstance_imds(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_notebook_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNotebookInstanceConfig_imds(rName, "2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNotebookInstanceConfig_imds(rName, "1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", "1"),
+				),
 			},
 		},
 	})
@@ -69,10 +112,10 @@ func TestAccSageMakerNotebookInstance_update(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_basic(rName),
@@ -81,7 +124,6 @@ func TestAccSageMakerNotebookInstance_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
 				),
 			},
-
 			{
 				Config: testAccNotebookInstanceConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -106,11 +148,12 @@ func TestAccSageMakerNotebookInstance_volumeSize(t *testing.T) {
 	var notebook1, notebook2, notebook3 sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_basic(rName),
@@ -155,10 +198,10 @@ func TestAccSageMakerNotebookInstance_lifecycleName(t *testing.T) {
 	sagemakerLifecycleConfigResourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_lifecycleName(rName),
@@ -200,10 +243,10 @@ func TestAccSageMakerNotebookInstance_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_tags1(rName, "key1", "value1"),
@@ -249,10 +292,10 @@ func TestAccSageMakerNotebookInstance_kms(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_kms(rName),
@@ -280,10 +323,10 @@ func TestAccSageMakerNotebookInstance_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_basic(rName),
@@ -297,81 +340,6 @@ func TestAccSageMakerNotebookInstance_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckNotebookInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_notebook_instance" {
-			continue
-		}
-
-		describeNotebookInput := &sagemaker.DescribeNotebookInstanceInput{
-			NotebookInstanceName: aws.String(rs.Primary.ID),
-		}
-		notebookInstance, err := conn.DescribeNotebookInstance(describeNotebookInput)
-
-		if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "RecordNotFound") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading SageMaker Notebook Instance (%s): %w", rs.Primary.ID, err)
-		}
-
-		if aws.StringValue(notebookInstance.NotebookInstanceName) == rs.Primary.ID {
-			return fmt.Errorf("sagemaker notebook instance %q still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckNotebookInstanceExists(n string, notebook *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No sagmaker Notebook Instance ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		opts := &sagemaker.DescribeNotebookInstanceInput{
-			NotebookInstanceName: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeNotebookInstance(opts)
-		if err != nil {
-			return err
-		}
-
-		*notebook = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("SageMaker Notebook Instance was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckNotebookInstanceRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("SageMaker Notebook Instance was not recreated")
-		}
-
-		return nil
-	}
-}
-
 func TestAccSageMakerNotebookInstance_Root_access(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -382,10 +350,10 @@ func TestAccSageMakerNotebookInstance_Root_access(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_rootAccess(rName, "Disabled"),
@@ -420,10 +388,10 @@ func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v1"),
@@ -458,10 +426,10 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_directInternetAccess(rName, "Disabled"),
@@ -500,11 +468,12 @@ func TestAccSageMakerNotebookInstance_DefaultCode_repository(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_defaultCodeRepository(rName, "https://github.com/hashicorp/terraform-provider-aws.git"),
@@ -544,11 +513,12 @@ func TestAccSageMakerNotebookInstance_AdditionalCode_repositories(t *testing.T) 
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_additionalCodeRepository1(rName, "https://github.com/hashicorp/terraform-provider-aws.git"),
@@ -599,11 +569,12 @@ func TestAccSageMakerNotebookInstance_DefaultCodeRepository_sageMakerRepo(t *tes
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var resourceName = "aws_sagemaker_notebook_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNotebookInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceConfig_defaultCodeRepositoryRepo(rName),
@@ -634,6 +605,122 @@ func TestAccSageMakerNotebookInstance_DefaultCodeRepository_sageMakerRepo(t *tes
 	})
 }
 
+func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var resourceName = "aws_sagemaker_notebook_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.medium"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.large"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.large"),
+				),
+			},
+			{
+				Config: testAccNotebookInstanceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckNotebookInstanceDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_sagemaker_notebook_instance" {
+			continue
+		}
+
+		_, err := tfsagemaker.FindNotebookInstanceByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("SageMaker Notebook Instance %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckNotebookInstanceExists(n string, v *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SageMaker Notebook Instance ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+
+		output, err := tfsagemaker.FindNotebookInstanceByName(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
+			return errors.New("SageMaker Notebook Instance was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckNotebookInstanceRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
+			return errors.New("SageMaker Notebook Instance was not recreated")
+		}
+
+		return nil
+	}
+}
+
 func testAccNotebookInstanceBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -656,27 +743,27 @@ data "aws_iam_policy_document" "test" {
 }
 
 func testAccNotebookInstanceConfig_basic(rName string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
   instance_type = "ml.t2.medium"
 }
-`, rName)
+`, rName))
 }
 
 func testAccNotebookInstanceConfig_update(rName string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
   instance_type = "ml.m4.xlarge"
 }
-`, rName)
+`, rName))
 }
 
 func testAccNotebookInstanceConfig_lifecycleName(rName string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
   name = %[1]q
 }
@@ -687,11 +774,11 @@ resource "aws_sagemaker_notebook_instance" "test" {
   name                  = %[1]q
   role_arn              = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccNotebookInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
@@ -701,11 +788,11 @@ resource "aws_sagemaker_notebook_instance" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccNotebookInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
@@ -716,33 +803,32 @@ resource "aws_sagemaker_notebook_instance" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccNotebookInstanceConfig_rootAccess(rName string, rootAccess string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
   instance_type = "ml.t2.medium"
   root_access   = %[2]q
 }
-`, rName, rootAccess)
+`, rName, rootAccess))
 }
 
 func testAccNotebookInstanceConfig_platformIdentifier(rName string, platformIdentifier string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name                = %[1]q
   role_arn            = aws_iam_role.test.arn
   instance_type       = "ml.t2.medium"
   platform_identifier = %[2]q
 }
-`, rName, platformIdentifier)
+`, rName, platformIdentifier))
 }
 func testAccNotebookInstanceConfig_directInternetAccess(rName string, directInternetAccess string) string {
-	return testAccNotebookInstanceBaseConfig(rName) +
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name                   = %[1]q
   role_arn               = aws_iam_role.test.arn
@@ -776,55 +862,55 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-`, rName, directInternetAccess)
+`, rName, directInternetAccess))
 }
 
 func testAccNotebookInstanceConfig_volume(rName string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
   instance_type = "ml.t2.medium"
   volume_size   = 8
 }
-  `, rName)
+  `, rName))
 }
 
 func testAccNotebookInstanceConfig_defaultCodeRepository(rName string, defaultCodeRepository string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name                    = %[1]q
   role_arn                = aws_iam_role.test.arn
   instance_type           = "ml.t2.medium"
   default_code_repository = %[2]q
 }
-`, rName, defaultCodeRepository)
+`, rName, defaultCodeRepository))
 }
 
 func testAccNotebookInstanceConfig_additionalCodeRepository1(rName, repo1 string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name                         = %[1]q
   role_arn                     = aws_iam_role.test.arn
   instance_type                = "ml.t2.medium"
   additional_code_repositories = ["%[2]s"]
 }
-`, rName, repo1)
+`, rName, repo1))
 }
 
 func testAccNotebookInstanceConfig_additionalCodeRepository2(rName, repo1, repo2 string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "test" {
   name                         = %[1]q
   role_arn                     = aws_iam_role.test.arn
   instance_type                = "ml.t2.medium"
   additional_code_repositories = ["%[2]s", "%[3]s"]
 }
-`, rName, repo1, repo2)
+`, rName, repo1, repo2))
 }
 
 func testAccNotebookInstanceConfig_defaultCodeRepositoryRepo(rName string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
 
@@ -839,13 +925,13 @@ resource "aws_sagemaker_notebook_instance" "test" {
   instance_type           = "ml.t2.medium"
   default_code_repository = aws_sagemaker_code_repository.test.code_repository_name
 }
-`, rName)
+`, rName))
 }
 
 func testAccNotebookInstanceConfig_kms(rName string) string {
-	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %[1]s"
+  description = %[1]q
 
   policy = <<POLICY
 {
@@ -872,5 +958,29 @@ resource "aws_sagemaker_notebook_instance" "test" {
   instance_type = "ml.t2.medium"
   kms_key_id    = aws_kms_key.test.id
 }
-`, rName)
+`, rName))
+}
+
+func testAccNotebookInstanceConfig_imds(rName, version string) string {
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "test" {
+  name          = %[1]q
+  role_arn      = aws_iam_role.test.arn
+  instance_type = "ml.t2.medium"
+  instance_metadata_service_configuration {
+    minimum_instance_metadata_service_version = %[2]q
+  }
+}
+`, rName, version))
+}
+
+func testAccNotebookInstanceConfig_acceleratorType(rName, acceleratorType string) string {
+	return acctest.ConfigCompose(testAccNotebookInstanceBaseConfig(rName), fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "test" {
+  name              = %[1]q
+  role_arn          = aws_iam_role.test.arn
+  instance_type     = "ml.t2.xlarge"
+  accelerator_types = [%[2]q]
+}
+  `, rName, acceleratorType))
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -95,7 +96,6 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			input.AnomalyMonitor.MonitorSpecification = &expression
-
 		} else {
 			return diag.Errorf("If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeCustom)
 		}
@@ -128,13 +128,13 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id())
+		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResAnomalyMonitor, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
 	}
 
 	if monitor.MonitorSpecification != nil {
@@ -160,16 +160,16 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
 	}
 
 	return nil
@@ -192,7 +192,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange("tags")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalyMonitor, d.Id(), err)
 		}
 	}
 
@@ -200,7 +200,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalyMonitor, d.Id(), err)
 		}
 	}
 
@@ -208,7 +208,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := conn.UpdateAnomalyMonitorWithContext(ctx, input)
 
 		if err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResAnomalyMonitor, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalyMonitor, d.Id(), err)
 		}
 	}
 
@@ -225,7 +225,7 @@ func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionDeleting, ResAnomalyMonitor, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionDeleting, ResNameAnomalyMonitor, d.Id(), err)
 	}
 
 	return nil

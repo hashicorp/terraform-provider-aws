@@ -14,9 +14,9 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 	groupName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_basic(groupName),
@@ -38,9 +38,9 @@ func TestAccIAMGroupDataSource_users(t *testing.T) {
 	userCount := 101
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_user(groupName, userName, groupMemberShipName, userCount),
@@ -87,7 +87,7 @@ resource "aws_iam_user" "user" {
 
 resource "aws_iam_group_membership" "team" {
   name  = "%s"
-  users = aws_iam_user.user.*.name
+  users = aws_iam_user.user[*].name
   group = aws_iam_group.group.name
 }
 

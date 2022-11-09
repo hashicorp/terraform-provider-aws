@@ -55,6 +55,10 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Computed: true,

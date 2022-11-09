@@ -20,6 +20,10 @@ func DataSourceAMIIDs() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAMIIDsRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
 			"executable_users": {

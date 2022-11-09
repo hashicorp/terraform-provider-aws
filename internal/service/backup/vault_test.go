@@ -3,7 +3,10 @@ package backup_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,125 +18,193 @@ import (
 )
 
 func TestAccBackupVault_basic(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
-	rInt := sdkacctest.RandInt()
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
+				Config: testAccVaultConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "backup", fmt.Sprintf("backup-vault:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBackupVault_withKMSKey(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
-	rInt := sdkacctest.RandInt()
-	resourceName := "aws_backup_vault.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVaultConfig_kmsKey(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBackupVault_withTags(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
-	rInt := sdkacctest.RandInt()
-	resourceName := "aws_backup_vault.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVaultConfig_tags(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.up", "down"),
-					resource.TestCheckResourceAttr(resourceName, "tags.left", "right"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVaultConfig_updateTags(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "tags.up", "downdown"),
-					resource.TestCheckResourceAttr(resourceName, "tags.left", "rightright"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
-				),
-			},
-			{
-				Config: testAccVaultConfig_removeTags(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccBackupVault_disappears(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
-	rInt := sdkacctest.RandInt()
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultConfig_basic(rInt),
+				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccBackupVault_tags(t *testing.T) {
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_vault.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVaultConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccVaultConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVaultConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBackupVault_withKMSKey(t *testing.T) {
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_vault.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVaultConfig_kmsKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_vault.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVaultConfig_forceDestroyEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_vault.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+				),
+			},
+			{
+				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					testAccCheckRunDynamoDBTableBackupJob(rName),
+				),
+			},
+			{
+				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
+				),
 			},
 		},
 	})
@@ -162,7 +233,7 @@ func testAccCheckVaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVaultExists(name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultExists(name string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -181,7 +252,47 @@ func testAccCheckVaultExists(name string, vault *backup.DescribeBackupVaultOutpu
 			return err
 		}
 
-		*vault = *output
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckRunDynamoDBTableBackupJob(rName string) resource.TestCheckFunc { // nosemgrep:ci.backup-in-func-name
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := client.BackupConn
+
+		iamRoleARN := arn.ARN{
+			Partition: client.Partition,
+			Service:   "iam",
+			AccountID: client.AccountID,
+			Resource:  "role/service-role/AWSBackupDefaultServiceRole",
+		}.String()
+		resourceARN := arn.ARN{
+			Partition: client.Partition,
+			Service:   "dynamodb",
+			Region:    client.Region,
+			AccountID: client.AccountID,
+			Resource:  fmt.Sprintf("table/%s", rName),
+		}.String()
+		output, err := conn.StartBackupJob(&backup.StartBackupJobInput{
+			BackupVaultName: aws.String(rName),
+			IamRoleArn:      aws.String(iamRoleARN),
+			ResourceArn:     aws.String(resourceARN),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error starting Backup Job: %w", err)
+		}
+
+		jobID := aws.StringValue(output.BackupJobId)
+
+		_, err = tfbackup.WaitJobCompleted(conn, jobID, 10*time.Minute)
+
+		if err != nil {
+			return fmt.Errorf("error waiting for Backup Job (%s) complete: %w", jobID, err)
+		}
 
 		return nil
 	}
@@ -203,65 +314,81 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccVaultConfig_basic(randInt int) string {
+func testAccVaultConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = %[1]q
 }
-`, randInt)
+`, rName)
 }
 
-func testAccVaultConfig_kmsKey(randInt int) string {
+func testAccVaultConfig_kmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Test KMS Key for AWS Backup Vault"
+  description             = %[1]q
   deletion_window_in_days = 10
 }
 
 resource "aws_backup_vault" "test" {
-  name        = "tf_acc_test_backup_vault_%d"
+  name        = %[1]q
   kms_key_arn = aws_kms_key.test.arn
 }
-`, randInt)
+`, rName)
 }
 
-func testAccVaultConfig_tags(randInt int) string {
+func testAccVaultConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = %[1]q
 
   tags = {
-    up   = "down"
-    left = "right"
+    %[2]q = %[3]q
   }
 }
-`, randInt)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccVaultConfig_updateTags(randInt int) string {
+func testAccVaultConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = %[1]q
 
   tags = {
-    up   = "downdown"
-    left = "rightright"
-    foo  = "bar"
-    fizz = "buzz"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, randInt)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVaultConfig_removeTags(randInt int) string {
+func testAccVaultConfig_forceDestroyEmpty(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-  name = "tf_acc_test_backup_vault_%d"
+  name = %[1]q
 
-  tags = {
-    foo  = "bar"
-    fizz = "buzz"
+  force_destroy = true
+}
+`, rName)
+}
+
+func testAccVaultConfig_forceDestroyWithDynamoDBTable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
   }
 }
-`, randInt)
+`, rName)
 }

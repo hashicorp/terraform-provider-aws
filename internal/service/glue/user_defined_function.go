@@ -148,7 +148,6 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 	out, err := conn.GetUserDefinedFunction(input)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue User Defined Function (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -213,7 +212,6 @@ func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err
 }
 
 func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
-
 	udf := &glue.UserDefinedFunctionInput{
 		ClassName:    aws.String(d.Get("class_name").(string)),
 		FunctionName: aws.String(d.Get("name").(string)),

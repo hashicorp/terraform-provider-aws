@@ -158,9 +158,24 @@ func ResourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ingress_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"is_publicly_accessible": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
 						"egress_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -177,6 +192,25 @@ func ResourceService() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+
+			"observability_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"observability_configuration_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"observability_enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
 						},
 					},
 				},
@@ -351,7 +385,7 @@ func ResourceService() *schema.Resource {
 									"image_identifier": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([0-9]{12}.dkr.ecr.[a-z\-]+-[0-9]{1}.amazonaws.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
 									},
 									"image_repository_type": {
 										Type:         schema.TypeString,
@@ -411,6 +445,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("observability_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(v.([]interface{}))
 	}
 
 	var output *apprunner.CreateServiceOutput
@@ -515,6 +553,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting network_configuration: %w", err))
 	}
 
+	if err := d.Set("observability_configuration", flattenServiceObservabilityConfiguration(service.ObservabilityConfiguration)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting observability_configuration: %w", err))
+	}
+
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
 	}
@@ -546,6 +588,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"auto_scaling_configuration_arn",
 		"instance_configuration",
 		"network_configuration",
+		"observability_configuration",
 		"source_configuration",
 	) {
 		input := &apprunner.UpdateServiceInput{
@@ -562,6 +605,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("network_configuration") {
 			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		}
+
+		if d.HasChange("observability_configuration") {
+			input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(d.Get("observability_configuration").([]interface{}))
 		}
 
 		if d.HasChange("source_configuration") {
@@ -719,8 +766,36 @@ func expandNetworkConfiguration(l []interface{}) *apprunner.NetworkConfiguration
 
 	result := &apprunner.NetworkConfiguration{}
 
+	if v, ok := tfMap["ingress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		result.IngressConfiguration = expandNetworkIngressConfiguration(v)
+	}
+
 	if v, ok := tfMap["egress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
+	}
+
+	return result
+}
+
+func expandServiceObservabilityConfiguration(l []interface{}) *apprunner.ServiceObservabilityConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &apprunner.ServiceObservabilityConfiguration{}
+
+	if v, ok := tfMap["observability_configuration_arn"].(string); ok {
+		result.ObservabilityConfigurationArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["observability_enabled"].(bool); ok {
+		result.ObservabilityEnabled = aws.Bool(v)
 	}
 
 	return result
@@ -777,6 +852,26 @@ func expandServiceAuthenticationConfiguration(l []interface{}) *apprunner.Authen
 
 	if v, ok := tfMap["connection_arn"].(string); ok && v != "" {
 		result.ConnectionArn = aws.String(v)
+	}
+
+	return result
+}
+
+func expandNetworkIngressConfiguration(l []interface{}) *apprunner.IngressConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &apprunner.IngressConfiguration{}
+
+	if v, ok := tfMap["is_publicly_accessible"].(bool); ok {
+		result.IsPubliclyAccessible = aws.Bool(v)
 	}
 
 	return result
@@ -1023,7 +1118,20 @@ func flattenNetworkConfiguration(config *apprunner.NetworkConfiguration) []inter
 	}
 
 	m := map[string]interface{}{
-		"egress_configuration": flattenNetworkEgressConfiguration(config.EgressConfiguration),
+		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
+		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkIngressConfiguration(config *apprunner.IngressConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"is_publicly_accessible": aws.BoolValue(config.IsPubliclyAccessible),
 	}
 
 	return []interface{}{m}
@@ -1037,6 +1145,19 @@ func flattenNetworkEgressConfiguration(config *apprunner.EgressConfiguration) []
 	m := map[string]interface{}{
 		"egress_type":       aws.StringValue(config.EgressType),
 		"vpc_connector_arn": aws.StringValue(config.VpcConnectorArn),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenServiceObservabilityConfiguration(config *apprunner.ServiceObservabilityConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"observability_configuration_arn": aws.StringValue(config.ObservabilityConfigurationArn),
+		"observability_enabled":           aws.BoolValue(config.ObservabilityEnabled),
 	}
 
 	return []interface{}{m}

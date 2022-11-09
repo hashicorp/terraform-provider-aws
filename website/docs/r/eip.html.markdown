@@ -103,9 +103,11 @@ The following arguments are supported:
 * `instance` - (Optional) EC2 instance ID.
 * `network_border_group` - (Optional) Location from which the IP address is advertised. Use this parameter to limit the address to this location.
 * `network_interface` - (Optional) Network interface ID to associate with.
-* `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`. This option is only available for VPC EIPs.
-* `tags` - (Optional) Map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`.
+  This option is only available for VPC EIPs.
+* `tags` - (Optional) Map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Boolean if the EIP is in a VPC or not.
+  Defaults to `true` unless the region supports EC2-Classic.
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID, but not both. Including both will **not** return an error from the AWS API, but will have undefined behavior. See the relevant [AssociateAddress API Call][1] for more information.
 
@@ -120,23 +122,23 @@ In addition to all arguments above, the following attributes are exported:
 * `association_id` - ID representing the association of the address with an instance in a VPC.
 * `carrier_ip` - Carrier IP address.
 * `customer_owned_ip` - Customer owned IP.
-* `domain` - Indicates if this EIP is for use in VPC (`vpc`) or EC2 Classic (`standard`).
+* `domain` - Indicates if this EIP is for use in VPC (`vpc`) or EC2-Classic (`standard`).
 * `id` - Contains the EIP allocation ID.
 * `private_dns` - The Private DNS associated with the Elastic IP address (if in VPC).
 * `private_ip` - Contains the private IP address (if in VPC).
 * `public_dns` - Public DNS associated with the Elastic IP address.
 * `public_ip` - Contains the public IP address.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ~> **Note:** The resource computes the `public_dns` and `private_dns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
 
 ## Timeouts
 
-`aws_eip` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `15 minutes`) How long to wait querying for information about EIPs.
-- `update` - (Default `5 minutes`) How long to wait for an EIP to be updated.
-- `delete` - (Default `3 minutes`) How long to wait for an EIP to be deleted.
+- `read` - (Default `15m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -146,7 +148,7 @@ EIPs in a VPC can be imported using their Allocation ID, e.g.,
 $ terraform import aws_eip.bar eipalloc-00a10e96
 ```
 
-EIPs in EC2 Classic can be imported using their Public IP, e.g.,
+EIPs in EC2-Classic can be imported using their Public IP, e.g.,
 
 ```
 $ terraform import aws_eip.bar 52.0.0.0

@@ -22,13 +22,13 @@ data "aws_backup_plan" "example" {
 
 The following arguments are supported:
 
-* `plan_id` - (Required) The backup plan ID.
+* `plan_id` - (Required) Backup plan ID.
 
 ## Attributes Reference
 
 In addition to the arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the backup plan.
-* `name` - The display name of a backup plan.
+* `arn` - ARN of the backup plan.
+* `name` - Display name of a backup plan.
 * `tags` - Metadata that you can assign to help organize the plans you create.
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.

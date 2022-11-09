@@ -86,6 +86,18 @@ const (
 )
 
 const (
+	managedPrefixListAddressFamilyIPv4 = "IPv4"
+	managedPrefixListAddressFamilyIPv6 = "IPv6"
+)
+
+func managedPrefixListAddressFamily_Values() []string {
+	return []string{
+		managedPrefixListAddressFamilyIPv4,
+		managedPrefixListAddressFamilyIPv6,
+	}
+}
+
+const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
 	vpnTunnelOptionsDPDTimeoutActionRestart = "restart"
@@ -108,6 +120,18 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 	return []string{
 		vpnTunnelOptionsIKEVersion1,
 		vpnTunnelOptionsIKEVersion2,
+	}
+}
+
+const (
+	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
+	vpnTunnelCloudWatchLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogOutputFormatText,
 	}
 }
 
@@ -236,4 +260,28 @@ func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
 	}
 
 	return slice
+}
+
+const (
+	OutsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
+	OutsideIPAddressTypePublicIPv4  = "PublicIpv4"
+)
+
+func outsideIPAddressType_Values() []string {
+	return []string{
+		OutsideIPAddressTypePrivateIPv4,
+		OutsideIPAddressTypePublicIPv4,
+	}
+}
+
+const (
+	securityGroupRuleTypeEgress  = "egress"
+	securityGroupRuleTypeIngress = "ingress"
+)
+
+func securityGroupRuleType_Values() []string {
+	return []string{
+		securityGroupRuleTypeEgress,
+		securityGroupRuleTypeIngress,
+	}
 }

@@ -36,7 +36,6 @@ data "aws_cloudfront_origin_access_identities" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-
 * `iam_arns` - Set of ARNs of the matched origin access identities.
 * `ids` - Set of ids of the matched origin access identities.
 * `s3_canonical_user_ids` - Set of S3 canonical user IDs of the matched origin access identities.

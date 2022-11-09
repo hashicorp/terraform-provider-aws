@@ -61,13 +61,13 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating API Gateway v2 deployment: %s", req)
 	resp, err := conn.CreateDeployment(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 deployment: %s", err)
+		return fmt.Errorf("creating API Gateway v2 deployment: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentId))
 
 	if _, err := WaitDeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
-		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) creation: %s", d.Id(), err)
+		return fmt.Errorf("waiting for API Gateway v2 deployment (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceDeploymentRead(d, meta)
@@ -83,7 +83,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 deployment: %s", err)
+		return fmt.Errorf("reading API Gateway v2 deployment: %s", err)
 	}
 
 	output := outputRaw.(*apigatewayv2.GetDeploymentOutput)
@@ -107,11 +107,11 @@ func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating API Gateway v2 deployment: %s", req)
 	_, err := conn.UpdateDeployment(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 deployment: %s", err)
+		return fmt.Errorf("updating API Gateway v2 deployment: %s", err)
 	}
 
 	if _, err := WaitDeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
-		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) update: %s", d.Id(), err)
+		return fmt.Errorf("waiting for API Gateway v2 deployment (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceDeploymentRead(d, meta)
@@ -129,7 +129,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 deployment: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 deployment: %s", err)
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceDeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/deployment-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/deployment-id'", d.Id())
 	}
 
 	d.SetId(parts[1])

@@ -27,7 +27,6 @@ resource "aws_pinpoint_app" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -37,7 +36,7 @@ The following arguments are supported:
 * `campaign_hook` - (Optional) Specifies settings for invoking an AWS Lambda function that customizes a segment for a campaign
 * `limits` - (Optional) The default campaign limits for the app. These limits apply to each campaign for the app, unless the campaign overrides the default with limits of its own
 * `quiet_time` - (Optional) The default quiet time for the app. Each campaign for this app sends no messages during this time unless the campaign overrides the default with a quiet time of its own
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 `campaign_hook` supports the following:
 
@@ -57,14 +56,13 @@ The following arguments are supported:
 * `end` - (Optional) The default end time for quiet time in ISO 8601 format. Required if `start` is set
 * `start` - (Optional) The default start time for quiet time in ISO 8601 format. Required if `end` is set
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `application_id` - The Application ID of the Pinpoint App.
 * `arn` - Amazon Resource Name (ARN) of the PinPoint Application
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

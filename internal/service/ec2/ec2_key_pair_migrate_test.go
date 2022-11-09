@@ -21,9 +21,9 @@ func TestKeyPairMigrateState(t *testing.T) {
 			Attributes: map[string]string{
 				"fingerprint": "1d:cd:46:31:a9:4a:e0:06:8a:a1:22:cb:3b:bf:8e:42",
 				"key_name":    "tf-testing-file",
-				"public_key":  "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep: ssh-key
+				"public_key":  "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep:ci.ssh-key
 			},
-			Expected: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep: ssh-key
+			Expected: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep:ci.ssh-key
 		},
 		"v0_2": {
 			StateVersion: 0,
@@ -31,9 +31,9 @@ func TestKeyPairMigrateState(t *testing.T) {
 			Attributes: map[string]string{
 				"fingerprint": "1d:cd:46:31:a9:4a:e0:06:8a:a1:22:cb:3b:bf:8e:42",
 				"key_name":    "tf-testing-file",
-				"public_key":  "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment\n", // nosemgrep: ssh-key
+				"public_key":  "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment\n", // nosemgrep:ci.ssh-key
 			},
-			Expected: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep: ssh-key
+			Expected: "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4LBtwcFsQAYWw1cnOwRTZCJCzPSzq0dl3== comment", // nosemgrep:ci.ssh-key
 		},
 	}
 

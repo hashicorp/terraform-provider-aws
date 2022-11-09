@@ -69,11 +69,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_mskconnect_custom_plugin` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10 minutes`) How long to wait for the MSK Connect Custom Plugin to be created.
-* `delete` - (Default `10 minutes`) How long to wait for the MSK Connect Custom Plugin to be created.
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

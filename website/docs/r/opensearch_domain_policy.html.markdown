@@ -1,7 +1,7 @@
 ---
 subcategory: "OpenSearch"
 layout: "aws"
-page_title: "AWS: aws_opensearch_domain"
+page_title: "AWS: aws_opensearch_domain_policy"
 description: |-
   Provides an OpenSearch Domain Policy.
 ---
@@ -53,7 +53,7 @@ No additional attributes are exported.
 
 ## Timeouts
 
-`aws_opensearch_domain_policy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Optional, Default: `180m`) How long to wait for updates.
-* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)

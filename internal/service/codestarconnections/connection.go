@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -106,13 +107,13 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	connection, err := FindConnectionByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CodeStarConnections, names.ErrActionReading, ResConnection, d.Id())
+		create.LogNotFoundRemoveState(names.CodeStarConnections, create.ErrActionReading, ResNameConnection, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeStarConnections, names.ErrActionReading, ResConnection, d.Id(), err)
+		return create.Error(names.CodeStarConnections, create.ErrActionReading, ResNameConnection, d.Id(), err)
 	}
 
 	arn := aws.StringValue(connection.ConnectionArn)

@@ -43,21 +43,19 @@ The following arguments are supported:
 * `invitation_message` - (Optional) Message for invitation.
 * `disable_email_notification` - (Optional) Boolean whether an email notification is sent to the accounts. Defaults to `false`.
 
-## Timeouts
-
-`aws_guardduty_member` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
-
-- `create` - (Default `60s`) How long to wait for a verification to be done against inviting GuardDuty member account.
-- `update` - (Default `60s`) How long to wait for a verification to be done against inviting GuardDuty member account.
-
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the GuardDuty member
 * `relationship_status` - The status of the relationship between the member account and its primary account. More information can be found in [Amazon GuardDuty API Reference](https://docs.aws.amazon.com/guardduty/latest/ug/get-members.html).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `1m`)
+- `update` - (Default `1m`)
 
 ## Import
 

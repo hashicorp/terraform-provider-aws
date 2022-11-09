@@ -1,0 +1,3 @@
+```release-note:enhancement
+ resource/aws_elasticache_global_replication_group: Add support for updating `cache_node_type` and `automatic_failover_enabled`.
+```

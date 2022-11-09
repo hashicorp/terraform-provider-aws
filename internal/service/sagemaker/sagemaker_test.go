@@ -45,6 +45,10 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
+			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
+			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"domainSettings":                                         testAccDomain_domainSettings,
+			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
@@ -69,6 +73,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"CognitoConfig":  testAccWorkforce_cognitoConfig,
 			"OidcConfig":     testAccWorkforce_oidcConfig,
 			"SourceIpConfig": testAccWorkforce_sourceIPConfig,
+			"VPC":            testAccWorkforce_vpc,
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
@@ -76,6 +81,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,
 			"Tags":               testAccWorkteam_tags,
+		},
+		"Servicecatalog": {
+			"basic": testAccServicecatalogPortfolioStatus_basic,
 		},
 	}
 

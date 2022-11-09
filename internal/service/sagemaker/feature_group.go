@@ -253,7 +253,7 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(name)
 
 	if _, err := WaitFeatureGroupCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Feature Group (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Feature Group (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceFeatureGroupRead(d, meta)
@@ -273,7 +273,7 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Feature Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(output.FeatureGroupArn)
@@ -285,31 +285,31 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 
 	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
-		return fmt.Errorf("error setting feature_definition for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting feature_definition for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("online_store_config", flattenFeatureGroupOnlineStoreConfig(output.OnlineStoreConfig)); err != nil {
-		return fmt.Errorf("error setting online_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting online_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("offline_store_config", flattenFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
-		return fmt.Errorf("error setting offline_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting offline_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -322,7 +322,7 @@ func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -340,14 +340,14 @@ func resourceFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Feature Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitFeatureGroupDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for SageMaker Feature Group (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Feature Group (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

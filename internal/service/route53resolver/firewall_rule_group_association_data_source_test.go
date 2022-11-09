@@ -13,9 +13,9 @@ func TestAccRoute53ResolverRuleGroupAssociationDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_resolver_firewall_rule_group_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupAssociationDataSourceConfig_basic(),

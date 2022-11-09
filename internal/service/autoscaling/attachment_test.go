@@ -4,53 +4,30 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAutoScalingAttachment_elb(t *testing.T) {
-
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutocalingAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachmentConfig_elb(rInt),
+				Config: testAccAttachmentConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 0),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_elbAssociated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 1),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_elbDoubleAssociated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 2),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_elbAssociated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 1),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_elb(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 0),
+					testAccCheckAttachmentByLoadBalancerNameExists(resourceName),
 				),
 			},
 		},
@@ -58,50 +35,84 @@ func TestAccAutoScalingAttachment_elb(t *testing.T) {
 }
 
 func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
-
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAutocalingAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachmentConfig_alb(rInt),
+				Config: testAccAttachmentConfig_targetGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_albAssociated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_albDoubleAssociated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 2),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_albAssociated(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_alb(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
+					testAccCheckAttachmentByTargetGroupARNExists(resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAutocalingAttachmentDestroy(s *terraform.State) error {
+func TestAccAutoScalingAttachment_multipleELBs(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_autoscaling_attachment.test.0"
+	resource11Name := "aws_autoscaling_attachment.test.10"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttachmentDestroy,
+		Steps: []resource.TestStep{
+			// Create all the ELBs first.
+			{
+				Config: testAccAttachmentConfig_elbBase(rName, 11),
+			},
+			{
+				Config: testAccAttachmentConfig_multipleELBs(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAttachmentByLoadBalancerNameExists(resource1Name),
+					testAccCheckAttachmentByLoadBalancerNameExists(resource11Name),
+				),
+			},
+			{
+				Config: testAccAttachmentConfig_elbBase(rName, 11),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_autoscaling_attachment.test.0"
+	resource11Name := "aws_autoscaling_attachment.test.10"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttachmentDestroy,
+		Steps: []resource.TestStep{
+			// Create all the target groups first.
+			{
+				Config: testAccAttachmentConfig_targetGroupBase(rName, 11),
+			},
+			{
+				Config: testAccAttachmentConfig_multipleTargetGroups(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAttachmentByTargetGroupARNExists(resource1Name),
+					testAccCheckAttachmentByTargetGroupARNExists(resource11Name),
+				),
+			},
+			{
+				Config: testAccAttachmentConfig_targetGroupBase(rName, 11),
+			},
+		},
+	})
+}
+
+func testAccCheckAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -109,272 +120,181 @@ func testAccCheckAutocalingAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
-			AutoScalingGroupNames: []*string{aws.String(rs.Primary.ID)},
-		})
+		var err error
 
-		if err == nil {
-			for _, autoscalingGroup := range resp.AutoScalingGroups {
-				if aws.StringValue(autoscalingGroup.AutoScalingGroupName) == rs.Primary.ID {
-					return fmt.Errorf("AWS Autoscaling Attachment is still exist: %s", rs.Primary.ID)
-				}
-			}
+		if targetGroupARN := rs.Primary.Attributes["lb_target_group_arn"]; targetGroupARN == "" {
+			targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
+
+			err = tfautoscaling.FindAttachmentByTargetGroupARN(conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
+		} else {
+			err = tfautoscaling.FindAttachmentByLoadBalancerName(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
 		}
 
-		return err
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Auto Scaling Group Attachment %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAutocalingELBAttachmentExists(asgname string, loadBalancerCount int) resource.TestCheckFunc {
+func testAccCheckAttachmentByLoadBalancerNameExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[asgname]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", asgname)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-		asg := rs.Primary.ID
 
-		actual, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
-			AutoScalingGroupNames: []*string{aws.String(asg)},
-		})
-
-		if err != nil {
-			return fmt.Errorf("Received an error when attempting to load %s:  %s", asg, err)
-		}
-
-		if loadBalancerCount != len(actual.AutoScalingGroups[0].LoadBalancerNames) {
-			return fmt.Errorf("Error: ASG has the wrong number of load balacners associated.  Expected [%d] but got [%d]", loadBalancerCount, len(actual.AutoScalingGroups[0].LoadBalancerNames))
-		}
-
-		return nil
+		return tfautoscaling.FindAttachmentByLoadBalancerName(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
 	}
 }
 
-func testAccCheckAutocalingAlbAttachmentExists(asgname string, targetGroupCount int) resource.TestCheckFunc {
+func testAccCheckAttachmentByTargetGroupARNExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[asgname]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", asgname)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-		asg := rs.Primary.ID
 
-		actual, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
-			AutoScalingGroupNames: []*string{aws.String(asg)},
-		})
-
-		if err != nil {
-			return fmt.Errorf("Received an error when attempting to load %s:  %s", asg, err)
+		targetGroupARN := rs.Primary.Attributes["lb_target_group_arn"]
+		if targetGroupARN == "" {
+			targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
 		}
 
-		if targetGroupCount != len(actual.AutoScalingGroups[0].TargetGroupARNs) {
-			return fmt.Errorf("Error: ASG has the wrong number of Target Groups associated.  Expected [%d] but got [%d]", targetGroupCount, len(actual.AutoScalingGroups[0].TargetGroupARNs))
-		}
-
-		return nil
+		return tfautoscaling.FindAttachmentByTargetGroupARN(conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
 	}
 }
 
-func testAccAttachmentConfig_alb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccAttachmentConfig_elbBase(rName string, elbCount int) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_elb" "test" {
+  count = %[2]d
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  # "name" cannot be longer than 32 characters.
+  name               = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
+  availability_zones = data.aws_availability_zones.available.names
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 
+resource "aws_autoscaling_group" "test" {
+  availability_zones        = data.aws_availability_zones.available.names
+  max_size                  = 1
+  min_size                  = 0
+  desired_capacity          = 0
+  health_check_grace_period = 300
+  force_delete              = true
+  name                      = %[1]q
+  launch_configuration      = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [load_balancers]
+  }
+}
+`, rName, elbCount))
+}
+
+func testAccAttachmentConfig_targetGroupBase(rName string, targetGroupCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name     = "test-alb-%d"
-  port     = 443
-  protocol = "HTTPS"
+  count = %[2]d
+
+  # "name" cannot be longer than 32 characters.
+  name     = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
+  port     = 80
+  protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-
-  stickiness {
-    type            = "lb_cookie"
-    cookie_duration = 10000
-  }
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    TestName = "TestAccAutoScalingAttachment_albTargetGroup"
-  }
 }
 
-resource "aws_lb_target_group" "another_test" {
-  name     = "atest-alb-%d"
-  port     = 443
-  protocol = "HTTPS"
-  vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-
-  stickiness {
-    type            = "lb_cookie"
-    cookie_duration = 10000
-  }
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    TestName = "TestAccAutoScalingAttachment_albTargetGroup"
-  }
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
 }
 
-resource "aws_autoscaling_group" "asg" {
-  availability_zones        = data.aws_availability_zones.available.names
-  name                      = "asg-lb-assoc-terraform-test_%d"
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier       = aws_subnet.test[*].id
   max_size                  = 1
   min_size                  = 0
   desired_capacity          = 0
   health_check_grace_period = 300
   force_delete              = true
-  launch_configuration      = aws_launch_configuration.as_conf.name
+  name                      = %[1]q
+  launch_configuration      = aws_launch_configuration.test.name
 
   tag {
     key                 = "Name"
-    value               = "terraform-asg-lg-assoc-test"
+    value               = %[1]q
     propagate_at_launch = true
   }
 
   lifecycle {
-    ignore_changes = [load_balancers, target_group_arns]
+    ignore_changes = [target_group_arns]
   }
 }
-
-resource "aws_launch_configuration" "as_conf" {
-  name          = "test_config_%d"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+`, rName, targetGroupCount))
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-autoscaling-attachment-alb"
-  }
+func testAccAttachmentConfig_elb(rName string) string {
+	return acctest.ConfigCompose(testAccAttachmentConfig_elbBase(rName, 1), `
+resource "aws_autoscaling_attachment" "test" {
+  autoscaling_group_name = aws_autoscaling_group.test.id
+  elb                    = aws_elb.test[0].id
 }
-`, rInt, rInt, rInt, rInt)
-}
-
-func testAccAttachmentConfig_elb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+`)
 }
 
-resource "aws_elb" "foo" {
-  availability_zones = data.aws_availability_zones.available.names
+func testAccAttachmentConfig_multipleELBs(rName string, n int) string {
+	return acctest.ConfigCompose(testAccAttachmentConfig_elbBase(rName, n), fmt.Sprintf(`
+resource "aws_autoscaling_attachment" "test" {
+  count = %[1]d
 
-  listener {
-    instance_port     = 8000
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
+  autoscaling_group_name = aws_autoscaling_group.test.id
+  elb                    = aws_elb.test[count.index].id
+}
+`, n))
 }
 
-resource "aws_elb" "bar" {
-  availability_zones = data.aws_availability_zones.available.names
-
-  listener {
-    instance_port     = 8000
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
+func testAccAttachmentConfig_targetGroup(rName string) string {
+	return acctest.ConfigCompose(testAccAttachmentConfig_targetGroupBase(rName, 1), `
+resource "aws_autoscaling_attachment" "test" {
+  autoscaling_group_name = aws_autoscaling_group.test.id
+  lb_target_group_arn    = aws_lb_target_group.test[0].arn
+}
+`)
 }
 
-resource "aws_launch_configuration" "as_conf" {
-  name          = "test_config_%d"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+func testAccAttachmentConfig_multipleTargetGroups(rName string, n int) string {
+	return acctest.ConfigCompose(testAccAttachmentConfig_targetGroupBase(rName, n), fmt.Sprintf(`
+resource "aws_autoscaling_attachment" "test" {
+  count = %[1]d
+
+  autoscaling_group_name = aws_autoscaling_group.test.id
+  lb_target_group_arn    = aws_lb_target_group.test[0].arn
 }
-
-resource "aws_autoscaling_group" "asg" {
-  availability_zones        = data.aws_availability_zones.available.names
-  name                      = "asg-lb-assoc-terraform-test_%d"
-  max_size                  = 1
-  min_size                  = 0
-  desired_capacity          = 0
-  health_check_grace_period = 300
-  force_delete              = true
-  launch_configuration      = aws_launch_configuration.as_conf.name
-
-  tag {
-    key                 = "Name"
-    value               = "terraform-asg-lg-assoc-test"
-    propagate_at_launch = true
-  }
-
-  lifecycle {
-    ignore_changes = [load_balancers, target_group_arns]
-  }
-}
-`, rInt, rInt)
-}
-
-func testAccAttachmentConfig_elbAssociated(rInt int) string {
-	return testAccAttachmentConfig_elb(rInt) + `
-resource "aws_autoscaling_attachment" "asg_attachment_foo" {
-  autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.foo.id
-}`
-}
-
-func testAccAttachmentConfig_albAssociated(rInt int) string {
-	return testAccAttachmentConfig_alb(rInt) + `
-resource "aws_autoscaling_attachment" "asg_attachment_foo" {
-  autoscaling_group_name = aws_autoscaling_group.asg.id
-  alb_target_group_arn   = aws_lb_target_group.test.arn
-}`
-}
-
-func testAccAttachmentConfig_elbDoubleAssociated(rInt int) string {
-	return testAccAttachmentConfig_elbAssociated(rInt) + `
-resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.bar.id
-}`
-}
-
-func testAccAttachmentConfig_albDoubleAssociated(rInt int) string {
-	return testAccAttachmentConfig_albAssociated(rInt) + `
-resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name = aws_autoscaling_group.asg.id
-  alb_target_group_arn   = aws_lb_target_group.another_test.arn
-}`
+`, n))
 }

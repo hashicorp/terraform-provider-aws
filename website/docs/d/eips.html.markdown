@@ -35,16 +35,22 @@ output "public_ips" {
 ## Argument Reference
 
 * `filter` - (Optional) Custom filter block as described below.
-* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Elastic IPs.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IPs.
 
 More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
 * `values` - (Required) Set of values that are accepted for the given field. An Elastic IP will be selected if any one of the given values matches.
 
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `allocation_ids` - A list of all the allocation IDs for address for use with EC2-VPC.
-* `public_ips` - A list of all the Elastic IP addresses.
+* `allocation_ids` - List of all the allocation IDs for address for use with EC2-VPC.
+* `public_ips` - List of all the Elastic IP addresses.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

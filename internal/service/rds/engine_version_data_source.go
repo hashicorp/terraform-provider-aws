@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceEngineVersion() *schema.Resource {
@@ -17,6 +18,11 @@ func DataSourceEngineVersion() *schema.Resource {
 			"default_character_set": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"default_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"engine": {
@@ -34,6 +40,13 @@ func DataSourceEngineVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 				Set:      schema.HashString,
+			},
+
+			"filter": namevaluesfilters.Schema(),
+
+			"include_all": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"parameter_group_family": {
@@ -136,6 +149,14 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 		input.Engine = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
+	}
+
+	if v, ok := d.GetOk("include_all"); ok {
+		input.IncludeAll = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("parameter_group_family"); ok {
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
@@ -144,7 +165,9 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 		input.EngineVersion = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("version"); !ok {
+	if v, ok := d.GetOk("default_only"); ok {
+		input.DefaultOnly = aws.Bool(v.(bool))
+	} else if _, ok := d.GetOk("version"); !ok {
 		if _, ok := d.GetOk("preferred_versions"); !ok {
 			input.DefaultOnly = aws.Bool(true)
 		}

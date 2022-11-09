@@ -157,7 +157,7 @@ func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Authorization Rule: %s", d.Id())
 	_, err = conn.RevokeClientVpnIngress(input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound, errCodeInvalidClientVPNAuthorizationRuleNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNAuthorizationRuleNotFound) {
 		return nil
 	}
 

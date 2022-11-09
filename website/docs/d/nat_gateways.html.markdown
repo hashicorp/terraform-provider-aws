@@ -33,14 +33,14 @@ data "aws_nat_gateway" "ngw" {
 ## Argument Reference
 
 * `filter` - (Optional) Custom filter block as described below.
-* `vpc_id` - (Optional) The VPC ID that you want to filter from.
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
+* `vpc_id` - (Optional) VPC ID that you want to filter from.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired NAT Gateways.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNatGateways.html).
 * `values` - (Required) Set of values that are accepted for the given field.
   A Nat Gateway will be selected if any one of the given values matches.
@@ -48,4 +48,10 @@ which take the following arguments:
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A list of all the NAT gateway ids found.
+* `ids` - List of all the NAT gateway ids found.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

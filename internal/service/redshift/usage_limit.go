@@ -101,7 +101,7 @@ func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.CreateUsageLimit(&input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Usage Limit (%s): %s", clusterId, err)
+		return fmt.Errorf("creating Redshift Usage Limit (%s): %s", clusterId, err)
 	}
 
 	d.SetId(aws.StringValue(out.UsageLimitId))
@@ -122,7 +122,7 @@ func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Usage Limit (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Usage Limit (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -145,11 +145,11 @@ func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -173,7 +173,7 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.ModifyUsageLimit(input)
 		if err != nil {
-			return fmt.Errorf("error updating Redshift Usage Limit (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating Redshift Usage Limit (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -181,7 +181,7 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Usage Limit (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Usage Limit (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

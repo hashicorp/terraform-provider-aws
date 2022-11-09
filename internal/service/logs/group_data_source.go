@@ -61,11 +61,11 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %w", name, err)
+		return fmt.Errorf("listing tags for CloudWatch Logs Group (%s): %w", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

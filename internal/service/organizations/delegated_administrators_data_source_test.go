@@ -6,12 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
-	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
@@ -21,8 +19,8 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorsDataSourceConfig_basic(servicePrincipal),
@@ -38,7 +36,6 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
 }
 
 func TestAccOrganizationsDelegatedAdministratorsDataSource_multiple(t *testing.T) {
-	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 	servicePrincipal2 := "config.amazonaws.com"
@@ -49,8 +46,8 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_multiple(t *testing.T
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal, servicePrincipal2),
@@ -66,7 +63,6 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_multiple(t *testing.T
 }
 
 func TestAccOrganizationsDelegatedAdministratorsDataSource_servicePrincipal(t *testing.T) {
-	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
@@ -76,8 +72,8 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_servicePrincipal(t *t
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorsDataSourceConfig_servicePrincipal(servicePrincipal),
@@ -97,9 +93,9 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_empty(t *testing.T) {
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorsDataSourceConfig_empty(servicePrincipal),

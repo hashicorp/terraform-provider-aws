@@ -82,10 +82,10 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 	arnResource := fmt.Sprintf("role%s%s", path, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -137,10 +137,10 @@ func TestAccIAMServiceLinkedRole_customSuffix(t *testing.T) {
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
@@ -166,10 +166,10 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 	name := "AWSServiceRoleForApplicationAutoScaling_CustomResource"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
@@ -195,10 +195,10 @@ func TestAccIAMServiceLinkedRole_description(t *testing.T) {
 	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLinkedRoleConfig_description(awsServiceName, customSuffix, "description1"),
@@ -229,10 +229,10 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLinkedRoleConfig_tags1(awsServiceName, customSuffix, "key1", "value1"),
@@ -274,10 +274,10 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
@@ -319,7 +319,6 @@ func testAccCheckServiceLinkedRoleDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
@@ -337,11 +336,7 @@ func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
 
 		_, err = tfiam.FindRoleByName(conn, roleName)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

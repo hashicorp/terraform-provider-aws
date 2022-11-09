@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_ecs_service: Fix error where tags are sometimes not retrieved.
+```
+
+```release-note:bug
+resource/aws_ecs_service: Fix "unexpected new value" errors on creation.
+```
+
+```release-note:enhancement
+resource/aws_ecs_service: Add configurable timeouts for Create and Delete.
+```

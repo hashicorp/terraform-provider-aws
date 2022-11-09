@@ -28,7 +28,7 @@ output "foo" {
 
 ## Argument Reference
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired local_gateways.
 
 * `filter` - (Optional) Custom filter block as described below.
@@ -36,7 +36,7 @@ output "foo" {
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLocalGateways.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
@@ -46,3 +46,9 @@ which take the following arguments:
 
 * `id` - AWS Region.
 * `ids` - Set of all the Local Gateway identifiers
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

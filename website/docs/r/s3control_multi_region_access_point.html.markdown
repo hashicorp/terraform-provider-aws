@@ -59,12 +59,12 @@ The following arguments are supported:
 * `account_id` - (Optional) The AWS account ID for the owner of the buckets for which you want to create a Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `details` - (Required) A configuration block containing details about the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60 minutes`) Used when creating the Multi-Region Access Point.
-* `delete` - (Default `15 minutes`) Used when deleting the Multi-Region Access Point.
+* `create` - (Default `60m`)
+* `delete` - (Default `15m`)
 
 ### Details Configuration
 
