@@ -26,7 +26,7 @@ func TestTLSRSAPublicKeyPEM(t *testing.T) {
 
 func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, "example.com")
 
@@ -37,7 +37,7 @@ func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
 
 func TestTLSRSAX509SelfSignedCACertificatePEM(t *testing.T) {
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 
 	if !strings.Contains(caCertificate, acctest.PEMBlockTypeCertificate) {
 		t.Errorf("CA certificate does not contain CERTIFICATE: %s", caCertificate)

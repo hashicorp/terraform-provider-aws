@@ -195,7 +195,7 @@ func TLSRSAX509LocallySignedCertificatePEM(t *testing.T, caKeyPem, caCertificate
 // TLSRSAX509SelfSignedCACertificatePEM generates a x509 CA certificate PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: root_certificate_pem = "%[1]s"
-func TLSRSAX509SelfSignedCACertificatePEM(keyPem string) string {
+func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
