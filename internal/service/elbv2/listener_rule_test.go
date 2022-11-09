@@ -577,7 +577,7 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 
 func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 	var conf elbv2.Rule
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	lbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -621,7 +621,7 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 
 func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	var conf elbv2.Rule
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	lbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -665,7 +665,7 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 
 func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
 	var rule elbv2.Rule
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
@@ -692,7 +692,7 @@ func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccELBV2ListenerRule_ActionOrder_recreates(t *testing.T) {
 	var rule elbv2.Rule
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
