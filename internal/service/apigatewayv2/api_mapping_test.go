@@ -157,7 +157,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 
 func testAccCheckAPIMappingCreateCertificate(rName string, certificateArn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		privateKey := acctest.TLSRSAPrivateKeyPEM(2048)
+		privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey, fmt.Sprintf("%s.example.com", rName))
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
