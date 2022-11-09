@@ -11,9 +11,6 @@ import (
 
 const (
 	statusNormal = "Normal"
-
-	statusActive   = ivs.RecordingConfigurationStateActive
-	statusCreating = ivs.RecordingConfigurationStateCreating
 )
 
 func statusPlaybackKeyPair(ctx context.Context, conn *ivs.IVS, id string) resource.StateRefreshFunc {

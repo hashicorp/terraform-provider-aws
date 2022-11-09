@@ -44,8 +44,8 @@ func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.IVS, id string, t
 
 func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{statusCreating},
-		Target:                    []string{statusActive},
+		Pending:                   []string{ivs.RecordingConfigurationStateCreating},
+		Target:                    []string{ivs.RecordingConfigurationStateActive},
 		Refresh:                   statusRecordingConfiguration(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -62,7 +62,7 @@ func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.IVS, id st
 
 func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{statusActive},
+		Pending: []string{ivs.RecordingConfigurationStateActive},
 		Target:  []string{},
 		Refresh: statusRecordingConfiguration(ctx, conn, id),
 		Timeout: timeout,
