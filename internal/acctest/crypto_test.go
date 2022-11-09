@@ -8,7 +8,7 @@ import (
 )
 
 func TestTLSRSAPrivateKeyPEM(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 
 	if !strings.Contains(key, acctest.PEMBlockTypeRSAPrivateKey) {
 		t.Errorf("key does not contain RSA PRIVATE KEY: %s", key)
@@ -16,7 +16,7 @@ func TestTLSRSAPrivateKeyPEM(t *testing.T) {
 }
 
 func TestTLSRSAPublicKeyPEM(t *testing.T) {
-	privateKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	publicKey := acctest.TLSRSAPublicKeyPEM(privateKey)
 
 	if !strings.Contains(publicKey, acctest.PEMBlockTypePublicKey) {
@@ -25,9 +25,9 @@ func TestTLSRSAPublicKeyPEM(t *testing.T) {
 }
 
 func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, "example.com")
 
 	if !strings.Contains(certificate, acctest.PEMBlockTypeCertificate) {
@@ -36,7 +36,7 @@ func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
 }
 
 func TestTLSRSAX509SelfSignedCACertificatePEM(t *testing.T) {
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
 
 	if !strings.Contains(caCertificate, acctest.PEMBlockTypeCertificate) {
@@ -45,7 +45,7 @@ func TestTLSRSAX509SelfSignedCACertificatePEM(t *testing.T) {
 }
 
 func TestTLSRSAX509SelfSignedCertificatePEM(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	if !strings.Contains(certificate, acctest.PEMBlockTypeCertificate) {

@@ -90,12 +90,11 @@ func TLSECDSAPublicKeyPEM(t *testing.T, keyPem string) (string, string) {
 // TLSRSAPrivateKeyPEM generates a RSA private key PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
-func TLSRSAPrivateKeyPEM(bits int) string {
+func TLSRSAPrivateKeyPEM(t *testing.T, bits int) string {
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 
 	if err != nil {
-		//lintignore:R009
-		panic(err)
+		t.Fatal(err)
 	}
 
 	block := &pem.Block{
