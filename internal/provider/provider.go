@@ -2013,9 +2013,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
-			"aws_schemas_discoverer": schemas.ResourceDiscoverer(),
-			"aws_schemas_registry":   schemas.ResourceRegistry(),
-			"aws_schemas_schema":     schemas.ResourceSchema(),
+			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
+			"aws_schemas_registry":        schemas.ResourceRegistry(),
+			"aws_schemas_registry_policy": schemas.ResourceRegistryPolicy(),
+			"aws_schemas_schema":          schemas.ResourceSchema(),
 
 			"aws_secretsmanager_secret":          secretsmanager.ResourceSecret(),
 			"aws_secretsmanager_secret_policy":   secretsmanager.ResourceSecretPolicy(),
