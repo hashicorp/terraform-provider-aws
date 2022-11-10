@@ -21,12 +21,12 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 ```
 
-### Example with VPN attachment
+### Example with site-to-site VPN attachment
 
 ```terraform
 resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_vpn_attachment.vpc.id
-  attachment_type = aws_networkmanager_vpn_attachment.vpc.attachment_type
+  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.vpn.id
+  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.vpn.attachment_type
 }
 ```
 
