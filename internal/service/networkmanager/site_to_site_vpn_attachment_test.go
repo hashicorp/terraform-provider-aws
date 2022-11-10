@@ -18,7 +18,7 @@ import (
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
-	resourceName := "aws_networkmanager_vpn_attachment.test"
+	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	vpnResourceName := "aws_vpn_connection.test"
 	coreNetwork := "awscc_networkmanager_core_network.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
@@ -67,7 +67,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
-	resourceName := "aws_networkmanager_vpn_attachment.test"
+	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
 			Source:            "hashicorp/awscc",
@@ -99,7 +99,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
-	resourceName := "aws_networkmanager_vpn_attachment.test"
+	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
 			Source:            "hashicorp/awscc",
@@ -180,7 +180,7 @@ func testAccCheckSiteToSiteVPNAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_vpn_attachment" {
+		if rs.Type != "aws_networkmanager_site_to_site_vpn_attachment" {
 			continue
 		}
 
@@ -275,7 +275,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 func testAccSiteToSiteVPNAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), `
-resource "aws_networkmanager_vpn_attachment" "test" {
+resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpn_arn         = aws_vpn_connection.test.arn
   tags = {
@@ -284,15 +284,15 @@ resource "aws_networkmanager_vpn_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_vpn_attachment.test.id
-  attachment_type = aws_networkmanager_vpn_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
+  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
 `)
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, tagKey1, tagValue1 string, bgpASN int) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
-resource "aws_networkmanager_vpn_attachment" "test" {
+resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpn_arn         = aws_vpn_connection.test.arn
 
@@ -302,15 +302,15 @@ resource "aws_networkmanager_vpn_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_vpn_attachment.test.id
-  attachment_type = aws_networkmanager_vpn_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
+  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1))
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, tagKey1, tagValue1, tagKey2, tagValue2 string, bgpASN int) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
-resource "aws_networkmanager_vpn_attachment" "test" {
+resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpn_arn         = aws_vpn_connection.test.arn
 
@@ -321,8 +321,8 @@ resource "aws_networkmanager_vpn_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_vpn_attachment.test.id
-  attachment_type = aws_networkmanager_vpn_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
+  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -1,12 +1,12 @@
 ---
 subcategory: "Network Manager"
 layout: "aws"
-page_title: "AWS: aws_networkmanager_vpn_attachment"
+page_title: "AWS: aws_networkmanager_site_to_site_vpn_attachment"
 description: |-
   Terraform resource for managing an AWS NetworkManager SiteToSiteAttachment.
 ---
 
-# Resource: aws_networkmanager_vpn_attachment
+# Resource: aws_networkmanager_site_to_site_vpn_attachment
 
 Terraform resource for managing an AWS NetworkManager SiteToSiteAttachment.
 
@@ -15,7 +15,7 @@ Terraform resource for managing an AWS NetworkManager SiteToSiteAttachment.
 ### Basic Usage
 
 ```terraform
-resource "aws_networkmanager_vpn_attachment" "example" {
+resource "aws_networkmanager_site_to_site_vpn_attachment" "example" {
   core_network_id = awscc_networkmanager_core_network.example.id
   vpn_arn         = aws_vpn_connection.example.arn
 }
@@ -51,8 +51,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_networkmanager_vpn_attachment` can be imported using the attachment ID, e.g.
+`aws_networkmanager_site_to_site_vpn_attachment` can be imported using the attachment ID, e.g.
 
 ```
-$ terraform import aws_networkmanager_vpn_attachment.example attachment-0f8fa60d2238d1bd8
+$ terraform import aws_networkmanager_site_to_site_vpn_attachment.example attachment-0f8fa60d2238d1bd8
 ```
