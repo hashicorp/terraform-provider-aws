@@ -100,7 +100,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		d.SetId(attachmentID)
 
 	case networkmanager.AttachmentTypeSiteToSiteVpn:
-		vpnAttachment, err := FindVPNAttachmentByID(ctx, conn, attachmentID)
+		vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
 			return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", attachmentID, err)
@@ -132,7 +132,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 			}
 
 		case networkmanager.AttachmentTypeSiteToSiteVpn:
-			if _, err := waitVPNAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if _, err := waitSiteToSiteVPNAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager VPN Attachment (%s) create: %s", attachmentID, err)
 			}
 		}
@@ -169,7 +169,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("state", a.State)
 
 	case networkmanager.AttachmentTypeSiteToSiteVpn:
-		vpnAttachment, err := FindVPNAttachmentByID(ctx, conn, d.Id())
+		vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
