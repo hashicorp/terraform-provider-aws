@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	resourceHelper "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,7 +40,7 @@ const (
 )
 
 type multiplexProgram struct {
-	meta *conns.AWSClient
+	framework.ResourceWithConfigure
 }
 
 func (m *multiplexProgram) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -190,14 +190,8 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 	return schema, nil
 }
 
-func (m *multiplexProgram) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		m.meta = v
-	}
-}
-
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.meta.MediaLiveClient
+	conn := m.Meta().MediaLiveClient
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -255,7 +249,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.meta.MediaLiveClient
+	conn := m.Meta().MediaLiveClient
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -320,7 +314,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := m.meta.MediaLiveClient
+	conn := m.Meta().MediaLiveClient
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -385,7 +379,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.meta.MediaLiveClient
+	conn := m.Meta().MediaLiveClient
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
