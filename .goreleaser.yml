@@ -33,6 +33,8 @@ builds:
         goos: freebsd
       - goarch: arm64
         goos: windows
+      - goarch: arm64
+        goos: openbsd
     ldflags:
       - -s -w -X version.ProviderVersion={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'
