@@ -990,14 +990,6 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_storageMode(rName, "LOCAL", "2.7.1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_mode", "LOCAL"),
-				),
-			},
-			{
 				Config: testAccClusterConfig_storageMode(rName, "TIERED", "2.8.2.tiered"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
