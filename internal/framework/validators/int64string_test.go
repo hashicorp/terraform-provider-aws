@@ -1,4 +1,4 @@
-package fwvalidators_test
+package validators_test
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwvalidators"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 )
 
 func TestBetweenValidator(t *testing.T) {
