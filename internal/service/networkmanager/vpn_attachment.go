@@ -23,10 +23,10 @@ import (
 
 func ResourceVpnAttachment() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceVpnAttachmentCreate,
-		ReadWithoutTimeout:   resourceVpnAttachmentRead,
-		UpdateWithoutTimeout: resourceVpnAttachmentUpdate,
-		DeleteWithoutTimeout: resourceVpnAttachmentDelete,
+		CreateWithoutTimeout: resourceVPNAttachmentCreate,
+		ReadWithoutTimeout:   resourceVPNAttachmentRead,
+		UpdateWithoutTimeout: resourceVPNAttachmentUpdate,
+		DeleteWithoutTimeout: resourceVPNAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -94,7 +94,7 @@ func ResourceVpnAttachment() *schema.Resource {
 	}
 }
 
-func resourceVpnAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -119,19 +119,19 @@ func resourceVpnAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.SiteToSiteVpnAttachment.Attachment.AttachmentId))
 
-	if _, err := waitVpnAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVPNAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Network Manager VPN Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceVpnAttachmentRead(ctx, d, meta)
+	return resourceVPNAttachmentRead(ctx, d, meta)
 }
 
-func resourceVpnAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vpnAttachment, err := FindVpnAttachmentByID(ctx, conn, d.Id())
+	vpnAttachment, err := FindVPNAttachmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager VPN Attachment (%s) not found, removing from state", d.Id())
@@ -175,7 +175,7 @@ func resourceVpnAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceVpnAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	if d.HasChange("tags_all") {
@@ -186,15 +186,15 @@ func resourceVpnAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	return resourceVpnAttachmentRead(ctx, d, meta)
+	return resourceVPNAttachmentRead(ctx, d, meta)
 }
 
-func resourceVpnAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	// If ResourceAttachmentAccepter is used, then VPN Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails
-	output, sErr := FindVpnAttachmentByID(ctx, conn, d.Id())
+	output, sErr := FindVPNAttachmentByID(ctx, conn, d.Id())
 	if tfawserr.ErrCodeEquals(sErr, networkmanager.ErrCodeResourceNotFoundException) {
 		return nil
 	}
@@ -222,14 +222,14 @@ func resourceVpnAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("deleting Network Manager VPN Attachment (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitVpnAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitVPNAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Network Manager VPN Attachment (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindVpnAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.SiteToSiteVpnAttachment, error) {
+func FindVPNAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.SiteToSiteVpnAttachment, error) {
 	input := &networkmanager.GetSiteToSiteVpnAttachmentInput{
 		AttachmentId: aws.String(id),
 	}
@@ -254,9 +254,9 @@ func FindVpnAttachmentByID(ctx context.Context, conn *networkmanager.NetworkMana
 	return output.SiteToSiteVpnAttachment, nil
 }
 
-func statusVpnAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func statusVPNAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVpnAttachmentByID(ctx, conn, id)
+		output, err := FindVPNAttachmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -270,12 +270,12 @@ func statusVpnAttachmentState(ctx context.Context, conn *networkmanager.NetworkM
 	}
 }
 
-func waitVpnAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
+func waitVPNAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Timeout: timeout,
-		Refresh: statusVpnAttachmentState(ctx, conn, id),
+		Refresh: statusVPNAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -287,12 +287,12 @@ func waitVpnAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkM
 	return nil, err
 }
 
-func waitVpnAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
+func waitVPNAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusVpnAttachmentState(ctx, conn, id),
+		Refresh:        statusVPNAttachmentState(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
@@ -305,12 +305,12 @@ func waitVpnAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkM
 	return nil, err
 }
 
-func waitVpnAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
+func waitVPNAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable},
 		Timeout: timeout,
-		Refresh: statusVpnAttachmentState(ctx, conn, id),
+		Refresh: statusVPNAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

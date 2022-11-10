@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccNetworkManagerVpnAttachment_basic(t *testing.T) {
+func TestAccNetworkManagerVPNAttachment_basic(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_vpn_attachment.test"
 	vpnResourceName := "aws_vpn_connection.test"
@@ -36,12 +36,12 @@ func TestAccNetworkManagerVpnAttachment_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckVpnAttachmentDestroy,
+		CheckDestroy:             testAccCheckVPNAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnAttachmentConfig_basic(rName, bgpASN, vpnIP),
+				Config: testAccVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVpnAttachmentExists(resourceName, &v),
+					testAccCheckVPNAttachmentExists(resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "SITE_TO_SITE_VPN"),
@@ -65,7 +65,7 @@ func TestAccNetworkManagerVpnAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerVpnAttachment_disappears(t *testing.T) {
+func TestAccNetworkManagerVPNAttachment_disappears(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_vpn_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
@@ -83,12 +83,12 @@ func TestAccNetworkManagerVpnAttachment_disappears(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckVpnAttachmentDestroy,
+		CheckDestroy:             testAccCheckVPNAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnAttachmentConfig_basic(rName, bgpASN, vpnIP),
+				Config: testAccVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnAttachmentExists(resourceName, &v),
+					testAccCheckVPNAttachmentExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceVpnAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,7 +97,7 @@ func TestAccNetworkManagerVpnAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerVpnAttachment_tags(t *testing.T) {
+func TestAccNetworkManagerVPNAttachment_tags(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_vpn_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
@@ -115,29 +115,29 @@ func TestAccNetworkManagerVpnAttachment_tags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckVpnAttachmentDestroy,
+		CheckDestroy:             testAccCheckVPNAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpnAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
+				Config: testAccVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnAttachmentExists(resourceName, &v),
+					testAccCheckVPNAttachmentExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
 			{
-				Config: testAccVpnAttachmentConfig_tags2(rName, vpnIP, "segment", "shared", "Name", "test", bgpASN),
+				Config: testAccVPNAttachmentConfig_tags2(rName, vpnIP, "segment", "shared", "Name", "test", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnAttachmentExists(resourceName, &v),
+					testAccCheckVPNAttachmentExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
 			{
-				Config: testAccVpnAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
+				Config: testAccVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnAttachmentExists(resourceName, &v),
+					testAccCheckVPNAttachmentExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
@@ -151,7 +151,7 @@ func TestAccNetworkManagerVpnAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVpnAttachmentExists(n string, v *networkmanager.SiteToSiteVpnAttachment) resource.TestCheckFunc {
+func testAccCheckVPNAttachmentExists(n string, v *networkmanager.SiteToSiteVpnAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -164,7 +164,7 @@ func testAccCheckVpnAttachmentExists(n string, v *networkmanager.SiteToSiteVpnAt
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
-		output, err := tfnetworkmanager.FindVpnAttachmentByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkmanager.FindVPNAttachmentByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -176,7 +176,7 @@ func testAccCheckVpnAttachmentExists(n string, v *networkmanager.SiteToSiteVpnAt
 	}
 }
 
-func testAccCheckVpnAttachmentDestroy(s *terraform.State) error {
+func testAccCheckVPNAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -184,7 +184,7 @@ func testAccCheckVpnAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfnetworkmanager.FindVpnAttachmentByID(context.Background(), conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindVPNAttachmentByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -200,7 +200,7 @@ func testAccCheckVpnAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVpnAttachmentConfig_base(rName string, bgpASN int, vpnIP string) string {
+func testAccVPNAttachmentConfig_base(rName string, bgpASN int, vpnIP string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -273,8 +273,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 `, rName, bgpASN, vpnIP))
 }
 
-func testAccVpnAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) string {
-	return acctest.ConfigCompose(testAccVpnAttachmentConfig_base(rName, bgpASN, vpnIP), `
+func testAccVPNAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) string {
+	return acctest.ConfigCompose(testAccVPNAttachmentConfig_base(rName, bgpASN, vpnIP), `
 resource "aws_networkmanager_vpn_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpn_arn         = aws_vpn_connection.test.arn
@@ -290,8 +290,8 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `)
 }
 
-func testAccVpnAttachmentConfig_tags1(rName, vpnIP, tagKey1, tagValue1 string, bgpASN int) string {
-	return acctest.ConfigCompose(testAccVpnAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
+func testAccVPNAttachmentConfig_tags1(rName, vpnIP, tagKey1, tagValue1 string, bgpASN int) string {
+	return acctest.ConfigCompose(testAccVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
 resource "aws_networkmanager_vpn_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpn_arn         = aws_vpn_connection.test.arn
@@ -308,8 +308,8 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccVpnAttachmentConfig_tags2(rName, vpnIP, tagKey1, tagValue1, tagKey2, tagValue2 string, bgpASN int) string {
-	return acctest.ConfigCompose(testAccVpnAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
+func testAccVPNAttachmentConfig_tags2(rName, vpnIP, tagKey1, tagValue1, tagKey2, tagValue2 string, bgpASN int) string {
+	return acctest.ConfigCompose(testAccVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
 resource "aws_networkmanager_vpn_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpn_arn         = aws_vpn_connection.test.arn
