@@ -10,6 +10,8 @@ FEATURES:
 * **New Data Source:** `aws_route53_resolver_firewall_config` ([#25496](https://github.com/hashicorp/terraform-provider-aws/issues/25496))
 * **New Data Source:** `aws_route53_resolver_firewall_domain_list` ([#25509](https://github.com/hashicorp/terraform-provider-aws/issues/25509))
 * **New Data Source:** `aws_route53_resolver_firewall_rule_group` ([#25511](https://github.com/hashicorp/terraform-provider-aws/issues/25511))
+* **New Data Source:** `aws_route53_resolver_firewall_rule_group_association` ([#25512](https://github.com/hashicorp/terraform-provider-aws/issues/25512))
+* **New Data Source:** `aws_route53_resolver_firewall_rules` ([#25536](https://github.com/hashicorp/terraform-provider-aws/issues/25536))
 * **New Resource:** `aws_ivs_playback_key_pair` ([#27678](https://github.com/hashicorp/terraform-provider-aws/issues/27678))
 * **New Resource:** `aws_ivs_recording_configuration` ([#27718](https://github.com/hashicorp/terraform-provider-aws/issues/27718))
 * **New Resource:** `aws_lightsail_lb_https_redirection_policy` ([#27679](https://github.com/hashicorp/terraform-provider-aws/issues/27679))
