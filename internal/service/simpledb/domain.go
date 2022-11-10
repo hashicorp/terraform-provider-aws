@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -29,7 +29,7 @@ func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) 
 }
 
 type resourceDomain struct {
-	meta *conns.AWSClient
+	framework.ResourceWithConfigure
 }
 
 // Metadata should return the full name of the resource, such as
@@ -60,14 +60,6 @@ func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnost
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined Resource type.
-func (r *resourceDomain) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		r.meta = v
-	}
-}
-
 // Create is called when the provider must create a new resource.
 // Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
 func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -79,12 +71,14 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	conn := r.Meta().SimpleDBConn
+
 	name := data.Name.Value
 	input := &simpledb.CreateDomainInput{
 		DomainName: aws.String(name),
 	}
 
-	_, err := r.meta.SimpleDBConn.CreateDomainWithContext(ctx, input)
+	_, err := conn.CreateDomainWithContext(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating SimpleDB Domain (%s)", name), err.Error())
@@ -108,7 +102,9 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	_, err := FindDomainByName(ctx, r.meta.SimpleDBConn, data.ID.Value)
+	conn := r.Meta().SimpleDBConn
+
+	_, err := FindDomainByName(ctx, conn, data.ID.Value)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(errs.NewResourceNotFoundWarningDiagnostic(err))
@@ -146,11 +142,13 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
+	conn := r.Meta().SimpleDBConn
+
 	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
 		"id": data.ID.Value,
 	})
 
-	_, err := r.meta.SimpleDBConn.DeleteDomainWithContext(ctx, &simpledb.DeleteDomainInput{
+	_, err := conn.DeleteDomainWithContext(ctx, &simpledb.DeleteDomainInput{
 		DomainName: aws.String(data.ID.Value),
 	})
 
