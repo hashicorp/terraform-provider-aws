@@ -285,7 +285,6 @@ func testAccCheckWorkflowDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		workflow := output.Workflow

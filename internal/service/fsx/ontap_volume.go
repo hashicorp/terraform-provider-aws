@@ -161,7 +161,6 @@ func resourceOntapVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceOntapVolumeRead(d, meta)
-
 }
 
 func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {

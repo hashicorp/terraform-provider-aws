@@ -127,7 +127,6 @@ func testAccCheckDomainEntryExists(n string, domainEntry *lightsail.DomainEntry)
 }
 
 func testAccCheckDomainEntryDestroy(s *terraform.State) error {
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_domain_entry" {
 			continue

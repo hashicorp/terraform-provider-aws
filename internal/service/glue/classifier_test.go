@@ -435,7 +435,6 @@ func testAccCheckClassifierDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		classifier := output.Classifier

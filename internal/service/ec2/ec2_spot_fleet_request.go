@@ -1300,7 +1300,6 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 
 	associatePublicIpAddress, hasPublicIpAddress := d["associate_public_ip_address"]
 	if hasPublicIpAddress && associatePublicIpAddress.(bool) && hasSubnetId {
-
 		// If we have a non-default VPC / Subnet specified, we can flag
 		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
 		// You cannot specify both SubnetId and the NetworkInterface.0.* parameters though, otherwise

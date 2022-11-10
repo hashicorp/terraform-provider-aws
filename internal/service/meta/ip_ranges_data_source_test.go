@@ -55,7 +55,6 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 
 func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		r := s.RootModule().Resources[n]
 		a := r.Primary.Attributes
 
@@ -84,27 +83,22 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 		)
 
 		for k, v := range a {
-
 			if regionMember.MatchString(k) {
-
 				// lintignore:AWSAT003
 				if !(v == "eu-west-1" || v == "eu-central-1") {
 					return fmt.Errorf("unexpected region %s", v)
 				}
 
 				regions = regions + 1
-
 			}
 
 			if serviceMember.MatchString(k) {
-
 				if v != "ec2" {
 					return fmt.Errorf("unexpected service %s", v)
 				}
 
 				services = services + 1
 			}
-
 		}
 
 		if regions != 2 {

@@ -111,7 +111,6 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return resourceClusterEndpointRead(d, meta)
-
 }
 
 func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {

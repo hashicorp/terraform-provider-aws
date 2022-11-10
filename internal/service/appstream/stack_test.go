@@ -28,10 +28,23 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -56,7 +69,7 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStack(), resourceName),
 				),
@@ -81,16 +94,30 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_complete(rName, description),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", "SettingsGroup"),
+					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
 				Config: testAccStackConfig_complete(rName, descriptionUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -104,6 +131,132 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
+	var stackOutput appstream.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	settingsGroup := "group"
+	settingsGroupUpdated := "group-updated"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroupUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroupUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStackConfig_applicationSettings(rName, false, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
+	var stackOutput appstream.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	settingsGroup := "group"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_applicationSettings(rName, true, settingsGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", settingsGroup),
+				),
+			},
+			{
+				Config: testAccStackConfig_applicationSettingsRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppStreamStack_applicationSettings_removeFromDisabled(t *testing.T) {
+	var stackOutput appstream.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_applicationSettingsDisabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
+				),
+			},
+			{
+				Config:   testAccStackConfig_applicationSettingsRemoved(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -124,7 +277,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_complete(rName, description),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -133,7 +286,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_tags(rName, descriptionUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -201,7 +354,6 @@ func testAccCheckStackDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccStackConfig_basic(name string) string {
@@ -250,6 +402,39 @@ resource "aws_appstream_stack" "test" {
   }
 }
 `, name, description)
+}
+
+func testAccStackConfig_applicationSettings(name string, enabled bool, settingsGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+
+  application_settings {
+    enabled        = %[2]t
+    settings_group = %[3]q
+  }
+}
+`, name, enabled, settingsGroupName)
+}
+
+func testAccStackConfig_applicationSettingsDisabled(name string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+
+  application_settings {
+    enabled = false
+  }
+}
+`, name)
+}
+
+func testAccStackConfig_applicationSettingsRemoved(name string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+}
+`, name)
 }
 
 func testAccStackConfig_tags(name, description string) string {

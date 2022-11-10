@@ -46,7 +46,7 @@ func TestAccEvidentlyProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "status", cloudwatchevidently.ProjectStatusAvailable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 				),
@@ -140,8 +140,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchLogGroup(t *testing.T) 
 
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
+	rName4 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_evidently_project.test"
 
@@ -283,8 +283,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchToS3(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
+	rName4 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_evidently_project.test"
 	prefix := "tests3prefix"
@@ -357,7 +357,7 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudwatchevidently.FindProjectByName(context.Background(), conn, rs.Primary.ID)
+		_, err := tfcloudwatchevidently.FindProjectByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -387,7 +387,7 @@ func testAccCheckProjectExists(n string, v *cloudwatchevidently.Project) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 
-		output, err := tfcloudwatchevidently.FindProjectByName(context.Background(), conn, rs.Primary.ID)
+		output, err := tfcloudwatchevidently.FindProjectByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

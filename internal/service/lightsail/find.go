@@ -2,6 +2,7 @@ package lightsail
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -111,7 +112,6 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 }
 
 func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
-
 	id_parts := strings.SplitN(id, "_", -1)
 	domainName := id_parts[1]
 	name := expandDomainEntryName(id_parts[0], domainName)
@@ -145,6 +145,71 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 	for _, n := range out.Domain.DomainEntries {
 		if name == aws.StringValue(n.Name) && recordType == aws.StringValue(n.Type) && recordTarget == aws.StringValue(n.Target) {
 			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}
+
+func FindLoadBalancerByName(ctx context.Context, conn *lightsail.Lightsail, name string) (*lightsail.LoadBalancer, error) {
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(name)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoadBalancer == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	lb := out.LoadBalancer
+
+	return lb, nil
+}
+
+func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id string) (*string, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer attachment id")
+	}
+
+	lbName := id_parts[0]
+	iName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *string
+	entryExists := false
+
+	for _, n := range out.LoadBalancer.InstanceHealthSummary {
+		if iName == aws.StringValue(n.InstanceName) {
+			entry = n.InstanceName
 			entryExists = true
 			break
 		}

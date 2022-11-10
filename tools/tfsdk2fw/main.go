@@ -180,6 +180,8 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	}
 
 	templateData := &templateData{
+		EmitResourceImportState:      m.Resource.Importer != nil,
+		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
 		Name:                         m.Name,
@@ -323,7 +325,10 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 // emitAttributeProperty generates the Plugin Framework code for a Plugin SDK Attribute's property
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) error {
+	attributeName := path[len(path)-1]
+	isComputedOnly := property.Computed && !property.Optional
 	isTopLevelAttribute := len(path) == 1
+	var planModifiers []string
 
 	// At this point we are emitting code for the values of a tfsdk.Schema's Attributes (map[string]tfsdk.Attribute).
 	fprintf(e.SchemaWriter, "{\n")
@@ -354,7 +359,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		}
 
 	case schema.TypeString:
-		if path[len(path)-1] == "arn" {
+		// Computed-only ARN attributes are easiest handled as strings.
+		if (attributeName == "arn" || strings.HasSuffix(attributeName, "_arn")) && !isComputedOnly {
 			e.ImportProviderFrameworkTypes = true
 
 			fprintf(e.SchemaWriter, "Type:fwtypes.ARNType,\n")
@@ -462,11 +468,19 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
-	// Features that we can't (yet) migrate:
-
 	if property.ForceNew {
-		fprintf(e.SchemaWriter, "// TODO ForceNew:true,\n")
+		planModifiers = append(planModifiers, "resource.RequiresReplace()")
 	}
+
+	if len(planModifiers) > 0 {
+		fprintf(e.SchemaWriter, "PlanModifiers:[]tfsdk.AttributePlanModifier{\n")
+		for _, planModifier := range planModifiers {
+			fprintf(e.SchemaWriter, "%s,\n", planModifier)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
+	// Features that we can't (yet) migrate:
 
 	if def := property.Default; def != nil {
 		switch def.(type) {
@@ -744,6 +758,8 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
+	EmitResourceImportState      bool
+	EmitResourceUpdateSkeleton   bool
 	ImportFrameworkAttr          bool
 	ImportProviderFrameworkTypes bool
 	Name                         string // e.g. Instance

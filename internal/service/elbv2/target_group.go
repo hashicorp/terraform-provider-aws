@@ -701,7 +701,6 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
-
 			if d.HasChange("stickiness") {
 				stickinessBlocks := d.Get("stickiness").([]interface{})
 				if len(stickinessBlocks) == 1 {

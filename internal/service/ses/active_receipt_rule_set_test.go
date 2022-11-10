@@ -108,11 +108,9 @@ func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
 		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) == rs.Primary.ID) {
 			return fmt.Errorf("Active receipt rule set still exists")
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {

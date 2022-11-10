@@ -427,7 +427,6 @@ func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccPreCheckCapacityReservation(t *testing.T) {

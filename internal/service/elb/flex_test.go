@@ -104,7 +104,6 @@ func TestFlattenHealthCheck(t *testing.T) {
 }
 
 func TestExpandInstanceString(t *testing.T) {
-
 	expected := []*elb.Instance{
 		{InstanceId: aws.String("test-one")},
 		{InstanceId: aws.String("test-two")},

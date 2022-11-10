@@ -268,7 +268,6 @@ func resourceOntapStorageVirtualMachineCreate(d *schema.ResourceData, meta inter
 	}
 
 	return resourceOntapStorageVirtualMachineRead(d, meta)
-
 }
 
 func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
