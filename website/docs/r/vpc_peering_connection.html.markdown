@@ -22,9 +22,7 @@ management of the VPC Peering Connection and allows options to be set correctly 
 VPC Peering Connections use the `aws_vpc_peering_connection` resource to manage the requester's side of the
 connection and use the `aws_vpc_peering_connection_accepter` resource to manage the accepter's side of the connection.
 
--> **Note:** Creating multiple `aws_vpc_peering_connection` resources with the same `peer_vpc_id` and `vpc_id` will not produce an error.
-Instead, AWS will return the connection `id` that already exists, resulting in multiple `aws_vpc_peering_connection` resources with
-the same `id`.
+-> **Note:** Creating multiple `aws_vpc_peering_connection` resources with the same `peer_vpc_id` and `vpc_id` will not produce an error. Instead, AWS will return the connection `id` that already exists, resulting in multiple `aws_vpc_peering_connection` resources with the same `id`.
 
 ## Example Usage
 
