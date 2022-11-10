@@ -25,12 +25,12 @@ resource "aws_networkmanager_vpn_attachment" "example" {
 
 The following arguments are required:
 
-- `core_network_id` - (Required) The ID of a core network for the VPC attachment.
+- `core_network_id` - (Required) The ID of a core network for the VPN attachment.
 - `vpn_arn` - (Required) The ARN of the VPN.
 
 The following arguments are optional:
 
-- `tags` - (Optional) Key-value tags for the Global Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
