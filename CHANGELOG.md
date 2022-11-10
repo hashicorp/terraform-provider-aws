@@ -1,4 +1,5 @@
-## 4.39.0 (Unreleased)
+## 4.40.0 (Unreleased)
+## 4.39.0 (November 10, 2022)
 
 BREAKING CHANGES:
 
