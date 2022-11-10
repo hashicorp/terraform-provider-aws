@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 func init() {
