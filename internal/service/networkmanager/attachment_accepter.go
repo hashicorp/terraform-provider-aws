@@ -85,9 +85,9 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 	var state string
 	attachmentID := d.Get("attachment_id").(string)
-	aType := d.Get("attachment_type")
+	attachmentType := d.Get("attachment_type").(string)
 
-	switch aType {
+	switch attachmentType {
 	case networkmanager.AttachmentTypeVpc:
 		vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, attachmentID)
 
@@ -103,7 +103,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", attachmentID, err)
+			return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", attachmentID, err)
 		}
 
 		state = aws.StringValue(vpnAttachment.Attachment.State)
@@ -111,7 +111,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		d.SetId(attachmentID)
 
 	default:
-		return diag.Errorf("Unsupported Network Manager Attachment type: %s", aType)
+		return diag.Errorf("unsupported Network Manager Attachment type: %s", attachmentType)
 	}
 
 	if state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
@@ -125,7 +125,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 			return diag.Errorf("accepting Network Manager Attachment (%s): %s", attachmentID, err)
 		}
 
-		switch aType {
+		switch attachmentType {
 		case networkmanager.AttachmentTypeVpc:
 			if _, err := waitVPCAttachmentCreated(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", attachmentID, err)
@@ -172,13 +172,13 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
-			log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
+			log.Printf("[WARN] Network Manager Site To Site VPN Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager VPN Attachment (%s): %s", d.Id(), err)
+			return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 		}
 
 		a := vpnAttachment.Attachment
