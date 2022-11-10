@@ -3236,7 +3236,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      subnet_id = aws_subnet.test.*.id[%[2]d]
+      subnet_id = aws_subnet.test[%[2]d].id
     }
   }
 

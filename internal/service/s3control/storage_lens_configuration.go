@@ -311,7 +311,7 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 }
 
 func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := meta.(*conns.AWSClient).S3ControlClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -348,7 +348,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := meta.(*conns.AWSClient).S3ControlClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -398,7 +398,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := meta.(*conns.AWSClient).S3ControlClient
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -436,7 +436,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := meta.(*conns.AWSClient).S3ControlClient
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 

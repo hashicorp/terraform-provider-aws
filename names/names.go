@@ -32,6 +32,7 @@ const (
 	RolesAnywhereEndpointID    = "rolesanywhere"
 	Route53DomainsEndpointID   = "route53domains"
 	SESV2EndpointID            = "sesv2"
+	SSMEndpointID              = "ssm"
 	TranscribeEndpointID       = "transcribe"
 )
 

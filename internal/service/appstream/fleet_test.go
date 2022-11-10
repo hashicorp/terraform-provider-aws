@@ -398,7 +398,7 @@ resource "aws_appstream_fleet" "test" {
   stream_view                        = "DESKTOP"
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType))
@@ -436,7 +436,7 @@ resource "aws_appstream_fleet" "test" {
   max_user_duration_in_seconds       = 1000
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType, displayName))
@@ -478,7 +478,7 @@ resource "aws_appstream_fleet" "test" {
   }
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType, displayName))

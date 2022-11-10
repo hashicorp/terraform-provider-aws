@@ -960,7 +960,7 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 }
 
 func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -997,7 +997,7 @@ func testAccCheckUserExists(name string, user *identitystore.DescribeUserOutput)
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
 		ctx := context.Background()
 		resp, err := conn.DescribeUser(ctx, &identitystore.DescribeUserInput{
 			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
@@ -1015,7 +1015,7 @@ func testAccCheckUserExists(name string, user *identitystore.DescribeUserOutput)
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
 	ssoadminConn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 	ctx := context.Background()
 

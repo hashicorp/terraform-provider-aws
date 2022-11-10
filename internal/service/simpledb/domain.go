@@ -2,6 +2,7 @@ package simpledb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/simpledb"
@@ -15,6 +16,7 @@ import (
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -23,7 +25,7 @@ func init() {
 }
 
 // newResourceDomain instantiates a new Resource for the aws_simpledb_domain resource.
-func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
+func newResourceDomain(context.Context) (intf.ResourceWithConfigureAndImportState, error) {
 	return &resourceDomain{}, nil
 }
 
@@ -86,7 +88,7 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 	_, err := r.meta.SimpleDBConn.CreateDomainWithContext(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating SimpleDB Domain", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating SimpleDB Domain (%s)", name), err.Error())
 
 		return
 	}
@@ -117,7 +119,7 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("reading SimpleDB Domain", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SimpleDB Domain (%s)", data.ID.Value), err.Error())
 
 		return
 	}
@@ -154,7 +156,7 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 	})
 
 	if err != nil {
-		response.Diagnostics.AddError("deleting SimpleDB Domain", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting SimpleDB Domain (%s)", data.ID.Value), err.Error())
 
 		return
 	}

@@ -422,7 +422,7 @@ func dnsSECStatus(conn *route53.Route53, hostedZoneID string) (string, error) {
 	}
 
 	var output *route53.GetDNSSECOutput
-	err := tfresource.RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 30*time.Second, 3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryContext(context.Background(), 3*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetDNSSEC(input)
@@ -437,7 +437,7 @@ func dnsSECStatus(conn *route53.Route53, hostedZoneID string) (string, error) {
 		}
 
 		return nil
-	})
+	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
 
 	if tfresource.TimedOut(err) {
 		output, err = conn.GetDNSSEC(input)
@@ -478,7 +478,7 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 	}
 
 	var output *route53.DisableHostedZoneDNSSECOutput
-	err = tfresource.RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 20*time.Second, 5*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryContext(context.Background(), 5*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DisableHostedZoneDNSSEC(input)
@@ -493,7 +493,7 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 		}
 
 		return nil
-	})
+	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(20*time.Second))
 
 	if tfresource.TimedOut(err) {
 		output, err = conn.DisableHostedZoneDNSSEC(input)

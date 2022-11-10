@@ -457,11 +457,9 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		old, new := d.GetChange("endpoint_type")
 
-		if old, new := old.(string), new.(string); new != old && new == transfer.EndpointTypeVpc {
+		if old, new := old.(string), new.(string); new == transfer.EndpointTypeVpc {
 			newEndpointTypeVpc = true
-		} else if new == old && new == transfer.EndpointTypeVpc {
-			newEndpointTypeVpc = true
-			oldEndpointTypeVpc = true
+			oldEndpointTypeVpc = old == new
 		}
 
 		var addressAllocationIDs []*string

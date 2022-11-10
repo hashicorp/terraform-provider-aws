@@ -225,7 +225,7 @@ func testAccMultiplex_disappears(t *testing.T) {
 }
 
 func testAccCheckMultiplexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -258,7 +258,7 @@ func testAccCheckMultiplexExists(name string, multiplex *medialive.DescribeMulti
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplex, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 		ctx := context.Background()
 		resp, err := tfmedialive.FindMultiplexByID(ctx, conn, rs.Primary.ID)
 
@@ -273,7 +273,7 @@ func testAccCheckMultiplexExists(name string, multiplex *medialive.DescribeMulti
 }
 
 func testAccMultiplexesPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 	ctx := context.Background()
 
 	input := &medialive.ListMultiplexesInput{}

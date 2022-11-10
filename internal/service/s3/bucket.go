@@ -84,7 +84,6 @@ func ResourceBucket() *schema.Resource {
 
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -230,7 +229,6 @@ func ResourceBucket() *schema.Resource {
 
 			"hosted_zone_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 

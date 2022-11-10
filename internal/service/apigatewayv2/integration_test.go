@@ -754,7 +754,7 @@ resource "aws_lb" "test" {
 
   internal           = true
   load_balancer_type = "network"
-  subnets            = aws_subnet.test.*.id
+  subnets            = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
