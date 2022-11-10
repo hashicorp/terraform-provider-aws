@@ -1,17 +1,19 @@
 package route53resolver
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceResolverFirewallRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceResolverFirewallFirewallRulesRead,
+		ReadWithoutTimeout: dataSourceResolverFirewallFirewallRulesRead,
+
 		Schema: map[string]*schema.Schema{
 			"action": {
 				Type:     schema.TypeString,
@@ -85,46 +87,37 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 	}
 }
 
-func dataSourceResolverFirewallFirewallRulesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	input := &route53resolver.ListFirewallRulesInput{
-		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
-	}
-
-	var results []*route53resolver.FirewallRule
-
-	err := conn.ListFirewallRulesPages(input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
+	rules, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {
+		if v, ok := d.GetOk("action"); ok && aws.StringValue(rule.Action) != v.(string) {
+			return false
 		}
 
-		for _, rule := range page.FirewallRules {
-			if rule == nil {
-				continue
-			}
-			if v, ok := d.GetOk("action"); ok && aws.StringValue(rule.Action) != v.(string) {
-				continue
-			}
-			if v, ok := d.GetOk("priority"); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
-				continue
-			}
-			results = append(results, rule)
+		if v, ok := d.GetOk("priority"); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
+			return false
 		}
-		return !lastPage
+
+		return true
 	})
 
 	if err != nil {
-		return fmt.Errorf("error getting Route53 Firewall Rules: %w", err)
-	}
-	if len(results) == 0 {
-		return fmt.Errorf("no  Route53 Firewall Rules found matching criteria; try different search")
-	}
-	if err := d.Set("firewall_rules", flattenFirewallRules(results)); err != nil {
-		return fmt.Errorf("error setting firewall rule details: %w", err)
+		return diag.Errorf("reading Route53 Resolver Firewall Rules (%s): %s", firewallRuleGroupID, err)
 	}
 
-	d.SetId(aws.StringValue(aws.String(d.Get("firewall_rule_group_id").(string))))
+	if n := len(rules); n == 0 {
+		return diag.Errorf("no Route53 Resolver Firewall Rules matched")
+	} else if n > 1 {
+		return diag.Errorf("%d Route53 Resolver Firewall Rules matched; use additional constraints to reduce matches to a single Firewall Rule", n)
+	}
+
+	if err := d.Set("firewall_rules", flattenFirewallRules(rules)); err != nil {
+		return diag.Errorf("setting firewall_rules: %s", err)
+	}
+
+	d.SetId(firewallRuleGroupID)
 
 	return nil
 }
