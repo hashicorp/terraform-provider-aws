@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceVpnAttachment() *schema.Resource {
+func ResourceVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNAttachmentCreate,
 		ReadWithoutTimeout:   resourceVPNAttachmentRead,

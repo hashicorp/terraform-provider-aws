@@ -89,7 +89,7 @@ func TestAccNetworkManagerVPNAttachment_disappears(t *testing.T) {
 				Config: testAccVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceVpnAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceVPNAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
