@@ -846,9 +846,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_route53_traffic_policy_document": route53.DataSourceTrafficPolicyDocument(),
 			"aws_route53_zone":                    route53.DataSourceZone(),
 
-			"aws_route53_resolver_endpoint": route53resolver.DataSourceEndpoint(),
-			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
-			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),
+			"aws_route53_resolver_endpoint":                        route53resolver.DataSourceEndpoint(),
+			"aws_route53_resolver_firewall_config":                 route53resolver.DataSourceFirewallConfig(),
+			"aws_route53_resolver_firewall_domain_list":            route53resolver.DataSourceFirewallDomainList(),
+			"aws_route53_resolver_firewall_rule_group":             route53resolver.DataSourceFirewallRuleGroup(),
+			"aws_route53_resolver_firewall_rule_group_association": route53resolver.DataSourceFirewallRuleGroupAssociation(),
+			"aws_route53_resolver_rule":                            route53resolver.DataSourceRule(),
+			"aws_route53_resolver_rules":                           route53resolver.DataSourceRules(),
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
@@ -1652,7 +1656,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
 			"aws_iot_topic_rule_destination":     iot.ResourceTopicRuleDestination(),
 
-			"aws_ivs_playback_key_pair": ivs.ResourcePlaybackKeyPair(),
+			"aws_ivs_playback_key_pair":       ivs.ResourcePlaybackKeyPair(),
+			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
 
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
