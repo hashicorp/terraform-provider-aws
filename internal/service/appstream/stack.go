@@ -75,7 +75,7 @@ func ResourceStack() *schema.Resource {
 						"settings_group": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 100),
+							ValidateFunc: validation.StringLenBetween(0, 1000),
 						},
 					},
 				},
