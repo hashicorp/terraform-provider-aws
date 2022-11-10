@@ -49,7 +49,7 @@ func (r *resourceSecurityGroupEgressRule) Delete(ctx context.Context, request re
 }
 
 func (r *resourceSecurityGroupEgressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	conn := r.meta.EC2Conn
+	conn := r.Meta().EC2Conn
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
 		GroupId:       aws.String(data.SecurityGroupID.Value),
@@ -66,7 +66,7 @@ func (r *resourceSecurityGroupEgressRule) createSecurityGroupRule(ctx context.Co
 }
 
 func (r *resourceSecurityGroupEgressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
-	conn := r.meta.EC2Conn
+	conn := r.Meta().EC2Conn
 
 	_, err := conn.RevokeSecurityGroupEgressWithContext(ctx, &ec2.RevokeSecurityGroupEgressInput{
 		GroupId:              aws.String(data.SecurityGroupID.Value),
@@ -77,7 +77,7 @@ func (r *resourceSecurityGroupEgressRule) deleteSecurityGroupRule(ctx context.Co
 }
 
 func (r *resourceSecurityGroupEgressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.meta.EC2Conn
+	conn := r.Meta().EC2Conn
 
 	return FindSecurityGroupEgressRuleByID(ctx, conn, id)
 }

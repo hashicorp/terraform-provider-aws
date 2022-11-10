@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwvalidators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -65,7 +65,7 @@ func (r *resourceSecurityGroupIngressRule) Delete(ctx context.Context, request r
 }
 
 func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	conn := r.meta.EC2Conn
+	conn := r.Meta().EC2Conn
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       aws.String(data.SecurityGroupID.Value),
@@ -82,7 +82,7 @@ func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
-	conn := r.meta.EC2Conn
+	conn := r.Meta().EC2Conn
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
 		GroupId:              aws.String(data.SecurityGroupID.Value),
@@ -93,7 +93,7 @@ func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.meta.EC2Conn
+	conn := r.Meta().EC2Conn
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
 }
@@ -101,7 +101,7 @@ func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context
 // Base structure and methods for VPC security group rules.
 
 type resourceSecurityGroupRule struct {
-	meta *conns.AWSClient
+	framework.ResourceWithConfigure
 }
 
 // GetSchema returns the schema for this resource.
@@ -191,14 +191,6 @@ func (r *resourceSecurityGroupRule) GetSchema(context.Context) (tfsdk.Schema, di
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined Resource type.
-func (r *resourceSecurityGroupRule) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		r.meta = v
-	}
-}
-
 // Update is called to update the state of the resource.
 // Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
 func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -216,7 +208,7 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 		return
 	}
 
-	conn := r.meta.EC2Conn
+	conn := r.Meta().EC2Conn
 
 	if !new.CIDRIPv4.Equal(old.CIDRIPv4) ||
 		!new.CIDRIPv6.Equal(old.CIDRIPv6) ||
@@ -303,8 +295,8 @@ func (r *resourceSecurityGroupRule) ModifyPlan(ctx context.Context, request reso
 	}
 
 	// Calculate new `tags_all` value.
-	defaultTagsConfig := r.meta.DefaultTagsConfig
-	ignoreTagsConfig := r.meta.IgnoreTagsConfig
+	defaultTagsConfig := r.Meta().DefaultTagsConfig
+	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
 	var planTags types.Map
 
@@ -362,9 +354,9 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 
 	data.ID = types.String{Value: securityGroupRuleID}
 
-	conn := r.meta.EC2Conn
-	defaultTagsConfig := r.meta.DefaultTagsConfig
-	ignoreTagsConfig := r.meta.IgnoreTagsConfig
+	conn := r.Meta().EC2Conn
+	defaultTagsConfig := r.Meta().DefaultTagsConfig
+	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
 	if len(tags) > 0 {
@@ -417,8 +409,8 @@ func (r *resourceSecurityGroupRule) read(ctx context.Context, request resource.R
 		return
 	}
 
-	defaultTagsConfig := r.meta.DefaultTagsConfig
-	ignoreTagsConfig := r.meta.IgnoreTagsConfig
+	defaultTagsConfig := r.Meta().DefaultTagsConfig
+	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
 	output, err := f(ctx, data.ID.Value)
 
@@ -473,10 +465,10 @@ func (r *resourceSecurityGroupRule) read(ctx context.Context, request resource.R
 
 func (r *resourceSecurityGroupRule) arn(_ context.Context, id string) types.String {
 	arn := arn.ARN{
-		Partition: r.meta.Partition,
+		Partition: r.Meta().Partition,
 		Service:   ec2.ServiceName,
-		Region:    r.meta.Region,
-		AccountID: r.meta.AccountID,
+		Region:    r.Meta().Region,
+		AccountID: r.Meta().AccountID,
 		Resource:  fmt.Sprintf("security-group-rule/%s", id),
 	}.String()
 	return types.String{Value: arn}
@@ -589,7 +581,7 @@ func (r *resourceSecurityGroupRule) flattenReferencedSecurityGroup(ctx context.C
 		return types.String{Null: true}
 	}
 
-	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == r.meta.AccountID {
+	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == r.Meta().AccountID {
 		return flex.ToFrameworkStringValue(ctx, apiObject.GroupId)
 	}
 
