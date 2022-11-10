@@ -37,6 +37,12 @@ type resourceSecurityGroupIngressRule struct {
 	resourceSecurityGroupRule
 }
 
+// Metadata should return the full name of the resource, such as
+// examplecloud_thing.
+func (r *resourceSecurityGroupIngressRule) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_vpc_security_group_ingress_rule"
+}
+
 // Create is called when the provider must create a new resource.
 // Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
 func (r *resourceSecurityGroupIngressRule) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -96,12 +102,6 @@ func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context
 
 type resourceSecurityGroupRule struct {
 	meta *conns.AWSClient
-}
-
-// Metadata should return the full name of the resource, such as
-// examplecloud_thing.
-func (r *resourceSecurityGroupRule) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_ingress_rule"
 }
 
 // GetSchema returns the schema for this resource.

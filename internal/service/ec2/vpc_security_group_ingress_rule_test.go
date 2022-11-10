@@ -617,7 +617,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4Updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
-					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
+					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "10.0.0.0/16"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
@@ -672,7 +672,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv6(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv6Updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
-					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
+					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv6", "2001:db8:85a3:2::/64"),
@@ -717,7 +717,7 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
-					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
+					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -764,7 +764,7 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_prefixListIDUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
-					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
+					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
@@ -821,7 +821,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID(t *testing.T) 
 				Config: testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
-					testAccCheckSecurityGroupIngressRuleNotRecreated(&v2, &v1),
+					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
@@ -916,7 +916,7 @@ func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(resourceName, &v2),
-					testAccCheckSecurityGroupIngressRuleRecreated(&v2, &v1),
+					testAccCheckSecurityGroupRuleRecreated(&v2, &v1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv6", "2001:db8:85a3::/64"),
@@ -934,20 +934,20 @@ func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityGroupIngressRuleNotRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRuleNotRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.SecurityGroupRuleId) != aws.StringValue(j.SecurityGroupRuleId) {
-			return errors.New("EC2 Security Group Rule was recreated")
+			return errors.New("VPC Security Group Rule was recreated")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSecurityGroupIngressRuleRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRuleRecreated(i, j *ec2.SecurityGroupRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.SecurityGroupRuleId) == aws.StringValue(j.SecurityGroupRuleId) {
-			return errors.New("EC2 Security Group Rule was not recreated")
+			return errors.New("VPC Security Group Rule was not recreated")
 		}
 
 		return nil
@@ -1011,7 +1011,7 @@ func testAccCheckSecurityGroupIngressRuleUpdateTags(v *ec2.SecurityGroupRule, ol
 	}
 }
 
-func testAccVPCSecurityGroupIngressRuleConfig_base(rName string) string {
+func testAccVPCSecurityGroupRuleConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1033,7 +1033,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1046,7 +1046,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1063,7 +1063,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1135,7 +1135,7 @@ locals {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1148,7 +1148,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4Updated(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1161,7 +1161,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv6(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1174,7 +1174,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv6Updated(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1185,7 +1185,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_description(rName, description string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1200,7 +1200,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_prefixListIDBase(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test1" {
@@ -1250,7 +1250,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupID(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), `
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_vpc_security_group_ingress_rule" "test" {
   security_group_id = aws_security_group.test.id
 
@@ -1263,7 +1263,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test1" {
   vpc_id = aws_vpc.test.id
   name   = "%[1]s-1"
@@ -1285,7 +1285,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDPeerVPC(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccVPCSecurityGroupIngressRuleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "peer" {
   provider = "awsalternate"
 
