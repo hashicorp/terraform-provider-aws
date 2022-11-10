@@ -851,6 +851,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_route53_resolver_firewall_domain_list":            route53resolver.DataSourceFirewallDomainList(),
 			"aws_route53_resolver_firewall_rule_group":             route53resolver.DataSourceFirewallRuleGroup(),
 			"aws_route53_resolver_firewall_rule_group_association": route53resolver.DataSourceFirewallRuleGroupAssociation(),
+			"aws_route53_resolver_firewall_rules":                  route53resolver.DataSourceResolverFirewallRules(),
 			"aws_route53_resolver_rule":                            route53resolver.DataSourceRule(),
 			"aws_route53_resolver_rules":                           route53resolver.DataSourceRules(),
 
