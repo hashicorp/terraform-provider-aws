@@ -110,17 +110,16 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager VPN Attachment (%s, %s)", coreNetworkID, vpnConnectionARN)
 	output, err := conn.CreateSiteToSiteVpnAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager VPN (%s) Attachment (%s): %s", vpnConnectionARN, coreNetworkID, err)
+		return diag.Errorf("creating Network Manager Site To Site VPN (%s) Attachment (%s): %s", vpnConnectionARN, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(output.SiteToSiteVpnAttachment.Attachment.AttachmentId))
 
 	if _, err := waitSiteToSiteVPNAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager VPN Attachment (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Site To Site VPN Attachment (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceSiteToSiteVPNAttachmentRead(ctx, d, meta)
@@ -134,13 +133,13 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Network Manager VPN Attachment (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Network Manager Site To Site VPN Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager VPN Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 	}
 
 	a := vpnAttachment.Attachment
@@ -182,7 +181,7 @@ func resourceSiteToSiteVPNAttachmentUpdate(ctx context.Context, d *schema.Resour
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Network Manager VPN Attachment (%s) tags: %s", d.Get("arn").(string), err))
+			return diag.FromErr(fmt.Errorf("updating Network Manager Site To Site VPN Attachment (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}
 
@@ -194,23 +193,22 @@ func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.Resour
 
 	// If ResourceAttachmentAccepter is used, then VPN Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails
-	output, sErr := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
-	if tfawserr.ErrCodeEquals(sErr, networkmanager.ErrCodeResourceNotFoundException) {
+	output, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
-	if sErr != nil {
-		return diag.Errorf("deleting Network Manager VPN Attachment (%s): %s", d.Id(), sErr)
+	if err != nil {
+		return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("state", output.Attachment.State)
-
-	if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
-		return diag.Errorf("cannot delete Network Manager VPN Attachment (%s) in %s state", d.Id(), state)
+	if state := aws.StringValue(output.Attachment.State); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
+		return diag.Errorf("cannot delete Network Manager Site To Site VPN Attachment (%s) in state: %s", d.Id(), state)
 	}
 
-	log.Printf("[DEBUG] Deleting Network Manager VPN Attachment: %s", d.Id())
-	_, err := conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{
+	log.Printf("[DEBUG] Deleting Network Manager Site To Site VPN Attachment: %s", d.Id())
+	_, err = conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
 	})
 
@@ -219,11 +217,11 @@ func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager VPN Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitSiteToSiteVPNAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager VPN Attachment (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Site To Site VPN Attachment (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

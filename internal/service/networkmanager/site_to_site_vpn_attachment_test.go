@@ -159,7 +159,7 @@ func testAccCheckSiteToSiteVPNAttachmentExists(n string, v *networkmanager.SiteT
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager VPN Attachment ID is set")
+			return fmt.Errorf("No Network Manager Site To Site VPN Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
@@ -194,7 +194,7 @@ func testAccCheckSiteToSiteVPNAttachmentDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Network Manager VPN Attachment %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Network Manager Site To Site VPN Attachment %s still exists", rs.Primary.ID)
 	}
 
 	return nil
