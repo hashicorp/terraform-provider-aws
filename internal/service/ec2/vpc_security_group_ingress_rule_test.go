@@ -972,7 +972,7 @@ func testAccCheckSecurityGroupIngressRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("EC2 Security Group Ingress Rule still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("VPC Security Group Ingress Rule still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
@@ -986,7 +986,7 @@ func testAccCheckSecurityGroupIngressRuleExists(n string, v *ec2.SecurityGroupRu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Security Group Ingress Rule ID is set")
+			return fmt.Errorf("No VPC Security Group Ingress Rule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
