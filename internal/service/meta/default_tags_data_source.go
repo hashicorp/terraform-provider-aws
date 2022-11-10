@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -24,7 +24,7 @@ func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type dataSourceDefaultTags struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -49,15 +49,6 @@ func (d *dataSourceDefaultTags) GetSchema(context.Context) (tfsdk.Schema, diag.D
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceDefaultTags) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceDefaultTags) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -69,11 +60,11 @@ func (d *dataSourceDefaultTags) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	defaultTagsConfig := d.meta.DefaultTagsConfig
-	ignoreTagsConfig := d.meta.IgnoreTagsConfig
+	defaultTagsConfig := d.Meta().DefaultTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.GetTags()
 
-	data.ID = types.String{Value: d.meta.Partition}
+	data.ID = types.String{Value: d.Meta().Partition}
 	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
