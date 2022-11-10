@@ -84,7 +84,7 @@ func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"vpn_arn": {
+			"vpn_connection_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -100,21 +100,21 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	coreNetworkID := d.Get("core_network_id").(string)
-	vpnARN := d.Get("vpn_arn").(string)
+	vpnConnectionARN := d.Get("vpn_connection_arn").(string)
 	input := &networkmanager.CreateSiteToSiteVpnAttachmentInput{
 		CoreNetworkId:    aws.String(coreNetworkID),
-		VpnConnectionArn: aws.String(vpnARN),
+		VpnConnectionArn: aws.String(vpnConnectionARN),
 	}
 
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager VPN Attachment (%s, %s)", coreNetworkID, vpnARN)
+	log.Printf("[DEBUG] Creating Network Manager VPN Attachment (%s, %s)", coreNetworkID, vpnConnectionARN)
 	output, err := conn.CreateSiteToSiteVpnAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager VPN (%s) Attachment (%s): %s", vpnARN, coreNetworkID, err)
+		return diag.Errorf("creating Network Manager VPN (%s) Attachment (%s): %s", vpnConnectionARN, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(output.SiteToSiteVpnAttachment.Attachment.AttachmentId))
@@ -160,7 +160,7 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("resource_arn", a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
 	d.Set("state", a.State)
-	d.Set("vpn_arn", a.ResourceArn)
+	d.Set("vpn_connection_arn", a.ResourceArn)
 
 	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

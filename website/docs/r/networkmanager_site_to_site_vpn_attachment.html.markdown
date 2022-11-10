@@ -16,8 +16,8 @@ Terraform resource for managing an AWS NetworkManager SiteToSiteAttachment.
 
 ```terraform
 resource "aws_networkmanager_site_to_site_vpn_attachment" "example" {
-  core_network_id = awscc_networkmanager_core_network.example.id
-  vpn_arn         = aws_vpn_connection.example.arn
+  core_network_id    = awscc_networkmanager_core_network.example.id
+  vpn_connection_arn = aws_vpn_connection.example.arn
 }
 ```
 
@@ -26,7 +26,7 @@ resource "aws_networkmanager_site_to_site_vpn_attachment" "example" {
 The following arguments are required:
 
 - `core_network_id` - (Required) The ID of a core network for the VPN attachment.
-- `vpn_arn` - (Required) The ARN of the VPN.
+- `vpn_connection_arn` - (Required) The ARN of the site-to-site VPN connection.
 
 The following arguments are optional:
 
