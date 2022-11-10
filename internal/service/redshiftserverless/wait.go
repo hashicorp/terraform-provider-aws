@@ -129,7 +129,7 @@ func waitEndpointAccessDeleted(conn *redshiftserverless.RedshiftServerless, name
 	return nil, err
 }
 
-func waitSnapshotAvailable(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Snapshot, error) { //nolint:unparam
+func waitSnapshotAvailable(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Snapshot, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			redshiftserverless.SnapshotStatusCreating,
