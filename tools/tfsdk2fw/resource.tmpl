@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
     "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	{{if .ImportProviderFrameworkTypes }}"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"{{- end}}
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	{{if .ImportProviderFrameworkTypes }}fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"{{- end}}
 )
 
 func init() {
@@ -26,7 +26,7 @@ func newResource{{ .Name }}(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type resource{{ .Name }} struct {
-	meta *conns.AWSClient
+	framework.ResourceWithConfigure
 }
 
 // Metadata should return the full name of the resource, such as
@@ -40,14 +40,6 @@ func (r *resource{{ .Name }}) GetSchema(context.Context) (tfsdk.Schema, diag.Dia
     schema := {{ .Schema }}
 
     return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined Resource type.
-func (r *resource{{ .Name }}) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		r.meta = v
-	}
 }
 
 // Create is called when the provider must create a new resource.
