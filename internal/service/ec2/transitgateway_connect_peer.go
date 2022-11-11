@@ -50,7 +50,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: valid4ByteASN,
+				ValidateFunc: verify.Valid4ByteASN,
 			},
 			"inside_cidr_blocks": {
 				Type:     schema.TypeSet,
@@ -129,13 +129,13 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 	output, err := conn.CreateTransitGatewayConnectPeerWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating EC2 Transit Gateway Connect Peer: %s", err)
+		return diag.Errorf("creating EC2 Transit Gateway Connect Peer: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayConnectPeer.TransitGatewayConnectPeerId))
 
 	if _, err := WaitTransitGatewayConnectPeerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Connect Peer (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for EC2 Transit Gateway Connect Peer (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceTransitGatewayConnectPeerRead(ctx, d, meta)
@@ -155,7 +155,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Connect Peer (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EC2 Transit Gateway Connect Peer (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -176,11 +176,11 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -193,7 +193,7 @@ func resourceTransitGatewayConnectPeerUpdate(ctx context.Context, d *schema.Reso
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating EC2 Transit Gateway Connect Peer (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating EC2 Transit Gateway Connect Peer (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -213,11 +213,11 @@ func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting EC2 Transit Gateway Connect Peer: %s", err)
+		return diag.Errorf("deleting EC2 Transit Gateway Connect Peer: %s", err)
 	}
 
 	if _, err := WaitTransitGatewayConnectPeerDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Connect Peer (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for EC2 Transit Gateway Connect Peer (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

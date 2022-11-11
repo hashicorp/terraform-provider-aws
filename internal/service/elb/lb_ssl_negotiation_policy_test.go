@@ -21,14 +21,14 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLBSSLNegotiationPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
@@ -47,14 +47,14 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLBSSLNegotiationPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),

@@ -22,14 +22,14 @@ func init() {
 	})
 }
 
-func sweepKeyspaces(region string) error { // nosemgrep:keyspaces-in-func-name
+func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-name
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).KeyspacesConn
 	input := &keyspaces.ListKeyspacesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListKeyspacesPages(input, func(page *keyspaces.ListKeyspacesOutput, lastPage bool) bool {
 		if page == nil {
@@ -40,7 +40,7 @@ func sweepKeyspaces(region string) error { // nosemgrep:keyspaces-in-func-name
 			id := aws.StringValue(v.KeyspaceName)
 
 			switch id {
-			case "system_schema", "system_schema_mcs", "system":
+			case "system_schema", "system_schema_mcs", "system", "system_multiregion_info":
 				// The default keyspaces cannot be deleted.
 				continue
 			}

@@ -12,7 +12,6 @@ Provides a SageMaker endpoint configuration resource.
 
 ## Example Usage
 
-
 Basic usage:
 
 ```terraform
@@ -39,7 +38,7 @@ The following arguments are supported:
 * `production_variants` - (Required) Fields are documented below.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `data_capture_config` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `async_inference_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
 
@@ -102,7 +101,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint configuration.
 * `name` - The name of the endpoint configuration.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

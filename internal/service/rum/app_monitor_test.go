@@ -21,21 +21,22 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppMonitorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
-					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -49,12 +50,13 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
-					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
+					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -68,10 +70,10 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppMonitorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_tags1(rName, "key1", "value1"),
@@ -113,10 +115,10 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 	resourceName := "aws_rum_app_monitor.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppMonitorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppMonitorConfig_basic(rName),

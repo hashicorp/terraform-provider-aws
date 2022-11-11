@@ -15,32 +15,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectInstance_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":     testAccInstance_basic,
-		"directory": testAccInstance_directory,
-		"saml":      testAccInstance_saml,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccInstance_basic(t *testing.T) {
 	var v connect.DescribeInstanceOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
@@ -55,6 +39,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeConnectManaged),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "true"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
+					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
@@ -77,6 +62,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "false"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
+					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 				),
@@ -93,10 +79,10 @@ func testAccInstance_directory(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_directory(rName, domainName),
@@ -122,10 +108,10 @@ func testAccInstance_saml(t *testing.T) {
 	resourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_saml(rName),
@@ -223,6 +209,7 @@ resource "aws_connect_instance" "test" {
   identity_management_type         = "CONNECT_MANAGED"
   inbound_calls_enabled            = false
   instance_alias                   = %[1]q
+  multi_party_conference_enabled   = false
   outbound_calls_enabled           = false
 }
 `, rName)

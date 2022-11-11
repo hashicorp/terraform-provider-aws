@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
@@ -17,10 +16,10 @@ func TestAccDynamoDBTag_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
@@ -44,10 +43,10 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
@@ -63,7 +62,6 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13725
 func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_tag.test"
 
@@ -72,9 +70,9 @@ func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTagDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_resourceARNTableReplica(rName),
@@ -97,10 +95,10 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -16,6 +17,10 @@ import (
 func DataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceRouteTableRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
@@ -331,7 +336,6 @@ func dataSourceAssociationsRead(ec2Assocations []*ec2.RouteTableAssociation) []m
 	associations := make([]map[string]interface{}, 0, len(ec2Assocations))
 	// Loop through the routes and add them to the set
 	for _, a := range ec2Assocations {
-
 		m := make(map[string]interface{})
 		m["route_table_id"] = aws.StringValue(a.RouteTableId)
 		m["route_table_association_id"] = aws.StringValue(a.RouteTableAssociationId)

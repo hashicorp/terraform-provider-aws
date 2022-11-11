@@ -71,14 +71,14 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 
 	name := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
@@ -101,14 +101,14 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 
 	name := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
@@ -130,14 +130,14 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
@@ -181,14 +181,14 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	name := acctest.RandomSubdomain()
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),

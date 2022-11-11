@@ -82,6 +82,38 @@ func ResourceDetector() *schema.Resource {
 								},
 							},
 						},
+						"malware_protection": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scan_ec2_instance_with_findings": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ebs_volumes": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"enable": {
+																Type:     schema.TypeBool,
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -272,7 +304,9 @@ func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.Dat
 	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Kubernetes = expandKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
-
+	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MalwareProtection = expandMalwareProtectionConfiguration(v[0].(map[string]interface{}))
+	}
 	return apiObject
 }
 
@@ -324,6 +358,61 @@ func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guard
 	return apiObject
 }
 
+func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *guardduty.MalwareProtectionConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["scan_ec2_instance_with_findings"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.MalwareProtectionConfiguration{
+		ScanEc2InstanceWithFindings: expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(m),
+	}
+}
+
+func expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["ebs_volumes"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &guardduty.ScanEc2InstanceWithFindings{
+		EbsVolumes: expandMalwareProtectionEBSVolumesConfiguration(m),
+	}
+	return apiObject
+}
+
+func expandMalwareProtectionEBSVolumesConfiguration(tfMap map[string]interface{}) *bool {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObject *bool
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -337,6 +426,10 @@ func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfig
 
 	if v := apiObject.Kubernetes; v != nil {
 		tfMap["kubernetes"] = []interface{}{flattenKubernetesConfiguration(v)}
+	}
+
+	if v := apiObject.MalwareProtection; v != nil {
+		tfMap["malware_protection"] = []interface{}{flattenMalwareProtectionConfiguration(v)}
 	}
 
 	return tfMap
@@ -371,6 +464,48 @@ func flattenKubernetesConfiguration(apiObject *guardduty.KubernetesConfiguration
 }
 
 func flattenKubernetesAuditLogsConfiguration(apiObject *guardduty.KubernetesAuditLogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionConfiguration(apiObject *guardduty.MalwareProtectionConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EbsVolumes; v != nil {
+		tfMap["ebs_volumes"] = []interface{}{flattenMalwareProtectionEBSVolumesConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionEBSVolumesConfigurationResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

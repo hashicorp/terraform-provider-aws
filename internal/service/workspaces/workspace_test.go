@@ -32,9 +32,9 @@ func testAccWorkspace_basic(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
@@ -81,9 +81,9 @@ func testAccWorkspace_tags(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_tagsA(rName, domain),
@@ -134,9 +134,9 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
@@ -200,9 +200,9 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_propertiesB(rName, domain),
@@ -230,10 +230,10 @@ func testAccWorkspace_validateRootVolumeSize(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceConfig_validateRootVolumeSize(rName, domain),
@@ -248,10 +248,10 @@ func testAccWorkspace_validateUserVolumeSize(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceConfig_validateUserVolumeSize(rName, domain),
@@ -275,9 +275,9 @@ func testAccWorkspace_recreate(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(rName, domain),
@@ -310,9 +310,9 @@ func testAccWorkspace_timeout(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,

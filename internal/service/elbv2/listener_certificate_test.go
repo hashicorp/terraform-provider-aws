@@ -17,18 +17,18 @@ import (
 )
 
 func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckListenerCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
@@ -49,18 +49,18 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17639
 func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckListenerCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate),
@@ -83,18 +83,18 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 	keys := make([]string, 4)
 	certificates := make([]string, 4)
 	for i := 0; i < 4; i++ {
-		keys[i] = acctest.TLSRSAPrivateKeyPEM(2048)
-		certificates[i] = acctest.TLSRSAX509SelfSignedCertificatePEM(keys[i], "example.com")
+		keys[i] = acctest.TLSRSAPrivateKeyPEM(t, 2048)
+		certificates[i] = acctest.TLSRSAX509SelfSignedCertificatePEM(t, keys[i], "example.com")
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_certificate.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckListenerCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_multiple(rName, keys, certificates),
@@ -152,16 +152,16 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 }
 
 func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_lb_listener_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckListenerCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),

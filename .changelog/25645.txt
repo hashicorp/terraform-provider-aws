@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_risk_configuration: Increase maximum allowed length of `account_takeover_risk_configuration.notify_configuration.block_email.html_body`, `account_takeover_risk_configuration.notify_configuration.block_email.text_body`, `account_takeover_risk_configuration.notify_configuration.mfa_email.html_body`, `account_takeover_risk_configuration.notify_configuration.mfa_email.text_body`, `account_takeover_risk_configuration.notify_configuration.no_action_email.html_body` and `account_takeover_risk_configuration.notify_configuration.no_action_email.text_body` arguments from `2000` to `20000`
+```

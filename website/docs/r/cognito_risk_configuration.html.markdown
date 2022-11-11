@@ -49,8 +49,8 @@ The following arguments are supported:
 ##### notify email type
 
 * `html_body` - (Required) The email HTML body.
-* `block_email` - (Required) The email subject.
-* `block_email` - (Required) The email text body.
+* `subject` - (Required) The email subject.
+* `test_body` - (Required) The email text body.
 
 #### actions
 

@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +15,6 @@ import (
 )
 
 func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_vpc_endpoint_connection_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -25,9 +23,9 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckVPCEndpointConnectionAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName),

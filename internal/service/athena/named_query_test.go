@@ -18,10 +18,10 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNamedQueryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamedQueryConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
@@ -42,10 +42,10 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNamedQueryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNamedQueryConfig_workGroup(sdkacctest.RandInt(), sdkacctest.RandString(5)),

@@ -23,10 +23,10 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
@@ -55,10 +55,10 @@ func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
@@ -78,10 +78,10 @@ func TestAccSiteVPNCustomerGateway_privateIPv4(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
@@ -110,10 +110,10 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, "key1", "value1"),
@@ -153,10 +153,10 @@ func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayConfig_deviceName(rName, rBgpAsn),
@@ -181,10 +181,10 @@ func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNCustomerGatewayConfig_siteVPN4ByteASN(rName, rBgpAsn),
@@ -215,10 +215,10 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCustomerGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			// We need to create and activate the CAs before issuing a certificate.
 			{

@@ -61,10 +61,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_guardduty_invite_accepter` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1m`) How long to wait for an invite to accept.
+- `create` - (Default `1m`)
 
 ## Import
 

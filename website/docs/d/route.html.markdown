@@ -39,7 +39,7 @@ The arguments of this data source act as filters for querying the available Rout
 
 The following arguments are required:
 
-* `route_table_id` - (Required) The ID of the specific Route Table containing the Route entry.
+* `route_table_id` - (Required) ID of the specific Route Table containing the Route entry.
 
 The following arguments are optional:
 
@@ -47,7 +47,7 @@ The following arguments are optional:
 * `core_network_arn` - (Optional) Core network ARN of the Route belonging to the Route Table.
 * `destination_cidr_block` - (Optional) CIDR block of the Route belonging to the Route Table.
 * `destination_ipv6_cidr_block` - (Optional) IPv6 CIDR block of the Route belonging to the Route Table.
-* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the Route belonging to the Route Table.
+* `destination_prefix_list_id` - (Optional) ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the Route belonging to the Route Table.
 * `egress_only_gateway_id` - (Optional) Egress Only Gateway ID of the Route belonging to the Route Table.
 * `gateway_id` - (Optional) Gateway ID of the Route belonging to the Route Table.
 * `instance_id` - (Optional) Instance ID of the Route belonging to the Route Table.
@@ -60,3 +60,9 @@ The following arguments are optional:
 ## Attributes Reference
 
 All of the argument attributes are also exported as result attributes when there is data available. For example, the `vpc_peering_connection_id` field will be empty when the route is attached to a Network Interface.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

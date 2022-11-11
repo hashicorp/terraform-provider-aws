@@ -29,10 +29,10 @@ func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_basic(rName, cwArn),
@@ -64,10 +64,10 @@ func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_basic(rName, cwArn),
@@ -93,10 +93,10 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	}.String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_tags1(rName, cwArn, "key1", "value1"),
@@ -144,10 +144,10 @@ func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 	}.String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_readinessScopes(rName, cwArn),
@@ -185,9 +185,9 @@ func TestAccRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testin
 			acctest.PreCheck(t)
 			testAccPreCheckResourceSet(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_basicDNSTarget(rName, domainName, hzArn, recordType, recordSetId),
@@ -225,9 +225,9 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *te
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_dnsTargetNlbTarget(rName, hzArn),
@@ -264,9 +264,9 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *te
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_dnsTargetR53Target(rName, hzArn, domainName, recordSetId),
@@ -298,10 +298,10 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourceSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_timeout(rName, cwArn),

@@ -46,15 +46,15 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 
 func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:test-config-funcs-correct-form
-				Config: "# Dummy config.",
+			{
+				Config: "# Empty config",
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIMappingCreateCertificate(rName, certificateArn),
+					testAccCheckAPIMappingCreateCertificate(t, rName, certificateArn),
 				),
 			},
 		},
@@ -71,10 +71,10 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateArn *string)
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIMappingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
@@ -99,10 +99,10 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *st
 	resourceName := "aws_apigatewayv2_api_mapping.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIMappingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
@@ -124,10 +124,10 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIMappingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_key(rName, *certificateArn, "$context.domainName"),
@@ -155,10 +155,10 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	})
 }
 
-func testAccCheckAPIMappingCreateCertificate(rName string, certificateArn *string) resource.TestCheckFunc {
+func testAccCheckAPIMappingCreateCertificate(t *testing.T, rName string, certificateArn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		privateKey := acctest.TLSRSAPrivateKeyPEM(2048)
-		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey, fmt.Sprintf("%s.example.com", rName))
+		privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey, fmt.Sprintf("%s.example.com", rName))
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
 

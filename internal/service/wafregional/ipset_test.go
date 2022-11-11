@@ -26,10 +26,10 @@ func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(ipsetName),
@@ -57,10 +57,10 @@ func TestAccWAFRegionalIPSet_disappears(t *testing.T) {
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(ipsetName),
@@ -81,10 +81,10 @@ func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 	ipsetNewName := fmt.Sprintf("ip-set-new-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(ipsetName),
@@ -123,10 +123,10 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(ipsetName),
@@ -186,10 +186,10 @@ func TestAccWAFRegionalIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_ipSetDescriptors(ipsetName, strings.Join(ipSetDescriptors, "\n")),
@@ -213,10 +213,10 @@ func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_noDescriptors(ipsetName),

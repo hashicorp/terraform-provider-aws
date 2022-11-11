@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,13 +23,13 @@ func TestAccEKSAddon_basic(t *testing.T) {
 	clusterResourceName := "aws_eks_cluster.test"
 	addonResourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_basic(rName, addonName),
@@ -58,13 +57,13 @@ func TestAccEKSAddon_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_basic(rName, addonName),
@@ -84,13 +83,13 @@ func TestAccEKSAddon_Disappears_cluster(t *testing.T) {
 	resourceName := "aws_eks_addon.test"
 	clusterResourceName := "aws_eks_cluster.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_basic(rName, addonName),
@@ -111,13 +110,13 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 	addonName := "vpc-cni"
 	addonVersion1 := "v1.8.0-eksbuild.1"
 	addonVersion2 := "v1.9.0-eksbuild.1"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_version(rName, addonName, addonVersion1),
@@ -148,13 +147,13 @@ func TestAccEKSAddon_preserve(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_preserve(rName, addonName),
@@ -174,17 +173,17 @@ func TestAccEKSAddon_preserve(t *testing.T) {
 }
 
 func TestAccEKSAddon_resolveConflicts(t *testing.T) {
-	var addon1, addon2 eks.Addon
+	var addon1, addon2, addon3 eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_resolveConflicts(rName, addonName, eks.ResolveConflictsNone),
@@ -206,6 +205,13 @@ func TestAccEKSAddon_resolveConflicts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", eks.ResolveConflictsOverwrite),
 				),
 			},
+			{
+				Config: testAccAddonConfig_resolveConflicts(rName, addonName, eks.ResolveConflictsPreserve),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon3),
+					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", eks.ResolveConflictsPreserve),
+				),
+			},
 		},
 	})
 }
@@ -216,13 +222,13 @@ func TestAccEKSAddon_serviceAccountRoleARN(t *testing.T) {
 	resourceName := "aws_eks_addon.test"
 	serviceRoleResourceName := "aws_iam_role.test-service-role"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_serviceAccountRoleARN(rName, addonName),
@@ -245,13 +251,13 @@ func TestAccEKSAddon_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_tags1(rName, addonName, "key1", "value1"),
@@ -288,19 +294,17 @@ func TestAccEKSAddon_tags(t *testing.T) {
 }
 
 func TestAccEKSAddon_DefaultTags_providerOnly(t *testing.T) {
-	var providers []*schema.Provider
 	var addon eks.Addon
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -349,19 +353,17 @@ func TestAccEKSAddon_DefaultTags_providerOnly(t *testing.T) {
 }
 
 func TestAccEKSAddon_DefaultTags_updateToProviderOnly(t *testing.T) {
-	var providers []*schema.Provider
 	var addon eks.Addon
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_tags1(rName, addonName, "key1", "value1"),
@@ -395,19 +397,17 @@ func TestAccEKSAddon_DefaultTags_updateToProviderOnly(t *testing.T) {
 }
 
 func TestAccEKSAddon_DefaultTags_updateToResourceOnly(t *testing.T) {
-	var providers []*schema.Provider
 	var addon eks.Addon
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -441,19 +441,17 @@ func TestAccEKSAddon_DefaultTags_updateToResourceOnly(t *testing.T) {
 }
 
 func TestAccEKSAddon_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
-	var providers []*schema.Provider
 	var addon eks.Addon
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -509,19 +507,17 @@ func TestAccEKSAddon_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing
 }
 
 func TestAccEKSAddon_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
-	var providers []*schema.Provider
 	var addon eks.Addon
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -573,16 +569,14 @@ func TestAccEKSAddon_DefaultTagsProviderAndResource_overlappingTag(t *testing.T)
 }
 
 func TestAccEKSAddon_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
-	var providers []*schema.Provider
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	addonName := "vpc-cni"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -597,19 +591,17 @@ func TestAccEKSAddon_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 }
 
 func TestAccEKSAddon_defaultAndIgnoreTags(t *testing.T) {
-	var providers []*schema.Provider
 	var addon eks.Addon
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_tags1(rName, addonName, "key1", "value1"),
@@ -638,19 +630,17 @@ func TestAccEKSAddon_defaultAndIgnoreTags(t *testing.T) {
 }
 
 func TestAccEKSAddon_ignoreTags(t *testing.T) {
-	var providers []*schema.Provider
 	var addon eks.Addon
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_tags1(rName, addonName, "key1", "value1"),
@@ -678,15 +668,15 @@ func TestAccEKSAddon_ignoreTags(t *testing.T) {
 	})
 }
 
-func testAccCheckAddonExists(ctx context.Context, resourceName string, addon *eks.Addon) resource.TestCheckFunc {
+func testAccCheckAddonExists(ctx context.Context, n string, v *eks.Addon) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no EKS Add-On ID is set")
+			return fmt.Errorf("No EKS Add-On ID is set")
 		}
 
 		clusterName, addonName, err := tfeks.AddonParseResourceID(rs.Primary.ID)
@@ -703,14 +693,14 @@ func testAccCheckAddonExists(ctx context.Context, resourceName string, addon *ek
 			return err
 		}
 
-		*addon = *output
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccCheckAddonDestroy(s *terraform.State) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -734,7 +724,7 @@ func testAccCheckAddonDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("EKS Node Group %s still exists", rs.Primary.ID)
+		return fmt.Errorf("EKS Add-On %s still exists", rs.Primary.ID)
 	}
 
 	return nil

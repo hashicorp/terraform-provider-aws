@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -69,11 +70,6 @@ func ResourceInstanceGroup() *schema.Resource {
 					return json
 				},
 			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
 			"ebs_config": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -107,10 +103,15 @@ func ResourceInstanceGroup() *schema.Resource {
 				},
 				Set: resourceClusterEBSHashConfig,
 			},
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Computed: true,
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -141,7 +142,6 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	groupConfig := &emr.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
 		InstanceType:     aws.String(d.Get("instance_type").(string)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
@@ -164,6 +164,12 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 		}
+	}
+
+	if v, ok := d.GetOk("instance_count"); ok {
+		groupConfig.InstanceCount = aws.Int64(int64(v.(int)))
+	} else {
+		groupConfig.InstanceCount = aws.Int64(1)
 	}
 
 	groupConfig.Market = aws.String(emr.MarketTypeOnDemand)
@@ -208,6 +214,11 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
+		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+			log.Printf("[DEBUG] EMR Cluster corresponding to Instance Group (%s) not found, removing", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
@@ -235,35 +246,12 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("configurations_json", "")
 	}
 
-	var autoscalingPolicyString string
-	if ig.AutoScalingPolicy != nil {
-		// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated for `instance_group`.
-		// We are purposefully omitting that field and the null values here when we flatten the autoscaling policy string for the statefile.
-		for i, rule := range ig.AutoScalingPolicy.Rules {
-			for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
-				if aws.StringValue(dimension.Key) == "JobFlowId" {
-					tmpDimensions := append(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[:j], ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[j+1:]...)
-					ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = tmpDimensions
-				}
-			}
+	autoscalingPolicyString, err := flattenAutoScalingPolicyDescription(ig.AutoScalingPolicy)
 
-			if len(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
-				ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = nil
-			}
-		}
-
-		autoscalingPolicyConstraintsBytes, err := json.Marshal(ig.AutoScalingPolicy.Constraints)
-		if err != nil {
-			return fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %s", err)
-		}
-
-		autoscalingPolicyRulesBytes, err := marshalWithoutNil(ig.AutoScalingPolicy.Rules)
-		if err != nil {
-			return fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %s", err)
-		}
-
-		autoscalingPolicyString = fmt.Sprintf("{\"Constraints\":%s,\"Rules\":%s}", string(autoscalingPolicyConstraintsBytes), string(autoscalingPolicyRulesBytes))
+	if err != nil {
+		return err
 	}
+
 	d.Set("autoscaling_policy", autoscalingPolicyString)
 
 	d.Set("bid_price", ig.BidPrice)
@@ -442,46 +430,6 @@ func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 	}
 	result.EbsBlockDeviceConfigs = ebsConfigs
 	return result
-}
-
-// marshalWithoutNil returns a JSON document of v stripped of any null properties
-func marshalWithoutNil(v interface{}) ([]byte, error) {
-	//removeNil is a helper for stripping nil values
-	removeNil := func(data map[string]interface{}) map[string]interface{} {
-
-		m := make(map[string]interface{})
-		for k, v := range data {
-			if v == nil {
-				continue
-			}
-
-			switch v := v.(type) {
-			case map[string]interface{}:
-				m[k] = removeNil(v)
-			default:
-				m[k] = v
-			}
-		}
-
-		return m
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	var rules []map[string]interface{}
-	if err := json.Unmarshal(b, &rules); err != nil {
-		return nil, err
-	}
-
-	var cleanRules []map[string]interface{}
-	for _, rule := range rules {
-		cleanRules = append(cleanRules, removeNil(rule))
-	}
-
-	return json.Marshal(cleanRules)
 }
 
 func waitForInstanceGroupStateRunning(conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {

@@ -20,10 +20,10 @@ func TestAccRedshiftHSMClientCertificate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHSMClientCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMClientCertificateConfig_basic(rName),
@@ -49,10 +49,10 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHSMClientCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMClientCertificateConfig_tags1(rName, "key1", "value1"),
@@ -92,10 +92,10 @@ func TestAccRedshiftHSMClientCertificate_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHSMClientCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMClientCertificateConfig_basic(rName),
@@ -148,11 +148,7 @@ func testAccCheckHSMClientCertificateExists(name string) resource.TestCheckFunc 
 
 		_, err := tfredshift.FindHSMClientCertificateByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

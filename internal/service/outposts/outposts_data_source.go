@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceOutposts() *schema.Resource { // nosemgrep: outposts-in-func-name
+func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-name
 	return &schema.Resource{
 		Read: dataSourceOutpostsRead,
 
@@ -48,7 +48,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep: outposts-in-func-name
 	}
 }
 
-func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep: outposts-in-func-name
+func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.outposts-in-func-name
 	conn := meta.(*conns.AWSClient).OutpostsConn
 
 	input := &outposts.ListOutpostsInput{}

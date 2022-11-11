@@ -27,13 +27,13 @@ jobs:
         id: release-tag
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo ::set-output name=tag::${{ github.event.inputs.release-tag }}
+            echo "tag=${{ github.event.inputs.release-tag }}" >> "$GITHUB_OUTPUT"
           else
             value=`cat release-tag.data`
-            echo ::set-output name=tag::$value
+            echo "tag=$value" >> "$GITHUB_OUTPUT"
           fi
   tidy-asana:
-    needs: [ on-success-or-workflow-dispatch ]
+    needs: [on-success-or-workflow-dispatch]
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Asana
@@ -47,7 +47,7 @@ jobs:
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   archive-release-cards:
-    needs: [ on-success-or-workflow-dispatch ]
+    needs: [on-success-or-workflow-dispatch]
     runs-on: ubuntu-latest
     steps:
       - name: Archive Release Cards

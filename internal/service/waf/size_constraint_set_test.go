@@ -22,10 +22,10 @@ func TestAccWAFSizeConstraintSet_basic(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
@@ -62,10 +62,10 @@ func TestAccWAFSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
@@ -98,10 +98,10 @@ func TestAccWAFSizeConstraintSet_disappears(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
@@ -121,10 +121,10 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(setName),
@@ -177,10 +177,10 @@ func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_nos(setName),

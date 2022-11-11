@@ -25,10 +25,10 @@ func TestAccDataSyncLocationS3_basic(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationS3Config_basic(rName),
@@ -63,10 +63,10 @@ func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationS3Config_storageClass(rName),
@@ -97,10 +97,10 @@ func TestAccDataSyncLocationS3_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_s3.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationS3Config_basic(rName),
@@ -120,10 +120,10 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 	resourceName := "aws_datasync_location_s3.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationS3Config_tags1(rName, "key1", "value1"),

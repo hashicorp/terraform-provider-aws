@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -19,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceCloudTrail() *schema.Resource { // nosemgrep:cloudtrail-in-func-name
+func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-name
 	return &schema.Resource{
 		Create: resourceCloudTrailCreate,
 		Read:   resourceCloudTrailRead,
@@ -246,7 +247,7 @@ func ResourceCloudTrail() *schema.Resource { // nosemgrep:cloudtrail-in-func-nam
 	}
 }
 
-func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -344,7 +345,7 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { 
 	return resourceCloudTrailRead(d, meta)
 }
 
-func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -369,13 +370,13 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 	}
 
 	if !d.IsNewResource() && trail == nil {
-		names.LogNotFoundRemoveState(names.CloudTrail, names.ErrActionReading, resTrail, d.Id())
+		create.LogNotFoundRemoveState(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && trail == nil {
-		return names.Error(names.CloudTrail, names.ErrActionReading, resTrail, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	log.Printf("[DEBUG] CloudTrail received: %s", trail)
@@ -461,7 +462,7 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 	return nil
 }
 
-func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
@@ -563,7 +564,7 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { 
 	return resourceCloudTrailRead(d, meta)
 }
 
-func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())
@@ -752,11 +753,9 @@ func expandAdvancedEventSelector(configured []interface{}) []*cloudtrail.Advance
 		}
 
 		advancedEventSelectors = append(advancedEventSelectors, aes)
-
 	}
 
 	return advancedEventSelectors
-
 }
 
 func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []*cloudtrail.AdvancedFieldSelector {

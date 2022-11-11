@@ -22,10 +22,10 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_name(rName),
@@ -48,9 +48,10 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 		},
 	})
@@ -62,10 +63,10 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_tags1(rName, "key1", "value1"),
@@ -77,9 +78,10 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 
 			{
@@ -112,10 +114,10 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_name(rName),
@@ -135,10 +137,10 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "REGIONAL"),
@@ -150,9 +152,10 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
@@ -211,10 +214,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -251,9 +254,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 		},
 	})
@@ -264,10 +268,10 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_keySource(rName, "AUTHORIZER"),
@@ -276,9 +280,10 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_keySource(rName, "HEADER"),
@@ -302,10 +307,10 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_keySourceOverrideBody(rName, "AUTHORIZER", "HEADER"),
@@ -318,7 +323,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated API key source still overrides
 			{
@@ -346,10 +351,10 @@ func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_keySourceSetByBody(rName, "AUTHORIZER"),
@@ -362,7 +367,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -374,10 +379,10 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet-stream"),
@@ -391,7 +396,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet"),
@@ -411,10 +416,10 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName, "application/octet-stream", "image/jpeg"),
@@ -428,7 +433,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated minimum compression size still overrides
 			{
@@ -458,10 +463,10 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1SetByBody(rName, "application/octet-stream"),
@@ -475,7 +480,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -487,10 +492,10 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			// The body is expected to only set a title (name) and one route
 			{
@@ -502,14 +507,13 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "binary_media_types"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_body(rName, "/update"),
@@ -531,10 +535,10 @@ func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_description(rName, "description1"),
@@ -547,7 +551,7 @@ func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_description(rName, "description2"),
@@ -566,10 +570,10 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_descriptionOverrideBody(rName, "tfdescription1", "oasdescription1"),
@@ -582,7 +586,7 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated description still overrides
 			{
@@ -610,10 +614,10 @@ func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_descriptionSetByBody(rName, "oasdescription1"),
@@ -626,7 +630,7 @@ func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -637,10 +641,10 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, false),
@@ -649,9 +653,10 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, true),
@@ -675,10 +680,10 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpointOverrideBody(rName, true, false),
@@ -691,7 +696,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify override can be unset (only for body set to false)
 			{
@@ -719,10 +724,10 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) 
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpointSetByBody(rName, true),
@@ -735,7 +740,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -749,10 +754,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 	vpcEndpointResourceName2 := "aws_vpc_endpoint.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
@@ -769,7 +774,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIds2(rName),
@@ -807,10 +812,10 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 	vpcEndpointResourceName3 := "aws_vpc_endpoint.test.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
@@ -819,13 +824,14 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated configuration value still overrides
 			{
@@ -835,6 +841,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 			// Verify updated body value is still overridden
@@ -845,12 +852,120 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 		},
 	})
 }
 
+func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
+	vpcEndpointResourceName2 := "aws_vpc_endpoint.test.1"
+	vpcEndpointResourceName3 := "aws_vpc_endpoint.test.2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+
+			// Verify updated endpoint configuration, and endpoint from OAS is discarded.
+			{
+				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
+				),
+			},
+			// Verify updated endpoint configuration, and endpoint from OAS is discarded.
+			{
+				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
+	vpcEndpointResourceName2 := "aws_vpc_endpoint.test.1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+
+			// Add the new attribute and verify works as desired.
+			{
+				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+		},
+	})
+}
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -858,10 +973,10 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsSetByBody(rName),
@@ -876,7 +991,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -888,10 +1003,10 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, 0),
@@ -904,7 +1019,7 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, -1),
@@ -930,10 +1045,10 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, 1, 5242880),
@@ -946,7 +1061,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated minimum compression size still overrides
 			{
@@ -974,10 +1089,10 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSizeSetByBody(rName, 1048576),
@@ -992,7 +1107,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -1005,10 +1120,10 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_nameOverrideBody(rName, "title1"),
@@ -1021,7 +1136,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated name still overrides
 			{
@@ -1049,10 +1164,10 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_parameters1(rName, "basepath", "prepend"),
@@ -1065,7 +1180,7 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body", "parameters"},
+				ImportStateVerifyIgnore: []string{"body", "parameters", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_parameters1(rName, "basepath", "ignore"),
@@ -1085,10 +1200,10 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policy(rName),
@@ -1100,7 +1215,7 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ImportStateVerifyIgnore: []string{"policy", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_updatePolicy(rName),
@@ -1118,10 +1233,10 @@ func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policyOrder(rName),
@@ -1143,10 +1258,10 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policyOverrideBody(rName, "/test", "Allow"),
@@ -1160,7 +1275,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body", "policy"},
+				ImportStateVerifyIgnore: []string{"body", "policy", "put_rest_api_mode"},
 			},
 			// Verify updated body still has override policy
 			{
@@ -1190,10 +1305,10 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRestAPIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policySetByBody(rName, "Allow"),
@@ -1206,7 +1321,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -1237,6 +1352,30 @@ func testAccCheckRestAPIRoutes(conf *apigateway.RestApi, routes []string) resour
 
 		if len(actualRoutePaths) > 0 {
 			return fmt.Errorf("Found unexpected paths %v", actualRoutePaths)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckRestAPIEndpointsCount(conf *apigateway.RestApi, count int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+
+		resp, err := conn.GetRestApi(&apigateway.GetRestApiInput{
+			RestApiId: conf.Id,
+		})
+		if err != nil {
+			return err
+		}
+
+		actualEndpoints := map[string]bool{}
+		for _, endpoint := range resp.EndpointConfiguration.VpcEndpointIds {
+			actualEndpoints[*endpoint] = true
+		}
+
+		if len(resp.EndpointConfiguration.VpcEndpointIds) != count {
+			return fmt.Errorf("Found unexpected endpoint in endpoints %v", actualEndpoints)
 		}
 
 		return nil
@@ -1562,6 +1701,92 @@ resource "aws_vpc_endpoint" "test" {
 
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
+
+  endpoint_configuration {
+    types            = ["PRIVATE"]
+    vpc_endpoint_ids = [%[2]s]
+  }
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://api.example.com/"
+          }
+        }
+      }
+    }
+    x-amazon-apigateway-endpoint-configuration = {
+      vpcEndpointIds = [%[3]s]
+    }
+  })
+}
+`, rName, configVpcEndpointResourceName+".id", bodyVpcEndpointResourceName+".id"))
+}
+
+func testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName string, configVpcEndpointResourceName string, bodyVpcEndpointResourceName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  count = 3
+
+  private_dns_enabled = false
+  security_group_ids  = [aws_default_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name              = %[1]q
+  put_rest_api_mode = "merge"
 
   endpoint_configuration {
     types            = ["PRIVATE"]

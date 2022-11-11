@@ -8,7 +8,8 @@ before:
   hooks:
     - 'go mod download'
 builds:
-  - # Binary naming only required for Terraform CLI 0.12
+  -
+    # Binary naming only required for Terraform CLI 0.12
     binary: '{{ .ProjectName }}_v{{ .Version }}_x5'
     env:
       - CGO_ENABLED=0
@@ -18,6 +19,7 @@ builds:
       - darwin
       - freebsd
       - linux
+      - openbsd
       - windows
     goarch:
       - '386'
@@ -31,6 +33,8 @@ builds:
         goos: freebsd
       - goarch: arm64
         goos: windows
+      - goarch: arm64
+        goos: openbsd
     ldflags:
       - -s -w -X version.ProviderVersion={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'

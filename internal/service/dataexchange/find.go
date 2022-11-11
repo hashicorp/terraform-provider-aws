@@ -8,7 +8,6 @@ import (
 )
 
 func FindDataSetById(conn *dataexchange.DataExchange, id string) (*dataexchange.GetDataSetOutput, error) {
-
 	input := &dataexchange.GetDataSetInput{
 		DataSetId: aws.String(id),
 	}
@@ -29,7 +28,6 @@ func FindDataSetById(conn *dataexchange.DataExchange, id string) (*dataexchange.
 }
 
 func FindRevisionById(conn *dataexchange.DataExchange, dataSetId, revisionId string) (*dataexchange.GetRevisionOutput, error) {
-
 	input := &dataexchange.GetRevisionInput{
 		DataSetId:  aws.String(dataSetId),
 		RevisionId: aws.String(revisionId),

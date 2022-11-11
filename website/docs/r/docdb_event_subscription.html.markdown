@@ -46,7 +46,7 @@ The following arguments are supported:
 * `source_type` - (Optional) The type of source that will be generating the events. Valid options are `db-instance`, `db-cluster`, `db-parameter-group`, `db-security-group`,` db-cluster-snapshot`. If not set, all sources will be subscribed to.
 * `event_categories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See https://docs.aws.amazon.com/documentdb/latest/developerguide/API_Event.html or run `aws docdb describe-event-categories`.
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -55,16 +55,15 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The name of the DocDB event notification subscription
 * `arn` - The Amazon Resource Name of the DocDB event notification subscription
 * `customer_aws_id` - The AWS customer account associated with the DocDB event notification subscription
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_docdb_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `40m`) How long to wait for an DocDB event notification subscription to be ready.
-- `delete` - (Default `40m`) How long to wait for an DocDB event notification subscription to be deleted.
-- `update` - (Default `40m`) How long to wait for an DocDB event notification subscription to be updated.
+- `create` - (Default `40m`)
+- `delete` - (Default `40m`)
+- `update` - (Default `40m`)
 
 ## Import
 

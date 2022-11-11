@@ -44,7 +44,7 @@ EOF
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  # If the file is not in the current working directory you will need to include a 
+  # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
   filename      = "lambda_function_payload.zip"
   function_name = "lambda_function_name"
@@ -56,7 +56,7 @@ resource "aws_lambda_function" "test_lambda" {
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
   source_code_hash = filebase64sha256("lambda_function_payload.zip")
 
-  runtime = "nodejs12.x"
+  runtime = "nodejs16.x"
 
   environment {
     variables = {
@@ -280,7 +280,7 @@ The following arguments are optional:
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
-* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
 * `tracing_config` - (Optional) Configuration block. Detailed below.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
@@ -335,10 +335,11 @@ In addition to all arguments above, the following attributes are exported:
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
+* `qualified_invoke_arn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `source_code_size` - Size in bytes of the function .zip file.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.
 
@@ -358,9 +359,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_lambda_function` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10m`) How long to wait for slow uploads or EC2 throttling errors.
+* `create` - (Default `10m`)
 
 ## Import
 

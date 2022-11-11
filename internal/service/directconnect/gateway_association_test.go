@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,10 +25,10 @@ func TestAccDirectConnectGatewayAssociation_v0StateUpgrade(t *testing.T) {
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNSingleAccount(rName, rBgpAsn),
@@ -52,10 +51,10 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewaySingleAccount(t *test
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNSingleAccount(rName, rBgpAsn),
@@ -82,7 +81,6 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewaySingleAccount(t *test
 }
 
 func TestAccDirectConnectGatewayAssociation_basicVPNGatewayCrossAccount(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
@@ -92,10 +90,10 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewayCrossAccount(t *testi
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNCrossAccount(rName, rBgpAsn),
@@ -126,10 +124,10 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicTransitSingleAccount(rName, rBgpAsn),
@@ -157,7 +155,6 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 }
 
 func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
@@ -167,10 +164,10 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *t
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicTransitCrossAccount(rName, rBgpAsn),
@@ -201,10 +198,10 @@ func TestAccDirectConnectGatewayAssociation_multiVPNGatewaysSingleAccount(t *tes
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_associationMultiVPNSingleAccount(rName, rBgpAsn),
@@ -233,10 +230,10 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccou
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNSingleAccount(rName, rBgpAsn),
@@ -269,7 +266,6 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccou
 }
 
 func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccount(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
@@ -279,10 +275,10 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccoun
 	var gap directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNCrossAccount(rName, rBgpAsn),
@@ -314,7 +310,6 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccoun
 }
 
 func TestAccDirectConnectGatewayAssociation_recreateProposal(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -322,10 +317,10 @@ func TestAccDirectConnectGatewayAssociation_recreateProposal(t *testing.T) {
 	var gap1, gap2 directconnect.GatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNCrossAccount(rName, rBgpAsn),

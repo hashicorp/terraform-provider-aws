@@ -7,6 +7,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/*
+      - .ci/tools/go.mod
 jobs:
   actionlint:
     runs-on: ubuntu-latest
@@ -16,6 +17,6 @@ jobs:
         with:
           go-version-file: .go-version
       - name: Install actionlint
-        run: cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
+        run: cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
       - name: Run actionlint on workflow files
         run: actionlint -shellcheck=

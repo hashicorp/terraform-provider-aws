@@ -129,7 +129,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("policy_type_name", policyTypeName)
 	d.Set("load_balancer_name", loadBalancerName)
 	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policyAttributes)); err != nil {
-		return fmt.Errorf("error setting policy_attribute: %w", err)
+		return fmt.Errorf("setting policy_attribute: %w", err)
 	}
 
 	return nil

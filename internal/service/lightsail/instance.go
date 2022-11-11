@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -93,6 +92,11 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
+			"ip_address_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "dualstack",
+			},
 			"ipv6_address": {
 				Type:       schema.TypeString,
 				Computed:   true,
@@ -144,8 +148,13 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("key_pair_name"); ok {
 		req.KeyPairName = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("user_data"); ok {
 		req.UserData = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ip_address_type"); ok {
+		req.IpAddressType = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -164,16 +173,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	op := resp.Operations[0]
 	d.SetId(d.Get("name").(string))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
+	err = waitOperation(conn, op.Id)
 
-	_, err = stateConf.WaitForState()
 	if err != nil {
 		// We don't return an error here because the Create call succeeded
 		log.Printf("[ERR] Error waiting for instance (%s) to become ready: %s", d.Id(), err)
@@ -230,6 +231,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("ipv6_addresses", aws.StringValueSlice(i.Ipv6Addresses))
+	d.Set("ip_address_type", i.IpAddressType)
 	d.Set("is_static_ip", i.IsStaticIp)
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
@@ -260,16 +262,8 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	op := resp.Operations[0]
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
+	err = waitOperation(conn, op.Id)
 
-	_, err = stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for instance (%s) to become destroyed: %s",
@@ -282,6 +276,29 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
+	if d.HasChange("ip_address_type") {
+		resp, err := conn.SetIpAddressType(&lightsail.SetIpAddressTypeInput{
+			ResourceName:  aws.String(d.Id()),
+			ResourceType:  aws.String("Instance"),
+			IpAddressType: aws.String(d.Get("ip_address_type").(string)),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if len(resp.Operations) == 0 {
+			return fmt.Errorf("No operations found for CreateInstance request")
+		}
+
+		op := resp.Operations[0]
+
+		err = waitOperation(conn, op.Id)
+		if err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -291,33 +308,4 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceInstanceRead(d, meta)
-}
-
-// method to check the status of an Operation, which is returned from
-// Create/Delete methods.
-// Status's are an aws.OperationStatus enum:
-// - NotStarted
-// - Started
-// - Failed
-// - Completed
-// - Succeeded (not documented?)
-func resourceOperationRefreshFunc(
-	oid *string, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).LightsailConn
-		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", *oid)
-		o, err := conn.GetOperation(&lightsail.GetOperationInput{
-			OperationId: oid,
-		})
-		if err != nil {
-			return o, "FAILED", err
-		}
-
-		if o.Operation == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Operation info for operation (%s)", *oid)
-		}
-
-		log.Printf("[DEBUG] Lightsail Operation (%s) is currently %q", *oid, *o.Operation.Status)
-		return o, *o.Operation.Status, nil
-	}
 }

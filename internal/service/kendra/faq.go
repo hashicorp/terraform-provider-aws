@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,10 +62,10 @@ func ResourceFaq() *schema.Resource {
 				Computed: true,
 			},
 			"file_format": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(faqFileFormatValues(types.FaqFileFormat("").Values()...), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.FaqFileFormat](),
 			},
 			"index_id": {
 				Type:     schema.TypeString,
@@ -141,7 +142,7 @@ func ResourceFaq() *schema.Resource {
 }
 
 func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -212,7 +213,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -277,7 +278,7 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -291,7 +292,7 @@ func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	log.Printf("[INFO] Deleting Kendra Faq %s", d.Id())
 
@@ -322,10 +323,9 @@ func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
-
 	stateConf := &resource.StateChangeConf{
-		Pending:                   FaqStatusValues(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
-		Target:                    FaqStatusValues(types.FaqStatusActive),
+		Pending:                   enum.Slice(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
+		Target:                    enum.Slice(types.FaqStatusActive),
 		Timeout:                   timeout,
 		Refresh:                   statusFaq(ctx, conn, id, indexId),
 		NotFoundChecks:            20,
@@ -346,7 +346,7 @@ func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string
 
 func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: FaqStatusValues(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
+		Pending: enum.Slice(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusFaq(ctx, conn, id, indexId),
@@ -418,28 +418,4 @@ func flattenS3Path(apiObject *types.S3Path) []interface{} {
 	}
 
 	return []interface{}{m}
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func faqFileFormatValues(input ...types.FaqFileFormat) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func FaqStatusValues(input ...types.FaqStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	output = append(output, "PENDING_CREATION")
-	output = append(output, "PENDING_DELETION")
-
-	return output
 }

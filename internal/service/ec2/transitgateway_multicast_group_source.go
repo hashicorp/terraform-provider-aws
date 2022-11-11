@@ -60,7 +60,7 @@ func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *sc
 	_, err := conn.RegisterTransitGatewayMulticastGroupSourcesWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating EC2 Transit Gateway Multicast Group Source (%s): %s", id, err)
+		return diag.Errorf("creating EC2 Transit Gateway Multicast Group Source (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -88,7 +88,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Multicast Group Source (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EC2 Transit Gateway Multicast Group Source (%s): %s", d.Id(), err)
 	}
 
 	multicastGroup := outputRaw.(*ec2.TransitGatewayMulticastGroup)
@@ -133,7 +133,7 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Group Source (%s): %w", id, err)
+		return fmt.Errorf("deleting EC2 Transit Gateway Multicast Group Source (%s): %w", id, err)
 	}
 
 	_, err = tfresource.RetryUntilNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
@@ -141,7 +141,7 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 	})
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Multicast Group Source (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway Multicast Group Source (%s) delete: %w", id, err)
 	}
 
 	return nil

@@ -36,6 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 * `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin).
 * `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics for collecting metrics for this user pool. [Detailed below](#analytics_configuration).
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
+* `client_secret` - Client secret of the user pool client.
 * `default_redirect_uri` - (Optional) Default redirect URI. Must be in the list of callback URLs.
 * `enable_token_revocation` - (Optional) Enables or disables token revocation.
 * `explicit_auth_flows` - (Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH).

@@ -190,7 +190,6 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChanges("description", "reservation_plan_settings", "status") {
-
 		updateOpts := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
 			Status: aws.String(d.Get("status").(string)),

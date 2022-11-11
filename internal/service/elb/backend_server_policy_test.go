@@ -17,19 +17,19 @@ import (
 )
 
 func TestAccELBBackendServerPolicy_basic(t *testing.T) {
-	privateKey1 := acctest.TLSRSAPrivateKeyPEM(2048)
-	privateKey2 := acctest.TLSRSAPrivateKeyPEM(2048)
-	publicKey1 := acctest.TLSRSAPublicKeyPEM(privateKey1)
-	publicKey2 := acctest.TLSRSAPublicKeyPEM(privateKey2)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey1, "example.com")
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey1 := acctest.TLSRSAPublicKeyPEM(t, privateKey1)
+	publicKey2 := acctest.TLSRSAPublicKeyPEM(t, privateKey2)
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey1, "example.com")
 	rString := sdkacctest.RandString(8)
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBackendServerPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackendServerPolicyConfig_basic0(lbName, privateKey1, publicKey1, certificate1),

@@ -480,12 +480,7 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 		nv = append(nv, m)
 	}
 
-	err := d.Set("app_source", nv)
-	if err != nil {
-		// should never happen
-		return err
-	}
-	return nil
+	return d.Set("app_source", nv)
 }
 
 func resourceApplicationsDataSource(d *schema.ResourceData) []*opsworks.DataSource {
@@ -554,12 +549,7 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 		}
 	}
 
-	err := d.Set("ssl_configuration", nv)
-	if err != nil {
-		// should never happen
-		return err
-	}
-	return nil
+	return d.Set("ssl_configuration", nv)
 }
 
 func resourceApplicationAttributes(d *schema.ResourceData) map[string]*string {
@@ -616,5 +606,4 @@ func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]*stri
 		}
 		return
 	}
-
 }

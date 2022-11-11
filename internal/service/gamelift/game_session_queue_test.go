@@ -54,9 +54,9 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGameSessionQueueDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basic(queueName,
@@ -66,6 +66,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", queueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
@@ -118,9 +119,9 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGameSessionQueueDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basicTags1(queueName, "key1", "value1"),
@@ -179,9 +180,9 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGameSessionQueueDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basic(queueName,

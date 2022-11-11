@@ -109,6 +109,7 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
 * `drop_invalid_header_fields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
+* `preserve_host_header` - (Optional) Indicates whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
 cannot be updated for Load Balancers of type `network`. Changing this value
@@ -124,7 +125,7 @@ for load balancers of type `network` will force a recreation of the resource.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
 * `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Access Logs (`access_logs`) support the following:
 
@@ -134,7 +135,7 @@ Access Logs (`access_logs`) support the following:
 
 Subnet Mapping (`subnet_mapping`) blocks support the following:
 
-* `subnet_id` - (Required) The id of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
+* `subnet_id` - (Required) ID of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
 * `allocation_id` - (Optional) The allocation ID of the Elastic IP address.
 * `private_ipv4_address` - (Optional) A private ipv4 address within the subnet to assign to the internal-facing load balancer.
 * `ipv6_address` - (Optional) An ipv6 address within the subnet to assign to the internet-facing load balancer.
@@ -147,18 +148,17 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
 * `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
 
 ## Timeouts
 
-`aws_lb` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for Creating LB
-- `update` - (Default `10 minutes`) Used for LB modifications
-- `delete` - (Default `10 minutes`) Used for destroying LB
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

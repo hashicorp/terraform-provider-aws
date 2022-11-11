@@ -20,15 +20,15 @@ func TestAccAPIGatewayV2DomainName_basic(t *testing.T) {
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_basic(rName, certificate, key, 1, 0),
@@ -59,15 +59,15 @@ func TestAccAPIGatewayV2DomainName_disappears(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_basic(rName, certificate, key, 1, 0),
@@ -86,15 +86,15 @@ func TestAccAPIGatewayV2DomainName_tags(t *testing.T) {
 	resourceName := "aws_apigatewayv2_domain_name.test"
 	certResourceName := "aws_acm_certificate.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_tags(rName, certificate, key, 1, 0),
@@ -145,15 +145,15 @@ func TestAccAPIGatewayV2DomainName_updateCertificate(t *testing.T) {
 	certResourceName0 := "aws_acm_certificate.test.0"
 	certResourceName1 := "aws_acm_certificate.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domainName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_basic(rName, certificate, key, 2, 0),
@@ -216,7 +216,7 @@ func TestAccAPIGatewayV2DomainName_updateCertificate(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
@@ -225,10 +225,10 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationObjectVersion(rName, rootDomain, domain),
@@ -294,7 +294,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 
 func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_noVersion(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
@@ -302,10 +302,10 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_noVersion(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationNoObjectVersion(rName, rootDomain, domain),
@@ -331,9 +331,9 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_noVersion(t *testing.
 
 func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, domain)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
 	var v apigatewayv2.GetDomainNameOutput
 	resourceName := "aws_apigatewayv2_domain_name.test"
@@ -343,10 +343,10 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key),

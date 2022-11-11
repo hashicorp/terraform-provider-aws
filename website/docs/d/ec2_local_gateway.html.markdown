@@ -30,18 +30,18 @@ Local Gateway whose data will be exported as attributes.
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `id` - (Optional) The id of the specific Local Gateway to retrieve.
+* `id` - (Optional) Id of the specific Local Gateway to retrieve.
 
-* `state` - (Optional) The current state of the desired Local Gateway.
+* `state` - (Optional) Current state of the desired Local Gateway.
   Can be either `"pending"` or `"available"`.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired Local Gateway.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLocalGateways.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
@@ -56,6 +56,12 @@ the selected Local Gateway.
 
 The following attributes are additionally exported:
 
-* `outpost_arn` - Amazon Resource Name (ARN) of Outpost
+* `outpost_arn` - ARN of Outpost
 * `owner_id` - AWS account identifier that owns the Local Gateway.
 * `state` - State of the local gateway.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

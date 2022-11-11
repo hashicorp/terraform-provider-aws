@@ -30,9 +30,9 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScriptDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptConfig_basic(rName),
@@ -78,9 +78,9 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScriptDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptConfig_basicTags1(rName, "key1", "value1"),
@@ -129,9 +129,9 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScriptDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScriptDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptConfig_basic(rName),

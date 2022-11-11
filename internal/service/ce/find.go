@@ -87,3 +87,28 @@ func FindCostAllocationTagByKey(ctx context.Context, conn *costexplorer.CostExpl
 
 	return out.CostAllocationTags[0], nil
 }
+
+func FindCostCategoryByARN(ctx context.Context, conn *costexplorer.CostExplorer, arn string) (*costexplorer.CostCategory, error) {
+	in := &costexplorer.DescribeCostCategoryDefinitionInput{
+		CostCategoryArn: aws.String(arn),
+	}
+
+	out, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.CostCategory == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.CostCategory, nil
+}
