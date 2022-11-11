@@ -3,6 +3,8 @@ package acctest
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
@@ -12,12 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 )
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
 
-func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), is *terraform.InstanceState, meta interface{}) error {
+func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
 	ctx := context.Background()
 
 	resource, err := factory(ctx)
@@ -34,12 +35,22 @@ func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithCon
 		return fwdiag.DiagnosticsError(diags)
 	}
 
-	// Simple Terraform State that contains just the resource ID.
+	// Construct a simple Framework State that contains just top-level attributes.
 	state := tfsdk.State{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
-	state.SetAttribute(ctx, path.Root("id"), is.ID)
+
+	for name, v := range is.Attributes {
+		if strings.Contains(name, ".") {
+			continue
+		}
+
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(name), v)); err != nil {
+			log.Printf("[WARN] %s(%s): %s", name, v, err)
+		}
+	}
+
 	response := fwresource.DeleteResponse{}
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
@@ -50,7 +61,7 @@ func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithCon
 	return nil
 }
 
-func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), n string) resource.TestCheckFunc {
+func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (fwresource.ResourceWithConfigure, error), n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

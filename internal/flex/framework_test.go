@@ -2,6 +2,7 @@ package flex
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -274,6 +275,108 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			got := FlattenFrameworkStringValueMap(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestToFrameworkInt64Value(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *int64
+		expected types.Int64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    aws.Int64(42),
+			expected: types.Int64{Value: 42},
+		},
+		"zero int64": {
+			input:    aws.Int64(0),
+			expected: types.Int64{Value: 0},
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.Int64{Null: true},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ToFrameworkInt64Value(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestToFrameworkStringValue(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    aws.String("TEST"),
+			expected: types.String{Value: "TEST"},
+		},
+		"empty string": {
+			input:    aws.String(""),
+			expected: types.String{Value: ""},
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.String{Null: true},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ToFrameworkStringValue(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestToFrameworkStringValueWithTransform(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    aws.String("TEST"),
+			expected: types.String{Value: "test"},
+		},
+		"empty string": {
+			input:    aws.String(""),
+			expected: types.String{Value: ""},
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.String{Null: true},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ToFrameworkStringValueWithTransform(context.Background(), test.input, strings.ToLower)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

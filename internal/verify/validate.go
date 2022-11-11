@@ -84,10 +84,10 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-// validateCIDRBlock validates that the specified CIDR block is valid:
+// ValidateCIDRBlock validates that the specified CIDR block is valid:
 // - The CIDR block parses to an IP address and network
 // - The CIDR block is the CIDR block for the network
-func validateCIDRBlock(cidr string) error {
+func ValidateCIDRBlock(cidr string) error {
 	_, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
@@ -103,7 +103,7 @@ func validateCIDRBlock(cidr string) error {
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := validateCIDRBlock(v.(string)); err != nil {
+	if err := ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
