@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -112,7 +112,7 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 	_, err := FindDomainByName(ctx, r.meta.SimpleDBConn, data.ID.Value)
 
 	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(errs.NewResourceNotFoundWarningDiagnostic(err))
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
 		return
