@@ -1,6 +1,7 @@
 package controltower_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -9,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfct "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
+	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccControlTowerControl_serial(t *testing.T) {
@@ -80,7 +82,7 @@ func testAccControl_disappears(t *testing.T) {
 				Config: testAccControlConfig_basic(controlName, ouName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(resourceName, &control),
-					acctest.CheckResourceDisappears(acctest.Provider, tfct.ResourceControl(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +90,7 @@ func testAccControl_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckControlExists(n string, control *controltower.EnabledControlSummary) resource.TestCheckFunc {
+func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -98,48 +100,51 @@ func testAccCheckControlExists(n string, control *controltower.EnabledControlSum
 			return fmt.Errorf("No ControlTower Control ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn
-
-		input := &controltower.ListEnabledControlsInput{
-			TargetIdentifier: &rs.Primary.ID,
-		}
-		output, err := conn.ListEnabledControls(input)
+		targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
-		for _, c := range output.EnabledControls {
-			if *c.ControlIdentifier == rs.Primary.Attributes["control_identifier"] {
-				*control = *c
-				return nil
-			}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn
+
+		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(context.Background(), conn, targetIdentifier, controlIdentifier)
+
+		if err != nil {
+			return err
 		}
 
-		return fmt.Errorf("Expected Control Tower Control to be created, but wasn't found")
+		*v = *output
+
+		return nil
 	}
 }
 
 func testAccCheckControlDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_controltower_control" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn
-		input := &controltower.ListEnabledControlsInput{
-			TargetIdentifier: &rs.Primary.ID,
-		}
 
-		output, err := conn.ListEnabledControls(input)
+		targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		for _, c := range output.EnabledControls {
-			if *c.ControlIdentifier == rs.Primary.Attributes["control_identifier"] {
-				return fmt.Errorf("ControlTower Control still enabled: %s", rs.Primary.ID)
-			}
+		_, err = tfcontroltower.FindEnabledControlByTwoPartKey(context.Background(), conn, targetIdentifier, controlIdentifier)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("ControlTower Control %s still exists", rs.Primary.ID)
 	}
 
 	return nil
