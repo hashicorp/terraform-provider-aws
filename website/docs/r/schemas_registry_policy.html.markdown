@@ -27,8 +27,8 @@ data "aws_iam_policy_document" "example" {
     }
     actions = ["schemas:*"]
     resources = [
-      "arn:aws:schemas:us-east-1:012345678901:registry/default",
-      "arn:aws:schemas:us-east-1:012345678901:schema/default*"
+      "arn:aws:schemas:us-east-1:012345678901:registry/example",
+      "arn:aws:schemas:us-east-1:012345678901:schema/example*"
     ]
   }
 }
