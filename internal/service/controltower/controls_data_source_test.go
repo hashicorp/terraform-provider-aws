@@ -5,19 +5,22 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccControlTowerControlsDataSource_id(t *testing.T) {
+func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_controltower_controls.test"
 	ouName := "Security"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckControlTowerDeployed(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,6 +35,43 @@ func TestAccControlTowerControlsDataSource_id(t *testing.T) {
 	})
 }
 
+func testAccPreCheck(t *testing.T) {
+	// leverage the control tower created "aws-controltower-BaselineCloudTrail" to confirm control tower is deployed
+	var trails []string
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+
+	input := &cloudtrail.ListTrailsInput{}
+	err := conn.ListTrailsPages(input, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, trail := range page.Trails {
+			if trail == nil {
+				continue
+			}
+			trails = append(trails, *trail.Name)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	// Ensure there is a Control Tower trail
+	ctTrail := false
+	for _, t := range trails {
+		if t == "aws-controltower-BaselineCloudTrail" {
+			ctTrail = true
+		}
+	}
+	if !ctTrail {
+		t.Skip("skipping since Control Tower not found")
+	}
+}
+
 func testAccControlsDataSourceConfig_id(ouName string) string {
 	return fmt.Sprintf(`
 data "aws_organizations_organization" "test" {}
@@ -41,12 +81,10 @@ data "aws_organizations_organizational_units" "test" {
 }
 
 data "aws_controltower_controls" "test" {
-
   target_identifier = [
     for x in data.aws_organizations_organizational_units.test.children :
     x.arn if x.name == "%[1]s"
   ][0]
-
 }
 `, ouName)
 }
