@@ -31,6 +31,11 @@ func TestAccOpenSearchInboundConnectionAccepter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
