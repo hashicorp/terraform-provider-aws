@@ -44,8 +44,34 @@ func TestAccSESV2EmailIdentityMailFromAttributes_basic(t *testing.T) {
 }
 
 func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
+	domain := acctest.RandomDomain()
+	mailFromDomain := domain.Subdomain("test")
+
+	rName := domain.String()
+	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureUseDefaultValue), mailFromDomain.String()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityMailFromAttributesExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentityMailFromAttributes(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
+	emailIdentityName := "aws_sesv2_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -57,7 +83,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 				Config: testAccEmailIdentityMailFromAttributesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityMailFromAttributesExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentity(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
