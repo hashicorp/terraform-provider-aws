@@ -67,7 +67,7 @@ You can have the node group track the latest version of the Amazon EKS optimized
 
 ```terraform
 data "aws_ssm_parameter" "eks_ami_release_version" {
-    name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.example.version}/amazon-linux-2/recommended/release_version"
+  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.example.version}/amazon-linux-2/recommended/release_version"
 }
 
 resource "aws_eks_node_group" "example" {
