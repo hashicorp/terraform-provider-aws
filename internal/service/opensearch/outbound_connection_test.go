@@ -69,96 +69,96 @@ func testAccOutboundConnectionConfig(name string) string {
 	// Satisfy the pw requirements
 	pw := fmt.Sprintf("Aa1-%s", sdkacctest.RandString(10))
 	return fmt.Sprintf(`
-	resource "aws_opensearch_domain" "domain_1" {
-		domain_name           = "%s-1"
-		engine_version        = "OpenSearch_1.1"
+resource "aws_opensearch_domain" "domain_1" {
+  domain_name    = "%s-1"
+  engine_version = "OpenSearch_1.1"
 
-		cluster_config {
-			instance_type = "t3.small.search" # supported in both aws and aws-us-gov
-		}
+  cluster_config {
+    instance_type = "t3.small.search" # supported in both aws and aws-us-gov
+  }
 
-		ebs_options {
-			ebs_enabled = true
-			volume_size = 10
-		}
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
 
-		node_to_node_encryption {
-			enabled = true
-		}
+  node_to_node_encryption {
+    enabled = true
+  }
 
-		advanced_security_options {
-			enabled 					   = true
-			internal_user_database_enabled = true
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
 
-			master_user_options {
-				master_user_name 	 = "test"
-				master_user_password = "%s"
-			}
-		}
+    master_user_options {
+      master_user_name     = "test"
+      master_user_password = "%s"
+    }
+  }
 
-		encrypt_at_rest {
-			enabled = true
-		}
+  encrypt_at_rest {
+    enabled = true
+  }
 
-		domain_endpoint_options {
-			enforce_https 		= true
-			tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
-		}
-	}
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+}
 
-	resource "aws_opensearch_domain" "domain_2" {
-		domain_name           = "%s-2"
-		engine_version        = "OpenSearch_1.1"
-	
-		cluster_config {
-			instance_type = "t3.small.search" # supported in both aws and aws-us-gov
-		}
-	
-		ebs_options {
-			ebs_enabled = true
-			volume_size = 10
-		}
+resource "aws_opensearch_domain" "domain_2" {
+  domain_name    = "%s-2"
+  engine_version = "OpenSearch_1.1"
 
-		node_to_node_encryption {
-			enabled = true
-		}
+  cluster_config {
+    instance_type = "t3.small.search" # supported in both aws and aws-us-gov
+  }
 
-		advanced_security_options {
-			enabled 					   = true
-			internal_user_database_enabled = true
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
 
-			master_user_options {
-				master_user_name 	 = "test"
-				master_user_password = "%s"
-			}
-		}
-		
-		encrypt_at_rest {
-			enabled = true
-		}
+  node_to_node_encryption {
+    enabled = true
+  }
 
-		domain_endpoint_options {
-			enforce_https 		= true
-			tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
-		}
-	}
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
 
-	data "aws_caller_identity" "current" {}
-	data "aws_region" "current" {}
+    master_user_options {
+      master_user_name     = "test"
+      master_user_password = "%s"
+    }
+  }
 
-	resource "aws_opensearch_outbound_connection" "test" {
-		connection_alias = "%s"
-		local_domain_info {
-			owner_id    = data.aws_caller_identity.current.account_id
-			region      = data.aws_region.current.name
-			domain_name = aws_opensearch_domain.domain_1.domain_name
-		}
-	  
-		remote_domain_info {
-			owner_id    = data.aws_caller_identity.current.account_id
-			region      = data.aws_region.current.name
-			domain_name = aws_opensearch_domain.domain_2.domain_name
-		}
-	}
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_opensearch_outbound_connection" "test" {
+  connection_alias = "%s"
+  local_domain_info {
+    owner_id    = data.aws_caller_identity.current.account_id
+    region      = data.aws_region.current.name
+    domain_name = aws_opensearch_domain.domain_1.domain_name
+  }
+
+  remote_domain_info {
+    owner_id    = data.aws_caller_identity.current.account_id
+    region      = data.aws_region.current.name
+    domain_name = aws_opensearch_domain.domain_2.domain_name
+  }
+}
 `, name, pw, name, pw, name)
 }
