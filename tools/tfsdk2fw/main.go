@@ -184,7 +184,7 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 
 	templateData := &templateData{
 		EmitResourceImportState:      m.Resource.Importer != nil,
-		EmitResourceModifyPlan:       emitter.HasTopLevelTagsAllMap && emitter.HasTopLevelTagsMap,
+		EmitResourceModifyPlan:       !m.IsDataSource && emitter.HasTopLevelTagsAllMap && emitter.HasTopLevelTagsMap,
 		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
@@ -429,7 +429,11 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 				if typeName == "map" && isTopLevelAttribute {
 					if attributeName == "tags" {
 						e.HasTopLevelTagsMap = true
-						fprintf(e.SchemaWriter, "// TODO tftags.TagsAttribute()\n")
+						if property.Optional {
+							fprintf(e.SchemaWriter, "// TODO tftags.TagsAttribute()\n")
+						} else if property.Computed {
+							fprintf(e.SchemaWriter, "// TODO tftags.TagsAttributeComputedOnly()\n")
+						}
 					} else if attributeName == "tags_all" {
 						e.HasTopLevelTagsAllMap = true
 						fprintf(e.SchemaWriter, "// TODO tftags.TagsAttributeComputedOnly()\n")
