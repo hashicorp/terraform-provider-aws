@@ -255,9 +255,12 @@ func expandOutboundConnectionDomainInfo(vOptions []interface{}) *opensearchservi
 }
 
 func flattenOutboundConnectionDomainInfo(domainInfo *opensearchservice.DomainInformationContainer) []interface{} {
+	if domainInfo == nil || domainInfo.AWSDomainInformation == nil {
+		return nil
+	}
 	return []interface{}{map[string]interface{}{
-		"owner_id":    aws.String(*domainInfo.AWSDomainInformation.OwnerId),
-		"domain_name": aws.String(*domainInfo.AWSDomainInformation.DomainName),
-		"region":      aws.String(*domainInfo.AWSDomainInformation.Region),
+		"owner_id":    aws.StringValue(domainInfo.AWSDomainInformation.OwnerId),
+		"domain_name": aws.StringValue(domainInfo.AWSDomainInformation.DomainName),
+		"region":      aws.StringValue(domainInfo.AWSDomainInformation.Region),
 	}}
 }
