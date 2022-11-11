@@ -1,8 +1,13 @@
-## 4.39.0 (Unreleased)
+## 4.40.0 (Unreleased)
+## 4.39.0 (November 10, 2022)
 
 BREAKING CHANGES:
 
 * resource/aws_secretsmanager_secret_rotation: Remove unused `tags` attribute ([#27656](https://github.com/hashicorp/terraform-provider-aws/issues/27656))
+
+NOTES:
+
+* provider: Add OpenBSD to list of OSes which the provider is built on ([#27663](https://github.com/hashicorp/terraform-provider-aws/issues/27663))
 
 FEATURES:
 
@@ -10,12 +15,16 @@ FEATURES:
 * **New Data Source:** `aws_route53_resolver_firewall_config` ([#25496](https://github.com/hashicorp/terraform-provider-aws/issues/25496))
 * **New Data Source:** `aws_route53_resolver_firewall_domain_list` ([#25509](https://github.com/hashicorp/terraform-provider-aws/issues/25509))
 * **New Data Source:** `aws_route53_resolver_firewall_rule_group` ([#25511](https://github.com/hashicorp/terraform-provider-aws/issues/25511))
+* **New Data Source:** `aws_route53_resolver_firewall_rule_group_association` ([#25512](https://github.com/hashicorp/terraform-provider-aws/issues/25512))
+* **New Data Source:** `aws_route53_resolver_firewall_rules` ([#25536](https://github.com/hashicorp/terraform-provider-aws/issues/25536))
 * **New Resource:** `aws_ivs_playback_key_pair` ([#27678](https://github.com/hashicorp/terraform-provider-aws/issues/27678))
 * **New Resource:** `aws_ivs_recording_configuration` ([#27718](https://github.com/hashicorp/terraform-provider-aws/issues/27718))
 * **New Resource:** `aws_lightsail_lb_https_redirection_policy` ([#27679](https://github.com/hashicorp/terraform-provider-aws/issues/27679))
 * **New Resource:** `aws_medialive_channel` ([#26810](https://github.com/hashicorp/terraform-provider-aws/issues/26810))
+* **New Resource:** `aws_networkmanager_site_to_site_vpn_attachment` ([#27387](https://github.com/hashicorp/terraform-provider-aws/issues/27387))
 * **New Resource:** `aws_redshift_endpoint_authorization` ([#27654](https://github.com/hashicorp/terraform-provider-aws/issues/27654))
 * **New Resource:** `aws_redshift_partner` ([#27665](https://github.com/hashicorp/terraform-provider-aws/issues/27665))
+* **New Resource:** `aws_redshiftserverless_snapshot` ([#27741](https://github.com/hashicorp/terraform-provider-aws/issues/27741))
 
 ENHANCEMENTS:
 

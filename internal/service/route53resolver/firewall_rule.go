@@ -244,10 +244,30 @@ func FirewallRuleParseResourceID(id string) (string, string, error) {
 }
 
 func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Route53Resolver, firewallRuleGroupID, firewallDomainListID string) (*route53resolver.FirewallRule, error) {
+	output, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {
+		return aws.StringValue(rule.FirewallDomainListId) == firewallDomainListID
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(firewallRuleGroupID)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, firewallRuleGroupID)
+	}
+
+	return output[0], nil
+}
+
+func findFirewallRules(ctx context.Context, conn *route53resolver.Route53Resolver, firewallRuleGroupID string, f func(*route53resolver.FirewallRule) bool) ([]*route53resolver.FirewallRule, error) {
 	input := &route53resolver.ListFirewallRulesInput{
 		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
 	}
-	var output *route53resolver.FirewallRule
+	var output []*route53resolver.FirewallRule
 
 	err := conn.ListFirewallRulesPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
 		if page == nil {
@@ -255,10 +275,8 @@ func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Rou
 		}
 
 		for _, v := range page.FirewallRules {
-			if aws.StringValue(v.FirewallDomainListId) == firewallDomainListID {
-				output = v
-
-				return false
+			if f(v) {
+				output = append(output, v)
 			}
 		}
 
@@ -274,10 +292,6 @@ func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Rou
 
 	if err != nil {
 		return nil, err
-	}
-
-	if output == nil {
-		return nil, &resource.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil
