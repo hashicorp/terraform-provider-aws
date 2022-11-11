@@ -294,33 +294,7 @@ func (r *resourceSecurityGroupRule) ModifyPlan(ctx context.Context, request reso
 		}
 	}
 
-	// Calculate new `tags_all` value.
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-
-	var planTags types.Map
-
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("tags"), &planTags)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if !planTags.IsUnknown() {
-		resourceTags := tftags.New(planTags)
-
-		if defaultTagsConfig.TagsEqual(resourceTags) {
-			response.Diagnostics.AddError(
-				`"tags" are identical to those in the "default_tags" configuration block of the provider`,
-				"please de-duplicate and try again")
-		}
-
-		allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMap(ctx, allTags.Map()))...)
-	} else {
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), tftags.Unknown)...)
-	}
+	r.SetTagsAll(ctx, request, response)
 }
 
 // ConfigValidators returns a list of functions which will all be performed during validation.
