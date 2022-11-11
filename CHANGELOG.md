@@ -1,4 +1,21 @@
 ## 4.40.0 (Unreleased)
+
+NOTES:
+
+* data-source/aws_identitystore_group: The `filter` argument has been deprecated. Use the `alternate_identifier` argument instead ([#27762](https://github.com/hashicorp/terraform-provider-aws/issues/27762))
+
+FEATURES:
+
+* **New Resource:** `aws_evidently_feature` ([#27395](https://github.com/hashicorp/terraform-provider-aws/issues/27395))
+* **New Resource:** `aws_ivs_channel` ([#27726](https://github.com/hashicorp/terraform-provider-aws/issues/27726))
+* **New Resource:** `aws_sesv2_email_identity_mail_from_attributes` ([#27672](https://github.com/hashicorp/terraform-provider-aws/issues/27672))
+
+ENHANCEMENTS:
+
+* data-source/aws_connect_instance: Add `multi_party_conference_enabled` attribute ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
+* data-source/aws_identitystore_group: Add `alternate_identifier` argument and `description` attribute ([#27762](https://github.com/hashicorp/terraform-provider-aws/issues/27762))
+* resource/aws_connect_instance: Add `multi_party_conference_enabled` argument ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
+
 ## 4.39.0 (November 10, 2022)
 
 BREAKING CHANGES:
