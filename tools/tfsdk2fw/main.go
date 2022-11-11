@@ -425,11 +425,14 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 			case schema.TypeString:
 				elementType = "types.StringType"
+				// Special handling for 'tags' and 'tags_all'.
 				if typeName == "map" && isTopLevelAttribute {
 					if attributeName == "tags" {
 						e.HasTopLevelTagsMap = true
+						fprintf(e.SchemaWriter, "// TODO tftags.TagsAttribute()\n")
 					} else if attributeName == "tags_all" {
 						e.HasTopLevelTagsAllMap = true
+						fprintf(e.SchemaWriter, "// TODO tftags.TagsAttributeComputedOnly()\n")
 					}
 				}
 
