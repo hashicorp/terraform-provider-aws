@@ -322,7 +322,7 @@ For `root_block_device`, in addition to the arguments above, the following attri
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `update` - (Default `10m`)

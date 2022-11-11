@@ -78,6 +78,7 @@ resource "aws_eks_node_group" "example" {
   node_role_arn   = aws_iam_role.example.arn
   subnet_ids      = aws_subnet.example[*].id
 }
+```
 
 ### Example IAM Role for EKS Node Group
 
@@ -206,7 +207,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
 * `update` - (Default `60m`)

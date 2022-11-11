@@ -314,6 +314,7 @@ func init() {
 		F:    sweepVPCEndpoints,
 		Dependencies: []string{
 			"aws_route_table",
+			"aws_sagemaker_workforce",
 		},
 	})
 
@@ -2375,27 +2376,20 @@ func sweepIPAMs(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeIpamsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeIpamsPages(input, func(page *ec2.DescribeIpamsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		cascade := true
+		for _, v := range page.Ipams {
+			r := ResourceIPAM()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.IpamId))
+			d.Set("cascade", true)
 
-		for _, ipam := range page.Ipams {
-			id := aws.StringValue(ipam.IpamId)
-			input := &ec2.DeleteIpamInput{
-				Cascade: aws.Bool(cascade),
-				IpamId:  aws.String(id),
-			}
-
-			log.Printf("[INFO] Cascade deleting EC2 IPAM: %s", id)
-			_, err := conn.DeleteIpam(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error cascade deleting EC2 IPAM (%s): %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -2405,6 +2399,12 @@ func sweepIPAMs(region string) error {
 		log.Printf("[WARN] Skipping IPAM sweep for %s: %s", region, err)
 		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IPAMs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)

@@ -1,13 +1,13 @@
 package ec2
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceIPAMPoolCIDRs() *schema.Resource {
@@ -47,28 +47,26 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 func dataSourceIPAMPoolCIDRsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.GetIpamPoolCidrsInput{}
-
-	if v, ok := d.GetOk("ipam_pool_id"); ok {
-		input.IpamPoolId = aws.String(v.(string))
+	poolID := d.Get("ipam_pool_id").(string)
+	input := &ec2.GetIpamPoolCidrsInput{
+		IpamPoolId: aws.String(poolID),
 	}
 
-	filters, filtersOk := d.GetOk("filter")
-	if filtersOk {
-		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
 	output, err := FindIPAMPoolCIDRs(conn, input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IPAM Pool CIDRs: %w", err)
 	}
 
-	if len(output) == 0 || output[0] == nil {
-		return tfresource.SingularDataSourceFindError("CIDRS IN EC2 VPC IPAM POOL", tfresource.NewEmptyResultError(input))
-	}
-
-	d.SetId(d.Get("ipam_pool_id").(string))
+	d.SetId(poolID)
 	d.Set("ipam_pool_cidrs", flattenIPAMPoolCIDRs(output))
 
 	return nil

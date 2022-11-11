@@ -73,6 +73,7 @@ The following arguments are optional:
   See [`storage_connectors`](#storage_connectors) below.
 * `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled.
   See [`user_settings`](#user_settings) below.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `access_endpoints`
 

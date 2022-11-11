@@ -16,7 +16,7 @@ Provides an RDS DB proxy endpoint resource. For additional information, see the 
 resource "aws_db_proxy_endpoint" "example" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = "example"
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   target_role            = "READ_ONLY"
 }
 ```
@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)

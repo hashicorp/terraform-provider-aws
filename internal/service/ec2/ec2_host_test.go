@@ -242,7 +242,7 @@ func testAccCheckHostDestroy(s *terraform.State) error {
 func testAccHostConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ec2_host" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[1]
   instance_type     = "a1.large"
 }
 `)

@@ -25,6 +25,10 @@
             {{- if eq .ServiceAlias "CloudTrail" }}
             - pattern-not-regex: ^testAccCloudTrailConfig_.*
             {{- end }}
+            {{- if eq .ServiceAlias "SSM" }}
+            - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
+            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
+            {{- end }}
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
 {{- end }}

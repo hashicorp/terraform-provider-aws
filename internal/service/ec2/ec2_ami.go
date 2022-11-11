@@ -31,9 +31,8 @@ const (
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAMICreate,
-		// The Read, Update and Delete operations are shared with aws_ami_copy
-		// and aws_ami_from_instance, since they differ only in how the image
-		// is created.
+		// The Read, Update and Delete operations are shared with aws_ami_copy and aws_ami_from_instance,
+		// since they differ only in how the image is created.
 		Read:   resourceAMIRead,
 		Update: resourceAMIUpdate,
 		Delete: resourceAMIDelete,
@@ -48,6 +47,7 @@ func ResourceAMI() *schema.Resource {
 			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
+		// Keep in sync with aws_ami_copy's and aws_ami_from_instance's schemas.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:         schema.TypeString,

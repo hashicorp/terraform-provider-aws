@@ -65,7 +65,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient
 
 	identityStoreId := d.Get("identity_store_id").(string)
 
@@ -95,7 +95,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient
 
 	identityStoreId, groupMembershipId, err := resourceGroupMembershipParseID(d.Id())
 
@@ -131,7 +131,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient
 
 	log.Printf("[INFO] Deleting IdentityStore GroupMembership %s", d.Id())
 

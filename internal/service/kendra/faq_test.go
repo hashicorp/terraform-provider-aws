@@ -250,7 +250,7 @@ func TestAccKendraFaq_disappears(t *testing.T) {
 }
 
 func testAccCheckFaqDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kendra_faq" {
@@ -292,7 +292,7 @@ func testAccCheckFaqExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 		_, err = tfkendra.FindFaqByID(context.Background(), conn, id, indexId)
 
