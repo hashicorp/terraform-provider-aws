@@ -184,7 +184,7 @@ func testAccCheckEmailIdentityMailFromAttributesExists(name string) resource.Tes
 		}
 
 		if out == nil || out.MailFromAttributes == nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, rs.Primary.ID, err)
+			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, rs.Primary.ID, errors.New("mail from attributes not set"))
 		}
 
 		return nil
