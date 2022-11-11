@@ -65,6 +65,35 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the Neptune cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
 * `deletion_protection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
+* `serverless_v2_scaling_configuration` - (Optional) If set, create the Neptune cluster as a serverless one. See [Serverless](#serverless) for example block attributes.
+
+### Serverless
+
+**Neptune serverless has some limitations. Please see the [limitations on the AWS documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless.html#neptune-serverless-limitations) before jumping into Neptune Serverless.**
+
+Neptune serverless requires that the `engine_version` attribute must be `1.2.0.1` or above. Also, you need to provide a cluster parameter group compatible with the family `neptune1.2`. In the example below, the default cluster parameter group is used.
+
+```terraform
+resource "aws_neptune_cluster" "example" {
+  cluster_identifier                   = "neptune-cluster-development"
+  engine                               = "neptune"
+  engine_version                       = "1.2.0.1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  skip_final_snapshot                  = true
+  apply_immediately                    = true
+
+  serverless_v2_scaling_configuration {}
+}
+
+resource "aws_neptune_cluster_instance" "example" {
+  cluster_identifier           = aws_neptune_cluster.example.cluster_identifier
+  instance_class               = "db.serverless"
+  neptune_parameter_group_name = "default.neptune1.2"
+}
+```
+
+* `min_capacity`: (default: **2.5**) The minimum Neptune Capacity Units (NCUs) for this cluster. Must be greater or equal than **2.5**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
+* `max_capacity`: (default: **128**) The maximum Neptune Capacity Units (NCUs) for this cluster. Must be lower or equal than **128**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
 
 ## Attributes Reference
 
