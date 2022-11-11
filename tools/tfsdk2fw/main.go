@@ -375,6 +375,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 				fprintf(e.StructWriter, "fwtypes.ARN")
 			}
 		} else {
+			if isTopLevelAttribute && attributeName == "id" {
+				fprintf(e.SchemaWriter, "// TODO framework.IDAttribute()\n")
+			}
+
 			fprintf(e.SchemaWriter, "Type:types.StringType,\n")
 
 			if isTopLevelAttribute {
