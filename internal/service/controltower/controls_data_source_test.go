@@ -2,7 +2,6 @@ package controltower_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -28,7 +27,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccControlsDataSourceConfig_id(ouName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "target_identifier", "organizations", regexp.MustCompile(`ou/.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "enabled_controls.#", "0"),
 				),
 			},
 		},
