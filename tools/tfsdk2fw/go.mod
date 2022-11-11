@@ -5,18 +5,18 @@ go 1.17
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
-	github.com/mitchellh/cli v1.1.4
+	github.com/mitchellh/cli v1.1.5
 )
 
 require (
-	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
-	github.com/Masterminds/sprig/v3 v3.2.0 // indirect
+	github.com/Masterminds/sprig/v3 v3.2.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
-	github.com/aws/aws-sdk-go v1.44.121 // indirect
+	github.com/aws/aws-sdk-go v1.44.133 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0 // indirect
@@ -36,8 +36,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.24.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.14.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.25.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.11 // indirect
@@ -100,9 +101,9 @@ require (
 	github.com/zclconf/go-cty v1.11.0 // indirect
 	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.48.0 // indirect

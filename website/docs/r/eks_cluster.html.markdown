@@ -123,7 +123,7 @@ data "tls_certificate" "example" {
 
 resource "aws_iam_openid_connect_provider" "example" {
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = data.tls_certificate.example.certificates.*.sha1_fingerprint
+  thumbprint_list = data.tls_certificate.example.certificates[*].sha1_fingerprint
   url             = data.tls_certificate.example.url
 }
 
@@ -282,7 +282,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `60m`)

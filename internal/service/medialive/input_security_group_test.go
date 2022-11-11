@@ -178,7 +178,7 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckInputSecurityGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -211,7 +211,7 @@ func testAccCheckInputSecurityGroupExists(name string, inputSecurityGroup *media
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameInputSecurityGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 		ctx := context.Background()
 		resp, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -226,7 +226,7 @@ func testAccCheckInputSecurityGroupExists(name string, inputSecurityGroup *media
 }
 
 func testAccInputSecurityGroupsPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 	ctx := context.Background()
 
 	input := &medialive.ListInputSecurityGroupsInput{}

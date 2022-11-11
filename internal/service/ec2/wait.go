@@ -114,11 +114,11 @@ const (
 	CarrierGatewayDeletedTimeout = 5 * time.Minute
 )
 
-func WaitCarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+func WaitCarrierGatewayCreated(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.CarrierGatewayStatePending},
 		Target:  []string{ec2.CarrierGatewayStateAvailable},
-		Refresh: StatusCarrierGatewayState(conn, carrierGatewayID),
+		Refresh: StatusCarrierGatewayState(conn, id),
 		Timeout: CarrierGatewayAvailableTimeout,
 	}
 
@@ -131,11 +131,11 @@ func WaitCarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.C
 	return nil, err
 }
 
-func WaitCarrierGatewayDeleted(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+func WaitCarrierGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.CarrierGatewayStateDeleting},
 		Target:  []string{},
-		Refresh: StatusCarrierGatewayState(conn, carrierGatewayID),
+		Refresh: StatusCarrierGatewayState(conn, id),
 		Timeout: CarrierGatewayDeletedTimeout,
 	}
 
@@ -2756,6 +2756,224 @@ func waitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration)
 	if output, ok := outputRaw.(*ec2.SnapshotTierStatus); ok {
 		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamStateCreateInProgress},
+		Target:  []string{ec2.IpamStateCreateComplete},
+		Refresh: StatusIPAMState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete, ec2.IpamStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamStateModifyInProgress},
+		Target:  []string{ec2.IpamStateModifyComplete},
+		Refresh: StatusIPAMState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateCreateInProgress},
+		Target:  []string{ec2.IpamPoolStateCreateComplete},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateCreateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateDeleteFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateModifyInProgress},
+		Target:  []string{ec2.IpamPoolStateModifyComplete},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateModifyFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolCIDRCreated(conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolCidrStatePendingProvision},
+		Target:  []string{ec2.IpamPoolCidrStateProvisioned},
+		Refresh: StatusIPAMPoolCIDRState(conn, cidrBlock, poolID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if state, failureReason := aws.StringValue(output.State), output.FailureReason; state == ec2.IpamPoolCidrStateFailedProvision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolCidrStatePendingDeprovision, ec2.IpamPoolCidrStateProvisioned},
+		Target:  []string{},
+		Refresh: StatusIPAMPoolCIDRState(conn, cidrBlock, poolID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if state, failureReason := aws.StringValue(output.State), output.FailureReason; state == ec2.IpamPoolCidrStateFailedDeprovision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateCreateInProgress},
+		Target:  []string{ec2.IpamScopeStateCreateComplete},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateCreateComplete, ec2.IpamScopeStateModifyComplete, ec2.IpamScopeStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateModifyInProgress},
+		Target:  []string{ec2.IpamScopeStateModifyComplete},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
 		return output, err
 	}
 

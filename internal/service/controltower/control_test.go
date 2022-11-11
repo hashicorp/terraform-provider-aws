@@ -2,7 +2,6 @@ package controltower_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/controltower"
@@ -15,7 +14,7 @@ import (
 
 func TestAccControlTowerControl_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
-		"ControlTowerControl": {
+		"Control": {
 			"basic":      testAccControl_basic,
 			"disappears": testAccControl_disappears,
 		},
@@ -43,7 +42,8 @@ func testAccControl_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckControlTowerDeployed(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
 		CheckDestroy:             testAccCheckControlDestroy,
@@ -53,7 +53,6 @@ func testAccControl_basic(t *testing.T) {
 				Config: testAccControlConfig_basic(controlName, ouName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(resourceName, &control),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "target_identifier", "organizations", regexp.MustCompile(`ou/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 				),
 			},
@@ -70,7 +69,8 @@ func testAccControl_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckControlTowerDeployed(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,7 +95,7 @@ func testAccCheckControlExists(n string, control *controltower.EnabledControlSum
 			return fmt.Errorf("Not found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Control ID is set")
+			return fmt.Errorf("No ControlTower Control ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn

@@ -80,7 +80,7 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -117,7 +117,7 @@ func testAccCheckGroupExists(name string, group *identitystore.DescribeGroupOutp
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
 		ctx := context.Background()
 		resp, err := conn.DescribeGroup(ctx, &identitystore.DescribeGroupInput{
 			GroupId:         aws.String(rs.Primary.Attributes["group_id"]),

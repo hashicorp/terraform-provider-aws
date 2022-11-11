@@ -185,10 +185,10 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
 
-	key1 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(2048)))
+	key1 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key2 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(2048)))
+	key2 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -270,7 +270,7 @@ func TestAccSESV2EmailIdentity_tags(t *testing.T) {
 }
 
 func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sesv2_email_identity" {
@@ -304,7 +304,7 @@ func testAccCheckEmailIdentityExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 
 		_, err := tfsesv2.FindEmailIdentityByID(context.Background(), conn, rs.Primary.ID)
 

@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,44 +17,36 @@ func DataSourceIPAMPools() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
-
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
 						"address_family": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"allocation_default_netmask_length": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"allocation_max_netmask_length": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"allocation_min_netmask_length": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"allocation_resource_tags": tftags.TagsSchemaComputed(),
-
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"auto_import": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"aws_service": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -62,52 +55,42 @@ func DataSourceIPAMPools() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"ipam_scope_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"ipam_scope_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"ipam_pool_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"locale": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"publicly_advertisable": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"pool_depth": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"source_ipam_pool_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
@@ -122,20 +105,22 @@ func dataSourceIPAMPoolsRead(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	filters, filtersOk := d.GetOk("filter")
-	if filtersOk {
-		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
 	pools, err := FindIPAMPools(conn, input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IPAM Pools: %w", err)
 	}
 
-	d.Set("ipam_pools", flattenIPAMPools(pools, ignoreTagsConfig))
-
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("ipam_pools", flattenIPAMPools(pools, ignoreTagsConfig))
 
 	return nil
 }

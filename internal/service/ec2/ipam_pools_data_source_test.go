@@ -20,19 +20,18 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_basic,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", "1"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", "0"),
 				),
 			},
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_basicTwoPools,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// DS 1 finds all 3 pools
-					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", "3"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", "2"),
 
 					// DS 2 filters on 1 specific pool to validate attributes
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.#", "1"),
-
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.address_family", resourceName, "address_family"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_default_netmask_length", resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_max_netmask_length", resourceName, "allocation_max_netmask_length"),
@@ -48,7 +47,6 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.pool_depth", resourceName, "pool_depth"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.publicly_advertisable", resourceName, "publicly_advertisable"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.source_ipam_pool_id", resourceName, "source_ipam_pool_id"),
-
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.0.tags.tagtest", "3"),
 				),
 			},
@@ -156,11 +154,11 @@ data "aws_vpc_ipam_pools" "testtwo" {
 }
 `)
 
-var testAccIPAMPoolsDataSourceConfig_empty = acctest.ConfigCompose(`
+const testAccIPAMPoolsDataSourceConfig_empty = `
 data "aws_vpc_ipam_pools" "test" {
   filter {
     name   = "description"
     values = ["*none*"]
   }
 }
-`)
+`

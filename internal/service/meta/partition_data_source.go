@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
 func init() {
@@ -20,7 +20,7 @@ func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure
 }
 
 type dataSourcePartition struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -56,15 +56,6 @@ func (d *dataSourcePartition) GetSchema(context.Context) (tfsdk.Schema, diag.Dia
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourcePartition) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -76,10 +67,10 @@ func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadR
 		return
 	}
 
-	data.DNSSuffix = types.String{Value: d.meta.DNSSuffix}
-	data.ID = types.String{Value: d.meta.Partition}
-	data.Partition = types.String{Value: d.meta.Partition}
-	data.ReverseDNSPrefix = types.String{Value: d.meta.ReverseDNSPrefix}
+	data.DNSSuffix = types.String{Value: d.Meta().DNSSuffix}
+	data.ID = types.String{Value: d.Meta().Partition}
+	data.Partition = types.String{Value: d.Meta().Partition}
+	data.ReverseDNSPrefix = types.String{Value: d.Meta().ReverseDNSPrefix}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
