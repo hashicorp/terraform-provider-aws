@@ -200,17 +200,20 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &docdb.CreateDBInstanceInput{
-		DBInstanceClass:           aws.String(d.Get("instance_class").(string)),
-		DBClusterIdentifier:       aws.String(d.Get("cluster_identifier").(string)),
-		Engine:                    aws.String(d.Get("engine").(string)),
-		PromotionTier:             aws.Int64(int64(d.Get("promotion_tier").(int))),
-		AutoMinorVersionUpgrade:   aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                      Tags(tags.IgnoreAWS()),
-		EnablePerformanceInsights: aws.Bool(d.Get("enable_performance_insights").(bool)),
+		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
+		Engine:                  aws.String(d.Get("engine").(string)),
+		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		Tags:                    Tags(tags.IgnoreAWS()),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
 		createOpts.AvailabilityZone = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("enable_performance_insights"); ok {
+		createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
 	}
 
 	if v, ok := d.GetOk("identifier"); ok {
@@ -328,16 +331,16 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("dbi_resource_id", db.DbiResourceId)
-	//Commented the below code as aws api does not expose these values and should be uncommented
-	//as soon as the vlues are available in the DescribeDBClusters output
+	// The AWS API does not expose 'EnablePerformanceInsights' the line below should be uncommented
+	// as soon as it is available in the DescribeDBClusters output.
 	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
 	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
-	//Commented the below code as aws api does not expose these values and should be uncommented
-	//as soon as the vlues are available in the DescribeDBClusters output
+	// The AWS API does not expose 'PerformanceInsightsKMSKeyId'  the line below should be uncommented
+	// as soon as it is available in the DescribeDBClusters output.
 	//d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
@@ -400,13 +403,16 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		requestUpdate = true
 	}
 
+	if d.HasChange("enable_performance_insights") {
+		req.EnablePerformanceInsights = aws.Bool(d.Get("enable_performance_insights").(bool))
+		requestUpdate = true
+	}
 
 	if d.HasChange("performance_insights_kms_key_id") {
 		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
 		requestUpdate = true
 	}
 
-	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
 		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)

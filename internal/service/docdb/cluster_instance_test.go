@@ -73,17 +73,18 @@ func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(rNamePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfigPerf(rName),
+				Config: testAccClusterInstanceConfig_performanceInsights(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttrSet(resourceName, "enable_performance_insights"),
+					resource.TestCheckResourceAttrSet(resourceName, "performance_insights_kms_key_id"),
 				),
 			},
 
@@ -357,8 +358,32 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
 `, rName))
 }
 
+func testAccClusterInstanceConfig_modified(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_docdb_cluster" "default" {
+  cluster_identifier  = %[1]q
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
 
-func testAccClusterInstanceConfigPerf(rName string) string {
+data "aws_docdb_orderable_db_instance" "test" {
+  engine                     = "docdb"
+  preferred_instance_classes = ["db.t3.medium", "db.r4.large", "db.r5.large", "db.r5.xlarge"]
+}
+
+resource "aws_docdb_cluster_instance" "cluster_instances" {
+  identifier                 = %[1]q
+  cluster_identifier         = aws_docdb_cluster.default.id
+  instance_class             = data.aws_docdb_orderable_db_instance.test.instance_class
+  auto_minor_version_upgrade = false
+  promotion_tier             = "3"
+}
+`, rName))
+}
+
+func testAccClusterInstanceConfig_performanceInsights(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "Terraform acc test %[1]s"
@@ -399,36 +424,8 @@ resource "aws_docdb_cluster_instance" "test" {
   cluster_identifier 				= aws_docdb_cluster.default.id
   instance_class     				= data.aws_docdb_orderable_db_instance.test.instance_class
   promotion_tier     				= "3"
-  
-  enable_performance_insights 		
-                            = true
-  performance_insights_kms_key_id 	
-                            = aws_kms_key.test.arn
-}
-`, rName))
-}
-
-func testAccClusterInstanceConfig_modified(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_docdb_cluster" "default" {
-  cluster_identifier  = %[1]q
-  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
-  skip_final_snapshot = true
-}
-
-data "aws_docdb_orderable_db_instance" "test" {
-  engine                     = "docdb"
-  preferred_instance_classes = ["db.t3.medium", "db.r4.large", "db.r5.large", "db.r5.xlarge"]
-}
-
-resource "aws_docdb_cluster_instance" "cluster_instances" {
-  identifier                 = %[1]q
-  cluster_identifier         = aws_docdb_cluster.default.id
-  instance_class             = data.aws_docdb_orderable_db_instance.test.instance_class
-  auto_minor_version_upgrade = false
-  promotion_tier             = "3"
+  enable_performance_insights 		= true
+  performance_insights_kms_key_id 	= aws_kms_key.test.arn
 }
 `, rName))
 }
