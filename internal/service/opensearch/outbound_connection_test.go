@@ -8,12 +8,14 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 )
 
 func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
+	resourceName := "aws_opensearch_outbound_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -26,8 +28,33 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists("aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists("aws_opensearch_domain.domain_2", &domain),
-					resource.TestCheckResourceAttr("aws_opensearch_outbound_connection.main", "connection_status", "PENDING_ACCEPTANCE"),
+					resource.TestCheckResourceAttr(resourceName, "connection_status", "PENDING_ACCEPTANCE"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchOutboundConnection_disappears(t *testing.T) {
+	var domain opensearchservice.DomainStatus
+	ri := sdkacctest.RandString(10)
+	name := fmt.Sprintf("tf-test-%s", ri)
+	resourceName := "aws_opensearch_outbound_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOutboundConnectionConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists("aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists("aws_opensearch_domain.domain_2", &domain),
+					acctest.CheckResourceDisappears(acctest.Provider, tfopensearch.ResourceOutboundConnection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -114,7 +141,7 @@ func testAccOutboundConnectionConfig(name string) string {
 	data "aws_caller_identity" "current" {}
 	data "aws_region" "current" {}
 
-	resource "aws_opensearch_outbound_connection" "main" {
+	resource "aws_opensearch_outbound_connection" "test" {
 		connection_alias = "%s"
 		local_domain_info {
 			owner_id    = data.aws_caller_identity.current.account_id
