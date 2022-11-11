@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_docdb_cluster_instance: Add support for `enable_performance_insights` during cluster instance creation
-```
