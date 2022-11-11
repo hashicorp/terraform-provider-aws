@@ -44,6 +44,13 @@ The following arguments are supported:
 
 * `connection_id` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The Id of the connection to accept.
+* `connection_status` - Status of the connection request.
+
 ## Import
 
 AWS Opensearch Inbound Connection Accepters can be imported by using the Inbound Connection ID, e.g.,
