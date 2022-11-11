@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -368,8 +369,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			resources = append(resources, func() resource.Resource {
-				// TODO Consider wrapping.
-				return v
+				return newWrappedResource(v)
 			})
 		}
 	}
@@ -422,4 +422,62 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
 	w.inner.Configure(ctx, request, response)
+}
+
+// wrappedResource wraps a resource, adding common functionality.
+type wrappedResource struct {
+	inner    intf.ResourceWithConfigureAndImportState
+	typeName string
+}
+
+func newWrappedResource(inner intf.ResourceWithConfigureAndImportState) intf.ResourceWithConfigureAndImportState {
+	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return w.inner.GetSchema(ctx)
+}
+
+func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
+
+	w.inner.Create(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create exit", w.typeName))
+}
+
+func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
+
+	w.inner.Update(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update exit", w.typeName))
+}
+
+func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
+
+	w.inner.Delete(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete exit", w.typeName))
+}
+
+func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	w.inner.ImportState(ctx, request, response)
 }

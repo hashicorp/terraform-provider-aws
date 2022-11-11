@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	SweepThrottlingRetryTimeout = 10 * time.Minute
+	ThrottlingRetryTimeout = 10 * time.Minute
 
 	ResourcePrefix = "tf-acc-test"
 )
@@ -100,7 +100,7 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 }
 
 type Sweepable interface {
-	Delete(ctx context.Context, rc RetryConfig) error
+	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
 }
 
 type SweepResource struct {
@@ -117,16 +117,8 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 	}
 }
 
-type RetryConfig struct {
-	Delay        time.Duration
-	DelayRand    time.Duration
-	MinTimeout   time.Duration
-	PollInterval time.Duration
-	Timeout      time.Duration
-}
-
-func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
-	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		err := DeleteResource(sr.resource, sr.d, sr.meta)
 
 		if err != nil {
@@ -139,7 +131,7 @@ func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
 		}
 
 		return nil
-	})
+	}, optFns...)
 
 	if tfresource.TimedOut(err) {
 		err = DeleteResource(sr.resource, sr.d, sr.meta)
@@ -150,23 +142,17 @@ func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
 }
 
 func SweepOrchestrator(sweepables []Sweepable) error {
-	return SweepOrchestratorWithContext(context.Background(), sweepables, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+	return SweepOrchestratorWithContext(context.Background(), sweepables)
 }
 
-func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
 		sweepable := sweepable
 
 		g.Go(func() error {
-			return sweepable.Delete(ctx, RetryConfig{
-				Delay:        delay,
-				DelayRand:    delayRand,
-				MinTimeout:   minTimeout,
-				PollInterval: pollInterval,
-				Timeout:      timeout,
-			})
+			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
 		})
 	}
 

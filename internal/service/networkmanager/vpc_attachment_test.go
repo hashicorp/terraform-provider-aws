@@ -19,6 +19,7 @@ import (
 func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 	var v networkmanager.VpcAttachment
 	resourceName := "aws_networkmanager_vpc_attachment.test"
+	coreNetworkResourceName := "awscc_networkmanager_core_network.test"
 	vpcResourceName := "aws_vpc.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
@@ -42,7 +43,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "0"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
-					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, "core_network_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),

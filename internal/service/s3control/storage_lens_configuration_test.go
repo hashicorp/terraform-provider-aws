@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	s3controlv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -215,7 +214,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 }
 
 func testAccCheckStorageLensConfigurationDestroy(s *terraform.State) error {
-	conn := s3controlv2.NewFromConfig(*acctest.Provider.Meta().(*conns.AWSClient).Config)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_object_lambda_access_point" {
@@ -261,7 +260,7 @@ func testAccCheckStorageLensConfigurationExists(n string) resource.TestCheckFunc
 			return err
 		}
 
-		conn := s3controlv2.NewFromConfig(*acctest.Provider.Meta().(*conns.AWSClient).Config)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient
 
 		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(context.Background(), conn, accountID, configID)
 

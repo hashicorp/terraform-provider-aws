@@ -60,3 +60,28 @@ func FindProjectByNameOrARN(ctx context.Context, conn *cloudwatchevidently.Cloud
 
 	return output.Project, nil
 }
+
+func FindSegmentByNameOrARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string) (*cloudwatchevidently.Segment, error) {
+	input := &cloudwatchevidently.GetSegmentInput{
+		Segment: aws.String(nameOrARN),
+	}
+
+	output, err := conn.GetSegmentWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Segment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Segment, nil
+}

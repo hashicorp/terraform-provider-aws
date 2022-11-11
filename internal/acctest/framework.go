@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 )
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
+func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), is *terraform.InstanceState, meta interface{}) error {
 	ctx := context.Background()
 
 	resource, err := factory(ctx)
@@ -30,7 +31,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	schema, diags := resource.GetSchema(ctx)
 
 	if diags.HasError() {
-		return errs.NewDiagnosticsError(diags)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	// Simple Terraform State that contains just the resource ID.
@@ -43,13 +44,13 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	if response.Diagnostics.HasError() {
-		return errs.NewDiagnosticsError(response.Diagnostics)
+		return fwdiag.DiagnosticsError(response.Diagnostics)
 	}
 
 	return nil
 }
 
-func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (fwresource.ResourceWithConfigure, error), n string) resource.TestCheckFunc {
+func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

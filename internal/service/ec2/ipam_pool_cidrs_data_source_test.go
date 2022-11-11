@@ -38,8 +38,7 @@ func TestAccIPAMPoolCIDRsDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccIPAMPoolCIDRsDataSourceConfig_basicOneCIDRs = acctest.ConfigCompose(
-	testAccIPAMPoolConfig_basic, `
+var testAccIPAMPoolCIDRsDataSourceConfig_basicOneCIDRs = acctest.ConfigCompose(testAccIPAMPoolConfig_basic, `
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = "172.2.0.0/16"
@@ -47,20 +46,19 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 
 data "aws_vpc_ipam_pool_cidrs" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
+
   depends_on = [
     aws_vpc_ipam_pool_cidr.test
   ]
 }
 `)
 
-var testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRs = acctest.ConfigCompose(
-	testAccIPAMPoolConfig_basic, `
-
-
+var testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRs = acctest.ConfigCompose(testAccIPAMPoolConfig_basic, `
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = "172.2.0.0/16"
 }
+
 resource "aws_vpc_ipam_pool_cidr" "testtwo" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = "10.2.0.0/16"
@@ -68,6 +66,7 @@ resource "aws_vpc_ipam_pool_cidr" "testtwo" {
 
 data "aws_vpc_ipam_pool_cidrs" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
+
   depends_on = [
     aws_vpc_ipam_pool_cidr.test,
     aws_vpc_ipam_pool_cidr.testtwo,
@@ -75,12 +74,12 @@ data "aws_vpc_ipam_pool_cidrs" "test" {
 }
 `)
 
-var testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRsFiltered = acctest.ConfigCompose(
-	testAccIPAMPoolConfig_basic, `
+var testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRsFiltered = acctest.ConfigCompose(testAccIPAMPoolConfig_basic, `
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = "172.2.0.0/16"
 }
+
 resource "aws_vpc_ipam_pool_cidr" "testtwo" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = "10.2.0.0/16"

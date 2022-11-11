@@ -1209,13 +1209,13 @@ func TestAccCloudFrontDistribution_ViewerCertificate_acmCertificateARN(t *testin
 		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_viewerCertificateACMCertificateARN(retainOnDelete),
+				Config: testAccDistributionConfig_viewerCertificateACMCertificateARN(t, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(resourceName, &distribution),
 				),
 			},
 			{
-				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARN(retainOnDelete),
+				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARN(t, retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1241,13 +1241,13 @@ func TestAccCloudFrontDistribution_ViewerCertificateACMCertificateARN_conflictsW
 		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(retainOnDelete),
+				Config: testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(resourceName, &distribution),
 				),
 			},
 			{
-				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(retainOnDelete),
+				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t, retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -3573,9 +3573,9 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 // CloudFront Distribution ACM Certificates must be created in us-east-1
-func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
+func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t *testing.T, commonName string) string {
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
 	return testAccRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
@@ -3585,11 +3585,11 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccDistributionConfig_viewerCertificateACMCertificateARN(retainOnDelete bool) string {
-	return testAccDistributionViewerCertificateACMCertificateARNBaseConfig("example.com") + fmt.Sprintf(`
+func testAccDistributionConfig_viewerCertificateACMCertificateARN(t *testing.T, retainOnDelete bool) string {
+	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
-  retain_on_delete = %t
+  retain_on_delete = %[1]t
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
@@ -3629,14 +3629,14 @@ resource "aws_cloudfront_distribution" "test" {
     ssl_support_method  = "sni-only"
   }
 }
-`, retainOnDelete)
+`, retainOnDelete))
 }
 
-func testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(retainOnDelete bool) string {
-	return testAccDistributionViewerCertificateACMCertificateARNBaseConfig("example.com") + fmt.Sprintf(`
+func testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t *testing.T, retainOnDelete bool) string {
+	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
-  retain_on_delete = %t
+  retain_on_delete = %[1]t
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
@@ -3677,7 +3677,7 @@ resource "aws_cloudfront_distribution" "test" {
     ssl_support_method             = "sni-only"
   }
 }
-`, retainOnDelete)
+`, retainOnDelete))
 }
 
 func testAccDistributionConfig_waitForDeployment(enabled, waitForDeployment bool) string {

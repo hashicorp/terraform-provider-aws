@@ -26,6 +26,8 @@ the `apply_method` of a parameter, its value must also change.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_db_parameter_group" "default" {
   name   = "rds-pg"
@@ -40,6 +42,36 @@ resource "aws_db_parameter_group" "default" {
     name  = "character_set_client"
     value = "utf8"
   }
+}
+```
+
+### `create_before_destroy` Lifecycle Configuration
+
+The [`create_before_destroy`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy)
+lifecycle configuration is necessary for modifications that force re-creation of an existing,
+in-use parameter group. This includes common situations like changing the group `name` or
+bumping the `family` version during a major version upgrade. This configuration will prevent destruction
+of the deposed parameter group while still in use by the database during upgrade.
+
+```terraform
+resource "aws_db_parameter_group" "example" {
+  name   = "my-pg"
+  family = "postgres13"
+
+  parameter {
+    name  = "log_connections"
+    value = "1"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_db_instance" "example" {
+  # other attributes
+  parameter_group_name = aws_db_parameter_group.example.name
+  apply_immediately    = true
 }
 ```
 

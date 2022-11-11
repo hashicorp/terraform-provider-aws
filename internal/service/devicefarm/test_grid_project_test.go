@@ -269,8 +269,8 @@ resource "aws_devicefarm_test_grid_project" "test" {
 
   vpc_config {
     vpc_id             = aws_vpc.test.id
-    subnet_ids         = aws_subnet.test.*.id
-    security_group_ids = aws_security_group.test.*.id
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
 }
 `, rName))

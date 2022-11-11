@@ -4,6 +4,7 @@
 package elasticache
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -125,6 +126,7 @@ func sweepGlobalReplicationGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).ElastiCacheConn
+	ctx := context.Background()
 
 	var grgGroup multierror.Group
 
@@ -144,17 +146,13 @@ func sweepGlobalReplicationGroups(region string) error {
 
 				disassociationErrors := DisassociateMembers(conn, globalReplicationGroup)
 				if disassociationErrors != nil {
-					sweeperErr := fmt.Errorf("failed to disassociate ElastiCache Global Replication Group (%s) members: %w", id, disassociationErrors)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
+					return fmt.Errorf("disassociating ElastiCache Global Replication Group (%s) members: %w", id, disassociationErrors)
 				}
 
 				log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
-				err := DeleteGlobalReplicationGroup(conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout)
+				err := deleteGlobalReplicationGroup(ctx, conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout, globalReplicationGroupDefaultDeletedTimeout)
 				if err != nil {
-					sweeperErr := fmt.Errorf("error deleting ElastiCache Global Replication Group (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
+					return fmt.Errorf("deleting ElastiCache Global Replication Group (%s): %w", id, err)
 				}
 				return nil
 			})
@@ -171,7 +169,7 @@ func sweepGlobalReplicationGroups(region string) error {
 	}
 
 	if err != nil {
-		grgErrs = multierror.Append(grgErrs, fmt.Errorf("error listing ElastiCache Global Replication Groups: %w", err))
+		grgErrs = multierror.Append(grgErrs, fmt.Errorf("listing ElastiCache Global Replication Groups: %w", err))
 	}
 
 	return grgErrs.ErrorOrNil()

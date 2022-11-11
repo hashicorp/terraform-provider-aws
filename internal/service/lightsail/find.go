@@ -111,6 +111,67 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	return result, nil
 }
 
+func FindDiskById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.Disk, error) {
+	in := &lightsail.GetDiskInput{
+		DiskName: aws.String(id),
+	}
+
+	out, err := conn.GetDiskWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Disk == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Disk, nil
+}
+
+func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.Disk, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid Disk Attachment id")
+	}
+
+	dName := id_parts[0]
+	iName := id_parts[1]
+
+	in := &lightsail.GetDiskInput{
+		DiskName: aws.String(dName),
+	}
+
+	out, err := conn.GetDiskWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	disk := out.Disk
+
+	if disk == nil || !aws.BoolValue(disk.IsAttached) || aws.StringValue(disk.Name) != dName || aws.StringValue(disk.AttachedTo) != iName {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Disk, nil
+}
+
 func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
 	id_parts := strings.SplitN(id, "_", -1)
 	domainName := id_parts[1]
@@ -220,4 +281,130 @@ func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Lightsa
 	}
 
 	return entry, nil
+}
+
+func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.LoadBalancerTlsCertificate, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer certificate id")
+	}
+
+	lbName := id_parts[0]
+	cName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerTlsCertificatesInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancerTlsCertificatesWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *lightsail.LoadBalancerTlsCertificate
+	entryExists := false
+
+	for _, n := range out.TlsCertificates {
+		if cName == aws.StringValue(n.Name) {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}
+
+func FindLoadBalancerCertificateAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id string) (*string, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer certificate attachment id")
+	}
+
+	lbName := id_parts[0]
+	cName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerTlsCertificatesInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancerTlsCertificatesWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *string
+	entryExists := false
+
+	for _, n := range out.TlsCertificates {
+		if cName == aws.StringValue(n.Name) && aws.BoolValue(n.IsAttached) {
+			entry = n.Name
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}
+
+func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.Lightsail, id string) (map[string]*string, error) {
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(id)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoadBalancer.ConfigurationOptions == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.LoadBalancer.ConfigurationOptions, nil
+}
+
+func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *lightsail.Lightsail, id string) (*bool, error) {
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(id)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoadBalancer.HttpsRedirectionEnabled == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.LoadBalancer.HttpsRedirectionEnabled, nil
 }

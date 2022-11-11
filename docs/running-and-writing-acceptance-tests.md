@@ -1000,7 +1000,7 @@ func testAccPreCheckPricing(t *testing.T) {
     if diags != nil && diags.HasError() {
       for _, d := range diags {
         if d.Severity == diag.Error {
-          t.Fatalf("error configuring Pricing provider: %s", d.Summary)
+          t.Fatalf("configuring Pricing provider: %s", d.Summary)
         }
       }
     }
@@ -1206,7 +1206,7 @@ func sweepThings(region string) error {
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
-    return fmt.Errorf("error getting client: %w", err)
+    return fmt.Errorf("getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
@@ -1236,7 +1236,7 @@ func sweepThings(region string) error {
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
-        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
@@ -1249,11 +1249,11 @@ func sweepThings(region string) error {
   })
 
   if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("listing Example Thing for %s: %w", region, err))
   }
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
   }
 
   if sweep.SkipSweepError(err) {
@@ -1272,7 +1272,7 @@ func sweepThings(region string) error {
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
-    return fmt.Errorf("error getting client: %w", err)
+    return fmt.Errorf("getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
@@ -1300,7 +1300,7 @@ func sweepThings(region string) error {
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
-        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
@@ -1317,7 +1317,7 @@ func sweepThings(region string) error {
   }
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
   }
 
   if sweep.SkipSweepError(err) {
@@ -1632,7 +1632,7 @@ func TestAccKeyPair_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := acctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
-		t.Fatalf("error generating random SSH key: %s", err)
+		t.Fatalf("generating random SSH key: %s", err)
 	}
 
   resource.ParallelTest(t, resource.TestCase{

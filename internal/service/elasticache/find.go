@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -127,13 +128,13 @@ func FindCacheClustersByID(conn *elasticache.ElastiCache, idList []string) ([]*e
 	return results, err
 }
 
-// FindGlobalReplicationGroupByID() retrieves an ElastiCache Global Replication Group by id.
-func FindGlobalReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticache.GlobalReplicationGroup, error) {
+// FindGlobalReplicationGroupByID retrieves an ElastiCache Global Replication Group by id.
+func FindGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.GlobalReplicationGroup, error) {
 	input := &elasticache.DescribeGlobalReplicationGroupsInput{
 		GlobalReplicationGroupId: aws.String(id),
 		ShowMemberInfo:           aws.Bool(true),
 	}
-	output, err := conn.DescribeGlobalReplicationGroups(input)
+	output, err := conn.DescribeGlobalReplicationGroupsWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
@@ -156,7 +157,7 @@ func FindGlobalReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*
 
 // FindGlobalReplicationGroupMemberByID retrieves a member Replication Group by id from a Global Replication Group.
 func FindGlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalReplicationGroupID string, id string) (*elasticache.GlobalReplicationGroupMember, error) {
-	globalReplicationGroup, err := FindGlobalReplicationGroupByID(conn, globalReplicationGroupID)
+	globalReplicationGroup, err := FindGlobalReplicationGroupByID(context.TODO(), conn, globalReplicationGroupID)
 	if err != nil {
 		return nil, &resource.NotFoundError{
 			Message:   "unable to retrieve enclosing Global Replication Group",

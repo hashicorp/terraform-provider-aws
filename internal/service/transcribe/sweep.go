@@ -58,7 +58,7 @@ func sweepLanguageModels(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
+	conn := client.(*conns.AWSClient).TranscribeClient
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListLanguageModelsInput{}
 	var errs *multierror.Error
@@ -108,7 +108,7 @@ func sweepMedicalVocabularies(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
+	conn := client.(*conns.AWSClient).TranscribeClient
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListMedicalVocabulariesInput{}
 	var errs *multierror.Error
@@ -159,7 +159,7 @@ func sweepVocabularies(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
+	conn := client.(*conns.AWSClient).TranscribeClient
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListVocabulariesInput{}
 	var errs *multierror.Error
@@ -210,7 +210,7 @@ func sweepVocabularyFilters(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
+	conn := client.(*conns.AWSClient).TranscribeClient
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListVocabularyFiltersInput{}
 	var errs *multierror.Error

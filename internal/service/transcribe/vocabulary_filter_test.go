@@ -209,7 +209,7 @@ func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 }
 
 func testAccCheckVocabularyFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -244,7 +244,7 @@ func testAccCheckVocabularyFilterExists(name string, vocabularyFilter *transcrib
 			return create.Error(names.Transcribe, create.ErrActionCheckingExistence, tftranscribe.ResNameVocabularyFilter, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 		ctx := context.Background()
 		resp, err := tftranscribe.FindVocabularyFilterByName(ctx, conn, rs.Primary.ID)
 
@@ -259,7 +259,7 @@ func testAccCheckVocabularyFilterExists(name string, vocabularyFilter *transcrib
 }
 
 func testAccVocabularyFiltersPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 	ctx := context.Background()
 
 	input := &transcribe.ListVocabularyFiltersInput{}
