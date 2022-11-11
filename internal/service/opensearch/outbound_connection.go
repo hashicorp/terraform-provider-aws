@@ -22,7 +22,7 @@ func ResourceOutboundConnection() *schema.Resource {
 		ReadContext:   resourceOutboundConnectionRead,
 		DeleteContext: resourceOutboundConnectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
