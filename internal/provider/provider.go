@@ -2230,7 +2230,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 		ServicePackages: []intf.ServicePackageData{
 			ec2.ServicePackageData,
 			globalaccelerator.ServicePackageData,
-			//medialive.ServicePackageData,
+			medialive.ServicePackageData,
 			meta.ServicePackageData,
 			simpledb.ServicePackageData,
 			sts.ServicePackageData,
