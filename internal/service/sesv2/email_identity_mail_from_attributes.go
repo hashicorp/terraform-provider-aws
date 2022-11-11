@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,10 +32,10 @@ func ResourceEmailIdentityMailFromAttributes() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"behavior_on_mx_failure": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      string(types.BehaviorOnMxFailureUseDefaultValue),
-				ValidateFunc: validation.StringInSlice(behaviorOnMXFailureValues(types.BehaviorOnMxFailure("").Values()), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(types.BehaviorOnMxFailureUseDefaultValue),
+				ValidateDiagFunc: enum.Validate[types.BehaviorOnMxFailure](),
 			},
 			"email_identity": {
 				Type:     schema.TypeString,
@@ -167,14 +167,4 @@ func resourceEmailIdentityMailFromAttributesDelete(ctx context.Context, d *schem
 	}
 
 	return nil
-}
-
-func behaviorOnMXFailureValues(in []types.BehaviorOnMxFailure) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
 }
