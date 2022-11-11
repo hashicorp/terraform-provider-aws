@@ -321,7 +321,7 @@ data "aws_identitystore_group" "test" {
     attribute_value = aws_identitystore_group.test.display_name
   }
 
-  group_id = aws_identitystore_group.test2.group_id 
+  group_id = aws_identitystore_group.test2.group_id
 }
 `, name2),
 	)

@@ -33,7 +33,6 @@ output "group_id" {
 
 ## Argument Reference
 
-
 The following arguments are required:
 
 * `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On Instance.
@@ -86,5 +85,5 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - Description of the specified group.
 * `display_name` - Group's display name value.
 * `external_ids` - List of identifiers issued to this resource by an external identity provider.
-  * `id` - The identifier issued to this resource by an external identity provider.
-  * `issuer` - The issuer for an external identifier.
+    * `id` - The identifier issued to this resource by an external identity provider.
+    * `issuer` - The issuer for an external identifier.
