@@ -42,11 +42,7 @@ func (r *resourceDomain) Metadata(_ context.Context, request resource.MetadataRe
 func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-				Computed: true,
-			},
+			"id": framework.IDAttribute(),
 			"name": {
 				Type:     types.StringType,
 				Required: true,

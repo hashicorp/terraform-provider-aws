@@ -50,13 +50,7 @@ func (m *multiplexProgram) Metadata(_ context.Context, request resource.Metadata
 func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.UseStateForUnknown(),
-				},
-			},
+			"id": framework.IDAttribute(),
 			"multiplex_id": {
 				Type:     types.StringType,
 				Required: true,
