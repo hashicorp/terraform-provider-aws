@@ -184,6 +184,7 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 
 	templateData := &templateData{
 		EmitResourceImportState:      m.Resource.Importer != nil,
+		EmitResourceModifyPlan:       emitter.HasTopLevelTagsAllMap && emitter.HasTopLevelTagsMap,
 		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
@@ -202,6 +203,8 @@ func (m *migrator) infof(format string, a ...interface{}) {
 }
 
 type emitter struct {
+	HasTopLevelTagsAllMap        bool
+	HasTopLevelTagsMap           bool
 	ImportFrameworkAttr          bool
 	ImportProviderFrameworkTypes bool
 	IsDataSource                 bool
@@ -422,6 +425,13 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 			case schema.TypeString:
 				elementType = "types.StringType"
+				if typeName == "map" && isTopLevelAttribute {
+					if attributeName == "tags" {
+						e.HasTopLevelTagsMap = true
+					} else if attributeName == "tags_all" {
+						e.HasTopLevelTagsAllMap = true
+					}
+				}
 
 			default:
 				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %s", typeName, v.String()))
@@ -766,6 +776,7 @@ func unsupportedTypeError(path []string, typ string) error {
 
 type templateData struct {
 	EmitResourceImportState      bool
+	EmitResourceModifyPlan       bool
 	EmitResourceUpdateSkeleton   bool
 	ImportFrameworkAttr          bool
 	ImportProviderFrameworkTypes bool
