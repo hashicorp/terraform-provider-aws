@@ -59,6 +59,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Id of the connection.
+* `connection_status` - Status of the connection request.
 
 ## Import
 
