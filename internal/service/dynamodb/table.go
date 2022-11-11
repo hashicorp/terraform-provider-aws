@@ -74,6 +74,14 @@ func ResourceTable() *schema.Resource {
 				}
 				return nil
 			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if diff.Id() != "" && diff.HasChange("stream_enabled") {
+					if err := diff.SetNewComputed("stream_arn"); err != nil {
+						return fmt.Errorf("error setting stream_arn to computed: %s", err)
+					}
+				}
+				return nil
+			},
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 				if v := diff.Get("restore_source_name"); v != "" {
 					return nil

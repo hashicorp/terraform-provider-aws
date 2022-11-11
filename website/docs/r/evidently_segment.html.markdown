@@ -72,15 +72,15 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the segment.
 * `created_time` - The date and time that the segment is created.
 * `experiment_count` - The number of experiments that this segment is used in. This count includes all current experiments, not just those that are currently running.
-* `id` - The ID has the same value as the name of the segment.
+* `id` - The ID has the same value as the ARN of the segment.
 * `last_updated_time` - The date and time that this segment was most recently updated.
 * `launch_count` - The number of launches that this segment is used in. This count includes all current launches, not just those that are currently running.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-CloudWatch Evidently Segment can be imported using the `name`, e.g.,
+CloudWatch Evidently Segment can be imported using the `arn`, e.g.,
 
 ```
-$ terraform import aws_evidently_segment.example example
+$ terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
 ```

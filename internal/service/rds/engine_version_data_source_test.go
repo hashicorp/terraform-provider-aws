@@ -88,7 +88,7 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
+func TestAccRDSEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,9 +98,67 @@ func TestAccRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
+				Config: testAccEngineVersionDataSourceConfig_defaultOnlyImplicit(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_defaultOnlyExplicit(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexp.MustCompile(`^8\.0\.`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_includeAll(t *testing.T) {
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_includeAll(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_filter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "version", "10.14"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "serverless"),
 				),
 			},
 		},
@@ -154,10 +212,45 @@ data "aws_rds_engine_version" "test" {
 `
 }
 
-func testAccEngineVersionDataSourceConfig_defaultOnly() string {
+func testAccEngineVersionDataSourceConfig_defaultOnlyImplicit() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine = "mysql"
+}
+`
+}
+
+func testAccEngineVersionDataSourceConfig_defaultOnlyExplicit() string {
+	return `
+data "aws_rds_engine_version" "test" {
+  engine       = "mysql"
+  version      = "8.0"
+  default_only = true
+}
+`
+}
+
+func testAccEngineVersionDataSourceConfig_includeAll() string {
+	return `
+data "aws_rds_engine_version" "test" {
+  engine      = "mysql"
+  version     = "8.0.20"
+  include_all = true
+}
+`
+}
+
+func testAccEngineVersionDataSourceConfig_filter() string {
+	return `
+data "aws_rds_engine_version" "test" {
+  engine      = "aurora-postgresql"
+  version     = "10.14"
+  include_all = true
+
+  filter {
+    name   = "engine-mode"
+    values = ["serverless"]
+  }
 }
 `
 }

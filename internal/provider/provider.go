@@ -108,6 +108,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
@@ -530,7 +531,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_directory_service_directory": ds.DataSourceDirectory(),
 
-			"aws_dynamodb_table": dynamodb.DataSourceTable(),
+			"aws_dynamodb_table":      dynamodb.DataSourceTable(),
+			"aws_dynamodb_table_item": dynamodb.DataSourceTableItem(),
 
 			"aws_ami":                                        ec2.DataSourceAMI(),
 			"aws_ami_ids":                                    ec2.DataSourceAMIIDs(),
@@ -844,9 +846,14 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_route53_traffic_policy_document": route53.DataSourceTrafficPolicyDocument(),
 			"aws_route53_zone":                    route53.DataSourceZone(),
 
-			"aws_route53_resolver_endpoint": route53resolver.DataSourceEndpoint(),
-			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
-			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),
+			"aws_route53_resolver_endpoint":                        route53resolver.DataSourceEndpoint(),
+			"aws_route53_resolver_firewall_config":                 route53resolver.DataSourceFirewallConfig(),
+			"aws_route53_resolver_firewall_domain_list":            route53resolver.DataSourceFirewallDomainList(),
+			"aws_route53_resolver_firewall_rule_group":             route53resolver.DataSourceFirewallRuleGroup(),
+			"aws_route53_resolver_firewall_rule_group_association": route53resolver.DataSourceFirewallRuleGroupAssociation(),
+			"aws_route53_resolver_firewall_rules":                  route53resolver.DataSourceResolverFirewallRules(),
+			"aws_route53_resolver_rule":                            route53resolver.DataSourceRule(),
+			"aws_route53_resolver_rules":                           route53resolver.DataSourceRules(),
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
@@ -1650,6 +1657,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
 			"aws_iot_topic_rule_destination":     iot.ResourceTopicRuleDestination(),
 
+			"aws_ivs_playback_key_pair":       ivs.ResourcePlaybackKeyPair(),
+			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
+
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
@@ -1728,6 +1738,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lightsail_lb_attachment":                        lightsail.ResourceLoadBalancerAttachment(),
 			"aws_lightsail_lb_certificate":                       lightsail.ResourceLoadBalancerCertificate(),
 			"aws_lightsail_lb_certificate_attachment":            lightsail.ResourceLoadBalancerCertificateAttachment(),
+			"aws_lightsail_lb_https_redirection_policy":          lightsail.ResourceLoadBalancerHTTPSRedirectionPolicy(),
 			"aws_lightsail_lb_stickiness_policy":                 lightsail.ResourceLoadBalancerStickinessPolicy(),
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
@@ -1755,6 +1766,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 
+			"aws_medialive_channel":              medialive.ResourceChannel(),
 			"aws_medialive_input":                medialive.ResourceInput(),
 			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
 			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
@@ -1802,6 +1814,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
 			"aws_networkmanager_transit_gateway_route_table_attachment":   networkmanager.ResourceTransitGatewayRouteTableAttachment(),
 			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
+			"aws_networkmanager_site_to_site_vpn_attachment":              networkmanager.ResourceSiteToSiteVPNAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
@@ -1885,10 +1898,12 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
 			"aws_redshift_cluster_iam_roles":             redshift.ResourceClusterIAMRoles(),
 			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
+			"aws_redshift_endpoint_authorization":        redshift.ResourceEndpointAuthorization(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
 			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
 			"aws_redshift_hsm_configuration":             redshift.ResourceHSMConfiguration(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),
+			"aws_redshift_partner":                       redshift.ResourcePartner(),
 			"aws_redshift_scheduled_action":              redshift.ResourceScheduledAction(),
 			"aws_redshift_security_group":                redshift.ResourceSecurityGroup(),
 			"aws_redshift_snapshot_copy_grant":           redshift.ResourceSnapshotCopyGrant(),
@@ -1901,6 +1916,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
 			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_snapshot":        redshiftserverless.ResourceSnapshot(),
 			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
 			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),
 

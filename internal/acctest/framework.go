@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
@@ -32,7 +32,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	schema, diags := resource.GetSchema(ctx)
 
 	if diags.HasError() {
-		return errs.NewDiagnosticsError(diags)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	// Construct a simple Framework State that contains just top-level attributes.
@@ -46,7 +46,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 			continue
 		}
 
-		if err := errs.NewDiagnosticsError(state.SetAttribute(ctx, path.Root(name), v)); err != nil {
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(name), v)); err != nil {
 			log.Printf("[WARN] %s(%s): %s", name, v, err)
 		}
 	}
@@ -55,7 +55,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	if response.Diagnostics.HasError() {
-		return errs.NewDiagnosticsError(response.Diagnostics)
+		return fwdiag.DiagnosticsError(response.Diagnostics)
 	}
 
 	return nil
