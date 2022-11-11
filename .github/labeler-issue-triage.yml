@@ -541,6 +541,8 @@ service/sagemakerruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemakerruntime_'
 service/savingsplans:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_savingsplans_'
+service/scheduler:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_scheduler_'
 service/schemas:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_schemas_'
 service/secretsmanager:
