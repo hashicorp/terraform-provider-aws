@@ -25,7 +25,7 @@ resource "aws_opensearch_outbound_connection" "foo" {
     region      = data.aws_region.current.name
     domain_name = aws_opensearch_domain.local_domain.domain_name
   }
-  
+
   remote_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
     region      = data.aws_region.current.name
