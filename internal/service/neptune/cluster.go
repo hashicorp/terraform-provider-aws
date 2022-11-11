@@ -28,6 +28,9 @@ const (
 	cloudWatchLogsExportsAudit = "audit"
 
 	DefaultPort = 8182
+
+	ServerlessMinNCUs = 2.5
+	ServerlessMaxNCUs = 128.0
 )
 
 func ResourceCluster() *schema.Resource {
@@ -247,6 +250,33 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 			},
 
+			"serverless_v2_scaling_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"min_capacity": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  ServerlessMinNCUs,
+							// Minimum capacity is 2.5 NCUs
+							// see: https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html
+							ValidateFunc: verify.FloatGreaterOrEqualThan(ServerlessMinNCUs),
+						},
+						"max_capacity": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  ServerlessMaxNCUs,
+							// Maximum capacity is 128 NCUs
+							// see: https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html
+							ValidateFunc: verify.FloatLowerOrEqualThan(ServerlessMaxNCUs),
+						},
+					},
+				},
+			},
+
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -307,23 +337,27 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	serverlessConfiguration := expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
+
 	createDbClusterInput := &neptune.CreateDBClusterInput{
-		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-		CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-		Engine:              aws.String(d.Get("engine").(string)),
-		Port:                aws.Int64(int64(d.Get("port").(int))),
-		StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
-		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		DBClusterIdentifier:              aws.String(d.Get("cluster_identifier").(string)),
+		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+		Engine:                           aws.String(d.Get("engine").(string)),
+		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		StorageEncrypted:                 aws.Bool(d.Get("storage_encrypted").(bool)),
+		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
+		Tags:                             Tags(tags.IgnoreAWS()),
+		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
-		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-		CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-		Engine:              aws.String(d.Get("engine").(string)),
-		Port:                aws.Int64(int64(d.Get("port").(int))),
-		SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
-		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		DBClusterIdentifier:              aws.String(d.Get("cluster_identifier").(string)),
+		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+		Engine:                           aws.String(d.Get("engine").(string)),
+		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
+		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
+		Tags:                             Tags(tags.IgnoreAWS()),
+		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 
 	if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -480,6 +514,19 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return flattenClusterResource(d, meta, dbc)
 }
 
+func flattenServerlessV2ScalingConfigurationResponse(serverlessConfig *neptune.ServerlessV2ScalingConfigurationInfo) []map[string]interface{} {
+	if serverlessConfig == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"min_capacity": aws.Float64(*serverlessConfig.MinCapacity),
+		"max_capacity": aws.Float64(*serverlessConfig.MaxCapacity),
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -513,6 +560,10 @@ func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptu
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
 	d.Set("deletion_protection", dbc.DeletionProtection)
+
+	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfigurationResponse(dbc.ServerlessV2ScalingConfiguration)); err != nil {
+		return fmt.Errorf("error setting serverless_v2_scaling_configuration: %w", err)
+	}
 
 	var sg []string
 	for _, g := range dbc.VpcSecurityGroups {
@@ -639,6 +690,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("engine_version") {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("serverless_v2_scaling_configuration") {
+		req.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
 		requestUpdate = true
 	}
 
@@ -777,4 +833,16 @@ func removeIAMRoleFromCluster(clusterIdentifier string, roleArn string, conn *ne
 	}
 	_, err := conn.RemoveRoleFromDBCluster(params)
 	return err
+}
+
+func expandServerlessConfiguration(l []interface{}) *neptune.ServerlessV2ScalingConfiguration {
+	if len(l) == 0 {
+		return nil
+	}
+
+	tfMap := l[0].(map[string]interface{})
+	return &neptune.ServerlessV2ScalingConfiguration{
+		MinCapacity: aws.Float64(tfMap["min_capacity"].(float64)),
+		MaxCapacity: aws.Float64(tfMap["max_capacity"].(float64)),
+	}
 }
