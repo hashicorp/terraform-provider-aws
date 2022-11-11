@@ -58,10 +58,6 @@ func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("listing ControlTower Controls (%s): %s", targetIdentifier, err)
 	}
 
-	if len(controls) == 0 {
-		return diag.Errorf("no ControlTower Controls matched")
-	}
-
 	d.SetId(targetIdentifier)
 	d.Set("enabled_controls", controls)
 

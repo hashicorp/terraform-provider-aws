@@ -27,7 +27,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccControlsDataSourceConfig_id(ouName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "enabled_controls.#", "0"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "enabled_controls.#"),
 				),
 			},
 		},
