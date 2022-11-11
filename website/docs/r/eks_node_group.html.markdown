@@ -66,8 +66,8 @@ resource "aws_eks_node_group" "example" {
 You can have the node group track the latest version of the Amazon EKS optimized Amazon Linux AMI for a given EKS version by querying an Amazon provided SSM parameter. Replace `amazon-linux-2` in the parameter name below with `amazon-linux-2-gpu` to retrieve the  accelerated AMI version and `amazon-linux-2-arm64` to retrieve the Arm version.
 
 ```terraform
-data aws_ssm_parameter "eks_ami_release_version" {
-    name = /aws/service/eks/optimized-ami/${aws_eks_cluster.example.version}/amazon-linux-2/recommended/release_version"
+data "aws_ssm_parameter" "eks_ami_release_version" {
+    name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.example.version}/amazon-linux-2/recommended/release_version"
 }
 
 resource "aws_eks_node_group" "example" {
