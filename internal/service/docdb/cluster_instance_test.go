@@ -66,6 +66,41 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
+	var v docdb.DBInstance
+	resourceName := "aws_docdb_cluster_instance.test"
+	rNamePrefix := acctest.ResourcePrefix
+	rName := sdkacctest.RandomWithPrefix(rNamePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfigPerf(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttrSet(resourceName, "enable_performance_insights"),
+				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+					"enable_performance_insights",
+					"performance_insights_kms_key_id",
+				},
+			},
+		},
+	})
+}
 func TestAccDocDBClusterInstance_az(t *testing.T) {
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
@@ -318,6 +353,57 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
   cluster_identifier = aws_docdb_cluster.default.id
   instance_class     = data.aws_docdb_orderable_db_instance.test.instance_class
   promotion_tier     = "3"
+}
+`, rName))
+}
+
+
+func testAccClusterInstanceConfigPerf(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test %[1]s"
+	  
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+  	  "Sid": "Enable IAM User Permissions",
+	  "Effect": "Allow",
+	  "Principal": {
+	    "AWS": "*"
+	  },
+	  "Action": "kms:*",
+	  "Resource": "*"
+	}
+  ]
+}
+POLICY
+}
+resource "aws_docdb_cluster" "default" {
+  cluster_identifier  = %[1]q
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+data "aws_docdb_orderable_db_instance" "test" {
+  engine                     = "docdb"
+  preferred_instance_classes = ["db.t3.medium", "db.r4.large", "db.r5.large", "db.r5.xlarge"]
+}
+
+resource "aws_docdb_cluster_instance" "test" {
+  identifier         				= %[1]q
+  cluster_identifier 				= aws_docdb_cluster.default.id
+  instance_class     				= data.aws_docdb_orderable_db_instance.test.instance_class
+  promotion_tier     				= "3"
+  
+  enable_performance_insights 		
+                            = true
+  performance_insights_kms_key_id 	
+                            = aws_kms_key.test.arn
 }
 `, rName))
 }
