@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	registerFrameworkResourceFactory(newResourceSecurityGroupEgressRule)
+	//registerFrameworkResourceFactory(newResourceSecurityGroupEgressRule)
 }
 
 // newResourceSecurityGroupEgressRule instantiates a new Resource for the aws_vpc_security_group_egress_rule resource.
