@@ -1234,6 +1234,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
 			"aws_connect_vocabulary":                  connect.ResourceVocabulary(),
 
+			"aws_controltower_control": controltower.ResourceControl(),
+
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
 			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
