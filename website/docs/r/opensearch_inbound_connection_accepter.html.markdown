@@ -1,5 +1,5 @@
 ---
-subcategory: "Opensearch"
+subcategory: "OpenSearch"
 layout: "aws"
 page_title: "AWS: aws_opensearch_inbound_connection_accepter"
 description: |-
