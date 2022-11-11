@@ -259,7 +259,7 @@ func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData
 func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	// If ResourceAttachmentAccepter is used, then VPN Attachment state
+	// If ResourceAttachmentAccepter is used, then Connect Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails
 	output, sErr := FindConnectAttachmentByID(ctx, conn, d.Id())
 	if tfawserr.ErrCodeEquals(sErr, networkmanager.ErrCodeResourceNotFoundException) {
