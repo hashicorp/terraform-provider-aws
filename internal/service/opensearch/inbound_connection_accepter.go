@@ -101,7 +101,7 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 
 	_, err := conn.DeleteInboundConnectionWithContext(ctx, req)
 
-	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil
 	}
 

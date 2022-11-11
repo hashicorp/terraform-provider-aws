@@ -88,18 +88,15 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 	ccsc := ccscRaw.(*opensearchservice.OutboundConnection)
 	log.Printf("[DEBUG] Outbound Connection response: %#v", ccsc)
 
-	if statusCode == opensearchservice.OutboundConnectionStatusCodeDeleted {
+	if !d.IsNewResource() && statusCode == opensearchservice.OutboundConnectionStatusCodeDeleted {
 		log.Printf("[INFO] Outbound Connection (%s) deleted, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	d.Set("connection_alias", ccsc.ConnectionAlias)
-
 	d.Set("remote_domain_info", flattenOutboundConnectionDomainInfo(ccsc.RemoteDomainInfo))
-
 	d.Set("local_domain_info", flattenOutboundConnectionDomainInfo(ccsc.LocalDomainInfo))
-
 	d.Set("connection_status", statusCode)
 
 	return nil
@@ -114,7 +111,7 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 
 	_, err := conn.DeleteOutboundConnectionWithContext(ctx, req)
 
-	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil
 	}
 
