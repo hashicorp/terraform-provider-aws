@@ -704,7 +704,7 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// testAccCheckInstanceSnapshot verifies a database snapshot is
+		// testAccCheckInstanceDestroyWithFinalSnapshot verifies a database snapshot is
 		// created, and subsequently deletes it
 		CheckDestroy: testAccCheckInstanceDestroyWithFinalSnapshot,
 		Steps: []resource.TestStep{
