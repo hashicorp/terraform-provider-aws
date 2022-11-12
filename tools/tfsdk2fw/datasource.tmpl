@@ -10,8 +10,8 @@ import (
     "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
     "github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	{{if .ImportProviderFrameworkTypes }}"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"{{- end}}
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	{{if .ImportProviderFrameworkTypes }}fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"{{- end}}
 )
 
 func init() {
@@ -24,7 +24,7 @@ func newDataSource{{ .Name }}(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type dataSource{{ .Name }} struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -38,15 +38,6 @@ func (d *dataSource{{ .Name }}) GetSchema(context.Context) (tfsdk.Schema, diag.D
     schema := {{ .Schema }}
 
     return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSource{{ .Name }}) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
 }
 
 // Read is called when the provider must read data source values in order to update state.

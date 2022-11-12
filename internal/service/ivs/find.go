@@ -55,3 +55,26 @@ func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.IVS, id strin
 
 	return out.RecordingConfiguration, nil
 }
+
+func FindChannelByID(ctx context.Context, conn *ivs.IVS, arn string) (*ivs.Channel, error) {
+	in := &ivs.GetChannelInput{
+		Arn: aws.String(arn),
+	}
+	out, err := conn.GetChannelWithContext(ctx, in)
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+			return nil, &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.Channel == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Channel, nil
+}

@@ -61,6 +61,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
@@ -514,6 +515,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
 			"aws_connect_user_hierarchy_group":        connect.DataSourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
+
+			"aws_controltower_controls": controltower.DataSourceControls(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -1231,6 +1234,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
 			"aws_connect_vocabulary":                  connect.ResourceVocabulary(),
 
+			"aws_controltower_control": controltower.ResourceControl(),
+
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
 			"aws_dataexchange_data_set": dataexchange.ResourceDataSet(),
@@ -1523,6 +1528,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
 
+			"aws_evidently_feature": evidently.ResourceFeature(),
 			"aws_evidently_project": evidently.ResourceProject(),
 			"aws_evidently_segment": evidently.ResourceSegment(),
 
@@ -1657,6 +1663,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iot_topic_rule":                 iot.ResourceTopicRule(),
 			"aws_iot_topic_rule_destination":     iot.ResourceTopicRuleDestination(),
 
+			"aws_ivs_channel":                 ivs.ResourceChannel(),
 			"aws_ivs_playback_key_pair":       ivs.ResourcePlaybackKeyPair(),
 			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
 
@@ -1816,9 +1823,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 			"aws_networkmanager_site_to_site_vpn_attachment":              networkmanager.ResourceSiteToSiteVPNAttachment(),
 
-			"aws_opensearch_domain":              opensearch.ResourceDomain(),
-			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
-			"aws_opensearch_domain_saml_options": opensearch.ResourceDomainSAMLOptions(),
+			"aws_opensearch_domain":                      opensearch.ResourceDomain(),
+			"aws_opensearch_domain_policy":               opensearch.ResourceDomainPolicy(),
+			"aws_opensearch_domain_saml_options":         opensearch.ResourceDomainSAMLOptions(),
+			"aws_opensearch_outbound_connection":         opensearch.ResourceOutboundConnection(),
+			"aws_opensearch_inbound_connection_accepter": opensearch.ResourceInboundConnectionAccepter(),
 
 			"aws_opsworks_application":       opsworks.ResourceApplication(),
 			"aws_opsworks_custom_layer":      opsworks.ResourceCustomLayer(),
@@ -2085,11 +2094,12 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
-			"aws_sesv2_configuration_set":                  sesv2.ResourceConfigurationSet(),
-			"aws_sesv2_dedicated_ip_assignment":            sesv2.ResourceDedicatedIPAssignment(),
-			"aws_sesv2_dedicated_ip_pool":                  sesv2.ResourceDedicatedIPPool(),
-			"aws_sesv2_email_identity":                     sesv2.ResourceEmailIdentity(),
-			"aws_sesv2_email_identity_feedback_attributes": sesv2.ResourceEmailIdentityFeedbackAttributes(),
+			"aws_sesv2_configuration_set":                   sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_dedicated_ip_assignment":             sesv2.ResourceDedicatedIPAssignment(),
+			"aws_sesv2_dedicated_ip_pool":                   sesv2.ResourceDedicatedIPPool(),
+			"aws_sesv2_email_identity":                      sesv2.ResourceEmailIdentity(),
+			"aws_sesv2_email_identity_feedback_attributes":  sesv2.ResourceEmailIdentityFeedbackAttributes(),
+			"aws_sesv2_email_identity_mail_from_attributes": sesv2.ResourceEmailIdentityMailFromAttributes(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
@@ -2218,6 +2228,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
 		ServicePackages: []intf.ServicePackageData{
+			ec2.ServicePackageData,
 			globalaccelerator.ServicePackageData,
 			//medialive.ServicePackageData,
 			meta.ServicePackageData,
