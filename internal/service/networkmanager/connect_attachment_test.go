@@ -310,74 +310,74 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 func testAccConnectAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
-	resource "aws_networkmanager_vpc_attachment" "test" {
-		subnet_arns     = aws_subnet.test[*].arn
-		core_network_id = awscc_networkmanager_core_network.test.id
-		vpc_arn         = aws_vpc.test.arn
-		tags = {
-			segment = "shared"
-		}
-	}
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns     = aws_subnet.test[*].arn
+  core_network_id = awscc_networkmanager_core_network.test.id
+  vpc_arn         = aws_vpc.test.arn
+  tags = {
+    segment = "shared"
+  }
+}
 
-	resource "aws_networkmanager_attachment_accepter" "test" {
-		attachment_id   = aws_networkmanager_vpc_attachment.test.id
-		attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
-	}
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+}
 
-	resource "aws_networkmanager_connect_attachment" "test" {
-		core_network_id = awscc_networkmanager_core_network.test.id
-		transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-		edge_location = aws_networkmanager_vpc_attachment.test.edge_location
-		options {
-			protocol = "GRE"
-		}
-		tags = {
-			segment = "shared"
-		}
-		depends_on = [
-			"aws_networkmanager_attachment_accepter.test"
-		]
-	}
+resource "aws_networkmanager_connect_attachment" "test" {
+  core_network_id = awscc_networkmanager_core_network.test.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  options {
+    protocol = "GRE"
+  }
+  tags = {
+    segment = "shared"
+  }
+  depends_on = [
+    "aws_networkmanager_attachment_accepter.test"
+  ]
+}
 
-	resource "aws_networkmanager_attachment_accepter" "test2" {
-		attachment_id   = aws_networkmanager_connect_attachment.test.id
-		attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
-	}
+resource "aws_networkmanager_attachment_accepter" "test2" {
+  attachment_id   = aws_networkmanager_connect_attachment.test.id
+  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
+}
 `)
 }
 
 func testAccConnectAttachmentConfig_basic_NoDependsOn(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
-	resource "aws_networkmanager_vpc_attachment" "test" {
-		subnet_arns     = aws_subnet.test[*].arn
-		core_network_id = awscc_networkmanager_core_network.test.id
-		vpc_arn         = aws_vpc.test.arn
-		tags = {
-			segment = "shared"
-		}
-	}
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns     = aws_subnet.test[*].arn
+  core_network_id = awscc_networkmanager_core_network.test.id
+  vpc_arn         = aws_vpc.test.arn
+  tags = {
+    segment = "shared"
+  }
+}
 
-	resource "aws_networkmanager_attachment_accepter" "test" {
-		attachment_id   = aws_networkmanager_vpc_attachment.test.id
-		attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
-	}
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+}
 
-	resource "aws_networkmanager_connect_attachment" "test" {
-		core_network_id = awscc_networkmanager_core_network.test.id
-		transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-		edge_location = aws_networkmanager_vpc_attachment.test.edge_location
-		options {
-			protocol = "GRE"
-		}
-		tags = {
-			segment = "shared"
-		}
-	}
+resource "aws_networkmanager_connect_attachment" "test" {
+  core_network_id = awscc_networkmanager_core_network.test.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  options {
+    protocol = "GRE"
+  }
+  tags = {
+    segment = "shared"
+  }
+}
 
-	resource "aws_networkmanager_attachment_accepter" "test2" {
-		attachment_id   = aws_networkmanager_connect_attachment.test.id
-		attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
-	}
+resource "aws_networkmanager_attachment_accepter" "test2" {
+  attachment_id   = aws_networkmanager_connect_attachment.test.id
+  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
+}
 `)
 }
 
@@ -388,8 +388,8 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 	tags = {
-		segment = "shared"
-	}
+    segment = "shared"
+  }
 }
 
 resource "aws_networkmanager_attachment_accepter" "test" {
@@ -398,25 +398,24 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-	core_network_id = awscc_networkmanager_core_network.test.id
-	transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-	edge_location = aws_networkmanager_vpc_attachment.test.edge_location
-	options {
-		protocol = "GRE"
-	}
-	depends_on = [
-		"aws_networkmanager_attachment_accepter.test"
-	]
-	tags = {
+  core_network_id = awscc_networkmanager_core_network.test.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  options {
+    protocol = "GRE"
+  }
+  depends_on = [
+    "aws_networkmanager_attachment_accepter.test"
+  ]
+  tags = {
     %[1]q = %[2]q
   }
 }
 
 resource "aws_networkmanager_attachment_accepter" "test2" {
-	attachment_id   = aws_networkmanager_connect_attachment.test.id
-	attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_connect_attachment.test.id
+  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
 }
-
 `, tagKey1, tagValue1))
 }
 
@@ -427,8 +426,8 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
   tags = {
-		segment = "shared"
-	}
+    segment = "shared"
+  }
 }
 
 resource "aws_networkmanager_attachment_accepter" "test" {
@@ -437,24 +436,24 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-	core_network_id = awscc_networkmanager_core_network.test.id
-	transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-	edge_location = aws_networkmanager_vpc_attachment.test.edge_location
-	options {
-		protocol = "GRE"
-	}
-	depends_on = [
-		"aws_networkmanager_attachment_accepter.test"
-	]
-	tags = {
+  core_network_id = awscc_networkmanager_core_network.test.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  options {
+    protocol = "GRE"
+  }
+  depends_on = [
+    "aws_networkmanager_attachment_accepter.test"
+  ]
+  tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q
   }
 }
 
 resource "aws_networkmanager_attachment_accepter" "test2" {
-	attachment_id   = aws_networkmanager_connect_attachment.test.id
-	attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_connect_attachment.test.id
+  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }

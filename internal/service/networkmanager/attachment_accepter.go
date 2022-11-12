@@ -208,7 +208,6 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		a = connectAttachment.Attachment
-
 	}
 
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)

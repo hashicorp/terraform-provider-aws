@@ -158,7 +158,6 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	err = resource.RetryContext(ctx, d.Timeout("Create"), func() *resource.RetryError {
 		output, err = conn.CreateConnectAttachmentWithContext(ctx, input)
 		if err != nil {
-
 			if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
 				return resource.RetryableError(err)
 			}
@@ -335,7 +334,7 @@ func statusConnectAttachmentState(ctx context.Context, conn *networkmanager.Netw
 	}
 }
 
-func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectAttachment, error) { //nolint:unparam
+func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
@@ -370,7 +369,7 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Netw
 	return nil, err
 }
 
-func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectAttachment, error) { //nolint:unparam
+func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Target:  []string{networkmanager.AttachmentStateAvailable},
