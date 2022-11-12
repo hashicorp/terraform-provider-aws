@@ -387,7 +387,7 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
-	tags = {
+  tags = {
     segment = "shared"
   }
 }
