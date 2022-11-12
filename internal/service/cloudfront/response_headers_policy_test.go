@@ -267,6 +267,21 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 				),
 			},
 			{
+				Config: testAccResponseHeadersPolicyConfig_serverTiming(rName, true, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponseHeadersPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "0"),
+				),
+			},
+			{
 				Config: testAccResponseHeadersPolicyConfig_serverTiming(rName, false, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(ctx, resourceName),
