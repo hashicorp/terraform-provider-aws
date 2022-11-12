@@ -484,6 +484,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_bus":        events.DataSourceBus(),
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
+			"aws_cloudwatch_event_rule":       events.DataSourceRule(),
 
 			"aws_cloudwatch_log_group":  logs.DataSourceGroup(),
 			"aws_cloudwatch_log_groups": logs.DataSourceGroups(),
