@@ -325,9 +325,9 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
     protocol = "GRE"
   }
@@ -363,9 +363,9 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
     protocol = "GRE"
   }
@@ -398,9 +398,9 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
     protocol = "GRE"
   }
@@ -436,9 +436,9 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
-  edge_location = aws_networkmanager_vpc_attachment.test.edge_location
+  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
     protocol = "GRE"
   }
