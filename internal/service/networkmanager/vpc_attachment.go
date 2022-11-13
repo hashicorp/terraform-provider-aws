@@ -278,7 +278,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if sErr != nil {
-		return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), sErr)
+		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), sErr)
 	}
 
 	d.Set("state", output.Attachment.State)
