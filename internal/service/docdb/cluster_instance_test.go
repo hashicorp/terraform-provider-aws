@@ -387,7 +387,7 @@ func testAccClusterInstanceConfig_performanceInsights(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "Terraform acc test %[1]s"
-	  
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -420,12 +420,12 @@ data "aws_docdb_orderable_db_instance" "test" {
 }
 
 resource "aws_docdb_cluster_instance" "test" {
-  identifier         				= %[1]q
-  cluster_identifier 				= aws_docdb_cluster.default.id
-  instance_class     				= data.aws_docdb_orderable_db_instance.test.instance_class
-  promotion_tier     				= "3"
-  enable_performance_insights 		= true
-  performance_insights_kms_key_id 	= aws_kms_key.test.arn
+  identifier                      = %[1]q
+  cluster_identifier              = aws_docdb_cluster.default.id
+  instance_class                  = data.aws_docdb_orderable_db_instance.test.instance_class
+  promotion_tier                  = "3"
+  enable_performance_insights     = true
+  performance_insights_kms_key_id = aws_kms_key.test.arn
 }
 `, rName))
 }
