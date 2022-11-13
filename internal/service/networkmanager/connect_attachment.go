@@ -155,7 +155,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	log.Printf("[DEBUG] Creating Network Manager Connect Attachment: %s", input)
 	var err error
 	var output *networkmanager.CreateConnectAttachmentOutput
-	err = resource.RetryContext(ctx, d.Timeout("Create"), func() *resource.RetryError {
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		output, err = conn.CreateConnectAttachmentWithContext(ctx, input)
 		if err != nil {
 			if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
@@ -167,6 +167,10 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateConnectAttachmentWithContext(ctx, input)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating Network Manager Connect Attachment (%s) (%s): %s", transportAttachmentID, coreNetworkID, err)
