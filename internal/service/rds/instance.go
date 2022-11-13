@@ -497,6 +497,11 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(StorageType_Values(), false),
 			},
+			"storage_throughput": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  500,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"timezone": {
@@ -1763,6 +1768,9 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if aws.StringValue(input.StorageType) == storageTypeIO1 {
 				input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+			} else if aws.StringValue(input.StorageType) == storageTypeGP3 && aws.Int64(int64(d.Get("allocated_storage").(int))) >= 400 {
+				input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+				input.StorageThroughput = aws.Int64(int64(d.Get("storage_throughput").(int)))
 			}
 		}
 
