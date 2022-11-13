@@ -133,7 +133,7 @@ if omitted, Terraform will assign a random, unique identifier. Required if `rest
 identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
-storage_type of "io1".
+storage_type of "io1" or "gp3".
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
 * `license_model` - (Optional, but required for some DB engines, i.e., Oracle
@@ -202,6 +202,8 @@ default is `false` if not specified.
 purpose SSD), "gp3" (general purpose SSD that needs `iops` independently)
 or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is specified,
 "gp2" if not.
+* `storage_throughput` - (Optional) The speed at which reads and writes are performed. Setting this implies a
+storage_type of "gp3", The default is 500 for `allocated_storage` greater than or equal to 400.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
 only supported by Microsoft SQL Server. The `timezone` can only be set on
