@@ -443,9 +443,9 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		keyAlgorithmValue := certificate.KeyAlgorithm
 		// ACM DescribeCertificate returns hyphenated string values instead of underscore separated
 		// This sets the value to the string in the ACM SDK (i.e. underscore separated)
-		for _, str := range acm.KeyAlgorithm_Values() {
-			if strings.ReplaceAll(*keyAlgorithmValue, "-", "_") == strings.ReplaceAll(str, "-", "_") {
-				keyAlgorithmValue = aws.String(str)
+		for _, v := range acm.KeyAlgorithm_Values() {
+			if strings.ReplaceAll(aws.StringValue(keyAlgorithmValue), "-", "_") == strings.ReplaceAll(v, "-", "_") {
+				keyAlgorithmValue = aws.String(v)
 				break
 			}
 		}
