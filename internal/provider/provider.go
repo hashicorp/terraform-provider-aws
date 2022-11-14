@@ -1802,6 +1802,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
 			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
+			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
@@ -1815,7 +1816,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_transit_gateway_route_table_attachment":   networkmanager.ResourceTransitGatewayRouteTableAttachment(),
 			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 			"aws_networkmanager_site_to_site_vpn_attachment":              networkmanager.ResourceSiteToSiteVPNAttachment(),
-			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
