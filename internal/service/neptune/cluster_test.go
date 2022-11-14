@@ -32,18 +32,19 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -159,6 +160,7 @@ func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 				Config: testAccClusterConfig_serverlessConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "4.5"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "12.5"),
 				),
