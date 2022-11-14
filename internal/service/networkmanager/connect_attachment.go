@@ -79,6 +79,20 @@ func ResourceConnectAttachment() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[\s\S]*`), "Anything but whitespace"),
 				),
 			},
+			"options": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"GRE"}, false),
+						},
+					},
+				},
+			},
 			"owner_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -105,20 +119,6 @@ func ResourceConnectAttachment() *schema.Resource {
 					validation.StringLenBetween(0, 50),
 					validation.StringMatch(regexp.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
 				),
-			},
-			"options": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"protocol": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"GRE"}, false),
-						},
-					},
-				},
 			},
 		},
 	}
