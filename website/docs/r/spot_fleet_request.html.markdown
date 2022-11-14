@@ -219,7 +219,7 @@ across different markets and instance types. Conflicts with `launch_template_con
   important to your application workload, such as vCPUs, memory, or I/O.
 * `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 * `allocation_strategy` - Indicates how to allocate the target capacity across
-  the Spot pools specified by the Spot fleet request. The default is
+  the Spot pools specified by the Spot fleet request. Valid values: `lowestPrice`, `diversified`, `capacityOptimized`, `capacityOptimizedPrioritized`, and `priceCapacityOptimized`. The default is
   `lowestPrice`.
 * `instance_pools_to_use_count` - (Optional; Default: 1)
   The number of Spot pools across which to allocate your target Spot capacity.
