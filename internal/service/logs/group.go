@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -91,7 +92,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.CreateLogGroup(input)
 
 	if err != nil {
-		return fmt.Errorf("creating CloudWatch Log Group (%s): %w", name, err)
+		return fmt.Errorf("creating CloudWatch Logs Log Group (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -103,7 +104,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("setting CloudWatch Log Group (%s) retention policy: %w", d.Id(), err)
+			return fmt.Errorf("setting CloudWatch Logs Log Group (%s) retention policy: %w", d.Id(), err)
 		}
 	}
 
@@ -115,16 +116,16 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading CloudWatch Log Group: %q", d.Get("name").(string))
-	lg, err := LookupGroup(conn, d.Id())
-	if err != nil {
-		return err
-	}
+	lg, err := FindLogGroupByName(conn, d.Id())
 
-	if lg == nil {
-		log.Printf("[DEBUG] CloudWatch Group %q Not Found", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Logs Log Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading CloudWatch Logs Log Group (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(lg.Arn)))
@@ -136,7 +137,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("listing tags for CloudWatch Logs Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for CloudWatch Logs Log Group (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -164,7 +165,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 
 			if err != nil {
-				return fmt.Errorf("setting CloudWatch Log Group (%s) retention policy: %w", d.Id(), err)
+				return fmt.Errorf("setting CloudWatch Logs Log Group (%s) retention policy: %w", d.Id(), err)
 			}
 		} else {
 			_, err := conn.DeleteRetentionPolicy(&cloudwatchlogs.DeleteRetentionPolicyInput{
@@ -172,7 +173,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 
 			if err != nil {
-				return fmt.Errorf("deleting CloudWatch Log Group (%s) retention policy: %w", d.Id(), err)
+				return fmt.Errorf("deleting CloudWatch Logs Log Group (%s) retention policy: %w", d.Id(), err)
 			}
 		}
 	}
@@ -185,7 +186,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 
 			if err != nil {
-				return fmt.Errorf("associating CloudWatch Log Group (%s) KMS key: %w", d.Id(), err)
+				return fmt.Errorf("associating CloudWatch Logs Log Group (%s) KMS key: %w", d.Id(), err)
 			}
 		} else {
 			_, err := conn.DisassociateKmsKey(&cloudwatchlogs.DisassociateKmsKeyInput{
@@ -193,7 +194,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 
 			if err != nil {
-				return fmt.Errorf("disassociating CloudWatch Log Group (%s) KMS key: %w", d.Id(), err)
+				return fmt.Errorf("disassociating CloudWatch Logs Log Group (%s) KMS key: %w", d.Id(), err)
 			}
 		}
 	}
@@ -202,7 +203,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating CloudWatch Log Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating CloudWatch Logs Log Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -211,13 +212,13 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
-		log.Printf("[DEBUG] Retaining CloudWatch Log Group: %s", d.Id())
+		log.Printf("[DEBUG] Retaining CloudWatch Logs Log Group: %s", d.Id())
 		return nil
 	}
 
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	log.Printf("[INFO] Deleting CloudWatch Log Group: %s", d.Id())
+	log.Printf("[INFO] Deleting CloudWatch Logs Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
 		LogGroupName: aws.String(d.Id()),
 	})
@@ -227,29 +228,41 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudWatch Log Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CloudWatch Logs Log Group (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func LookupGroup(conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.LogGroup, error) {
+func FindLogGroupByName(conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.LogGroup, error) {
 	input := &cloudwatchlogs.DescribeLogGroupsInput{
 		LogGroupNamePrefix: aws.String(name),
 	}
-	var logGroup *cloudwatchlogs.LogGroup
+	var output *cloudwatchlogs.LogGroup
+
 	err := conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
-		for _, lg := range page.LogGroups {
-			if aws.StringValue(lg.LogGroupName) == name {
-				logGroup = lg
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LogGroups {
+			if aws.StringValue(v.LogGroupName) == name {
+				output = v
+
 				return false
 			}
 		}
+
 		return !lastPage
 	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	return logGroup, nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

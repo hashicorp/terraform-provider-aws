@@ -365,7 +365,7 @@ func testAccCheckGroupExists(n string, lg *cloudwatchlogs.LogGroup) resource.Tes
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
-		logGroup, err := tflogs.LookupGroup(conn, rs.Primary.ID)
+		logGroup, err := tflogs.FindLogGroupByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -386,7 +386,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudwatch_log_group" {
 			continue
 		}
-		logGroup, err := tflogs.LookupGroup(conn, rs.Primary.ID)
+		logGroup, err := tflogs.FindLogGroupByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("reading CloudWatch Log Group (%s): %w", rs.Primary.ID, err)
