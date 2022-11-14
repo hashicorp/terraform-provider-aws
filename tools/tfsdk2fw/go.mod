@@ -16,7 +16,7 @@ require (
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
-	github.com/aws/aws-sdk-go v1.44.133 // indirect
+	github.com/aws/aws-sdk-go v1.44.136 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0 // indirect
@@ -36,9 +36,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.25.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.32.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.25.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.11 // indirect

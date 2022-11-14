@@ -269,6 +269,7 @@ const (
 	SageMakerFeatureStoreRuntime = "sagemakerfeaturestoreruntime"
 	SageMakerRuntime             = "sagemakerruntime"
 	SavingsPlans                 = "savingsplans"
+	Scheduler                    = "scheduler"
 	Schemas                      = "schemas"
 	SecretsManager               = "secretsmanager"
 	SecurityHub                  = "securityhub"

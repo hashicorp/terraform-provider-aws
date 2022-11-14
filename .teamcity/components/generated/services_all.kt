@@ -150,6 +150,7 @@ val services = mapOf(
     "s3control" to ServiceSpec("S3 Control"),
     "s3outposts" to ServiceSpec("S3 on Outposts"),
     "sagemaker" to ServiceSpec("SageMaker", vpcLock = true),
+    "scheduler" to ServiceSpec("EventBridge Scheduler"),
     "schemas" to ServiceSpec("EventBridge Schemas"),
     "secretsmanager" to ServiceSpec("Secrets Manager"),
     "securityhub" to ServiceSpec("Security Hub"),

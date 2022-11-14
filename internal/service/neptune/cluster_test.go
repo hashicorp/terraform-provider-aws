@@ -32,18 +32,19 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -126,6 +127,42 @@ func TestAccNeptuneCluster_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+					"allow_major_version_upgrade",
+				},
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
+	var v neptune.DBCluster
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_serverlessConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "4.5"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "12.5"),
 				),
 			},
 			{
@@ -825,6 +862,22 @@ resource "aws_neptune_cluster" "test" {
   engine                               = "neptune"
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot                  = true
+}
+`, rName)
+}
+
+func testAccClusterConfig_serverlessConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier_prefix            = %q
+  engine                               = "neptune"
+  engine_version                       = "1.2.0.1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  skip_final_snapshot                  = true
+  serverless_v2_scaling_configuration {
+    min_capacity = 4.5
+    max_capacity = 12.5
+  }
 }
 `, rName)
 }

@@ -31,10 +31,6 @@ func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfig
 	return &multiplexProgram{}, nil
 }
 
-func NewResourceMultiplexProgram(_ context.Context) resource.Resource {
-	return &multiplexProgram{}
-}
-
 const (
 	ResNameMultiplexProgram = "Multiplex Program"
 )
