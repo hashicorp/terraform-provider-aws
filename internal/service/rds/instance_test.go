@@ -4623,7 +4623,6 @@ resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  publicly_accessible = true
   skip_final_snapshot = true
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
@@ -4638,7 +4637,6 @@ resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  publicly_accessible = true
   skip_final_snapshot = true
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
@@ -5011,8 +5009,6 @@ resource "aws_db_instance" "test" {
   username                = "tfacctest"
   backup_retention_period = 1
 
-  publicly_accessible = true
-
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
 
   skip_final_snapshot       = true
@@ -5119,7 +5115,6 @@ resource "aws_db_instance" "test" {
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                    = "test"
-  publicly_accessible        = false
   password                   = "avoid-plaintext-passwords"
   username                   = "tfacctest"
   backup_retention_period    = 0
@@ -5151,7 +5146,6 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  publicly_accessible     = true
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   backup_retention_period = 1
