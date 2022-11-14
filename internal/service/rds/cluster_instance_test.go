@@ -1111,6 +1111,7 @@ func testAccCheckClusterInstanceExists(n string, v *rds.DBInstance) resource.Tes
 
 		ctx := context.Background()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		ctx := context.Background()
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -1127,6 +1128,7 @@ func testAccCheckClusterInstanceExists(n string, v *rds.DBInstance) resource.Tes
 func testAccCheckClusterInstanceDestroy(s *terraform.State) error {
 	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_instance" {
