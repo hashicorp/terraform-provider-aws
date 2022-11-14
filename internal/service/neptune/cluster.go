@@ -49,7 +49,6 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-
 			// allow_major_version_upgrade is used to indicate whether upgrades between different major versions
 			// are allowed.
 			"allow_major_version_upgrade": {
@@ -57,7 +56,6 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			// apply_immediately is used to determine when the update modifications
 			// take place.
 			"apply_immediately": {
@@ -65,12 +63,10 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"availability_zones": {
 				Type:     schema.TypeSet,
 				MaxItems: 3,
@@ -78,16 +74,13 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
-				Set:      schema.HashString,
 			},
-
 			"backup_retention_period": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,
 				ValidateFunc: validation.IntAtMost(35),
 			},
-
 			"cluster_identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -96,7 +89,6 @@ func ResourceCluster() *schema.Resource {
 				ConflictsWith: []string{"cluster_identifier_prefix"},
 				ValidateFunc:  validIdentifier,
 			},
-
 			"cluster_identifier_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -104,29 +96,23 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifierPrefix,
 			},
-
 			"cluster_members": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
-
 			"cluster_resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
-
 			"enable_cloudwatch_logs_exports": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -136,9 +122,11 @@ func ResourceCluster() *schema.Resource {
 						cloudWatchLogsExportsAudit,
 					}, false),
 				},
-				Set: schema.HashString,
 			},
-
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -146,13 +134,11 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validEngine(),
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"final_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -171,12 +157,14 @@ func ResourceCluster() *schema.Resource {
 					return
 				},
 			},
-
 			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"iam_database_authentication_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"iam_roles": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -184,14 +172,7 @@ func ResourceCluster() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
-				Set: schema.HashString,
 			},
-
-			"iam_database_authentication_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -199,34 +180,29 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
+			"neptune_cluster_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "default.neptune1",
+			},
 			"neptune_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-
-			"neptune_cluster_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "default.neptune1",
-			},
-
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  DefaultPort,
 				ForceNew: true,
 			},
-
 			"preferred_backup_window": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -239,32 +215,20 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-
 			"reader_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"replication_source_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"serverless_v2_scaling_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"min_capacity": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  ServerlessMinNCUs,
-							// Minimum capacity is 2.5 NCUs
-							// see: https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html
-							ValidateFunc: verify.FloatGreaterOrEqualThan(ServerlessMinNCUs),
-						},
 						"max_capacity": {
 							Type:     schema.TypeFloat,
 							Optional: true,
@@ -273,41 +237,39 @@ func ResourceCluster() *schema.Resource {
 							// see: https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html
 							ValidateFunc: verify.FloatLowerOrEqualThan(ServerlessMaxNCUs),
 						},
+						"min_capacity": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  ServerlessMinNCUs,
+							// Minimum capacity is 2.5 NCUs
+							// see: https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html
+							ValidateFunc: verify.FloatGreaterOrEqualThan(ServerlessMinNCUs),
+						},
 					},
 				},
 			},
-
+			"skip_final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 				ForceNew: true,
 			},
-
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"deletion_protection": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 		},
 
