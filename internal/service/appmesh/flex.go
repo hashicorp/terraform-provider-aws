@@ -1482,9 +1482,7 @@ func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 					"weighted_target": vWeightedTargets,
 				},
 			}
-
 		}
-
 	}
 
 	if tcpRouteMatch := tcpRoute.Match; tcpRouteMatch != nil {
