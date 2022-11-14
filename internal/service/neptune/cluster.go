@@ -476,14 +476,14 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return flattenClusterResource(d, meta, dbc)
 }
 
-func flattenServerlessV2ScalingConfigurationResponse(serverlessConfig *neptune.ServerlessV2ScalingConfigurationInfo) []map[string]interface{} {
+func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *neptune.ServerlessV2ScalingConfigurationInfo) []map[string]interface{} {
 	if serverlessConfig == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"min_capacity": aws.Float64(*serverlessConfig.MinCapacity),
-		"max_capacity": aws.Float64(*serverlessConfig.MaxCapacity),
+		"min_capacity": aws.Float64Value(serverlessConfig.MinCapacity),
+		"max_capacity": aws.Float64Value(serverlessConfig.MaxCapacity),
 	}
 
 	return []map[string]interface{}{m}
@@ -523,7 +523,7 @@ func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptu
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
 	d.Set("deletion_protection", dbc.DeletionProtection)
 
-	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfigurationResponse(dbc.ServerlessV2ScalingConfiguration)); err != nil {
+	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)); err != nil {
 		return fmt.Errorf("error setting serverless_v2_scaling_configuration: %w", err)
 	}
 
