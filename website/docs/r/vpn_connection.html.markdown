@@ -119,21 +119,14 @@ resource "aws_vpn_connection" "example" {
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
-
-One of the following arguments is required:
-
 * `transit_gateway_id` - (Optional) The ID of the EC2 Transit Gateway.
 * `vpn_gateway_id` - (Optional) The ID of the Virtual Private Gateway.
-
-Other arguments:
-
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enable_acceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
 * `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

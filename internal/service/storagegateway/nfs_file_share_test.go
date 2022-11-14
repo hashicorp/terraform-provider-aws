@@ -683,7 +683,6 @@ func testAccCheckNFSFileShareDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckNFSFileShareExists(resourceName string, nfsFileShare *storagegateway.NFSFileShareInfo) resource.TestCheckFunc {

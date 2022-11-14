@@ -241,7 +241,7 @@ func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.
 	}
 }
 
-func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) { //nolint:unparam
+func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateCreating},
 		Target:  []string{networkmanager.PeeringStateAvailable},
@@ -258,7 +258,7 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 	return nil, err
 }
 
-func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) { //nolint:unparam
+func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateDeleting},
 		Target:  []string{},

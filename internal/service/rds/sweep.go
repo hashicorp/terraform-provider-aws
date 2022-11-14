@@ -224,7 +224,7 @@ func sweepClusters(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RDSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeDBClustersPages(&rds.DescribeDBClustersInput{}, func(out *rds.DescribeDBClustersOutput, lastPage bool) bool {
 		for _, cluster := range out.DBClusters {
@@ -271,7 +271,7 @@ func sweepEventSubscriptions(region string) error {
 	}
 	conn := client.(*conns.AWSClient).RDSConn
 	input := &rds.DescribeEventSubscriptionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeEventSubscriptionsPages(input, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -359,7 +359,7 @@ func sweepInstances(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RDSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
@@ -630,7 +630,7 @@ func sweepInstanceAutomatedBackupsReplication(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RDSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	backupARNs := []string{}

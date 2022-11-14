@@ -163,7 +163,6 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 
 func LookupMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	name, logGroupName string, nextToken *string) (*cloudwatchlogs.MetricFilter, error) {
-
 	input := cloudwatchlogs.DescribeMetricFiltersInput{
 		FilterNamePrefix: aws.String(name),
 		LogGroupName:     aws.String(logGroupName),

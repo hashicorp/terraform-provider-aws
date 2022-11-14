@@ -80,7 +80,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -743,7 +743,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),

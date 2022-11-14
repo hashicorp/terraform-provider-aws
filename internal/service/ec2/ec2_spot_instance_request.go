@@ -26,6 +26,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 		Read:   resourceSpotInstanceRequestRead,
 		Delete: resourceSpotInstanceRequestDelete,
 		Update: resourceSpotInstanceRequestUpdate,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -140,16 +141,12 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	spotOpts := &ec2.RequestSpotInstancesInput{
-		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
-		Type:                         aws.String(d.Get("spot_type").(string)),
-		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behavior").(string)),
-		TagSpecifications:            tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotInstancesRequest),
-
+		ClientToken: aws.String(resource.UniqueId()),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
 		// Users can get equivalent behavior out of TF's "count" meta-parameter.
-		InstanceCount: aws.Int64(1),
-
+		InstanceCount:                aws.Int64(1),
+		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behavior").(string)),
 		LaunchSpecification: &ec2.RequestSpotLaunchSpecification{
 			BlockDeviceMappings: instanceOpts.BlockDeviceMappings,
 			EbsOptimized:        instanceOpts.EBSOptimized,
@@ -164,6 +161,9 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 			UserData:            instanceOpts.UserData64,
 			NetworkInterfaces:   instanceOpts.NetworkInterfaces,
 		},
+		SpotPrice:         aws.String(d.Get("spot_price").(string)),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotInstancesRequest),
+		Type:              aws.String(d.Get("spot_type").(string)),
 	}
 
 	if v, ok := d.GetOk("block_duration_minutes"); ok {

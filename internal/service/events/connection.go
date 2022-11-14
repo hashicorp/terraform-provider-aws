@@ -270,8 +270,6 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EventBridge connection: %s", input)
-
 	_, err := conn.CreateConnection(input)
 
 	if err != nil {
@@ -339,7 +337,6 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Updating EventBridge connection: %s", input)
 	_, err := conn.UpdateConnection(input)
 
 	if err != nil {

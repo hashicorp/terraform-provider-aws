@@ -217,7 +217,7 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 	newEngineVersion := aws.StringValue(globalCluster.EngineVersion)
 
 	// For example a configured engine_version of "5.6.10a" and a returned engine_version of "5.6.global_10a".
-	if oldParts, newParts := strings.Split(oldEngineVersion, "."), strings.Split(newEngineVersion, "."); len(oldParts) == 3 &&
+	if oldParts, newParts := strings.Split(oldEngineVersion, "."), strings.Split(newEngineVersion, "."); len(oldParts) == 3 && //nolint:gocritic // Ignore 'badCond'
 		len(oldParts) == len(newParts) &&
 		oldParts[0] == newParts[0] &&
 		oldParts[1] == newParts[1] &&

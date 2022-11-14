@@ -395,7 +395,6 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 		if logGroup != nil {
 			return fmt.Errorf("Bad: LogGroup still exists: %q", rs.Primary.ID)
 		}
-
 	}
 
 	return nil

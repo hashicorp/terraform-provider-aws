@@ -3,12 +3,18 @@ package conns
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -77,12 +83,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitosync"
 	"github.com/aws/aws-sdk-go/service/comprehendmedical"
-	"github.com/aws/aws-sdk-go/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/aws/aws-sdk-go/service/connectcontactlens"
 	"github.com/aws/aws-sdk-go/service/connectparticipant"
 	"github.com/aws/aws-sdk-go/service/connectwisdomservice"
+	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/aws/aws-sdk-go/service/customerprofiles"
@@ -143,7 +149,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/aws/aws-sdk-go/service/inspector2"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -266,7 +271,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
@@ -305,7 +309,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -319,10 +323,12 @@ type AWSClient struct {
 	Region                    string
 	ReverseDNSPrefix          string
 	S3ConnURICleaningDisabled *s3.S3
-	ServiceMap                map[string]intf.ServiceData
+	ServicePackages           []intf.ServicePackageData
 	Session                   *session.Session
 	SupportedPlatforms        []string
 	TerraformVersion          string
+
+	ssmClient lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA
@@ -385,13 +391,14 @@ type AWSClient struct {
 	CognitoIDPConn                   *cognitoidentityprovider.CognitoIdentityProvider
 	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
 	CognitoSyncConn                  *cognitosync.CognitoSync
-	ComprehendConn                   *comprehend.Client
+	ComprehendClient                 *comprehend.Client
 	ComprehendMedicalConn            *comprehendmedical.ComprehendMedical
-	ComputeOptimizerConn             *computeoptimizer.ComputeOptimizer
+	ComputeOptimizerClient           *computeoptimizer.Client
 	ConfigServiceConn                *configservice.ConfigService
 	ConnectConn                      *connect.Connect
 	ConnectContactLensConn           *connectcontactlens.ConnectContactLens
 	ConnectParticipantConn           *connectparticipant.ConnectParticipant
+	ControlTowerConn                 *controltower.ControlTower
 	CustomerProfilesConn             *customerprofiles.CustomerProfiles
 	DAXConn                          *dax.DAX
 	DLMConn                          *dlm.DLM
@@ -431,7 +438,7 @@ type AWSClient struct {
 	ElasticsearchConn                *elasticsearchservice.ElasticsearchService
 	EventsConn                       *eventbridge.EventBridge
 	EvidentlyConn                    *cloudwatchevidently.CloudWatchEvidently
-	FISConn                          *fis.Client
+	FISClient                        *fis.Client
 	FMSConn                          *fms.FMS
 	FSxConn                          *fsx.FSx
 	FinSpaceConn                     *finspace.Finspace
@@ -454,10 +461,10 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
-	IdentityStoreConn                *identitystore.Client
+	IdentityStoreClient              *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
-	Inspector2Conn                   *inspector2.Inspector2
+	Inspector2Client                 *inspector2.Client
 	IoTConn                          *iot.IoT
 	IoT1ClickDevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
 	IoT1ClickProjectsConn            *iot1clickprojects.IoT1ClickProjects
@@ -476,7 +483,7 @@ type AWSClient struct {
 	KMSConn                          *kms.KMS
 	KafkaConn                        *kafka.Kafka
 	KafkaConnectConn                 *kafkaconnect.KafkaConnect
-	KendraConn                       *kendra.Client
+	KendraClient                     *kendra.Client
 	KeyspacesConn                    *keyspaces.Keyspaces
 	KinesisConn                      *kinesis.Kinesis
 	KinesisAnalyticsConn             *kinesisanalytics.KinesisAnalytics
@@ -511,7 +518,7 @@ type AWSClient struct {
 	MarketplaceMeteringConn          *marketplacemetering.MarketplaceMetering
 	MediaConnectConn                 *mediaconnect.MediaConnect
 	MediaConvertConn                 *mediaconvert.MediaConvert
-	MediaLiveConn                    *medialive.Client
+	MediaLiveClient                  *medialive.Client
 	MediaPackageConn                 *mediapackage.MediaPackage
 	MediaPackageVODConn              *mediapackagevod.MediaPackageVod
 	MediaStoreConn                   *mediastore.MediaStore
@@ -560,18 +567,19 @@ type AWSClient struct {
 	ResourceGroupsConn               *resourcegroups.ResourceGroups
 	ResourceGroupsTaggingAPIConn     *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	RoboMakerConn                    *robomaker.RoboMaker
-	RolesAnywhereConn                *rolesanywhere.Client
+	RolesAnywhereClient              *rolesanywhere.Client
 	Route53Conn                      *route53.Route53
-	Route53DomainsConn               *route53domains.Client
+	Route53DomainsClient             *route53domains.Client
 	Route53RecoveryClusterConn       *route53recoverycluster.Route53RecoveryCluster
 	Route53RecoveryControlConfigConn *route53recoverycontrolconfig.Route53RecoveryControlConfig
 	Route53RecoveryReadinessConn     *route53recoveryreadiness.Route53RecoveryReadiness
 	Route53ResolverConn              *route53resolver.Route53Resolver
 	S3Conn                           *s3.S3
 	S3ControlConn                    *s3control.S3Control
+	S3ControlClient                  *s3control_sdkv2.Client
 	S3OutpostsConn                   *s3outposts.S3Outposts
 	SESConn                          *ses.SES
-	SESV2Conn                        *sesv2.SESV2
+	SESV2Client                      *sesv2.Client
 	SFNConn                          *sfn.SFN
 	SMSConn                          *sms.SMS
 	SNSConn                          *sns.SNS
@@ -590,6 +598,7 @@ type AWSClient struct {
 	SageMakerFeatureStoreRuntimeConn *sagemakerfeaturestoreruntime.SageMakerFeatureStoreRuntime
 	SageMakerRuntimeConn             *sagemakerruntime.SageMakerRuntime
 	SavingsPlansConn                 *savingsplans.SavingsPlans
+	SchedulerClient                  *scheduler.Client
 	SchemasConn                      *schemas.Schemas
 	SecretsManagerConn               *secretsmanager.SecretsManager
 	SecurityHubConn                  *securityhub.SecurityHub
@@ -609,7 +618,7 @@ type AWSClient struct {
 	TextractConn                     *textract.Textract
 	TimestreamQueryConn              *timestreamquery.TimestreamQuery
 	TimestreamWriteConn              *timestreamwrite.TimestreamWrite
-	TranscribeConn                   *transcribe.Client
+	TranscribeClient                 *transcribe.Client
 	TranscribeStreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	TransferConn                     *transfer.Transfer
 	TranslateConn                    *translate.Translate

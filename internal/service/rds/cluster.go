@@ -669,7 +669,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Creating RDS Cluster: %s", input)
 		_, err := tfresource.RetryWhen(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromS3(input)
@@ -928,7 +927,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Creating RDS Cluster: %s", input)
 		_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBCluster(input)
@@ -957,7 +955,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if requiresModifyDbCluster {
 		modifyDbClusterInput.DBClusterIdentifier = aws.String(d.Id())
 
-		log.Printf("[INFO] Modifying RDS Cluster: %s", modifyDbClusterInput)
 		_, err := conn.ModifyDBCluster(modifyDbClusterInput)
 
 		if err != nil {
@@ -1221,7 +1218,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Modifying RDS Cluster: %s", input)
 		_, err := tfresource.RetryWhen(5*time.Minute,
 			func() (interface{}, error) {
 				return conn.ModifyDBCluster(input)

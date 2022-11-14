@@ -42,7 +42,7 @@ The following arguments are supported:
 * `arn` - (Optional) Full ARN of the target group.
 * `name` - (Optional) Unique name of the target group.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence.
 
 ## Attributes Reference
 
@@ -51,6 +51,6 @@ on the returned attributes - they are identical.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

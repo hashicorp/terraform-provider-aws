@@ -31,9 +31,8 @@ const (
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAMICreate,
-		// The Read, Update and Delete operations are shared with aws_ami_copy
-		// and aws_ami_from_instance, since they differ only in how the image
-		// is created.
+		// The Read, Update and Delete operations are shared with aws_ami_copy and aws_ami_from_instance,
+		// since they differ only in how the image is created.
 		Read:   resourceAMIRead,
 		Update: resourceAMIUpdate,
 		Delete: resourceAMIDelete,
@@ -48,6 +47,7 @@ func ResourceAMI() *schema.Resource {
 			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
+		// Keep in sync with aws_ami_copy's and aws_ami_from_instance's schemas.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:         schema.TypeString,
@@ -198,6 +198,12 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"imds_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true, // this attribute can only be set at registration time
+				ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
+			},
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -296,6 +302,10 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v := d.Get("boot_mode").(string); v != "" {
 		input.BootMode = aws.String(v)
+	}
+
+	if v := d.Get("imds_support").(string); v != "" {
+		input.ImdsSupport = aws.String(v)
 	}
 
 	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
@@ -419,6 +429,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("image_location", image.ImageLocation)
 	d.Set("image_owner_alias", image.ImageOwnerAlias)
 	d.Set("image_type", image.ImageType)
+	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
 	d.Set("name", image.Name)
 	d.Set("owner_id", image.OwnerId)

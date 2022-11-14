@@ -24,6 +24,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/exp/slices"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -957,8 +958,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		params.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
-
 	var resp *emr.RunJobFlowOutput
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
@@ -1033,7 +1032,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	instanceGroups, err := fetchAllInstanceGroups(conn, d.Id())
 
 	if err == nil { // find instance group
-
 		coreGroup := coreInstanceGroup(instanceGroups)
 		masterGroup := findMasterGroup(instanceGroups)
 
@@ -1055,7 +1053,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	instanceFleets, err := FetchAllInstanceFleets(conn, d.Id())
 
 	if err == nil { // find instance fleets
-
 		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeCore)
 		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeMaster)
 
@@ -1377,7 +1374,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 					break
 				}
 			}
-
 		}
 	}
 
@@ -1501,8 +1497,7 @@ func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescriptio
 	for i, rule := range policy.Rules {
 		for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
 			if aws.StringValue(dimension.Key) == "JobFlowId" {
-				tmpDimensions := append(policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[:j], policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[j+1:]...)
-				policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = tmpDimensions
+				policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = slices.Delete(policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions, j, j+1)
 			}
 		}
 		if len(policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
@@ -1966,7 +1961,6 @@ func fetchAllInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.InstanceGro
 }
 
 func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType string) *emr.InstanceFleetConfig {
-
 	config := &emr.InstanceFleetConfig{
 		InstanceFleetType:      &InstanceFleetType,
 		Name:                   aws.String(data["name"].(string)),
@@ -2183,7 +2177,6 @@ func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.
 			spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := configAttributes["allocation_strategy"]; ok {
-
 			spotProvisioning.AllocationStrategy = aws.String(v.(string))
 		}
 

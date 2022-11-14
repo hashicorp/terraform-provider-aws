@@ -80,7 +80,6 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 		}
 		return diag.FromErr(fmt.Errorf("error creating AppStream User Stack Association (%s): %w", id, errs))
-
 	}
 
 	d.SetId(id)

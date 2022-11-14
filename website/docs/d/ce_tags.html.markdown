@@ -34,7 +34,6 @@ The following arguments are optional:
 * `sort_by` - (Optional) Configuration block for the value by which you want to sort the data. See below.
 * `tag_key` - (Optional) Key of the tag that you want to return values for.
 
-
 ### `time_period`
 
 * `start` - (Required) End of the time period.
@@ -67,12 +66,10 @@ The following arguments are optional:
 * `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
-
 ### `sort_by`
 
 * `key` - (Required) key that's used to sort the data. Valid values are: `BlendedCost`,  `UnblendedCost`, `AmortizedCost`, `NetAmortizedCost`, `NetUnblendedCost`, `UsageQuantity`, `NormalizedUsageAmount`.
 * `sort_order` - (Optional) order that's used to sort the data. Valid values are: `ASCENDING`,  `DESCENDING`.
-
 
 ## Attributes Reference
 
@@ -80,4 +77,3 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Unique ID of the tag.
 * `tags` - Tags that match your request.
-

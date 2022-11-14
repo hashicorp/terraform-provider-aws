@@ -89,7 +89,7 @@ func sweepStudios(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).EMRConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 	input := &emr.ListStudiosInput{}
 

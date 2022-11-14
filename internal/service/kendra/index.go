@@ -372,7 +372,7 @@ func ResourceIndex() *schema.Resource {
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -467,7 +467,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -545,7 +545,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	id := d.Id()
 
@@ -615,7 +615,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	id := d.Id()
 
@@ -678,7 +678,6 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.S
 }
 
 func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-
 	stateConf := &resource.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusCreating),
 		Target:  enum.Slice(types.IndexStatusActive),
@@ -699,7 +698,6 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-
 	stateConf := &resource.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusUpdating),
 		Target:  enum.Slice(types.IndexStatusActive),

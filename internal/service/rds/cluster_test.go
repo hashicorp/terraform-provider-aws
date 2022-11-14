@@ -687,7 +687,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 }
 
 func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
-	var dbCluster1 rds.DBCluster
+	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
@@ -703,6 +703,15 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 					testAccCheckClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, "postgresql", "upgrade"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "upgrade"),
 				),
 			},
 		},
@@ -2613,14 +2622,39 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, enabledCloudwatchLogExports1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  enabled_cloudwatch_logs_exports = [%q]
-  engine                          = "aurora-postgresql"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q]
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
   skip_final_snapshot             = true
+  allocated_storage               = 100
+  storage_type                    = "io1"
+  iops                            = 1000
+  db_cluster_instance_class       = "db.m5d.large"
+  engine                          = "postgres"
+  engine_mode                     = "provisioned"
+  engine_version                  = "13.4"
 }
 `, rName, enabledCloudwatchLogExports1)
+}
+
+func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q, %[3]q]
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  skip_final_snapshot             = true
+  allocated_storage               = 100
+  storage_type                    = "io1"
+  iops                            = 1000
+  db_cluster_instance_class       = "db.m5d.large"
+  engine                          = "postgres"
+  engine_mode                     = "provisioned"
+  engine_version                  = "13.4"
+}
+`, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2)
 }
 
 func testAccClusterConfig_kmsKey(n int) string {

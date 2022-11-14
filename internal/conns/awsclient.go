@@ -1,10 +1,9 @@
 package conns
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/intf"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -21,6 +20,6 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (client *AWSClient) Services(_ context.Context) map[string]intf.ServiceData {
-	return client.ServiceMap
+func (client *AWSClient) SSMClient() *ssm.Client {
+	return client.ssmClient.Client()
 }
