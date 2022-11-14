@@ -455,6 +455,11 @@ ENHANCEMENTS:
 * resource/aws_lightsail_instance: Add `ip_address_type` argument ([#27699](https://github.com/hashicorp/terraform-provider-aws/issues/27699))
 * resource/aws_security_group: Do not pass `from_port` or `to_port` values to the AWS API if a `rule`'s `protocol` value is `-1` or `all` ([#27642](https://github.com/hashicorp/terraform-provider-aws/issues/27642))
 * resource/aws_wafv2_rule_group: Correct maximum nesting level for `and_statement`, `not_statement`, `or_statement` and `rate_based_statement` ([#27682](https://github.com/hashicorp/terraform-provider-aws/issues/27682))
+* resource/aws_appmesh_virtual_node: Add Support for multiple listeners ([#27698](https://github.com/hashicorp/terraform-provider-aws/issues/27698))
+* resource/aws_appmesh_virtual_router: Add Support for multiple listeners ([#27698](https://github.com/hashicorp/terraform-provider-aws/issues/27698))
+* resource/aws_appmesh_virtual_gateway: Add Support for multiple listeners ([#27698](https://github.com/hashicorp/terraform-provider-aws/issues/27698))
+* resource/aws_appmesh_route: Add Support to match on port and specify weighted target port ([#27698](https://github.com/hashicorp/terraform-provider-aws/issues/27698))
+* resource/aws_appmesh_gateway_route: Add Support to match on port ([#27698](https://github.com/hashicorp/terraform-provider-aws/issues/27698))
 
 BUG FIXES:
 
