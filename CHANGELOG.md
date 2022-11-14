@@ -18,7 +18,9 @@ ENHANCEMENTS:
 
 * data-source/aws_connect_instance: Add `multi_party_conference_enabled` attribute ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
 * data-source/aws_identitystore_group: Add `alternate_identifier` argument and `description` attribute ([#27762](https://github.com/hashicorp/terraform-provider-aws/issues/27762))
+* resource/aws_acm_certificate: Add `key_algorithm` argument in support of [ECDSA TLS certificates](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) ([#27781](https://github.com/hashicorp/terraform-provider-aws/issues/27781))
 * resource/aws_connect_instance: Add `multi_party_conference_enabled` argument ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
+* resource/aws_docdb_cluster_instance: Add `enable_performance_insights` and `performance_insights_kms_key_id` arguments ([#27769](https://github.com/hashicorp/terraform-provider-aws/issues/27769))
 * resource/aws_msk_cluster: Add `storage_mode` argument ([#27546](https://github.com/hashicorp/terraform-provider-aws/issues/27546))
 
 ## 4.39.0 (November 10, 2022)
