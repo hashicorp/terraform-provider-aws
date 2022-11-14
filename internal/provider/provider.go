@@ -716,6 +716,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_iot_endpoint": iot.DataSourceEndpoint(),
 
+			"aws_ivs_stream_key": ivs.DataSourceStreamKey(),
+
 			"aws_msk_broker_nodes":  kafka.DataSourceBrokerNodes(),
 			"aws_msk_cluster":       kafka.DataSourceCluster(),
 			"aws_msk_configuration": kafka.DataSourceConfiguration(),
