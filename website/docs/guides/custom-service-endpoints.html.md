@@ -323,6 +323,7 @@ provider "aws" {
   <li><code>sagemakerfeaturestoreruntime</code></li>
   <li><code>sagemakerruntime</code></li>
   <li><code>savingsplans</code></li>
+  <li><code>scheduler</code></li>
   <li><code>schemas</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>
