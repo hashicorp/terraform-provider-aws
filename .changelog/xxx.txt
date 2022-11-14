@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudwatch_logs_group: Add `skip_destroy` attribute
-```
