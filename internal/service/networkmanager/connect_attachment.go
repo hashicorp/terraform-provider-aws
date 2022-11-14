@@ -133,7 +133,6 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	edgeLocation := d.Get("edge_location").(string)
 	transportAttachmentID := d.Get("transport_attachment_id").(string)
 	options := &networkmanager.ConnectAttachmentOptions{}
-
 	if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		options = expandConnectOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -141,8 +140,8 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	input := &networkmanager.CreateConnectAttachmentInput{
 		CoreNetworkId:         aws.String(coreNetworkID),
 		EdgeLocation:          aws.String(edgeLocation),
-		TransportAttachmentId: aws.String(transportAttachmentID),
 		Options:               options,
+		TransportAttachmentId: aws.String(transportAttachmentID),
 	}
 
 	if len(tags) > 0 {
@@ -153,30 +152,16 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	// Waiting for Create Timeout period for VPC Attachment to come available state.
 	// Only needed if depends_on statement is not used in Connect attachment
 	log.Printf("[DEBUG] Creating Network Manager Connect Attachment: %s", input)
-	var err error
-	var output *networkmanager.CreateConnectAttachmentOutput
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err = conn.CreateConnectAttachmentWithContext(ctx, input)
-		if err != nil {
-			if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
-				return resource.RetryableError(err)
-			}
 
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateConnectAttachmentWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateConnectAttachmentWithContext(ctx, input)
+	}, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.")
 
 	if err != nil {
 		return diag.Errorf("creating Network Manager Connect Attachment (%s) (%s): %s", transportAttachmentID, coreNetworkID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectAttachment.Attachment.AttachmentId))
+	d.SetId(aws.StringValue(outputRaw.(*networkmanager.CreateConnectAttachmentOutput).ConnectAttachment.Attachment.AttachmentId))
 
 	if _, err := waitConnectAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Network Manager Connect Attachment (%s) create: %s", d.Id(), err)
@@ -215,12 +200,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("attachment_type", a.AttachmentType)
 	d.Set("core_network_arn", a.CoreNetworkArn)
 	d.Set("core_network_id", a.CoreNetworkId)
-	d.Set("owner_account_id", a.OwnerAccountId)
-	d.Set("resource_arn", a.ResourceArn)
-	d.Set("segment_name", a.SegmentName)
-	d.Set("state", a.State)
 	d.Set("edge_location", a.EdgeLocation)
-	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 	if connectAttachment.Options != nil {
 		if err := d.Set("options", []interface{}{flattenConnectOptions(connectAttachment.Options)}); err != nil {
 			return diag.Errorf("setting options: %s", err)
@@ -228,12 +208,17 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("options", nil)
 	}
+	d.Set("owner_account_id", a.OwnerAccountId)
+	d.Set("resource_arn", a.ResourceArn)
+	d.Set("segment_name", a.SegmentName)
+	d.Set("state", a.State)
+	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
 	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("Setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
@@ -250,7 +235,7 @@ func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Network Manager Connect Attachment (%s) tags: %s", d.Get("arn").(string), err))
+			return diag.FromErr(fmt.Errorf("updating Network Manager Connect Attachment (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}
 
@@ -262,23 +247,22 @@ func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData
 
 	// If ResourceAttachmentAccepter is used, then Connect Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails
-	output, sErr := FindConnectAttachmentByID(ctx, conn, d.Id())
-	if tfawserr.ErrCodeEquals(sErr, networkmanager.ErrCodeResourceNotFoundException) {
+	output, err := FindConnectAttachmentByID(ctx, conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
-	if sErr != nil {
-		return diag.Errorf("deleting Network Manager Connect Attachment (%s): %s", d.Id(), sErr)
+	if err != nil {
+		return diag.Errorf("reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("state", output.Attachment.State)
-
-	if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
-		return diag.Errorf("cannot delete Network Manager Connect Attachment (%s) in %s state", d.Id(), state)
+	if state := aws.StringValue(output.Attachment.State); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
+		return diag.Errorf("cannot delete Network Manager Connect Attachment (%s) in state: %s", d.Id(), state)
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Attachment: %s", d.Id())
-	_, err := conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{
+	_, err = conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
 	})
 
