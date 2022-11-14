@@ -17,19 +17,19 @@ import (
 
 func TestAccLogsGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroyX(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &lg),
+					testAccCheckGroupExistsX(t, resourceName, &lg),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -298,6 +298,58 @@ func TestAccLogsGroup_skipDestroy(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Temporary during VCR development.
+func testAccCheckGroupExistsX(t *testing.T, n string, v *cloudwatchlogs.LogGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudWatch Logs Log Group ID is set")
+		}
+
+		conn := acctest.ProviderState(t).LogsConn
+
+		output, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckGroupDestroyX(t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderState(t).LogsConn
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_log_group" {
+				continue
+			}
+
+			_, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudWatch Logs Log Group still exists: %s", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckGroupExists(n string, v *cloudwatchlogs.LogGroup) resource.TestCheckFunc {
