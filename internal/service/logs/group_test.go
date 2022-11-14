@@ -359,11 +359,7 @@ func testAccCheckGroupNoDestroy(s *terraform.State) error {
 
 		_, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil
