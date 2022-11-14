@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -79,10 +80,10 @@ func TestAccProvider_DefaultTags_emptyBlock(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_defaultTagsEmptyConfigurationBlock(),
@@ -98,10 +99,10 @@ func TestAccProvider_DefaultTagsTags_none(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigDefaultTags_Tags0(),
@@ -117,10 +118,10 @@ func TestAccProvider_DefaultTagsTags_one(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigDefaultTags_Tags1("test", "value"),
@@ -136,10 +137,10 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigDefaultTags_Tags2("test1", "value1", "test2", "value2"),
@@ -158,10 +159,10 @@ func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_defaultAndIgnoreTagsEmptyConfigurationBlock(),
@@ -185,10 +186,10 @@ func TestAccProvider_endpoints(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_endpoints(endpoints.String()),
@@ -228,10 +229,10 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 	unusual3 := []string{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3),
@@ -247,10 +248,10 @@ func TestAccProvider_IgnoreTags_emptyBlock(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsEmptyConfigurationBlock(),
@@ -267,10 +268,10 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_none(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeyPrefixes0(),
@@ -286,10 +287,10 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_one(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeyPrefixes3("test"),
@@ -305,10 +306,10 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_multiple(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeyPrefixes2("test1", "test2"),
@@ -324,10 +325,10 @@ func TestAccProvider_IgnoreTagsKeys_none(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeys0(),
@@ -343,10 +344,10 @@ func TestAccProvider_IgnoreTagsKeys_one(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeys1("test"),
@@ -362,10 +363,10 @@ func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_ignoreTagsKeys2("test1", "test2"),
@@ -381,10 +382,10 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
@@ -403,10 +404,10 @@ func TestAccProvider_Region_china(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
@@ -425,10 +426,10 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
@@ -447,10 +448,10 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
@@ -469,10 +470,10 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
@@ -491,10 +492,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 	var provider *schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t),
-		ProviderFactories: testAccProviderFactoriesInternal(t, &provider),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(t, &provider),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
@@ -525,18 +526,20 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	})
 }
 
-// Replaces FactoriesInternal.
-func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) {
-	p, err := provider.New(context.Background())
+func testAccProtoV5ProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	providerServerFactory, p, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	providerServer := providerServerFactory()
 	*v = p
 
-	return map[string]func() (*schema.Provider, error){
-		acctest.ProviderName: func() (*schema.Provider, error) { return p, nil }, //nolint:unparam
+	return map[string]func() (tfprotov5.ProviderServer, error){
+		acctest.ProviderName: func() (tfprotov5.ProviderServer, error) { //nolint:unparam
+			return providerServer, nil
+		},
 	}
 }
 
@@ -910,7 +913,7 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 ` //lintignore:AT004
 
-const testAccProviderConfigBase = `
+const testAccProviderConfig_base = `
 data "aws_region" "provider_test" {}
 
 # Required to initialize the provider.
@@ -922,9 +925,7 @@ data "aws_service" "provider_test" {
 
 func testAccProviderConfig_endpoints(endpoints string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -940,9 +941,7 @@ provider "aws" {
 
 func testAccProviderConfig_fipsEndpoint(endpoint, rName string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   endpoints {
     s3 = %[1]q
@@ -963,9 +962,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 []string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -983,9 +980,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeys0() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -997,9 +992,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeys1(tag1 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     keys = [%[1]q]
@@ -1015,9 +1008,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeys2(tag1, tag2 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     keys = [%[1]q, %[2]q]
@@ -1033,9 +1024,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeyPrefixes0() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -1047,9 +1036,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeyPrefixes3(tagPrefix1 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     key_prefixes = [%[1]q]
@@ -1065,9 +1052,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsKeyPrefixes2(tagPrefix1, tagPrefix2 string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     key_prefixes = [%[1]q, %[2]q]
@@ -1083,9 +1068,7 @@ provider "aws" {
 
 func testAccProviderConfig_defaultTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   default_tags {}
 
@@ -1099,9 +1082,7 @@ provider "aws" {
 
 func testAccProviderConfig_defaultAndIgnoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   default_tags {}
   ignore_tags {}
@@ -1116,9 +1097,7 @@ provider "aws" {
 
 func testAccProviderConfig_ignoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		`
+	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   ignore_tags {}
 
@@ -1132,9 +1111,7 @@ provider "aws" {
 
 func testAccProviderConfig_region(region string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   region                      = %[1]q
   skip_credentials_validation = true
@@ -1147,9 +1124,7 @@ provider "aws" {
 
 func testAccProviderConfig_stsRegion(region, stsRegion string) string {
 	//lintignore:AT004
-	return acctest.ConfigCompose(
-		testAccProviderConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   region                      = %[1]q
   sts_region                  = %[2]q

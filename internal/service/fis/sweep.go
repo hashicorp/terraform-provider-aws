@@ -28,7 +28,7 @@ func sweepExperimentTemplates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).FISConn
+	conn := client.(*conns.AWSClient).FISClient
 	input := &fis.ListExperimentTemplatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error

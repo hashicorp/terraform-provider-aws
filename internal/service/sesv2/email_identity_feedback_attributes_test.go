@@ -134,14 +134,14 @@ func testAccCheckEmailIdentityFeedbackAttributesExist(name string, emailForwardi
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 
 		out, err := tfsesv2.FindEmailIdentityByID(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, rs.Primary.ID, err)
 		}
 		if out == nil || out.FeedbackForwardingStatus != emailForwardingEnabled {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityFeedbackAttributes, rs.Primary.ID, err)
+			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityFeedbackAttributes, rs.Primary.ID, errors.New("feedback attributes not set"))
 		}
 
 		return nil

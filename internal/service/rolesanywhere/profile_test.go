@@ -155,7 +155,7 @@ func TestAccRolesAnywhereProfile_enabled(t *testing.T) {
 }
 
 func testAccCheckProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rolesanywhere_profile" {
@@ -190,7 +190,7 @@ func testAccCheckProfileExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Profile is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 		_, err := tfrolesanywhere.FindProfileByID(context.Background(), conn, rs.Primary.ID)
 

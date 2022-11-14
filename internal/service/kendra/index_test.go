@@ -21,7 +21,7 @@ import (
 func testAccPreCheck(t *testing.T) {
 	acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 	input := &kendra.ListIndicesInput{}
 
@@ -1284,7 +1284,7 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 }
 
 func testAccCheckIndexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kendra_index" {
@@ -1315,7 +1315,7 @@ func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) res
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 		input := &kendra.DescribeIndexInput{
 			Id: aws.String(rs.Primary.ID),
 		}

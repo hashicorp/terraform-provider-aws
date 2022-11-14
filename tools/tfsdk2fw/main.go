@@ -20,6 +20,9 @@ import (
 	"github.com/mitchellh/cli"
 )
 
+// TODO
+// * timeouts
+
 var (
 	dataSourceType = flag.String("data-source", "", "Data Source type")
 	resourceType   = flag.String("resource", "", "Resource type")
@@ -181,6 +184,7 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 
 	templateData := &templateData{
 		EmitResourceImportState:      m.Resource.Importer != nil,
+		EmitResourceModifyPlan:       !m.IsDataSource && emitter.HasTopLevelTagsAllMap && emitter.HasTopLevelTagsMap,
 		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
@@ -199,6 +203,8 @@ func (m *migrator) infof(format string, a ...interface{}) {
 }
 
 type emitter struct {
+	HasTopLevelTagsAllMap        bool
+	HasTopLevelTagsMap           bool
 	ImportFrameworkAttr          bool
 	ImportProviderFrameworkTypes bool
 	IsDataSource                 bool
@@ -214,7 +220,7 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 	} else {
 		resource.Schema["id"] = &schema.Schema{
 			Type:     schema.TypeString,
-			Optional: true,
+			Optional: e.IsDataSource,
 			Computed: true,
 		}
 	}
@@ -369,6 +375,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 				fprintf(e.StructWriter, "fwtypes.ARN")
 			}
 		} else {
+			if isTopLevelAttribute && attributeName == "id" {
+				fprintf(e.SchemaWriter, "// TODO framework.IDAttribute()\n")
+			}
+
 			fprintf(e.SchemaWriter, "Type:types.StringType,\n")
 
 			if isTopLevelAttribute {
@@ -419,6 +429,20 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 			case schema.TypeString:
 				elementType = "types.StringType"
+				// Special handling for 'tags' and 'tags_all'.
+				if typeName == "map" && isTopLevelAttribute {
+					if attributeName == "tags" {
+						e.HasTopLevelTagsMap = true
+						if property.Optional {
+							fprintf(e.SchemaWriter, "// TODO tftags.TagsAttribute()\n")
+						} else if property.Computed {
+							fprintf(e.SchemaWriter, "// TODO tftags.TagsAttributeComputedOnly()\n")
+						}
+					} else if attributeName == "tags_all" {
+						e.HasTopLevelTagsAllMap = true
+						fprintf(e.SchemaWriter, "// TODO tftags.TagsAttributeComputedOnly()\n")
+					}
+				}
 
 			default:
 				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %s", typeName, v.String()))
@@ -466,6 +490,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
+	if attributeName == "id" && isTopLevelAttribute && !e.IsDataSource {
+		planModifiers = append(planModifiers, "resource.UseStateForUnknown()")
 	}
 
 	if property.ForceNew {
@@ -759,6 +787,7 @@ func unsupportedTypeError(path []string, typ string) error {
 
 type templateData struct {
 	EmitResourceImportState      bool
+	EmitResourceModifyPlan       bool
 	EmitResourceUpdateSkeleton   bool
 	ImportFrameworkAttr          bool
 	ImportProviderFrameworkTypes bool

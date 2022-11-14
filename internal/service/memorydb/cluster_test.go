@@ -1065,7 +1065,7 @@ func testAccClusterConfig_baseNetwork(rName string) string {
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		`
 resource "aws_memorydb_subnet_group" "test" {
-  subnet_ids = aws_subnet.test.*.id
+  subnet_ids = aws_subnet.test[*].id
 }
 `,
 	)

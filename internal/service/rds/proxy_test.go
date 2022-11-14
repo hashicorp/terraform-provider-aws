@@ -673,7 +673,7 @@ resource "aws_db_proxy" "test" {
   require_tls            = true
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -701,7 +701,7 @@ resource "aws_db_proxy" "test" {
   engine_family          = "MYSQL"
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -725,7 +725,7 @@ resource "aws_db_proxy" "test" {
   debug_logging  = %[2]t
   engine_family  = "MYSQL"
   role_arn       = aws_iam_role.test.arn
-  vpc_subnet_ids = aws_subnet.test.*.id
+  vpc_subnet_ids = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -749,7 +749,7 @@ resource "aws_db_proxy" "test" {
   idle_client_timeout = %[2]d
   engine_family       = "MYSQL"
   role_arn            = aws_iam_role.test.arn
-  vpc_subnet_ids      = aws_subnet.test.*.id
+  vpc_subnet_ids      = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -773,7 +773,7 @@ resource "aws_db_proxy" "test" {
   require_tls    = %[2]t
   engine_family  = "MYSQL"
   role_arn       = aws_iam_role.test.arn
-  vpc_subnet_ids = aws_subnet.test.*.id
+  vpc_subnet_ids = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -796,7 +796,7 @@ resource "aws_db_proxy" "test" {
   name           = "%[1]s"
   engine_family  = "MYSQL"
   role_arn       = aws_iam_role.test2.arn
-  vpc_subnet_ids = aws_subnet.test.*.id
+  vpc_subnet_ids = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -832,7 +832,7 @@ resource "aws_db_proxy" "test" {
   engine_family          = "MYSQL"
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test2.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -861,7 +861,7 @@ resource "aws_db_proxy" "test" {
   engine_family          = "MYSQL"
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -886,7 +886,7 @@ resource "aws_db_proxy" "test" {
   role_arn               = aws_iam_role.test.arn
   require_tls            = true
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -910,7 +910,7 @@ resource "aws_db_proxy" "test" {
   engine_family          = "MYSQL"
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -944,7 +944,7 @@ resource "aws_db_proxy" "test" {
   engine_family          = "MYSQL"
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"

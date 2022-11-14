@@ -23,6 +23,9 @@ const (
 
 	ObservabilityConfigurationCreateTimeout = 2 * time.Minute
 	ObservabilityConfigurationDeleteTimeout = 2 * time.Minute
+
+	VPCIngressConnectionCreateTimeout = 2 * time.Minute
+	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
 
 func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
@@ -109,6 +112,32 @@ func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner
 		Target:  []string{ObservabilityConfigurationStatusInactive},
 		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
 		Timeout: ObservabilityConfigurationDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{VPCIngressConnectionStatusActive},
+		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
+		Timeout: VPCIngressConnectionCreateTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{VPCIngressConnectionStatusActive, VPCIngressConnectionStatusPendingDeletion},
+		Target:  []string{VPCIngressConnectionStatusDeleted},
+		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
+		Timeout: VPCIngressConnectionDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

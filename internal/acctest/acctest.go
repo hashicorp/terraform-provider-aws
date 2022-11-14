@@ -110,7 +110,7 @@ func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tf
 
 	for _, name := range providerNames {
 		factories[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 			if err != nil {
 				return nil, err

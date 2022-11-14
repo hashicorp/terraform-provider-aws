@@ -3,9 +3,9 @@ package conns
 
 import (
 {{ range .Services }}
-	"github.com/aws/aws-sdk-go{{ if eq .SDKVersion "2" }}-v2{{ end }}/service/{{ .GoPackage }}"
+	{{ if ne .GoPackageOverride "" }}{{ .GoPackageOverride }}{{ end -}} "github.com/aws/aws-sdk-go{{ if eq .SDKVersion "2" }}-v2{{ end }}/service/{{ .GoPackage }}"
 {{- end }}
-	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
+	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -13,7 +13,6 @@ import (
 
 type AWSClient struct {
 	AccountID                 string
-	Config                    *awsv2.Config
 	DefaultTagsConfig         *tftags.DefaultConfig
 	DNSSuffix                 string
 	IgnoreTagsConfig          *tftags.IgnoreConfig
@@ -27,7 +26,9 @@ type AWSClient struct {
 	SupportedPlatforms        []string
 	TerraformVersion          string
 
+	ssmClient lazyClient[*ssm_sdkv2.Client]
+
 	{{ range .Services }}
-	{{ .ProviderNameUpper }}Conn *{{ .GoPackage }}.{{ .ClientTypeName }}
+	{{ .ProviderNameUpper }}{{ if eq .SDKVersion "1" }}Conn{{ else }}Client{{end}} *{{ if ne .GoPackageOverride "" }}{{ .GoPackageOverride }}{{ else }}{{ .GoPackage }}{{ end }}.{{ .ClientTypeName }}
 	{{- end }}
 }
