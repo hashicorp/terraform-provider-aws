@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -312,7 +313,7 @@ func testAccCheckGroupExists(n string, v *cloudwatchlogs.LogGroup) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		output, err := tflogs.FindLogGroupByName(conn, rs.Primary.ID)
+		output, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -332,7 +333,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflogs.FindLogGroupByName(conn, rs.Primary.ID)
+		_, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			return nil
@@ -356,7 +357,7 @@ func testAccCheckGroupNoDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflogs.FindLogGroupByName(conn, rs.Primary.ID)
+		_, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

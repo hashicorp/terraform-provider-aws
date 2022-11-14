@@ -1,9 +1,10 @@
 package logs
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -11,7 +12,7 @@ import (
 
 func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -39,15 +40,15 @@ func DataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	logGroup, err := FindLogGroupByName(conn, name)
+	logGroup, err := FindLogGroupByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("reading CloudWatch Logs Log Group (%s): %w", name, err)
+		return diag.Errorf("reading CloudWatch Logs Log Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -56,14 +57,14 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", logGroup.KmsKeyId)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 
-	tags, err := ListTags(conn, name)
+	tags, err := ListTagsWithContext(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for CloudWatch Logs Log Group (%s): %w", name, err)
+		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil
