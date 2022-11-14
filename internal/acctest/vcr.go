@@ -22,11 +22,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/dnaeon/go-vcr/v2/cassette"
 	"github.com/dnaeon/go-vcr/v2/recorder"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 const (
@@ -75,23 +77,21 @@ func vcrMode() (recorder.Mode, error) {
 	}
 }
 
-// vcrEnabledProviderFactories returns provider factories ready for use with VCR.
-func vcrEnabledProviderFactories(t *testing.T, input map[string]func() (*schema.Provider, error)) map[string]func() (*schema.Provider, error) {
-	output := make(map[string]func() (*schema.Provider, error), len(input))
+// vcrEnabledProtoV5ProviderFactories returns ProtoV5ProviderFactories ready for use with VCR.
+func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
+	output := make(map[string]func() (tfprotov5.ProviderServer, error), len(input))
 
-	for k, fn := range input {
-		fn := fn
-
-		output[k] = func() (*schema.Provider, error) {
-			provider, err := fn()
+	for name := range input {
+		output[name] = func() (tfprotov5.ProviderServer, error) {
+			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 			if err != nil {
 				return nil, err
 			}
 
-			provider.ConfigureContextFunc = vcrProviderConfigureContextFunc(provider.ConfigureContextFunc, t.Name())
+			primary.ConfigureContextFunc = vcrProviderConfigureContextFunc(primary.ConfigureContextFunc, t.Name())
 
-			return provider, nil
+			return providerServerFactory(), nil
 		}
 	}
 
@@ -357,7 +357,7 @@ func closeVCRRecorder(t *testing.T) {
 func ParallelTest(t *testing.T, c resource.TestCase) {
 	if isVCREnabled() {
 		log.Print("[DEBUG] initializing VCR")
-		c.ProviderFactories = vcrEnabledProviderFactories(t, c.ProviderFactories)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
 	} else {
 		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
@@ -370,7 +370,7 @@ func ParallelTest(t *testing.T, c resource.TestCase) {
 func Test(t *testing.T, c resource.TestCase) {
 	if isVCREnabled() {
 		log.Print("[DEBUG] initializing VCR")
-		c.ProviderFactories = vcrEnabledProviderFactories(t, c.ProviderFactories)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
 	} else {
 		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
