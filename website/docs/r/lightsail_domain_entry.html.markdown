@@ -40,12 +40,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - A combination of attributes to create a unique id: `name`\_`domain_name`\_`type`\_`target`
+* `id` - A combination of attributes to create a unique id: `name`,`domain_name`,`type`,`target`
 
 ## Import
 
 `aws_lightsail_domain_entry` can be imported by using the id attribute, e.g.,
 
 ```
-$ terraform import aws_lightsail_domain_entry.example www_mydomain.com_A_127.0.0.1
+$ terraform import aws_lightsail_domain_entry.example www,mydomain.com,A,127.0.0.1
 ```
