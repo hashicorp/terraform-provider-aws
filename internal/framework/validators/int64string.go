@@ -1,4 +1,4 @@
-package fwvalidators
+package validators
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 var _ tfsdk.AttributeValidator = int64StringBetweenValidator{}
 
-// int64StringBetweenValidator validates that an string Attribute's value is an integer in a range.
+// int64StringBetweenValidator validates that a string Attribute's value is an integer in a range.
 type int64StringBetweenValidator struct {
 	min, max int64
 }

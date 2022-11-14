@@ -1,4 +1,4 @@
-package fwtypes
+package types
 
 import (
 	"context"

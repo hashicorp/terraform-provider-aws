@@ -292,7 +292,7 @@ func acceptVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string, ti
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("error acccepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
+		return nil, fmt.Errorf("error accepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
 	}
 
 	// "OperationNotPermitted: Peering pcx-0000000000000000 is not active. Peering options can be added only to active peerings."

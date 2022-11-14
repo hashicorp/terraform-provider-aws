@@ -62,6 +62,10 @@ func DataSourceInstance() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"instance_id", "instance_alias"},
 			},
+			"multi_party_conference_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
