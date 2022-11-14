@@ -192,6 +192,7 @@ iottwinmaker,iottwinmaker,iottwinmaker,iottwinmaker,,iottwinmaker,,,IoTTwinMaker
 iotwireless,iotwireless,iotwireless,iotwireless,,iotwireless,,,IoTWireless,IoTWireless,,1,,,aws_iotwireless_,,iotwireless_,IoT Wireless,AWS,,,,,
 ,,,,,,,,,,,,,,,,,IQ,AWS,x,,,,No SDK support
 ivs,ivs,ivs,ivs,,ivs,,,IVS,IVS,,1,,,aws_ivs_,,ivs_,IVS (Interactive Video),Amazon,,,,,
+ivschat,ivschat,ivschat,ivschat,,ivschat,,,IVSChat,Ivschat,,,2,,aws_ivschat_,,ivschat_,IVS (Interactive Video) Chat,Amazon,,,,,
 kendra,kendra,kendra,kendra,,kendra,,,Kendra,Kendra,x,,2,,aws_kendra_,,kendra_,Kendra,Amazon,,,,,
 keyspaces,keyspaces,keyspaces,,,keyspaces,,,Keyspaces,Keyspaces,,1,,,aws_keyspaces_,,keyspaces_,Keyspaces (for Apache Cassandra),Amazon,,,,,
 kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,,1,,aws_kinesis_stream,aws_kinesis_,,kinesis_stream,Kinesis,Amazon,,,,,
