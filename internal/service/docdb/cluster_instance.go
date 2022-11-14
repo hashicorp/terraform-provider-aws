@@ -42,52 +42,48 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"dbi_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"dbi_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"enable_performance_insights": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -95,17 +91,10 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:      "docdb",
 				ValidateFunc: validEngine(),
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -114,7 +103,6 @@ func ResourceClusterInstance() *schema.Resource {
 				ConflictsWith: []string{"identifier_prefix"},
 				ValidateFunc:  validIdentifier,
 			},
-
 			"identifier_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -122,28 +110,27 @@ func ResourceClusterInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifierPrefix,
 			},
-
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"performance_insights_kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"preferred_backup_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -157,33 +144,22 @@ func ResourceClusterInstance() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-
 			"promotion_tier": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 15),
 			},
-
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"writer": {
 				Type:     schema.TypeBool,
 				Computed: true,
