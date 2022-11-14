@@ -243,7 +243,7 @@ func ResourceCluster() *schema.Resource {
 							Default:  ServerlessMinNCUs,
 							// Minimum capacity is 2.5 NCUs
 							// see: https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html
-							ValidateFunc: verify.FloatGreaterOrEqualThan(ServerlessMinNCUs),
+							ValidateFunc: validation.FloatAtLeast(ServerlessMinNCUs),
 						},
 					},
 				},

@@ -710,33 +710,6 @@ func TestFloatGreaterThan(t *testing.T) {
 	}
 }
 
-func TestFloatGreaterOrEqualThan(t *testing.T) {
-	cases := map[string]struct {
-		Value                  interface{}
-		ValidateFunc           schema.SchemaValidateFunc
-		ExpectValidationErrors bool
-	}{
-		"accept valid value": {
-			Value:        1.5,
-			ValidateFunc: FloatGreaterOrEqualThan(1.5),
-		},
-		"reject invalid value gt": {
-			Value:                  1.5,
-			ValidateFunc:           FloatGreaterThan(2.0),
-			ExpectValidationErrors: true,
-		},
-	}
-
-	for tn, tc := range cases {
-		_, errors := tc.ValidateFunc(tc.Value, tn)
-		if len(errors) > 0 && !tc.ExpectValidationErrors {
-			t.Errorf("%s: unexpected errors %s", tn, errors)
-		} else if len(errors) == 0 && tc.ExpectValidationErrors {
-			t.Errorf("%s: expected errors but got none", tn)
-		}
-	}
-}
-
 func TestFloatLowerOrEqualThan(t *testing.T) {
 	cases := map[string]struct {
 		Value                  interface{}

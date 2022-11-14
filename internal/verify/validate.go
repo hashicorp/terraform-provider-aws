@@ -398,25 +398,6 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 	}
 }
 
-// FloatGreaterOrEqualThan returns a SchemaValidateFunc which tests if the provided value
-// is of type float and is greater or equal than threshold.
-func FloatGreaterOrEqualThan(threshold float64) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(float64)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be float", k))
-			return
-		}
-
-		if v < threshold {
-			es = append(es, fmt.Errorf("expected %s to be greater or equal than (%f), got %f", k, threshold, v))
-			return
-		}
-
-		return
-	}
-}
-
 // FloatLowerOrEqualThan returns a SchemaValidateFunc which tests if the provided value
 // is of type float and is lower or equal than threshold.
 func FloatLowerOrEqualThan(threshold float64) schema.SchemaValidateFunc {
