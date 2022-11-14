@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +17,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// route53ZoneID defines the route 53 zone ID for CloudFront. This
+// is used to set the zone_id attribute.
+const route53ZoneID = "Z2FDTNDATAQYW2"
+
+// cnRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
+// This is used to set the zone_id attribute.
+// ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
+const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 
 func ResourceUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
@@ -49,6 +59,10 @@ func ResourceUserPoolDomain() *schema.Resource {
 				Computed: true,
 			},
 			"cloudfront_distribution_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cloudfront_distribution_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,6 +150,15 @@ func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.Set("aws_account_id", desc.AWSAccountId)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
+
+	// override hosted_zone_id from flattenDistributionConfig
+	region := meta.(*conns.AWSClient).Region
+	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
+		d.Set("cloudfront_distribution_zone_id", cnRoute53ZoneID)
+	} else {
+		d.Set("cloudfront_distribution_zone_id", route53ZoneID)
+	}
+
 	d.Set("s3_bucket", desc.S3Bucket)
 	d.Set("user_pool_id", desc.UserPoolId)
 	d.Set("version", desc.Version)

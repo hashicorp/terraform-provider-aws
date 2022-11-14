@@ -35,6 +35,7 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "name", poolName),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "aws_account_id"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "cloudfront_distribution_arn"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_domain.main", "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "s3_bucket"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_domain.main", "version"),
 				),
