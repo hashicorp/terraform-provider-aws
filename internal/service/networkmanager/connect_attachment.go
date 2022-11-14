@@ -35,7 +35,7 @@ func ResourceConnectAttachment() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
@@ -147,14 +147,34 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	// Connect attachment doesn't have direct dependency to VPC attachment state when using Attachment Accepter.
-	// Waiting for Create Timeout period for VPC Attachment to come available state.
-	// Only needed if depends_on statement is not used in Connect attachment
-	log.Printf("[DEBUG] Creating Network Manager Connect Attachment: %s", input)
+	outputRaw, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return conn.CreateConnectAttachmentWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// Connect attachment doesn't have direct dependency to VPC attachment state when using Attachment Accepter.
+			// Waiting for Create Timeout period for VPC Attachment to come available state.
+			// Only needed if depends_on statement is not used in Connect attachment.
+			//
+			// ValidationException: Incorrect input.
+			// {
+			//   RespMetadata: {
+			//     StatusCode: 400,
+			//     RequestID: "0a711cf7-2210-40c9-a170-a4c42134e195"
+			//   },
+			//   Fields: [{
+			//       Message: "Transport attachment state is invalid.",
+			//       Name: "transportAttachmentId"
+			//     }],
+			//   Message_: "Incorrect input.",
+			//   Reason: "FieldValidationFailed"
+			// }
+			if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
+				return true, err
+			}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return conn.CreateConnectAttachmentWithContext(ctx, input)
-	}, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.")
+			return false, err
+		})
 
 	if err != nil {
 		return diag.Errorf("creating Network Manager Connect Attachment (%s) (%s): %s", transportAttachmentID, coreNetworkID, err)
