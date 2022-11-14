@@ -21,11 +21,20 @@ func ResourceGroup() *schema.Resource {
 		Read:   resourceGroupRead,
 		Update: resourceGroupUpdate,
 		Delete: resourceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -40,29 +49,17 @@ func ResourceGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validLogGroupNamePrefix,
 			},
-			"skip_destroy": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-
 			"retention_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
 				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653}),
 			},
-
-			"kms_key_id": {
-				Type:     schema.TypeString,
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
 				Optional: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
