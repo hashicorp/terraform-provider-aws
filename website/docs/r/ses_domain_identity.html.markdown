@@ -20,6 +20,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `domain` - Name of the domain.
+
 * `arn` - The ARN of the domain identity.
 
 * `verification_token` - A code which when added to the domain as a TXT record
