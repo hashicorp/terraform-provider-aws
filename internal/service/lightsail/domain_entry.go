@@ -102,7 +102,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		d.Get("target").(string),
 	}
 
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(strings.Join(vars, ","))
 
 	return resourceDomainEntryRead(ctx, d, meta)
 }
@@ -160,7 +160,7 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func expandDomainEntry(id string) *lightsail.DomainEntry {
-	id_parts := strings.SplitN(id, "_", -1)
+	id_parts := strings.SplitN(id, ",", -1)
 	name := id_parts[0]
 	domainName := id_parts[1]
 	recordType := id_parts[2]
@@ -176,7 +176,7 @@ func expandDomainEntry(id string) *lightsail.DomainEntry {
 }
 
 func expandDomainNameFromId(id string) string {
-	id_parts := strings.SplitN(id, "_", -1)
+	id_parts := strings.SplitN(id, ",", -1)
 	domainName := id_parts[1]
 
 	return domainName
