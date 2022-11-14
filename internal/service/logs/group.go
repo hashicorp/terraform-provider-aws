@@ -256,14 +256,19 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	conn := meta.(*conns.AWSClient).LogsConn
+
 	log.Printf("[INFO] Deleting CloudWatch Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
-		LogGroupName: aws.String(d.Get("name").(string)),
+		LogGroupName: aws.String(d.Id()),
 	})
-	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatch Log Group: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+		return nil
 	}
-	log.Println("[INFO] CloudWatch Log Group deleted")
+
+	if err != nil {
+		return fmt.Errorf("deleting CloudWatch Log Group (%s): %w", d.Id(), err)
+	}
 
 	return nil
 }
