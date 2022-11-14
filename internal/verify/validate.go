@@ -398,25 +398,6 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 	}
 }
 
-// FloatLowerOrEqualThan returns a SchemaValidateFunc which tests if the provided value
-// is of type float and is lower or equal than threshold.
-func FloatLowerOrEqualThan(threshold float64) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(float64)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be float", k))
-			return
-		}
-
-		if v > threshold {
-			es = append(es, fmt.Errorf("expected %s to be lower or equal than (%f), got %f", k, threshold, v))
-			return
-		}
-
-		return
-	}
-}
-
 // https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
 func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
 	return func(i any, path cty.Path) diag.Diagnostics {
