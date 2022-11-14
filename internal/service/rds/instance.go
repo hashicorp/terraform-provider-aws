@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	// rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -1435,7 +1436,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(identifier)
 
-	if _, err := waitDBInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) create: %s", d.Id(), err)
 	}
 
@@ -1448,7 +1449,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1462,7 +1463,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return errs.AppendErrorf(diags, "rebooting RDS DB Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1805,7 +1806,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1897,7 +1898,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			if _, ierr := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+			if _, ierr := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
 				return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), ierr)
 			}
 
@@ -1965,41 +1966,7 @@ func FindDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBI
 	return dbInstance, nil
 }
 
-func waitDBInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
-		// https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
-		Pending: []string{
-			InstanceStatusBackingUp,
-			InstanceStatusConfiguringEnhancedMonitoring,
-			InstanceStatusConfiguringIAMDatabaseAuth,
-			InstanceStatusConfiguringLogExports,
-			InstanceStatusCreating,
-			InstanceStatusMaintenance,
-			InstanceStatusModifying,
-			InstanceStatusRebooting,
-			InstanceStatusRenaming,
-			InstanceStatusResettingMasterCredentials,
-			InstanceStatusStarting,
-			InstanceStatusStopping,
-			InstanceStatusUpgrading,
-		},
-		Target:     []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
-		Refresh:    statusDBInstance(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.DBInstance); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDBInstanceUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) { //nolint:unparam
+func waitDBInstanceAvailable(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,

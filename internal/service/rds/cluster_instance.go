@@ -325,7 +325,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("updating RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
 
@@ -337,7 +337,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("rebooting RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
 	}
