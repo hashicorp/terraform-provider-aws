@@ -47,8 +47,8 @@ var (
 	randomnessSources     = make(map[string]*randomnessSource, 0)
 )
 
-// ProviderState returns the current provider's state (AKA "Config" or "conns.AWSClient").
-func ProviderState(t *testing.T) *conns.AWSClient {
+// ProviderMeta returns the current provider's state (AKA "Config" or "conns.AWSClient").
+func ProviderMeta(t *testing.T) *conns.AWSClient {
 	providerStatesLock.RLock()
 	v, ok := providerStates[t.Name()]
 	providerStatesLock.RUnlock()

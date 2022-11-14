@@ -312,7 +312,7 @@ func testAccCheckGroupExistsX(t *testing.T, n string, v *cloudwatchlogs.LogGroup
 			return fmt.Errorf("No CloudWatch Logs Log Group ID is set")
 		}
 
-		conn := acctest.ProviderState(t).LogsConn
+		conn := acctest.ProviderMeta(t).LogsConn
 
 		output, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
 
@@ -328,7 +328,7 @@ func testAccCheckGroupExistsX(t *testing.T, n string, v *cloudwatchlogs.LogGroup
 
 func testAccCheckGroupDestroyX(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderState(t).LogsConn
+		conn := acctest.ProviderMeta(t).LogsConn
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_group" {
