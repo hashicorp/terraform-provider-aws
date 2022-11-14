@@ -333,6 +333,8 @@ service/ipam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_vpc_ipam'
 service/ivs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ivs_'
+service/ivschat:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ivschat_'
 service/kafka:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_msk_'
 service/kafkaconnect:

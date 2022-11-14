@@ -133,6 +133,7 @@ const (
 	Honeycode                    = "honeycode"
 	IAM                          = "iam"
 	IVS                          = "ivs"
+	IVSChat                      = "ivschat"
 	IdentityStore                = "identitystore"
 	ImageBuilder                 = "imagebuilder"
 	Inspector                    = "inspector"
