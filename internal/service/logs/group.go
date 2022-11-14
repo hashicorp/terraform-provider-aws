@@ -7,10 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -44,10 +44,12 @@ func ResourceGroup() *schema.Resource {
 				ValidateFunc:  validLogGroupName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogGroupNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validLogGroupNamePrefix,
 			},
 			"retention_in_days": {
 				Type:         schema.TypeInt,
@@ -73,53 +75,37 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	var logGroupName string
-	if v, ok := d.GetOk("name"); ok {
-		logGroupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		logGroupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		logGroupName = resource.UniqueId()
-	}
-
-	log.Printf("[DEBUG] Creating CloudWatch Log Group: %s", logGroupName)
-
-	params := &cloudwatchlogs.CreateLogGroupInput{
-		LogGroupName: aws.String(logGroupName),
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &cloudwatchlogs.CreateLogGroupInput{
+		LogGroupName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		params.KmsKeyId = aws.String(v.(string))
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.CreateLogGroup(params)
-
-	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceAlreadyExistsException) {
-		return fmt.Errorf("Creating CloudWatch Log Group failed: %s:  The CloudWatch Log Group '%s' already exists.", err, d.Get("name").(string))
-	}
+	_, err := conn.CreateLogGroup(input)
 
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Log Group failed: %s '%s'", err, d.Get("name"))
+		return fmt.Errorf("creating CloudWatch Log Group (%s): %w", name, err)
 	}
 
-	d.SetId(logGroupName)
-
-	log.Println("[INFO] CloudWatch Log Group created")
+	d.SetId(name)
 
 	if v, ok := d.GetOk("retention_in_days"); ok {
 		input := cloudwatchlogs.PutRetentionPolicyInput{
-			LogGroupName:    aws.String(logGroupName),
+			LogGroupName:    aws.String(d.Id()),
 			RetentionInDays: aws.Int64(int64(v.(int))),
 		}
-		log.Printf("[DEBUG] Setting retention for CloudWatch Log Group: %q: %s", logGroupName, input)
+
 		_, err = conn.PutRetentionPolicy(&input)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("setting CloudWatch Log Group (%s) retention policy: %w", d.Id(), err)
 		}
 	}
 
