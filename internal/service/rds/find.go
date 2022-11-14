@@ -188,36 +188,6 @@ func FindDBClusterSnapshotByID(conn *rds.RDS, id string) (*rds.DBClusterSnapshot
 	return dbClusterSnapshot, nil
 }
 
-func FindDBInstanceByID(conn *rds.RDS, id string) (*rds.DBInstance, error) {
-	input := &rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeDBInstances(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.DBInstances) == 0 || output.DBInstances[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbInstance := output.DBInstances[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbInstance.DBInstanceIdentifier) != id {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbInstance, nil
-}
-
 func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
 	input := &rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(name),

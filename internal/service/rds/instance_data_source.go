@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -184,10 +185,11 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
+	ctx := context.TODO()
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := FindDBInstanceByID(conn, d.Get("db_instance_identifier").(string))
+	v, err := FindDBInstanceByID(ctx, conn, d.Get("db_instance_identifier").(string))
 
 	if err != nil {
 		return tfresource.SingularDataSourceFindError("RDS DB Instance", err)

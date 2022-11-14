@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -220,6 +221,7 @@ func ResourceClusterInstance() *schema.Resource {
 }
 
 func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+	ctx := context.TODO()
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -306,7 +308,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(output.DBInstance.DBInstanceIdentifier))
 
-	if _, err := waitDBClusterInstanceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDBClusterInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("waiting for RDS Cluster Instance (%s) create: %w", d.Id(), err)
 	}
 
@@ -323,7 +325,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("updating RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
 
@@ -335,7 +337,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("rebooting RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -344,11 +346,12 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
+	ctx := context.TODO()
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	db, err := FindDBInstanceByID(conn, d.Id())
+	db, err := FindDBInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster Instance (%s) not found, removing from state", d.Id())
@@ -439,6 +442,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	ctx := context.TODO()
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -514,7 +518,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("updating RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBClusterInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -531,6 +535,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+	ctx := context.TODO()
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DeleteDBInstanceInput{
@@ -552,7 +557,7 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("deleting RDS Cluster Instance (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waitDBClusterInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitDBClusterInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("waiting for RDS Cluster Instance (%s) delete: %w", d.Id(), err)
 	}
 
