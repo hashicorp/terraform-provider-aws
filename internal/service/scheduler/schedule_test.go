@@ -242,6 +242,76 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	resourceName := "aws_scheduler_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	resourceName := "aws_scheduler_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -480,6 +550,52 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name),
+	)
+}
+
+func testAccScheduleConfig_nameGenerated() string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		`
+resource "aws_sqs_queue" "test" {}
+
+resource "aws_scheduler_schedule" "test" {
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_sqs_queue.test.arn
+    role_arn = aws_iam_role.test.arn
+  }
+}
+`,
+	)
+}
+
+func testAccScheduleConfig_namePrefix(namePrefix string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {}
+
+resource "aws_scheduler_schedule" "test" {
+  name_prefix = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_sqs_queue.test.arn
+    role_arn = aws_iam_role.test.arn
+  }
+}
+`, namePrefix),
 	)
 }
 
