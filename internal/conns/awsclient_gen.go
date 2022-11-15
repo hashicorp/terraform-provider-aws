@@ -2,6 +2,7 @@
 package conns
 
 import (
+	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -43,7 +44,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/aws/aws-sdk-go/service/auditmanager"
 	"github.com/aws/aws-sdk-go/service/augmentedairuntime"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
@@ -355,7 +355,7 @@ type AWSClient struct {
 	ApplicationCostProfilerConn      *applicationcostprofiler.ApplicationCostProfiler
 	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
 	AthenaConn                       *athena.Athena
-	AuditManagerConn                 *auditmanager.AuditManager
+	AuditManagerClient               *auditmanager.Client
 	AutoScalingConn                  *autoscaling.AutoScaling
 	AutoScalingPlansConn             *autoscalingplans.AutoScalingPlans
 	BackupConn                       *backup.Backup
