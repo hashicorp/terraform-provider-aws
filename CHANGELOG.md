@@ -12,6 +12,7 @@ FEATURES:
 * **New Resource:** `aws_controltower_control` ([#26990](https://github.com/hashicorp/terraform-provider-aws/issues/26990))
 * **New Resource:** `aws_evidently_feature` ([#27395](https://github.com/hashicorp/terraform-provider-aws/issues/27395))
 * **New Resource:** `aws_ivs_channel` ([#27726](https://github.com/hashicorp/terraform-provider-aws/issues/27726))
+* **New Resource:** `aws_networkmanager_connect_attachment` ([#27787](https://github.com/hashicorp/terraform-provider-aws/issues/27787))
 * **New Resource:** `aws_opensearch_inbound_connection_accepter` ([#22988](https://github.com/hashicorp/terraform-provider-aws/issues/22988))
 * **New Resource:** `aws_opensearch_outbound_connection` ([#22988](https://github.com/hashicorp/terraform-provider-aws/issues/22988))
 * **New Resource:** `aws_sesv2_email_identity_mail_from_attributes` ([#27672](https://github.com/hashicorp/terraform-provider-aws/issues/27672))
@@ -22,9 +23,15 @@ ENHANCEMENTS:
 * data-source/aws_identitystore_group: Add `alternate_identifier` argument and `description` attribute ([#27762](https://github.com/hashicorp/terraform-provider-aws/issues/27762))
 * resource/aws_acm_certificate: Add `key_algorithm` argument in support of [ECDSA TLS certificates](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) ([#27781](https://github.com/hashicorp/terraform-provider-aws/issues/27781))
 * resource/aws_autoscaling_group: Add support for `price-capacity-optimized` `spot_allocation_strategy` value ([#27795](https://github.com/hashicorp/terraform-provider-aws/issues/27795))
+* resource/aws_cloudwatch_logs_group: Add `skip_destroy` argument ([#26775](https://github.com/hashicorp/terraform-provider-aws/issues/26775))
 * resource/aws_connect_instance: Add `multi_party_conference_enabled` argument ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
 * resource/aws_docdb_cluster_instance: Add `enable_performance_insights` and `performance_insights_kms_key_id` arguments ([#27769](https://github.com/hashicorp/terraform-provider-aws/issues/27769))
 * resource/aws_msk_cluster: Add `storage_mode` argument ([#27546](https://github.com/hashicorp/terraform-provider-aws/issues/27546))
+* resource/aws_neptune_cluster: Add `serverless_v2_scaling_configuration` block in support of [Neptune Serverless](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless.html) ([#27763](https://github.com/hashicorp/terraform-provider-aws/issues/27763))
+
+BUG FIXES:
+
+* resource/aws_sesv2_email_identity_feedback_attributes: Fix invalid resource ID in error messages when creating the resource ([#27784](https://github.com/hashicorp/terraform-provider-aws/issues/27784))
 
 ## 4.39.0 (November 10, 2022)
 
