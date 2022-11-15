@@ -1858,7 +1858,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSRegion(rName string, snsRegion string) string {
-	return testAccUserPoolSMSConfigurationBaseConfig(rName, "test") + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, "test"), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
@@ -1868,7 +1868,7 @@ resource "aws_cognito_user_pool" "test" {
     sns_region     = %[2]q
   }
 }
-`, rName, snsRegion)
+`, rName, snsRegion))
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSCallerARN2(rName string) string {
