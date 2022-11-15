@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -230,6 +231,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Inspector2Client = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
 		if endpoint := c.Endpoints[names.Inspector2]; endpoint != "" {
 			o.EndpointResolver = inspector2.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.IVSChatClient = ivschat.NewFromConfig(cfg, func(o *ivschat.Options) {
+		if endpoint := c.Endpoints[names.IVSChat]; endpoint != "" {
+			o.EndpointResolver = ivschat.EndpointResolverFromURL(endpoint)
 		}
 	})
 

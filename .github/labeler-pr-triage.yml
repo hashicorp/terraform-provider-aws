@@ -555,6 +555,9 @@ service/ipam:
 service/ivs:
   - 'internal/service/ivs/**/*'
   - 'website/**/ivs_*'
+service/ivschat:
+  - 'internal/service/ivschat/**/*'
+  - 'website/**/ivschat_*'
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
