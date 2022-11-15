@@ -246,6 +246,54 @@ func channelEncoderSettingsSchema() *schema.Schema {
 												},
 											},
 										},
+										"eac3_atmos_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"bitrate": {
+														Type:     schema.TypeFloat,
+														Optional: true,
+														Computed: true,
+													},
+													"coding_mode": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.Eac3AtmosCodingMode](),
+													},
+													"dialnorm": {
+														Type:     schema.TypeFloat,
+														Optional: true,
+														Computed: true,
+													},
+													"drc_line": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.Eac3AtmosDrcLine](),
+													},
+													"drc_rf": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.Eac3AtmosDrcRf](),
+													},
+													"height_trim": {
+														Type:     schema.TypeFloat,
+														Optional: true,
+														Computed: true,
+													},
+													"surround_trim": {
+														Type:     schema.TypeFloat,
+														Optional: true,
+														Computed: true,
+													},
+												},
+											},
+										},
 										"eac3_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
@@ -394,6 +442,15 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed: true,
 													},
 												},
+											},
+										},
+										"pass_through_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{}, // no exported elements in this list
 											},
 										},
 										"wav_settings": {
@@ -2318,7 +2375,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 			a.AudioWatermarkingSettings = expandAudioWatermarkSettings(v)
 		}
 		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
-			a.CodecSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsCodecSettings(v)
+			a.CodecSettings = expandChannelEncoderSettingsAudioDescriptionsCodecSettings(v)
 		}
 		if v, ok := m["language_code"].(string); ok && v != "" {
 			a.LanguageCode = aws.String(v)
@@ -2327,7 +2384,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 			a.LanguageCodeControl = types.AudioDescriptionLanguageCodeControl(v)
 		}
 		if v, ok := m["remix_settings"].([]interface{}); ok && len(v) > 0 {
-			a.RemixSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsRemixSettings(v)
+			a.RemixSettings = expandChannelEncoderSettingsAudioDescriptionsRemixSettings(v)
 		}
 		if v, ok := m["stream_name"].(string); ok && v != "" {
 			a.StreamName = aws.String(v)
@@ -2387,6 +2444,328 @@ func expandAudioDescriptionsAudioNormalizationSettings(tfList []interface{}) *ty
 	}
 
 	return &out
+}
+
+func expandChannelEncoderSettingsAudioDescriptionsCodecSettings(tfList []interface{}) *types.AudioCodecSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioCodecSettings
+	if v, ok := m["aac_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AacSettings = expandAudioDescriptionsCodecSettingsAacSettings(v)
+	}
+	if v, ok := m["ac3_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Ac3Settings = expandAudioDescriptionsCodecSettingsAc3Settings(v)
+	}
+	if v, ok := m["eac3_atmos_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Eac3AtmosSettings = expandAudioDescriptionsCodecSettingsEac3AtmosSettings(v)
+	}
+	if v, ok := m["eac3_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Eac3Settings = expandAudioDescriptionsCodecSettingsEac3Settings(v)
+	}
+	if v, ok := m["vp2_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Mp2Settings = expandAudioDescriptionsCodecSettingsMp2Settings(v)
+	}
+	if v, ok := m["pass_through_settings"].([]interface{}); ok && len(v) > 0 {
+		out.PassThroughSettings = &types.PassThroughSettings{} // no exported fields
+	}
+	if v, ok := m["wav_settings"].([]interface{}); ok && len(v) > 0 {
+		out.WavSettings = expandAudioDescriptionsCodecSettingsWavSettings(v)
+	}
+
+	return &out
+}
+
+func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *types.AacSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AacSettings
+	if v, ok := m["bitrate"].(float32); ok {
+		out.Bitrate = float64(v)
+	}
+	if v, ok := m["coding_mode"].(string); ok && v != "" {
+		out.CodingMode = types.AacCodingMode(v)
+	}
+	if v, ok := m["input_type"].(string); ok && v != "" {
+		out.InputType = types.AacInputType(v)
+	}
+	if v, ok := m["profile"].(string); ok && v != "" {
+		out.Profile = types.AacProfile(v)
+	}
+	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
+		out.RateControlMode = types.AacRateControlMode(v)
+	}
+	if v, ok := m["raw_format"].(string); ok && v != "" {
+		out.RawFormat = types.AacRawFormat(v)
+	}
+	if v, ok := m["sample_rate"].(float32); ok {
+		out.SampleRate = float64(v)
+	}
+	if v, ok := m["spec"].(string); ok && v != "" {
+		out.Spec = types.AacSpec(v)
+	}
+	if v, ok := m["vbr_quality"].(string); ok && v != "" {
+		out.VbrQuality = types.AacVbrQuality(v)
+	}
+
+	return &out
+}
+
+func expandAudioDescriptionsCodecSettingsAc3Settings(tfList []interface{}) *types.Ac3Settings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Ac3Settings
+	if v, ok := m["bitrate"].(float32); ok {
+		out.Bitrate = float64(v)
+	}
+	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
+		out.BitstreamMode = types.Ac3BitstreamMode(v)
+	}
+	if v, ok := m["coding_mode"].(string); ok && v != "" {
+		out.CodingMode = types.Ac3CodingMode(v)
+	}
+	if v, ok := m["dialnorm"].(int); ok {
+		out.Dialnorm = int32(v)
+	}
+	if v, ok := m["drc_profile"].(string); ok && v != "" {
+		out.DrcProfile = types.Ac3DrcProfile(v)
+	}
+	if v, ok := m["lfe_filter"].(string); ok && v != "" {
+		out.LfeFilter = types.Ac3LfeFilter(v)
+	}
+	if v, ok := m["metadata_control"].(string); ok && v != "" {
+		out.MetadataControl = types.Ac3MetadataControl(v)
+	}
+
+	return &out
+}
+
+func expandAudioDescriptionsCodecSettingsEac3AtmosSettings(tfList []interface{}) *types.Eac3AtmosSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Eac3AtmosSettings
+	if v, ok := m["bitrate"].(float32); ok {
+		out.Bitrate = float64(v)
+	}
+	if v, ok := m["coding_mode"].(string); ok && v != "" {
+		out.CodingMode = types.Eac3AtmosCodingMode(v)
+	}
+	if v, ok := m["dialnorm"].(int); ok {
+		out.Dialnorm = int32(v)
+	}
+	if v, ok := m["drc_line"].(string); ok && v != "" {
+		out.DrcLine = types.Eac3AtmosDrcLine(v)
+	}
+	if v, ok := m["drc_rf"].(string); ok && v != "" {
+		out.DrcRf = types.Eac3AtmosDrcRf(v)
+	}
+	if v, ok := m["height_trim"].(float32); ok {
+		out.HeightTrim = float64(v)
+	}
+	if v, ok := m["surround_trim"].(float32); ok {
+		out.SurroundTrim = float64(v)
+	}
+
+	return &out
+}
+
+func expandAudioDescriptionsCodecSettingsEac3Settings(tfList []interface{}) *types.Eac3Settings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Eac3Settings
+	if v, ok := m["attenuation_control"].(string); ok && v != "" {
+		out.AttenuationControl = types.Eac3AttenuationControl(v)
+	}
+	if v, ok := m["bitrate"].(float32); ok {
+		out.Bitrate = float64(v)
+	}
+	if v, ok := m["bitstream_mode"].(string); ok && v != "" {
+		out.BitstreamMode = types.Eac3BitstreamMode(v)
+	}
+	if v, ok := m["coding_mode"].(string); ok && v != "" {
+		out.CodingMode = types.Eac3CodingMode(v)
+	}
+	if v, ok := m["dc_filter"].(string); ok && v != "" {
+		out.DcFilter = types.Eac3DcFilter(v)
+	}
+	if v, ok := m["dialnorm"].(int); ok {
+		out.Dialnorm = int32(v)
+	}
+	if v, ok := m["drc_line"].(string); ok && v != "" {
+		out.DrcLine = types.Eac3DrcLine(v)
+	}
+	if v, ok := m["drc_rf"].(string); ok && v != "" {
+		out.DrcRf = types.Eac3DrcRf(v)
+	}
+	if v, ok := m["lfe_control"].(string); ok && v != "" {
+		out.LfeControl = types.Eac3LfeControl(v)
+	}
+	if v, ok := m["lfe_filter"].(string); ok && v != "" {
+		out.LfeFilter = types.Eac3LfeFilter(v)
+	}
+	if v, ok := m["lo_ro_center_mix_level"].(float32); ok {
+		out.LoRoCenterMixLevel = float64(v)
+	}
+	if v, ok := m["lo_ro_surround_mix_level"].(float32); ok {
+		out.LoRoSurroundMixLevel = float64(v)
+	}
+	if v, ok := m["lt_rt_center_mix_level"].(float32); ok {
+		out.LtRtCenterMixLevel = float64(v)
+	}
+	if v, ok := m["lt_rt_surround_mix_level"].(float32); ok {
+		out.LtRtSurroundMixLevel = float64(v)
+	}
+	if v, ok := m["metadata_control"].(string); ok && v != "" {
+		out.MetadataControl = types.Eac3MetadataControl(v)
+	}
+	if v, ok := m["phase_control"].(string); ok && v != "" {
+		out.PhaseControl = types.Eac3PhaseControl(v)
+	}
+	if v, ok := m["stereo_downmix"].(string); ok && v != "" {
+		out.StereoDownmix = types.Eac3StereoDownmix(v)
+	}
+	if v, ok := m["surround_ex_mode"].(string); ok && v != "" {
+		out.SurroundExMode = types.Eac3SurroundExMode(v)
+	}
+	if v, ok := m["surround_mode"].(string); ok && v != "" {
+		out.SurroundMode = types.Eac3SurroundMode(v)
+	}
+
+	return &out
+}
+
+func expandAudioDescriptionsCodecSettingsMp2Settings(tfList []interface{}) *types.Mp2Settings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Mp2Settings
+	if v, ok := m["bitrate"].(float32); ok {
+		out.Bitrate = float64(v)
+	}
+	if v, ok := m["coding_mode"].(string); ok && v != "" {
+		out.CodingMode = types.Mp2CodingMode(v)
+	}
+	if v, ok := m["sample_rate"].(float32); ok {
+		out.Bitrate = float64(v)
+	}
+
+	return &out
+}
+
+func expandAudioDescriptionsCodecSettingsWavSettings(tfList []interface{}) *types.WavSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.WavSettings
+	if v, ok := m["bit_depth"].(float32); ok {
+		out.BitDepth = float64(v)
+	}
+	if v, ok := m["coding_mode"].(string); ok && v != "" {
+		out.CodingMode = types.WavCodingMode(v)
+	}
+	if v, ok := m["sample_rate"].(float32); ok {
+		out.SampleRate = float64(v)
+	}
+
+	return &out
+}
+
+func expandChannelEncoderSettingsAudioDescriptionsRemixSettings(tfList []interface{}) *types.RemixSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.RemixSettings
+	if v, ok := m["channel_mappings"].(*schema.Set); ok && v.Len() > 0 {
+		out.ChannelMappings = expandChannelMappings(v.List())
+	}
+	if v, ok := m["channels_in"].(int); ok {
+		out.ChannelsIn = int32(v)
+	}
+	if v, ok := m["channels_out"].(int); ok {
+		out.ChannelsOut = int32(v)
+	}
+
+	return &out
+}
+
+func expandChannelMappings(tfList []interface{}) []types.AudioChannelMapping {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.AudioChannelMapping
+	for _, item := range tfList {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.AudioChannelMapping
+		if v, ok := m["input_channel_levels"].(*schema.Set); ok && v.Len() > 0 {
+			o.InputChannelLevels = expandInputChannelLevels(v.List())
+		}
+		if v, ok := m["output_channel"].(int); ok {
+			o.OutputChannel = int32(v)
+		}
+
+		out = append(out, o)
+	}
+
+	return out
+}
+
+func expandInputChannelLevels(tfList []interface{}) []types.InputChannelLevel {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.InputChannelLevel
+	for _, item := range tfList {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.InputChannelLevel
+		if v, ok := m["gain"].(int); ok {
+			o.Gain = int32(v)
+		}
+		if v, ok := m["input_channel"].(int); ok {
+			o.InputChannel = int32(v)
+		}
+
+		out = append(out, o)
+	}
+
+	return out
 }
 
 func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interface{}) *types.OutputGroupSettings {
@@ -3136,6 +3515,11 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 			"audio_type":                   v.AudioType,
 			"audio_type_control":           v.AudioTypeControl,
 			"audio_watermark_settings":     flattenAudioWatermarkSettings(v.AudioWatermarkingSettings),
+			"codec_settings":               flattenAudioDescriptionsCodecSettings(v.CodecSettings),
+			"language_code":                aws.ToString(v.LanguageCode),
+			"language_control_mode":        string(v.LanguageCodeControl),
+			"remix_settings":               flattenAudioDescriptionsRemixSettings(v.RemixSettings),
+			"stream_name":                  aws.ToString(v.StreamName),
 		}
 
 		ml = append(ml, m)
@@ -3621,6 +4005,192 @@ func flattenAudioWatermarkSettings(ns *types.AudioWatermarkSettings) []interface
 	}
 
 	return []interface{}{m}
+}
+
+func flattenAudioDescriptionsCodecSettings(in *types.AudioCodecSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"aac_settings":        flattenCodecSettingsAacSettings(in.AacSettings),
+		"ac3_settings":        flattenCodecSettingsAc3Settings(in.Ac3Settings),
+		"eac3_atmos_settings": flattenCodecSettingsEac3AtmosSettings(in.Eac3AtmosSettings),
+		"eac3_settings":       flattenCodecSettingsEac3Settings(in.Eac3Settings),
+		"mp2_settings":        flattenCodecSettingsMp2Settings(in.Mp2Settings),
+		"wav_settings":        flattenCodecSettingsWavSettings(in.WavSettings),
+	}
+
+	if in.PassThroughSettings != nil {
+		m["pass_through_settings"] = []interface{}{} // no exported fields
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"bitrate":           float32(in.Bitrate),
+		"coding_mode":       string(in.CodingMode),
+		"input_type":        string(in.InputType),
+		"profile":           string(in.Profile),
+		"rate_control_mode": string(in.RateControlMode),
+		"raw_format":        string(in.RawFormat),
+		"sample_rate":       float32(in.SampleRate),
+		"spec":              string(in.Spec),
+		"vbr_quality":       string(in.VbrQuality),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsAc3Settings(in *types.Ac3Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"bitrate":          float32(in.Bitrate),
+		"bitstream_mode":   string(in.BitstreamMode),
+		"coding_mode":      string(in.CodingMode),
+		"dialnorm":         int(in.Dialnorm),
+		"drc_profile":      string(in.DrcProfile),
+		"lfe_filter":       string(in.LfeFilter),
+		"metadata_control": string(in.MetadataControl),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsEac3AtmosSettings(in *types.Eac3AtmosSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"bitrate":       float32(in.Bitrate),
+		"coding_mode":   string(in.CodingMode),
+		"dialnorm":      int(in.Dialnorm),
+		"drc_line":      string(in.DrcLine),
+		"drc_rf":        string(in.DrcRf),
+		"height_trim":   float32(in.HeightTrim),
+		"surround_trim": float32(in.SurroundTrim),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsEac3Settings(in *types.Eac3Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"attenuation_control":      string(in.AttenuationControl),
+		"bitrate":                  float32(in.Bitrate),
+		"bitstream_mode":           string(in.BitstreamMode),
+		"coding_mode":              string(in.CodingMode),
+		"dc_filter":                string(in.DcFilter),
+		"dialnorm":                 int(in.Dialnorm),
+		"drc_line":                 string(in.DrcLine),
+		"drc_rf":                   string(in.DrcRf),
+		"lfe_control":              string(in.LfeControl),
+		"lfe_filter":               string(in.LfeFilter),
+		"lo_ro_center_mix_level":   float32(in.LoRoCenterMixLevel),
+		"lo_ro_surround_mix_level": float32(in.LoRoSurroundMixLevel),
+		"lt_rt_center_mix_level":   float32(in.LtRtCenterMixLevel),
+		"lt_rt_surround_mix_level": float32(in.LtRtSurroundMixLevel),
+		"metadata_control":         string(in.MetadataControl),
+		"passthrough_control":      string(in.PassthroughControl),
+		"phase_control":            string(in.PhaseControl),
+		"stereo_downmix":           string(in.StereoDownmix),
+		"surround_ex_mode":         string(in.SurroundExMode),
+		"surround_mode":            string(in.SurroundMode),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsMp2Settings(in *types.Mp2Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"bitrate":     float32(in.Bitrate),
+		"coding_mode": string(in.CodingMode),
+		"sample_rate": float32(in.SampleRate),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsWavSettings(in *types.WavSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"bit_depth":   float32(in.BitDepth),
+		"coding_mode": string(in.CodingMode),
+		"sample_rate": float32(in.SampleRate),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAudioDescriptionsRemixSettings(in *types.RemixSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"channel_mappings": flattenChannelMappings(in.ChannelMappings),
+		"channels_in":      int(in.ChannelsIn),
+		"channels_out":     int(in.ChannelsOut),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenChannelMappings(in []types.AudioChannelMapping) []interface{} {
+	if len(in) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+	for _, item := range in {
+		m := map[string]interface{}{
+			"input_channel_levels": flattenInputChannelLevels(item.InputChannelLevels),
+			"output_channel":       int(item.OutputChannel),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
+}
+
+func flattenInputChannelLevels(in []types.InputChannelLevel) []interface{} {
+	if len(in) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+	for _, item := range in {
+		m := map[string]interface{}{
+			"gain":          int(item.Gain),
+			"input_channel": int(item.InputChannel),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
 }
 
 func flattenNielsenCbetSettings(in *types.NielsenCBET) []interface{} {
