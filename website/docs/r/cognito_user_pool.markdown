@@ -208,8 +208,6 @@ resource "aws_cognito_user_pool" "example" {
 * `sns_caller_arn` - (Required) ARN of the Amazon SNS caller. This is usually the IAM role that you've given Cognito permission to assume.
 * `sns_region` - (Optional) The AWS Region to use with Amazon SNS integration. You can choose the same Region as your user pool, or a supported Legacy Amazon SNS alternate Region. Amazon Cognito resources in the Asia Pacific (Seoul) AWS Region must use your Amazon SNS configuration in the Asia Pacific (Tokyo) Region. For more information, see [SMS message settings for Amazon Cognito user pools](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-sms-settings.html).
 
-
-
 ### software_token_mfa_configuration
 
 The following arguments are required in the `software_token_mfa_configuration` configuration block:
