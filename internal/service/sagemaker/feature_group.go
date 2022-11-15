@@ -1,14 +1,16 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +28,16 @@ func ResourceFeatureGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIf("feature_definition", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				old, new := d.GetChange("feature_definition")
+				var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(old.([]interface{}))
+				var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(new.([]interface{}))
+
+				return len(featureDefinitionsNew) < len(featureDefinitionsOld)
+			}),
+			verify.SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -77,7 +89,7 @@ func ResourceFeatureGroup() *schema.Resource {
 			"feature_definition": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 				MinItems: 1,
 				MaxItems: 2500,
 				Elem: &schema.Resource{
@@ -85,6 +97,8 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							// TODO: line below will also force change when new features are added, workaround needded
+							// ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
@@ -93,8 +107,9 @@ func ResourceFeatureGroup() *schema.Resource {
 							),
 						},
 						"feature_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
+							Type:     schema.TypeString,
+							Optional: true,
+							// ForceNew: true,
 							ValidateFunc: validation.StringInSlice(sagemaker.FeatureType_Values(), false),
 						},
 					},
@@ -191,8 +206,6 @@ func ResourceFeatureGroup() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -323,6 +336,39 @@ func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
+		}
+	}
+
+	o, n := d.GetChange("feature_definition")
+	var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(o.([]interface{}))
+	var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
+
+	var newFeatures []*sagemaker.FeatureDefinition
+
+	for _, elem := range featureDefinitionsNew {
+		var elementExists = false
+
+		for _, existingElem := range featureDefinitionsOld {
+			if *existingElem.FeatureName == *elem.FeatureName {
+				elementExists = true
+				break
+			}
+		}
+
+		if !elementExists {
+			newFeatures = append(newFeatures, elem)
+		}
+	}
+
+	if len(newFeatures) > 0 {
+		input := &sagemaker.UpdateFeatureGroupInput{
+			FeatureGroupName: aws.String(d.Id()),
+			FeatureAdditions: newFeatures,
+		}
+
+		_, err := conn.UpdateFeatureGroup(input)
+		if err != nil {
+			return fmt.Errorf("adding new feature_definition for SageMaker Feature Group (%s): %w", d.Id(), err)
 		}
 	}
 
