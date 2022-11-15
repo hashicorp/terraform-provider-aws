@@ -42,24 +42,24 @@ type randomnessSource struct {
 }
 
 var (
-	providerStatesLock = sync.RWMutex{}
-	providerStates     = make(map[string]interface{}, 0)
+	providerMetasLock = sync.RWMutex{}
+	providerMetas     = make(map[string]*conns.AWSClient, 0)
 
 	randomnessSourcesLock = sync.RWMutex{}
 	randomnessSources     = make(map[string]*randomnessSource, 0)
 )
 
-// ProviderMeta returns the current provider's state (AKA "Config" or "conns.AWSClient").
+// ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient").
 func ProviderMeta(t *testing.T) *conns.AWSClient {
-	providerStatesLock.RLock()
-	v, ok := providerStates[t.Name()]
-	providerStatesLock.RUnlock()
+	providerMetasLock.RLock()
+	meta, ok := providerMetas[t.Name()]
+	providerMetasLock.RUnlock()
 
 	if !ok {
-		v = Provider.Meta()
+		meta = Provider.Meta().(*conns.AWSClient)
 	}
 
-	return v.(*conns.AWSClient)
+	return meta
 }
 
 func isVCREnabled() bool {
@@ -103,18 +103,18 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 // VCR requires a single HTTP client to handle all interactions.
 func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		providerStatesLock.RLock()
-		v, ok := providerStates[testName]
-		providerStatesLock.RUnlock()
+		providerMetasLock.RLock()
+		meta, ok := providerMetas[testName]
+		providerMetasLock.RUnlock()
 
 		if ok {
-			return v, nil
+			return meta, nil
 		}
 
-		v, diags := configureFunc(ctx, d)
-
-		if diags.HasError() {
+		if v, diags := configureFunc(ctx, d); diags.HasError() {
 			return nil, diags
+		} else {
+			meta = v.(*conns.AWSClient)
 		}
 
 		vcrMode, err := vcrMode()
@@ -124,18 +124,17 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 		}
 
 		path := filepath.Join(os.Getenv(envVarVCRPath), vcrFileName(testName))
-		c := v.(*conns.AWSClient)
 
 		// Don't retry requests if a recorded interaction isn't found.
 		// TODO: Need to loop through all API clients to do this:
-		c.LogsConn.Handlers.AfterRetry.PushFront(func(r *request.Request) {
+		meta.LogsConn.Handlers.AfterRetry.PushFront(func(r *request.Request) {
 			// if errors.Is(r.Error, cassette.ErrInteractionNotFound) {
 			if err := r.Error; err != nil && strings.Contains(err.Error(), cassette.ErrInteractionNotFound.Error()) {
 				r.Retryable = aws.Bool(false)
 			}
 		})
 
-		recorder, err := recorder.NewAsMode(path, vcrMode, c.Session.Config.HTTPClient.Transport)
+		recorder, err := recorder.NewAsMode(path, vcrMode, meta.Session.Config.HTTPClient.Transport)
 
 		if err != nil {
 			return nil, diag.FromErr(err)
@@ -211,13 +210,13 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 			return false
 		})
 
-		c.Session.Config.HTTPClient.Transport = recorder
+		meta.Session.Config.HTTPClient.Transport = recorder
 
-		providerStatesLock.Lock()
-		providerStates[testName] = v
-		providerStatesLock.Unlock()
+		providerMetasLock.Lock()
+		providerMetas[testName] = meta
+		providerMetasLock.Unlock()
 
-		return v, nil
+		return meta, nil
 	}
 }
 
@@ -320,32 +319,35 @@ func writeSeedToFile(seed int64, fileName string) error {
 // CloseVCRRecorder closes the VCR recorder, saving the cassette.
 func CloseVCRRecorder(t *testing.T) {
 	testName := t.Name()
-	providerStatesLock.RLock()
-	v, ok := providerStates[testName]
-	providerStatesLock.RUnlock()
+	providerMetasLock.RLock()
+	meta, ok := providerMetas[testName]
+	providerMetasLock.RUnlock()
 
 	if ok {
 		if !t.Failed() {
-			log.Print("[DEBUG] closing VCR recorder")
-			if err := v.(*conns.AWSClient).Session.Config.HTTPClient.Transport.(*recorder.Recorder).Stop(); err != nil {
+			log.Print("[DEBUG] stopping VCR recorder")
+			if err := meta.Session.Config.HTTPClient.Transport.(*recorder.Recorder).Stop(); err != nil {
 				t.Error(err)
-			}
-
-			// Save the randomness seed.
-			randomnessSourcesLock.RLock()
-			s, ok := randomnessSources[testName]
-			randomnessSourcesLock.RUnlock()
-
-			if ok {
-				if err := writeSeedToFile(s.seed, vcrSeedFile(os.Getenv(envVarVCRPath), t.Name())); err != nil {
-					t.Error(err)
-				}
 			}
 		}
 
-		providerStatesLock.Lock()
-		delete(providerStates, testName)
-		providerStatesLock.Unlock()
+		providerMetasLock.Lock()
+		delete(providerMetas, testName)
+		providerMetasLock.Unlock()
+	}
+
+	// Save the randomness seed.
+	randomnessSourcesLock.RLock()
+	s, ok := randomnessSources[testName]
+	randomnessSourcesLock.RUnlock()
+
+	if ok {
+		if !t.Failed() {
+			log.Print("[DEBUG] persisting randomness seed")
+			if err := writeSeedToFile(s.seed, vcrSeedFile(os.Getenv(envVarVCRPath), t.Name())); err != nil {
+				t.Error(err)
+			}
+		}
 
 		randomnessSourcesLock.Lock()
 		delete(randomnessSources, testName)
