@@ -2157,6 +2157,16 @@ func FindSecurityGroupIngressRuleByID(ctx context.Context, conn *ec2.EC2, id str
 	return output, nil
 }
 
+func FindSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.SecurityGroupRule, error) {
+	input := &ec2.DescribeSecurityGroupRulesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"group-id": id,
+		}),
+	}
+
+	return FindSecurityGroupRules(ctx, conn, input)
+}
+
 func FindSpotFleetInstances(conn *ec2.EC2, input *ec2.DescribeSpotFleetInstancesInput) ([]*ec2.ActiveInstance, error) {
 	var output []*ec2.ActiveInstance
 
