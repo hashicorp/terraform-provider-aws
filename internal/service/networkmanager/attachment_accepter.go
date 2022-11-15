@@ -46,6 +46,7 @@ func ResourceAttachmentAccepter() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					networkmanager.AttachmentTypeVpc,
 					networkmanager.AttachmentTypeSiteToSiteVpn,
+					networkmanager.AttachmentTypeConnect,
 				}, false),
 			},
 			"core_network_arn": {
@@ -110,6 +111,17 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 		d.SetId(attachmentID)
 
+	case networkmanager.AttachmentTypeConnect:
+		connectAttachment, err := FindConnectAttachmentByID(ctx, conn, attachmentID)
+
+		if err != nil {
+			return diag.Errorf("reading Network Manager Connect Attachment (%s): %s", attachmentID, err)
+		}
+
+		state = aws.StringValue(connectAttachment.Attachment.State)
+
+		d.SetId(attachmentID)
+
 	default:
 		return diag.Errorf("unsupported Network Manager Attachment type: %s", attachmentType)
 	}
@@ -135,6 +147,11 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 			if _, err := waitSiteToSiteVPNAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager VPN Attachment (%s) create: %s", attachmentID, err)
 			}
+
+		case networkmanager.AttachmentTypeConnect:
+			if _, err := waitConnectAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return diag.Errorf("waiting for Network Manager Connect Attachment (%s) create: %s", attachmentID, err)
+			}
 		}
 	}
 
@@ -143,6 +160,8 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
+
+	var a *networkmanager.Attachment
 
 	switch aType := d.Get("attachment_type"); aType {
 	case networkmanager.AttachmentTypeVpc:
@@ -158,15 +177,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 			return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
 		}
 
-		a := vpcAttachment.Attachment
-		d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
-		d.Set("core_network_arn", a.CoreNetworkArn)
-		d.Set("core_network_id", a.CoreNetworkId)
-		d.Set("edge_location", a.EdgeLocation)
-		d.Set("owner_account_id", a.OwnerAccountId)
-		d.Set("resource_arn", a.ResourceArn)
-		d.Set("segment_name", a.SegmentName)
-		d.Set("state", a.State)
+		a = vpcAttachment.Attachment
 
 	case networkmanager.AttachmentTypeSiteToSiteVpn:
 		vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
@@ -181,16 +192,32 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 			return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 		}
 
-		a := vpnAttachment.Attachment
-		d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
-		d.Set("core_network_arn", a.CoreNetworkArn)
-		d.Set("core_network_id", a.CoreNetworkId)
-		d.Set("edge_location", a.EdgeLocation)
-		d.Set("owner_account_id", a.OwnerAccountId)
-		d.Set("resource_arn", a.ResourceArn)
-		d.Set("segment_name", a.SegmentName)
-		d.Set("state", a.State)
+		a = vpnAttachment.Attachment
+
+	case networkmanager.AttachmentTypeConnect:
+		connectAttachment, err := FindConnectAttachmentByID(ctx, conn, d.Id())
+
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] Network Manager Connect Attachment %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		if err != nil {
+			return diag.Errorf("reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
+		}
+
+		a = connectAttachment.Attachment
 	}
+
+	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
+	d.Set("core_network_arn", a.CoreNetworkArn)
+	d.Set("core_network_id", a.CoreNetworkId)
+	d.Set("edge_location", a.EdgeLocation)
+	d.Set("owner_account_id", a.OwnerAccountId)
+	d.Set("resource_arn", a.ResourceArn)
+	d.Set("segment_name", a.SegmentName)
+	d.Set("state", a.State)
 
 	return nil
 }

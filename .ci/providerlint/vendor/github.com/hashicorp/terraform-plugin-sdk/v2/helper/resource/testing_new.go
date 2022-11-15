@@ -89,7 +89,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 	}()
 
 	if c.hasProviders(ctx) {
-		err := wd.SetConfig(ctx, c.providerConfig(ctx))
+		err := wd.SetConfig(ctx, c.providerConfig(ctx, false))
 
 		if err != nil {
 			logging.HelperResourceError(ctx,
@@ -170,7 +170,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 				protov6: protov6ProviderFactories(c.ProtoV6ProviderFactories).merge(step.ProtoV6ProviderFactories),
 			}
 
-			providerCfg := step.providerConfig(ctx)
+			providerCfg := step.providerConfig(ctx, step.configHasProviderBlock(ctx))
 
 			err := wd.SetConfig(ctx, providerCfg)
 
@@ -371,7 +371,7 @@ func testIDRefresh(ctx context.Context, t testing.T, c TestCase, wd *plugintest.
 
 	// Temporarily set the config to a minimal provider config for the refresh
 	// test. After the refresh we can reset it.
-	err := wd.SetConfig(ctx, c.providerConfig(ctx))
+	err := wd.SetConfig(ctx, c.providerConfig(ctx, step.configHasProviderBlock(ctx)))
 	if err != nil {
 		t.Fatalf("Error setting import test config: %s", err)
 	}

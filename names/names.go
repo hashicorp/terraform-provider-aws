@@ -27,6 +27,7 @@ const (
 	ComputeOptimizerEndpointID = "computeoptimizer"
 	IdentityStoreEndpointID    = "identitystore"
 	Inspector2EndpointID       = "inspector2"
+	IVSChatEndpointID          = "ivschat"
 	KendraEndpointID           = "kendra"
 	MediaLiveEndpointID        = "medialive"
 	RolesAnywhereEndpointID    = "rolesanywhere"

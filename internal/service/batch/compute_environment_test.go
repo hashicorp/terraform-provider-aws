@@ -1767,21 +1767,15 @@ provider "kubernetes" {
   host                   = aws_eks_cluster.test.endpoint
   cluster_ca_certificate = base64decode(aws_eks_cluster.test.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-
-  alias = "batch"
 }
 
 resource "kubernetes_namespace" "test" {
-  provider = kubernetes.batch
-
   metadata {
     name = "test"
   }
 }
 
 resource "kubernetes_cluster_role" "test" {
-  provider = kubernetes.batch
-
   metadata {
     name = "aws-batch-cluster-role"
   }
@@ -1812,8 +1806,6 @@ resource "kubernetes_cluster_role" "test" {
 }
 
 resource "kubernetes_cluster_role_binding" "test" {
-  provider = kubernetes.batch
-
   metadata {
     name = "aws-batch-cluster-role-binding"
   }
@@ -1832,8 +1824,6 @@ resource "kubernetes_cluster_role_binding" "test" {
 }
 
 resource "kubernetes_role" "test" {
-  provider = kubernetes.batch
-
   metadata {
     name      = "aws-batch-compute-environment-role"
     namespace = kubernetes_namespace.test.metadata[0].name
@@ -1859,8 +1849,6 @@ resource "kubernetes_role" "test" {
 }
 
 resource "kubernetes_role_binding" "test" {
-  provider = kubernetes.batch
-
   metadata {
     name      = "aws-batch-compute-environment-role-binding"
     namespace = kubernetes_namespace.test.metadata[0].name
@@ -1880,8 +1868,6 @@ resource "kubernetes_role_binding" "test" {
 }
 
 resource "kubernetes_config_map" "aws_auth" {
-  provider = kubernetes.batch
-
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"

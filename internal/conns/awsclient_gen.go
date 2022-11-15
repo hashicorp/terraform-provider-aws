@@ -2,11 +2,13 @@
 package conns
 
 import (
+	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -42,7 +44,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/aws/aws-sdk-go/service/auditmanager"
 	"github.com/aws/aws-sdk-go/service/augmentedairuntime"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
@@ -354,7 +355,7 @@ type AWSClient struct {
 	ApplicationCostProfilerConn      *applicationcostprofiler.ApplicationCostProfiler
 	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
 	AthenaConn                       *athena.Athena
-	AuditManagerConn                 *auditmanager.AuditManager
+	AuditManagerClient               *auditmanager.Client
 	AutoScalingConn                  *autoscaling.AutoScaling
 	AutoScalingPlansConn             *autoscalingplans.AutoScalingPlans
 	BackupConn                       *backup.Backup
@@ -461,6 +462,7 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
+	IVSChatClient                    *ivschat.Client
 	IdentityStoreClient              *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector

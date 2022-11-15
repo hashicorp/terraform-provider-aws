@@ -154,6 +154,7 @@ variable "service_labels" {
     "iotwireless",
     "ipam",
     "ivs",
+    "ivschat",
     "kafka",
     "kafkaconnect",
     "kendra",

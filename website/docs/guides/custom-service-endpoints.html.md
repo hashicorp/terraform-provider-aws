@@ -220,6 +220,7 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
+  <li><code>ivschat</code></li>
   <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
