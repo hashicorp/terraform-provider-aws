@@ -418,9 +418,9 @@ const (
 	SecurityGroupStatusCreated = "Created"
 )
 
-func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSecurityGroup(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSecurityGroupByID(conn, id)
+		output, err := FindSecurityGroupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

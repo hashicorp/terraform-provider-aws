@@ -154,7 +154,7 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 	conns.GlobalMutexKV.Lock(securityGroupID)
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if err != nil {
 		return diag.Errorf("reading Security Group (%s): %s", securityGroupID, err)
@@ -211,7 +211,7 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 	}
 
 	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		sg, err := FindSecurityGroupByID(conn, securityGroupID)
+		sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {
 			return nil, err
@@ -248,7 +248,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 	securityGroupID := d.Get("security_group_id").(string)
 	ruleType := d.Get("type").(string)
 
-	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", securityGroupID)
@@ -306,7 +306,7 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 		conns.GlobalMutexKV.Lock(securityGroupID)
 		defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-		sg, err := FindSecurityGroupByID(conn, securityGroupID)
+		sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {
 			return diag.Errorf("reading Security Group (%s): %s", securityGroupID, err)
@@ -354,7 +354,7 @@ func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData
 	conns.GlobalMutexKV.Lock(securityGroupID)
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if err != nil {
 		return diag.Errorf("reading Security Group (%s): %s", securityGroupID, err)

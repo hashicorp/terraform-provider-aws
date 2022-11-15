@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -56,7 +57,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, m
 
 		vpcID := aws.StringValue(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(conn, vpcID)
+		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(context.TODO(), conn, vpcID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 VPC (%s) default Security Group: %w", vpcID, err)
@@ -139,7 +140,7 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(d *schema.ResourceData, m
 
 		vpcID := aws.StringValue(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(conn, vpcID)
+		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(context.TODO(), conn, vpcID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 VPC (%s) default Security Group: %w", vpcID, err)

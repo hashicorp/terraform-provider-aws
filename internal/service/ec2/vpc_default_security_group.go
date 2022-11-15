@@ -101,7 +101,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 		)...)
 	}
 
-	sg, err := FindSecurityGroup(conn, input)
+	sg, err := FindSecurityGroup(ctx, conn, input)
 
 	if err != nil {
 		return diag.Errorf("reading Default Security Group: %s", err)

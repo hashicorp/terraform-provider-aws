@@ -61,7 +61,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroups(conn, input)
+	output, err := FindSecurityGroups(ctx, conn, input)
 
 	if err != nil {
 		return diag.Errorf("reading EC2 Security Groups: %s", err)

@@ -801,17 +801,17 @@ func WaitRouteTableAssociationUpdated(conn *ec2.EC2, id string) (*ec2.RouteTable
 	return nil, err
 }
 
-func WaitSecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {
+func WaitSecurityGroupCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{SecurityGroupStatusCreated},
-		Refresh:                   StatusSecurityGroup(conn, id),
+		Refresh:                   StatusSecurityGroup(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            SecurityGroupNotFoundChecks,
 		ContinuousTargetOccurence: 3,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.SecurityGroup); ok {
 		return output, err

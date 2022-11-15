@@ -206,7 +206,7 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(aws.StringValue(output.GroupId))
 
 	// Wait for the security group to truly exist
-	group, err := WaitSecurityGroupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	group, err := WaitSecurityGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return diag.Errorf("waiting for Security Group (%s) create: %s", d.Id(), err)
@@ -268,7 +268,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sg, err := FindSecurityGroupByID(conn, d.Id())
+	sg, err := FindSecurityGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", d.Id())
@@ -331,7 +331,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	group, err := FindSecurityGroupByID(conn, d.Id())
+	group, err := FindSecurityGroupByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("reading Security Group (%s): %s", d.Id(), err)
@@ -421,7 +421,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindSecurityGroupByID(conn, d.Id())
+		return FindSecurityGroupByID(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -461,7 +461,7 @@ func forceRevokeSecurityGroupRules(ctx context.Context, conn *ec2.EC2, id string
 				// However, ec2.SecurityGroupRule doesn't include name so can't
 				// be used. If it affects anything, this would affect default
 				// VPCs.
-				sg, err := FindSecurityGroupByID(conn, id)
+				sg, err := FindSecurityGroupByID(ctx, conn, id)
 				if err != nil {
 					return fmt.Errorf("reading Security Group (%s): %w", id, err)
 				}
@@ -556,7 +556,7 @@ func rulesInSGsTouchingThis(ctx context.Context, conn *ec2.EC2, id string, searc
 func relatedSGs(ctx context.Context, conn *ec2.EC2, id string) ([]string, error) {
 	relatedSGs := []string{id}
 
-	sg, err := FindSecurityGroupByID(conn, id)
+	sg, err := FindSecurityGroupByID(ctx, conn, id)
 	if err != nil {
 		return nil, fmt.Errorf("reading Security Group (%s): %w", id, err)
 	}
