@@ -1304,7 +1304,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 												},
 											},
 										},
-										"h_264_settings": {
+										"h264_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
 											MaxItems: 1,
@@ -1554,7 +1554,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 												},
 											},
 										},
-										// TODO h_265_settings
+										// TODO h265_settings
 										// TODO mgeg2_settings
 									},
 								},
@@ -2780,6 +2780,9 @@ func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interf
 	if v, ok := m["archive_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.ArchiveGroupSettings = expandArchiveGroupSettings(v)
 	}
+	if v, ok := m["frame_capture_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.FrameCaptureGroupSettings = expandFrameCaptureGroupSettings(v)
+	}
 	if v, ok := m["media_package_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.MediaPackageGroupSettings = expandMediaPackageGroupSettings(v)
 	}
@@ -2848,6 +2851,53 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 	}
 
 	return &o
+}
+
+func expandFrameCaptureGroupSettings(tfList []interface{}) *types.FrameCaptureGroupSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.FrameCaptureGroupSettings
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		out.Destination = expandDestination(v)
+	}
+	if v, ok := m["frame_capture_cdn_settings"].([]interface{}); ok && len(v) > 0 {
+		out.FrameCaptureCdnSettings = expandFrameCaptureCDNSettings(v)
+	}
+	return &out
+}
+
+func expandFrameCaptureCDNSettings(tfList []interface{}) *types.FrameCaptureCdnSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.FrameCaptureCdnSettings
+	if v, ok := m["frame_capture_s3_settings"].([]interface{}); ok && len(v) > 0 {
+		out.FrameCaptureS3Settings = expandFrameCaptureS3Settings(v)
+	}
+
+	return &out
+}
+
+func expandFrameCaptureS3Settings(tfList []interface{}) *types.FrameCaptureS3Settings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.FrameCaptureS3Settings
+	if v, ok := m["canned_acl"].(string); ok && v != "" {
+		out.CannedAcl = types.S3CannedAcl(v)
+	}
+
+	return &out
 }
 
 func expandArchiveCDNSettings(tfList []interface{}) *types.ArchiveCdnSettings {
@@ -3555,6 +3605,7 @@ func flattenOutputGroupSettings(os *types.OutputGroupSettings) []interface{} {
 
 	m := map[string]interface{}{
 		"archive_group_settings":       flattenOutputGroupSettingsArchiveGroupSettings(os.ArchiveGroupSettings),
+		"frame_capture_group_settings": flattenOutputGroupSettingsFrameCaptureGroupSettings(os.FrameCaptureGroupSettings),
 		"media_package_group_settings": flattenOutputGroupSettingsMediaPackageGroupSettings(os.MediaPackageGroupSettings),
 		"multiplex_group_settings": func(inner *types.MultiplexGroupSettings) []interface{} {
 			if inner == nil {
@@ -3812,6 +3863,43 @@ func flattenOutputGroupSettingsArchiveGroupSettings(as *types.ArchiveGroupSettin
 		"destination":          flattenDestination(as.Destination),
 		"archive_cdn_settings": flattenOutputGroupSettingsArchiveCDNSettings(as.ArchiveCdnSettings),
 		"rollover_interval":    int(as.RolloverInterval),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputGroupSettingsFrameCaptureGroupSettings(in *types.FrameCaptureGroupSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"destination":                flattenDestination(in.Destination),
+		"frame_capture_cdn_settings": flattenFrameCaptureCDNSettings(in.FrameCaptureCdnSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFrameCaptureCDNSettings(in *types.FrameCaptureCdnSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"frame_capture_s3_settings": flattenFrameCaptureS3Settings(in.FrameCaptureS3Settings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFrameCaptureS3Settings(in *types.FrameCaptureS3Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"canned_acl": string(in.CannedAcl),
 	}
 
 	return []interface{}{m}
