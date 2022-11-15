@@ -1042,6 +1042,8 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
 		is.AudioSelectors = expandInputAttachmentInputSettingsAudioSelectors(v)
 	}
+	// TODO expand InputAttachments
+
 	return &is
 }
 

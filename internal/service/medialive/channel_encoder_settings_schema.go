@@ -2783,6 +2783,9 @@ func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interf
 	if v, ok := m["frame_capture_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.FrameCaptureGroupSettings = expandFrameCaptureGroupSettings(v)
 	}
+	if v, ok := m["hls_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.HlsGroupSettings = expandHLSGroupSettings(v)
+	}
 	if v, ok := m["media_package_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.MediaPackageGroupSettings = expandMediaPackageGroupSettings(v)
 	}
@@ -2900,6 +2903,119 @@ func expandFrameCaptureS3Settings(tfList []interface{}) *types.FrameCaptureS3Set
 	return &out
 }
 
+func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsGroupSettings
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		out.Destination = expandDestination(v)
+	}
+	if v, ok := m["ad_markers"].([]interface{}); ok && len(v) > 0 {
+		out.AdMarkers = expandHLSAdMarkers(v)
+	}
+	if v, ok := m["base_url_content"].(string); ok && v != "" {
+		out.BaseUrlContent = aws.String(v)
+	}
+	if v, ok := m["base_url_content1"].(string); ok && v != "" {
+		out.BaseUrlContent1 = aws.String(v)
+	}
+	if v, ok := m["base_url_manifest"].(string); ok && v != "" {
+		out.BaseUrlManifest = aws.String(v)
+	}
+	if v, ok := m["base_url_manifest1"].(string); ok && v != "" {
+		out.BaseUrlManifest1 = aws.String(v)
+	}
+	if v, ok := m["caption_language_mappings"].(*schema.Set); ok && v.Len() > 0 {
+		out.CaptionLanguageMappings = expandHSLGroupSettingsCaptionLanguageMappings(v.List())
+	}
+	if v, ok := m["caption_language_setting"].(string); ok && v != "" {
+		out.CaptionLanguageSetting = types.HlsCaptionLanguageSetting(v)
+	}
+	if v, ok := m["codec_specification"].(string); ok && v != "" {
+		out.CodecSpecification = types.HlsCodecSpecification(v)
+	}
+	if v, ok := m["constant_iv"].(string); ok && v != "" {
+		out.ConstantIv = aws.String(v)
+	}
+	if v, ok := m["directory_structure"].(string); ok && v != "" {
+		out.DirectoryStructure = types.HlsDirectoryStructure(v)
+	}
+	if v, ok := m["discontinuity_tags"].(string); ok && v != "" {
+		out.DiscontinuityTags = types.HlsDiscontinuityTags(v)
+	}
+	if v, ok := m["encryption_type"].(string); ok && v != "" {
+		out.EncryptionType = types.HlsEncryptionType(v)
+	}
+	if v, ok := m["hls_cdn_setting"].([]interface{}); ok && len(v) > 0 {
+		out.HlsCdnSettings = expandHLSCDNSettings(v)
+	}
+
+	return &out
+}
+
+func expandHLSCDNSettings(tfList []interface{}) *types.HlsCdnSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsCdnSettings
+	if v, ok := m["hls_akamai_setting"].([]interface{}); ok && len(v) > 0 {
+		out.HlsAkamaiSettings = expandHSLAkamaiSettings(v)
+	}
+
+	return &out
+}
+
+func expandHSLAkamaiSettings(tfList []interface{}) *types.HlsAkamaiSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsAkamaiSettings
+	if v, ok := m["connection_retry_interval"].(int); ok {
+		out.ConnectionRetryInterval = int32(v)
+	}
+
+	return &out
+}
+
+func expandHSLGroupSettingsCaptionLanguageMappings(tfList []interface{}) []types.CaptionLanguageMapping {
+	if tfList == nil {
+		return nil
+	}
+
+	var out []types.CaptionLanguageMapping
+	for _, item := range tfList {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.CaptionLanguageMapping
+		if v, ok := m["caption_channel"].(int); ok {
+			o.CaptionChannel = int32(v)
+		}
+		if v, ok := m["language_code"].(string); ok && v != "" {
+			o.LanguageCode = aws.String(v)
+		}
+		if v, ok := m["language_description"].(string); ok && v != "" {
+			o.LanguageDescription = aws.String(v)
+		}
+
+		out = append(out, o)
+	}
+
+	return out
+}
+
 func expandArchiveCDNSettings(tfList []interface{}) *types.ArchiveCdnSettings {
 	if len(tfList) == 0 {
 		return nil
@@ -2971,7 +3087,7 @@ func expandRtmpGroupSettings(tfList []interface{}) *types.RtmpGroupSettings {
 
 	var out types.RtmpGroupSettings
 	if v, ok := m["ad_markers"].([]interface{}); ok && len(v) > 0 {
-		out.AdMarkers = expandAdMarkers(v)
+		out.AdMarkers = expandRTMPAdMarkers(v)
 	}
 	if v, ok := m["authentication_scheme"].(string); ok && v != "" {
 		out.AuthenticationScheme = types.AuthenticationScheme(v)
@@ -3016,7 +3132,7 @@ func expandUdpGroupSettings(tfList []interface{}) *types.UdpGroupSettings {
 	return &out
 }
 
-func expandAdMarkers(tfList []interface{}) []types.RtmpAdMarkers {
+func expandRTMPAdMarkers(tfList []interface{}) []types.RtmpAdMarkers {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -3024,6 +3140,19 @@ func expandAdMarkers(tfList []interface{}) []types.RtmpAdMarkers {
 	var out []types.RtmpAdMarkers
 	for _, v := range tfList {
 		out = append(out, types.RtmpAdMarkers(v.(string)))
+	}
+
+	return out
+}
+
+func expandHLSAdMarkers(tfList []interface{}) []types.HlsAdMarkers {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.HlsAdMarkers
+	for _, v := range tfList {
+		out = append(out, types.HlsAdMarkers(v.(string)))
 	}
 
 	return out
