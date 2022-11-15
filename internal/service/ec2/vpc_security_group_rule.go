@@ -180,8 +180,12 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 
 		output, err = conn.AuthorizeSecurityGroupIngressWithContext(ctx, input)
 
-		if err == nil && len(output.SecurityGroupRules) == 1 {
-			d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+		if err == nil {
+			if len(output.SecurityGroupRules) == 1 {
+				d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+			} else {
+				d.Set("security_group_rule_id", nil)
+			}
 		}
 
 	case securityGroupRuleTypeEgress:
@@ -193,8 +197,12 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 
 		output, err = conn.AuthorizeSecurityGroupEgressWithContext(ctx, input)
 
-		if err == nil && len(output.SecurityGroupRules) == 1 {
-			d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+		if err == nil {
+			if len(output.SecurityGroupRules) == 1 {
+				d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+			} else {
+				d.Set("security_group_rule_id", nil)
+			}
 		}
 	}
 
