@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil" // TODO
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -169,7 +169,7 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 				return false
 			}
 
-			r.Body = ioutil.NopCloser(&b)
+			r.Body = io.NopCloser(&b)
 			body := b.String()
 			// If body matches identically, we are done.
 			if body == i.Body {
