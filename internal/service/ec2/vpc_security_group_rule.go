@@ -180,7 +180,7 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 
 		output, err = conn.AuthorizeSecurityGroupIngressWithContext(ctx, input)
 
-		if err != nil && len(output.SecurityGroupRules) == 1 {
+		if err == nil && len(output.SecurityGroupRules) == 1 {
 			d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
 		}
 
@@ -193,7 +193,7 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 
 		output, err = conn.AuthorizeSecurityGroupEgressWithContext(ctx, input)
 
-		if err != nil && len(output.SecurityGroupRules) == 1 {
+		if err == nil && len(output.SecurityGroupRules) == 1 {
 			d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
 		}
 	}
@@ -292,6 +292,17 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 		// import so fix the id
 		id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
 		d.SetId(id)
+	}
+
+	if isVPC {
+		// Attempt to find the single matching AWS Security Group Rule resource ID.
+		securityGroupRules, err := FindSecurityGroupRulesBySecurityGroupID(ctx, conn, securityGroupID)
+
+		if err != nil {
+			return diag.Errorf("reading Security Group (%s) Rules: %s", securityGroupID, err)
+		}
+
+		d.Set("security_group_rule_id", findSecurityGroupRuleMatch(ipPermission, securityGroupRules, ruleType))
 	}
 
 	return nil
@@ -611,6 +622,55 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) (
 	}
 
 	return rule, description
+}
+
+func findSecurityGroupRuleMatch(p *ec2.IpPermission, securityGroupRules []*ec2.SecurityGroupRule, ruleType string) string {
+	for _, r := range securityGroupRules {
+		if ruleType == securityGroupRuleTypeIngress && aws.BoolValue(r.IsEgress) {
+			continue
+		}
+
+		if p.ToPort != nil && r.ToPort != nil && aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
+			continue
+		}
+
+		if p.FromPort != nil && r.FromPort != nil && aws.Int64Value(p.FromPort) != aws.Int64Value(r.FromPort) {
+			continue
+		}
+
+		if p.IpProtocol != nil && r.IpProtocol != nil && aws.StringValue(p.IpProtocol) != aws.StringValue(r.IpProtocol) {
+			continue
+		}
+
+		// SecurityGroupRule has only a single source or destination set.
+		if r.CidrIpv4 != nil {
+			if len(p.IpRanges) == 1 && aws.StringValue(p.IpRanges[0].CidrIp) == aws.StringValue(r.CidrIpv4) {
+				if len(p.Ipv6Ranges) == 0 && len(p.PrefixListIds) == 0 && len(p.UserIdGroupPairs) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		} else if r.CidrIpv6 != nil {
+			if len(p.Ipv6Ranges) == 1 && aws.StringValue(p.Ipv6Ranges[0].CidrIpv6) == aws.StringValue(r.CidrIpv6) {
+				if len(p.IpRanges) == 0 && len(p.PrefixListIds) == 0 && len(p.UserIdGroupPairs) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		} else if r.PrefixListId != nil {
+			if len(p.PrefixListIds) == 1 && aws.StringValue(p.PrefixListIds[0].PrefixListId) == aws.StringValue(r.PrefixListId) {
+				if len(p.IpRanges) == 0 && len(p.Ipv6Ranges) == 0 && len(p.UserIdGroupPairs) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		} else if r.ReferencedGroupInfo != nil {
+			if len(p.UserIdGroupPairs) == 1 && aws.StringValue(p.UserIdGroupPairs[0].GroupId) == aws.StringValue(r.ReferencedGroupInfo.GroupId) {
+				if len(p.IpRanges) == 0 && len(p.Ipv6Ranges) == 0 && len(p.PrefixListIds) == 0 {
+					return aws.StringValue(r.SecurityGroupRuleId)
+				}
+			}
+		}
+	}
+
+	return ""
 }
 
 const securityGroupRuleIDSeparator = "_"
