@@ -78,3 +78,49 @@ func FindChannelByID(ctx context.Context, conn *ivs.IVS, arn string) (*ivs.Chann
 
 	return out.Channel, nil
 }
+
+func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.IVS, channelArn string) (*ivs.StreamKey, error) {
+	in := &ivs.ListStreamKeysInput{
+		ChannelArn: aws.String(channelArn),
+	}
+	out, err := conn.ListStreamKeysWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(out.StreamKeys) < 1 {
+		return nil, &resource.NotFoundError{
+			LastRequest: in,
+		}
+	}
+
+	streamKeyArn := out.StreamKeys[0].Arn
+
+	return findStreamKeyByID(ctx, conn, *streamKeyArn)
+}
+
+func findStreamKeyByID(ctx context.Context, conn *ivs.IVS, id string) (*ivs.StreamKey, error) {
+	in := &ivs.GetStreamKeyInput{
+		Arn: aws.String(id),
+	}
+	out, err := conn.GetStreamKeyWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out.StreamKey, nil
+}
