@@ -9,6 +9,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_controltower_controls` ([#26978](https://github.com/hashicorp/terraform-provider-aws/issues/26978))
+* **New Data Source:** `aws_ivs_stream_key` ([#27789](https://github.com/hashicorp/terraform-provider-aws/issues/27789))
 * **New Resource:** `aws_controltower_control` ([#26990](https://github.com/hashicorp/terraform-provider-aws/issues/26990))
 * **New Resource:** `aws_evidently_feature` ([#27395](https://github.com/hashicorp/terraform-provider-aws/issues/27395))
 * **New Resource:** `aws_ivs_channel` ([#27726](https://github.com/hashicorp/terraform-provider-aws/issues/27726))
@@ -24,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_acm_certificate: Add `key_algorithm` argument in support of [ECDSA TLS certificates](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) ([#27781](https://github.com/hashicorp/terraform-provider-aws/issues/27781))
 * resource/aws_autoscaling_group: Add support for `price-capacity-optimized` `spot_allocation_strategy` value ([#27795](https://github.com/hashicorp/terraform-provider-aws/issues/27795))
 * resource/aws_cloudwatch_logs_group: Add `skip_destroy` argument ([#26775](https://github.com/hashicorp/terraform-provider-aws/issues/26775))
+* resource/aws_cognito_user_pool: Add `sns_region` attribute to `sms_configuration` block ([#26684](https://github.com/hashicorp/terraform-provider-aws/issues/26684))
 * resource/aws_connect_instance: Add `multi_party_conference_enabled` argument ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
 * resource/aws_docdb_cluster_instance: Add `enable_performance_insights` and `performance_insights_kms_key_id` arguments ([#27769](https://github.com/hashicorp/terraform-provider-aws/issues/27769))
 * resource/aws_msk_cluster: Add `storage_mode` argument ([#27546](https://github.com/hashicorp/terraform-provider-aws/issues/27546))
