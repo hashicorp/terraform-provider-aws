@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -136,11 +137,12 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
+	ctx := context.TODO()
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbClusterID := d.Get("cluster_identifier").(string)
-	dbc, err := FindDBClusterByID(conn, dbClusterID)
+	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
 		return fmt.Errorf("reading RDS Cluster (%s): %w", dbClusterID, err)

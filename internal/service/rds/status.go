@@ -51,22 +51,6 @@ func statusDBProxyEndpoint(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusDBCluster(conn *rds.RDS, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBClusterByID(conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func statusDBClusterRole(conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
@@ -83,9 +67,9 @@ func statusDBClusterRole(conn *rds.RDS, dbClusterID, roleARN string) resource.St
 	}
 }
 
-func statusDBClusterActivityStream(conn *rds.RDS, dbClusterArn string) resource.StateRefreshFunc {
+func statusDBClusterActivityStream(ctx context.Context, conn *rds.RDS, dbClusterArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBClusterWithActivityStream(conn, dbClusterArn)
+		output, err := FindDBClusterWithActivityStream(ctx, conn, dbClusterArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -194,7 +194,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
-	tags, err := ListTags(conn, aws.ToString(reservation.ReservedDBInstanceArn))
+	tags, err := ListTagsWithContext(ctx, conn, aws.ToString(reservation.ReservedDBInstanceArn))
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
@@ -219,7 +219,7 @@ func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 		}
 	}
@@ -227,7 +227,7 @@ func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 		}
 	}

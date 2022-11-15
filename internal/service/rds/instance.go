@@ -1095,7 +1095,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
-			_, err = conn.RestoreDBInstanceFromDBSnapshot(input)
+			_, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
 		}
 
 		if err != nil {

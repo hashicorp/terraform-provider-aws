@@ -295,9 +295,9 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Creating RDS Cluster Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateDBInstance(input)
+			return conn.CreateDBInstanceWithContext(ctx, input)
 		},
 		errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -320,7 +320,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 			DBInstanceIdentifier:    aws.String(d.Id()),
 		}
 
-		if _, err := conn.ModifyDBInstance(input); err != nil {
+		if _, err := conn.ModifyDBInstanceWithContext(ctx, input); err != nil {
 			return errs.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
@@ -328,7 +328,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 			return errs.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 
-		_, err = conn.RebootDBInstance(&rds.RebootDBInstanceInput{
+		_, err = conn.RebootDBInstanceWithContext(ctx, &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(d.Id()),
 		})
 		if err != nil {
@@ -364,7 +364,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return errs.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
-	dbc, err := FindDBClusterByID(conn, dbClusterID)
+	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
 		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
@@ -416,7 +416,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
-	tags, err := ListTags(conn, aws.StringValue(db.DBInstanceArn))
+	tags, err := ListTagsWithContext(ctx, conn, aws.StringValue(db.DBInstanceArn))
 
 	if err != nil {
 		return errs.AppendErrorf(diags, "listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
@@ -502,9 +502,9 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		log.Printf("[DEBUG] Updating RDS Cluster Instance: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return conn.ModifyDBInstance(input)
+				return conn.ModifyDBInstanceWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -520,7 +520,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return errs.AppendErrorf(diags, "updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -536,9 +536,9 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
-			return conn.DeleteDBInstance(input)
+			return conn.DeleteDBInstanceWithContext(ctx, input)
 		},
 		rds.ErrCodeInvalidDBClusterStateFault, "Delete the replica cluster before deleting")
 
