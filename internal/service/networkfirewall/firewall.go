@@ -341,7 +341,6 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			respToken, err := waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
-
 			}
 			if respToken == nil {
 				return diag.FromErr(fmt.Errorf("error associating NetworkFirewall Firewall (%s) subnet: empty update_token", arn))
@@ -364,7 +363,6 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err = waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
-
 			}
 		}
 	}

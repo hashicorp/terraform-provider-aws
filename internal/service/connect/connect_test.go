@@ -49,11 +49,23 @@ func TestAccConnect_serial(t *testing.T) {
 			"S3Config_BucketName":                       testAccInstanceStorageConfig_S3Config_BucketName,
 			"S3Config_BucketPrefix":                     testAccInstanceStorageConfig_S3Config_BucketPrefix,
 			"S3Config_EncryptionConfig":                 testAccInstanceStorageConfig_S3Config_EncryptionConfig,
+			"dataSource_KinesisFirehoseConfig":          testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig,
+			"dataSource_KinesisStreamConfig":            testAccInstanceStorageConfigDataSource_KinesisStreamConfig,
+			"dataSource_KinesisVideoStreamConfig":       testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig,
+			"dataSource_S3Config":                       testAccInstanceStorageConfigDataSource_S3Config,
 		},
 		"LambdaFunctionAssociation": {
 			"basic":            testAccLambdaFunctionAssociation_basic,
 			"disappears":       testAccLambdaFunctionAssociation_disappears,
 			"dataSource_basic": testAccLambdaFunctionAssociationDataSource_basic,
+		},
+		"PhoneNumber": {
+			"basic":       testAccPhoneNumber_basic,
+			"disappears":  testAccPhoneNumber_disappears,
+			"tags":        testAccPhoneNumber_tags,
+			"description": testAccPhoneNumber_description,
+			"prefix":      testAccPhoneNumber_prefix,
+			"targetARN":   testAccPhoneNumber_targetARN,
 		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,

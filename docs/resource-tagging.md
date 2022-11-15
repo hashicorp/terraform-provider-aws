@@ -436,4 +436,3 @@ In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`)
 ```markdown
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 ```
-  

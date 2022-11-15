@@ -478,6 +478,502 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 	}
 }
 
+func TestExpandIPPerms(t *testing.T) {
+	hash := schema.HashString
+
+	expanded := []interface{}{
+		map[string]interface{}{
+			"protocol":    "icmp",
+			"from_port":   1,
+			"to_port":     -1,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+			"description": "desc",
+		},
+		map[string]interface{}{
+			"protocol":  "icmp",
+			"from_port": 1,
+			"to_port":   -1,
+			"self":      true,
+		},
+	}
+	group := &ec2.SecurityGroup{
+		GroupId: aws.String("foo"),
+		VpcId:   aws.String("bar"),
+	}
+	perms, err := tfec2.ExpandIPPerms(group, expanded)
+	if err != nil {
+		t.Fatalf("error expanding perms: %v", err)
+	}
+
+	expected := []ec2.IpPermission{
+		{
+			IpProtocol: aws.String("icmp"),
+			FromPort:   aws.Int64(1),
+			ToPort:     aws.Int64(int64(-1)),
+			IpRanges: []*ec2.IpRange{
+				{
+					CidrIp:      aws.String("0.0.0.0/0"),
+					Description: aws.String("desc"),
+				},
+			},
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					UserId:      aws.String("foo"),
+					GroupId:     aws.String("sg-22222"),
+					Description: aws.String("desc"),
+				},
+				{
+					GroupId:     aws.String("sg-11111"),
+					Description: aws.String("desc"),
+				},
+			},
+		},
+		{
+			IpProtocol: aws.String("icmp"),
+			FromPort:   aws.Int64(1),
+			ToPort:     aws.Int64(int64(-1)),
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					GroupId: aws.String("foo"),
+				},
+			},
+		},
+	}
+
+	exp := expected[0]
+	perm := perms[0]
+
+	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.Int64Value(perm.FromPort),
+			aws.Int64Value(exp.FromPort))
+	}
+
+	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.IpRanges[0].CidrIp),
+			aws.StringValue(exp.IpRanges[0].CidrIp))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].UserId) != aws.StringValue(perm.UserIdGroupPairs[0].UserId) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
+			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].GroupId) != aws.StringValue(perm.UserIdGroupPairs[0].GroupId) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].GroupId),
+			aws.StringValue(exp.UserIdGroupPairs[0].GroupId))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[1].GroupId) != aws.StringValue(perm.UserIdGroupPairs[1].GroupId) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[1].GroupId),
+			aws.StringValue(exp.UserIdGroupPairs[1].GroupId))
+	}
+
+	exp = expected[1]
+	perm = perms[1]
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].GroupId) != aws.StringValue(perm.UserIdGroupPairs[0].GroupId) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].GroupId),
+			aws.StringValue(exp.UserIdGroupPairs[0].GroupId))
+	}
+}
+
+func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
+	hash := schema.HashString
+
+	expanded := []interface{}{
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   0,
+			"to_port":     0,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+		},
+	}
+	group := &ec2.SecurityGroup{
+		GroupId: aws.String("foo"),
+		VpcId:   aws.String("bar"),
+	}
+
+	perms, err := tfec2.ExpandIPPerms(group, expanded)
+	if err != nil {
+		t.Fatalf("error expanding perms: %v", err)
+	}
+
+	expected := []ec2.IpPermission{
+		{
+			IpProtocol: aws.String("-1"),
+			FromPort:   aws.Int64(0),
+			ToPort:     aws.Int64(0),
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					UserId:  aws.String("foo"),
+					GroupId: aws.String("sg-22222"),
+				},
+				{
+					GroupId: aws.String("sg-11111"),
+				},
+			},
+		},
+	}
+
+	exp := expected[0]
+	perm := perms[0]
+
+	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.Int64Value(perm.FromPort),
+			aws.Int64Value(exp.FromPort))
+	}
+
+	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.IpRanges[0].CidrIp),
+			aws.StringValue(exp.IpRanges[0].CidrIp))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].UserId) != aws.StringValue(perm.UserIdGroupPairs[0].UserId) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
+			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
+	}
+
+	// Now test the error case. This *should* error when either from_port
+	// or to_port is not zero, but protocol is "-1".
+	errorCase := []interface{}{
+		map[string]interface{}{
+			"protocol":    "-1",
+			"from_port":   0,
+			"to_port":     65535,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+		},
+	}
+	securityGroups := &ec2.SecurityGroup{
+		GroupId: aws.String("foo"),
+		VpcId:   aws.String("bar"),
+	}
+
+	_, expandErr := tfec2.ExpandIPPerms(securityGroups, errorCase)
+	if expandErr == nil {
+		t.Fatal("ExpandIPPerms should have errored!")
+	}
+}
+
+func TestExpandIPPerms_AllProtocol(t *testing.T) {
+	hash := schema.HashString
+
+	expanded := []interface{}{
+		map[string]interface{}{
+			"protocol":    "all",
+			"from_port":   0,
+			"to_port":     0,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+		},
+	}
+	group := &ec2.SecurityGroup{
+		GroupId: aws.String("foo"),
+		VpcId:   aws.String("bar"),
+	}
+
+	perms, err := tfec2.ExpandIPPerms(group, expanded)
+	if err != nil {
+		t.Fatalf("error expanding perms: %v", err)
+	}
+
+	expected := []ec2.IpPermission{
+		{
+			IpProtocol: aws.String("-1"),
+			FromPort:   aws.Int64(0),
+			ToPort:     aws.Int64(0),
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					UserId:  aws.String("foo"),
+					GroupId: aws.String("sg-22222"),
+				},
+				{
+					GroupId: aws.String("sg-11111"),
+				},
+			},
+		},
+	}
+
+	exp := expected[0]
+	perm := perms[0]
+
+	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.Int64Value(perm.FromPort),
+			aws.Int64Value(exp.FromPort))
+	}
+
+	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.IpRanges[0].CidrIp),
+			aws.StringValue(exp.IpRanges[0].CidrIp))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].UserId) != aws.StringValue(perm.UserIdGroupPairs[0].UserId) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
+			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
+	}
+
+	// Now test the error case. This *should* error when either from_port
+	// or to_port is not zero, but protocol is "all".
+	errorCase := []interface{}{
+		map[string]interface{}{
+			"protocol":    "all",
+			"from_port":   0,
+			"to_port":     65535,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+		},
+	}
+	securityGroups := &ec2.SecurityGroup{
+		GroupId: aws.String("foo"),
+		VpcId:   aws.String("bar"),
+	}
+
+	_, expandErr := tfec2.ExpandIPPerms(securityGroups, errorCase)
+	if expandErr == nil {
+		t.Fatal("ExpandIPPerms should have errored!")
+	}
+}
+
+func TestExpandIPPerms_nonVPC(t *testing.T) {
+	hash := schema.HashString
+
+	expanded := []interface{}{
+		map[string]interface{}{
+			"protocol":    "icmp",
+			"from_port":   1,
+			"to_port":     -1,
+			"cidr_blocks": []interface{}{"0.0.0.0/0"},
+			"security_groups": schema.NewSet(hash, []interface{}{
+				"sg-11111",
+				"foo/sg-22222",
+			}),
+		},
+		map[string]interface{}{
+			"protocol":  "icmp",
+			"from_port": 1,
+			"to_port":   -1,
+			"self":      true,
+		},
+	}
+	group := &ec2.SecurityGroup{
+		GroupName: aws.String("foo"),
+	}
+	perms, err := tfec2.ExpandIPPerms(group, expanded)
+	if err != nil {
+		t.Fatalf("error expanding perms: %v", err)
+	}
+
+	expected := []ec2.IpPermission{
+		{
+			IpProtocol: aws.String("icmp"),
+			FromPort:   aws.Int64(1),
+			ToPort:     aws.Int64(int64(-1)),
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					GroupName: aws.String("sg-22222"),
+				},
+				{
+					GroupName: aws.String("sg-11111"),
+				},
+			},
+		},
+		{
+			IpProtocol: aws.String("icmp"),
+			FromPort:   aws.Int64(1),
+			ToPort:     aws.Int64(int64(-1)),
+			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+				{
+					GroupName: aws.String("foo"),
+				},
+			},
+		},
+	}
+
+	exp := expected[0]
+	perm := perms[0]
+
+	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.Int64Value(perm.FromPort),
+			aws.Int64Value(exp.FromPort))
+	}
+
+	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.IpRanges[0].CidrIp),
+			aws.StringValue(exp.IpRanges[0].CidrIp))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
+			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
+	}
+
+	if aws.StringValue(exp.UserIdGroupPairs[1].GroupName) != aws.StringValue(perm.UserIdGroupPairs[1].GroupName) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[1].GroupName),
+			aws.StringValue(exp.UserIdGroupPairs[1].GroupName))
+	}
+
+	exp = expected[1]
+	perm = perms[1]
+
+	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
+			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
+	}
+}
+
+func TestFlattenSecurityGroups(t *testing.T) {
+	cases := []struct {
+		ownerId  *string
+		pairs    []*ec2.UserIdGroupPair
+		expected []*tfec2.GroupIdentifier
+	}{
+		// simple, no user id included (we ignore it mostly)
+		{
+			ownerId: aws.String("user1234"),
+			pairs: []*ec2.UserIdGroupPair{
+				{
+					GroupId: aws.String("sg-12345"),
+				},
+			},
+			expected: []*tfec2.GroupIdentifier{
+				{
+					GroupId: aws.String("sg-12345"),
+				},
+			},
+		},
+		// include the owner id, but keep it consitent with the same account. Tests
+		// EC2 classic situation
+		{
+			ownerId: aws.String("user1234"),
+			pairs: []*ec2.UserIdGroupPair{
+				{
+					GroupId: aws.String("sg-12345"),
+					UserId:  aws.String("user1234"),
+				},
+			},
+			expected: []*tfec2.GroupIdentifier{
+				{
+					GroupId: aws.String("sg-12345"),
+				},
+			},
+		},
+
+		// include the owner id, but from a different account. This is reflects
+		// EC2 Classic when referring to groups by name
+		{
+			ownerId: aws.String("user1234"),
+			pairs: []*ec2.UserIdGroupPair{
+				{
+					GroupId:   aws.String("sg-12345"),
+					GroupName: aws.String("somegroup"), // GroupName is only included in Classic
+					UserId:    aws.String("user4321"),
+				},
+			},
+			expected: []*tfec2.GroupIdentifier{
+				{
+					GroupId:   aws.String("sg-12345"),
+					GroupName: aws.String("user4321/somegroup"),
+				},
+			},
+		},
+
+		// include the owner id, but from a different account. This reflects in
+		// EC2 VPC when referring to groups by id
+		{
+			ownerId: aws.String("user1234"),
+			pairs: []*ec2.UserIdGroupPair{
+				{
+					GroupId: aws.String("sg-12345"),
+					UserId:  aws.String("user4321"),
+				},
+			},
+			expected: []*tfec2.GroupIdentifier{
+				{
+					GroupId: aws.String("user4321/sg-12345"),
+				},
+			},
+		},
+
+		// include description
+		{
+			ownerId: aws.String("user1234"),
+			pairs: []*ec2.UserIdGroupPair{
+				{
+					GroupId:     aws.String("sg-12345"),
+					Description: aws.String("desc"),
+				},
+			},
+			expected: []*tfec2.GroupIdentifier{
+				{
+					GroupId:     aws.String("sg-12345"),
+					Description: aws.String("desc"),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := tfec2.FlattenSecurityGroups(c.pairs, c.ownerId)
+		if !reflect.DeepEqual(out, c.expected) {
+			t.Fatalf("Error matching output and expected: %#v vs %#v", out, c.expected)
+		}
+	}
+}
+
 func TestAccVPCSecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
@@ -502,7 +998,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -533,6 +1029,42 @@ func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCSecurityGroup_noVPC(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupConfig_noVPC(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "data.aws_vpc.default", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+			{
+				Config:   testAccVPCSecurityGroupConfig_defaultVPC(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccVPCSecurityGroupConfig_noVPC(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1339,7 +1871,7 @@ func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1375,7 +1907,7 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1411,7 +1943,7 @@ func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1439,6 +1971,42 @@ func TestAccVPCSecurityGroup_multiIngress(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_multiIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccVPCSecurityGroup_vpcAllEgress(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupConfig_vpcAllEgress(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"protocol":      "-1",
+						"from_port":     "0",
+						"to_port":       "0",
+						"cidr_blocks.#": "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -2198,7 +2766,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 				ExpectError: regexp.MustCompile("unexpected state"),
 			},
@@ -2451,6 +3019,31 @@ resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
 }
 `, rName, namePrefix)
+}
+
+func testAccVPCSecurityGroupConfig_noVPC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupConfig_defaultVPC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = data.aws_vpc.default.id
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+`, rName)
 }
 
 func testAccVPCSecurityGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -3063,6 +3656,34 @@ resource "aws_security_group" "test2" {
     protocol    = "tcp"
     from_port   = 80
     to_port     = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupConfig_vpcAllEgress(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  egress {
+    protocol    = "all"
+    from_port   = 0
+    to_port     = 0
     cidr_blocks = ["10.0.0.0/8"]
   }
 

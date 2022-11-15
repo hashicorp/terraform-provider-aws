@@ -40,7 +40,7 @@ func sweepDirectories(region string) error {
 	}
 	conn := client.(*conns.AWSClient).WorkSpacesConn
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeWorkspaceDirectoriesPages(input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
@@ -83,7 +83,7 @@ func sweepIPGroups(region string) error {
 	}
 	conn := client.(*conns.AWSClient).WorkSpacesConn
 	input := &workspaces.DescribeIpGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeIPGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
 		if page == nil {

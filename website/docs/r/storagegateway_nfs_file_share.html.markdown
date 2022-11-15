@@ -61,7 +61,6 @@ Files and folders stored as Amazon S3 objects in S3 buckets don't, by default, h
  TTL is the length of time since the last refresh after which access to the directory would cause the file gateway
   to first refresh that directory's contents from the Amazon S3 bucket. Valid Values: 300 to 2,592,000 seconds (5 minutes to 30 days)
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -74,7 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `update` - (Default `10m`)

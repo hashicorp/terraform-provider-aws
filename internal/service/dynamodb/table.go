@@ -74,6 +74,14 @@ func ResourceTable() *schema.Resource {
 				}
 				return nil
 			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if diff.Id() != "" && diff.HasChange("stream_enabled") {
+					if err := diff.SetNewComputed("stream_arn"); err != nil {
+						return fmt.Errorf("error setting stream_arn to computed: %s", err)
+					}
+				}
+				return nil
+			},
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 				if v := diff.Get("restore_source_name"); v != "" {
 					return nil
@@ -477,7 +485,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		if output == nil || output.TableDescription == nil {
 			return errors.New("error creating DynamoDB Table: empty response")
 		}
-
 	} else {
 		input := &dynamodb.CreateTableInput{
 			TableName:   aws.String(d.Get("name").(string)),
@@ -685,8 +692,8 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
 	} else {
-		d.Set("stream_view_type", "")
 		d.Set("stream_enabled", false)
+		d.Set("stream_view_type", d.Get("stream_view_type").(string))
 	}
 
 	d.Set("stream_arn", table.LatestStreamArn)
@@ -717,8 +724,8 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	})
-
-	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
+	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException", dynamodb.ErrCodeTableNotFoundException) {
 		return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), fmt.Errorf("continuous backups: %w", err))
 	}
 
@@ -742,8 +749,8 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
+	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), fmt.Errorf("tags: %w", err))
 	}
 
@@ -827,7 +834,21 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
 	}
 
-	if d.HasChanges("stream_enabled", "stream_view_type") {
+	// make change when
+	//   stream_enabled has change (below) OR
+	//   stream_view_type has change and stream_enabled is true (special case)
+	if !d.HasChange("stream_enabled") && d.HasChange("stream_view_type") {
+		if v, ok := d.Get("stream_enabled").(bool); ok && v {
+			// in order to change stream view type:
+			//   1) stream have already been enabled, and
+			//   2) it must be disabled and then reenabled (otherwise, ValidationException: Table already has an enabled stream)
+			if err := cycleStreamEnabled(conn, d.Id(), d.Get("stream_view_type").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("stream_enabled") {
 		hasTableUpdate = true
 
 		input.StreamSpecification = &dynamodb.StreamSpecification{
@@ -1003,6 +1024,43 @@ func isTableOptionDisabled(v interface{}) bool {
 }
 
 // CRUD helpers
+
+// cycleStreamEnabled disables the stream and then re-enables it with streamViewType
+func cycleStreamEnabled(conn *dynamodb.DynamoDB, id string, streamViewType string, timeout time.Duration) error {
+	input := &dynamodb.UpdateTableInput{
+		TableName: aws.String(id),
+	}
+	input.StreamSpecification = &dynamodb.StreamSpecification{
+		StreamEnabled: aws.Bool(false),
+	}
+
+	_, err := conn.UpdateTable(input)
+
+	if err != nil {
+		return fmt.Errorf("cycling stream enabled: %s", err)
+	}
+
+	if _, err := waitTableActive(conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for stream cycle: %s", err)
+	}
+
+	input.StreamSpecification = &dynamodb.StreamSpecification{
+		StreamEnabled:  aws.Bool(true),
+		StreamViewType: aws.String(streamViewType),
+	}
+
+	_, err = conn.UpdateTable(input)
+
+	if err != nil {
+		return fmt.Errorf("cycling stream enabled: %s", err)
+	}
+
+	if _, err := waitTableActive(conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for stream cycle: %s", err)
+	}
+
+	return nil
+}
 
 func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interface{}, tfVersion string, create bool, timeout time.Duration) error {
 	for _, tfMapRaw := range tfList {
@@ -1469,8 +1527,8 @@ func replicaPITR(conn *dynamodb.DynamoDB, tableName string, region string, tfVer
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	})
-
-	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
+	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException", dynamodb.ErrCodeTableNotFoundException) {
 		return false, fmt.Errorf("describing Continuous Backups: %w", err)
 	}
 

@@ -90,7 +90,6 @@ func testAccCheckReceiptRuleSetDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckReceiptRuleSetExists(n string) resource.TestCheckFunc {

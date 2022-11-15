@@ -82,3 +82,53 @@ func FindEndpointAccessByName(conn *redshiftserverless.RedshiftServerless, name 
 
 	return output.Endpoint, nil
 }
+
+func FindUsageLimitByName(conn *redshiftserverless.RedshiftServerless, id string) (*redshiftserverless.UsageLimit, error) {
+	input := &redshiftserverless.GetUsageLimitInput{
+		UsageLimitId: aws.String(id),
+	}
+
+	output, err := conn.GetUsageLimit(input)
+
+	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeValidationException, "does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.UsageLimit, nil
+}
+
+func FindSnapshotByName(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Snapshot, error) {
+	input := &redshiftserverless.GetSnapshotInput{
+		SnapshotName: aws.String(name),
+	}
+
+	output, err := conn.GetSnapshot(input)
+
+	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeResourceNotFoundException, "snapshot") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Snapshot, nil
+}

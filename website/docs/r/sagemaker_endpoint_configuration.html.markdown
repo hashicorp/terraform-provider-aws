@@ -12,7 +12,6 @@ Provides a SageMaker endpoint configuration resource.
 
 ## Example Usage
 
-
 Basic usage:
 
 ```terraform

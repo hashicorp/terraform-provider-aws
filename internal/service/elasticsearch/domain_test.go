@@ -99,8 +99,8 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 	customEndpoint := fmt.Sprintf("%s.example.com", rName)
 	certResourceName := "aws_acm_certificate.test"
-	certKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(certKey, customEndpoint)
+	certKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, certKey, customEndpoint)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1744,7 +1744,6 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("Elasticsearch domain %s still exists", rs.Primary.ID)
-
 	}
 	return nil
 }

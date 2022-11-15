@@ -356,3 +356,75 @@ func FindEndpointAccessByName(conn *redshift.Redshift, name string) (*redshift.E
 
 	return output.EndpointAccessList[0], nil
 }
+
+func FindEndpointAuthorizationById(conn *redshift.Redshift, id string) (*redshift.EndpointAuthorization, error) {
+	account, clusterId, err := DecodeEndpointAuthorizationID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &redshift.DescribeEndpointAuthorizationInput{
+		Account:           aws.String(account),
+		ClusterIdentifier: aws.String(clusterId),
+	}
+
+	output, err := conn.DescribeEndpointAuthorization(input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointAuthorizationNotFoundFault) || tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.EndpointAuthorizationList) == 0 || output.EndpointAuthorizationList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.EndpointAuthorizationList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.EndpointAuthorizationList[0], nil
+}
+
+func FindPartnerById(conn *redshift.Redshift, id string) (*redshift.PartnerIntegrationInfo, error) {
+	account, clusterId, dbName, partnerName, err := DecodePartnerID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &redshift.DescribePartnersInput{
+		AccountId:         aws.String(account),
+		ClusterIdentifier: aws.String(clusterId),
+		DatabaseName:      aws.String(dbName),
+		PartnerName:       aws.String(partnerName),
+	}
+
+	output, err := conn.DescribePartners(input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.PartnerIntegrationInfoList) == 0 || output.PartnerIntegrationInfoList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.PartnerIntegrationInfoList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.PartnerIntegrationInfoList[0], nil
+}

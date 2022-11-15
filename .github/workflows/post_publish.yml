@@ -27,10 +27,10 @@ jobs:
         id: release-tag
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo ::set-output name=tag::${{ github.event.inputs.release-tag }}
+            echo "tag=${{ github.event.inputs.release-tag }}" >> "$GITHUB_OUTPUT"
           else
             value=`cat release-tag.data`
-            echo ::set-output name=tag::$value
+            echo "tag=$value" >> "$GITHUB_OUTPUT"
           fi
   tidy-asana:
     needs: [on-success-or-workflow-dispatch]

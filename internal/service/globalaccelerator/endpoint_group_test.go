@@ -1,6 +1,7 @@
 package globalaccelerator_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -141,8 +142,8 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
 				),
 			},
-			{
-				Config: testAccEndpointGroupConfig_baseVPC(rName),
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
@@ -193,8 +194,8 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccEndpointGroupConfig_baseVPC(rName),
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
@@ -426,10 +427,10 @@ func testAccCheckEndpointGroupExists(name string, v *globalaccelerator.EndpointG
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Global Accelerator endpoint group ID is set")
+			return fmt.Errorf("No Global Accelerator Endpoint Group ID is set")
 		}
 
-		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(conn, rs.Primary.ID)
+		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -449,7 +450,7 @@ func testAccCheckEndpointGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfglobalaccelerator.FindEndpointGroupByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindEndpointGroupByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -459,7 +460,7 @@ func testAccCheckEndpointGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Global Accelerator endpoint group %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Global Accelerator Endpoint Group %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
@@ -468,20 +469,26 @@ func testAccCheckEndpointGroupDestroy(s *terraform.State) error {
 // placed into the VPC when Global Accelerator client IP address preservation is enabled.
 func testAccCheckEndpointGroupDeleteSecurityGroup(vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		meta := acctest.Provider.Meta()
+		conn := meta.(*conns.AWSClient).EC2Conn
 
-		sg, err := tfec2.FindSecurityGroupByNameAndVPCID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+		v, err := tfec2.FindSecurityGroupByNameAndVPCID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+
 		if tfresource.NotFound(err) {
 			// Already gone.
 			return nil
 		}
+
 		if err != nil {
 			return err
 		}
 
-		_, err = conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: sg.GroupId,
-		})
+		r := tfec2.ResourceSecurityGroup()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(v.GroupId))
+		d.Set("revoke_rules_on_delete", true)
+
+		err = acctest.DeleteResource(r, d, meta)
 
 		return err
 	}
@@ -511,47 +518,16 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 `, rName)
 }
 
-func testAccEndpointGroupConfig_baseVPC(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
 func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		testAccEndpointGroupConfig_baseVPC(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = false
   security_groups = [aws_security_group.test.id]
-  subnets         = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list
-}
-
-resource "aws_subnet" "test" {
-  count             = length(var.subnets)
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = element(var.subnets, count.index)
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = %[1]q
@@ -626,21 +602,10 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 
 func testAccEndpointGroupConfig_instance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		testAccEndpointGroupConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -652,7 +617,7 @@ resource "aws_internet_gateway" "test" {
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.test.id
+  subnet_id     = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q

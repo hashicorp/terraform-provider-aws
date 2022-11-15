@@ -41,7 +41,6 @@ The following arguments are supported:
 * `solution_stack_name` – (Optional) A solution stack to base your Template
 off of. Example stacks can be found in the [Amazon API documentation][1]
 
-
 ## Option Settings
 
 The `setting` field supports the following format:

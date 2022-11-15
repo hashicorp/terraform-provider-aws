@@ -1,7 +1,6 @@
 package opsworks
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -112,10 +111,10 @@ func ResourceStack() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 			"default_availability_zone": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"vpc_id"},
 			},
 			"default_instance_profile_arn": {
 				Type:     schema.TypeString,
@@ -182,11 +181,11 @@ func ResourceStack() *schema.Resource {
 				Default:  true,
 			},
 			"vpc_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Computed:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"default_availability_zone"},
 			},
 		},
 
@@ -198,10 +197,6 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if _, ok := d.GetOk("vpc_id"); !ok {
-		return errors.New(`with the retirement of EC2-Classic no new OpsWorks Stacks can be created without referencing a VPC`)
-	}
 
 	name := d.Get("name").(string)
 	region := d.Get("region").(string)
@@ -265,7 +260,6 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VpcId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating OpsWorks Stack: %s", input)
 	outputRaw, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateStack(input)
@@ -534,7 +528,6 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.UseOpsworksSecurityGroups = aws.Bool(d.Get("use_opsworks_security_groups").(bool))
 		}
 
-		log.Printf("[DEBUG] Updating OpsWorks Stack: %s", input)
 		_, err = conn.UpdateStack(input)
 
 		if err != nil {

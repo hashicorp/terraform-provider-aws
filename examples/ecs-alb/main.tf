@@ -38,7 +38,7 @@ resource "aws_route_table" "r" {
 
 resource "aws_route_table_association" "a" {
   count          = var.az_count
-  subnet_id      = element(aws_subnet.main.*.id, count.index)
+  subnet_id      = element(aws_subnet.main[*].id, count.index)
   route_table_id = aws_route_table.r.id
 }
 
@@ -46,7 +46,7 @@ resource "aws_route_table_association" "a" {
 
 resource "aws_autoscaling_group" "app" {
   name                 = "tf-test-asg"
-  vpc_zone_identifier  = aws_subnet.main.*.id
+  vpc_zone_identifier  = aws_subnet.main[*].id
   min_size             = var.asg_min
   max_size             = var.asg_max
   desired_capacity     = var.asg_desired
@@ -283,7 +283,7 @@ resource "aws_alb_target_group" "test" {
 
 resource "aws_alb" "main" {
   name            = "tf-example-alb-ecs"
-  subnets         = aws_subnet.main.*.id
+  subnets         = aws_subnet.main[*].id
   security_groups = [aws_security_group.lb_sg.id]
 }
 

@@ -46,6 +46,24 @@ func ResourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"comment": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Managed by Terraform",
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"delegation_set_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"vpc"},
+				ValidateFunc:  validation.StringLenBetween(0, 32),
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				// AWS Provider 3.0.0 - trailing period removed from name
 				// returned from API, no longer requiring custom DiffSuppressFunc;
@@ -57,14 +75,17 @@ func ResourceZone() *schema.Resource {
 				StateFunc:    TrimTrailingPeriod,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-
-			"comment": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 256),
+			"name_servers": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
 			},
-
+			"primary_name_server": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -86,33 +107,9 @@ func ResourceZone() *schema.Resource {
 				},
 				Set: hostedZoneVPCHash,
 			},
-
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"delegation_set_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"vpc"},
-				ValidateFunc:  validation.StringLenBetween(0, 32),
-			},
-
-			"name_servers": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 
@@ -185,27 +182,16 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &route53.GetHostedZoneInput{
-		Id: aws.String(d.Id()),
-	}
+	output, err := FindHostedZoneByID(conn, d.Id())
 
-	log.Printf("[DEBUG] Getting Route53 Hosted Zone: %s", input)
-	output, err := conn.GetHostedZone(input)
-
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-		log.Printf("[WARN] Route53 Hosted Zone (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Hosted Zone %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("getting Route53 Hosted Zone (%s): %s", d.Id(), err)
-	}
-
-	if output == nil || output.HostedZone == nil {
-		log.Printf("[WARN] Route53 Hosted Zone (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading Route53 Hosted Zone (%s): %w", d.Id(), err)
 	}
 
 	d.Set("comment", "")
@@ -234,6 +220,10 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("getting Route53 Hosted Zone (%s) name servers: %s", d.Id(), err)
 			}
 		}
+	}
+
+	if err := d.Set("primary_name_server", nameServers[0]); err != nil {
+		return fmt.Errorf("setting primary_name_server: %s", err)
 	}
 
 	sort.Strings(nameServers)
@@ -432,7 +422,7 @@ func dnsSECStatus(conn *route53.Route53, hostedZoneID string) (string, error) {
 	}
 
 	var output *route53.GetDNSSECOutput
-	err := tfresource.RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 30*time.Second, 3*time.Minute, func() *resource.RetryError {
+	err := tfresource.RetryContext(context.Background(), 3*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetDNSSEC(input)
@@ -447,7 +437,7 @@ func dnsSECStatus(conn *route53.Route53, hostedZoneID string) (string, error) {
 		}
 
 		return nil
-	})
+	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
 
 	if tfresource.TimedOut(err) {
 		output, err = conn.GetDNSSEC(input)
@@ -488,7 +478,7 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 	}
 
 	var output *route53.DisableHostedZoneDNSSECOutput
-	err = tfresource.RetryConfigContext(context.Background(), 0*time.Millisecond, 1*time.Minute, 0*time.Millisecond, 20*time.Second, 5*time.Minute, func() *resource.RetryError {
+	err = tfresource.RetryContext(context.Background(), 5*time.Minute, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DisableHostedZoneDNSSEC(input)
@@ -503,7 +493,7 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 		}
 
 		return nil
-	})
+	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(20*time.Second))
 
 	if tfresource.TimedOut(err) {
 		output, err = conn.DisableHostedZoneDNSSEC(input)
@@ -535,7 +525,6 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 }
 
 func resourceGoWait(r53 *route53.Route53, ref *route53.GetChangeInput) (result interface{}, state string, err error) {
-
 	status, err := r53.GetChange(ref)
 	if err != nil {
 		return nil, "UNKNOWN", err

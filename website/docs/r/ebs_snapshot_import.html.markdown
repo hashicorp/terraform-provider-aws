@@ -32,7 +32,6 @@ resource "aws_ebs_snapshot_import" "example" {
 
 ## Argument Reference
 
-
 The following arguments are supported:
 
 * `client_data` - (Optional) The client-specific data. Detailed below.
@@ -67,7 +66,7 @@ The following arguments are supported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `60m`)
 - `delete` - (Default `10m`)

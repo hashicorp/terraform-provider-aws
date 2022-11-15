@@ -113,7 +113,6 @@ func TestAccElasticTranscoderPipeline_notifications(t *testing.T) {
 func testAccCheckPipeline_notifications(
 	p *elastictranscoder.Pipeline, notifications []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		var notes []string
 		if aws.StringValue(p.Notifications.Completed) != "" {
 			notes = append(notes, "completed")

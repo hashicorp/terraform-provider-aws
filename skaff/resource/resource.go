@@ -3,7 +3,9 @@ package resource
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -23,16 +25,17 @@ var resourceTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	Resource          string
-	ResourceLower     string
-	ResourceSnake     string
-	IncludeComments   bool
-	ServicePackage    string
-	Service           string
-	ServiceLower      string
-	AWSServiceName    string
-	AWSGoSDKV2        bool
-	HumanResourceName string
+	Resource             string
+	ResourceLower        string
+	ResourceSnake        string
+	HumanFriendlyService string
+	IncludeComments      bool
+	ServicePackage       string
+	Service              string
+	ServiceLower         string
+	AWSServiceName       string
+	AWSGoSDKV2           bool
+	HumanResourceName    string
 }
 
 func ToSnakeCase(upper string, snakeName string) string {
@@ -87,17 +90,23 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
+	hf, err := names.HumanFriendly(servicePackage)
+	if err != nil {
+		return fmt.Errorf("error getting human-friendly name: %w", err)
+	}
+
 	templateData := TemplateData{
-		Resource:          resName,
-		ResourceLower:     strings.ToLower(resName),
-		ResourceSnake:     snakeName,
-		IncludeComments:   comments,
-		ServicePackage:    servicePackage,
-		Service:           s,
-		ServiceLower:      strings.ToLower(s),
-		AWSServiceName:    sn,
-		AWSGoSDKV2:        v2,
-		HumanResourceName: HumanResName(resName),
+		Resource:             resName,
+		ResourceLower:        strings.ToLower(resName),
+		ResourceSnake:        snakeName,
+		HumanFriendlyService: hf,
+		IncludeComments:      comments,
+		ServicePackage:       servicePackage,
+		Service:              s,
+		ServiceLower:         strings.ToLower(s),
+		AWSServiceName:       sn,
+		AWSGoSDKV2:           v2,
+		HumanResourceName:    HumanResName(resName),
 	}
 
 	f := fmt.Sprintf("%s.go", snakeName)
@@ -120,7 +129,7 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 }
 
 func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
-	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
+	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}
 

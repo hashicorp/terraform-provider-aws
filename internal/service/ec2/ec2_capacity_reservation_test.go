@@ -44,6 +44,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 				),
@@ -354,8 +355,6 @@ func TestAccEC2CapacityReservation_tags(t *testing.T) {
 }
 
 func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
-	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
-	acctest.Skip(t, "EC2 Capacity Reservations do not currently support dedicated tenancy.")
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -429,7 +428,6 @@ func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccPreCheckCapacityReservation(t *testing.T) {
@@ -604,10 +602,10 @@ resource "aws_ec2_capacity_reservation" "test" {
 func testAccCapacityReservationConfig_tenancy(rName, tenancy string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[1]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
-  instance_type     = "t2.micro"
+  instance_type     = "a1.4xlarge"
   tenancy           = %[2]q
 
   tags = {
