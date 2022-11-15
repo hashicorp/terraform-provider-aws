@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io/ioutil" // TODO
 	"log"
 	"math/rand"
 	"net/http"
@@ -317,8 +317,8 @@ func writeSeedToFile(seed int64, fileName string) error {
 	return nil
 }
 
-// closeVCRRecorder closes the VCR recorder, saving the cassette.
-func closeVCRRecorder(t *testing.T) {
+// CloseVCRRecorder closes the VCR recorder, saving the cassette.
+func CloseVCRRecorder(t *testing.T) {
 	testName := t.Name()
 	providerStatesLock.RLock()
 	v, ok := providerStates[testName]
@@ -358,7 +358,7 @@ func ParallelTest(t *testing.T, c resource.TestCase) {
 	if isVCREnabled() {
 		log.Print("[DEBUG] initializing VCR")
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		defer CloseVCRRecorder(t)
 	} else {
 		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
 	}
@@ -371,7 +371,7 @@ func Test(t *testing.T, c resource.TestCase) {
 	if isVCREnabled() {
 		log.Print("[DEBUG] initializing VCR")
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		defer CloseVCRRecorder(t)
 	} else {
 		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
 	}
