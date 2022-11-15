@@ -31,6 +31,7 @@ const (
 	MediaLiveEndpointID        = "medialive"
 	RolesAnywhereEndpointID    = "rolesanywhere"
 	Route53DomainsEndpointID   = "route53domains"
+	SchedulerEndpointID        = "scheduler"
 	SESV2EndpointID            = "sesv2"
 	SSMEndpointID              = "ssm"
 	TranscribeEndpointID       = "transcribe"

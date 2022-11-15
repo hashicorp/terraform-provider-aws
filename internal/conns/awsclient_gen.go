@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -597,6 +598,7 @@ type AWSClient struct {
 	SageMakerFeatureStoreRuntimeConn *sagemakerfeaturestoreruntime.SageMakerFeatureStoreRuntime
 	SageMakerRuntimeConn             *sagemakerruntime.SageMakerRuntime
 	SavingsPlansConn                 *savingsplans.SavingsPlans
+	SchedulerClient                  *scheduler.Client
 	SchemasConn                      *schemas.Schemas
 	SecretsManagerConn               *secretsmanager.SecretsManager
 	SecurityHubConn                  *securityhub.SecurityHub

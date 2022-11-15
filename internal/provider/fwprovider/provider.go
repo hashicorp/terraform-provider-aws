@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -350,10 +349,6 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
 
-	resources = append(resources, func() resource.Resource {
-		return medialive.NewResourceMultiplexProgram(ctx)
-	})
-
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		for _, v := range sp.FrameworkResources(ctx) {
 			v, err := v(ctx)
@@ -504,4 +499,10 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 	}
 
 	return nil
+}
+
+func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
+		v.ValidateConfig(ctx, request, response)
+	}
 }
