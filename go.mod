@@ -22,7 +22,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.11
 	github.com/beevik/etree v1.1.0
-	github.com/dnaeon/go-vcr/v2 v2.0.1
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.18
@@ -48,6 +47,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/tools v0.1.12
+	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -118,5 +118,6 @@ require (
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	syreclabs.com/go/faker v1.2.3
 )

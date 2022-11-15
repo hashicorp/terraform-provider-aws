@@ -20,8 +20,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/dnaeon/go-vcr/v2/cassette"
-	"github.com/dnaeon/go-vcr/v2/recorder"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -29,6 +27,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"gopkg.in/dnaeon/go-vcr.v3/cassette"
+	"gopkg.in/dnaeon/go-vcr.v3/recorder"
 )
 
 const (
@@ -69,11 +69,11 @@ func isVCREnabled() bool {
 func vcrMode() (recorder.Mode, error) {
 	switch v := os.Getenv(envVarVCRMode); v {
 	case "RECORDING":
-		return recorder.ModeRecording, nil
+		return recorder.ModeRecordOnce, nil
 	case "REPLAYING":
-		return recorder.ModeReplaying, nil
+		return recorder.ModeReplayOnly, nil
 	default:
-		return recorder.ModeDisabled, fmt.Errorf("unsupported value for %s: %s", envVarVCRMode, v)
+		return recorder.ModePassthrough, fmt.Errorf("unsupported value for %s: %s", envVarVCRMode, v)
 	}
 }
 
@@ -134,22 +134,26 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 			}
 		})
 
-		recorder, err := recorder.NewAsMode(path, vcrMode, meta.Session.Config.HTTPClient.Transport)
+		r, err := recorder.NewWithOptions(&recorder.Options{
+			CassetteName:  path,
+			Mode:          vcrMode,
+			RealTransport: meta.Session.Config.HTTPClient.Transport,
+		})
 
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
 
 		// Remove sensitive HTTP headers.
-		recorder.AddFilter(func(i *cassette.Interaction) error {
+		r.AddHook(func(i *cassette.Interaction) error {
 			delete(i.Request.Headers, "Authorization")
 			delete(i.Request.Headers, "X-Amz-Security-Token")
 
 			return nil
-		})
+		}, recorder.AfterCaptureHook)
 
 		// Defines how VCR will match requests to responses.
-		recorder.SetMatcher(func(r *http.Request, i cassette.Request) bool {
+		r.SetMatcher(func(r *http.Request, i cassette.Request) bool {
 			// Default matcher compares method and URL only.
 			if !cassette.DefaultMatcher(r, i) {
 				return false
@@ -210,7 +214,7 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 			return false
 		})
 
-		meta.Session.Config.HTTPClient.Transport = recorder
+		meta.Session.Config.HTTPClient.Transport = r
 
 		providerMetasLock.Lock()
 		providerMetas[testName] = meta
@@ -241,13 +245,13 @@ func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 	}
 
 	switch vcrMode {
-	case recorder.ModeRecording:
+	case recorder.ModeRecordOnce:
 		seed := rand.Int63()
 		s = &randomnessSource{
 			seed:   seed,
 			source: rand.NewSource(seed),
 		}
-	case recorder.ModeReplaying:
+	case recorder.ModeReplayOnly:
 		seed, err := readSeedFromFile(vcrSeedFile(os.Getenv(envVarVCRPath), testName))
 
 		if err != nil {
