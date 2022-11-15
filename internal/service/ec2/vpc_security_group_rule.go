@@ -103,6 +103,10 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"security_group_rule_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"self": {
 				Type:          schema.TypeBool,
 				Optional:      true,
@@ -165,6 +169,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 		input := &ec2.AuthorizeSecurityGroupIngressInput{
 			IpPermissions: []*ec2.IpPermission{ipPermission},
 		}
+		var output *ec2.AuthorizeSecurityGroupIngressOutput
 
 		if isVPC {
 			input.GroupId = sg.GroupId
@@ -172,15 +177,24 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 			input.GroupName = sg.GroupName
 		}
 
-		_, err = conn.AuthorizeSecurityGroupIngress(input)
+		output, err = conn.AuthorizeSecurityGroupIngress(input)
+
+		if err != nil && len(output.SecurityGroupRules) == 1 {
+			d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+		}
 
 	case securityGroupRuleTypeEgress:
 		input := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       sg.GroupId,
 			IpPermissions: []*ec2.IpPermission{ipPermission},
 		}
+		var output *ec2.AuthorizeSecurityGroupEgressOutput
 
-		_, err = conn.AuthorizeSecurityGroupEgress(input)
+		output, err = conn.AuthorizeSecurityGroupEgress(input)
+
+		if err != nil && len(output.SecurityGroupRules) == 1 {
+			d.Set("security_group_rule_id", output.SecurityGroupRules[0].SecurityGroupRuleId)
+		}
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionDuplicate) {
