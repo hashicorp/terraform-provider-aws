@@ -316,7 +316,7 @@ func writeSeedToFile(seed int64, fileName string) error {
 	return nil
 }
 
-// CloseVCRRecorder closes the VCR recorder, saving the cassette.
+// CloseVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
 func CloseVCRRecorder(t *testing.T) {
 	testName := t.Name()
 	providerMetasLock.RLock()
