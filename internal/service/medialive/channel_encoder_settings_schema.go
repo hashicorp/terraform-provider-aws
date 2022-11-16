@@ -929,6 +929,31 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
+													"key_provider_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"static_key_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"static_key_value": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"key_provider_server": func() *schema.Schema {
+																				return inputLocationSchema()
+																			}(),
+																		},
+																	},
+																},
+															},
+														},
+													},
 													"manifest_compression": {
 														Type:             schema.TypeString,
 														Optional:         true,
@@ -1595,7 +1620,24 @@ func channelEncoderSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				// TODO avail_blanking
+				"avail_blanking": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"avail_blanking_image": func() *schema.Schema {
+								return inputLocationSchema()
+							}(),
+							"state": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
 				// TODO avail_configuration
 				// TODO blackout_slate
 				// TODO caption_descriptions
@@ -1832,29 +1874,9 @@ func hlsSettingsSchema() *schema.Schema {
 								Optional: true,
 								Computed: true,
 							},
-							"audio_only_image": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"uri": {
-											Type:     schema.TypeString,
-											Required: true,
-										},
-										"password_param": {
-											Type:     schema.TypeString,
-											Optional: true,
-											Computed: true,
-										},
-										"username": {
-											Type:     schema.TypeString,
-											Optional: true,
-											Computed: true,
-										},
-									},
-								},
-							},
+							"audio_only_image": func() *schema.Schema {
+								return inputLocationSchema()
+							}(),
 							"audio_track_type": {
 								Type:             schema.TypeString,
 								Optional:         true,
@@ -2324,7 +2346,7 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v.List())
 	}
 	if v, ok := m["avail_blanking"].([]interface{}); ok && len(v) > 0 {
-		settings.AvailBlanking = nil // TODO expandChannelEncoderSettingsAvailBlanking(v)
+		settings.AvailBlanking = expandChannelEncoderSettingsAvailBlanking(v)
 	}
 	if v, ok := m["avail_configuration"].([]interface{}); ok && len(v) > 0 {
 		settings.AvailConfiguration = nil // TODO expandChannelEncoderSettingsAvailConfiguration(v)
@@ -4171,6 +4193,24 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 	return videoDesc
 }
 
+func expandChannelEncoderSettingsAvailBlanking(tfList []interface{}) *types.AvailBlanking {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AvailBlanking
+	if v, ok := m["avail_blanking_image"].([]interface{}); ok && len(v) > 0 {
+		out.AvailBlankingImage = expandInputLocation(v)
+	}
+	if v, ok := m["state"].(string); ok && v != "" {
+		out.State = types.AvailBlankingState(v)
+	}
+
+	return &out
+}
+
 func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []interface{}) *types.VideoCodecSettings {
 	if tfList == nil {
 		return nil
@@ -4421,7 +4461,7 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 		"output_groups":      flattenOutputGroups(apiObject.OutputGroups),
 		"timecode_config":    flattenTimecodeConfig(apiObject.TimecodeConfig),
 		"video_descriptions": flattenVideoDescriptions(apiObject.VideoDescriptions),
-		// TODO avail_blanking
+		"avail_blanking":     flattenAvailBlanking(apiObject.AvailBlanking),
 		// TODO avail_configuration
 		// TODO blackout_slate
 		// TODO caption_descriptions
@@ -5297,6 +5337,19 @@ func flattenVideoDescriptions(tfList []types.VideoDescription) []interface{} {
 		out = append(out, m)
 	}
 	return out
+}
+
+func flattenAvailBlanking(in *types.AvailBlanking) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"avail_blanking_image": flattenInputLocation(in.AvailBlankingImage),
+		"state":                string(in.State),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenVideoDescriptionsCodecSettings(in *types.VideoCodecSettings) []interface{} {
