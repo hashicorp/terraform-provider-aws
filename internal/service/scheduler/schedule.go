@@ -50,6 +50,11 @@ func ResourceSchedule() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"maximum_window_in_minutes": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 1440)),
+						},
 						"mode": {
 							Type:     schema.TypeString,
 							Required: true,

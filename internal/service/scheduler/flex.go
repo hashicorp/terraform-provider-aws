@@ -12,8 +12,12 @@ func expandFlexibleTimeWindow(tfMap map[string]interface{}) *types.FlexibleTimeW
 
 	a := &types.FlexibleTimeWindow{}
 
-	if v, ok := tfMap["mode"].(string); ok && v != "" {
-		a.Mode = types.FlexibleTimeWindowMode(v)
+	if v, ok := tfMap["maximum_window_in_minutes"]; ok && v.(int) != 0 {
+		a.MaximumWindowInMinutes = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := tfMap["mode"]; ok && v.(string) != "" {
+		a.Mode = types.FlexibleTimeWindowMode(v.(string))
 	}
 
 	return a
@@ -25,6 +29,10 @@ func flattenFlexibleTimeWindow(apiObject *types.FlexibleTimeWindow) map[string]i
 	}
 
 	m := map[string]interface{}{}
+
+	if v := aws.ToInt32(apiObject.MaximumWindowInMinutes); v != 0 {
+		m["maximum_window_in_minutes"] = int(v)
+	}
 
 	if v := apiObject.Mode; v != "" {
 		m["mode"] = string(v)

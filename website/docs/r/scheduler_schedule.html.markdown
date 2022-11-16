@@ -53,6 +53,7 @@ The following arguments are optional:
 
 ### flexible_time_window Configuration Block
 
+* `maximum_window_in_minutes` - (Optional) Maximum time window during which a schedule can be invoked. Between 1 and 1440 minutes.
 * `mode` - (Required) Determines whether the schedule is invoked within a flexible time window. Valid values: `OFF`, `FLEXIBLE`.
 
 ### target Configuration Block
