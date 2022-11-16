@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -232,6 +234,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
+	client.IVSChatClient = ivschat.NewFromConfig(cfg, func(o *ivschat.Options) {
+		if endpoint := c.Endpoints[names.IVSChat]; endpoint != "" {
+			o.EndpointResolver = ivschat.EndpointResolverFromURL(endpoint)
+		}
+	})
+
 	client.KendraClient = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
@@ -262,6 +270,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.S3ControlClient = s3control.NewFromConfig(cfg, func(o *s3control.Options) {
 		if endpoint := c.Endpoints[names.S3Control]; endpoint != "" {
 			o.EndpointResolver = s3control.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.SchedulerClient = scheduler.NewFromConfig(cfg, func(o *scheduler.Options) {
+		if endpoint := c.Endpoints[names.Scheduler]; endpoint != "" {
+			o.EndpointResolver = scheduler.EndpointResolverFromURL(endpoint)
 		}
 	})
 

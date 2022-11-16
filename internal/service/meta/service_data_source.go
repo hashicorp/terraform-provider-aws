@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
@@ -24,7 +24,7 @@ func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type dataSourceService struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -81,15 +81,6 @@ func (d *dataSourceService) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceService) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -134,7 +125,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.Region.IsNull() {
-		data.Region = types.String{Value: d.meta.Region}
+		data.Region = types.String{Value: d.Meta().Region}
 	}
 
 	if data.ServiceID.IsNull() {
@@ -144,7 +135,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.ReverseDNSPrefix.IsNull() {
-		dnsParts := strings.Split(d.meta.DNSSuffix, ".")
+		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
 		data.ReverseDNSPrefix = types.String{Value: strings.Join(slices.Reverse(dnsParts), ".")}
 	}
 

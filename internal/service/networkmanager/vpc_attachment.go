@@ -269,6 +269,20 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
+	// If ResourceAttachmentAccepter is used, then VPC Attachment state
+	// is not updated from StatePendingAttachmentAcceptance and the delete fails if deleted immediately after create
+	output, sErr := FindVPCAttachmentByID(ctx, conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(sErr, networkmanager.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if sErr != nil {
+		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), sErr)
+	}
+
+	d.Set("state", output.Attachment.State)
+
 	if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
 		return diag.Errorf("cannot delete Network Manager VPC Attachment (%s) in %s state", d.Id(), state)
 	}

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -27,7 +27,7 @@ func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type dataSourceAccelerator struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -90,20 +90,11 @@ func (d *dataSourceAccelerator) GetSchema(context.Context) (tfsdk.Schema, diag.D
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsAttributeComputed(),
+			"tags": tftags.TagsAttributeComputedOnly(),
 		},
 	}
 
 	return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceAccelerator) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -117,8 +108,8 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	conn := d.meta.GlobalAcceleratorConn
-	ignoreTagsConfig := d.meta.IgnoreTagsConfig
+	conn := d.Meta().GlobalAcceleratorConn
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator
 	err := conn.ListAcceleratorsPagesWithContext(ctx, &globalaccelerator.ListAcceleratorsInput{}, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -56,9 +57,9 @@ func ResourceConfigurationSet() *schema.Resource {
 							Optional: true,
 						},
 						"tls_policy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(tlsPolicyValues(types.TlsPolicy("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.TlsPolicy](),
 						},
 					},
 				},
@@ -108,8 +109,8 @@ func ResourceConfigurationSet() *schema.Resource {
 							Optional: true,
 							MinItems: 1,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(suppressionListReasonValues(types.SuppressionListReason("").Values()), false),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[types.SuppressionListReason](),
 							},
 						},
 					},
@@ -603,24 +604,4 @@ func expandTrackingOptions(tfMap map[string]interface{}) *types.TrackingOptions 
 	}
 
 	return a
-}
-
-func tlsPolicyValues(in []types.TlsPolicy) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
-}
-
-func suppressionListReasonValues(in []types.SuppressionListReason) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
 }

@@ -29,7 +29,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/aws/aws-sdk-go/service/auditmanager"
 	"github.com/aws/aws-sdk-go/service/augmentedairuntime"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
@@ -317,7 +316,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.ApplicationCostProfilerConn = applicationcostprofiler.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ApplicationCostProfiler])}))
 	client.ApplicationInsightsConn = applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ApplicationInsights])}))
 	client.AthenaConn = athena.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Athena])}))
-	client.AuditManagerConn = auditmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AuditManager])}))
 	client.AutoScalingConn = autoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AutoScaling])}))
 	client.AutoScalingPlansConn = autoscalingplans.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AutoScalingPlans])}))
 	client.BackupConn = backup.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Backup])}))

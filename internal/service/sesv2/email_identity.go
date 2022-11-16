@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -83,11 +84,11 @@ func ResourceEmailIdentity() *schema.Resource {
 							Computed: true,
 						},
 						"next_signing_key_length": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
-							ValidateFunc:  validation.StringInSlice(dkimSigningKeyLengthValues(types.DkimSigningKeyLength("").Values()), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ConflictsWith:    []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
+							ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
 						},
 						"signing_attributes_origin": {
 							Type:     schema.TypeString,
@@ -385,14 +386,4 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface
 	}
 
 	return m
-}
-
-func dkimSigningKeyLengthValues(in []types.DkimSigningKeyLength) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
 }
