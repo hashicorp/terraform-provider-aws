@@ -16040,10 +16040,16 @@ var awsPartition = partition{
 					Region: "eu-north-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "eu-south-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-west-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-west-3",
 				}: endpoint{},
 				endpointKey{
 					Region: "fips",
