@@ -77,7 +77,6 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateCustomerGatewayInput{
-		IpAddress:         aws.String(d.Get("ip_address").(string)),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
 		Type:              aws.String(d.Get("type").(string)),
 	}
@@ -98,6 +97,10 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	if v, ok := d.GetOk("device_name"); ok {
 		input.DeviceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ip_address"); ok {
+		input.IpAddress = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Customer Gateway: %s", input)
