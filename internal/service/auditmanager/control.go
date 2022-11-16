@@ -188,7 +188,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AuditManagerClient
 
-	out, err := findControlByID(ctx, conn, d.Id())
+	out, err := FindControlByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AuditManager Control (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -294,7 +294,7 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func findControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*types.Control, error) {
+func FindControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*types.Control, error) {
 	in := &auditmanager.GetControlInput{
 		ControlId: aws.String(id),
 	}
