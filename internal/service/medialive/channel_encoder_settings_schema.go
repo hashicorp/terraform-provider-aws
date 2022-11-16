@@ -879,6 +879,12 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.HlsId3SegmentTaggingState](),
 													},
+													"hls_iframe_only_playlists": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.IFrameOnlyPlaylistType](),
+													},
 													"incomplete_segment_behavior": {
 														Type:             schema.TypeString,
 														Optional:         true,
@@ -1666,7 +1672,9 @@ func outputSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"hls_settings": hlsSettingsSchema(),
+							"hls_settings": func() *schema.Schema {
+								return hlsSettingsSchema()
+							}(),
 							"h265_packaging_type": {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -2786,6 +2794,9 @@ func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interf
 	if v, ok := m["hls_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.HlsGroupSettings = expandHLSGroupSettings(v)
 	}
+	if v, ok := m["ms_smooth_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.MsSmoothGroupSettings = expandMsSmoothGroupSettings(v)
+	}
 	if v, ok := m["media_package_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.MediaPackageGroupSettings = expandMediaPackageGroupSettings(v)
 	}
@@ -2953,6 +2964,159 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["hls_cdn_setting"].([]interface{}); ok && len(v) > 0 {
 		out.HlsCdnSettings = expandHLSCDNSettings(v)
 	}
+	if v, ok := m["hls_id3_segment_tagging"].(string); ok && v != "" {
+		out.HlsId3SegmentTagging = types.HlsId3SegmentTaggingState(v)
+	}
+	if v, ok := m["iframe_only_playlists"].(string); ok && v != "" {
+		out.IFrameOnlyPlaylists = types.IFrameOnlyPlaylistType(v)
+	}
+	if v, ok := m["incomplete_segment_behavior"].(string); ok && v != "" {
+		out.IncompleteSegmentBehavior = types.HlsIncompleteSegmentBehavior(v)
+	}
+	if v, ok := m["index_n_segments"].(int); ok {
+		out.IndexNSegments = int32(v)
+	}
+	if v, ok := m["input_loss_action"].(string); ok && v != "" {
+		out.InputLossAction = types.InputLossActionForHlsOut(v)
+	}
+	if v, ok := m["iv_in_manifest"].(string); ok && v != "" {
+		out.IvInManifest = types.HlsIvInManifest(v)
+	}
+	if v, ok := m["iv_source"].(string); ok && v != "" {
+		out.IvSource = types.HlsIvSource(v)
+	}
+	if v, ok := m["keep_segments"].(int); ok {
+		out.KeepSegments = int32(v)
+	}
+	if v, ok := m["key_format"].(string); ok && v != "" {
+		out.KeyFormat = aws.String(v)
+	}
+	if v, ok := m["key_format_versions"].(string); ok && v != "" {
+		out.KeyFormatVersions = aws.String(v)
+	}
+	if v, ok := m["key_provider_settings"].([]interface{}); ok && len(v) > 0 {
+		out.KeyProviderSettings = expandHLSGroupSettingsKeyProviderSettings(v)
+	}
+	if v, ok := m["manifest_compression"].(string); ok && v != "" {
+		out.ManifestCompression = types.HlsManifestCompression(v)
+	}
+	if v, ok := m["manifest_duration_format"].(string); ok && v != "" {
+		out.ManifestDurationFormat = types.HlsManifestDurationFormat(v)
+	}
+	if v, ok := m["min_segment_length"].(int); ok {
+		out.MinSegmentLength = int32(v)
+	}
+	if v, ok := m["mode"].(string); ok && v != "" {
+		out.Mode = types.HlsMode(v)
+	}
+	if v, ok := m["output_selection"].(string); ok && v != "" {
+		out.OutputSelection = types.HlsOutputSelection(v)
+	}
+	if v, ok := m["program_date_time"].(string); ok && v != "" {
+		out.ProgramDateTime = types.HlsProgramDateTime(v)
+	}
+	if v, ok := m["program_date_time_clock"].(string); ok && v != "" {
+		out.ProgramDateTimeClock = types.HlsProgramDateTimeClock(v)
+	}
+	if v, ok := m["program_date_time_period"].(int); ok {
+		out.ProgramDateTimePeriod = int32(v)
+	}
+	if v, ok := m["redundant_manifest"].(string); ok && v != "" {
+		out.RedundantManifest = types.HlsRedundantManifest(v)
+	}
+	if v, ok := m["segment_length"].(int); ok {
+		out.SegmentLength = int32(v)
+	}
+	if v, ok := m["segmentation_mode"].(string); ok && v != "" {
+		out.SegmentationMode = types.HlsSegmentationMode(v)
+	}
+	if v, ok := m["segments_per_subdirectory"].(int); ok {
+		out.SegmentsPerSubdirectory = int32(v)
+	}
+	if v, ok := m["stream_inf_resolution"].(string); ok && v != "" {
+		out.StreamInfResolution = types.HlsStreamInfResolution(v)
+	}
+	if v, ok := m["timed_metadata_id3_frame"].(string); ok && v != "" {
+		out.TimedMetadataId3Frame = types.HlsTimedMetadataId3Frame(v)
+	}
+	if v, ok := m["timed_metadata_id3_period"].(int); ok {
+		out.TimedMetadataId3Period = int32(v)
+	}
+	if v, ok := m["timestamp_delta_milliseconds"].(int); ok {
+		out.TimestampDeltaMilliseconds = int32(v)
+	}
+	if v, ok := m["ts_file_mode"].(string); ok && v != "" {
+		out.TsFileMode = types.HlsTsFileMode(v)
+	}
+
+	return &out
+}
+
+func expandMsSmoothGroupSettings(tfList []interface{}) *types.MsSmoothGroupSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.MsSmoothGroupSettings
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		out.Destination = expandDestination(v)
+	}
+	if v, ok := m["acquisition_point_id"].(string); ok && v != "" {
+		out.AcquisitionPointId = aws.String(v)
+	}
+	if v, ok := m["audio_only_timecode_control"].(string); ok && v != "" {
+		out.AudioOnlyTimecodeControl = types.SmoothGroupAudioOnlyTimecodeControl(v)
+	}
+	if v, ok := m["certificate_mode"].(string); ok && v != "" {
+		out.CertificateMode = types.SmoothGroupCertificateMode(v)
+	}
+	if v, ok := m["connection_retry_interval"].(int); ok {
+		out.ConnectionRetryInterval = int32(v)
+	}
+	if v, ok := m["event_id"].(string); ok && v != "" {
+		out.EventId = aws.String(v)
+	}
+	if v, ok := m["event_id_mode"].(string); ok && v != "" {
+		out.EventIdMode = types.SmoothGroupEventIdMode(v)
+	}
+	if v, ok := m["event_stop_behavior"].(string); ok && v != "" {
+		out.EventStopBehavior = types.SmoothGroupEventStopBehavior(v)
+	}
+	if v, ok := m["filecache_duration"].(int); ok {
+		out.FilecacheDuration = int32(v)
+	}
+	if v, ok := m["fragment_length"].(int); ok {
+		out.FragmentLength = int32(v)
+	}
+	if v, ok := m["input_loss_action"].(string); ok && v != "" {
+		out.InputLossAction = types.InputLossActionForMsSmoothOut(v)
+	}
+	if v, ok := m["num_retries"].(int); ok {
+		out.NumRetries = int32(v)
+	}
+	if v, ok := m["restart_delay"].(int); ok {
+		out.RestartDelay = int32(v)
+	}
+	if v, ok := m["segmentation_mode"].(string); ok && v != "" {
+		out.SegmentationMode = types.SmoothGroupSegmentationMode(v)
+	}
+	if v, ok := m["send_delay_ms"].(int); ok {
+		out.SendDelayMs = int32(v)
+	}
+	if v, ok := m["sparse_track_type"].(string); ok && v != "" {
+		out.SparseTrackType = types.SmoothGroupSparseTrackType(v)
+	}
+	if v, ok := m["stream_manifest_behavior"].(string); ok && v != "" {
+		out.StreamManifestBehavior = types.SmoothGroupStreamManifestBehavior(v)
+	}
+	if v, ok := m["timestamp_offset"].(string); ok && v != "" {
+		out.TimestampOffset = aws.String(v)
+	}
+	if v, ok := m["timestamp_offset_mode"].(string); ok && v != "" {
+		out.TimestampOffsetMode = types.SmoothGroupTimestampOffsetMode(v)
+	}
 
 	return &out
 }
@@ -2968,7 +3132,18 @@ func expandHLSCDNSettings(tfList []interface{}) *types.HlsCdnSettings {
 	if v, ok := m["hls_akamai_setting"].([]interface{}); ok && len(v) > 0 {
 		out.HlsAkamaiSettings = expandHSLAkamaiSettings(v)
 	}
-
+	if v, ok := m["hls_basic_put_setting"].([]interface{}); ok && len(v) > 0 {
+		out.HlsBasicPutSettings = expandHSLBasicPutSettings(v)
+	}
+	if v, ok := m["hls_media_store_setting"].([]interface{}); ok && len(v) > 0 {
+		out.HlsMediaStoreSettings = expandHLSMediaStoreSettings(v)
+	}
+	if v, ok := m["hls_s3_setting"].([]interface{}); ok && len(v) > 0 {
+		out.HlsS3Settings = expandHSLS3Settings(v)
+	}
+	if v, ok := m["hls_webdav_setting"].([]interface{}); ok && len(v) > 0 {
+		out.HlsWebdavSettings = expandHLSWebdavSettings(v)
+	}
 	return &out
 }
 
@@ -2983,7 +3158,117 @@ func expandHSLAkamaiSettings(tfList []interface{}) *types.HlsAkamaiSettings {
 	if v, ok := m["connection_retry_interval"].(int); ok {
 		out.ConnectionRetryInterval = int32(v)
 	}
+	if v, ok := m["filecache_duration"].(int); ok {
+		out.FilecacheDuration = int32(v)
+	}
+	if v, ok := m["http_transfer_mode"].(string); ok && v != "" {
+		out.HttpTransferMode = types.HlsAkamaiHttpTransferMode(v)
+	}
+	if v, ok := m["num_retries"].(int); ok {
+		out.NumRetries = int32(v)
+	}
+	if v, ok := m["restart_delay"].(int); ok {
+		out.RestartDelay = int32(v)
+	}
+	if v, ok := m["salt"].(string); ok && v != "" {
+		out.Salt = aws.String(v)
+	}
+	if v, ok := m["token"].(string); ok && v != "" {
+		out.Token = aws.String(v)
+	}
 
+	return &out
+}
+
+func expandHSLBasicPutSettings(tfList []interface{}) *types.HlsBasicPutSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsBasicPutSettings
+	if v, ok := m["connection_retry_interval"].(int); ok {
+		out.ConnectionRetryInterval = int32(v)
+	}
+	if v, ok := m["filecache_duration"].(int); ok {
+		out.FilecacheDuration = int32(v)
+	}
+	if v, ok := m["num_retries"].(int); ok {
+		out.NumRetries = int32(v)
+	}
+	if v, ok := m["restart_delay"].(int); ok {
+		out.RestartDelay = int32(v)
+	}
+
+	return &out
+}
+
+func expandHLSMediaStoreSettings(tfList []interface{}) *types.HlsMediaStoreSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsMediaStoreSettings
+	if v, ok := m["connection_retry_interval"].(int); ok {
+		out.ConnectionRetryInterval = int32(v)
+	}
+	if v, ok := m["filecache_duration"].(int); ok {
+		out.FilecacheDuration = int32(v)
+	}
+	if v, ok := m["media_store_storage_class"].(string); ok && v != "" {
+		out.MediaStoreStorageClass = types.HlsMediaStoreStorageClass(v)
+	}
+	if v, ok := m["num_retries"].(int); ok {
+		out.NumRetries = int32(v)
+	}
+	if v, ok := m["restart_delay"].(int); ok {
+		out.RestartDelay = int32(v)
+	}
+
+	return &out
+}
+
+func expandHSLS3Settings(tfList []interface{}) *types.HlsS3Settings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsS3Settings
+	if v, ok := m["canned_acl"].(string); ok && v != "" {
+		out.CannedAcl = types.S3CannedAcl(v)
+	}
+
+	return &out
+}
+
+func expandHLSWebdavSettings(tfList []interface{}) *types.HlsWebdavSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsWebdavSettings
+	if v, ok := m["connection_retry_interval"].(int); ok {
+		out.ConnectionRetryInterval = int32(v)
+	}
+	if v, ok := m["filecache_duration"].(int); ok {
+		out.FilecacheDuration = int32(v)
+	}
+	if v, ok := m["http_transfer_mode"].(string); ok && v != "" {
+		out.HttpTransferMode = types.HlsWebdavHttpTransferMode(v)
+	}
+	if v, ok := m["num_retries"].(int); ok {
+		out.NumRetries = int32(v)
+	}
+	if v, ok := m["restart_delay"].(int); ok {
+		out.RestartDelay = int32(v)
+	}
 	return &out
 }
 
@@ -3014,6 +3299,60 @@ func expandHSLGroupSettingsCaptionLanguageMappings(tfList []interface{}) []types
 	}
 
 	return out
+}
+
+func expandHLSGroupSettingsKeyProviderSettings(tfList []interface{}) *types.KeyProviderSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.KeyProviderSettings
+	if v, ok := m["static_key_settings"].([]interface{}); ok && len(v) > 0 {
+		out.StaticKeySettings = expandKeyProviderSettingsStaticKeySettings(v)
+	}
+
+	return &out
+}
+
+func expandKeyProviderSettingsStaticKeySettings(tfList []interface{}) *types.StaticKeySettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.StaticKeySettings
+	if v, ok := m["static_key_value"].(string); ok && v != "" {
+		out.StaticKeyValue = aws.String(v)
+	}
+	if v, ok := m["key_provider_server"].([]interface{}); ok && len(v) > 0 {
+		out.KeyProviderServer = expandInputLocation(v)
+	}
+
+	return &out
+}
+
+func expandInputLocation(tfList []interface{}) *types.InputLocation {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.InputLocation
+	if v, ok := m["uri"].(string); ok && v != "" {
+		out.Uri = aws.String(v)
+	}
+	if v, ok := m["password_param"].(string); ok && v != "" {
+		out.PasswordParam = aws.String(v)
+	}
+	if v, ok := m["username"].(string); ok && v != "" {
+		out.Username = aws.String(v)
+	}
+
+	return &out
 }
 
 func expandArchiveCDNSettings(tfList []interface{}) *types.ArchiveCdnSettings {
@@ -3203,6 +3542,12 @@ func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
 	if v, ok := m["archive_output_settings"].([]interface{}); ok && len(v) > 0 {
 		os.ArchiveOutputSettings = expandOutputsOutputSettingsArchiveOutputSettings(v)
 	}
+	if v, ok := m["frame_capture_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.FrameCaptureOutputSettings = expandOutputsOutSettingsFrameCaptureOutputSettings(v)
+	}
+	if v, ok := m["hls_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.HlsOutputSettings = expandOutputsOutSettingsHLSOutputSettings(v)
+	}
 	if v, ok := m["media_package_output_settings"].([]interface{}); ok && len(v) > 0 {
 		os.MediaPackageOutputSettings = &types.MediaPackageOutputSettings{} // no exported fields
 	}
@@ -3249,6 +3594,195 @@ func expandOutputsOutputSettingsArchiveOutputSettings(tfList []interface{}) *typ
 		settings.NameModifier = aws.String(v)
 	}
 	return &settings
+}
+
+func expandOutputsOutSettingsFrameCaptureOutputSettings(tfList []interface{}) *types.FrameCaptureOutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.FrameCaptureOutputSettings
+	if v, ok := m["name_modifier"].(string); ok && v != "" {
+		out.NameModifier = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandOutputsOutSettingsHLSOutputSettings(tfList []interface{}) *types.HlsOutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsOutputSettings
+	if v, ok := m["hls_settings"].([]interface{}); ok && len(v) > 0 {
+		out.HlsSettings = expandHLSOutputSettingsHLSSettings(v)
+	}
+	if v, ok := m["h265_packaging_type"].(string); ok && v != "" {
+		out.H265PackagingType = types.HlsH265PackagingType(v)
+	}
+	if v, ok := m["name_modifier"].(string); ok && v != "" {
+		out.NameModifier = aws.String(v)
+	}
+	if v, ok := m["segment_modifier"].(string); ok && v != "" {
+		out.SegmentModifier = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandHLSOutputSettingsHLSSettings(tfList []interface{}) *types.HlsSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsSettings
+	if v, ok := m["audio_only_hls_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AudioOnlyHlsSettings = expandHLSSettingsAudioOnlyHLSSettings(v)
+	}
+	if v, ok := m["fmp4_hls_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Fmp4HlsSettings = expandHLSSettingsFmp4HLSSettings(v)
+	}
+	if v, ok := m["frame_capture_hls_settings"].([]interface{}); ok && len(v) > 0 {
+		out.FrameCaptureHlsSettings = &types.FrameCaptureHlsSettings{} // no exported types
+	}
+	if v, ok := m["standard_hls_settings"].([]interface{}); ok && len(v) > 0 {
+		out.StandardHlsSettings = expandHLSSettingsStandardHLSSettings(v)
+	}
+
+	return &out
+}
+
+func expandHLSSettingsAudioOnlyHLSSettings(tfList []interface{}) *types.AudioOnlyHlsSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioOnlyHlsSettings
+	if v, ok := m["audio_group_id"].(string); ok && v != "" {
+		out.AudioGroupId = aws.String(v)
+	}
+	if v, ok := m["audio_only_image"].([]interface{}); ok && len(v) > 0 {
+		out.AudioOnlyImage = expandInputLocation(v)
+	}
+	if v, ok := m["audio_track_type"].(string); ok && v != "" {
+		out.AudioTrackType = types.AudioOnlyHlsTrackType(v)
+	}
+	if v, ok := m["segment_type"].(string); ok && v != "" {
+		out.SegmentType = types.AudioOnlyHlsSegmentType(v)
+	}
+
+	return &out
+}
+
+func expandHLSSettingsFmp4HLSSettings(tfList []interface{}) *types.Fmp4HlsSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Fmp4HlsSettings
+	if v, ok := m["audio_rendition_sets"].(string); ok && v != "" {
+		out.AudioRenditionSets = aws.String(v)
+	}
+	if v, ok := m["segment_type"].(string); ok && v != "" {
+		out.NielsenId3Behavior = types.Fmp4NielsenId3Behavior(v)
+	}
+	if v, ok := m["timed_metadata_behavior"].(string); ok && v != "" {
+		out.TimedMetadataBehavior = types.Fmp4TimedMetadataBehavior(v)
+	}
+
+	return &out
+}
+
+func expandHLSSettingsStandardHLSSettings(tfList []interface{}) *types.StandardHlsSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.StandardHlsSettings
+	if v, ok := m["m3u8_settings"].([]interface{}); ok && len(v) > 0 {
+		out.M3u8Settings = expandStandardHLSSettingsH3u8Settings(v)
+	}
+	if v, ok := m["audio_rendition_sets"].(string); ok && v != "" {
+		out.AudioRenditionSets = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandStandardHLSSettingsH3u8Settings(tfList []interface{}) *types.M3u8Settings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.M3u8Settings
+	if v, ok := m["audio_frames_per_pes"].(int); ok {
+		out.AudioFramesPerPes = int32(v)
+	}
+	if v, ok := m["audio_pids"].(string); ok && v != "" {
+		out.AudioPids = aws.String(v)
+	}
+	if v, ok := m["ecm_pid"].(string); ok && v != "" {
+		out.EcmPid = aws.String(v)
+	}
+	if v, ok := m["nielsen_id3_behavior"].(string); ok && v != "" {
+		out.NielsenId3Behavior = types.M3u8NielsenId3Behavior(v)
+	}
+	if v, ok := m["pat_interval"].(int); ok {
+		out.PatInterval = int32(v)
+	}
+	if v, ok := m["pcr_control"].(string); ok && v != "" {
+		out.PcrControl = types.M3u8PcrControl(v)
+	}
+	if v, ok := m["pcr_period"].(int); ok {
+		out.PcrPeriod = int32(v)
+	}
+	if v, ok := m["pcr_pid"].(string); ok && v != "" {
+		out.PcrPid = aws.String(v)
+	}
+	if v, ok := m["pmt_interval"].(int); ok {
+		out.PmtInterval = int32(v)
+	}
+	if v, ok := m["pmt_pid"].(string); ok && v != "" {
+		out.PmtPid = aws.String(v)
+	}
+	if v, ok := m["program_num"].(int); ok {
+		out.ProgramNum = int32(v)
+	}
+	if v, ok := m["scte35_behavior"].(string); ok && v != "" {
+		out.Scte35Behavior = types.M3u8Scte35Behavior(v)
+	}
+	if v, ok := m["scte35_pid"].(string); ok && v != "" {
+		out.Scte35Pid = aws.String(v)
+	}
+	if v, ok := m["timed_metadata_behavior"].(string); ok && v != "" {
+		out.TimedMetadataBehavior = types.M3u8TimedMetadataBehavior(v)
+	}
+	if v, ok := m["timed_metadata_pid"].(string); ok && v != "" {
+		out.TimedMetadataPid = aws.String(v)
+	}
+	if v, ok := m["transport_stream_id"].(int); ok {
+		out.TransportStreamId = int32(v)
+	}
+	if v, ok := m["video_pid"].(string); ok && v != "" {
+		out.VideoPid = aws.String(v)
+	}
+
+	return &out
 }
 
 func expandOutputsOutputSettingsRtmpOutputSettings(tfList []interface{}) *types.RtmpOutputSettings {
@@ -3696,7 +4230,7 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 			"audio_watermark_settings":     flattenAudioWatermarkSettings(v.AudioWatermarkingSettings),
 			"codec_settings":               flattenAudioDescriptionsCodecSettings(v.CodecSettings),
 			"language_code":                aws.ToString(v.LanguageCode),
-			"language_control_mode":        string(v.LanguageCodeControl),
+			"language_code_control":        string(v.LanguageCodeControl),
 			"remix_settings":               flattenAudioDescriptionsRemixSettings(v.RemixSettings),
 			"stream_name":                  aws.ToString(v.StreamName),
 		}
@@ -3735,6 +4269,8 @@ func flattenOutputGroupSettings(os *types.OutputGroupSettings) []interface{} {
 	m := map[string]interface{}{
 		"archive_group_settings":       flattenOutputGroupSettingsArchiveGroupSettings(os.ArchiveGroupSettings),
 		"frame_capture_group_settings": flattenOutputGroupSettingsFrameCaptureGroupSettings(os.FrameCaptureGroupSettings),
+		"hls_group_settings":           flattenOutputGroupSettingsHLSGroupSettings(os.HlsGroupSettings),
+		"ms_smooth_group_settings":     flattenOutputGroupSettingsMsSmoothGroupSettings(os.MsSmoothGroupSettings),
 		"media_package_group_settings": flattenOutputGroupSettingsMediaPackageGroupSettings(os.MediaPackageGroupSettings),
 		"multiplex_group_settings": func(inner *types.MultiplexGroupSettings) []interface{} {
 			if inner == nil {
@@ -3777,7 +4313,9 @@ func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"archive_output_settings": flattenOutputsOutputSettingsArchiveOutputSettings(in.ArchiveOutputSettings),
+		"archive_output_settings":       flattenOutputsOutputSettingsArchiveOutputSettings(in.ArchiveOutputSettings),
+		"frame_capture_output_settings": flattenOutputsOutputSettingsFrameCaptureOutputSettings(in.FrameCaptureOutputSettings),
+		"hls_output_settings":           flattenOutputsOutputSettingsHLSOutputSettings(in.HlsOutputSettings),
 		"media_package_output_settings": func(inner *types.MediaPackageOutputSettings) []interface{} {
 			if inner == nil {
 				return nil
@@ -3792,7 +4330,7 @@ func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
 				"destination": flattenDestination(inner.Destination),
 			}
 
-			return []interface{}{data} // no exported attributes
+			return []interface{}{data}
 		}(in.MultiplexOutputSettings),
 		"rtmp_output_settings": flattenOutputsOutputSettingsRtmpOutputSettings(in.RtmpOutputSettings),
 		"udp_output_settings":  flattenOutputsOutputSettingsUdpOutputSettings(in.UdpOutputSettings),
@@ -3810,6 +4348,123 @@ func flattenOutputsOutputSettingsArchiveOutputSettings(in *types.ArchiveOutputSe
 		"container_settings": flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in.ContainerSettings),
 		"extension":          aws.ToString(in.Extension),
 		"name_modifier":      aws.ToString(in.NameModifier),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputsOutputSettingsFrameCaptureOutputSettings(in *types.FrameCaptureOutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"name_modifier": aws.ToString(in.NameModifier),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputsOutputSettingsHLSOutputSettings(in *types.HlsOutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"hls_settings":        flattenHLSOutputSettingsHLSSettings(in.HlsSettings),
+		"h265_packaging_type": string(in.H265PackagingType),
+		"name_modifier":       aws.ToString(in.NameModifier),
+		"segment_modifier":    aws.ToString(in.SegmentModifier),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSOutputSettingsHLSSettings(in *types.HlsSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_only_hls_settings": flattenHLSSettingsAudioOnlyHLSSettings(in.AudioOnlyHlsSettings),
+		"fmp4_hls_settings":       flattenHLSSettingsFmp4HLSSettings(in.Fmp4HlsSettings),
+		"frame_capture_hls_settings": func(inner *types.FrameCaptureHlsSettings) []interface{} {
+			if inner == nil {
+				return nil
+			}
+			return []interface{}{} // no exported fields
+		}(in.FrameCaptureHlsSettings),
+		"standard_hls_settings": flattenHLSSettingsStandardHLSSettings(in.StandardHlsSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSSettingsAudioOnlyHLSSettings(in *types.AudioOnlyHlsSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_group_id":   aws.ToString(in.AudioGroupId),
+		"audio_only_image": flattenInputLocation(in.AudioOnlyImage),
+		"audio_track_type": string(in.AudioTrackType),
+		"segment_type":     string(in.AudioTrackType),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSSettingsFmp4HLSSettings(in *types.Fmp4HlsSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_rendition_sets":    aws.ToString(in.AudioRenditionSets),
+		"nielsen_id3_behavior":    string(in.NielsenId3Behavior),
+		"timed_metadata_behavior": string(in.TimedMetadataBehavior),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSSettingsStandardHLSSettings(in *types.StandardHlsSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"m3u8_settings":        flattenStandardHLSSettingsM3u8Settings(in.M3u8Settings),
+		"audio_rendition_sets": aws.ToString(in.AudioRenditionSets),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenStandardHLSSettingsM3u8Settings(in *types.M3u8Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_frames_per_pes":    int(in.AudioFramesPerPes),
+		"audio_pids":              aws.ToString(in.AudioPids),
+		"ecm_pid":                 aws.ToString(in.EcmPid),
+		"nielsen_id3_behavior":    string(in.NielsenId3Behavior),
+		"pat_interval":            int(in.PatInterval),
+		"pcr_control":             string(in.PcrControl),
+		"pcr_period":              int(in.PcrPeriod),
+		"pcr_pid":                 aws.ToString(in.PcrPid),
+		"pmt_interval":            int(in.PmtInterval),
+		"pmt_pid":                 aws.ToString(in.PmtPid),
+		"program_num":             int(in.ProgramNum),
+		"scte35_behavior":         string(in.Scte35Behavior),
+		"scte35_pid":              aws.ToString(in.Scte35Pid),
+		"timed_metadata_behavior": string(in.TimedMetadataBehavior),
+		"timed_metadata_pid":      aws.ToString(in.TimedMetadataPid),
+		"transport_stream_id":     int(in.TransportStreamId),
+		"video_pid":               aws.ToString(in.VideoPid),
 	}
 
 	return []interface{}{m}
@@ -4010,6 +4665,199 @@ func flattenOutputGroupSettingsFrameCaptureGroupSettings(in *types.FrameCaptureG
 	return []interface{}{m}
 }
 
+func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"destination":                  flattenDestination(in.Destination),
+		"ad_markers":                   flattenHLSAdMarkers(in.AdMarkers),
+		"base_url_content":             aws.ToString(in.BaseUrlContent),
+		"base_url_content1":            aws.ToString(in.BaseUrlContent1),
+		"base_url_manifest":            aws.ToString(in.BaseUrlManifest),
+		"base_url_manifest1":           aws.ToString(in.BaseUrlManifest1),
+		"caption_language_mapping":     flattenHLSCaptionLanguageMappings(in.CaptionLanguageMappings),
+		"caption_language_setting":     string(in.CaptionLanguageSetting),
+		"client_cache":                 string(in.ClientCache),
+		"codec_specification":          string(in.CodecSpecification),
+		"constant_iv":                  aws.ToString(in.ConstantIv),
+		"directory_structure":          string(in.DirectoryStructure),
+		"discontinuity_tags":           string(in.DiscontinuityTags),
+		"encryption_type":              string(in.EncryptionType),
+		"hls_cdn_settings":             flattenHLSCDNSettings(in.HlsCdnSettings),
+		"hls_id3_segment_tagging":      string(in.HlsId3SegmentTagging),
+		"iframe_only_playlists":        string(in.IFrameOnlyPlaylists),
+		"incomplete_segment_behavior":  string(in.IncompleteSegmentBehavior),
+		"index_n_segments":             int(in.IndexNSegments),
+		"input_loss_action":            string(in.InputLossAction),
+		"iv_in_manifest":               string(in.IvInManifest),
+		"iv_source":                    string(in.IvSource),
+		"keep_segments":                int(in.KeepSegments),
+		"key_format":                   aws.ToString(in.KeyFormat),
+		"key_format_versions":          aws.ToString(in.KeyFormatVersions),
+		"key_provider_settings":        flattenHLSKeyProviderSettings(in.KeyProviderSettings),
+		"manifest_compression":         string(in.ManifestCompression),
+		"manifest_duration_format":     string(in.ManifestDurationFormat),
+		"min_segment_length":           int(in.MinSegmentLength),
+		"mode":                         string(in.Mode),
+		"output_selection":             string(in.OutputSelection),
+		"program_date_time":            string(in.ProgramDateTime),
+		"program_date_time_clock":      string(in.ProgramDateTimeClock),
+		"program_date_time_period":     int(in.ProgramDateTimePeriod),
+		"redundant_manifest":           string(in.RedundantManifest),
+		"segment_length":               int(in.SegmentLength),
+		"segmentation_mode":            string(in.SegmentationMode),
+		"segments_per_subdirectory":    string(in.SegmentsPerSubdirectory),
+		"stream_inf_resolution":        string(in.StreamInfResolution),
+		"timed_metadata_id3_frame":     string(in.TimedMetadataId3Frame),
+		"timed_metadata_id3_period":    int(in.TimedMetadataId3Period),
+		"timestamp_delta_milliseconds": int(in.TimestampDeltaMilliseconds),
+		"ts_file_mode":                 string(in.TsFileMode),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputGroupSettingsMsSmoothGroupSettings(in *types.MsSmoothGroupSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"destination":                 flattenDestination(in.Destination),
+		"acquisition_point_id":        aws.ToString(in.AcquisitionPointId),
+		"audio_only_timecode_control": string(in.AudioOnlyTimecodeControl),
+		"certificate_mode":            string(in.CertificateMode),
+		"connection_retry_interval":   int(in.ConnectionRetryInterval),
+		"event_id":                    aws.ToString(in.EventId),
+		"event_id_mode":               string(in.EventIdMode),
+		"event_stop_behavior":         string(in.EventStopBehavior),
+		"filecache_duration":          int(in.FilecacheDuration),
+		"fragment_length":             int(in.FragmentLength),
+		"input_loss_action":           string(in.InputLossAction),
+		"num_retries":                 int(in.NumRetries),
+		"restart_delay":               int(in.RestartDelay),
+		"segmentation_mode":           string(in.SegmentationMode),
+		"send_delay_ms":               int(in.SendDelayMs),
+		"sparse_track_type":           string(in.SparseTrackType),
+		"stream_manifest_behavior":    string(in.StreamManifestBehavior),
+		"timestamp_offset":            aws.ToString(in.TimestampOffset),
+		"timestamp_offset_mode":       string(in.TimestampOffsetMode),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSAdMarkers(in []types.HlsAdMarkers) []interface{} {
+	if len(in) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+	for _, item := range in {
+		out = append(out, string(item))
+	}
+
+	return out
+}
+
+func flattenHLSCaptionLanguageMappings(in []types.CaptionLanguageMapping) []interface{} {
+	if len(in) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+	for _, item := range in {
+		m := map[string]interface{}{
+			"caption_channel":      int(item.CaptionChannel),
+			"language_code":        aws.ToString(item.LanguageCode),
+			"language_description": aws.ToString(item.LanguageDescription),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
+}
+
+func flattenHLSCDNSettings(in *types.HlsCdnSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"hls_akamai_settings":      flattenHLSAkamaiSettings(in.HlsAkamaiSettings),
+		"hls_basic_put_settings":   flattenHLSBasicPutSettings(in.HlsBasicPutSettings),
+		"hls_media_store_settings": flattenHLSMediaStoreSettings(in.HlsMediaStoreSettings),
+		"hls_s3_settings":          flattenHLSS3Settings(in.HlsS3Settings),
+		"hls_webdav_settings":      flattenHLSWebdavSettings(in.HlsWebdavSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSAkamaiSettings(in *types.HlsAkamaiSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"connection_retry_interval": int(in.ConnectionRetryInterval),
+		"filecache_duration":        int(in.FilecacheDuration),
+		"http_transfer_mode":        string(in.HttpTransferMode),
+		"num_retries":               int(in.NumRetries),
+		"restart_delay":             int(in.RestartDelay),
+		"salt":                      aws.ToString(in.Salt),
+		"token":                     aws.ToString(in.Token),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSBasicPutSettings(in *types.HlsBasicPutSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"connection_retry_interval": int(in.ConnectionRetryInterval),
+		"filecache_duration":        int(in.FilecacheDuration),
+		"num_retries":               int(in.NumRetries),
+		"restart_delay":             int(in.RestartDelay),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSMediaStoreSettings(in *types.HlsMediaStoreSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"connection_retry_interval": int(in.ConnectionRetryInterval),
+		"filecache_duration":        int(in.FilecacheDuration),
+		"media_store_storage_class": string(in.MediaStoreStorageClass),
+		"num_retries":               int(in.NumRetries),
+		"restart_delay":             int(in.RestartDelay),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSS3Settings(in *types.HlsS3Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"canned_acl": string(in.CannedAcl),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenFrameCaptureCDNSettings(in *types.FrameCaptureCdnSettings) []interface{} {
 	if in == nil {
 		return nil
@@ -4017,6 +4865,61 @@ func flattenFrameCaptureCDNSettings(in *types.FrameCaptureCdnSettings) []interfa
 
 	m := map[string]interface{}{
 		"frame_capture_s3_settings": flattenFrameCaptureS3Settings(in.FrameCaptureS3Settings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSWebdavSettings(in *types.HlsWebdavSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"connection_retry_interval": int(in.ConnectionRetryInterval),
+		"filecache_duration":        int(in.FilecacheDuration),
+		"http_transfer_mode":        string(in.HttpTransferMode),
+		"num_retries":               int(in.NumRetries),
+		"restart_delay":             int(in.RestartDelay),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHLSKeyProviderSettings(in *types.KeyProviderSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"static_key_settings": flattenKeyProviderSettingsStaticKeySettings(in.StaticKeySettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenKeyProviderSettingsStaticKeySettings(in *types.StaticKeySettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"static_key_value":    aws.ToString(in.StaticKeyValue),
+		"key_provider_server": flattenInputLocation(in.KeyProviderServer),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputLocation(in *types.InputLocation) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"uri":            aws.ToString(in.Uri),
+		"password_param": aws.ToString(in.PasswordParam),
+		"username":       aws.ToString(in.Username),
 	}
 
 	return []interface{}{m}
