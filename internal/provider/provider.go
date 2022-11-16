@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -1068,6 +1069,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_athena_data_catalog": athena.ResourceDataCatalog(),
 			"aws_athena_named_query":  athena.ResourceNamedQuery(),
 			"aws_athena_workgroup":    athena.ResourceWorkGroup(),
+
+			"aws_auditmanager_control": auditmanager.ResourceControl(),
 
 			"aws_autoscaling_attachment":     autoscaling.ResourceAttachment(),
 			"aws_autoscaling_group":          autoscaling.ResourceGroup(),
