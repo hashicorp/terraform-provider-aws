@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -253,7 +254,7 @@ func testAccCheckSubscriptionFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflogs.FindSubscriptionFilterByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
+		_, err := tflogs.FindSubscriptionFilterByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -282,7 +283,7 @@ func testAccCheckSubscriptionFilterExists(n string, v *cloudwatchlogs.Subscripti
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
+		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err
