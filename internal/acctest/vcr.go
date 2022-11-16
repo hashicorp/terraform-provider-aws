@@ -126,7 +126,9 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 		path := filepath.Join(os.Getenv(envVarVCRPath), vcrFileName(testName))
 
 		// Don't retry requests if a recorded interaction isn't found.
-		// TODO: Need to loop through all API clients to do this:
+		// TODO Need to loop through all API clients to do this.
+		// TODO Use []*client.Client?
+		// TODO AWS SDK for Go v2 API clients.
 		meta.LogsConn.Handlers.AfterRetry.PushFront(func(r *request.Request) {
 			// if errors.Is(r.Error, cassette.ErrInteractionNotFound) {
 			if err := r.Error; err != nil && strings.Contains(err.Error(), cassette.ErrInteractionNotFound.Error()) {
