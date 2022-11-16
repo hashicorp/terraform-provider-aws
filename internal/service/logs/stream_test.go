@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -103,7 +104,7 @@ func testAccCheckStreamExists(n string, v *cloudwatchlogs.LogStream) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		output, err := tflogs.FindLogStreamByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+		output, err := tflogs.FindLogStreamByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -123,7 +124,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflogs.FindLogStreamByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+		_, err := tflogs.FindLogStreamByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			return nil
