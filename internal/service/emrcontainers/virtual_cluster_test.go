@@ -378,13 +378,9 @@ provider "kubernetes" {
   host                   = aws_eks_cluster.test.endpoint
   cluster_ca_certificate = base64decode(aws_eks_cluster.test.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-
-  alias = "emr"
 }
 
 resource "kubernetes_role" "emrcontainers_role" {
-  provider = kubernetes.emr
-
   metadata {
     name      = "emr-containers"
     namespace = "default"
@@ -434,8 +430,6 @@ resource "kubernetes_role" "emrcontainers_role" {
 }
 
 resource "kubernetes_role_binding" "emrcontainers_rolemapping" {
-  provider = kubernetes.emr
-
   metadata {
     name      = "emr-containers"
     namespace = "default"
@@ -455,8 +449,6 @@ resource "kubernetes_role_binding" "emrcontainers_rolemapping" {
 }
 
 resource "kubernetes_config_map" "aws_auth" {
-  provider = kubernetes.emr
-
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"

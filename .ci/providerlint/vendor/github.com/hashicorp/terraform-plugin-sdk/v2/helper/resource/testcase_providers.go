@@ -9,7 +9,7 @@ import (
 // providerConfig takes the list of providers in a TestCase and returns a
 // config with only empty provider blocks. This is useful for Import, where no
 // config is provided, but the providers must be defined.
-func (c TestCase) providerConfig(_ context.Context) string {
+func (c TestCase) providerConfig(_ context.Context, skipProviderBlock bool) string {
 	var providerBlocks, requiredProviderBlocks strings.Builder
 
 	// [BF] The Providers field handling predates the logic being moved to this
@@ -21,7 +21,9 @@ func (c TestCase) providerConfig(_ context.Context) string {
 	}
 
 	for name, externalProvider := range c.ExternalProviders {
-		providerBlocks.WriteString(fmt.Sprintf("provider %q {}\n", name))
+		if !skipProviderBlock {
+			providerBlocks.WriteString(fmt.Sprintf("provider %q {}\n", name))
+		}
 
 		if externalProvider.Source == "" && externalProvider.VersionConstraint == "" {
 			continue

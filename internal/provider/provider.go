@@ -716,6 +716,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_iot_endpoint": iot.DataSourceEndpoint(),
 
+			"aws_ivs_stream_key": ivs.DataSourceStreamKey(),
+
 			"aws_msk_broker_nodes":  kafka.DataSourceBrokerNodes(),
 			"aws_msk_cluster":       kafka.DataSourceCluster(),
 			"aws_msk_configuration": kafka.DataSourceConfiguration(),
@@ -1809,6 +1811,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
 			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
+			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),

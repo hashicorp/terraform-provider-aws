@@ -26,7 +26,7 @@ appstream,appstream,appstream,appstream,,appstream,,,AppStream,AppStream,,1,,,aw
 appsync,appsync,appsync,appsync,,appsync,,,AppSync,AppSync,,1,,,aws_appsync_,,appsync_,AppSync,AWS,,,,,
 ,,,,,,,,,,,,,,,,,Artifact,AWS,x,,,,No SDK support
 athena,athena,athena,athena,,athena,,,Athena,Athena,,1,,,aws_athena_,,athena_,Athena,Amazon,,,,,
-auditmanager,auditmanager,auditmanager,auditmanager,,auditmanager,,,AuditManager,AuditManager,,1,,,aws_auditmanager_,,auditmanager_,Audit Manager,AWS,,,,,
+auditmanager,auditmanager,auditmanager,auditmanager,,auditmanager,,,AuditManager,AuditManager,,,2,,aws_auditmanager_,,auditmanager_,Audit Manager,AWS,,,,,
 autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,1,,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,
 autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,1,,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,No SDK support
@@ -192,6 +192,7 @@ iottwinmaker,iottwinmaker,iottwinmaker,iottwinmaker,,iottwinmaker,,,IoTTwinMaker
 iotwireless,iotwireless,iotwireless,iotwireless,,iotwireless,,,IoTWireless,IoTWireless,,1,,,aws_iotwireless_,,iotwireless_,IoT Wireless,AWS,,,,,
 ,,,,,,,,,,,,,,,,,IQ,AWS,x,,,,No SDK support
 ivs,ivs,ivs,ivs,,ivs,,,IVS,IVS,,1,,,aws_ivs_,,ivs_,IVS (Interactive Video),Amazon,,,,,
+ivschat,ivschat,ivschat,ivschat,,ivschat,,,IVSChat,Ivschat,,,2,,aws_ivschat_,,ivschat_,IVS (Interactive Video) Chat,Amazon,,,,,
 kendra,kendra,kendra,kendra,,kendra,,,Kendra,Kendra,x,,2,,aws_kendra_,,kendra_,Kendra,Amazon,,,,,
 keyspaces,keyspaces,keyspaces,,,keyspaces,,,Keyspaces,Keyspaces,,1,,,aws_keyspaces_,,keyspaces_,Keyspaces (for Apache Cassandra),Amazon,,,,,
 kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,,1,,aws_kinesis_stream,aws_kinesis_,,kinesis_stream,Kinesis,Amazon,,,,,
