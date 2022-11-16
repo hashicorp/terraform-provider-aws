@@ -313,11 +313,7 @@ func writeSeedToFile(seed int64, fileName string) error {
 
 	_, err = f.WriteString(strconv.FormatInt(seed, 10))
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // CloseVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
