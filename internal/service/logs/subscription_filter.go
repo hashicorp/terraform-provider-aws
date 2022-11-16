@@ -2,6 +2,7 @@ package logs
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,10 +23,10 @@ import (
 
 func ResourceSubscriptionFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSubscriptionFilterPut,
-		Read:   resourceSubscriptionFilterRead,
-		Update: resourceSubscriptionFilterPut,
-		Delete: resourceSubscriptionFilterDelete,
+		CreateWithoutTimeout: resourceSubscriptionFilterPut,
+		ReadWithoutTimeout:   resourceSubscriptionFilterRead,
+		UpdateWithoutTimeout: resourceSubscriptionFilterPut,
+		DeleteWithoutTimeout: resourceSubscriptionFilterDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceSubscriptionFilterImport,
@@ -69,7 +71,7 @@ func ResourceSubscriptionFilter() *schema.Resource {
 	}
 }
 
-func resourceSubscriptionFilterPut(d *schema.ResourceData, meta interface{}) error {
+func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	logGroupName := d.Get("log_group_name").(string)
@@ -89,9 +91,9 @@ func resourceSubscriptionFilterPut(d *schema.ResourceData, meta interface{}) err
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhen(5*time.Minute,
+	_, err := tfresource.RetryWhenContext(ctx, 5*time.Minute,
 		func() (interface{}, error) {
-			return conn.PutSubscriptionFilter(input)
+			return conn.PutSubscriptionFilterWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
@@ -110,7 +112,7 @@ func resourceSubscriptionFilterPut(d *schema.ResourceData, meta interface{}) err
 		})
 
 	if err != nil {
-		return fmt.Errorf("creating CloudWatch Logs Subscription Filter (%s): %w", name, err)
+		return diag.Errorf("putting CloudWatch Logs Subscription Filter (%s): %s", name, err)
 	}
 
 	d.SetId(subscriptionFilterID(logGroupName))
@@ -118,10 +120,10 @@ func resourceSubscriptionFilterPut(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	subscriptionFilter, err := FindSubscriptionFilterByTwoPartKey(conn, d.Get("log_group_name").(string), d.Get("name").(string))
+	subscriptionFilter, err := FindSubscriptionFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Get("name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Subscription Filter (%s) not found, removing from state", d.Id())
@@ -130,7 +132,7 @@ func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading CloudWatch Logs Subscription Filter (%s): %w", d.Id(), err)
+		return diag.Errorf("reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("destination_arn", subscriptionFilter.DestinationArn)
@@ -143,11 +145,11 @@ func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Subscription Filter: %s", d.Id())
-	_, err := conn.DeleteSubscriptionFilter(&cloudwatchlogs.DeleteSubscriptionFilterInput{
+	_, err := conn.DeleteSubscriptionFilterWithContext(ctx, &cloudwatchlogs.DeleteSubscriptionFilterInput{
 		FilterName:   aws.String(d.Get("name").(string)),
 		LogGroupName: aws.String(d.Get("log_group_name").(string)),
 	})
@@ -157,7 +159,7 @@ func resourceSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudWatch Logs Subscription Filter (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -187,14 +189,14 @@ func subscriptionFilterID(log_group_name string) string {
 	return fmt.Sprintf("cwlsf-%d", create.StringHashcode(buf.String()))
 }
 
-func FindSubscriptionFilterByTwoPartKey(conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.SubscriptionFilter, error) {
+func FindSubscriptionFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.SubscriptionFilter, error) {
 	input := &cloudwatchlogs.DescribeSubscriptionFiltersInput{
 		FilterNamePrefix: aws.String(name),
 		LogGroupName:     aws.String(logGroupName),
 	}
 	var output *cloudwatchlogs.SubscriptionFilter
 
-	err := conn.DescribeSubscriptionFiltersPages(input, func(page *cloudwatchlogs.DescribeSubscriptionFiltersOutput, lastPage bool) bool {
+	err := conn.DescribeSubscriptionFiltersPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeSubscriptionFiltersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
