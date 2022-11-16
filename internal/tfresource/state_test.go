@@ -234,7 +234,6 @@ func TestWaitForState_cancel(t *testing.T) {
 	if obj != nil {
 		t.Fatalf("should not return obj")
 	}
-
 }
 
 func TestWaitForState_success(t *testing.T) {
