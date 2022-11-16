@@ -349,7 +349,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	db, err := FindDBInstanceByID(ctx, conn, d.Id())
+	db, err := findDBInstanceByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")

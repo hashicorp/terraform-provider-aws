@@ -1476,7 +1476,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := FindDBInstanceByID(ctx, conn, d.Id())
+	v, err := findDBInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Id())
@@ -1936,18 +1936,20 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.D
 	compareActualEngineVersion(d, oldVersion, newVersion)
 }
 
-func FindDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
+func findDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
 
 	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
-
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	if output == nil || len(output.DBInstances) == 0 || output.DBInstances[0] == nil {
@@ -2038,7 +2040,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 
 func statusDBInstance(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(ctx, conn, id)
+		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

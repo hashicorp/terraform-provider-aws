@@ -175,7 +175,7 @@ func InstanceRoleAssociationDecodeID(id string) (string, string, error) {
 
 func DescribeDBInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
 	ctx := context.TODO()
-	dbInstance, err := FindDBInstanceByID(ctx, conn, dbInstanceIdentifier)
+	dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceIdentifier)
 	if err != nil {
 		return nil, err
 	}
