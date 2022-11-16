@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -21,6 +20,7 @@ func ResourceStream() *schema.Resource {
 		Create: resourceStreamCreate,
 		Read:   resourceStreamRead,
 		Delete: resourceStreamDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceStreamImport,
 		},
@@ -30,18 +30,16 @@ func ResourceStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: ValidStreamName,
-			},
-
 			"log_group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validStreamName,
 			},
 		},
 	}
@@ -50,16 +48,19 @@ func ResourceStream() *schema.Resource {
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	log.Printf("[DEBUG] Creating CloudWatch Log Stream: %s", d.Get("name").(string))
-	_, err := conn.CreateLogStream(&cloudwatchlogs.CreateLogStreamInput{
+	name := d.Get("name").(string)
+	input := &cloudwatchlogs.CreateLogStreamInput{
 		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
-		LogStreamName: aws.String(d.Get("name").(string)),
-	})
-	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Log Stream failed: %s", err)
+		LogStreamName: aws.String(name),
 	}
 
-	d.SetId(d.Get("name").(string))
+	_, err := conn.CreateLogStream(input)
+
+	if err != nil {
+		return fmt.Errorf("creating CloudWatch Logs Log Stream (%s): %w", name, err)
+	}
+
+	d.SetId(name)
 
 	return resourceStreamRead(d, meta)
 }
@@ -67,39 +68,16 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	group := d.Get("log_group_name").(string)
+	ls, err := FindLogStreamByTwoPartKey(conn, d.Get("log_group_name").(string), d.Id())
 
-	var ls *cloudwatchlogs.LogStream
-	var exists bool
-
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var err error
-		ls, exists, err = LookupStream(conn, d.Id(), group, nil)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if d.IsNewResource() && !exists {
-			return resource.RetryableError(&resource.NotFoundError{})
-		}
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Logs Log Stream (%s) not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		ls, exists, err = LookupStream(conn, d.Id(), group, nil)
 	}
 
 	if err != nil {
-		if !tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
-			return err
-		}
-
-		log.Printf("[DEBUG] container CloudWatch group %q Not Found.", group)
-		exists = false
-	}
-
-	if !exists {
-		log.Printf("[DEBUG] CloudWatch Stream %q Not Found. Removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading CloudWatch Logs Log Stream (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", ls.Arn)
@@ -111,20 +89,18 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	log.Printf("[INFO] Deleting CloudWatch Log Stream: %s", d.Id())
-	params := &cloudwatchlogs.DeleteLogStreamInput{
+	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
+	_, err := conn.DeleteLogStream(&cloudwatchlogs.DeleteLogStreamInput{
 		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
 		LogStreamName: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteLogStream(params)
+	})
 
 	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudWatch Log Stream (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CloudWatch Logs Log Stream (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -145,32 +121,48 @@ func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
-func LookupStream(conn *cloudwatchlogs.CloudWatchLogs,
-	name string, logStreamName string, nextToken *string) (*cloudwatchlogs.LogStream, bool, error) {
+func FindLogStreamByTwoPartKey(conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.LogStream, error) {
 	input := &cloudwatchlogs.DescribeLogStreamsInput{
+		LogGroupName:        aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(name),
-		LogGroupName:        aws.String(logStreamName),
-		NextToken:           nextToken,
 	}
-	resp, err := conn.DescribeLogStreams(input)
-	if err != nil {
-		return nil, true, err
-	}
+	var output *cloudwatchlogs.LogStream
 
-	for _, ls := range resp.LogStreams {
-		if aws.StringValue(ls.LogStreamName) == name {
-			return ls, true, nil
+	err := conn.DescribeLogStreamsPages(input, func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LogStreams {
+			if aws.StringValue(v.LogStreamName) == name {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	if resp.NextToken != nil {
-		return LookupStream(conn, name, logStreamName, resp.NextToken)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, false, nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func ValidStreamName(v interface{}, k string) (ws []string, errors []error) {
+func validStreamName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if regexp.MustCompile(`:`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
