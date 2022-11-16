@@ -3551,6 +3551,9 @@ func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
 	if v, ok := m["media_package_output_settings"].([]interface{}); ok && len(v) > 0 {
 		os.MediaPackageOutputSettings = &types.MediaPackageOutputSettings{} // no exported fields
 	}
+	if v, ok := m["ms_smooth_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.MsSmoothOutputSettings = expandOutputsOutSettingsMsSmoothOutputSettings(v)
+	}
 	if v, ok := m["multiplex_output_settings"].([]interface{}); ok && len(v) > 0 {
 		os.MultiplexOutputSettings = func(inner []interface{}) *types.MultiplexOutputSettings {
 			if len(inner) == 0 {
@@ -3630,6 +3633,24 @@ func expandOutputsOutSettingsHLSOutputSettings(tfList []interface{}) *types.HlsO
 	}
 	if v, ok := m["segment_modifier"].(string); ok && v != "" {
 		out.SegmentModifier = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []interface) *types.MsSmoothOutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.MsSmoothOutputSettings
+	if v, ok := m["h265_packaging_type"].(string); ok && v != "" {
+		out.H265PackagingType = types.MsSmoothH265PackagingType(v)
+	}
+	if v, ok := m["name_modifier"].(string); ok && v != "" {
+		out.NameModifier = aws.String(v)
 	}
 
 	return &out
@@ -4322,6 +4343,7 @@ func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
 			}
 			return []interface{}{} // no exported attributes
 		}(in.MediaPackageOutputSettings),
+		"ms_smooth_output_settings": flattenOutputsOutputSettingsMsSmoothOutputSettings(in.MsSmoothOutputSettings),
 		"multiplex_output_settings": func(inner *types.MultiplexOutputSettings) []interface{} {
 			if inner == nil {
 				return nil
@@ -4375,6 +4397,19 @@ func flattenOutputsOutputSettingsHLSOutputSettings(in *types.HlsOutputSettings) 
 		"h265_packaging_type": string(in.H265PackagingType),
 		"name_modifier":       aws.ToString(in.NameModifier),
 		"segment_modifier":    aws.ToString(in.SegmentModifier),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputsOutputSettingsMsSmoothOutputSettings(in *types.MsSmoothOutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"h265_packaging_type": string(in.H265PackagingType),
+		"name_modifier":       aws.ToString(in.NameModifier),
 	}
 
 	return []interface{}{m}
