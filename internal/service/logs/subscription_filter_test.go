@@ -16,7 +16,6 @@ import (
 
 func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
@@ -50,8 +49,6 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 }
 
 func TestAccLogsSubscriptionFilter_many(t *testing.T) {
-	var sf cloudwatchlogs.SubscriptionFilter
-
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -62,8 +59,8 @@ func TestAccLogsSubscriptionFilter_many(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriptionFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriptionFilterConfig_destinationARNLambdaMany(rName),
-				Check:  testAccCheckSubscriptionFilterManyExists(resourceName, &sf),
+				Config: testAccSubscriptionFilterConfig_destinationARNLambdaMany(rName, 2), // This is the default limit of subscription filters on an account
+				Check:  testAccCheckSubscriptionFilterManyExists(resourceName, 2),
 			},
 		},
 	})
@@ -71,7 +68,6 @@ func TestAccLogsSubscriptionFilter_many(t *testing.T) {
 
 func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -96,7 +92,6 @@ func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 	var logGroup cloudwatchlogs.LogGroup
-
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -122,7 +117,6 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 
 func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -152,7 +146,6 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing
 
 func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-
 	kinesisStream := "aws_kinesis_stream.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -182,7 +175,6 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 
 func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -218,7 +210,6 @@ func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 
 func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-
 	iamRoleResourceName1 := "aws_iam_role.test"
 	iamRoleResourceName2 := "aws_iam_role.test2"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
@@ -262,10 +253,7 @@ func testAccCheckSubscriptionFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		logGroupName := rs.Primary.Attributes["log_group_name"]
-		filterName := rs.Primary.Attributes["name"]
-
-		_, err := tflogs.FindSubscriptionFilter(conn, logGroupName, filterName)
+		_, err := tflogs.FindSubscriptionFilterByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -275,35 +263,32 @@ func testAccCheckSubscriptionFilterDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Subscription Filter still exists")
+		return fmt.Errorf("CloudWatch Logs Filter Subscription still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckSubscriptionFilterExists(n string, filter *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
+func testAccCheckSubscriptionFilterExists(n string, v *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SubscriptionFilter not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("SubscriptionFilter ID not set")
+			return fmt.Errorf("No CloudWatch Logs Filter Subscription ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		logGroupName := rs.Primary.Attributes["log_group_name"]
-		filterName := rs.Primary.Attributes["name"]
-
-		sub, err := tflogs.FindSubscriptionFilter(conn, logGroupName, filterName)
+		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err
 		}
 
-		*filter = *sub
+		*v = *output
 
 		return nil
 	}
@@ -324,12 +309,14 @@ func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.Im
 	}
 }
 
-func testAccCheckSubscriptionFilterManyExists(basename string, mf *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
+func testAccCheckSubscriptionFilterManyExists(basename string, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for i := 0; i < 2; i++ {
+		for i := 0; i < n; i++ {
 			n := fmt.Sprintf("%s.%d", basename, i)
-			testfunc := testAccCheckSubscriptionFilterExists(n, mf)
-			err := testfunc(s)
+			var v cloudwatchlogs.SubscriptionFilter
+
+			err := testAccCheckSubscriptionFilterExists(n, &v)(s)
+
 			if err != nil {
 				return err
 			}
@@ -339,16 +326,13 @@ func testAccCheckSubscriptionFilterManyExists(basename string, mf *cloudwatchlog
 	}
 }
 
-func testAccSubscriptionFilterKinesisDataFirehoseBaseConfig(rName string) string {
+func testAccSubscriptionFilterConfig_kinesisDataFirehoseBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
-}
+data "aws_caller_identity" "current" {}
 
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
   name              = %[1]q
@@ -472,10 +456,9 @@ resource "aws_s3_bucket_acl" "test" {
 `, rName)
 }
 
-func testAccSubscriptionFilterKinesisStreamBaseConfig(rName string) string {
+func testAccSubscriptionFilterConfig_kinesisStreamBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
   name              = %[1]q
@@ -531,10 +514,9 @@ resource "aws_kinesis_stream" "test" {
 `, rName)
 }
 
-func testAccSubscriptionFilterLambdaBaseConfig(rName string) string {
+func testAccSubscriptionFilterConfig_lambdaBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
   name              = %[1]q
@@ -583,10 +565,9 @@ resource "aws_lambda_permission" "test" {
 `, rName)
 }
 
-func testAccSubscriptionFilterLambdaConfigMany(rName string) string {
+func testAccSubscriptionFilterConfig_lambdaMany(rName string, n int) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
   name              = %[1]q
@@ -619,7 +600,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_lambda_function" "test" {
-  count = 2
+  count = %[2]d
 
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-${count.index}"
@@ -636,11 +617,11 @@ resource "aws_lambda_permission" "test" {
   function_name = aws_lambda_function.test[count.index].arn
   principal     = "logs.amazonaws.com"
 }
-`, rName)
+`, rName, n)
 }
 
 func testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehose(rName string) string {
-	return testAccSubscriptionFilterKinesisDataFirehoseBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisDataFirehoseBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_kinesis_firehose_delivery_stream.test.arn
   filter_pattern  = "logtype test"
@@ -648,11 +629,11 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   name            = %[1]q
   role_arn        = aws_iam_role.cloudwatchlogs.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccSubscriptionFilterConfig_destinationARNKinesisStream(rName string) string {
-	return testAccSubscriptionFilterKinesisStreamBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisStreamBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_kinesis_stream.test.arn
   filter_pattern  = "logtype test"
@@ -660,22 +641,22 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   name            = %[1]q
   role_arn        = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccSubscriptionFilterConfig_destinationARNLambda(rName string) string {
-	return testAccSubscriptionFilterLambdaBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_lambda_function.test.arn
   filter_pattern  = "logtype test"
   log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccSubscriptionFilterConfig_distribution(rName, distribution string) string {
-	return testAccSubscriptionFilterLambdaBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_lambda_function.test.arn
   distribution    = %[2]q
@@ -683,24 +664,24 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   log_group_name  = aws_cloudwatch_log_group.test.name
   name            = %[1]q
 }
-`, rName, distribution)
+`, rName, distribution))
 }
 
-func testAccSubscriptionFilterConfig_destinationARNLambdaMany(rName string) string {
-	return testAccSubscriptionFilterLambdaConfigMany(rName) + fmt.Sprintf(`
+func testAccSubscriptionFilterConfig_destinationARNLambdaMany(rName string, n int) string {
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaMany(rName, n), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
-  count = 2 # This is the default limit of subscription filters on an account
+  count = %[2]d
 
   destination_arn = aws_lambda_function.test[count.index].arn
   filter_pattern  = "logtype test"
   log_group_name  = aws_cloudwatch_log_group.test.name
   name            = "%[1]s-${count.index}"
 }
-`, rName)
+`, rName, n))
 }
 
 func testAccSubscriptionFilterConfig_roleARN1(rName string) string {
-	return testAccSubscriptionFilterKinesisStreamBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisStreamBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
   destination_arn = aws_kinesis_stream.test.arn
   filter_pattern  = "logtype test"
@@ -708,11 +689,11 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   name            = %[1]q
   role_arn        = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccSubscriptionFilterConfig_roleARN2(rName string) string {
-	return testAccSubscriptionFilterKinesisStreamBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisStreamBase(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test2" {
   name = "%[1]s-2"
 
@@ -762,5 +743,5 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   name            = %[1]q
   role_arn        = aws_iam_role.test2.arn
 }
-`, rName)
+`, rName))
 }
