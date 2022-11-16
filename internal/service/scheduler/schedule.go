@@ -39,6 +39,11 @@ func ResourceSchedule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(0, 512)),
+			},
 			"flexible_time_window": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -135,6 +140,10 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
 	}
 
+	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+		in.Description = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("flexible_time_window"); ok && len(v.([]interface{})) > 0 {
 		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -197,6 +206,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("arn", out.Arn)
+	d.Set("description", out.Description)
 	d.Set("group_name", out.GroupName)
 	d.Set("name", out.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
@@ -217,6 +227,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).SchedulerClient
 
 	in := &scheduler.UpdateScheduleInput{
+		Description:        aws.String(d.Get("description").(string)),
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
 		GroupName:          aws.String(d.Get("group_name").(string)),
 		Name:               aws.String(d.Get("name").(string)),
