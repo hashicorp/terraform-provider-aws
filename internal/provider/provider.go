@@ -165,6 +165,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
@@ -2036,6 +2037,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_user_profile":                              sagemaker.ResourceUserProfile(),
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
+
+			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
 			"aws_schemas_discoverer": schemas.ResourceDiscoverer(),
 			"aws_schemas_registry":   schemas.ResourceRegistry(),
