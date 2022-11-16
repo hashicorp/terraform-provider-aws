@@ -2809,7 +2809,6 @@ func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interf
 	if v, ok := m["udp_group_settings"].([]interface{}); ok && len(v) > 0 {
 		o.UdpGroupSettings = expandUdpGroupSettings(v)
 	}
-	// TODO implement rest of output group settings
 
 	return &o
 }
@@ -3638,7 +3637,7 @@ func expandOutputsOutSettingsHLSOutputSettings(tfList []interface{}) *types.HlsO
 	return &out
 }
 
-func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []interface) *types.MsSmoothOutputSettings {
+func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []interface{}) *types.MsSmoothOutputSettings {
 	if tfList == nil {
 		return nil
 	}
@@ -4148,7 +4147,7 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 			d.Name = aws.String(v)
 		}
 		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
-			d.CodecSettings = nil // TODO expandChannelEncoderSettingsVideoDescriptionsCodecSettings(v)
+			d.CodecSettings = expandChannelEncoderSettingsVideoDescriptionsCodecSettings(v)
 		}
 		if v, ok := m["height"].(int); ok {
 			d.Height = int32(v)
@@ -4170,6 +4169,207 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 	}
 
 	return videoDesc
+}
+
+func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []interface{}) *types.VideoCodecSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.VideoCodecSettings
+	if v, ok := m["frame_capture_settings"].([]interface{}); ok && len(v) > 0 {
+		out.FrameCaptureSettings = expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(v)
+	}
+	if v, ok := m["h264_settings"].([]interface{}); ok && len(v) > 0 {
+		out.H264Settings = expandsVideoDescriptionsCodecSettingsH264Settings(v)
+	}
+
+	return &out
+}
+
+func expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(tfList []interface{}) *types.FrameCaptureSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.FrameCaptureSettings
+	if v, ok := m["capture_interval"].(int); ok {
+		out.CaptureInterval = int32(v)
+	}
+	if v, ok := m["capture_interval_units"].(string); ok && v != "" {
+		out.CaptureIntervalUnits = types.FrameCaptureIntervalUnit(v)
+	}
+
+	return &out
+}
+
+func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *types.H264Settings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.H264Settings
+	if v, ok := m["adaptive_quantization"].(string); ok && v != "" {
+		out.AdaptiveQuantization = types.H264AdaptiveQuantization(v)
+	}
+	if v, ok := m["afd_signaling"].(string); ok && v != "" {
+		out.AfdSignaling = types.AfdSignaling(v)
+	}
+	if v, ok := m["bitrate"].(int); ok {
+		out.Bitrate = int32(v)
+	}
+	if v, ok := m["buf_fill_pct"].(int); ok {
+		out.BufFillPct = int32(v)
+	}
+	if v, ok := m["buf_size"].(int); ok {
+		out.BufSize = int32(v)
+	}
+	if v, ok := m["color_metadata"].(string); ok && v != "" {
+		out.ColorMetadata = types.H264ColorMetadata(v)
+	}
+	if v, ok := m["entropy_encoding"].(string); ok && v != "" {
+		out.EntropyEncoding = types.H264EntropyEncoding(v)
+	}
+	if v, ok := m["filter_settings"].([]interface{}); ok && len(v) > 0 {
+		out.FilterSettings = expandH264SettingsFilterSettings(v)
+	}
+	if v, ok := m["fixed_afd"].(string); ok && v != "" {
+		out.FixedAfd = types.FixedAfd(v)
+	}
+	if v, ok := m["flicker_aq"].(string); ok && v != "" {
+		out.FlickerAq = types.H264FlickerAq(v)
+	}
+	if v, ok := m["force_field_pictures"].(string); ok && v != "" {
+		out.ForceFieldPictures = types.H264ForceFieldPictures(v)
+	}
+	if v, ok := m["framerate_control"].(string); ok && v != "" {
+		out.FramerateControl = types.H264FramerateControl(v)
+	}
+	if v, ok := m["framerate_denominator"].(int); ok {
+		out.FramerateDenominator = int32(v)
+	}
+	if v, ok := m["framerate_numerator"].(int); ok {
+		out.FramerateNumerator = int32(v)
+	}
+	if v, ok := m["gop_b_reference"].(string); ok && v != "" {
+		out.GopBReference = types.H264GopBReference(v)
+	}
+	if v, ok := m["gop_closed_cadence"].(int); ok {
+		out.GopClosedCadence = int32(v)
+	}
+	if v, ok := m["gop_num_b_frames"].(int); ok {
+		out.GopNumBFrames = int32(v)
+	}
+	if v, ok := m["gop_size"].(float32); ok {
+		out.GopSize = float64(v)
+	}
+	if v, ok := m["gop_size_units"].(string); ok && v != "" {
+		out.GopSizeUnits = types.H264GopSizeUnits(v)
+	}
+	if v, ok := m["level"].(string); ok && v != "" {
+		out.Level = types.H264Level(v)
+	}
+	if v, ok := m["look_ahead_rate_control"].(string); ok && v != "" {
+		out.LookAheadRateControl = types.H264LookAheadRateControl(v)
+	}
+	if v, ok := m["max_bitrate"].(int); ok {
+		out.MaxBitrate = int32(v)
+	}
+	if v, ok := m["min_i_interval"].(int); ok {
+		out.MinIInterval = int32(v)
+	}
+	if v, ok := m["num_ref_frames"].(int); ok {
+		out.NumRefFrames = int32(v)
+	}
+	if v, ok := m["par_control"].(string); ok && v != "" {
+		out.ParControl = types.H264ParControl(v)
+	}
+	if v, ok := m["par_denominator"].(int); ok {
+		out.ParDenominator = int32(v)
+	}
+	if v, ok := m["par_numerator"].(int); ok {
+		out.ParNumerator = int32(v)
+	}
+	if v, ok := m["profile"].(string); ok && v != "" {
+		out.Profile = types.H264Profile(v)
+	}
+	if v, ok := m["quality_level"].(string); ok && v != "" {
+		out.QualityLevel = types.H264QualityLevel(v)
+	}
+	if v, ok := m["qvbr_quality_level"].(int); ok {
+		out.QvbrQualityLevel = int32(v)
+	}
+	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
+		out.RateControlMode = types.H264RateControlMode(v)
+	}
+	if v, ok := m["scan_type"].(string); ok && v != "" {
+		out.ScanType = types.H264ScanType(v)
+	}
+	if v, ok := m["scene_change_detect"].(string); ok && v != "" {
+		out.SceneChangeDetect = types.H264SceneChangeDetect(v)
+	}
+	if v, ok := m["slices"].(int); ok {
+		out.Slices = int32(v)
+	}
+	if v, ok := m["softness"].(int); ok {
+		out.Softness = int32(v)
+	}
+	if v, ok := m["spatial_aq"].(string); ok && v != "" {
+		out.SpatialAq = types.H264SpatialAq(v)
+	}
+	if v, ok := m["subgop_length"].(string); ok && v != "" {
+		out.SubgopLength = types.H264SubGopLength(v)
+	}
+	if v, ok := m["syntax"].(string); ok && v != "" {
+		out.Syntax = types.H264Syntax(v)
+	}
+	if v, ok := m["temporal_aq"].(string); ok && v != "" {
+		out.TemporalAq = types.H264TemporalAq(v)
+	}
+	if v, ok := m["timecode_insertion"].(string); ok && v != "" {
+		out.TimecodeInsertion = types.H264TimecodeInsertionBehavior(v)
+	}
+
+	return &out
+}
+
+func expandH264SettingsFilterSettings(tfList []interface{}) *types.H264FilterSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.H264FilterSettings
+	if v, ok := m["temporal_filter_settings"].([]interface{}); ok && len(v) > 0 {
+		out.TemporalFilterSettings = expandH264FilterSettingsTemporalFilterSettings(v)
+	}
+
+	return &out
+}
+
+func expandH264FilterSettingsTemporalFilterSettings(tfList []interface{}) *types.TemporalFilterSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.TemporalFilterSettings
+	if v, ok := m["post_filter_sharpening"].(string); ok && v != "" {
+		out.PostFilterSharpening = types.TemporalFilterPostFilterSharpening(v)
+	}
+	if v, ok := m["strength"].(string); ok && v != "" {
+		out.Strength = types.TemporalFilterStrength(v)
+	}
+
+	return &out
 }
 
 func expandNielsenCbetSettings(tfList []interface{}) *types.NielsenCBET {
@@ -5106,6 +5306,7 @@ func flattenVideoDescriptionsCodecSettings(in *types.VideoCodecSettings) []inter
 
 	m := map[string]interface{}{
 		"frame_capture_settings": flattenCodecSettingsFrameCaptureSettings(in.FrameCaptureSettings),
+		"h264_settings":          flattenCodecSettingsH264Settings(in.H264Settings),
 	}
 
 	return []interface{}{m}
@@ -5119,6 +5320,80 @@ func flattenCodecSettingsFrameCaptureSettings(in *types.FrameCaptureSettings) []
 	m := map[string]interface{}{
 		"capture_interval":       int(in.CaptureInterval),
 		"capture_interval_units": string(in.CaptureIntervalUnits),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsH264Settings(in *types.H264Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"adaptive_quantization":   string(in.AdaptiveQuantization),
+		"afd_signaling":           string(in.AfdSignaling),
+		"bitrate":                 int(in.Bitrate),
+		"buf_size":                int(in.BufSize),
+		"color_metadata":          string(in.ColorMetadata),
+		"entropy_encoding":        string(in.EntropyEncoding),
+		"filter_settings":         flattenH264SettingsFilterSettings(in.FilterSettings),
+		"fixed_afd":               string(in.FixedAfd),
+		"flicker_aq":              string(in.FlickerAq),
+		"force_field_pictures":    string(in.ForceFieldPictures),
+		"framerate_control":       string(in.FramerateControl),
+		"framerate_denominator":   int(in.FramerateDenominator),
+		"framerate_numerator":     int(in.FramerateNumerator),
+		"gop_b_reference":         string(in.GopBReference),
+		"gop_closed_cadence":      int(in.GopClosedCadence),
+		"gop_num_b_frames":        int(in.GopNumBFrames),
+		"gop_size":                float32(in.GopSize),
+		"gop_size_units":          string(in.GopSizeUnits),
+		"level":                   string(in.Level),
+		"look_ahead_rate_control": string(in.LookAheadRateControl),
+		"max_bitrate":             int(in.MaxBitrate),
+		"min_interval":            int(in.MinIInterval),
+		"num_ref_frames":          int(in.NumRefFrames),
+		"par_control":             string(in.ParControl),
+		"par_denominator":         int(in.ParDenominator),
+		"par_numerator":           int(in.ParNumerator),
+		"profile":                 string(in.Profile),
+		"quality_level":           string(in.QualityLevel),
+		"qvbr_quality_level":      string(in.QvbrQualityLevel),
+		"rate_control_mode":       string(in.RateControlMode),
+		"scan_type":               string(in.ScanType),
+		"scene_change_detect":     string(in.SceneChangeDetect),
+		"slices":                  int(in.Slices),
+		"spatial_aq":              string(in.SpatialAq),
+		"subgop_length":           string(in.SubgopLength),
+		"syntax":                  string(in.Syntax),
+		"temporal_aq":             string(in.TemporalAq),
+		"timecode_insertion":      string(in.TimecodeInsertion),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenH264SettingsFilterSettings(in *types.H264FilterSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"temporal_filter_settings": flattenFilterSettingsTemporalFilterSettings(in.TemporalFilterSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFilterSettingsTemporalFilterSettings(in *types.TemporalFilterSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"post_filter_sharpening": string(in.PostFilterSharpening),
+		"strength":               string(in.Strength),
 	}
 
 	return []interface{}{m}
