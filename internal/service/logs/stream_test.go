@@ -127,7 +127,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 		_, err := tflogs.FindLogStreamByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
-			return nil
+			continue
 		}
 
 		if err != nil {
