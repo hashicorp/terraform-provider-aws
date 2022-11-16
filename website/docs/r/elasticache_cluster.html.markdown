@@ -119,6 +119,7 @@ The following arguments are optional:
   Otherwise, specify the full version desired, e.g., `5.0.6`.
   The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
+* `ip_discovery` - (Optional) The network type for the cache cluster, either `ipv4` or `ipv6`. IPv6 is supported with Redis engine `6.2` onword or Memcached version `1.6.6` for all [Nitro system](https://aws.amazon.com/ec2/nitro/) instances
 * `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
