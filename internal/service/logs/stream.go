@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -63,6 +64,14 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(name)
+
+	_, err = tfresource.RetryWhenNotFoundContext(ctx, 2*time.Minute, func() (interface{}, error) {
+		return FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for CloudWatch Logs Log Stream (%s) create: %s", d.Id(), err)
+	}
 
 	return resourceStreamRead(ctx, d, meta)
 }
