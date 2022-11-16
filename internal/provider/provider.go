@@ -569,6 +569,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
+			"aws_ec2_spot_placement_scores":                  ec2.DataSourceSpotPricementScores(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
 			"aws_ec2_transit_gateway_attachment":             ec2.DataSourceTransitGatewayAttachment(),
 			"aws_ec2_transit_gateway_connect":                ec2.DataSourceTransitGatewayConnect(),
