@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -235,7 +236,7 @@ func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindCustomerGatewayByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindCustomerGatewayByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -264,7 +265,7 @@ func testAccCheckCustomerGatewayExists(n string, v *ec2.CustomerGateway) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		output, err := tfec2.FindCustomerGatewayByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindCustomerGatewayByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
