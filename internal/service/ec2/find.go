@@ -3358,12 +3358,51 @@ func FindVPNGateway(conn *ec2.EC2, input *ec2.DescribeVpnGatewaysInput) (*ec2.Vp
 	return output.VpnGateways[0], nil
 }
 
-func FindCustomerGatewayByID(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+func FindCustomerGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCustomerGatewaysInput) (*ec2.CustomerGateway, error) {
+	output, err := FindCustomerGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindCustomerGateways(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCustomerGatewaysInput) ([]*ec2.CustomerGateway, error) {
+	output, err := conn.DescribeCustomerGatewaysWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CustomerGateways, nil
+}
+
+func FindCustomerGatewayByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
 	input := &ec2.DescribeCustomerGatewaysInput{
 		CustomerGatewayIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindCustomerGateway(conn, input)
+	output, err := FindCustomerGateway(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -3384,31 +3423,6 @@ func FindCustomerGatewayByID(conn *ec2.EC2, id string) (*ec2.CustomerGateway, er
 	}
 
 	return output, nil
-}
-
-func FindCustomerGateway(conn *ec2.EC2, input *ec2.DescribeCustomerGatewaysInput) (*ec2.CustomerGateway, error) {
-	output, err := conn.DescribeCustomerGateways(input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.CustomerGateways) == 0 || output.CustomerGateways[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.CustomerGateways); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.CustomerGateways[0], nil
 }
 
 func FindVPNConnectionByID(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {

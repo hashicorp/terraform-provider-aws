@@ -1996,17 +1996,17 @@ const (
 	customerGatewayDeletedTimeout = 5 * time.Minute
 )
 
-func WaitCustomerGatewayCreated(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+func WaitCustomerGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{CustomerGatewayStatePending},
 		Target:     []string{CustomerGatewayStateAvailable},
-		Refresh:    StatusCustomerGatewayState(conn, id),
+		Refresh:    StatusCustomerGatewayState(ctx, conn, id),
 		Timeout:    customerGatewayCreatedTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
 		return output, err
@@ -2015,15 +2015,15 @@ func WaitCustomerGatewayCreated(conn *ec2.EC2, id string) (*ec2.CustomerGateway,
 	return nil, err
 }
 
-func WaitCustomerGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
+func WaitCustomerGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{CustomerGatewayStateAvailable, CustomerGatewayStateDeleting},
 		Target:  []string{},
-		Refresh: StatusCustomerGatewayState(conn, id),
+		Refresh: StatusCustomerGatewayState(ctx, conn, id),
 		Timeout: customerGatewayDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
 		return output, err
