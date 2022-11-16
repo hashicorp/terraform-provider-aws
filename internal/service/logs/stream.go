@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,9 +19,9 @@ import (
 
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStreamCreate,
-		Read:   resourceStreamRead,
-		Delete: resourceStreamDelete,
+		CreateWithoutTimeout: resourceStreamCreate,
+		ReadWithoutTimeout:   resourceStreamRead,
+		DeleteWithoutTimeout: resourceStreamDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceStreamImport,
@@ -45,7 +47,7 @@ func ResourceStream() *schema.Resource {
 	}
 }
 
-func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	name := d.Get("name").(string)
@@ -54,21 +56,21 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 		LogStreamName: aws.String(name),
 	}
 
-	_, err := conn.CreateLogStream(input)
+	_, err := conn.CreateLogStreamWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating CloudWatch Logs Log Stream (%s): %w", name, err)
+		return diag.Errorf("creating CloudWatch Logs Log Stream (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceStreamRead(d, meta)
+	return resourceStreamRead(ctx, d, meta)
 }
 
-func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	ls, err := FindLogStreamByTwoPartKey(conn, d.Get("log_group_name").(string), d.Id())
+	ls, err := FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Log Stream (%s) not found, removing from state", d.Id())
@@ -77,7 +79,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading CloudWatch Logs Log Stream (%s): %w", d.Id(), err)
+		return diag.Errorf("reading CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", ls.Arn)
@@ -86,11 +88,11 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
-	_, err := conn.DeleteLogStream(&cloudwatchlogs.DeleteLogStreamInput{
+	_, err := conn.DeleteLogStreamWithContext(ctx, &cloudwatchlogs.DeleteLogStreamInput{
 		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
 		LogStreamName: aws.String(d.Id()),
 	})
@@ -100,7 +102,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudWatch Logs Log Stream (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -121,14 +123,14 @@ func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindLogStreamByTwoPartKey(conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.LogStream, error) {
+func FindLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.LogStream, error) {
 	input := &cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName:        aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(name),
 	}
 	var output *cloudwatchlogs.LogStream
 
-	err := conn.DescribeLogStreamsPages(input, func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
+	err := conn.DescribeLogStreamsPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
