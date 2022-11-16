@@ -69,7 +69,6 @@ The default is `false`.
 * `include_public` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

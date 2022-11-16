@@ -180,7 +180,7 @@ func TestAccMediaLiveInput_disappears(t *testing.T) {
 }
 
 func testAccCheckInputDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -213,7 +213,7 @@ func testAccCheckInputExists(name string, input *medialive.DescribeInputOutput) 
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameInput, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 		ctx := context.Background()
 		resp, err := tfmedialive.FindInputByID(ctx, conn, rs.Primary.ID)
 
@@ -228,7 +228,7 @@ func testAccCheckInputExists(name string, input *medialive.DescribeInputOutput) 
 }
 
 func testAccInputsPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
 	ctx := context.Background()
 
 	input := &medialive.ListInputsInput{}

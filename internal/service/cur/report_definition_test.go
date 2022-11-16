@@ -329,7 +329,6 @@ func testAccCheckReportDefinitionDestroy(s *terraform.State) error {
 		return fmt.Errorf("Report Definition still exists: %q", rs.Primary.ID)
 	}
 	return nil
-
 }
 
 func testAccCheckReportDefinitionExists(resourceName string) resource.TestCheckFunc {

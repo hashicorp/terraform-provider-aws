@@ -2,6 +2,7 @@ package sns
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -113,15 +115,16 @@ var (
 		"redrive_policy":                 SubscriptionAttributeNameRedrivePolicy,
 		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleARN,
 		"topic_arn":                      SubscriptionAttributeNameTopicARN,
-	}, subscriptionSchema)
+	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
 func ResourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicSubscriptionCreate,
-		Read:   resourceTopicSubscriptionRead,
-		Update: resourceTopicSubscriptionUpdate,
-		Delete: resourceTopicSubscriptionDelete,
+		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
+		ReadWithoutTimeout:   resourceTopicSubscriptionRead,
+		UpdateWithoutTimeout: resourceTopicSubscriptionUpdate,
+		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -130,13 +133,13 @@ func ResourceTopicSubscription() *schema.Resource {
 	}
 }
 
-func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Endpoint, Protocol and TopicArn are not passed in Attributes.
@@ -152,11 +155,10 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		TopicArn:              aws.String(d.Get("topic_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating SNS Topic Subscription: %s", input)
-	output, err := conn.Subscribe(input)
+	output, err := conn.SubscribeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SNS Topic Subscription: %w", err)
+		return diag.Errorf("creating SNS Topic Subscription: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.SubscriptionArn))
@@ -177,19 +179,19 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if waitForConfirmation {
-		if _, err := waitSubscriptionConfirmed(conn, d.Id(), timeout); err != nil {
-			return fmt.Errorf("error waiting for SNS Topic Subscription (%s) confirmation: %w", d.Id(), err)
+		if _, err := waitSubscriptionConfirmed(ctx, conn, d.Id(), timeout); err != nil {
+			return diag.Errorf("waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTopicSubscriptionRead(d, meta)
+	return resourceTopicSubscriptionRead(ctx, d, meta)
 }
 
-func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(subscriptionCreateTimeout, func() (interface{}, error) {
-		return FindSubscriptionAttributesByARN(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
+		return FindSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -199,37 +201,37 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SNS Topic Subscription (%s): %w", d.Id(), err)
+		return diag.Errorf("reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
 	attributes := outputRaw.(map[string]string)
 
-	return subscriptionAttributeMap.APIAttributesToResourceData(attributes, d)
+	return diag.FromErr(subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }
 
-func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	err = putSubscriptionAttributes(conn, d.Id(), attributes)
+	err = putSubscriptionAttributes(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceTopicSubscriptionRead(d, meta)
+	return resourceTopicSubscriptionRead(ctx, d, meta)
 }
 
-func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] Deleting SNS Topic Subscription: %s", d.Id())
-	_, err := conn.Unsubscribe(&sns.UnsubscribeInput{
+	_, err := conn.UnsubscribeWithContext(ctx, &sns.UnsubscribeInput{
 		SubscriptionArn: aws.String(d.Id()),
 	})
 
@@ -237,16 +239,20 @@ func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	if _, err := waitSubscriptionDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SNS Topic Subscription (%s) deletion: %w", d.Id(), err)
+	if err != nil {
+		return diag.Errorf("deleting SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
-	return err
+	if _, err := waitSubscriptionDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
+	}
+
+	return nil
 }
 
-func putSubscriptionAttributes(conn *sns.SNS, arn string, attributes map[string]string) error {
+func putSubscriptionAttributes(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
 	for name, value := range attributes {
-		err := putSubscriptionAttribute(conn, arn, name, value)
+		err := putSubscriptionAttribute(ctx, conn, arn, name, value)
 
 		if err != nil {
 			return err
@@ -256,7 +262,7 @@ func putSubscriptionAttributes(conn *sns.SNS, arn string, attributes map[string]
 	return nil
 }
 
-func putSubscriptionAttribute(conn *sns.SNS, arn string, name, value string) error {
+func putSubscriptionAttribute(ctx context.Context, conn *sns.SNS, arn string, name, value string) error {
 	// https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html#message-filtering-policy-remove
 	if name == SubscriptionAttributeNameFilterPolicy && value == "" {
 		value = "{}"
@@ -274,11 +280,10 @@ func putSubscriptionAttribute(conn *sns.SNS, arn string, name, value string) err
 		input.AttributeValue = nil
 	}
 
-	log.Printf("[DEBUG] Setting SNS Topic Subscription attribute: %s", input)
-	_, err := conn.SetSubscriptionAttributes(input)
+	_, err := conn.SetSubscriptionAttributesWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error setting SNS Topic Subscription (%s) attribute (%s): %w", arn, name, err)
+		return fmt.Errorf("setting SNS Topic Subscription (%s) attribute (%s): %w", arn, name, err)
 	}
 
 	return nil

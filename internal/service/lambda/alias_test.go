@@ -205,7 +205,6 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Lambda alias was not deleted")
 		}
-
 	}
 
 	return nil
@@ -357,7 +356,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -380,7 +379,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -403,7 +402,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest_modified.zip")
   publish          = "true"
 }

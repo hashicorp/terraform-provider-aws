@@ -100,7 +100,7 @@ func DataSourceFaq() *schema.Resource {
 }
 
 func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("faq_id").(string)

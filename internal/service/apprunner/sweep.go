@@ -43,7 +43,7 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	ctx := context.Background()
 	var errs *multierror.Error
 
@@ -108,7 +108,7 @@ func sweepConnections(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	ctx := context.Background()
 
 	var errs *multierror.Error
@@ -169,7 +169,7 @@ func sweepServices(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppRunnerConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	ctx := context.Background()
 	var errs *multierror.Error
 

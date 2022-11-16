@@ -52,7 +52,6 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN assigned by AWS for this Elastic Beanstalk Application.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-
 ## Import
 
 Elastic Beanstalk Applications can be imported using the `name`, e.g.,

@@ -55,6 +55,43 @@ resource "aws_lightsail_container_service" "my_container_service" {
 }
 ```
 
+### Private Registry Access
+
+```terraform
+resource "aws_lightsail_container_service" "default" {
+  # ... other configuration ...
+
+  private_registry_access {
+    ecr_image_puller_role {
+      is_active = true
+    }
+  }
+}
+
+resource "aws_ecr_repository_policy" "default" {
+  repository = aws_ecr_repository.default.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowLightsailPull",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_lightsail_container_service.default.private_registry_access[0].ecr_image_puller_role[0].principal_arn}"
+      },
+      "Action": [
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ]
+    }
+  ]
+}
+EOF
+}
+```
+
 ## Argument Reference
 
 ~> **NOTE:** You must create and validate an SSL/TLS certificate before you can use `public_domain_names` with your
@@ -76,10 +113,23 @@ The following arguments are supported:
   specify are used when you create a deployment with a container configured as the public endpoint of your container
   service. If you don't specify public domain names, then you can use the default domain of the container service.
   Defined below.
+* `private_registry_access` - (Optional) An object to describe the configuration for the container service to access private container image repositories, such as Amazon Elastic Container Registry (Amazon ECR) private repositories. See [Private Registry Access](#private-registry-access) below for more details.
 * `tags` - (Optional) Map of container service tags. To tag at launch, specify the tags in the Launch Template. If
   configured with a provider
   [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
   present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Private Registry Access
+
+The `private_registry_access` block supports the following arguments:
+
+* `ecr_image_puller_role` - (Optional) Describes a request to configure an Amazon Lightsail container service to access private container image repositories, such as Amazon Elastic Container Registry (Amazon ECR) private repositories. See [ECR Image Puller Role](#ecr-image-puller-role) below for more details.
+
+### ECR Image Puller Role
+
+The `ecr_image_puller_role` blocks supports the following arguments:
+
+* `is_active` - (Optional) A Boolean value that indicates whether to activate the role. The default is `false`.
 
 ## Attributes Reference
 
@@ -104,7 +154,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)

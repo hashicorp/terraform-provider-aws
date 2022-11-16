@@ -14,7 +14,7 @@ const (
 type IAMPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
-	Statements []*IAMPolicyStatement `json:"Statement"`
+	Statements []*IAMPolicyStatement `json:"Statement,omitempty"`
 }
 
 type IAMPolicyStatement struct {

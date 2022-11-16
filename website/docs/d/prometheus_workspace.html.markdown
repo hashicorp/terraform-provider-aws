@@ -6,7 +6,7 @@ description: |-
   Gets information on an Amazon Managed Prometheus workspace.
 ---
 
-# Data Source: aws_amp_workspace
+# Data Source: aws_prometheus_workspace
 
 Provides an Amazon Managed Prometheus workspace data source.
 
@@ -15,7 +15,7 @@ Provides an Amazon Managed Prometheus workspace data source.
 ### Basic configuration
 
 ```terraform
-data "aws_amp_workspace" "example" {
+data "aws_prometheus_workspace" "example" {
   workspace_id = "ws-41det8a1-2c67-6a1a-9381-9b83d3d78ef7"
 }
 ```

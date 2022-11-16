@@ -59,6 +59,6 @@ All of the argument attributes except `filter` are also exported as result attri
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

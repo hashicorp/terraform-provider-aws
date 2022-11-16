@@ -9,6 +9,21 @@ const (
 )
 
 const (
+	ClusterStatusAvailable                  = "available"
+	ClusterStatusBackingUp                  = "backing-up"
+	ClusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
+	ClusterStatusCreating                   = "creating"
+	ClusterStatusDeleting                   = "deleting"
+	ClusterStatusMigrating                  = "migrating"
+	ClusterStatusModifying                  = "modifying"
+	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
+	ClusterStatusRebooting                  = "rebooting"
+	ClusterStatusRenaming                   = "renaming"
+	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	ClusterStatusUpgrading                  = "upgrading"
+)
+
+const (
 	storageTypeStandard = "standard"
 	storageTypeGP2      = "gp2"
 	storageTypeIO1      = "io1"
@@ -139,6 +154,7 @@ func ClusterExportableLogType_Values() []string {
 		ExportableLogTypeGeneral,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
+		ExportableLogTypeUpgrade,
 	}
 }
 
@@ -196,4 +212,14 @@ func TimeoutAction_Values() []string {
 
 const (
 	propagationTimeout = 2 * time.Minute
+)
+
+const (
+	ResNameTags = "Tags"
+)
+
+const (
+	ReservedInstanceStateActive         = "active"
+	ReservedInstanceStateRetired        = "retired"
+	ReservedInstanceStatePaymentPending = "payment-pending"
 )

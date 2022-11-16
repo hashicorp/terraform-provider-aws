@@ -185,7 +185,6 @@ func testAccCheckOrganizationalUnitDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckOrganizationalUnitExists(n string, ou *organizations.OrganizationalUnit) resource.TestCheckFunc {

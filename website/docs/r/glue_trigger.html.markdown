@@ -150,7 +150,6 @@ The following arguments are supported:
 * `batch_size` - (Required)Number of events that must be received from Amazon EventBridge before EventBridge  event trigger fires.
 * `batch_window` - (Optional) Window of time in seconds after which EventBridge event trigger fires. Window starts when first event is received. Default value is `900`.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -162,7 +161,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `delete` - (Default `5m`)

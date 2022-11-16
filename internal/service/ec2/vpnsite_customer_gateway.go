@@ -37,7 +37,7 @@ func ResourceCustomerGateway() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: valid4ByteASN,
+				ValidateFunc: verify.Valid4ByteASN,
 			},
 			"certificate_arn": {
 				Type:         schema.TypeString,
@@ -76,17 +76,20 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	i64BgpAsn, err := strconv.ParseInt(d.Get("bgp_asn").(string), 10, 64)
-
-	if err != nil {
-		return err
-	}
-
 	input := &ec2.CreateCustomerGatewayInput{
-		BgpAsn:            aws.Int64(i64BgpAsn),
 		IpAddress:         aws.String(d.Get("ip_address").(string)),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
 		Type:              aws.String(d.Get("type").(string)),
+	}
+
+	if v, ok := d.GetOk("bgp_asn"); ok {
+		v, err := strconv.ParseInt(v.(string), 10, 64)
+
+		if err != nil {
+			return err
+		}
+
+		input.BgpAsn = aws.Int64(v)
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {

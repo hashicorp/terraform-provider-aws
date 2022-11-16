@@ -135,6 +135,12 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"custom_iam_instance_profile": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+			},
 			"customer_owned_ip_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -569,6 +575,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
@@ -839,7 +849,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
 		_, err := tfresource.RetryWhen(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceFromS3(input)
@@ -922,6 +931,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("backup_window"); ok {
 			modifyDbInstanceInput.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
@@ -1049,7 +1062,18 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
-		_, err := conn.RestoreDBInstanceFromDBSnapshot(input)
+		_, err := tfresource.RetryWhen(propagationTimeout,
+			func() (interface{}, error) {
+				return conn.RestoreDBInstanceFromDBSnapshot(input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
@@ -1106,6 +1130,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("availability_zone"); ok {
 			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
@@ -1193,7 +1221,18 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
-		_, err := conn.RestoreDBInstanceToPointInTime(input)
+		_, err := tfresource.RetryWhen(propagationTimeout,
+			func() (interface{}, error) {
+				return conn.RestoreDBInstanceToPointInTime(input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("creating RDS DB Instance (restore to point-in-time) (%s): %w", identifier, err)
@@ -1245,6 +1284,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("character_set_name"); ok {
 			input.CharacterSetName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
@@ -1351,12 +1394,21 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+		outputRaw, err := tfresource.RetryWhen(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstance(input)
 			},
-			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "ENHANCED_MONITORING") {
+					return true, err
+				}
+				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("creating RDS DB Instance (%s): %w", identifier, err)
@@ -1380,7 +1432,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
 
-		log.Printf("[INFO] Modifying RDS DB Instance: %s", modifyDbInstanceInput)
 		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
 
 		if err != nil {
@@ -1436,6 +1487,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
 	d.Set("character_set_name", v.CharacterSetName)
 	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
+	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 	d.Set("db_name", v.DBName)
 	if v.DBSubnetGroup != nil {
@@ -1720,7 +1772,6 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Updating DB Instance: %s", input)
 		_, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
 			func() (interface{}, error) {
 				return conn.ModifyDBInstance(input)
@@ -1806,6 +1857,43 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Id())
 	_, err := conn.DeleteDBInstance(input)
+
+	if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
+		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+			_, ierr := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
+				func() (interface{}, error) {
+					return conn.ModifyDBInstance(&rds.ModifyDBInstanceInput{
+						ApplyImmediately:     aws.Bool(true),
+						DBInstanceIdentifier: aws.String(d.Id()),
+						DeletionProtection:   aws.Bool(false),
+					})
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
+						return true, err
+					}
+
+					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if ierr != nil {
+				return fmt.Errorf("updating RDS DB Instance (%s): %w", d.Id(), err)
+			}
+
+			if _, ierr := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+				return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), ierr)
+			}
+
+			_, err = conn.DeleteDBInstance(input)
+		}
+	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil

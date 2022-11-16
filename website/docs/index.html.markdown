@@ -14,7 +14,7 @@ with the proper credentials before you can use it.
 Use the navigation to the left to read about the available resources.
 
 To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) on HashiCorp's Learn platform. Interact with AWS services,
+hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
 including Lambda, RDS, and IAM by following the [AWS services
 tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
@@ -131,7 +131,6 @@ Other environment variables related to authorization are:
 * `AWS_CONFIG_FILE`
 * `AWS_SHARED_CREDENTIALS_FILE`
 
-
 ### Shared Configuration and Credentials Files
 
 The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
@@ -186,7 +185,7 @@ provider "aws" {
 }
 ```
 
-> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial.
 
 ### Assuming an IAM Role Using A Web Identity
 
@@ -197,7 +196,7 @@ Usage:
 
 ```terraform
 provider "aws" {
-  assume_role {
+  assume_role_with_web_identity {
     role_arn                = "arn:aws:iam::123456789012:role/ROLE_NAME"
     session_name            = "SESSION_NAME"
     web_identity_token_file = "/Users/tf_user/secrets/web-identity-token"
@@ -276,7 +275,7 @@ In the provider, all parameters for assuming an IAM role are set in the `assume_
 See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|-----------------------|
+|-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
 |Web Identity Token|`web_identity_token`|N/A|N/A|
 |Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
@@ -495,7 +494,7 @@ The `assume_role_with_web_identity` configuration block supports the following a
 
 ### default_tags Configuration Block
 
-> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial.
 
 Example: Resource with provider default tags
 

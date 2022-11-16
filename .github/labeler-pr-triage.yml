@@ -271,6 +271,9 @@ service/connectcontactlens:
 service/connectparticipant:
   - 'internal/service/connectparticipant/**/*'
   - 'website/**/connectparticipant_*'
+service/controltower:
+  - 'internal/service/controltower/**/*'
+  - 'website/**/controltower_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -552,6 +555,9 @@ service/ipam:
 service/ivs:
   - 'internal/service/ivs/**/*'
   - 'website/**/ivs_*'
+service/ivschat:
+  - 'internal/service/ivschat/**/*'
+  - 'website/**/ivschat_*'
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
@@ -884,6 +890,9 @@ service/sagemakerruntime:
 service/savingsplans:
   - 'internal/service/savingsplans/**/*'
   - 'website/**/savingsplans_*'
+service/scheduler:
+  - 'internal/service/scheduler/**/*'
+  - 'website/**/scheduler_*'
 service/schemas:
   - 'internal/service/schemas/**/*'
   - 'website/**/schemas_*'

@@ -44,7 +44,7 @@ EOF
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  # If the file is not in the current working directory you will need to include a 
+  # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
   filename      = "lambda_function_payload.zip"
   function_name = "lambda_function_name"
@@ -56,7 +56,7 @@ resource "aws_lambda_function" "test_lambda" {
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
   source_code_hash = filebase64sha256("lambda_function_payload.zip")
 
-  runtime = "nodejs12.x"
+  runtime = "nodejs16.x"
 
   environment {
     variables = {
@@ -335,6 +335,7 @@ In addition to all arguments above, the following attributes are exported:
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
+* `qualified_invoke_arn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `source_code_size` - Size in bytes of the function .zip file.
@@ -358,7 +359,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 

@@ -309,7 +309,6 @@ func resourceMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
 		"role_arn", "timeout", "worker_type", "parameters") {
-
 		input := &glue.UpdateMLTransformInput{
 			TransformId: aws.String(d.Id()),
 			Role:        aws.String(d.Get("role_arn").(string)),

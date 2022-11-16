@@ -1905,8 +1905,6 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 }
 
 func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
-	acctest.Skip(t, "EC2 API is not correctly returning MaxPrice override")
-
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3238,7 +3236,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      subnet_id = aws_subnet.test.*.id[%[2]d]
+      subnet_id = aws_subnet.test[%[2]d].id
     }
   }
 

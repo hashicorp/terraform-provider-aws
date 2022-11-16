@@ -11,20 +11,43 @@ description: |-
 The ACM certificate resource allows requesting and management of certificates
 from the Amazon Certificate Manager.
 
-It deals with requesting certificates and managing their attributes and life-cycle.
+ACM certificates can be created in three ways:
+Amazon-issued, where AWS provides the certificate authority and automatically manages renewal;
+imported certificates, issued by another certificate authority;
+and private certificates, issued using an ACM Private Certificate Authority.
+
+## Amazon-Issued Certificates
+
+For Amazon-issued certificates, this resource deals with requesting certificates and managing their attributes and life-cycle.
 This resource does not deal with validation of a certificate but can provide inputs
-for other resources implementing the validation. It does not wait for a certificate to be issued.
+for other resources implementing the validation.
+It does not wait for a certificate to be issued.
 Use a [`aws_acm_certificate_validation`](acm_certificate_validation.html) resource for this.
 
 Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
 [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
-Domain validation through email is also supported but should be avoided as it requires a manual step outside
-of Terraform.
+Domain validation through email is also supported but should be avoided as it requires a manual step outside of Terraform.
 
 It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
 which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
+
+## Certificates Imported from Other Certificate Authority
+
+Imported certificates can be used to make certificates created with an external certificate authority available for AWS services.
+
+As they are not managed by AWS, imported certificates are not eligible for automatic renewal.
+New certificate materials can be supplied to an existing imported certificate to update it in place.
+
+## Private Certificates
+
+Private certificates are issued by an ACM Private Cerificate Authority, which can be created using the resource type [`aws_acmpca_certificate_authority`](acmpca_certificate_authority.html).
+
+Private certificates created using this resource are eligible for managed renewal if they have been exported or associated with another AWS service.
+See [managed renewal documentation](https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html) for more information.
+By default, a certificate is valid for 395 days and the managed renewal process will start 60 days before expiration.
+To renew the certificate earlier than 60 days before expiration, configure `early_renewal_duration`.
 
 ## Example Usage
 
@@ -121,6 +144,7 @@ The following arguments are supported:
     * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
     * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
+    * `key_algorithm` - (Optional) Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data. See [ACM Certificate characteristics](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) for more details.
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
@@ -128,9 +152,16 @@ The following arguments are supported:
     * `certificate_body` - (Required) Certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
-    * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `certificate_authority_arn` - (Required) ARN of an ACM PCA
-    * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+    * `domain_name` - (Required) Domain name for which the certificate should be issued.
+    * `early_renewal_duration` - (Optional) Amount of time to start automatic renewal process before expiration.
+      Has no effect if less than 60 days.
+      Represented by either
+      a subset of [RFC 3339 duration](https://www.rfc-editor.org/rfc/rfc3339) supporting years, months, and days (e.g., `P90D`),
+      or a string such as `2160h`.
+* `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.
+  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
+  or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block
@@ -153,12 +184,18 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ARN of the certificate
 * `arn` - ARN of the certificate
 * `domain_name` - Domain name for which the certificate is issued
-* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined. Only set if `DNS`-validation was used.
+* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation.
+  Can have more than one element, e.g., if SANs are defined.
+  Only set if `DNS`-validation was used.
 * `not_after` - Expiration date and time of the certificate.
 * `not_before` - Start of the validity period of the certificate.
+* `pending_renewal` - `true` if a Private certificate eligible for managed renewal is within the `early_renewal_duration` period.
+* `renewal_eligibility` - Whether the certificate is eligible for managed renewal.
+* `renewal_summary` - Contains information about the status of ACM's [managed renewal](https://docs.aws.amazon.com/acm/latest/userguide/acm-renewal.html) for the certificate.
 * `status` - Status of the certificate.
+* `type` - Source of the certificate.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `validation_emails` - List of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
+* `validation_emails` - List of addresses that received a validation email. Only set if `EMAIL` validation was used.
 
 Domain validation objects export the following attributes:
 
@@ -166,6 +203,11 @@ Domain validation objects export the following attributes:
 * `resource_record_name` - The name of the DNS record to create to validate the certificate
 * `resource_record_type` - The type of DNS record to create
 * `resource_record_value` - The value the DNS record needs to have
+
+Renewal summary objects export the following attributes:
+
+* `renewal_status` - The status of ACM's managed renewal of the certificate
+* `renewal_status_reason` - The reason that a renewal request was unsuccessful or is pending
 
 [1]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
 

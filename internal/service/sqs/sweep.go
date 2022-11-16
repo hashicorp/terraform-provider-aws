@@ -49,7 +49,7 @@ func sweepQueues(region string) error {
 			r := ResourceQueue()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(queueUrl))
-			err = r.Delete(d, client)
+			err = sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				log.Printf("[ERROR] %s", err)

@@ -3,7 +3,6 @@ package ec2
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -181,10 +180,6 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	if _, ok := d.GetOk("vpc_id"); !ok {
-		return errors.New(`with the retirement of EC2-Classic no new Security Groups can be created without referencing a VPC`)
-	}
-
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateSecurityGroupInput{
 		GroupName: aws.String(name),
@@ -202,7 +197,6 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
 	}
 
-	log.Printf("[DEBUG] Creating Security Group: %s", input)
 	output, err := conn.CreateSecurityGroup(input)
 
 	if err != nil {
@@ -220,6 +214,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule.
 	// Here we revoke that rule, so users don't unknowingly have/use it.
+	// This will only be false for Security Groups in EC2-Classic
 	if aws.StringValue(group.VpcId) != "" {
 		input := &ec2.RevokeSecurityGroupEgressInput{
 			GroupId: aws.String(d.Id()),
@@ -348,6 +343,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("updating Security Group (%s) %s rules: %w", d.Id(), securityGroupRuleTypeIngress, err)
 	}
 
+	// This will only be false for Security Groups in EC2-Classic
 	if d.Get("vpc_id") != nil {
 		err = updateSecurityGroupRules(conn, d, securityGroupRuleTypeEgress, group)
 
@@ -481,7 +477,7 @@ func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string, searchAll bool) err
 			_, err = conn.RevokeSecurityGroupEgress(input)
 		}
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
 			continue
 		}
 
@@ -729,7 +725,6 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 				rule["security_groups"] = list
 			}
 		}
-
 	}
 
 	rules := make([]map[string]interface{}, 0, len(ruleMap))
@@ -834,6 +829,168 @@ func updateSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData, ruleType st
 	}
 
 	return nil
+}
+
+// Takes the result of flatmap.Expand for an array of ingress/egress security
+// group rules and returns EC2 API compatible objects. This function will error
+// if it finds invalid permissions input, namely a protocol of "-1" with either
+// to_port or from_port set to a non-zero value.
+func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
+	vpc := aws.StringValue(group.VpcId) != ""
+
+	perms := make([]*ec2.IpPermission, len(configured))
+	for i, mRaw := range configured {
+		var perm ec2.IpPermission
+		m := mRaw.(map[string]interface{})
+
+		perm.IpProtocol = aws.String(ProtocolForValue(m["protocol"].(string)))
+
+		if protocol, fromPort, toPort := aws.StringValue(perm.IpProtocol), m["from_port"].(int), m["to_port"].(int); protocol != "-1" {
+			perm.FromPort = aws.Int64(int64(fromPort))
+			perm.ToPort = aws.Int64(int64(toPort))
+		} else if fromPort != 0 || toPort != 0 {
+			// When protocol is "-1", AWS won't store any ports for the
+			// rule, but also won't error if the user specifies ports other
+			// than '0'. Force the user to make a deliberate '0' port
+			// choice when specifying a "-1" protocol, and tell them about
+			// AWS's behavior in the error message.
+			return nil, fmt.Errorf(
+				"from_port (%d) and to_port (%d) must both be 0 to use the 'ALL' \"-1\" protocol!",
+				fromPort, toPort)
+		}
+
+		var groups []string
+		if raw, ok := m["security_groups"]; ok {
+			list := raw.(*schema.Set).List()
+			for _, v := range list {
+				groups = append(groups, v.(string))
+			}
+		}
+		if v, ok := m["self"]; ok && v.(bool) {
+			if vpc {
+				groups = append(groups, *group.GroupId)
+			} else {
+				groups = append(groups, *group.GroupName)
+			}
+		}
+
+		if len(groups) > 0 {
+			perm.UserIdGroupPairs = make([]*ec2.UserIdGroupPair, len(groups))
+			for i, name := range groups {
+				ownerId, id := "", name
+				if items := strings.Split(id, "/"); len(items) > 1 {
+					ownerId, id = items[0], items[1]
+				}
+
+				perm.UserIdGroupPairs[i] = &ec2.UserIdGroupPair{
+					GroupId: aws.String(id),
+				}
+
+				if ownerId != "" {
+					perm.UserIdGroupPairs[i].UserId = aws.String(ownerId)
+				}
+
+				if !vpc {
+					perm.UserIdGroupPairs[i].GroupId = nil
+					perm.UserIdGroupPairs[i].GroupName = aws.String(id)
+				}
+			}
+		}
+
+		if raw, ok := m["cidr_blocks"]; ok {
+			list := raw.([]interface{})
+			for _, v := range list {
+				perm.IpRanges = append(perm.IpRanges, &ec2.IpRange{CidrIp: aws.String(v.(string))})
+			}
+		}
+		if raw, ok := m["ipv6_cidr_blocks"]; ok {
+			list := raw.([]interface{})
+			for _, v := range list {
+				perm.Ipv6Ranges = append(perm.Ipv6Ranges, &ec2.Ipv6Range{CidrIpv6: aws.String(v.(string))})
+			}
+		}
+
+		if raw, ok := m["prefix_list_ids"]; ok {
+			list := raw.([]interface{})
+			for _, v := range list {
+				perm.PrefixListIds = append(perm.PrefixListIds, &ec2.PrefixListId{PrefixListId: aws.String(v.(string))})
+			}
+		}
+
+		if raw, ok := m["description"]; ok {
+			description := raw.(string)
+			if description != "" {
+				for _, v := range perm.IpRanges {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.Ipv6Ranges {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.PrefixListIds {
+					v.Description = aws.String(description)
+				}
+				for _, v := range perm.UserIdGroupPairs {
+					v.Description = aws.String(description)
+				}
+			}
+		}
+
+		perms[i] = &perm
+	}
+
+	return perms, nil
+}
+
+// Like ec2.GroupIdentifier but with additional rule description.
+type GroupIdentifier struct {
+	// The ID of the security group.
+	GroupId *string
+
+	// The name of the security group.
+	GroupName *string
+
+	Description *string
+}
+
+// Flattens an array of UserSecurityGroups into a []*GroupIdentifier
+func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
+	result := make([]*GroupIdentifier, 0, len(list))
+	for _, g := range list {
+		var userId *string
+		if aws.StringValue(g.UserId) != "" && (ownerId == nil || aws.StringValue(ownerId) != aws.StringValue(g.UserId)) {
+			userId = g.UserId
+		}
+		// userid nil here for same vpc groups
+
+		vpc := aws.StringValue(g.GroupName) == ""
+		var id *string
+		if vpc {
+			id = g.GroupId
+		} else {
+			id = g.GroupName
+		}
+
+		// id is groupid for vpcs
+		// id is groupname for non vpc (classic)
+
+		if userId != nil {
+			id = aws.String(*userId + "/" + *id)
+		}
+
+		if vpc {
+			result = append(result, &GroupIdentifier{
+				GroupId:     id,
+				Description: g.Description,
+			})
+		} else {
+			result = append(result, &GroupIdentifier{
+				GroupId:     g.GroupId,
+				GroupName:   id,
+				Description: g.Description,
+			})
+		}
+	}
+	return result
 }
 
 // MatchRules receives the group id, type of rules, and the local / remote maps
@@ -1118,7 +1275,6 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 								}
 							}
 						}
-
 					}
 				}
 			}
@@ -1186,7 +1342,6 @@ func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k stri
 // For more detail, see comments for
 // SecurityGroupExpandRules()
 func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
-
 	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
 
 	collapsed := make(map[string]map[string]interface{})

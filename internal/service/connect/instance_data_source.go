@@ -62,6 +62,10 @@ func DataSourceInstance() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"instance_id", "instance_alias"},
 			},
+			"multi_party_conference_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -107,7 +111,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		matchedInstance = output.Instance
-
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 

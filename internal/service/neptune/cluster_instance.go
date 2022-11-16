@@ -452,7 +452,6 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return err
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
@@ -493,7 +492,6 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err := stateConf.WaitForState()
 	return err
-
 }
 
 var resourceClusterInstanceCreateUpdatePendingStates = []string{

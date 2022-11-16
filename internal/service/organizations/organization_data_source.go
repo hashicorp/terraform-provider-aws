@@ -225,7 +225,6 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 		if err := d.Set("roots", FlattenRoots(roots)); err != nil {
 			return fmt.Errorf("error setting roots: %w", err)
 		}
-
 	}
 	return nil
 }

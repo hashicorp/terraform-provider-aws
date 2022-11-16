@@ -8,8 +8,10 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"regexp"
@@ -115,7 +117,7 @@ func main() {
 			rp = l[names.ColSplitPackageRealPackage]
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
