@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,10 +22,10 @@ import (
 
 func ResourceMetricFilter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMetricFilterPut,
-		Read:   resourceMetricFilterRead,
-		Update: resourceMetricFilterPut,
-		Delete: resourceMetricFilterDelete,
+		CreateWithoutTimeout: resourceMetricFilterPut,
+		ReadWithoutTimeout:   resourceMetricFilterRead,
+		UpdateWithoutTimeout: resourceMetricFilterPut,
+		DeleteWithoutTimeout: resourceMetricFilterDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceMetricFilterImport,
@@ -98,7 +100,7 @@ func ResourceMetricFilter() *schema.Resource {
 	}
 }
 
-func resourceMetricFilterPut(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	name := d.Get("name").(string)
@@ -117,23 +119,23 @@ func resourceMetricFilterPut(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := conn.PutMetricFilter(input)
+	_, err := conn.PutMetricFilterWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("putting CloudWatch Logs Metric Filter (%s): %w", d.Id(), err)
+		return diag.Errorf("putting CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(name)
 	}
 
-	return resourceMetricFilterRead(d, meta)
+	return resourceMetricFilterRead(ctx, d, meta)
 }
 
-func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	mf, err := FindMetricFilterByTwoPartKey(conn, d.Get("log_group_name").(string), d.Id())
+	mf, err := FindMetricFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Metric Filter (%s) not found, removing from state", d.Id())
@@ -142,12 +144,12 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading CloudWatch Logs Metric Filter (%s): %w", d.Id(), err)
+		return diag.Errorf("reading CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("log_group_name", mf.LogGroupName)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
-		return fmt.Errorf("setting metric_transformation: %w", err)
+		return diag.Errorf("setting metric_transformation: %s", err)
 	}
 	d.Set("name", mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
@@ -155,7 +157,7 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceMetricFilterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	// Creating multiple filters on the same log group can sometimes cause
@@ -166,7 +168,7 @@ func resourceMetricFilterDelete(d *schema.ResourceData, meta interface{}) error 
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Metric Filter: %s", d.Id())
-	_, err := conn.DeleteMetricFilter(&cloudwatchlogs.DeleteMetricFilterInput{
+	_, err := conn.DeleteMetricFilterWithContext(ctx, &cloudwatchlogs.DeleteMetricFilterInput{
 		FilterName:   aws.String(d.Id()),
 		LogGroupName: aws.String(d.Get("log_group_name").(string)),
 	})
@@ -176,7 +178,7 @@ func resourceMetricFilterDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudWatch Logs Metric Filter (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -195,14 +197,14 @@ func resourceMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindMetricFilterByTwoPartKey(conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.MetricFilter, error) {
+func FindMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.MetricFilter, error) {
 	input := &cloudwatchlogs.DescribeMetricFiltersInput{
 		FilterNamePrefix: aws.String(name),
 		LogGroupName:     aws.String(logGroupName),
 	}
 	var output *cloudwatchlogs.MetricFilter
 
-	err := conn.DescribeMetricFiltersPages(input, func(page *cloudwatchlogs.DescribeMetricFiltersOutput, lastPage bool) bool {
+	err := conn.DescribeMetricFiltersPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeMetricFiltersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
