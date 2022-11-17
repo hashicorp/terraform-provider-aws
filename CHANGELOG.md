@@ -20,11 +20,15 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_cloudtrail_service_account: Add service account ID for `eu-central-2` AWS Region ([#27814](https://github.com/hashicorp/terraform-provider-aws/issues/27814))
+* data-source/aws_cloudtrail_service_account: Add service account ID for `eu-south-2` AWS Region ([#27855](https://github.com/hashicorp/terraform-provider-aws/issues/27855))
 * data-source/aws_connect_instance: Add `multi_party_conference_enabled` attribute ([#27734](https://github.com/hashicorp/terraform-provider-aws/issues/27734))
 * data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `eu-central-2` AWS Region ([#27814](https://github.com/hashicorp/terraform-provider-aws/issues/27814))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `eu-south-2` AWS Region ([#27855](https://github.com/hashicorp/terraform-provider-aws/issues/27855))
 * data-source/aws_identitystore_group: Add `alternate_identifier` argument and `description` attribute ([#27762](https://github.com/hashicorp/terraform-provider-aws/issues/27762))
 * data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `eu-central-2` AWS Region ([#27814](https://github.com/hashicorp/terraform-provider-aws/issues/27814))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `eu-south-2` AWS Region ([#27855](https://github.com/hashicorp/terraform-provider-aws/issues/27855))
 * data-source/aws_s3_bucket: Add hosted zone ID for `eu-central-2` AWS Region ([#27814](https://github.com/hashicorp/terraform-provider-aws/issues/27814))
+* data-source/aws_s3_bucket: Add hosted zone ID for `eu-south-2` AWS Region ([#27855](https://github.com/hashicorp/terraform-provider-aws/issues/27855))
 * provider: Support `eu-central-2` as a valid AWS Region ([#27812](https://github.com/hashicorp/terraform-provider-aws/issues/27812))
 * resource/aws_acm_certificate: Add `key_algorithm` argument in support of [ECDSA TLS certificates](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) ([#27781](https://github.com/hashicorp/terraform-provider-aws/issues/27781))
 * resource/aws_autoscaling_group: Add support for `price-capacity-optimized` `spot_allocation_strategy` value ([#27795](https://github.com/hashicorp/terraform-provider-aws/issues/27795))
@@ -44,6 +48,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_appstream_stack: Fix `redirect_url` max character length ([#27744](https://github.com/hashicorp/terraform-provider-aws/issues/27744))
+* resource/aws_dynamodb_table: Allow changing KMS keys on tables with replicas. ([#23156](https://github.com/hashicorp/terraform-provider-aws/issues/23156))
 * resource/aws_sesv2_email_identity_feedback_attributes: Fix invalid resource ID in error messages when creating the resource ([#27784](https://github.com/hashicorp/terraform-provider-aws/issues/27784))
 
 ## 4.39.0 (November 10, 2022)
