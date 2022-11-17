@@ -2,10 +2,12 @@ package dynamodb
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -235,8 +237,40 @@ func waitTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool, ti
 	return nil, err
 }
 
-func waitSSEUpdated(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
+func waitSSEUpdated(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
+		Delay: 30 * time.Second,
+		Pending: []string{
+			dynamodb.SSEStatusDisabling,
+			dynamodb.SSEStatusEnabling,
+			dynamodb.SSEStatusUpdating,
+		},
+		Target: []string{
+			dynamodb.SSEStatusDisabled,
+			dynamodb.SSEStatusEnabled,
+		},
+		Timeout: maxDuration(updateTableTimeout, timeout),
+		Refresh: statusTableSES(conn, tableName),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*dynamodb.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicaSSEUpdated(client *conns.AWSClient, region string, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
+	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn.Config, region, client.TerraformVersion)
+	if err != nil {
+		return nil, fmt.Errorf("creating session for region %q: %w", region, err)
+	}
+
+	conn := dynamodb.New(sess)
+	stateConf := &resource.StateChangeConf{
+		Delay: 30 * time.Second,
 		Pending: []string{
 			dynamodb.SSEStatusDisabling,
 			dynamodb.SSEStatusEnabling,
