@@ -127,6 +127,7 @@ The following arguments are optional:
 * `output_groups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecode_config` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `video_descriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
+* `avail_blanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 
 ### Input Attachments
 
@@ -137,10 +138,37 @@ The following arguments are optional:
 ### Input Settings
 
 * `audio_selectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `caption_selectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `deblock_filter` - (Optional) Enable or disable the deblock filter when filtering.
+* `denoise_filter` - (Optional) Enable or disable the denoise filter when filtering.
+* `filter_strength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
+* `input_filter` - (Optional) Turns on the filter for the input.
+* `network_input_settings` - (Optional) Input settings. See [Network Input Settings](#network-input-settings) for more details.
+* `scte35_pid` - (Optional) PID from which to read SCTE-35 messages.
+* `smpte2038_data_preference` - (Optional) Specifies whether to extract applicable ancillary data from a SMPTE-2038 source in the input.
+* `source_end_behavior` - (Optional) Loop input if it is a file.
 
 ### Audio Selectors
 
 * `name` - (Required) The name of the audio selector.
+
+### Caption Selectors
+
+* `name` - (Optional) The name of the caption selector.
+* `language_code` - (Optional) When specified this field indicates the three letter language code of the caption track to extract from the source.
+
+### Network Input Settings
+
+* `hls_input_settings` - (Optional) Specifies HLS input settings when the uri is for a HLS manifest. See [HLS Input Settings](#hls-input-settings) for more details.
+* `server_validation` - (Optional) Check HTTPS server certificates.
+
+### HLS Input Settings
+
+* `bandwidth` - (Optional) The bitrate is specified in bits per second, as in an HLS manifest.
+* `buffer_segments` - (Optional) Buffer segments.
+* `retries` - (Optional) The number of consecutive times that attempts to read a manifest or segment must fail before the input is considered unavailable.
+* `retry_interval` - (Optional) The number of seconds between retries when an attempt to read a manifest or segment fails.
+* `scte35_source_type` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
 
 ### Maintenance
 
@@ -171,6 +199,7 @@ The following arguments are optional:
 * `audio_type` - (Optional) Applies only if audioTypeControl is useConfigured. The values for audioType are defined in ISO-IEC 13818-1.
 * `audio_type_control` - (Optional) Determined how audio type is determined.
 * `audio_watermark_settings` - (Optional) Settings to configure one or more solutions that insert audio watermarks in the audio encode. See [Audio Watermark Settings](#audio-watermark-settings) for more details.
+* `codec_settings` - (Optional) Audio codec settings. See [Audio Codec Settings](#audio-codec-settings) for more details.
 
 ### Audio Normalization Settings
 
@@ -181,6 +210,53 @@ The following arguments are optional:
 ### Audio Watermark Settings
 
 * `nielsen_watermark_settings` - (Optional) Settings to configure Nielsen Watermarks in the audio encode. See [Nielsen Watermark Settings](#nielsen-watermark-settings) for more details.
+
+### Audio Codec Settings
+
+* `aac_settings` - (Optional) Aac Settings. See [AAC Settings](#aac-settings) for more details.
+* `ac3_settings` - (Optional) Ac3 Settings. See [AC3 Settings](#ac3-settings) for more details.
+* `eac3_atmos_settings` - (Optional) - Eac3 Atmos Settings. See [EAC3 Atmos Settings](#eac3-atmos-settings)
+* `eac3_settings` - (Optional) - Eac3 Settings. See [EAC3 Settings](#eac3-settings)
+
+### AAC Settings
+
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `coding_mode` - (Optional) Mono, Stereo, or 5.1 channel layout.
+* `input_type` - (Optional) Set to "broadcasterMixedAd" when input contains pre-mixed main audio + AD (narration) as a stereo pair.
+* `profile` - (Optional) AAC profile.
+* `rate_control_mode` - (Optional) The rate control mode.
+* `raw_format` - (Optional) Sets LATM/LOAS AAC output for raw containers.
+* `sample_rate` - (Optional) Sample rate in Hz.
+* `spec` - (Optional) Use MPEG-2 AAC audio instead of MPEG-4 AAC audio for raw or MPEG-2 Transport Stream containers.
+* `vbr_quality` - (Optional) VBR Quality Level - Only used if rateControlMode is VBR.
+
+### AC3 Settings
+
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `bitstream_mode` - (Optional) Specifies the bitstream mode (bsmod) for the emitted AC-3 stream.
+* `coding_mode` - (Optional) Dolby Digital coding mode.
+* `dialnorm` - (Optional) Sets the dialnorm of the output.
+* `drc_profile` - (Optional) If set to filmStandard, adds dynamic range compression signaling to the output bitstream as defined in the Dolby Digital specification.
+* `lfe_filter` - (Optional) When set to enabled, applies a 120Hz lowpass filter to the LFE channel prior to encoding.
+* `metadata_control` - (Optional) Metadata control.
+
+### EAC3 Atmos Settings
+
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `coding_mode` - (Optional) Dolby Digital Plus with dolby Atmos coding mode.
+* `dialnorm` - (Optional) Sets the dialnorm for the output.
+* `drc_line` - (Optional) Sets the Dolby dynamic range compression profile.
+* `drc_line` - (Optional) Sets the Dolby dynamic range compression profile.
+* `drc_rf` - (Optional) Sets the profile for heavy Dolby dynamic range compression.
+* `height_trim` - (Optional) Height dimensional trim.
+* `surround_trim` - (Optional) Surround dimensional trim.
+
+### EAC3 Settings
+
+* `attenuation_control` - (Optional) Sets the attenuation control.
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `bitstream_mode` - (Optional) Specifies the bitstream mode (bsmod) for the emitted AC-3 stream.
+* `coding_mode` - (Optional) Dolby Digital Plus coding mode.
 
 ### Nielsen Watermark Settings
 
@@ -228,11 +304,86 @@ The following arguments are optional:
 
 ### Video Descriptions
 
+* `name` - (Required) The name of the video description.
+* `codec_settings` - (Optional) The video codec settings. See [Video Codec Settings](#video-codec-settings) for more details.
 * `height` - Output video height in pixels.
 * `respond_to_afd` - (Optional) Indicate how to respond to the AFD values that might be in the input video.
 * `scaling_behavior` - (Optional) Behavior on how to scale.
 * `sharpness` - (Optional) Changes the strength of the anti-alias filter used for scaling.
 * `width` - (Optional) Output video width in pixels.
+
+### Video Codec Settings
+
+* `frame_capture_settings` - (Optional) Frame capture settings. See [Frame Capture Settings](#frame-capture-settings) for more details.
+* `h264_settings` - (Optional) H264 settings. See [H264 Settings](#h264-settings) for more details.
+
+### Frame Capture Settings
+
+* `capture_interval` - (Optional) The frequency at which to capture frames for inclusion in the output.
+* `capture_interval_units` - (Optional) Unit for the frame capture interval.
+
+### H264 Settings
+
+* `adaptive_quantization` - (Optional) Enables or disables adaptive quantization.
+* `afd_signaling` - (Optional) Indicates that AFD values will be written into the output stream.
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `buf_fil_pct` - (Optional) Percentage of the buffer that should initially be filled.
+* `buf_size` - (Optional) Size of buffer in bits.
+* `color_metadata` - (Optional) Includes color space metadata in the output.
+* `entropy_encoding` - (Optional) Entropy encoding mode.
+* `filter_settings` - (Optional) Filters to apply to an encode. See [H264 Filter Settings](#h264-filter-settings) for more details.
+* `fixed_afd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
+* `flicer_aq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
+* `force_field_pictures` - (Optional) Controls whether coding is performed on a field basis or on a frame basis.
+* `framerate_control` - (Optional) Indicates how the output video frame rate is specified.
+* `framerate_denominator` - (Optional) Framerate denominator.
+* `framerate_numerator` - (Optional) Framerate numerator.
+* `gop_b_reference` - (Optional) GOP-B reference.
+* `gop_closed_cadence` - (Optional) Frequency of closed GOPs.
+* `gop_num_b_frames` - (Optional) Number of B-frames between reference frames.
+* `gop_size` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
+* `gop_size_units` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
+* `level` - (Optional) H264 level.
+* `look_ahead_rate_control` - (Optional) Amount of lookahead.
+* `max_bitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
+* `min_interval` - (Optional) Min interval.
+* `num_ref_frames` - (Optional) Number of reference frames to use.
+* `par_control` - (Optional) Indicates how the output pixel aspect ratio is specified.
+* `par_denominator` - (Optional) Pixel Aspect Ratio denominator.
+* `par_numerator` - (Optional) Pixel Aspect Ratio numerator.
+* `profile` - (Optional) H264 profile.
+* `quality_level` - (Optional) Quality level.
+* `qvbr_quality_level` - (Optional) Controls the target quality for the video encode.
+* `rate_control_mode` - (Optional) Rate control mode.
+* `scan_type` - (Optional) Sets the scan type of the output.
+* `scene_change_detect` - (Optional) Scene change detection.
+* `slices` - (Optional) Number of slices per picture.
+* `softness` - (Optional) Softness.
+* `spatial_aq` - (Optional) Makes adjustments within each frame based on spatial variation of content complexity.
+* `subgop_length` - (Optional) Subgop length.
+* `syntax` - (Optional) Produces a bitstream compliant with SMPTE RP-2027.
+* `temporal_aq` - (Optional) Makes adjustments within each frame based on temporal variation of content complexity.
+* `timecode_insertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+
+### H264 Filter Settings
+
+* `temporal_filter_settings` - (Optional) Temporal filter settings. See [Temporal Filter Settings](#temporal-filter-settings)
+
+### Temporal Filter Settings
+
+* `post_filter_sharpening` - (Optional) Post filter sharpening.
+* `strength` - (Optional) Filter strength.
+
+### Avail Blanking
+
+* `avail_blanking_image` - (Optional) Blanking image to be used. See [Avail Blanking Image](#avail-blanking-image) for more details.
+* `state` - (Optional) When set to enabled, causes video, audio and captions to be blanked when insertion metadata is added.
+
+### Avail Blanking Image
+
+* `uri` - (Required) Path to a file accessible to the live stream.
+* `password_param` - (Optional) Key used to extract the password from EC2 Parameter store.
+* `username` - (Optional). Username to be used.
 
 ### Archive Group Settings
 

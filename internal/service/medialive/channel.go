@@ -62,6 +62,7 @@ func ResourceChannel() *schema.Resource {
 			"channel_class": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ChannelClass](),
 			},
 			"channel_id": {
@@ -394,7 +395,7 @@ func ResourceChannel() *schema.Resource {
 																			Optional:         true,
 																			ValidateDiagFunc: enum.Validate[types.EmbeddedConvert608To708](),
 																		},
-																		"scte_20_detection": {
+																		"scte20_detection": {
 																			Type:             schema.TypeString,
 																			Optional:         true,
 																			ValidateDiagFunc: enum.Validate[types.EmbeddedScte20Detection](),
@@ -410,7 +411,7 @@ func ResourceChannel() *schema.Resource {
 																	},
 																},
 															},
-															"scte_20_source_settings": {
+															"scte20_source_settings": {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -428,7 +429,7 @@ func ResourceChannel() *schema.Resource {
 																	},
 																},
 															},
-															"scte_27_source_settings": {
+															"scte27_source_settings": {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -487,106 +488,106 @@ func ResourceChannel() *schema.Resource {
 														},
 													},
 												},
-												"deblock_filter": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.InputDeblockFilter](),
-												},
-												"denoise_filter": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.InputDenoiseFilter](),
-												},
-												"filter_strength": {
-													Type:             schema.TypeInt,
-													Optional:         true,
-													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 5)),
-												},
-												"input_filter": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													Computed:         true,
-													ValidateDiagFunc: enum.Validate[types.InputFilter](),
-												},
-												"network_input_settings": {
+											},
+										},
+									},
+									"deblock_filter": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InputDeblockFilter](),
+									},
+									"denoise_filter": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InputDenoiseFilter](),
+									},
+									"filter_strength": {
+										Type:             schema.TypeInt,
+										Optional:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 5)),
+									},
+									"input_filter": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.InputFilter](),
+									},
+									"network_input_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hls_input_settings": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"hls_input_settings": {
-																Type:     schema.TypeList,
+															"bandwidth": {
+																Type:     schema.TypeInt,
 																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"bandwidth": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"buffer_segments": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"retries": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"retry_interval": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"scte_35_source": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.HlsScte35SourceType](),
-																		},
-																	},
-																},
 															},
-															"server_validation": {
+															"buffer_segments": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"retries": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"retry_interval": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"scte35_source": {
 																Type:             schema.TypeString,
 																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.NetworkInputServerValidation](),
+																ValidateDiagFunc: enum.Validate[types.HlsScte35SourceType](),
 															},
 														},
 													},
 												},
-												"scte_35_pid": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"smpte_2038_data_preference": {
+												"server_validation": {
 													Type:             schema.TypeString,
 													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.Smpte2038DataPreference](),
+													ValidateDiagFunc: enum.Validate[types.NetworkInputServerValidation](),
 												},
-												"source_end_behavior": {
+											},
+										},
+									},
+									"scte35_pid": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"smpte2038_data_preference": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.Smpte2038DataPreference](),
+									},
+									"source_end_behavior": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InputSourceEndBehavior](),
+									},
+									"video_selector": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"color_space": {
 													Type:             schema.TypeString,
 													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.InputSourceEndBehavior](),
+													ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpace](),
 												},
-												"video_selector": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"color_space": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpace](),
-															},
-															// TODO implement color_space_settings
-															"color_space_usage": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpaceUsage](),
-															},
-															// TODO implement selector_settings
-														},
-													},
+												// TODO implement color_space_settings
+												"color_space_usage": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpaceUsage](),
 												},
+												// TODO implement selector_settings
 											},
 										},
 									},
@@ -847,8 +848,16 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.EncoderSettings = expandChannelEncoderSettings(d.Get("encoder_settings").([]interface{}))
 		}
 
+		if d.HasChange("input_attachments") {
+			in.InputAttachments = expandChannelInputAttachments(d.Get("input_attachments").(*schema.Set).List())
+		}
+
 		if d.HasChange("input_specification") {
 			in.InputSpecification = expandChannelInputSpecification(d.Get("input_specification").([]interface{}))
+		}
+
+		if d.HasChange("log_level") {
+			in.LogLevel = types.LogLevel(d.Get("log_level").(string))
 		}
 
 		if d.HasChange("maintenance") {
@@ -1038,11 +1047,39 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 
 	m := tfList[0].(map[string]interface{})
 
-	var is types.InputSettings
+	var out types.InputSettings
 	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
-		is.AudioSelectors = expandInputAttachmentInputSettingsAudioSelectors(v)
+		out.AudioSelectors = expandInputAttachmentInputSettingsAudioSelectors(v)
 	}
-	return &is
+	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
+		out.CaptionSelectors = expandInputAttachmentInputSettingsCaptionSelectors(v)
+	}
+	if v, ok := m["deblock_filter"].(string); ok && v != "" {
+		out.DeblockFilter = types.InputDeblockFilter(v)
+	}
+	if v, ok := m["denoise_filter"].(string); ok && v != "" {
+		out.DenoiseFilter = types.InputDenoiseFilter(v)
+	}
+	if v, ok := m["filter_strength"].(int); ok {
+		out.FilterStrength = int32(v)
+	}
+	if v, ok := m["input_filter"].(string); ok && v != "" {
+		out.InputFilter = types.InputFilter(v)
+	}
+	if v, ok := m["network_input_settings"].([]interface{}); ok && len(v) > 0 {
+		out.NetworkInputSettings = expandInputAttachmentInputSettingsNetworkInputSettings(v)
+	}
+	if v, ok := m["scte35_pid"].(int); ok {
+		out.Scte35Pid = int32(v)
+	}
+	if v, ok := m["smpte2038_data_preference"].(string); ok && v != "" {
+		out.Smpte2038DataPreference = types.Smpte2038DataPreference(v)
+	}
+	if v, ok := m["source_end_behavior"].(string); ok && v != "" {
+		out.SourceEndBehavior = types.InputSourceEndBehavior(v)
+	}
+
+	return &out
 }
 
 func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []types.AudioSelector {
@@ -1063,6 +1100,74 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 	}
 
 	return as
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []types.CaptionSelector {
+	var out []types.CaptionSelector
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.CaptionSelector
+		if v, ok := m["name"].(string); ok && v != "" {
+			o.Name = aws.String(v)
+		}
+		if v, ok := m["language_code"].(string); ok && v != "" {
+			o.LanguageCode = aws.String(v)
+		}
+		// TODO selectorSettings
+
+		out = append(out, o)
+	}
+
+	return out
+}
+
+func expandInputAttachmentInputSettingsNetworkInputSettings(tfList []interface{}) *types.NetworkInputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.NetworkInputSettings
+	if v, ok := m["hls_input_settings"].([]interface{}); ok && len(v) > 0 {
+		out.HlsInputSettings = expandNetworkInputSettingsHLSInputSettings(v)
+	}
+	if v, ok := m["server_validation"].(string); ok && v != "" {
+		out.ServerValidation = types.NetworkInputServerValidation(v)
+	}
+
+	return &out
+}
+
+func expandNetworkInputSettingsHLSInputSettings(tfList []interface{}) *types.HlsInputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.HlsInputSettings
+	if v, ok := m["bandwidth"].(int); ok {
+		out.Bandwidth = int32(v)
+	}
+	if v, ok := m["buffer_segments"].(int); ok {
+		out.BufferSegments = int32(v)
+	}
+	if v, ok := m["retries"].(int); ok {
+		out.Retries = int32(v)
+	}
+	if v, ok := m["retry_interval"].(int); ok {
+		out.RetryInterval = int32(v)
+	}
+	if v, ok := m["scte35_source"].(string); ok && v != "" {
+		out.Scte35Source = types.HlsScte35SourceType(v)
+	}
+
+	return &out
 }
 
 func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{} {
@@ -1090,7 +1195,16 @@ func flattenInputAttachmentsInputSettings(in *types.InputSettings) []interface{}
 	}
 
 	m := map[string]interface{}{
-		"audio_selector": flattenInputAttachmentsInputSettingsAudioSelectors(in.AudioSelectors),
+		"audio_selector":            flattenInputAttachmentsInputSettingsAudioSelectors(in.AudioSelectors),
+		"caption_selector":          flattenInputAttachmentsInputSettingsCaptionSelectors(in.CaptionSelectors),
+		"deblock_filter":            string(in.DeblockFilter),
+		"denoise_filter":            string(in.DenoiseFilter),
+		"filter_strength":           int(in.FilterStrength),
+		"input_filter":              string(in.InputFilter),
+		"network_input_settings":    flattenInputAttachmentsInputSettingsNetworkInputSettings(in.NetworkInputSettings),
+		"scte35_pid":                int(in.Scte35Pid),
+		"smpte2038_data_preference": string(in.Smpte2038DataPreference),
+		"source_end_behavior":       string(in.SourceEndBehavior),
 	}
 
 	return []interface{}{m}
@@ -1112,6 +1226,54 @@ func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSele
 	}
 
 	return out
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.CaptionSelector) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+
+	for _, v := range tfList {
+		m := map[string]interface{}{
+			"name":          aws.ToString(v.Name),
+			"language_code": aws.ToString(v.LanguageCode),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
+}
+
+func flattenInputAttachmentsInputSettingsNetworkInputSettings(in *types.NetworkInputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"hls_input_settings": flattenNetworkInputSettingsHLSInputSettings(in.HlsInputSettings),
+		"server_validation":  string(in.ServerValidation),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkInputSettingsHLSInputSettings(in *types.HlsInputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"bandwidth":       int(in.Bandwidth),
+		"buffer_segments": int(in.BufferSegments),
+		"retries":         int(in.Retries),
+		"retry_interval":  int(in.RetryInterval),
+		"scte35_source":   string(in.Scte35Source),
+	}
+
+	return []interface{}{m}
 }
 
 func expandChannelCdiInputSpecification(tfList []interface{}) *types.CdiInputSpecification {
