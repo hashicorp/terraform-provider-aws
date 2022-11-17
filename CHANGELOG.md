@@ -8,6 +8,8 @@ FEATURES:
 
 * **New Data Source:** `aws_controltower_controls` ([#26978](https://github.com/hashicorp/terraform-provider-aws/issues/26978))
 * **New Data Source:** `aws_ivs_stream_key` ([#27789](https://github.com/hashicorp/terraform-provider-aws/issues/27789))
+* **New Resource:** `aws_appconfig_extension` ([#27860](https://github.com/hashicorp/terraform-provider-aws/issues/27860))
+* **New Resource:** `aws_appconfig_extension_association` ([#27860](https://github.com/hashicorp/terraform-provider-aws/issues/27860))
 * **New Resource:** `aws_controltower_control` ([#26990](https://github.com/hashicorp/terraform-provider-aws/issues/26990))
 * **New Resource:** `aws_evidently_feature` ([#27395](https://github.com/hashicorp/terraform-provider-aws/issues/27395))
 * **New Resource:** `aws_ivs_channel` ([#27726](https://github.com/hashicorp/terraform-provider-aws/issues/27726))
@@ -40,6 +42,7 @@ ENHANCEMENTS:
 * resource/aws_docdb_cluster_instance: Add `enable_performance_insights` and `performance_insights_kms_key_id` arguments ([#27769](https://github.com/hashicorp/terraform-provider-aws/issues/27769))
 * resource/aws_dynamodb_table_item: Allow the creation of items with the same hash key but different range keys ([#27517](https://github.com/hashicorp/terraform-provider-aws/issues/27517))
 * resource/aws_ec2_fleet: Add support for `price-capacity-optimized` `spot_options.allocation_strategy` value ([#27795](https://github.com/hashicorp/terraform-provider-aws/issues/27795))
+* resource/aws_medialive_channel: Add support for more `output`, `output_groups`, `audio_descriptions` and `video_descriptions` in `encoder_settings`. Add support for `input_settings` in `input_attachments` ([#27823](https://github.com/hashicorp/terraform-provider-aws/issues/27823))
 * resource/aws_msk_cluster: Add `storage_mode` argument ([#27546](https://github.com/hashicorp/terraform-provider-aws/issues/27546))
 * resource/aws_neptune_cluster: Add `serverless_v2_scaling_configuration` block in support of [Neptune Serverless](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless.html) ([#27763](https://github.com/hashicorp/terraform-provider-aws/issues/27763))
 * resource/aws_network_interface_sg_attachment: Add import support ([#27785](https://github.com/hashicorp/terraform-provider-aws/issues/27785))
@@ -50,6 +53,7 @@ BUG FIXES:
 
 * resource/aws_appstream_stack: Fix `redirect_url` max character length ([#27744](https://github.com/hashicorp/terraform-provider-aws/issues/27744))
 * resource/aws_dynamodb_table: Allow changing KMS keys on tables with replicas. ([#23156](https://github.com/hashicorp/terraform-provider-aws/issues/23156))
+* resource/aws_route53_resolver_endpoint: Fix deduplication with multiple IPs on the same subnet ([#25708](https://github.com/hashicorp/terraform-provider-aws/issues/25708))
 * resource/aws_sesv2_email_identity_feedback_attributes: Fix invalid resource ID in error messages when creating the resource ([#27784](https://github.com/hashicorp/terraform-provider-aws/issues/27784))
 
 ## 4.39.0 (November 10, 2022)
