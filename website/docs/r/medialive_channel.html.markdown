@@ -338,7 +338,7 @@ The following arguments are optional:
 * `framerate_control` - (Optional) Indicates how the output video frame rate is specified.
 * `framerate_denominator` - (Optional) Framerate denominator.
 * `framerate_numerator` - (Optional) Framerate numerator.
-* `gop_b_refrence` - (Optional) GOP-B reference.
+* `gop_b_reference` - (Optional) GOP-B reference.
 * `gop_closed_cadence` - (Optional) Frequency of closed GOPs.
 * `gop_num_b_frames` - (Optional) Number of B-frames between reference frames.
 * `gop_size` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
