@@ -3,7 +3,6 @@ package schemas
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
@@ -30,18 +29,7 @@ func ResourceRegistryPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
-			"registry_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -51,6 +39,11 @@ func ResourceRegistryPolicy() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
+			},
+			"registry_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -70,43 +63,48 @@ func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
 	}
 
-	input := schemas.PutResourcePolicyInput{
-		RegistryName: aws.String(registryName),
+	input := &schemas.PutResourcePolicyInput{
 		Policy:       policy,
+		RegistryName: aws.String(registryName),
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Registry Policy (%s)", d.Id())
-	_, err = conn.PutResourcePolicy(&input)
+	_, err = conn.PutResourcePolicyWithContext(ctx, input)
 
 	if err != nil {
 		return create.DiagError(names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
 	}
 
-	d.SetId(aws.StringValue(input.RegistryName))
+	d.SetId(registryName)
+
 	return resourceRegistryPolicyRead(ctx, d, meta)
 }
 
 func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchemasConn
 
-	input := &schemas.GetResourcePolicyInput{
-		RegistryName: aws.String(d.Id()),
-	}
+	output, err := FindRegistryPolicyByName(ctx, conn, d.Id())
 
-	output, err := conn.GetResourcePolicy(input)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Registry Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	if err != nil {
+		return create.DiagError(names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
+	}
+
 	policy, _ := structure.FlattenJsonToString(output.Policy)
-	d.Set("registry_name", input.RegistryName)
 	d.Set("policy", policy)
+	d.Set("registry_name", d.Id())
+
 	return nil
 }
 
 func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchemasConn
+
 	policy, err := structure.ExpandJsonFromString(d.Get("policy").(string))
 
 	if err != nil {
@@ -115,12 +113,12 @@ func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("policy") {
 		input := &schemas.PutResourcePolicyInput{
-			RegistryName: aws.String(d.Id()),
 			Policy:       policy,
+			RegistryName: aws.String(d.Id()),
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Schemas Registry Policy (%s)", d.Id())
-		_, err := conn.PutResourcePolicy(input)
+		_, err := conn.PutResourcePolicyWithContext(ctx, input)
 
 		if err != nil {
 			return create.DiagError(names.Schemas, create.ErrActionUpdating, ResNameRegistryPolicy, d.Id(), err)
@@ -132,12 +130,11 @@ func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchemasConn
-	input := &schemas.DeleteResourcePolicyInput{
-		RegistryName: aws.String(d.Id()),
-	}
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry Policy (%s)", d.Id())
-	_, err := conn.DeleteResourcePolicy(input)
+	_, err := conn.DeleteResourcePolicyWithContext(ctx, &schemas.DeleteResourcePolicyInput{
+		RegistryName: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
 		return nil

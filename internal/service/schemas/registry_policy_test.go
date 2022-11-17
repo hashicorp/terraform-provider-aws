@@ -1,6 +1,7 @@
 package schemas_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -126,7 +127,7 @@ func testAccCheckRegistryPolicyExists(name string, v *schemas.GetResourcePolicyO
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
-		output, err := tfschemas.FindRegistryPolicyByName(conn, rs.Primary.ID)
+		output, err := tfschemas.FindRegistryPolicyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -145,7 +146,7 @@ func testAccCheckRegistryPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfschemas.FindRegistryPolicyByName(conn, rs.Primary.ID)
+		_, err := tfschemas.FindRegistryPolicyByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -196,7 +197,7 @@ func testAccCheckRegistryPolicy(name string, expectedSid string) resource.TestCh
 		}`, expectedSid, partition, region, account_id, rs.Primary.ID)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
-		policy, err := tfschemas.FindRegistryPolicyByName(conn, rs.Primary.ID)
+		policy, err := tfschemas.FindRegistryPolicyByName(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
