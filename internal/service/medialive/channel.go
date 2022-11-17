@@ -62,6 +62,7 @@ func ResourceChannel() *schema.Resource {
 			"channel_class": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ChannelClass](),
 			},
 			"channel_id": {
@@ -487,106 +488,106 @@ func ResourceChannel() *schema.Resource {
 														},
 													},
 												},
-												"deblock_filter": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.InputDeblockFilter](),
-												},
-												"denoise_filter": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.InputDenoiseFilter](),
-												},
-												"filter_strength": {
-													Type:             schema.TypeInt,
-													Optional:         true,
-													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 5)),
-												},
-												"input_filter": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													Computed:         true,
-													ValidateDiagFunc: enum.Validate[types.InputFilter](),
-												},
-												"network_input_settings": {
+											},
+										},
+									},
+									"deblock_filter": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InputDeblockFilter](),
+									},
+									"denoise_filter": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InputDenoiseFilter](),
+									},
+									"filter_strength": {
+										Type:             schema.TypeInt,
+										Optional:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 5)),
+									},
+									"input_filter": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.InputFilter](),
+									},
+									"network_input_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hls_input_settings": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"hls_input_settings": {
-																Type:     schema.TypeList,
+															"bandwidth": {
+																Type:     schema.TypeInt,
 																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"bandwidth": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"buffer_segments": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"retries": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"retry_interval": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"scte35_source": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.HlsScte35SourceType](),
-																		},
-																	},
-																},
 															},
-															"server_validation": {
+															"buffer_segments": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"retries": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"retry_interval": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"scte35_source": {
 																Type:             schema.TypeString,
 																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.NetworkInputServerValidation](),
+																ValidateDiagFunc: enum.Validate[types.HlsScte35SourceType](),
 															},
 														},
 													},
 												},
-												"scte35_pid": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"smpte2038_data_preference": {
+												"server_validation": {
 													Type:             schema.TypeString,
 													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.Smpte2038DataPreference](),
+													ValidateDiagFunc: enum.Validate[types.NetworkInputServerValidation](),
 												},
-												"source_end_behavior": {
+											},
+										},
+									},
+									"scte35_pid": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"smpte2038_data_preference": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.Smpte2038DataPreference](),
+									},
+									"source_end_behavior": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InputSourceEndBehavior](),
+									},
+									"video_selector": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"color_space": {
 													Type:             schema.TypeString,
 													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.InputSourceEndBehavior](),
+													ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpace](),
 												},
-												"video_selector": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"color_space": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpace](),
-															},
-															// TODO implement color_space_settings
-															"color_space_usage": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpaceUsage](),
-															},
-															// TODO implement selector_settings
-														},
-													},
+												// TODO implement color_space_settings
+												"color_space_usage": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpaceUsage](),
 												},
+												// TODO implement selector_settings
 											},
 										},
 									},
@@ -847,8 +848,16 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.EncoderSettings = expandChannelEncoderSettings(d.Get("encoder_settings").([]interface{}))
 		}
 
+		if d.HasChange("input_attachments") {
+			in.InputAttachments = expandChannelInputAttachments(d.Get("input_attachments").(*schema.Set).List())
+		}
+
 		if d.HasChange("input_specification") {
 			in.InputSpecification = expandChannelInputSpecification(d.Get("input_specification").([]interface{}))
+		}
+
+		if d.HasChange("log_level") {
+			in.LogLevel = types.LogLevel(d.Get("log_level").(string))
 		}
 
 		if d.HasChange("maintenance") {

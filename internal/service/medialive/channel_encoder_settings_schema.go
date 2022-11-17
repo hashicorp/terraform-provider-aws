@@ -879,7 +879,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.HlsId3SegmentTaggingState](),
 													},
-													"hls_iframe_only_playlists": {
+													"iframe_only_playlists": {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -914,7 +914,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.HlsIvSource](),
 													},
-													"keep_segment": {
+													"keep_segments": {
 														Type:     schema.TypeInt,
 														Optional: true,
 														Computed: true,
@@ -977,6 +977,12 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.HlsMode](),
 													},
+													"output_selection": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.HlsOutputSelection](),
+													},
 													"program_date_time": {
 														Type:             schema.TypeString,
 														Optional:         true,
@@ -1016,11 +1022,16 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.HlsStreamInfResolution](),
 													},
-													"time_metadata_id3_frame": {
+													"timed_metadata_id3_frame": {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.HlsTimedMetadataId3Frame](),
+													},
+													"timed_metadata_id3_period": {
+														Type:     schema.TypeInt,
+														Optional: true,
+														Computed: true,
 													},
 													"timestamp_delta_milliseconds": {
 														Type:     schema.TypeInt,
@@ -3048,9 +3059,6 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["segment_length"].(int); ok {
 		out.SegmentLength = int32(v)
 	}
-	if v, ok := m["segmentation_mode"].(string); ok && v != "" {
-		out.SegmentationMode = types.HlsSegmentationMode(v)
-	}
 	if v, ok := m["segments_per_subdirectory"].(int); ok {
 		out.SegmentsPerSubdirectory = int32(v)
 	}
@@ -3678,7 +3686,7 @@ func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []interface{}) *types
 }
 
 func expandHLSOutputSettingsHLSSettings(tfList []interface{}) *types.HlsSettings {
-	if tfList == nil {
+	if len(tfList) == 0 {
 		return nil
 	}
 
@@ -4952,7 +4960,7 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 		"base_url_content1":            aws.ToString(in.BaseUrlContent1),
 		"base_url_manifest":            aws.ToString(in.BaseUrlManifest),
 		"base_url_manifest1":           aws.ToString(in.BaseUrlManifest1),
-		"caption_language_mapping":     flattenHLSCaptionLanguageMappings(in.CaptionLanguageMappings),
+		"caption_language_mappings":    flattenHLSCaptionLanguageMappings(in.CaptionLanguageMappings),
 		"caption_language_setting":     string(in.CaptionLanguageSetting),
 		"client_cache":                 string(in.ClientCache),
 		"codec_specification":          string(in.CodecSpecification),
@@ -4982,8 +4990,7 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 		"program_date_time_period":     int(in.ProgramDateTimePeriod),
 		"redundant_manifest":           string(in.RedundantManifest),
 		"segment_length":               int(in.SegmentLength),
-		"segmentation_mode":            string(in.SegmentationMode),
-		"segments_per_subdirectory":    string(in.SegmentsPerSubdirectory),
+		"segments_per_subdirectory":    int(in.SegmentsPerSubdirectory),
 		"stream_inf_resolution":        string(in.StreamInfResolution),
 		"timed_metadata_id3_frame":     string(in.TimedMetadataId3Frame),
 		"timed_metadata_id3_period":    int(in.TimedMetadataId3Period),
