@@ -139,7 +139,7 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 	}
 }
 
-func TestValidLogStreamName(t *testing.T) {
+func TestValidStreamName(t *testing.T) {
 	validNames := []string{
 		"test-log-stream",
 		"my_sample_log_stream",
