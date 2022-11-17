@@ -127,6 +127,7 @@ The following arguments are optional:
 * `output_groups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecode_config` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `video_descriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
+* `avail_blanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 
 ### Input Attachments
 
@@ -214,6 +215,8 @@ The following arguments are optional:
 
 * `aac_settings` - (Optional) Aac Settings. See [AAC Settings](#aac-settings) for more details.
 * `ac3_settings` - (Optional) Ac3 Settings. See [AC3 Settings](#ac3-settings) for more details.
+* `eac3_atmos_settings` - (Optional) - Eac3 Atmos Settings. See [EAC3 Atmos Settings](#eac3-atmos-settings)
+* `eac3_settings` - (Optional) - Eac3 Settings. See [EAC3 Settings](#eac3-settings)
 
 ### AAC Settings
 
@@ -236,6 +239,24 @@ The following arguments are optional:
 * `drc_profile` - (Optional) If set to filmStandard, adds dynamic range compression signaling to the output bitstream as defined in the Dolby Digital specification.
 * `lfe_filter` - (Optional) When set to enabled, applies a 120Hz lowpass filter to the LFE channel prior to encoding.
 * `metadata_control` - (Optional) Metadata control.
+
+### EAC3 Atmos Settings
+
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `coding_mode` - (Optional) Dolby Digital Plus with dolby Atmos coding mode.
+* `dialnorm` - (Optional) Sets the dialnorm for the output.
+* `drc_line` - (Optional) Sets the Dolby dynamic range compression profile.
+* `drc_line` - (Optional) Sets the Dolby dynamic range compression profile.
+* `drc_rf` - (Optional) Sets the profile for heavy Dolby dynamic range compression.
+* `height_trim` - (Optional) Height dimensional trim.
+* `surround_trim` - (Optional) Surround dimensional trim.
+
+### EAC3 Settings
+
+* `attenuation_control` - (Optional) Sets the attenuation control.
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `bitstream_mode` - (Optional) Specifies the bitstream mode (bsmod) for the emitted AC-3 stream.
+* `coding_mode` - (Optional) Dolby Digital Plus coding mode.
 
 ### Nielsen Watermark Settings
 
@@ -283,11 +304,34 @@ The following arguments are optional:
 
 ### Video Descriptions
 
+* `name` - (Required) The name of the video description.
+* `codec_settings` - (Optional) The video codec settings. See [Video Codec Settings](#video-codec-settings) for more details.
 * `height` - Output video height in pixels.
 * `respond_to_afd` - (Optional) Indicate how to respond to the AFD values that might be in the input video.
 * `scaling_behavior` - (Optional) Behavior on how to scale.
 * `sharpness` - (Optional) Changes the strength of the anti-alias filter used for scaling.
 * `width` - (Optional) Output video width in pixels.
+
+### Video Codec Settings
+
+* `frame_capture_settings` - (Optional) Frame capture settings. See [Frame Capture Settings](#frame-capture-settings) for more details.
+* `h264_settings` - (Optional)
+
+### Frame Capture Settings
+
+* `capture_interval` - (Optional) The frequency at which to capture frames for inclusion in the output.
+* `capture_interval_units` - (Optional) Unit for the frame capture interval.
+
+### Avail Blanking
+
+* `avail_blanking_image` - (Optional) Blanking image to be used. See [Avail Blanking Image](#avail-blanking-image) for more details.
+* `state` - (Optional) When set to enabled, causes video, audio and captions to be blanked when insertion metadata is added.
+
+### Avail Blanking Image
+
+* `uri` - (Required) Path to a file accessible to the live stream.
+* `password_param` - (Optional) Key used to extract the password from EC2 Parameter store.
+* `username` - (Optional). Username to be used.
 
 ### Archive Group Settings
 

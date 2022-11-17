@@ -93,7 +93,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 		CheckDestroy:             testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChannelConfig_basic(rName),
+				Config: testAccChannelConfig_hls(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
@@ -117,6 +117,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
 						"name": "test-video-name",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.hls_output_settings.0.h265_packaging_type", "HVC1"),
 				),
 			},
 		},
