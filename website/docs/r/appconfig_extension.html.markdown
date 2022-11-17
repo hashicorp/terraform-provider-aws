@@ -76,6 +76,14 @@ The `action` configuration block supports configuring any number of the followin
 * `uri` - (Required) The extension URI associated to the action point in the extension definition. The URI can be an Amazon Resource Name (ARN) for one of the following: an Lambda function, an Amazon Simple Queue Service queue, an Amazon Simple Notification Service topic, or the Amazon EventBridge default event bus.
 * `description` - (Optional) Information about the action.
 
+#### `parameter`
+
+The `parameter` configuration block supports configuring any number of the following arguments:
+
+* `name` - (Required) The parameter name.
+* `required` - (Required) Determines if a parameter value must be specified in the extension association.
+* `description` - (Optional) Information about the parameter.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
