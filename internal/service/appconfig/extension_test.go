@@ -27,7 +27,7 @@ func TestAccAppConfigExtension_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfigName(rName),
+				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`extension/*`)),
@@ -57,7 +57,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfigName(rName),
+				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
@@ -75,7 +75,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExtensionConfigActionPoint2(rName),
+				Config: testAccExtensionConfig_actionPoint2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action_point.#", "2"),
@@ -94,7 +94,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExtensionConfigName(rName),
+				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
@@ -127,7 +127,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfigParameter1(rName, pName1, pDescription1, pRequiredTrue),
+				Config: testAccExtensionConfig_parameter1(rName, pName1, pDescription1, pRequiredTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
@@ -144,7 +144,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExtensionConfigParameter2(rName),
+				Config: testAccExtensionConfig_parameter2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
@@ -161,7 +161,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExtensionConfigParameter1(rName, pName2, pDescription2, pRequiredFalse),
+				Config: testAccExtensionConfig_parameter1(rName, pName2, pDescription2, pRequiredFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
@@ -188,7 +188,7 @@ func TestAccAppConfigExtension_Name(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfigName(rName),
+				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -200,7 +200,7 @@ func TestAccAppConfigExtension_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExtensionConfigName(rName2),
+				Config: testAccExtensionConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -224,7 +224,7 @@ func TestAccAppConfigExtension_Description(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfigDescription(rName, rDescription),
+				Config: testAccExtensionConfig_description(rName, rDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
@@ -236,7 +236,7 @@ func TestAccAppConfigExtension_Description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExtensionConfigDescription(rName, rDescription2),
+				Config: testAccExtensionConfig_description(rName, rDescription2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescription2),
@@ -257,7 +257,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfigTags1(rName, "key1", "value1"),
+				Config: testAccExtensionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -270,7 +270,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExtensionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccExtensionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -279,7 +279,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExtensionConfigTags1(rName, "key2", "value2"),
+				Config: testAccExtensionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -301,7 +301,7 @@ func TestAccAppConfigExtension_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfigName(rName),
+				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceExtension(), resourceName),
@@ -396,7 +396,7 @@ resource "aws_iam_role" "test" {
   `, rName)
 }
 
-func testAccExtensionConfigName(rName string) string {
+func testAccExtensionConfig_name(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionConfigBase(rName),
 		fmt.Sprintf(`
@@ -415,7 +415,7 @@ resource "aws_appconfig_extension" "test" {
 `, rName))
 }
 
-func testAccExtensionConfigDescription(rName string, rDescription string) string {
+func testAccExtensionConfig_description(rName string, rDescription string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionConfigBase(rName),
 		fmt.Sprintf(`
@@ -434,7 +434,7 @@ resource "aws_appconfig_extension" "test" {
 `, rName, rDescription))
 }
 
-func testAccExtensionConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
+func testAccExtensionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionConfigBase(rName),
 		fmt.Sprintf(`
@@ -455,7 +455,7 @@ resource "aws_appconfig_extension" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccExtensionConfigTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccExtensionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionConfigBase(rName),
 		fmt.Sprintf(`
@@ -477,7 +477,7 @@ resource "aws_appconfig_extension" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccExtensionConfigActionPoint2(rName string) string {
+func testAccExtensionConfig_actionPoint2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionConfigBase(rName),
 		fmt.Sprintf(`
@@ -503,7 +503,7 @@ resource "aws_appconfig_extension" "test" {
 `, rName))
 }
 
-func testAccExtensionConfigParameter1(rName string, pName string, pDescription string, pRequired string) string {
+func testAccExtensionConfig_parameter1(rName string, pName string, pDescription string, pRequired string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionConfigBase(rName),
 		fmt.Sprintf(`
@@ -526,7 +526,7 @@ resource "aws_appconfig_extension" "test" {
 `, rName, pName, pDescription, pRequired))
 }
 
-func testAccExtensionConfigParameter2(rName string) string {
+func testAccExtensionConfig_parameter2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionConfigBase(rName),
 		fmt.Sprintf(`
