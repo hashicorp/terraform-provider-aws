@@ -323,8 +323,8 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "test" {
-  name           = %[1]q
-  pattern        = <<EOS
+  name    = %[1]q
+  pattern = <<EOS
     { $.d1 = "OK" }
 EOS
 
