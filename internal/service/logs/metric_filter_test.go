@@ -288,7 +288,7 @@ resource "aws_cloudwatch_log_metric_filter" "test" {
   metric_transformation {
     name      = "metric${count.index}"
     namespace = "ns1"
-    value     = "${count.index}"
+    value     = count.index
   }
 }
 `, rName, n)
