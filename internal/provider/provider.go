@@ -996,6 +996,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_appconfig_configuration_profile":        appconfig.ResourceConfigurationProfile(),
 			"aws_appconfig_deployment":                   appconfig.ResourceDeployment(),
 			"aws_appconfig_deployment_strategy":          appconfig.ResourceDeploymentStrategy(),
+			"aws_appconfig_extension":                    appconfig.ResourceExtension(),
+			"aws_appconfig_extension_association":        appconfig.ResourceExtensionAssociation(),
 			"aws_appconfig_environment":                  appconfig.ResourceEnvironment(),
 			"aws_appconfig_hosted_configuration_version": appconfig.ResourceHostedConfigurationVersion(),
 
