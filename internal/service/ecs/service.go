@@ -371,15 +371,13 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta inter
 	}
 
 	if d.HasChange("triggers") && !fnd {
-		d.Clear("triggers")
-
-		return nil
+		return d.Clear("triggers")
 	}
 
 	if d.HasChange("triggers") && fnd {
 		o, n := d.GetChange("triggers")
 		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
-			d.Clear("triggers")
+			return d.Clear("triggers")
 		}
 
 		return nil
