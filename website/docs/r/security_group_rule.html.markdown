@@ -113,6 +113,7 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the security group rule.
+* `security_group_rule_id` - If the `aws_security_group_rule` resource has a single source or destination then this is the AWS Security Group Rule resource ID. Otherwise it is empty.
 
 ## Timeouts
 
