@@ -137,10 +137,37 @@ The following arguments are optional:
 ### Input Settings
 
 * `audio_selectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `caption_selectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `deblock_filter` - (Optional) Enable or disable the deblock filter when filtering.
+* `denoise_filter` - (Optional) Enable or disable the denoise filter when filtering.
+* `filter_strength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
+* `input_filter` - (Optional) Turns on the filter for the input.
+* `network_input_settings` - (Optional) Input settings. See [Network Input Settings](#network-input-settings) for more details.
+* `scte35_pid` - (Optional) PID from which to read SCTE-35 messages.
+* `smpte2038_data_preference` - (Optional) Specifies whether to extract applicable ancillary data from a SMPTE-2038 source in the input.
+* `source_end_behavior` - (Optional) Loop input if it is a file.
 
 ### Audio Selectors
 
 * `name` - (Required) The name of the audio selector.
+
+### Caption Selectors
+
+* `name` - (Optional) The name of the caption selector.
+* `language_code` - (Optional) When specified this field indicates the three letter language code of the caption track to extract from the source.
+
+### Network Input Settings
+
+* `hls_input_settings` - (Optional) Specifies HLS input settings when the uri is for a HLS manifest. See [HLS Input Settings](#hls-input-settings) for more details.
+* `server_validation` - (Optional) Check HTTPS server certificates.
+
+### HLS Input Settings
+
+* `bandwidth` - (Optional) The bitrate is specified in bits per second, as in an HLS manifest.
+* `buffer_segments` - (Optional) Buffer segments.
+* `retries` - (Optional) The number of consecutive times that attempts to read a manifest or segment must fail before the input is considered unavailable.
+* `retry_interval` - (Optional) The number of seconds between retries when an attempt to read a manifest or segment fails.
+* `scte35_source_type` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
 
 ### Maintenance
 
@@ -171,6 +198,7 @@ The following arguments are optional:
 * `audio_type` - (Optional) Applies only if audioTypeControl is useConfigured. The values for audioType are defined in ISO-IEC 13818-1.
 * `audio_type_control` - (Optional) Determined how audio type is determined.
 * `audio_watermark_settings` - (Optional) Settings to configure one or more solutions that insert audio watermarks in the audio encode. See [Audio Watermark Settings](#audio-watermark-settings) for more details.
+* `codec_settings` - (Optional) Audio codec settings. See [Audio Codec Settings](#audio-codec-settings) for more details.
 
 ### Audio Normalization Settings
 
@@ -181,6 +209,33 @@ The following arguments are optional:
 ### Audio Watermark Settings
 
 * `nielsen_watermark_settings` - (Optional) Settings to configure Nielsen Watermarks in the audio encode. See [Nielsen Watermark Settings](#nielsen-watermark-settings) for more details.
+
+### Audio Codec Settings
+
+* `aac_settings` - (Optional) Aac Settings. See [AAC Settings](#aac-settings) for more details.
+* `ac3_settings` - (Optional) Ac3 Settings. See [AC3 Settings](#ac3-settings) for more details.
+
+### AAC Settings
+
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `coding_mode` - (Optional) Mono, Stereo, or 5.1 channel layout.
+* `input_type` - (Optional) Set to "broadcasterMixedAd" when input contains pre-mixed main audio + AD (narration) as a stereo pair.
+* `profile` - (Optional) AAC profile.
+* `rate_control_mode` - (Optional) The rate control mode.
+* `raw_format` - (Optional) Sets LATM/LOAS AAC output for raw containers.
+* `sample_rate` - (Optional) Sample rate in Hz.
+* `spec` - (Optional) Use MPEG-2 AAC audio instead of MPEG-4 AAC audio for raw or MPEG-2 Transport Stream containers.
+* `vbr_quality` - (Optional) VBR Quality Level - Only used if rateControlMode is VBR.
+
+### AC3 Settings
+
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `bitstream_mode` - (Optional) Specifies the bitstream mode (bsmod) for the emitted AC-3 stream.
+* `coding_mode` - (Optional) Dolby Digital coding mode.
+* `dialnorm` - (Optional) Sets the dialnorm of the output.
+* `drc_profile` - (Optional) If set to filmStandard, adds dynamic range compression signaling to the output bitstream as defined in the Dolby Digital specification.
+* `lfe_filter` - (Optional) When set to enabled, applies a 120Hz lowpass filter to the LFE channel prior to encoding.
+* `metadata_control` - (Optional) Metadata control.
 
 ### Nielsen Watermark Settings
 
