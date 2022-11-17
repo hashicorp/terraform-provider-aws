@@ -1658,6 +1658,7 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsAliasReplicaDatasourceName, "target_key_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsAliasDatasourceName, "target_key_arn"),
 				),
+				ExpectNonEmptyPlan: true, // Because of https://github.com/hashicorp/terraform-provider-aws/issues/27850
 			},
 			{
 				Config: testAccTableConfig_replicaCMK(rName),
@@ -1668,6 +1669,12 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
 				),
+			},
+			{
+				Config:            testAccTableConfig_replicaCMK(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
