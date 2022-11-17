@@ -27,7 +27,7 @@ func TestAccAppConfigExtensionAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionAssociationConfigName(rName),
+				Config: testAccExtensionAssociationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "extension_arn", "appconfig", regexp.MustCompile(`extension/*`)),
@@ -62,7 +62,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionAssociationConfigParameter1(rName, pName1, pDescription1, pRequiredTrue, pValue1),
+				Config: testAccExtensionAssociationConfig_parameters1(rName, pName1, pDescription1, pRequiredTrue, pValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
@@ -75,7 +75,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExtensionAssociationConfigParameter2(rName),
+				Config: testAccExtensionAssociationConfig_parameters2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
@@ -84,7 +84,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExtensionAssociationConfigParameter1(rName, pName2, pDescription2, pRequiredFalse, pValue2),
+				Config: testAccExtensionAssociationConfig_parameters1(rName, pName2, pDescription2, pRequiredFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
@@ -92,7 +92,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExtensionAssociationConfigParameterNotRequired(rName, pName2, pDescription2, pRequiredFalse, pValue2),
+				Config: testAccExtensionAssociationConfig_parametersNotRequired(rName, pName2, pDescription2, pRequiredFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
@@ -113,7 +113,7 @@ func TestAccAppConfigExtensionAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionAssociationConfigName(rName),
+				Config: testAccExtensionAssociationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceExtensionAssociation(), resourceName),
@@ -195,7 +195,7 @@ resource "aws_appconfig_application" "test" {
 `, rName))
 }
 
-func testAccExtensionAssociationConfigName(rName string) string {
+func testAccExtensionAssociationConfig_name(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionAssociationConfigBase(rName),
 		fmt.Sprintf(`
@@ -218,7 +218,7 @@ resource "aws_appconfig_extension_association" "test" {
 `, rName))
 }
 
-func testAccExtensionAssociationConfigParameter1(rName string, pName string, pDescription string, pRequired string, pValue string) string {
+func testAccExtensionAssociationConfig_parameters1(rName string, pName string, pDescription string, pRequired string, pValue string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionAssociationConfigBase(rName),
 		fmt.Sprintf(`
@@ -248,7 +248,7 @@ resource "aws_appconfig_extension_association" "test" {
 `, rName, pName, pDescription, pRequired, pValue))
 }
 
-func testAccExtensionAssociationConfigParameter2(rName string) string {
+func testAccExtensionAssociationConfig_parameters2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionAssociationConfigBase(rName),
 		fmt.Sprintf(`
@@ -284,7 +284,7 @@ resource "aws_appconfig_extension_association" "test" {
 `, rName))
 }
 
-func testAccExtensionAssociationConfigParameterNotRequired(rName string, pName string, pDescription string, pRequired string, pValue string) string {
+func testAccExtensionAssociationConfig_parametersNotRequired(rName string, pName string, pDescription string, pRequired string, pValue string) string {
 	return acctest.ConfigCompose(
 		testAccExtensionAssociationConfigBase(rName),
 		fmt.Sprintf(`
