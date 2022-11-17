@@ -42,6 +42,7 @@ ENHANCEMENTS:
 * resource/aws_docdb_cluster_instance: Add `enable_performance_insights` and `performance_insights_kms_key_id` arguments ([#27769](https://github.com/hashicorp/terraform-provider-aws/issues/27769))
 * resource/aws_dynamodb_table_item: Allow the creation of items with the same hash key but different range keys ([#27517](https://github.com/hashicorp/terraform-provider-aws/issues/27517))
 * resource/aws_ec2_fleet: Add support for `price-capacity-optimized` `spot_options.allocation_strategy` value ([#27795](https://github.com/hashicorp/terraform-provider-aws/issues/27795))
+* resource/aws_ecs_service: Add `triggers` argument to enable in-place updates (redeployments) on each apply, when used with `force_new_deployment = true` ([#25840](https://github.com/hashicorp/terraform-provider-aws/issues/25840))
 * resource/aws_medialive_channel: Add support for more `output`, `output_groups`, `audio_descriptions` and `video_descriptions` in `encoder_settings`. Add support for `input_settings` in `input_attachments` ([#27823](https://github.com/hashicorp/terraform-provider-aws/issues/27823))
 * resource/aws_msk_cluster: Add `storage_mode` argument ([#27546](https://github.com/hashicorp/terraform-provider-aws/issues/27546))
 * resource/aws_neptune_cluster: Add `serverless_v2_scaling_configuration` block in support of [Neptune Serverless](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless.html) ([#27763](https://github.com/hashicorp/terraform-provider-aws/issues/27763))
