@@ -156,29 +156,29 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
-		in.Description = aws.String(v.(string))
+	if v, ok := d.Get("description").(string); ok && v != "" {
+		in.Description = aws.String(v)
 	}
 
-	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
-		v, _ := time.Parse(time.RFC3339, v.(string))
+	if v, ok := d.Get("end_date").(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
 		in.EndDate = aws.Time(v)
 	}
 
-	if v, ok := d.GetOk("flexible_time_window"); ok && len(v.([]interface{})) > 0 {
-		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.Get("flexible_time_window").([]interface{}); ok && len(v) > 0 {
+		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("group_name"); ok {
-		in.GroupName = aws.String(v.(string))
+	if v, ok := d.Get("group_name").(string); ok && v != "" {
+		in.GroupName = aws.String(v)
 	}
 
 	if v, ok := d.Get("kms_key_arn").(string); ok && v != "" {
 		in.KmsKeyArn = aws.String(v)
 	}
 
-	if v, ok := d.GetOk("target"); ok && len(v.([]interface{})) > 0 {
-		in.Target = expandTarget(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
+		in.Target = expandTarget(v[0].(map[string]interface{}))
 	}
 
 	out, err := conn.CreateSchedule(ctx, in)
@@ -260,7 +260,6 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).SchedulerClient
 
 	in := &scheduler.UpdateScheduleInput{
-		Description:        aws.String(d.Get("description").(string)),
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
 		GroupName:          aws.String(d.Get("group_name").(string)),
 		Name:               aws.String(d.Get("name").(string)),
@@ -268,8 +267,12 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		Target:             expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
-		v, _ := time.Parse(time.RFC3339, v.(string))
+	if v, ok := d.Get("description").(string); ok && v != "" {
+		in.Description = aws.String(v)
+	}
+
+	if v, ok := d.Get("end_date").(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
 		in.EndDate = aws.Time(v)
 	}
 
