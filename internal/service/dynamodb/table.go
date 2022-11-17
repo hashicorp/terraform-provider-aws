@@ -3,7 +3,6 @@ package dynamodb
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -39,6 +38,7 @@ func ResourceTable() *schema.Resource {
 		Read:   resourceTableRead,
 		Update: resourceTableUpdate,
 		Delete: resourceTableDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -124,13 +124,9 @@ func ResourceTable() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								dynamodb.ScalarAttributeTypeB,
-								dynamodb.ScalarAttributeTypeN,
-								dynamodb.ScalarAttributeTypeS,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.ScalarAttributeType_Values(), false),
 						},
 					},
 				},
@@ -340,13 +336,7 @@ func ResourceTable() *schema.Resource {
 					value := v.(string)
 					return strings.ToUpper(value)
 				},
-				ValidateFunc: validation.StringInSlice([]string{
-					"",
-					dynamodb.StreamViewTypeNewImage,
-					dynamodb.StreamViewTypeOldImage,
-					dynamodb.StreamViewTypeNewAndOldImages,
-					dynamodb.StreamViewTypeKeysOnly,
-				}, false),
+				ValidateFunc: validation.StringInSlice(append(dynamodb.StreamViewType_Values(), ""), false),
 			},
 			"table_class": {
 				Type:         schema.TypeString,
@@ -389,6 +379,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	tableName := d.Get("name").(string)
 	keySchemaMap := map[string]interface{}{
 		"hash_key": d.Get("hash_key").(string),
 	}
@@ -396,12 +387,10 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
-
-	if _, ok := d.GetOk("restore_source_name"); ok {
+	if v, ok := d.GetOk("restore_source_name"); ok {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
-			TargetTableName: aws.String(d.Get("name").(string)),
-			SourceTableName: aws.String(d.Get("restore_source_name").(string)),
+			SourceTableName: aws.String(v.(string)),
+			TargetTableName: aws.String(tableName),
 		}
 
 		if v, ok := d.GetOk("restore_date_time"); ok {
@@ -411,11 +400,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if attr, ok := d.GetOk("restore_to_latest_time"); ok {
 			input.UseLatestRestorableTime = aws.Bool(attr.(bool))
-		}
-
-		if v, ok := d.GetOk("local_secondary_index"); ok {
-			lsiSet := v.(*schema.Set)
-			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
 		}
 
 		billingModeOverride := d.Get("billing_mode").(string)
@@ -455,42 +439,30 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]interface{}))
 		}
 
-		var output *dynamodb.RestoreTableToPointInTimeOutput
-		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
-			var err error
-			output, err = conn.RestoreTableToPointInTime(input)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
+		_, err := tfresource.RetryWhen(createTableTimeout, func() (interface{}, error) {
+			return conn.RestoreTableToPointInTime(input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+				return true, err
 			}
-			return nil
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
 		})
 
-		if tfresource.TimedOut(err) {
-			output, err = conn.RestoreTableToPointInTime(input)
-		}
-
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
-		}
-
-		if output == nil || output.TableDescription == nil {
-			return errors.New("error creating DynamoDB Table: empty response")
+			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 		}
 	} else {
 		input := &dynamodb.CreateTableInput{
-			TableName:   aws.String(d.Get("name").(string)),
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 			KeySchema:   expandKeySchema(keySchemaMap),
+			TableName:   aws.String(tableName),
 		}
 
 		if len(tags) > 0 {
@@ -523,7 +495,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
 				if err := validateGSIProvisionedThroughput(gsi, billingMode); err != nil {
-					return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+					return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 				}
 
 				gsiObject := expandGlobalSecondaryIndex(gsi, billingMode)
@@ -547,40 +519,28 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			input.TableClass = aws.String(v.(string))
 		}
 
-		var output *dynamodb.CreateTableOutput
-		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
-			var err error
-			output, err = conn.CreateTable(input)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, "ThrottlingException", "") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
+		_, err := tfresource.RetryWhen(createTableTimeout, func() (interface{}, error) {
+			return conn.CreateTable(input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+				return true, err
 			}
-			return nil
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
 		})
 
-		if tfresource.TimedOut(err) {
-			output, err = conn.CreateTable(input)
-		}
-
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
-		}
-
-		if output == nil || output.TableDescription == nil {
-			return errors.New("error creating DynamoDB Table: empty response")
+			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 		}
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(tableName)
 
 	var output *dynamodb.TableDescription
 	var err error
@@ -628,12 +588,10 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-		TableName: aws.String(d.Id()),
-	})
+	table, err := FindTableByName(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Dynamodb Table (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -641,17 +599,6 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), err)
 	}
-
-	if result == nil || result.Table == nil {
-		if d.IsNewResource() {
-			return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), errors.New("empty output after creation"))
-		}
-		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	table := result.Table
 
 	d.Set("arn", table.TableArn)
 	d.Set("name", table.TableName)
@@ -1035,9 +982,8 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	log.Printf("[DEBUG] DynamoDB delete table: %s", d.Id())
-
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
+		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
 		if err := deleteReplicas(conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
 			if !tfawserr.ErrMessageContains(err, "ValidationException", "request was not found") {
@@ -1046,11 +992,14 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	log.Printf("[DEBUG] Deleting DynamoDB Table: %s", d.Id())
 	err := deleteTable(conn, d.Id())
+
+	if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
-			return nil
-		}
 		return create.Error(names.DynamoDB, create.ErrActionDeleting, ResNameTable, d.Id(), err)
 	}
 
@@ -1481,32 +1430,24 @@ func deleteTable(conn *dynamodb.DynamoDB, tableName string) error {
 		TableName: aws.String(tableName),
 	}
 
-	err := resource.Retry(deleteTableTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteTable(input)
-		if err != nil {
-			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
-				return resource.RetryableError(err)
-			}
-			// This handles multiple scenarios in the DynamoDB API:
-			// 1. Updating a table immediately before deletion may return:
-			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
-			// 2. Removing a table from a DynamoDB global table may return:
-			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
-			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
-				return resource.NonRetryableError(err)
-			}
-			return resource.NonRetryableError(err)
+	_, err := tfresource.RetryWhen(deleteTableTimeout, func() (interface{}, error) {
+		return conn.DeleteTable(input)
+	}, func(err error) (bool, error) {
+		// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
+		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
+			return true, err
 		}
-		return nil
-	})
+		// This handles multiple scenarios in the DynamoDB API:
+		// 1. Updating a table immediately before deletion may return:
+		//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
+		// 2. Removing a table from a DynamoDB global table may return:
+		//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
+			return true, err
+		}
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteTable(input)
-	}
+		return false, err
+	})
 
 	return err
 }
