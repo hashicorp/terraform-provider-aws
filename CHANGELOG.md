@@ -15,6 +15,7 @@ FEATURES:
 * **New Resource:** `aws_opensearch_inbound_connection_accepter` ([#22988](https://github.com/hashicorp/terraform-provider-aws/issues/22988))
 * **New Resource:** `aws_opensearch_outbound_connection` ([#22988](https://github.com/hashicorp/terraform-provider-aws/issues/22988))
 * **New Resource:** `aws_scheduler_schedule_group` ([#27800](https://github.com/hashicorp/terraform-provider-aws/issues/27800))
+* **New Resource:** `aws_schemas_registry_policy` ([#27705](https://github.com/hashicorp/terraform-provider-aws/issues/27705))
 * **New Resource:** `aws_sesv2_email_identity_mail_from_attributes` ([#27672](https://github.com/hashicorp/terraform-provider-aws/issues/27672))
 
 ENHANCEMENTS:
