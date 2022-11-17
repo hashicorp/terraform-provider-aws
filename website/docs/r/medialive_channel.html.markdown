@@ -315,12 +315,64 @@ The following arguments are optional:
 ### Video Codec Settings
 
 * `frame_capture_settings` - (Optional) Frame capture settings. See [Frame Capture Settings](#frame-capture-settings) for more details.
-* `h264_settings` - (Optional)
+* `h264_settings` - (Optional) H264 settings. See [H264 Settings](#h264-settings) for more details.
 
 ### Frame Capture Settings
 
 * `capture_interval` - (Optional) The frequency at which to capture frames for inclusion in the output.
 * `capture_interval_units` - (Optional) Unit for the frame capture interval.
+
+### H264 Settings
+
+* `adaptive_quantization` - (Optional) Enables or disables adaptive quantization.
+* `afd_signaling` - (Optional) Indicates that AFD values will be written into the output stream.
+* `bitrate` - (Optional) Average bitrate in bits/second.
+* `buf_fil_pct` - (Optional) Percentage of the buffer that should initially be filled.
+* `buf_size` - (Optional) Size of buffer in bits.
+* `color_metadata` - (Optional) Includes color space metadata in the output.
+* `entropy_encoding` - (Optional) Entropy encoding mode.
+* `filter_settings` - (Optional) Filters to apply to an encode. See [H264 Filter Settings](#h264-filter-settings) for more details.
+* `fixed_afd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
+* `flicer_aq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
+* `force_field_pictures` - (Optional) Controls whether coding is performed on a field basis or on a frame basis.
+* `framerate_control` - (Optional) Indicates how the output video frame rate is specified.
+* `framerate_denominator` - (Optional) Framerate denominator.
+* `framerate_numerator` - (Optional) Framerate numerator.
+* `gop_b_refrence` - (Optional) GOP-B reference.
+* `gop_closed_cadence` - (Optional) Frequency of closed GOPs.
+* `gop_num_b_frames` - (Optional) Number of B-frames between reference frames.
+* `gop_size` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
+* `gop_size_units` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
+* `level` - (Optional) H264 level.
+* `look_ahead_rate_control` - (Optional) Amount of lookahead.
+* `max_bitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
+* `min_interval` - (Optional) Min interval.
+* `num_ref_frames` - (Optional) Number of reference frames to use.
+* `par_control` - (Optional) Indicates how the output pixel aspect ratio is specified.
+* `par_denominator` - (Optional) Pixel Aspect Ratio denominator.
+* `par_numerator` - (Optional) Pixel Aspect Ratio numerator.
+* `profile` - (Optional) H264 profile.
+* `quality_level` - (Optional) Quality level.
+* `qvbr_quality_level` - (Optional) Controls the target quality for the video encode.
+* `rate_control_mode` - (Optional) Rate control mode.
+* `scan_type` - (Optional) Sets the scan type of the output.
+* `scene_change_detect` - (Optional) Scene change detection.
+* `slices` - (Optional) Number of slices per picture.
+* `softness` - (Optional) Softness.
+* `spatial_aq` - (Optional) Makes adjustments within each frame based on spatial variation of content complexity.
+* `subgop_length` - (Optional) Subgop length.
+* `syntax` - (Optional) Produces a bitstream compliant with SMPTE RP-2027.
+* `temporal_aq` - (Optional) Makes adjustments within each frame based on temporal variation of content complexity.
+* `timecode_insertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+
+### H264 Filter Settings
+
+* `temporal_filter_settings` - (Optional) Temporal filter settings. See [Temporal Filter Settings](#temporal-filter-settings)
+
+### Temporal Filter Settings
+
+* `post_filter_sharpening` - (Optional) Post filter sharpening.
+* `strength` - (Optional) Filter strength.
 
 ### Avail Blanking
 
