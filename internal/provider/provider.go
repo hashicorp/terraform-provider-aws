@@ -2040,9 +2040,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
-			"aws_schemas_discoverer": schemas.ResourceDiscoverer(),
-			"aws_schemas_registry":   schemas.ResourceRegistry(),
-			"aws_schemas_schema":     schemas.ResourceSchema(),
+			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
+			"aws_schemas_registry":        schemas.ResourceRegistry(),
+			"aws_schemas_registry_policy": schemas.ResourceRegistryPolicy(),
+			"aws_schemas_schema":          schemas.ResourceSchema(),
 
 			"aws_secretsmanager_secret":          secretsmanager.ResourceSecret(),
 			"aws_secretsmanager_secret_policy":   secretsmanager.ResourceSecretPolicy(),
