@@ -85,6 +85,22 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Update In-place On Every Apply
+
+The key used with `triggers` is arbitrary.
+
+```terraform
+resource "aws_ecs_service" "example" {
+  # ... other configurations ...
+
+  force_new_deployment = true
+
+  triggers = {
+    redeployment = timestamp()
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -103,7 +119,6 @@ The following arguments are optional:
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enable_execute_command` - (Optional) Specifies whether to enable Amazon ECS Exec for the tasks within the service.
 * `force_new_deployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `ordered_placement_strategy` and `placement_constraints` updates.
-* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an update in-place via [`UpdateService`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html).
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
 * `launch_type` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`.
@@ -117,6 +132,7 @@ The following arguments are optional:
 * `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. See below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update. See example above.
 * `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ### capacity_provider_strategy
