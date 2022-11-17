@@ -584,7 +584,7 @@ resource "aws_medialive_channel" "test" {
         audio_description_names = [%[1]q]
         output_settings {
           hls_output_settings {
-            name_modifier = "_1"
+            name_modifier       = "_1"
             h265_packaging_type = "HVC1"
             hls_settings {
               standard_hls_settings {
