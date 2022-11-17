@@ -47,6 +47,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description specified for the schedule.
+* `end_date` - (Optional) The date, in UTC, before which the schedule can invoke its target. Depending on the schedule's recurrence expression, invocations might stop on, or before, the end date you specify. EventBridge Scheduler ignores the end date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `group_name` - (Optional, Forces new resource) Name of the schedule group to associate with this schedule. If you omit this, the default schedule group is used.
 * `name` - (Optional, Forces new resource) Name of the schedule. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.

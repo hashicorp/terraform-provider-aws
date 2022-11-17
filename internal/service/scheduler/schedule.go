@@ -7,6 +7,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
@@ -43,6 +44,11 @@ func ResourceSchedule() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(0, 512)),
+			},
+			"end_date": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
 			},
 			"flexible_time_window": {
 				Type:     schema.TypeList,
@@ -149,6 +155,11 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		in.EndDate = aws.Time(v)
+	}
+
 	if v, ok := d.GetOk("flexible_time_window"); ok && len(v.([]interface{})) > 0 {
 		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -212,6 +223,13 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("arn", out.Arn)
 	d.Set("description", out.Description)
+
+	if out.EndDate != nil {
+		d.Set("end_date", aws.ToTime(out.EndDate).Format(time.RFC3339))
+	} else {
+		d.Set("end_date", nil)
+	}
+
 	d.Set("group_name", out.GroupName)
 	d.Set("name", out.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
@@ -238,6 +256,11 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		Name:               aws.String(d.Get("name").(string)),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
 		Target:             expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+	}
+
+	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		in.EndDate = aws.Time(v)
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
