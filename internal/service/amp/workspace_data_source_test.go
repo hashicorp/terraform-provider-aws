@@ -26,6 +26,17 @@ func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccWorkspaceDataSourceConfig_workspaceId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "prometheus_endpoint", dataSourceName, "prometheus_endpoint"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+				),
+			},
+			{
 				Config: testAccWorkspaceDataSourceConfig_alias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
@@ -40,7 +51,7 @@ func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceDataSourceConfig_alias(rName string) string {
+func testAccWorkspaceDataSourceConfig_workspaceId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = %[1]q
@@ -48,6 +59,18 @@ resource "aws_prometheus_workspace" "test" {
 
 data "aws_prometheus_workspace" "test" {
   workspace_id = aws_prometheus_workspace.test.id
+}
+`, rName)
+}
+
+func testAccWorkspaceDataSourceConfig_alias(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {
+  alias = %[1]q
+}
+
+data "aws_prometheus_workspace" "test" {
+  alias = aws_prometheus_workspace.test.alias
 }
 `, rName)
 }

@@ -2,6 +2,8 @@ package amp
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -17,8 +19,10 @@ func DataSourceWorkspace() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"alias": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"alias", "workspace_id"},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -38,8 +42,10 @@ func DataSourceWorkspace() *schema.Resource {
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"alias", "workspace_id"},
 			},
 		},
 	}
@@ -49,14 +55,26 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).AMPConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	workspaceID := d.Get("workspace_id").(string)
-	workspace, err := FindWorkspaceByID(ctx, conn, workspaceID)
+	var err error
+	workspace := &prometheusservice.WorkspaceDescription{}
 
-	if err != nil {
-		return diag.Errorf("reading AMP Workspace (%s): %s", workspaceID, err)
+	if v, ok := d.GetOk("workspace_id"); ok {
+		workspaceID := v.(string)
+		workspace, err = FindWorkspaceByID(ctx, conn, workspaceID)
+
+		if err != nil {
+			return diag.Errorf("reading AMP Workspace (%s): %s", workspaceID, err)
+		}
+	} else if v, ok := d.GetOk("alias"); ok {
+		workspaceAlias := v.(string)
+		workspace, err = FindWorkspaceByAlias(ctx, conn, workspaceAlias)
+
+		if err != nil {
+			return diag.Errorf("reading AMP Workspace (%s): %s", workspaceAlias, err)
+		}
 	}
 
-	d.SetId(workspaceID)
+	d.SetId(aws.StringValue(workspace.WorkspaceId))
 
 	d.Set("alias", workspace.Alias)
 	d.Set("arn", workspace.Arn)

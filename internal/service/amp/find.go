@@ -76,6 +76,31 @@ func FindRuleGroupNamespaceByARN(ctx context.Context, conn *prometheusservice.Pr
 	return output.RuleGroupsNamespace, nil
 }
 
+func FindWorkspaceByAlias(ctx context.Context, conn *prometheusservice.PrometheusService, alias string) (*prometheusservice.WorkspaceDescription, error) {
+	input := &prometheusservice.ListWorkspacesInput{
+		Alias: aws.String(alias),
+	}
+
+	output, err := conn.ListWorkspacesWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.Workspaces) == 0 {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if len(output.Workspaces) > 1 {
+		return nil, tfresource.NewTooManyResultsError(len(output.Workspaces), input)
+	}
+
+	return FindWorkspaceByID(ctx, conn, *output.Workspaces[0].WorkspaceId)
+}
+
 func FindWorkspaceByID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
 	input := &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(id),
