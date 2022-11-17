@@ -222,6 +222,53 @@ func TestAccElastiCacheCluster_ParameterGroupName_default(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheCluster_IpDiscovery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ec elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_ipDiscovery(rName, "memcached", "1.6.6", "ipv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "1.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv4"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_ipDiscovery(rName, "memcached", "1.6.6", "ipv6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "1.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_port(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1303,6 +1350,19 @@ resource "aws_elasticache_cluster" "test" {
   parameter_group_name = %q
 }
 `, rName, engine, engineVersion, parameterGroupName)
+}
+
+func testAccClusterConfig_ipDiscovery(rName, engine, engineVersion, ipDiscovery string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id           = %q
+  engine               = %q
+  engine_version       = %q
+  node_type            = "cache.t3.small"
+  num_cache_nodes      = 1
+  ip_discovery         = %q
+}
+`, rName, engine, engineVersion, ipDiscovery)
 }
 
 func testAccClusterConfig_port(rName string, port int) string {

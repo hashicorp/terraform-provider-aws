@@ -142,10 +142,11 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_discovery"{
-				Type:	  schema.TypeString,
-				Optional: true,
-				Computed: false,
+			"ip_discovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
 			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
@@ -593,6 +594,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("parameter_group_name") {
 		req.CacheParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ip_discovery") {
+		req.IpDiscovery = aws.String(d.Get("ip_discovery").(string))
 		requestUpdate = true
 	}
 
