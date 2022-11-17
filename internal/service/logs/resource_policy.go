@@ -1,12 +1,13 @@
 package logs
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,10 +17,10 @@ import (
 
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourcePolicyPut,
-		Read:   resourceResourcePolicyRead,
-		Update: resourceResourcePolicyPut,
-		Delete: resourceResourcePolicyDelete,
+		CreateWithoutTimeout: resourceResourcePolicyPut,
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut,
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -48,13 +49,13 @@ func ResourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	name := d.Get("policy_name").(string)
@@ -63,21 +64,21 @@ func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 		PolicyName:     aws.String(name),
 	}
 
-	output, err := conn.PutResourcePolicy(input)
+	output, err := conn.PutResourcePolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating CloudWatch Logs Resource Policy (%s): %s", name, err)
+		return diag.Errorf("creating CloudWatch Logs Resource Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ResourcePolicy.PolicyName))
 
-	return resourceResourcePolicyRead(d, meta)
+	return resourceResourcePolicyRead(ctx, d, meta)
 }
 
-func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	resourcePolicy, err := FindResourcePolicyByName(conn, d.Id())
+	resourcePolicy, err := FindResourcePolicyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Resource Policy (%s) not found, removing from state", d.Id())
@@ -86,19 +87,19 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading CloudWatch Logs Resource Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("reading CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.StringValue(resourcePolicy.PolicyDocument))
 
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return diag.Errorf("while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
 	d.Set("policy_document", policyToSet)
@@ -106,11 +107,11 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy: %s", d.Id())
-	_, err := conn.DeleteResourcePolicy(&cloudwatchlogs.DeleteResourcePolicyInput{
+	_, err := conn.DeleteResourcePolicyWithContext(ctx, &cloudwatchlogs.DeleteResourcePolicyInput{
 		PolicyName: aws.String(d.Id()),
 	})
 
@@ -119,17 +120,17 @@ func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudWatch Logs Resource Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindResourcePolicyByName(conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.ResourcePolicy, error) {
+func FindResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.ResourcePolicy, error) {
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 	var output *cloudwatchlogs.ResourcePolicy
 
-	err := describeResourcePoliciesPages(conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
+	err := describeResourcePoliciesPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

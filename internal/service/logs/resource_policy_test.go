@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -94,7 +95,7 @@ func testAccCheckResourcePolicyExists(n string, v *cloudwatchlogs.ResourcePolicy
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		output, err := tflogs.FindResourcePolicyByName(conn, rs.Primary.ID)
+		output, err := tflogs.FindResourcePolicyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -114,7 +115,7 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflogs.FindResourcePolicyByName(conn, rs.Primary.ID)
+		_, err := tflogs.FindResourcePolicyByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
