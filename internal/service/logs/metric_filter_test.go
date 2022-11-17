@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -174,6 +175,17 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 	})
 }
 
+func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["log_group_name"] + ":" + rs.Primary.Attributes["name"], nil
+	}
+}
+
 func testAccCheckMetricFilterExists(n string, v *cloudwatchlogs.MetricFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -187,7 +199,7 @@ func testAccCheckMetricFilterExists(n string, v *cloudwatchlogs.MetricFilter) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		output, err := tflogs.FindMetricFilterByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+		output, err := tflogs.FindMetricFilterByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -199,17 +211,6 @@ func testAccCheckMetricFilterExists(n string, v *cloudwatchlogs.MetricFilter) re
 	}
 }
 
-func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["log_group_name"] + ":" + rs.Primary.Attributes["name"], nil
-	}
-}
-
 func testAccCheckMetricFilterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
@@ -218,7 +219,7 @@ func testAccCheckMetricFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflogs.FindMetricFilterByTwoPartKey(conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+		_, err := tflogs.FindMetricFilterByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
