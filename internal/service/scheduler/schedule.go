@@ -87,6 +87,11 @@ func ResourceSchedule() *schema.Resource {
 					validation.StringLenBetween(1, 64),
 				),
 			},
+			"kms_key_arn": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -168,6 +173,10 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.GroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.Get("kms_key_arn").(string); ok && v != "" {
+		in.KmsKeyArn = aws.String(v)
+	}
+
 	if v, ok := d.GetOk("target"); ok && len(v.([]interface{})) > 0 {
 		in.Target = expandTarget(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -231,6 +240,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("group_name", out.GroupName)
+	d.Set("kms_key_arn", out.KmsKeyArn)
 	d.Set("name", out.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
 	d.Set("schedule_expression", out.ScheduleExpression)
@@ -261,6 +271,10 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
 		v, _ := time.Parse(time.RFC3339, v.(string))
 		in.EndDate = aws.Time(v)
+	}
+
+	if v, ok := d.Get("kms_key_arn").(string); ok && v != "" {
+		in.KmsKeyArn = aws.String(v)
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
