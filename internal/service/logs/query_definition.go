@@ -89,20 +89,6 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 	return resourceQueryDefinitionRead(ctx, d, meta)
 }
 
-func getQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlogs.PutQueryDefinitionInput {
-	result := &cloudwatchlogs.PutQueryDefinitionInput{
-		Name:          aws.String(d.Get("name").(string)),
-		LogGroupNames: flex.ExpandStringList(d.Get("log_group_names").([]interface{})),
-		QueryString:   aws.String(d.Get("query_string").(string)),
-	}
-
-	if d.Id() != "" {
-		result.QueryDefinitionId = aws.String(d.Id())
-	}
-
-	return result
-}
-
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
