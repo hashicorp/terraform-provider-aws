@@ -123,14 +123,8 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	actions, expandErr := expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List())
-
-	if expandErr != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), expandErr)
-	}
-
 	in := appconfig.CreateExtensionInput{
-		Actions: actions,
+		Actions: expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List()),
 		Name:    aws.String(d.Get("name").(string)),
 		Tags:    Tags(tags.IgnoreAWS()),
 	}
@@ -217,13 +211,7 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if d.HasChange("action_point") {
-		actions, expandErr := expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List())
-
-		if expandErr != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), expandErr)
-		}
-
-		in.Actions = actions
+		in.Actions = expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List())
 		requestUpdate = true
 	}
 
@@ -283,29 +271,18 @@ func expandExtensionActions(actionsListRaw interface{}) []*appconfig.Action {
 	return actions
 }
 
-func expandExtensionActionPoints(actionsPointListRaw []interface{}) (map[string][]*appconfig.Action, error) {
+func expandExtensionActionPoints(actionsPointListRaw []interface{}) map[string][]*appconfig.Action {
 	if len(actionsPointListRaw) == 0 {
-		return map[string][]*appconfig.Action{}, nil
+		return map[string][]*appconfig.Action{}
 	}
 
 	actionsMap := make(map[string][]*appconfig.Action)
-	pointList := make([]string, len(actionsPointListRaw))
 	for _, actionPointRaw := range actionsPointListRaw {
-		actionPointMap, ok := actionPointRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		if _, ok := actionsMap[actionPointMap["point"].(string)]; ok {
-			return nil, errors.New("Error expanding Actions. You cannot define duplicate action_points.")
-		}
-		pointList = append(pointList, actionPointMap["point"].(string))
-
+		actionPointMap := actionPointRaw.(map[string]interface{})
 		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap["action"])
 	}
 
-	return actionsMap, nil
+	return actionsMap
 }
 
 func expandExtensionParameters(rawParameters []interface{}) map[string]*appconfig.Parameter {
@@ -382,27 +359,3 @@ func flattenExtensionParameters(parameters map[string]*appconfig.Parameter) []in
 
 	return rawParameters
 }
-
-// func extensionParameterSchema() *schema.Schema {
-// 	return &schema.Schema{
-// 		Type:     schema.TypeSet,
-// 		Optional: true,
-// 		Computed: true,
-// 		Elem: &schema.Resource{
-// 			Schema: map[string]*schema.Schema{
-// 				"name": {
-// 					Type:     schema.TypeString,
-// 					Required: true,
-// 				},
-// 				"description": {
-// 					Type:     schema.TypeString,
-// 					Optional: true,
-// 				},
-// 				"required": {
-// 					Type:     schema.TypeBool,
-// 					Optional: true,
-// 				},
-// 			},
-// 		},
-// 	}
-// }
