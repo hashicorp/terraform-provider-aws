@@ -128,7 +128,7 @@ func TestServicesForDirectories(t *testing.T) {
 		"iotthingsgraph",
 		"iottwinmaker",
 		"iotwireless",
-		"ivs",
+		"ivschat",
 		"kendra",
 		"kinesisvideoarchivedmedia",
 		"kinesisvideomedia",

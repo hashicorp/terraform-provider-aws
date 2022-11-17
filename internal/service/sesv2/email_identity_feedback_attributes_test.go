@@ -141,7 +141,7 @@ func testAccCheckEmailIdentityFeedbackAttributesExist(name string, emailForwardi
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, rs.Primary.ID, err)
 		}
 		if out == nil || out.FeedbackForwardingStatus != emailForwardingEnabled {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityFeedbackAttributes, rs.Primary.ID, err)
+			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityFeedbackAttributes, rs.Primary.ID, errors.New("feedback attributes not set"))
 		}
 
 		return nil

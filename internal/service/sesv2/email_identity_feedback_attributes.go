@@ -56,11 +56,11 @@ func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schem
 
 	out, err := conn.PutEmailIdentityFeedbackAttributes(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("name").(string), err)
+		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("email_identity").(string))

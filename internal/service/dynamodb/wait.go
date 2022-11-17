@@ -2,10 +2,12 @@ package dynamodb
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -58,9 +60,7 @@ func waitKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb
 func waitTableActive(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{dynamodb.TableStatusCreating, dynamodb.TableStatusUpdating},
-		Target: []string{
-			dynamodb.TableStatusActive,
-		},
+		Target:  []string{dynamodb.TableStatusActive},
 		Timeout: maxDuration(createTableTimeout, timeout),
 		Refresh: statusTable(conn, tableName),
 	}
@@ -93,14 +93,8 @@ func waitTableDeleted(conn *dynamodb.DynamoDB, tableName string, timeout time.Du
 
 func waitReplicaActive(conn *dynamodb.DynamoDB, tableName, region string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.ReplicaStatusCreating,
-			dynamodb.ReplicaStatusUpdating,
-			dynamodb.ReplicaStatusDeleting,
-		},
-		Target: []string{
-			dynamodb.ReplicaStatusActive,
-		},
+		Pending: []string{dynamodb.ReplicaStatusCreating, dynamodb.ReplicaStatusUpdating, dynamodb.ReplicaStatusDeleting},
+		Target:  []string{dynamodb.ReplicaStatusActive},
 		Timeout: maxDuration(replicaUpdateTimeout, timeout),
 		Refresh: statusReplicaUpdate(conn, tableName, region),
 	}
@@ -190,17 +184,11 @@ func waitPITRUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool, t
 }
 
 func waitTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool, timeout time.Duration) (*dynamodb.TimeToLiveDescription, error) {
-	pending := []string{
-		dynamodb.TimeToLiveStatusEnabled,
-		dynamodb.TimeToLiveStatusDisabling,
-	}
+	pending := []string{dynamodb.TimeToLiveStatusEnabled, dynamodb.TimeToLiveStatusDisabling}
 	target := []string{dynamodb.TimeToLiveStatusDisabled}
 
 	if toEnable {
-		pending = []string{
-			dynamodb.TimeToLiveStatusDisabled,
-			dynamodb.TimeToLiveStatusEnabling,
-		}
+		pending = []string{dynamodb.TimeToLiveStatusDisabled, dynamodb.TimeToLiveStatusEnabling}
 		target = []string{dynamodb.TimeToLiveStatusEnabled}
 	}
 
@@ -220,8 +208,33 @@ func waitTTLUpdated(conn *dynamodb.DynamoDB, tableName string, toEnable bool, ti
 	return nil, err
 }
 
-func waitSSEUpdated(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
+func waitSSEUpdated(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
+		Delay:   30 * time.Second,
+		Pending: []string{dynamodb.SSEStatusDisabling, dynamodb.SSEStatusEnabling, dynamodb.SSEStatusUpdating},
+		Target:  []string{dynamodb.SSEStatusDisabled, dynamodb.SSEStatusEnabled},
+		Timeout: maxDuration(updateTableTimeout, timeout),
+		Refresh: statusTableSES(conn, tableName),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*dynamodb.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicaSSEUpdated(client *conns.AWSClient, region string, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
+	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn.Config, region, client.TerraformVersion)
+	if err != nil {
+		return nil, fmt.Errorf("creating session for region %q: %w", region, err)
+	}
+
+	conn := dynamodb.New(sess)
+	stateConf := &resource.StateChangeConf{
+		Delay:   30 * time.Second,
 		Pending: []string{dynamodb.SSEStatusDisabling, dynamodb.SSEStatusEnabling, dynamodb.SSEStatusUpdating},
 		Target:  []string{dynamodb.SSEStatusDisabled, dynamodb.SSEStatusEnabled},
 		Timeout: maxDuration(updateTableTimeout, timeout),

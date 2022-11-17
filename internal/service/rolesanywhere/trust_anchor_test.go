@@ -127,7 +127,7 @@ func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustAnchorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustAnchorConfig_certificateBundle(rName),
+				Config: testAccTrustAnchorConfig_certificateBundle(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "enabled"),
@@ -157,7 +157,7 @@ func TestAccRolesAnywhereTrustAnchor_enabled(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustAnchorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustAnchorConfig_enabled(rName, true),
+				Config: testAccTrustAnchorConfig_enabled(t, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -169,14 +169,14 @@ func TestAccRolesAnywhereTrustAnchor_enabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTrustAnchorConfig_enabled(rName, false),
+				Config: testAccTrustAnchorConfig_enabled(t, rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 			{
-				Config: testAccTrustAnchorConfig_enabled(rName, true),
+				Config: testAccTrustAnchorConfig_enabled(t, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -325,9 +325,9 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 `, rName, tag1, value1, tag2, value2))
 }
 
-func testAccTrustAnchorConfig_certificateBundle(rName string) string {
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(caKey)
+func testAccTrustAnchorConfig_certificateBundle(t *testing.T, rName string) string {
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t, caKey)
 
 	return fmt.Sprintf(`
 resource "aws_rolesanywhere_trust_anchor" "test" {
@@ -342,9 +342,9 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(caCertificate))
 }
 
-func testAccTrustAnchorConfig_enabled(rName string, enabled bool) string {
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(caKey)
+func testAccTrustAnchorConfig_enabled(t *testing.T, rName string, enabled bool) string {
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t, caKey)
 
 	return fmt.Sprintf(`
 resource "aws_rolesanywhere_trust_anchor" "test" {

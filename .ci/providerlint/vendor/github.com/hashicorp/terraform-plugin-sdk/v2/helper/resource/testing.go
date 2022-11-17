@@ -551,6 +551,16 @@ type TestStep struct {
 	// ImportStateCheck checks the results of ImportState. It should be
 	// used to verify that the resulting value of ImportState has the
 	// proper resources, IDs, and attributes.
+	//
+	// Prefer ImportStateVerify over ImportStateCheck, unless the resource
+	// import explicitly is expected to create multiple resources (not a
+	// recommended resource implementation) or if attributes are imported with
+	// syntactically different but semantically/functionally equivalent values
+	// where special logic is needed.
+	//
+	// Terraform versions 1.3 and later can include data source states during
+	// import, which the testing framework will skip to prevent the need for
+	// Terraform version specific logic in provider testing.
 	ImportStateCheck ImportStateCheckFunc
 
 	// ImportStateVerify, if true, will also check that the state values
