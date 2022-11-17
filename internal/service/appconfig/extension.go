@@ -191,7 +191,6 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionReading, ResExtension, d.Id(), errors.New("Error setting tags_all"))
-
 	}
 
 	return nil
@@ -310,7 +309,6 @@ func expandExtensionParameters(rawParameters []interface{}) map[string]*appconfi
 }
 
 func flattenExtensionActions(actions []*appconfig.Action) []interface{} {
-
 	var rawActions []interface{}
 	for _, action := range actions {
 		rawAction := map[string]interface{}{
