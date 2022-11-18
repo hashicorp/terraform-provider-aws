@@ -82,7 +82,7 @@ func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest
 		return
 	}
 
-	arn := &data.ARN.Value
+	arn := data.ARN.ARNValue()
 
 	data.Account = types.StringValue(arn.AccountID)
 	data.ID = types.StringValue(arn.String())

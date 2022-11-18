@@ -122,7 +122,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 				continue
 			}
 
-			if !data.ARN.IsNull() && data.ARN.Value.String() != aws.StringValue(accelerator.AcceleratorArn) {
+			if !data.ARN.IsNull() && data.ARN.ARNValue().String() != aws.StringValue(accelerator.AcceleratorArn) {
 				continue
 			}
 
@@ -157,7 +157,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 	if v, err := arn.Parse(acceleratorARN); err != nil {
 		response.Diagnostics.AddError("parsing ARN", err.Error())
 	} else {
-		data.ARN = fwtypes.ARN{Value: v}
+		data.ARN = fwtypes.ARNValue(v)
 	}
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
