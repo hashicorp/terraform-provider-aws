@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
@@ -79,10 +80,10 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 	}
 
 	accountID := aws.StringValue(output.Account)
-	data.AccountID = types.String{Value: accountID}
-	data.ARN = types.String{Value: aws.StringValue(output.Arn)}
-	data.ID = types.String{Value: accountID}
-	data.UserID = types.String{Value: aws.StringValue(output.UserId)}
+	data.AccountID = types.StringValue(accountID)
+	data.ARN = flex.StringToFrameworkLegacy(ctx, output.Arn)
+	data.ID = types.StringValue(accountID)
+	data.UserID = flex.StringToFrameworkLegacy(ctx, output.UserId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
