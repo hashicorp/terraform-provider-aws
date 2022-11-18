@@ -85,6 +85,22 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Redeploy Service On Every Apply
+
+The key used with `triggers` is arbitrary.
+
+```terraform
+resource "aws_ecs_service" "example" {
+  # ... other configurations ...
+
+  force_new_deployment = true
+
+  triggers = {
+    redeployment = timestamp()
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -116,6 +132,7 @@ The following arguments are optional:
 * `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. See below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `timestamp()`. See example above.
 * `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ### capacity_provider_strategy

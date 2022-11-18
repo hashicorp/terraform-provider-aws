@@ -28,9 +28,9 @@ func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Dynam
 
 func statusTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := findTableByName(conn, tableName)
+		table, err := FindTableByName(conn, tableName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -98,9 +98,9 @@ func statusReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) reso
 
 func statusGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		gsi, err := findGSIByTableNameIndexName(conn, tableName, indexName)
+		gsi, err := findGSIByTwoPartKey(conn, tableName, indexName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -158,9 +158,9 @@ func statusTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshF
 
 func statusTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := findTableByName(conn, tableName)
+		table, err := FindTableByName(conn, tableName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
