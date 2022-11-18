@@ -20,7 +20,7 @@ func TestValidateInt64String(t *testing.T) {
 	}{
 		"invalid-type": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.Bool{Value: true},
+				AttributeConfig:         types.BoolValue(true),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -29,7 +29,7 @@ func TestValidateInt64String(t *testing.T) {
 		},
 		"string-null": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.Int64{Null: true},
+				AttributeConfig:         types.Int64Null(),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -38,7 +38,7 @@ func TestValidateInt64String(t *testing.T) {
 		},
 		"string-valid-value": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.String{Value: "43"},
+				AttributeConfig:         types.StringValue("43"),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -47,7 +47,7 @@ func TestValidateInt64String(t *testing.T) {
 		},
 		"string-invalid-value": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.String{Value: "test-value"},
+				AttributeConfig:         types.StringValue("test-value"),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -56,7 +56,7 @@ func TestValidateInt64String(t *testing.T) {
 		},
 		"string-unknown": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.Int64{Unknown: true},
+				AttributeConfig:         types.Int64Unknown(),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -94,7 +94,7 @@ func TestValidateString(t *testing.T) {
 	}{
 		"invalid-type": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.Bool{Value: true},
+				AttributeConfig:         types.BoolValue(true),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -103,7 +103,7 @@ func TestValidateString(t *testing.T) {
 		},
 		"string-null": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.Int64{Null: true},
+				AttributeConfig:         types.Int64Null(),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -112,7 +112,7 @@ func TestValidateString(t *testing.T) {
 		},
 		"string-value": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.String{Value: "test-value"},
+				AttributeConfig:         types.StringValue("test-value"),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},
@@ -121,7 +121,7 @@ func TestValidateString(t *testing.T) {
 		},
 		"string-unknown": {
 			request: tfsdk.ValidateAttributeRequest{
-				AttributeConfig:         types.Int64{Unknown: true},
+				AttributeConfig:         types.Int64Unknown(),
 				AttributePath:           path.Root("test"),
 				AttributePathExpression: path.MatchRoot("test"),
 			},

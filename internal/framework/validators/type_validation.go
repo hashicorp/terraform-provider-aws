@@ -49,5 +49,5 @@ func validateString(ctx context.Context, request tfsdk.ValidateAttributeRequest,
 		return "", false
 	}
 
-	return s.Value, true
+	return s.ValueString(), true
 }
