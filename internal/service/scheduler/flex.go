@@ -69,6 +69,42 @@ func flattenFlexibleTimeWindow(apiObject *types.FlexibleTimeWindow) map[string]i
 	return m
 }
 
+func expandRetryPolicy(tfMap map[string]interface{}) *types.RetryPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.RetryPolicy{}
+
+	if v, ok := tfMap["maximum_event_age_in_seconds"]; ok {
+		a.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := tfMap["maximum_retry_attempts"]; ok {
+		a.MaximumRetryAttempts = aws.Int32(int32(v.(int)))
+	}
+
+	return a
+}
+
+func flattenRetryPolicy(apiObject *types.RetryPolicy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.MaximumEventAgeInSeconds; v != nil {
+		m["maximum_event_age_in_seconds"] = int(aws.ToInt32(v))
+	}
+
+	if v := apiObject.MaximumRetryAttempts; v != nil {
+		m["maximum_retry_attempts"] = int(aws.ToInt32(v))
+	}
+
+	return m
+}
+
 func expandSqsParameters(tfMap map[string]interface{}) *types.SqsParameters {
 	if tfMap == nil {
 		return nil
@@ -120,6 +156,10 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.RoleArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["retry_policy"]; ok && len(v.([]interface{})) > 0 {
+		a.RetryPolicy = expandRetryPolicy(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["sqs_parameters"]; ok && len(v.([]interface{})) > 0 {
 		a.SqsParameters = expandSqsParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -148,6 +188,10 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	if v := apiObject.RoleArn; v != nil && len(*v) > 0 {
 		m["role_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.RetryPolicy; v != nil {
+		m["retry_policy"] = []interface{}{flattenRetryPolicy(v)}
 	}
 
 	if v := apiObject.SqsParameters; v != nil {

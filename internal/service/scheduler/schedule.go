@@ -176,6 +176,36 @@ func ResourceSchedule() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, math.MaxInt)),
 						},
+						"retry_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"maximum_event_age_in_seconds": {
+										Type:             schema.TypeInt,
+										Optional:         true,
+										Default:          86400,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(60, 86400)),
+									},
+									"maximum_retry_attempts": {
+										Type:             schema.TypeInt,
+										Optional:         true,
+										Default:          185,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 185)),
+									},
+								},
+							},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Prevent transitive usage of this suppression. This was discovered
+								// when attempting to update maximum_retry_attempts from 1 to 0.
+								if k != "target.0.retry_policy.#" {
+									return false
+								}
+
+								return verify.SuppressMissingOptionalConfigurationBlock(k, old, new, d)
+							},
+						},
 						"role_arn": {
 							Type:             schema.TypeString,
 							Required:         true,

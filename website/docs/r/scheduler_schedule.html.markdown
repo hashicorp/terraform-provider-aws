@@ -98,11 +98,17 @@ The following arguments are optional:
 
 * `dead_letter_config` - (Optional) Information about an Amazon SQS queue that EventBridge Scheduler uses as a dead-letter queue for your schedule. If specified, EventBridge Scheduler delivers failed events that could not be successfully delivered to a target to the queue. Detailed below.
 * `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
+* `retry_policy` - (Optional) Information about the retry policy settings. Detailed below.
 * `sqs_parameters` - (Optional) The templated target type for the Amazon SQS `SendMessage` API operation. Detailed below.
 
 #### dead_letter_config Configuration Block
 
 * `arn` - (Optional) ARN of the SQS queue specified as the destination for the dead-letter queue.
+
+#### retry_policy Configuration Block
+
+* `maximum_event_age_in_seconds` - (Optional) Maximum amount of time, in seconds, to continue to make retry attempts. Between `60` and `86400` (default).
+* `maximum_retry_attempts` - (Optional) Maximum number of retry attempts to make before the request fails. Between `0` and `185` (default).
 
 #### sqs_parameters Configuration Block
 
