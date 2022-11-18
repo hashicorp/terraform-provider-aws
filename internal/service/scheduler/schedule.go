@@ -130,6 +130,21 @@ func ResourceSchedule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  string(types.ScheduleStateEnabled),
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.StringInSlice(
+						slices.ApplyToAll(
+							types.ScheduleState("").Values(),
+							func(v types.ScheduleState) string {
+								return string(v)
+							},
+						),
+						false),
+				),
+			},
 			"target": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -195,6 +210,10 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.Get("start_date").(string); ok && v != "" {
 		v, _ := time.Parse(time.RFC3339, v)
 		in.StartDate = aws.Time(v)
+	}
+
+	if v, ok := d.Get("state").(string); ok && v != "" {
+		in.State = types.ScheduleState(v)
 	}
 
 	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
@@ -276,6 +295,8 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("start_date", nil)
 	}
 
+	d.Set("state", string(out.State))
+
 	if err := d.Set("target", []interface{}{flattenTarget(out.Target)}); err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
@@ -314,6 +335,10 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.Get("start_date").(string); ok && v != "" {
 		v, _ := time.Parse(time.RFC3339, v)
 		in.StartDate = aws.Time(v)
+	}
+
+	if v, ok := d.Get("state").(string); ok && v != "" {
+		in.State = types.ScheduleState(v)
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
