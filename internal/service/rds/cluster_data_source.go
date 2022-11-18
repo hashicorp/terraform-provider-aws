@@ -68,6 +68,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"engine_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -172,6 +176,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
+	d.Set("engine_mode", dbc.EngineMode)
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
