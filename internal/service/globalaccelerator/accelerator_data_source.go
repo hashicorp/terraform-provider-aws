@@ -126,7 +126,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 				continue
 			}
 
-			if !data.Name.IsNull() && data.Name.Value != aws.StringValue(accelerator.Name) {
+			if !data.Name.IsNull() && data.Name.ValueString() != aws.StringValue(accelerator.Name) {
 				continue
 			}
 
@@ -159,13 +159,13 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 	} else {
 		data.ARN = fwtypes.ARN{Value: v}
 	}
-	data.DnsName = types.String{Value: aws.StringValue(accelerator.DnsName)}
-	data.Enabled = types.Bool{Value: aws.BoolValue(accelerator.Enabled)}
-	data.HostedZoneID = types.String{Value: route53ZoneID}
-	data.ID = types.String{Value: acceleratorARN}
-	data.IpAddressType = types.String{Value: aws.StringValue(accelerator.IpAddressType)}
-	data.IpSets = flattenIPSetsFramework(ctx, accelerator.IpSets)
-	data.Name = types.String{Value: aws.StringValue(accelerator.Name)}
+	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
+	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
+	data.HostedZoneID = types.StringValue(route53ZoneID)
+	data.ID = types.StringValue(acceleratorARN)
+	data.IpAddressType = flex.StringToFrameworkLegacy(ctx, accelerator.IpAddressType)
+	data.IpSets = d.flattenIPSetsFramework(ctx, accelerator.IpSets)
+	data.Name = flex.StringToFrameworkLegacy(ctx, accelerator.Name)
 
 	attributes, err := FindAcceleratorAttributesByARN(ctx, conn, acceleratorARN)
 
@@ -175,7 +175,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.Attributes = flattenAcceleratorAttributesFramework(ctx, attributes)
+	data.Attributes = d.flattenAcceleratorAttributesFramework(ctx, attributes)
 
 	tags, err := ListTagsWithContext(ctx, conn, acceleratorARN)
 
@@ -190,6 +190,65 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
+func (d *dataSourceAccelerator) flattenIPSetFramework(ctx context.Context, apiObject *globalaccelerator.IpSet) types.Object {
+	attributeTypes := map[string]attr.Type{
+		"ip_addresses": types.ListType{ElemType: types.StringType},
+		"ip_family":    types.StringType,
+	}
+
+	if apiObject == nil {
+		return types.ObjectNull(attributeTypes)
+	}
+
+	attributes := map[string]attr.Value{
+		"ip_addresses": flex.FlattenFrameworkStringList(ctx, apiObject.IpAddresses),
+		"ip_family":    flex.StringToFrameworkLegacy(ctx, apiObject.IpFamily),
+	}
+
+	return types.ObjectValueMust(attributeTypes, attributes)
+}
+
+func (d *dataSourceAccelerator) flattenIPSetsFramework(ctx context.Context, apiObjects []*globalaccelerator.IpSet) types.List {
+	elementType := types.ObjectType{AttrTypes: map[string]attr.Type{
+		"ip_addresses": types.ListType{ElemType: types.StringType},
+		"ip_family":    types.StringType,
+	}}
+	var elements []attr.Value
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		elements = append(elements, d.flattenIPSetFramework(ctx, apiObject))
+	}
+
+	return types.ListValueMust(elementType, elements)
+}
+
+func (d *dataSourceAccelerator) flattenAcceleratorAttributesFramework(ctx context.Context, apiObject *globalaccelerator.AcceleratorAttributes) types.List {
+	attributeTypes := map[string]attr.Type{
+		"flow_logs_enabled":   types.BoolType,
+		"flow_logs_s3_bucket": types.StringType,
+		"flow_logs_s3_prefix": types.StringType,
+	}
+	elementType := types.ObjectType{
+		AttrTypes: attributeTypes,
+	}
+
+	if apiObject == nil {
+		return types.ListNull(elementType)
+	}
+
+	attributes := map[string]attr.Value{
+		"flow_logs_enabled":   flex.BoolToFrameworkLegacy(ctx, apiObject.FlowLogsEnabled),
+		"flow_logs_s3_bucket": flex.StringToFrameworkLegacy(ctx, apiObject.FlowLogsS3Bucket),
+		"flow_logs_s3_prefix": flex.StringToFrameworkLegacy(ctx, apiObject.FlowLogsS3Prefix),
+	}
+
+	return types.ListValueMust(elementType, []attr.Value{types.ObjectValueMust(attributeTypes, attributes)})
+}
+
 type dataSourceAcceleratorData struct {
 	ARN           fwtypes.ARN  `tfsdk:"arn"`
 	Attributes    types.List   `tfsdk:"attributes"`
@@ -201,63 +260,4 @@ type dataSourceAcceleratorData struct {
 	IpSets        types.List   `tfsdk:"ip_sets"`
 	Name          types.String `tfsdk:"name"`
 	Tags          types.Map    `tfsdk:"tags"`
-}
-
-func flattenIPSetFramework(ctx context.Context, apiObject *globalaccelerator.IpSet) types.Object {
-	attrTypes := map[string]attr.Type{
-		"ip_addresses": types.ListType{ElemType: types.StringType},
-		"ip_family":    types.StringType,
-	}
-
-	if apiObject == nil {
-		return types.Object{AttrTypes: attrTypes, Null: true}
-	}
-
-	attrs := map[string]attr.Value{
-		"ip_addresses": flex.FlattenFrameworkStringList(ctx, apiObject.IpAddresses),
-		"ip_family":    types.String{Value: aws.StringValue(apiObject.IpFamily)},
-	}
-
-	return types.Object{AttrTypes: attrTypes, Attrs: attrs}
-}
-
-func flattenIPSetsFramework(ctx context.Context, apiObjects []*globalaccelerator.IpSet) types.List {
-	elemType := types.ObjectType{AttrTypes: map[string]attr.Type{
-		"ip_addresses": types.ListType{ElemType: types.StringType},
-		"ip_family":    types.StringType,
-	}}
-	var elems []attr.Value
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		elems = append(elems, flattenIPSetFramework(ctx, apiObject))
-	}
-
-	return types.List{ElemType: elemType, Elems: elems}
-}
-
-func flattenAcceleratorAttributesFramework(_ context.Context, apiObject *globalaccelerator.AcceleratorAttributes) types.List {
-	attrTypes := map[string]attr.Type{
-		"flow_logs_enabled":   types.BoolType,
-		"flow_logs_s3_bucket": types.StringType,
-		"flow_logs_s3_prefix": types.StringType,
-	}
-	elemType := types.ObjectType{
-		AttrTypes: attrTypes,
-	}
-
-	if apiObject == nil {
-		return types.List{ElemType: elemType, Elems: []attr.Value{}}
-	}
-
-	attrs := map[string]attr.Value{
-		"flow_logs_enabled":   types.Bool{Value: aws.BoolValue(apiObject.FlowLogsEnabled)},
-		"flow_logs_s3_bucket": types.String{Value: aws.StringValue(apiObject.FlowLogsS3Bucket)},
-		"flow_logs_s3_prefix": types.String{Value: aws.StringValue(apiObject.FlowLogsS3Prefix)},
-	}
-
-	return types.List{ElemType: elemType, Elems: []attr.Value{types.Object{AttrTypes: attrTypes, Attrs: attrs}}}
 }
