@@ -891,8 +891,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 			}
 		}
-
-		log.Printf("[DEBUG] Updating MediaLive Channel (%s): %#v", d.Id(), in)
+		
 		out, err := conn.UpdateChannel(ctx, in)
 		if err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
