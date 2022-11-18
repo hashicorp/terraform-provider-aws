@@ -100,6 +100,16 @@ func FlattenFrameworkStringValueMap(_ context.Context, m map[string]string) type
 	return types.MapValueMust(types.StringType, elems)
 }
 
+// BoolFromFramework converts a Framework Bool value to a bool pointer.
+// A null Bool is converted to a nil bool pointer.
+func BoolFromFramework(_ context.Context, v types.Bool) *bool {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	return aws.Bool(v.ValueBool())
+}
+
 // Int64FromFramework converts a Framework Int64 value to an int64 pointer.
 // A null Int64 is converted to a nil int64 pointer.
 func Int64FromFramework(_ context.Context, v types.Int64) *int64 {
