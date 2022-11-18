@@ -100,6 +100,26 @@ func FlattenFrameworkStringValueMap(_ context.Context, m map[string]string) type
 	return types.MapValueMust(types.StringType, elems)
 }
 
+// FromFrameworkString converts a Framework String value to a string pointer.
+// A null String is converted to a nil string pointer.
+func FromFrameworkInt64(_ context.Context, v types.Int64) *int64 {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	return aws.Int64(v.ValueInt64())
+}
+
+// FromFrameworkString converts a Framework String value to a string pointer.
+// A null String is converted to a nil string pointer.
+func FromFrameworkString(_ context.Context, v types.String) *string {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	return aws.String(v.ValueString())
+}
+
 // ToFrameworkInt64Value converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a null Int64.
 func ToFrameworkInt64Value(_ context.Context, v *int64) types.Int64 {
@@ -107,7 +127,7 @@ func ToFrameworkInt64Value(_ context.Context, v *int64) types.Int64 {
 		return types.Int64Null()
 	}
 
-	return types.Int64Value(*v)
+	return types.Int64Value(aws.ToInt64(v))
 }
 
 // ToFrameworkStringValue converts a string pointer to a Framework String value.
@@ -117,7 +137,7 @@ func ToFrameworkStringValue(_ context.Context, v *string) types.String {
 		return types.StringNull()
 	}
 
-	return types.StringValue(*v)
+	return types.StringValue(aws.ToString(v))
 }
 
 // ToFrameworkStringValueWithTransform converts a string pointer to a Framework String value.
@@ -128,5 +148,5 @@ func ToFrameworkStringValueWithTransform(_ context.Context, v *string, f func(st
 		return types.StringNull()
 	}
 
-	return types.StringValue(f(*v))
+	return types.StringValue(f(aws.ToString(v)))
 }

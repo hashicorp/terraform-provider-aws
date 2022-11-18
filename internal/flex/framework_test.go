@@ -282,6 +282,82 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 	}
 }
 
+func TestFromFrameworkInt64(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.Int64
+		expected *int64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    types.Int64Value(42),
+			expected: aws.Int64(42),
+		},
+		"zero int64": {
+			input:    types.Int64Value(0),
+			expected: aws.Int64(0),
+		},
+		"null int64": {
+			input:    types.Int64Null(),
+			expected: nil,
+		},
+		"unknown int64": {
+			input:    types.Int64Unknown(),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := FromFrameworkInt64(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFromFrameworkString(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected *string
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    types.StringValue("TEST"),
+			expected: aws.String("TEST"),
+		},
+		"empty string": {
+			input:    types.StringValue(""),
+			expected: aws.String(""),
+		},
+		"null string": {
+			input:    types.StringNull(),
+			expected: nil,
+		},
+		"unknown string": {
+			input:    types.StringUnknown(),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := FromFrameworkString(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestToFrameworkInt64Value(t *testing.T) {
 	t.Parallel()
 
@@ -298,7 +374,7 @@ func TestToFrameworkInt64Value(t *testing.T) {
 			input:    aws.Int64(0),
 			expected: types.Int64Value(0),
 		},
-		"nil string": {
+		"nil int64": {
 			input:    nil,
 			expected: types.Int64Null(),
 		},
