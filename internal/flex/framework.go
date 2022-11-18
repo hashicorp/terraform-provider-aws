@@ -120,6 +120,16 @@ func StringFromFramework(_ context.Context, v types.String) *string {
 	return aws.String(v.ValueString())
 }
 
+// StringFromFramework converts a single Framework String value to a string pointer slice.
+// A null String is converted to a nil slice.
+func StringSliceFromFramework(_ context.Context, v types.String) []*string {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	return aws.StringSlice([]string{v.ValueString()})
+}
+
 // Int64ToFramework converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a null Int64.
 func Int64ToFramework(_ context.Context, v *int64) types.Int64 {

@@ -53,7 +53,7 @@ func (r *resourceSecurityGroupEgressRule) createSecurityGroupRule(ctx context.Co
 	conn := r.Meta().EC2Conn
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
-		GroupId:       aws.String(data.SecurityGroupID.Value),
+		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
 		IpPermissions: []*ec2.IpPermission{r.expandIPPermission(ctx, data)},
 	}
 
@@ -71,7 +71,7 @@ func (r *resourceSecurityGroupEgressRule) deleteSecurityGroupRule(ctx context.Co
 
 	_, err := conn.RevokeSecurityGroupEgressWithContext(ctx, &ec2.RevokeSecurityGroupEgressInput{
 		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
-		SecurityGroupRuleIds: aws.StringSlice([]string{data.ID.Value}),
+		SecurityGroupRuleIds: flex.StringSliceFromFramework(ctx, data.ID),
 	})
 
 	return err
