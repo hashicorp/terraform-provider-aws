@@ -28,21 +28,27 @@ func (d durationType) TerraformType(_ context.Context) tftypes.Type {
 
 func (d durationType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.Value, error) {
 	if !in.IsKnown() {
-		return Duration{Unknown: true}, nil
+		return DurationUnknown(), nil
 	}
+
 	if in.IsNull() {
-		return Duration{Null: true}, nil
+		return DurationNull(), nil
 	}
+
 	var s string
 	err := in.As(&s)
+
 	if err != nil {
 		return nil, err
 	}
-	dur, err := time.ParseDuration(s)
+
+	v, err := time.ParseDuration(s)
+
 	if err != nil {
 		return nil, err
 	}
-	return Duration{Value: dur}, nil
+
+	return DurationValue(v), nil
 }
 
 func (d durationType) ValueType(context.Context) attr.Value {
@@ -113,17 +119,32 @@ func (d durationType) Description() string {
 	return `A sequence of numbers with a unit suffix, "h" for hour, "m" for minute, and "s" for second.`
 }
 
+func DurationNull() Duration {
+	return Duration{
+		state: attr.ValueStateNull,
+	}
+}
+
+func DurationUnknown() Duration {
+	return Duration{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func DurationValue(value time.Duration) Duration {
+	return Duration{
+		state: attr.ValueStateKnown,
+		value: value,
+	}
+}
+
 type Duration struct {
-	// Unknown will be true if the value is not yet known.
-	Unknown bool
+	// state represents whether the value is null, unknown, or known. The
+	// zero-value is null.
+	state attr.ValueState
 
-	// Null will be true if the value was not set, or was explicitly set to
-	// null.
-	Null bool
-
-	// Value contains the set value, as long as Unknown and Null are both
-	// false.
-	Value time.Duration
+	// value contains the known value, if not null or unknown.
+	value time.Duration
 }
 
 // Type returns a DurationType.
@@ -136,41 +157,50 @@ func (d Duration) Type(_ context.Context) attr.Type {
 // returns nil.
 func (d Duration) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
 	t := DurationType.TerraformType(ctx)
-	if d.Null {
+
+	switch d.state {
+	case attr.ValueStateKnown:
+		if err := tftypes.ValidateValue(t, d.value); err != nil {
+			return tftypes.NewValue(t, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(t, d.value), nil
+	case attr.ValueStateNull:
 		return tftypes.NewValue(t, nil), nil
-	}
-	if d.Unknown {
+	case attr.ValueStateUnknown:
 		return tftypes.NewValue(t, tftypes.UnknownValue), nil
+	default:
+		return tftypes.NewValue(t, tftypes.UnknownValue), fmt.Errorf("unhandled Duration state in ToTerraformValue: %s", d.state)
 	}
-	if err := tftypes.ValidateValue(tftypes.Number, d.Value); err != nil {
-		return tftypes.NewValue(t, tftypes.UnknownValue), err
-	}
-	return tftypes.NewValue(t, d.Value), nil
 }
 
 // Equal returns true if `other` is a *Duration and has the same value as `d`.
 func (d Duration) Equal(other attr.Value) bool {
 	o, ok := other.(Duration)
+
 	if !ok {
 		return false
 	}
-	if d.Unknown != o.Unknown {
+
+	if d.state != o.state {
 		return false
 	}
-	if d.Null != o.Null {
-		return false
+
+	if d.state != attr.ValueStateKnown {
+		return true
 	}
-	return d.Value == o.Value
+
+	return d.value == o.value
 }
 
 // IsNull returns true if the Value is not set, or is explicitly set to null.
 func (d Duration) IsNull() bool {
-	return d.Null
+	return d.state == attr.ValueStateNull
 }
 
 // IsUnknown returns true if the Value is not yet known.
 func (d Duration) IsUnknown() bool {
-	return d.Unknown
+	return d.state == attr.ValueStateUnknown
 }
 
 // String returns a summary representation of either the underlying Value,
@@ -189,5 +219,10 @@ func (d Duration) String() string {
 		return attr.NullValueString
 	}
 
-	return d.Value.String()
+	return d.value.String()
+}
+
+// DurationValue returns the known duration value. If Duration is null or unknown, returns 0.
+func (d Duration) DurationValue() time.Duration {
+	return d.value
 }

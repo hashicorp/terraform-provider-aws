@@ -21,7 +21,7 @@ func DefaultValue(value attr.Value) tfsdk.AttributePlanModifier {
 }
 
 func DefaultStringValue(value string) tfsdk.AttributePlanModifier {
-	return DefaultValue(types.String{Value: value})
+	return DefaultValue(types.StringValue(value))
 }
 
 func (m defaultValue) Description(context.Context) string {

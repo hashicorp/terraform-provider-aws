@@ -20,28 +20,28 @@ func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"not a String": {
-			val:         types.Bool{Value: true},
+			val:         types.BoolValue(true),
 			expectError: true,
 		},
 		"unknown String": {
-			val: types.String{Unknown: true},
+			val: types.StringUnknown(),
 		},
 		"null String": {
-			val: types.String{Null: true},
+			val: types.StringNull(),
 		},
 		"invalid String": {
-			val:         types.String{Value: "test-value"},
+			val:         types.StringValue("test-value"),
 			expectError: true,
 		},
 		"valid IPv4 CIDR": {
-			val: types.String{Value: "10.2.2.0/24"},
+			val: types.StringValue("10.2.2.0/24"),
 		},
 		"invalid IPv4 CIDR": {
-			val:         types.String{Value: "10.2.2.2/24"},
+			val:         types.StringValue("10.2.2.2/24"),
 			expectError: true,
 		},
 		"valid IPv6 CIDR": {
-			val:         types.String{Value: "2001:db8::/122"},
+			val:         types.StringValue("2001:db8::/122"),
 			expectError: true,
 		},
 	}
@@ -77,28 +77,28 @@ func TestIPv6CIDRNetworkAddressValidator(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"not a String": {
-			val:         types.Bool{Value: true},
+			val:         types.BoolValue(true),
 			expectError: true,
 		},
 		"unknown String": {
-			val: types.String{Unknown: true},
+			val: types.StringUnknown(),
 		},
 		"null String": {
-			val: types.String{Null: true},
+			val: types.StringNull(),
 		},
 		"invalid String": {
-			val:         types.String{Value: "test-value"},
+			val:         types.StringValue("test-value"),
 			expectError: true,
 		},
 		"valid IPv6 CIDR": {
-			val: types.String{Value: "2001:db8::/122"},
+			val: types.StringValue("2001:db8::/122"),
 		},
 		"invalid IPv6 CIDR": {
-			val:         types.String{Value: "2001::/15"},
+			val:         types.StringValue("2001::/15"),
 			expectError: true,
 		},
 		"valid IPv4 CIDR": {
-			val:         types.String{Value: "10.2.2.0/24"},
+			val:         types.StringValue("10.2.2.0/24"),
 			expectError: true,
 		},
 	}

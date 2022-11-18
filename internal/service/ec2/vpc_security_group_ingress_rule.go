@@ -68,7 +68,7 @@ func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.C
 	conn := r.Meta().EC2Conn
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
-		GroupId:       aws.String(data.SecurityGroupID.Value),
+		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
 		IpPermissions: []*ec2.IpPermission{r.expandIPPermission(ctx, data)},
 	}
 
@@ -85,8 +85,8 @@ func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.C
 	conn := r.Meta().EC2Conn
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
-		GroupId:              aws.String(data.SecurityGroupID.Value),
-		SecurityGroupRuleIds: aws.StringSlice([]string{data.ID.Value}),
+		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
+		SecurityGroupRuleIds: flex.StringSliceFromFramework(ctx, data.ID),
 	})
 
 	return err
@@ -219,25 +219,25 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 		!new.ReferencedSecurityGroupID.Equal(old.ReferencedSecurityGroupID) ||
 		!new.ToPort.Equal(old.ToPort) {
 		input := &ec2.ModifySecurityGroupRulesInput{
-			GroupId: aws.String(new.SecurityGroupID.Value),
+			GroupId: flex.StringFromFramework(ctx, new.SecurityGroupID),
 			SecurityGroupRules: []*ec2.SecurityGroupRuleUpdate{{
 				SecurityGroupRule:   r.expandSecurityGroupRuleRequest(ctx, &new),
-				SecurityGroupRuleId: aws.String(new.ID.Value),
+				SecurityGroupRuleId: flex.StringFromFramework(ctx, new.ID),
 			}},
 		}
 
 		_, err := conn.ModifySecurityGroupRulesWithContext(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s)", new.ID.Value), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s)", new.ID.ValueString()), err.Error())
 
 			return
 		}
 	}
 
 	if !new.TagsAll.Equal(old.TagsAll) {
-		if err := UpdateTagsWithContext(ctx, conn, new.ID.Value, old.TagsAll, new.TagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s) tags", new.ID.Value), err.Error())
+		if err := UpdateTagsWithContext(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
 		}
@@ -326,7 +326,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 		return
 	}
 
-	data.ID = types.String{Value: securityGroupRuleID}
+	data.ID = types.StringValue(securityGroupRuleID)
 
 	conn := r.Meta().EC2Conn
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
@@ -334,8 +334,8 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
 	if len(tags) > 0 {
-		if err := UpdateTagsWithContext(ctx, conn, data.ID.Value, nil, tags); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.Value), err.Error())
+		if err := UpdateTagsWithContext(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
 			return
 		}
@@ -343,7 +343,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 
 	// Set values for unknowns.
 	data.ARN = r.arn(ctx, securityGroupRuleID)
-	data.SecurityGroupRuleID = types.String{Value: securityGroupRuleID}
+	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
 	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -359,7 +359,7 @@ func (r *resourceSecurityGroupRule) delete(ctx context.Context, request resource
 	}
 
 	tflog.Debug(ctx, "deleting VPC Security Group Rule", map[string]interface{}{
-		"id": data.ID.Value,
+		"id": data.ID.ValueString(),
 	})
 	err := f(ctx, &data)
 
@@ -368,7 +368,7 @@ func (r *resourceSecurityGroupRule) delete(ctx context.Context, request resource
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting VPC Security Group Rule (%s)", data.ID.Value), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting VPC Security Group Rule (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
@@ -386,11 +386,11 @@ func (r *resourceSecurityGroupRule) read(ctx context.Context, request resource.R
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
-	output, err := f(ctx, data.ID.Value)
+	output, err := f(ctx, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		tflog.Warn(ctx, "VPC Security Group Rule not found, removing from state", map[string]interface{}{
-			"id": data.ID.Value,
+			"id": data.ID.ValueString(),
 		})
 		response.State.RemoveResource(ctx)
 
@@ -398,31 +398,31 @@ func (r *resourceSecurityGroupRule) read(ctx context.Context, request resource.R
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading VPC Security Group Rule (%s)", data.ID.Value), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading VPC Security Group Rule (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	data.ARN = r.arn(ctx, data.ID.Value)
-	data.CIDRIPv4 = flex.ToFrameworkStringValue(ctx, output.CidrIpv4)
-	data.CIDRIPv6 = flex.ToFrameworkStringValue(ctx, output.CidrIpv6)
-	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
-	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
-	data.PrefixListID = flex.ToFrameworkStringValue(ctx, output.PrefixListId)
+	data.ARN = r.arn(ctx, data.ID.ValueString())
+	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
+	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
+	data.Description = flex.StringToFramework(ctx, output.Description)
+	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
+	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
 	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
-	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
-	data.SecurityGroupRuleID = flex.ToFrameworkStringValue(ctx, output.SecurityGroupRuleId)
+	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
+	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
 	// If planned from_port or to_port are null and values of -1 are returned, propagate null.
 	if v := aws.Int64Value(output.FromPort); v == -1 && data.FromPort.IsNull() {
-		data.FromPort = types.Int64{Null: true}
+		data.FromPort = types.Int64Null()
 	} else {
-		data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
+		data.FromPort = flex.Int64ToFramework(ctx, output.FromPort)
 	}
 	if v := aws.Int64Value(output.ToPort); v == -1 && data.ToPort.IsNull() {
-		data.ToPort = types.Int64{Null: true}
+		data.ToPort = types.Int64Null()
 	} else {
-		data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
+		data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 	}
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -445,106 +445,64 @@ func (r *resourceSecurityGroupRule) arn(_ context.Context, id string) types.Stri
 		AccountID: r.Meta().AccountID,
 		Resource:  fmt.Sprintf("security-group-rule/%s", id),
 	}.String()
-	return types.String{Value: arn}
+	return types.StringValue(arn)
 }
 
-func (r *resourceSecurityGroupRule) expandIPPermission(_ context.Context, data *resourceSecurityGroupRuleData) *ec2.IpPermission {
-	apiObject := &ec2.IpPermission{}
+func (r *resourceSecurityGroupRule) expandIPPermission(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.IpPermission {
+	apiObject := &ec2.IpPermission{
+		FromPort:   flex.Int64FromFramework(ctx, data.FromPort),
+		IpProtocol: flex.StringFromFramework(ctx, data.IPProtocol),
+		ToPort:     flex.Int64FromFramework(ctx, data.ToPort),
+	}
 
 	if !data.CIDRIPv4.IsNull() {
 		apiObject.IpRanges = []*ec2.IpRange{{
-			CidrIp: aws.String(data.CIDRIPv4.Value),
+			CidrIp:      flex.StringFromFramework(ctx, data.CIDRIPv4),
+			Description: flex.StringFromFramework(ctx, data.Description),
 		}}
-
-		if !data.Description.IsNull() {
-			apiObject.IpRanges[0].Description = aws.String(data.Description.Value)
-		}
 	}
 
 	if !data.CIDRIPv6.IsNull() {
 		apiObject.Ipv6Ranges = []*ec2.Ipv6Range{{
-			CidrIpv6: aws.String(data.CIDRIPv6.Value),
+			CidrIpv6:    flex.StringFromFramework(ctx, data.CIDRIPv6),
+			Description: flex.StringFromFramework(ctx, data.Description),
 		}}
-
-		if !data.Description.IsNull() {
-			apiObject.IpRanges[0].Description = aws.String(data.Description.Value)
-		}
-	}
-
-	if !data.FromPort.IsNull() {
-		apiObject.FromPort = aws.Int64(data.FromPort.Value)
-	}
-
-	if !data.IPProtocol.IsNull() {
-		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
 	}
 
 	if !data.PrefixListID.IsNull() {
 		apiObject.PrefixListIds = []*ec2.PrefixListId{{
-			PrefixListId: aws.String(data.PrefixListID.Value),
+			PrefixListId: flex.StringFromFramework(ctx, data.PrefixListID),
+			Description:  flex.StringFromFramework(ctx, data.Description),
 		}}
-
-		if !data.Description.IsNull() {
-			apiObject.PrefixListIds[0].Description = aws.String(data.Description.Value)
-		}
 	}
 
 	if !data.ReferencedSecurityGroupID.IsNull() {
-		apiObject.UserIdGroupPairs = []*ec2.UserIdGroupPair{{}}
+		apiObject.UserIdGroupPairs = []*ec2.UserIdGroupPair{{
+			Description: flex.StringFromFramework(ctx, data.Description),
+		}}
 
 		// [UserID/]GroupID.
-		if parts := strings.Split(data.ReferencedSecurityGroupID.Value, "/"); len(parts) == 2 {
+		if parts := strings.Split(data.ReferencedSecurityGroupID.ValueString(), "/"); len(parts) == 2 {
 			apiObject.UserIdGroupPairs[0].GroupId = aws.String(parts[1])
 			apiObject.UserIdGroupPairs[0].UserId = aws.String(parts[0])
 		} else {
-			apiObject.UserIdGroupPairs[0].GroupId = aws.String(data.ReferencedSecurityGroupID.Value)
+			apiObject.UserIdGroupPairs[0].GroupId = flex.StringFromFramework(ctx, data.ReferencedSecurityGroupID)
 		}
-
-		if !data.Description.IsNull() {
-			apiObject.UserIdGroupPairs[0].Description = aws.String(data.Description.Value)
-		}
-	}
-
-	if !data.ToPort.IsNull() {
-		apiObject.ToPort = aws.Int64(data.ToPort.Value)
 	}
 
 	return apiObject
 }
 
-func (r *resourceSecurityGroupRule) expandSecurityGroupRuleRequest(_ context.Context, data *resourceSecurityGroupRuleData) *ec2.SecurityGroupRuleRequest {
-	apiObject := &ec2.SecurityGroupRuleRequest{}
-
-	if !data.CIDRIPv4.IsNull() {
-		apiObject.CidrIpv4 = aws.String(data.CIDRIPv4.Value)
-	}
-
-	if !data.CIDRIPv6.IsNull() {
-		apiObject.CidrIpv6 = aws.String(data.CIDRIPv6.Value)
-	}
-
-	if !data.Description.IsNull() {
-		apiObject.Description = aws.String(data.Description.Value)
-	}
-
-	if !data.FromPort.IsNull() {
-		apiObject.FromPort = aws.Int64(data.FromPort.Value)
-	}
-
-	if !data.IPProtocol.IsNull() {
-		apiObject.IpProtocol = aws.String(data.IPProtocol.Value)
-	}
-
-	if !data.PrefixListID.IsNull() {
-		apiObject.PrefixListId = aws.String(data.PrefixListID.Value)
-	}
-
-	if !data.ReferencedSecurityGroupID.IsNull() {
-		apiObject.ReferencedGroupId = aws.String(data.ReferencedSecurityGroupID.Value)
-	}
-
-	if !data.ToPort.IsNull() {
-		apiObject.ToPort = aws.Int64(data.ToPort.Value)
+func (r *resourceSecurityGroupRule) expandSecurityGroupRuleRequest(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.SecurityGroupRuleRequest {
+	apiObject := &ec2.SecurityGroupRuleRequest{
+		CidrIpv4:          flex.StringFromFramework(ctx, data.CIDRIPv4),
+		CidrIpv6:          flex.StringFromFramework(ctx, data.CIDRIPv6),
+		Description:       flex.StringFromFramework(ctx, data.Description),
+		FromPort:          flex.Int64FromFramework(ctx, data.FromPort),
+		IpProtocol:        flex.StringFromFramework(ctx, data.IPProtocol),
+		PrefixListId:      flex.StringFromFramework(ctx, data.PrefixListID),
+		ReferencedGroupId: flex.StringFromFramework(ctx, data.ReferencedSecurityGroupID),
+		ToPort:            flex.Int64FromFramework(ctx, data.ToPort),
 	}
 
 	return apiObject
@@ -552,15 +510,15 @@ func (r *resourceSecurityGroupRule) expandSecurityGroupRuleRequest(_ context.Con
 
 func (r *resourceSecurityGroupRule) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
 	if apiObject == nil {
-		return types.String{Null: true}
+		return types.StringNull()
 	}
 
 	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == r.Meta().AccountID {
-		return flex.ToFrameworkStringValue(ctx, apiObject.GroupId)
+		return flex.StringToFramework(ctx, apiObject.GroupId)
 	}
 
 	// [UserID/]GroupID.
-	return types.String{Value: strings.Join([]string{aws.StringValue(apiObject.UserId), aws.StringValue(apiObject.GroupId)}, "/")}
+	return types.StringValue(strings.Join([]string{aws.StringValue(apiObject.UserId), aws.StringValue(apiObject.GroupId)}, "/"))
 }
 
 type resourceSecurityGroupRuleData struct {
@@ -635,7 +593,7 @@ func (m normalizeIPProtocol) Modify(ctx context.Context, request tfsdk.ModifyAtt
 		return
 	}
 
-	if ProtocolForValue(current.Value) == ProtocolForValue(planned.Value) {
+	if ProtocolForValue(current.ValueString()) == ProtocolForValue(planned.ValueString()) {
 		response.AttributePlan = request.AttributeState
 
 		return

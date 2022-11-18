@@ -100,7 +100,7 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 		// Data sources make no use of AttributePlanModifiers to set default values.
 		url = "https://ip-ranges.amazonaws.com/ip-ranges.json"
 	} else {
-		url = data.URL.Value
+		url = data.URL.ValueString()
 	}
 
 	bytes, err := readAll(ctx, url)
@@ -156,12 +156,12 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 
 	sort.Strings(ipv6Prefixes)
 
-	data.CreateDate = types.String{Value: ipRanges.CreateDate}
-	data.ID = types.String{Value: ipRanges.SyncToken}
+	data.CreateDate = types.StringValue(ipRanges.CreateDate)
+	data.ID = types.StringValue(ipRanges.SyncToken)
 	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv4Prefixes)
 	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv6Prefixes)
-	data.SyncToken = types.Int64{Value: int64(syncToken)}
-	data.URL = types.String{Value: url}
+	data.SyncToken = types.Int64Value(int64(syncToken))
+	data.URL = types.StringValue(url)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

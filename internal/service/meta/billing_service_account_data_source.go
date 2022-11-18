@@ -70,8 +70,8 @@ func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request data
 		Resource:  "root",
 	}
 
-	data.ARN = types.String{Value: arn.String()}
-	data.ID = types.String{Value: billingAccountID}
+	data.ARN = types.StringValue(arn.String())
+	data.ID = types.StringValue(billingAccountID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
