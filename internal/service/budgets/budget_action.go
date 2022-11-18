@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/separator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -379,23 +379,21 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-const budgetActionResourceIDSeparator = ":"
-
 func BudgetActionCreateResourceID(accountID, actionID, budgetName string) string {
-	parts := []string{accountID, actionID, budgetName}
-	id := strings.Join(parts, budgetActionResourceIDSeparator)
+	idParts := []string{accountID, actionID, budgetName}
+	id := separator.FlattenResourceId(idParts)
 
 	return id
 }
 
 func BudgetActionParseResourceID(id string) (string, string, string, error) {
-	parts := strings.Split(id, budgetActionResourceIDSeparator)
+	parts := separator.ExpandResourceId(id)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
 		return parts[0], parts[1], parts[2], nil
 	}
 
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sActionID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sActionID%[2]sBudgetName", id, separator.ResourceIdSeparator)
 }
 
 const (
