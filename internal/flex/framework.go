@@ -140,6 +140,12 @@ func BoolToFramework(_ context.Context, v *bool) types.Bool {
 	return types.BoolValue(aws.ToBool(v))
 }
 
+// BoolToFrameworkLegacy converts a bool pointer to a Framework Bool value.
+// A nil bool pointer is converted to a false Bool.
+func BoolToFrameworkLegacy(_ context.Context, v *bool) types.Bool {
+	return types.BoolValue(aws.ToBool(v))
+}
+
 // Int64ToFramework converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a null Int64.
 func Int64ToFramework(_ context.Context, v *int64) types.Int64 {
@@ -150,6 +156,12 @@ func Int64ToFramework(_ context.Context, v *int64) types.Int64 {
 	return types.Int64Value(aws.ToInt64(v))
 }
 
+// Int64ToFramework converts an int64 pointer to a Framework Int64 value.
+// A nil int64 pointer is converted to a zero Int64.
+func Int64ToFrameworkLegacy(_ context.Context, v *int64) types.Int64 {
+	return types.Int64Value(aws.ToInt64(v))
+}
+
 // StringToFramework converts a string pointer to a Framework String value.
 // A nil string pointer is converted to a null String.
 func StringToFramework(_ context.Context, v *string) types.String {
@@ -157,6 +169,12 @@ func StringToFramework(_ context.Context, v *string) types.String {
 		return types.StringNull()
 	}
 
+	return types.StringValue(aws.ToString(v))
+}
+
+// StringToFrameworkLegacy converts a string pointer to a Framework String value.
+// A nil string pointer is converted to an empty String.
+func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 	return types.StringValue(aws.ToString(v))
 }
 

@@ -388,6 +388,36 @@ func TestBoolToFramework(t *testing.T) {
 	}
 }
 
+func TestBoolToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *bool
+		expected types.Bool
+	}
+	tests := map[string]testCase{
+		"valid bool": {
+			input:    aws.Bool(true),
+			expected: types.BoolValue(true),
+		},
+		"nil bool": {
+			input:    nil,
+			expected: types.BoolValue(false),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := BoolToFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestInt64ToFramework(t *testing.T) {
 	t.Parallel()
 
@@ -422,6 +452,40 @@ func TestInt64ToFramework(t *testing.T) {
 	}
 }
 
+func TestInt64ToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *int64
+		expected types.Int64
+	}
+	tests := map[string]testCase{
+		"valid int64": {
+			input:    aws.Int64(42),
+			expected: types.Int64Value(42),
+		},
+		"zero int64": {
+			input:    aws.Int64(0),
+			expected: types.Int64Value(0),
+		},
+		"nil int64": {
+			input:    nil,
+			expected: types.Int64Value(0),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := Int64ToFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestStringToFramework(t *testing.T) {
 	t.Parallel()
 
@@ -448,6 +512,40 @@ func TestStringToFramework(t *testing.T) {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			got := StringToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStringToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid string": {
+			input:    aws.String("TEST"),
+			expected: types.StringValue("TEST"),
+		},
+		"empty string": {
+			input:    aws.String(""),
+			expected: types.StringValue(""),
+		},
+		"nil string": {
+			input:    nil,
+			expected: types.StringValue(""),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := StringToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
