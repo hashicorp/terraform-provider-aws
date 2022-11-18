@@ -125,6 +125,11 @@ func ResourceSchedule() *schema.Resource {
 				Default:          "UTC",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 50)),
 			},
+			"start_date": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
+			},
 			"target": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -185,6 +190,11 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.Get("schedule_expression_timezone").(string); ok && v != "" {
 		in.ScheduleExpressionTimezone = aws.String(v)
+	}
+
+	if v, ok := d.Get("start_date").(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+		in.StartDate = aws.Time(v)
 	}
 
 	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
@@ -249,6 +259,10 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("end_date", nil)
 	}
 
+	if err := d.Set("flexible_time_window", []interface{}{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
+		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
+	}
+
 	d.Set("group_name", out.GroupName)
 	d.Set("kms_key_arn", out.KmsKeyArn)
 	d.Set("name", out.Name)
@@ -256,8 +270,10 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("schedule_expression", out.ScheduleExpression)
 	d.Set("schedule_expression_timezone", out.ScheduleExpressionTimezone)
 
-	if err := d.Set("flexible_time_window", []interface{}{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
+	if out.StartDate != nil {
+		d.Set("start_date", aws.ToTime(out.StartDate).Format(time.RFC3339))
+	} else {
+		d.Set("start_date", nil)
 	}
 
 	if err := d.Set("target", []interface{}{flattenTarget(out.Target)}); err != nil {
@@ -293,6 +309,11 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.Get("schedule_expression_timezone").(string); ok && v != "" {
 		in.ScheduleExpressionTimezone = aws.String(v)
+	}
+
+	if v, ok := d.Get("start_date").(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+		in.StartDate = aws.Time(v)
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
