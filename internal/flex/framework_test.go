@@ -358,6 +358,36 @@ func TestStringFromFramework(t *testing.T) {
 	}
 }
 
+func TestBoolToFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *bool
+		expected types.Bool
+	}
+	tests := map[string]testCase{
+		"valid bool": {
+			input:    aws.Bool(true),
+			expected: types.BoolValue(true),
+		},
+		"nil bool": {
+			input:    nil,
+			expected: types.BoolNull(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := BoolToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestInt64ToFramework(t *testing.T) {
 	t.Parallel()
 

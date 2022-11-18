@@ -130,6 +130,16 @@ func StringSliceFromFramework(_ context.Context, v types.String) []*string {
 	return aws.StringSlice([]string{v.ValueString()})
 }
 
+// BoolToFramework converts a bool pointer to a Framework Bool value.
+// A nil bool pointer is converted to a null Bool.
+func BoolToFramework(_ context.Context, v *bool) types.Bool {
+	if v == nil {
+		return types.BoolNull()
+	}
+
+	return types.BoolValue(aws.ToBool(v))
+}
+
 // Int64ToFramework converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a null Int64.
 func Int64ToFramework(_ context.Context, v *int64) types.Int64 {
