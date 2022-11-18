@@ -7900,6 +7900,9 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "me-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "me-south-1",
 				}: endpoint{},
 				endpointKey{
@@ -25206,13 +25209,19 @@ var awsPartition = partition{
 				endpointKey{
 					Region: "fips-us-east-1",
 				}: endpoint{
-
+					Hostname: "voiceid-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
 					Region: "fips-us-west-2",
 				}: endpoint{
-
+					Hostname: "voiceid-fips.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
@@ -25221,14 +25230,18 @@ var awsPartition = partition{
 				endpointKey{
 					Region:  "us-east-1",
 					Variant: fipsVariant,
-				}: endpoint{},
+				}: endpoint{
+					Hostname: "voiceid-fips.us-east-1.amazonaws.com",
+				},
 				endpointKey{
 					Region: "us-west-2",
 				}: endpoint{},
 				endpointKey{
 					Region:  "us-west-2",
 					Variant: fipsVariant,
-				}: endpoint{},
+				}: endpoint{
+					Hostname: "voiceid-fips.us-west-2.amazonaws.com",
+				},
 			},
 		},
 		"waf": service{
@@ -31110,6 +31123,13 @@ var awsusgovPartition = partition{
 				}: endpoint{
 					Hostname: "identitystore.us-gov-west-1.amazonaws.com",
 				},
+			},
+		},
+		"ingest.timestream": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
 			},
 		},
 		"inspector": service{
