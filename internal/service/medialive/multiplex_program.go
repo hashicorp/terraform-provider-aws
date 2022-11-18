@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	mltypes "github.com/aws/aws-sdk-go-v2/service/medialive/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	resourceHelper "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -76,7 +76,7 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 						Type:     types.StringType,
 						Required: true,
 						Validators: []tfsdk.AttributeValidator{
-							stringvalidator.OneOf(preferredChannelPipelineToSlice(mltypes.PreferredChannelPipeline("").Values())...),
+							enum.FrameworkValidate[mltypes.PreferredChannelPipeline](),
 						},
 					},
 				},
@@ -637,15 +637,6 @@ func flattenVideoSettings(mps *mltypes.MultiplexVideoSettings, stateMuxIsNull bo
 	vals := types.ObjectValueMust(videoSettingsAttrs, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{vals})
-}
-
-func preferredChannelPipelineToSlice(p []mltypes.PreferredChannelPipeline) []string {
-	s := make([]string, 0)
-
-	for _, v := range p {
-		s = append(s, string(v))
-	}
-	return s
 }
 
 func ParseMultiplexProgramID(id string) (programName string, multiplexId string, err error) {
