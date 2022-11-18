@@ -80,6 +80,10 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.Arn = aws.String(v)
 	}
 
+	if v, ok := tfMap["input"].(string); ok && v != "" {
+		a.Input = aws.String(v)
+	}
+
 	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		a.RoleArn = aws.String(v)
 	}
@@ -100,6 +104,10 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	if v := apiObject.Arn; v != nil && len(*v) > 0 {
 		m["arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Input; v != nil && len(*v) > 0 {
+		m["input"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil && len(*v) > 0 {

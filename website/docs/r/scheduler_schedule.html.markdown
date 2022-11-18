@@ -36,6 +36,32 @@ resource "aws_scheduler_schedule" "example" {
 }
 ```
 
+### Universal Target
+
+```terraform
+resource "aws_sqs_queue" "example" {}
+
+resource "aws_scheduler_schedule" "example" {
+  name = "my-schedule"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = "arn:aws:scheduler:::aws-sdk:sqs:sendMessage"
+    role_arn = aws_iam_role.example.arn
+
+    input = jsonencode({
+      MessageBody = "Greetings, programs!"
+      QueueUrl    = aws_sqs_queue.example.url
+    })
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -64,6 +90,7 @@ The following arguments are optional:
 ### target Configuration Block
 
 * `arn` - (Required) ARN of the target of this schedule.
+* `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
 * `role_arn` - (Required) ARN of the IAM role that EventBridge Scheduler will use for this target when the schedule is invoked. Read more in [Set up the execution role](https://docs.aws.amazon.com/scheduler/latest/UserGuide/setting-up.html#setting-up-execution-role).
 * `sqs_parameters` - (Optional) The templated target type for the Amazon SQS `SendMessage` API operation. Detailed below.
 
