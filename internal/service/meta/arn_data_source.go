@@ -84,12 +84,12 @@ func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest
 
 	arn := &data.ARN.Value
 
-	data.Account = types.String{Value: arn.AccountID}
-	data.ID = types.String{Value: arn.String()}
-	data.Partition = types.String{Value: arn.Partition}
-	data.Region = types.String{Value: arn.Region}
-	data.Resource = types.String{Value: arn.Resource}
-	data.Service = types.String{Value: arn.Service}
+	data.Account = types.StringValue(arn.AccountID)
+	data.ID = types.StringValue(arn.String())
+	data.Partition = types.StringValue(arn.Partition)
+	data.Region = types.StringValue(arn.Region)
+	data.Resource = types.StringValue(arn.Resource)
+	data.Service = types.StringValue(arn.Service)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

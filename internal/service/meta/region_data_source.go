@@ -75,7 +75,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	var region *endpoints.Region
 
 	if !data.Endpoint.IsNull() {
-		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.Value)
+		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.ValueString())
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
@@ -87,7 +87,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	}
 
 	if !data.Name.IsNull() {
-		matchingRegion, err := FindRegionByName(data.Name.Value)
+		matchingRegion, err := FindRegionByName(data.Name.ValueString())
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by name", err.Error())
@@ -125,10 +125,10 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	data.Description = types.String{Value: region.Description()}
-	data.Endpoint = types.String{Value: strings.TrimPrefix(regionEndpointEC2.URL, "https://")}
-	data.ID = types.String{Value: region.ID()}
-	data.Name = types.String{Value: region.ID()}
+	data.Description = types.StringValue(region.Description())
+	data.Endpoint = types.StringValue(strings.TrimPrefix(regionEndpointEC2.URL, "https://"))
+	data.ID = types.StringValue(region.ID())
+	data.Name = types.StringValue(region.ID())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
