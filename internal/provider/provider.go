@@ -1710,6 +1710,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_kms_replica_key":          kms.ResourceReplicaKey(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.ResourceDataLakeSettings(),
+			"aws_lakeformation_data_cells_filter":  lakeformation.ResourceDataCellsFilter(),
 			"aws_lakeformation_lf_tag":             lakeformation.ResourceLFTag(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
 			"aws_lakeformation_resource":           lakeformation.ResourceResource(),

@@ -61,6 +61,13 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"table":            testAccResourceLFTags_table,
 			"tableWithColumns": testAccResourceLFTags_tableWithColumns,
 		},
+		"DataCellsFilter": {
+			"basic":                 testAccResourceDataCellsFilter_basic,
+			"disappears":            testAccResourceDataCellsFilter_disappears,
+			"inludeColumns":         testAccResourceDataCellsFilter_includeColumns,
+			"excludeColumns":        testAccResourceDataCellsFilter_excludeColumns,
+			"allRowsExcludeColumns": testAccResourceDataCellsFilter_allRowsExcludeColumns,
+		},
 	}
 
 	for group, m := range testCases {
