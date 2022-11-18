@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,7 +10,9 @@ import (
 	"strings"
 	"time"
 
-	// rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -508,6 +511,10 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"x_use_blue_green_update": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"username": {
 				Type:          schema.TypeString,
@@ -1607,207 +1614,311 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"final_snapshot_identifier",
 		"replicate_source_db",
 		"skip_final_snapshot",
-		"tags", "tags_all") {
-		input := &rds.ModifyDBInstanceInput{
-			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
-			DBInstanceIdentifier: aws.String(d.Id()),
-		}
+		"tags", "tags_all",
+		"x_use_blue_green_update",
+	) {
+		if d.Get("x_use_blue_green_update").(bool) {
+			conn := meta.(*conns.AWSClient).RDSClient()
 
-		if !aws.BoolValue(input.ApplyImmediately) {
-			diags = errs.AppendWarningf(diags, "updating RDS DB Instance (%s): changes will be applied during next maintenance window", d.Id())
-		}
-
-		if d.HasChanges("allocated_storage", "iops") {
-			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
-			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
-		}
-
-		if d.HasChange("allow_major_version_upgrade") {
-			input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
-		}
-
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
-		}
-
-		if d.HasChange("backup_retention_period") {
-			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
-		}
-
-		if d.HasChange("backup_window") {
-			input.PreferredBackupWindow = aws.String(d.Get("backup_window").(string))
-		}
-
-		if d.HasChange("copy_tags_to_snapshot") {
-			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
-		}
-
-		if d.HasChange("ca_cert_identifier") {
-			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
-		}
-
-		if d.HasChange("customer_owned_ip_enabled") {
-			input.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
-		}
-
-		if d.HasChange("db_subnet_group_name") {
-			input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
-		}
-
-		if d.HasChange("deletion_protection") {
-			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
-		}
-
-		if d.HasChanges("domain", "domain_iam_role_name") {
-			input.Domain = aws.String(d.Get("domain").(string))
-			input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
-		}
-
-		if d.HasChange("enabled_cloudwatch_logs_exports") {
-			oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
-			o := oraw.(*schema.Set)
-			n := nraw.(*schema.Set)
-
-			enable := n.Difference(o)
-			disable := o.Difference(n)
-
-			input.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
-				EnableLogTypes:  flex.ExpandStringSet(enable),
-				DisableLogTypes: flex.ExpandStringSet(disable),
-			}
-		}
-
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
-			input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
-		}
-
-		if d.HasChange("iam_database_authentication_enabled") {
-			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
-		}
-
-		if d.HasChange("instance_class") {
-			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
-		}
-
-		if d.HasChange("license_model") {
-			input.LicenseModel = aws.String(d.Get("license_model").(string))
-		}
-
-		if d.HasChange("maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
-		}
-
-		if d.HasChange("max_allocated_storage") {
-			v := d.Get("max_allocated_storage").(int)
-
-			// The API expects the max allocated storage value to be set to the allocated storage
-			// value when disabling autoscaling. This check ensures that value is set correctly
-			// if the update to the Terraform configuration was removing the argument completely.
-			if v == 0 {
-				v = d.Get("allocated_storage").(int)
+			createIn := &rds_sdkv2.CreateBlueGreenDeploymentInput{
+				BlueGreenDeploymentName: aws.String(d.Id()),
+				Source:                  aws.String(d.Get("arn").(string)),
 			}
 
-			input.MaxAllocatedStorage = aws.Int64(int64(v))
-		}
-
-		if d.HasChange("monitoring_interval") {
-			input.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
-		}
-
-		if d.HasChange("monitoring_role_arn") {
-			input.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
-		}
-
-		if d.HasChange("multi_az") {
-			input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
-		}
-
-		if d.HasChange("network_type") {
-			input.NetworkType = aws.String(d.Get("network_type").(string))
-		}
-
-		if d.HasChange("option_group_name") {
-			input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
-		}
-
-		if d.HasChange("parameter_group_name") {
-			input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
-		}
-
-		if d.HasChange("password") {
-			input.MasterUserPassword = aws.String(d.Get("password").(string))
-		}
-
-		if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
-			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
-
-			if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-				input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+			if d.HasChange("engine_version") {
+				createIn.TargetEngineVersion = aws.String(d.Get("engine_version").(string))
+			}
+			if d.HasChange("parameter_group_name") {
+				createIn.TargetDBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
 			}
 
-			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-				input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Creating Blue/Green Deployment", d.Id())
+
+			createOut, err := conn.CreateBlueGreenDeployment(ctx, createIn)
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: %s", d.Id(), err)
 			}
-		}
+			dep := createOut.BlueGreenDeployment
+			defer func() {
+				// Ensure that the Blue/Green Deployment is always cleaned up
+				input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+					BlueGreenDeploymentIdentifier: dep.BlueGreenDeploymentIdentifier,
+				}
+				if aws.StringValue(dep.Status) != "SWITCHOVER_COMPLETED" {
+					input.DeleteTarget = aws.Bool(true)
+				}
+				_, err = conn.DeleteBlueGreenDeployment(ctx, input)
+				if err != nil {
+					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: %s", d.Id(), err)
+					return
+				}
 
-		if d.HasChange("port") {
-			input.DBPortNumber = aws.Int64(int64(d.Get("port").(int)))
-		}
+				_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+				}
+			}()
 
-		if d.HasChange("publicly_accessible") {
-			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
-		}
-
-		if d.HasChange("replica_mode") {
-			input.ReplicaMode = aws.String(d.Get("replica_mode").(string))
-		}
-
-		if d.HasChange("security_group_names") {
-			if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
-				input.DBSecurityGroups = flex.ExpandStringSet(v)
+			dep, err = waitBlueGreenDeploymentAvailable(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
 			}
-		}
 
-		if d.HasChange("storage_type") {
-			input.StorageType = aws.String(d.Get("storage_type").(string))
+			details := dep.SwitchoverDetails
+			// TODO: check len()
+			detail := details[0]
+			targetARN := aws.StringValue(detail.TargetMember)
+			_, err = waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, targetARN, d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
+			}
 
-			if aws.StringValue(input.StorageType) == storageTypeIO1 {
+			// Do stuff
+
+			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Id())
+
+			switchoverOut, err := conn.SwitchoverBlueGreenDeployment(ctx, &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
+				BlueGreenDeploymentIdentifier: dep.BlueGreenDeploymentIdentifier,
+			})
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): switching over Blue/Green Deployment: %s", d.Id(), err)
+			}
+			dep = switchoverOut.BlueGreenDeployment
+
+			dep, err = waitBlueGreenDeploymentSwitchoverCompleted(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): switching over Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+			}
+
+			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment", d.Id())
+
+			details = dep.SwitchoverDetails
+			// TODO: check len()
+			detail = details[0]
+			arn, err := parseDBInstanceARN(aws.StringValue(detail.SourceMember))
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Id(), err)
+			}
+			_, err = conn.DeleteDBInstance(ctx, &rds_sdkv2.DeleteDBInstanceInput{
+				DBInstanceIdentifier: aws.String(arn.Identifier),
+				SkipFinalSnapshot:    true,
+			})
+			if err != nil {
+				diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Id(), err)
+			}
+
+			defer func() {
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, arn.Identifier, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+				}
+			}()
+
+			if diags.HasError() {
+				return
+			}
+		} else {
+			input := &rds.ModifyDBInstanceInput{
+				ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+				DBInstanceIdentifier: aws.String(d.Id()),
+			}
+
+			if !aws.BoolValue(input.ApplyImmediately) {
+				log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
+			}
+
+			if d.HasChanges("allocated_storage", "iops") {
 				input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+				input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 			}
-		}
 
-		if d.HasChange("vpc_security_group_ids") {
-			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+			if d.HasChange("allow_major_version_upgrade") {
+				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
 			}
-		}
 
-		_, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutUpdate),
-			func() (interface{}, error) {
-				return conn.ModifyDBInstanceWithContext(ctx, input)
-			},
-			func(err error) (bool, error) {
-				// Retry for IAM eventual consistency.
-				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
-					return true, err
+			if d.HasChange("auto_minor_version_upgrade") {
+				input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+			}
+
+			if d.HasChange("backup_retention_period") {
+				input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+			}
+
+			if d.HasChange("backup_window") {
+				input.PreferredBackupWindow = aws.String(d.Get("backup_window").(string))
+			}
+
+			if d.HasChange("copy_tags_to_snapshot") {
+				input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+			}
+
+			if d.HasChange("ca_cert_identifier") {
+				input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+			}
+
+			if d.HasChange("customer_owned_ip_enabled") {
+				input.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
+			}
+
+			if d.HasChange("db_subnet_group_name") {
+				input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
+			}
+
+			if d.HasChange("deletion_protection") {
+				input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+			}
+
+			if d.HasChanges("domain", "domain_iam_role_name") {
+				input.Domain = aws.String(d.Get("domain").(string))
+				input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
+			}
+
+			if d.HasChange("enabled_cloudwatch_logs_exports") {
+				oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+				o := oraw.(*schema.Set)
+				n := nraw.(*schema.Set)
+
+				enable := n.Difference(o)
+				disable := o.Difference(n)
+
+				input.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+					EnableLogTypes:  flex.ExpandStringSet(enable),
+					DisableLogTypes: flex.ExpandStringSet(disable),
+				}
+			}
+
+			if d.HasChange("engine_version") {
+				input.EngineVersion = aws.String(d.Get("engine_version").(string))
+				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
+			}
+
+			if d.HasChange("iam_database_authentication_enabled") {
+				input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+			}
+
+			if d.HasChange("instance_class") {
+				input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+			}
+
+			if d.HasChange("license_model") {
+				input.LicenseModel = aws.String(d.Get("license_model").(string))
+			}
+
+			if d.HasChange("maintenance_window") {
+				input.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
+			}
+
+			if d.HasChange("max_allocated_storage") {
+				v := d.Get("max_allocated_storage").(int)
+
+				// The API expects the max allocated storage value to be set to the allocated storage
+				// value when disabling autoscaling. This check ensures that value is set correctly
+				// if the update to the Terraform configuration was removing the argument completely.
+				if v == 0 {
+					v = d.Get("allocated_storage").(int)
 				}
 
-				// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
-					return true, err
+				input.MaxAllocatedStorage = aws.Int64(int64(v))
+			}
+
+			if d.HasChange("monitoring_interval") {
+				input.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
+			}
+
+			if d.HasChange("monitoring_role_arn") {
+				input.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
+			}
+
+			if d.HasChange("multi_az") {
+				input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+			}
+
+			if d.HasChange("network_type") {
+				input.NetworkType = aws.String(d.Get("network_type").(string))
+			}
+
+			if d.HasChange("option_group_name") {
+				input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
+			}
+
+			if d.HasChange("parameter_group_name") {
+				input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+			}
+
+			if d.HasChange("password") {
+				input.MasterUserPassword = aws.String(d.Get("password").(string))
+			}
+
+			if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
+				input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+
+				if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+					input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 				}
 
-				return false, err
-			},
-		)
+				if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+					input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+				}
+			}
 
-		if err != nil {
-			return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
-		}
+			if d.HasChange("port") {
+				input.DBPortNumber = aws.Int64(int64(d.Get("port").(int)))
+			}
 
-		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
+			if d.HasChange("publicly_accessible") {
+				input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+			}
+
+			if d.HasChange("replica_mode") {
+				input.ReplicaMode = aws.String(d.Get("replica_mode").(string))
+			}
+
+			if d.HasChange("security_group_names") {
+				if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
+					input.DBSecurityGroups = flex.ExpandStringSet(v)
+				}
+			}
+
+			if d.HasChange("storage_type") {
+				input.StorageType = aws.String(d.Get("storage_type").(string))
+
+				if aws.StringValue(input.StorageType) == storageTypeIO1 {
+					input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+				}
+			}
+
+			if d.HasChange("vpc_security_group_ids") {
+				if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+					input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+				}
+			}
+
+			_, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutUpdate),
+				func() (interface{}, error) {
+					return conn.ModifyDBInstanceWithContext(ctx, input)
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+						return true, err
+					}
+
+					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -1936,6 +2047,31 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.D
 	compareActualEngineVersion(d, oldVersion, newVersion)
 }
 
+type dbInstanceARN struct {
+	arn.ARN
+	Identifier string
+}
+
+func parseDBInstanceARN(s string) (dbInstanceARN, error) {
+	arn, err := arn.Parse(s)
+	if err != nil {
+		return dbInstanceARN{}, err
+	}
+
+	result := dbInstanceARN{
+		ARN: arn,
+	}
+
+	re := regexp.MustCompile(`^db:([0-9a-z-]+)$`)
+	matches := re.FindStringSubmatch(arn.Resource)
+	if matches == nil || len(matches) != 2 {
+		return dbInstanceARN{}, errors.New("DB Instance ARN: invalid resource section")
+	}
+	result.Identifier = matches[1]
+
+	return result, nil
+}
+
 func findDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
@@ -1958,17 +2094,19 @@ func findDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBI
 
 	dbInstance := output.DBInstances[0]
 
-	// Eventual consistency check.
-	if aws.StringValue(dbInstance.DBInstanceIdentifier) != id {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
 	return dbInstance, nil
 }
 
-func waitDBInstanceAvailable(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) { //nolint:unparam
+func waitDBInstanceAvailable(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
+	options := tfresource.Options{
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
+	}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
@@ -1987,13 +2125,11 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.RDS, id string, time
 			InstanceStatusStorageFull,
 			InstanceStatusUpgrading,
 		},
-		Target:                    []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
-		Refresh:                   statusDBInstance(ctx, conn, id),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		Delay:                     30 * time.Second,
-		ContinuousTargetOccurence: 3,
+		Target:  []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
+		Refresh: statusDBInstance(ctx, conn, id),
+		Timeout: timeout,
 	}
+	options.Apply(stateConf)
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -2004,7 +2140,16 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.RDS, id string, time
 	return nil, err
 }
 
-func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
+	options := tfresource.Options{
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
+	}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			InstanceStatusAvailable,
@@ -2021,13 +2166,11 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 			InstanceStatusStorageFull,
 			InstanceStatusStorageOptimization,
 		},
-		Target:                    []string{},
-		Refresh:                   statusDBInstance(ctx, conn, id),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		Delay:                     30 * time.Second,
-		ContinuousTargetOccurence: 3,
+		Target:  []string{},
+		Refresh: statusDBInstance(ctx, conn, id),
+		Timeout: timeout,
 	}
+	options.Apply(stateConf)
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -2051,5 +2194,145 @@ func statusDBInstance(ctx context.Context, conn *rds.RDS, id string) resource.St
 		}
 
 		return output, aws.StringValue(output.DBInstanceStatus), nil
+	}
+}
+
+func errIsA[T error](err error) bool {
+	_, ok := errAs[T](err)
+	return ok
+}
+
+func errAs[T error](err error) (T, bool) {
+	var as T
+	ok := errors.As(err, &as)
+	return as, ok
+}
+
+func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.BlueGreenDeployment, error) {
+	input := &rds_sdkv2.DescribeBlueGreenDeploymentsInput{
+		BlueGreenDeploymentIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeBlueGreenDeployments(ctx, input)
+
+	if errIsA[*types.BlueGreenDeploymentNotFoundFault](err) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.BlueGreenDeployments) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	deployment := output.BlueGreenDeployments[0]
+
+	if aws.StringValue(deployment.BlueGreenDeploymentIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return &deployment, nil
+}
+
+func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
+	options := tfresource.Options{
+		PollInterval: 10 * time.Second,
+		Delay:        1 * time.Minute,
+	}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PROVISIONING"},
+		Target:  []string{"AVAILABLE"},
+		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Timeout: timeout,
+	}
+	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
+	options := tfresource.Options{
+		PollInterval: 10 * time.Second,
+		Delay:        1 * time.Minute,
+	}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"SWITCHOVER_IN_PROGRESS"},
+		Target:  []string{"SWITCHOVER_COMPLETED"},
+		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Timeout: timeout,
+	}
+	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
+		if ues, ok := errAs[*resource.UnexpectedStateError](err); ok {
+			if ues.State == "INVALID_CONFIGURATION" || ues.State == "SWITCHOVER_FAILED" {
+				err = errors.New(aws.StringValue(output.StatusDetails))
+			}
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
+	options := tfresource.Options{
+		PollInterval: 10 * time.Second,
+		Delay:        1 * time.Minute,
+	}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
+		Target:  []string{},
+		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Timeout: timeout,
+	}
+	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }
