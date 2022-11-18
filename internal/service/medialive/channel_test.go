@@ -372,11 +372,11 @@ func testAccCheckChannelStatus(name string, state types.ChannelState) resource.T
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.MediaLive, "checking status", tfmedialive.ResNameChannel, name, errors.New("not found"))
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.MediaLive, "checking status", tfmedialive.ResNameChannel, name, errors.New("not set"))
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
@@ -384,11 +384,11 @@ func testAccCheckChannelStatus(name string, state types.ChannelState) resource.T
 		resp, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameChannel, rs.Primary.ID, err)
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, rs.Primary.ID, err)
 		}
 
 		if resp.State != state {
-			return create.Error(names.MediaLive, "checking status", tfmedialive.ResNameChannel, rs.Primary.ID, fmt.Errorf("not (%s) got: %s", state, resp.State))
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, rs.Primary.ID, fmt.Errorf("not (%s) got: %s", state, resp.State))
 		}
 
 		return nil
