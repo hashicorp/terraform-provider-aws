@@ -948,7 +948,19 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
-	_, err := conn.DeleteChannel(ctx, &medialive.DeleteChannelInput{
+	channel, err := FindChannelByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+	}
+
+	if channel.State == types.ChannelStateRunning {
+		if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+		}
+	}
+
+	_, err = conn.DeleteChannel(ctx, &medialive.DeleteChannelInput{
 		ChannelId: aws.String(d.Id()),
 	})
 
