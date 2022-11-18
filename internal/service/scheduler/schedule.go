@@ -119,6 +119,12 @@ func ResourceSchedule() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
 			},
+			"schedule_expression_timezone": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "UTC",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 50)),
+			},
 			"target": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -175,6 +181,10 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.Get("kms_key_arn").(string); ok && v != "" {
 		in.KmsKeyArn = aws.String(v)
+	}
+
+	if v, ok := d.Get("schedule_expression_timezone").(string); ok && v != "" {
+		in.ScheduleExpressionTimezone = aws.String(v)
 	}
 
 	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
@@ -244,6 +254,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", out.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
 	d.Set("schedule_expression", out.ScheduleExpression)
+	d.Set("schedule_expression_timezone", out.ScheduleExpressionTimezone)
 
 	if err := d.Set("flexible_time_window", []interface{}{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
@@ -278,6 +289,10 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.Get("kms_key_arn").(string); ok && v != "" {
 		in.KmsKeyArn = aws.String(v)
+	}
+
+	if v, ok := d.Get("schedule_expression_timezone").(string); ok && v != "" {
+		in.ScheduleExpressionTimezone = aws.String(v)
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
