@@ -207,6 +207,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
 				),
 			},
 			{
@@ -911,6 +912,65 @@ func TestAccSchedulerSchedule_targetRoleArn(t *testing.T) {
 	})
 }
 
+func TestAccSchedulerSchedule_targetSqsParameters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_scheduler_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_targetSqsParameters(name, "test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.0.message_group_id", "test1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetSqsParameters(name, "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.0.message_group_id", "test2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckScheduleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
 	ctx := context.Background()
@@ -1355,5 +1415,37 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name, resourceName),
+	)
+}
+
+func testAccScheduleConfig_targetSqsParameters(name, messageGroupId string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {}
+
+resource "aws_sqs_queue" "fifo" {
+  fifo_queue = true
+}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_sqs_queue.fifo.arn
+    role_arn = aws_iam_role.test.arn
+
+    sqs_parameters {
+      message_group_id = %[2]q
+    }
+  }
+}
+`, name, messageGroupId),
 	)
 }

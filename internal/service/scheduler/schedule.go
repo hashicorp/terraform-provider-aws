@@ -161,6 +161,20 @@ func ResourceSchedule() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 						},
+						"sqs_parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"message_group_id": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+									},
+								},
+							},
+						},
 					},
 				},
 			},

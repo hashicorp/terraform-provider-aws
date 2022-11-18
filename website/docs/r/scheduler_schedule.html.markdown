@@ -65,6 +65,11 @@ The following arguments are optional:
 
 * `arn` - (Required) ARN of the target of this schedule.
 * `role_arn` - (Required) ARN of the IAM role that EventBridge Scheduler will use for this target when the schedule is invoked. Read more in [Set up the execution role](https://docs.aws.amazon.com/scheduler/latest/UserGuide/setting-up.html#setting-up-execution-role).
+* `sqs_parameters` - (Optional) The templated target type for the Amazon SQS `SendMessage` API operation. Detailed below.
+
+#### sqs_parameters Configuration Block
+
+* `message_group_id` - (Optional) FIFO message group ID to use as the target.
 
 ## Attributes Reference
 
