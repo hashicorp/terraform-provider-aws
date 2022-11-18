@@ -20,20 +20,20 @@ func TestExpandFrameworkStringSet(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: types.Set{ElemType: types.StringType, Elems: []attr.Value{
-				types.String{Value: "GET"},
-				types.String{Value: "HEAD"},
-			}},
+			input: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
 			expected: []*string{aws.String("GET"), aws.String("HEAD")},
 		},
 		"zero elements": {
-			input:    types.Set{ElemType: types.StringType, Elems: []attr.Value{}},
+			input:    types.SetValueMust(types.StringType, []attr.Value{}),
 			expected: []*string{},
 		},
 		"invalid element type": {
-			input: types.Set{ElemType: types.Int64Type, Elems: []attr.Value{
-				types.Int64{Value: 42},
-			}},
+			input: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(42),
+			}),
 			expected: nil,
 		},
 	}
@@ -59,20 +59,20 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: types.Set{ElemType: types.StringType, Elems: []attr.Value{
-				types.String{Value: "GET"},
-				types.String{Value: "HEAD"},
-			}},
+			input: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
 			expected: []string{"GET", "HEAD"},
 		},
 		"zero elements": {
-			input:    types.Set{ElemType: types.StringType, Elems: []attr.Value{}},
+			input:    types.SetValueMust(types.StringType, []attr.Value{}),
 			expected: []string{},
 		},
 		"invalid element type": {
-			input: types.Set{ElemType: types.Int64Type, Elems: []attr.Value{
-				types.Int64{Value: 42},
-			}},
+			input: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(42),
+			}),
 			expected: nil,
 		},
 	}
@@ -98,24 +98,23 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{
-				"one": types.String{Value: "GET"},
-				"two": types.String{Value: "HEAD"},
-			}},
+			input: types.MapValueMust(types.StringType, map[string]attr.Value{
+				"one": types.StringValue("GET"),
+				"two": types.StringValue("HEAD"),
+			}),
 			expected: map[string]string{
 				"one": "GET",
 				"two": "HEAD",
 			},
 		},
 		"zero elements": {
-			input:    types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{}},
+			input:    types.MapValueMust(types.StringType, map[string]attr.Value{}),
 			expected: map[string]string{},
 		},
 		"invalid element type": {
-			input: types.Map{ElemType: types.BoolType, Elems: map[string]attr.Value{
-				"one": types.Bool{Value: true},
-				"two": types.Bool{Value: false},
-			}},
+			input: types.MapValueMust(types.BoolType, map[string]attr.Value{
+				"one": types.BoolValue(true),
+			}),
 			expected: nil,
 		},
 	}
@@ -142,18 +141,18 @@ func TestFlattenFrameworkStringList(t *testing.T) {
 	tests := map[string]testCase{
 		"two elements": {
 			input: []*string{aws.String("GET"), aws.String("HEAD")},
-			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{
-				types.String{Value: "GET"},
-				types.String{Value: "HEAD"},
-			}},
+			expected: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
 		},
 		"zero elements": {
 			input:    []*string{},
-			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+			expected: types.ListValueMust(types.StringType, []attr.Value{}),
 		},
 		"nil array": {
 			input:    nil,
-			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+			expected: types.ListValueMust(types.StringType, []attr.Value{}),
 		},
 	}
 
@@ -179,18 +178,18 @@ func TestFlattenFrameworkStringValueList(t *testing.T) {
 	tests := map[string]testCase{
 		"two elements": {
 			input: []string{"GET", "HEAD"},
-			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{
-				types.String{Value: "GET"},
-				types.String{Value: "HEAD"},
-			}},
+			expected: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
 		},
 		"zero elements": {
 			input:    []string{},
-			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+			expected: types.ListValueMust(types.StringType, []attr.Value{}),
 		},
 		"nil array": {
 			input:    nil,
-			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+			expected: types.ListValueMust(types.StringType, []attr.Value{}),
 		},
 	}
 
@@ -216,18 +215,18 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	tests := map[string]testCase{
 		"two elements": {
 			input: []string{"GET", "HEAD"},
-			expected: types.Set{ElemType: types.StringType, Elems: []attr.Value{
-				types.String{Value: "GET"},
-				types.String{Value: "HEAD"},
-			}},
+			expected: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
 		},
 		"zero elements": {
 			input:    []string{},
-			expected: types.Set{ElemType: types.StringType, Elems: []attr.Value{}},
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
 		},
 		"nil array": {
 			input:    nil,
-			expected: types.Set{ElemType: types.StringType, Elems: []attr.Value{}},
+			expected: types.SetValueMust(types.StringType, []attr.Value{}),
 		},
 	}
 
@@ -256,18 +255,18 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 				"one": "GET",
 				"two": "HEAD",
 			},
-			expected: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{
-				"one": types.String{Value: "GET"},
-				"two": types.String{Value: "HEAD"},
-			}},
+			expected: types.MapValueMust(types.StringType, map[string]attr.Value{
+				"one": types.StringValue("GET"),
+				"two": types.StringValue("HEAD"),
+			}),
 		},
 		"zero elements": {
 			input:    map[string]string{},
-			expected: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{}},
+			expected: types.MapValueMust(types.StringType, map[string]attr.Value{}),
 		},
 		"nil map": {
 			input:    nil,
-			expected: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{}},
+			expected: types.MapValueMust(types.StringType, map[string]attr.Value{}),
 		},
 	}
 
@@ -293,15 +292,15 @@ func TestToFrameworkInt64Value(t *testing.T) {
 	tests := map[string]testCase{
 		"valid int64": {
 			input:    aws.Int64(42),
-			expected: types.Int64{Value: 42},
+			expected: types.Int64Value(42),
 		},
 		"zero int64": {
 			input:    aws.Int64(0),
-			expected: types.Int64{Value: 0},
+			expected: types.Int64Value(0),
 		},
 		"nil string": {
 			input:    nil,
-			expected: types.Int64{Null: true},
+			expected: types.Int64Null(),
 		},
 	}
 
@@ -327,15 +326,15 @@ func TestToFrameworkStringValue(t *testing.T) {
 	tests := map[string]testCase{
 		"valid string": {
 			input:    aws.String("TEST"),
-			expected: types.String{Value: "TEST"},
+			expected: types.StringValue("TEST"),
 		},
 		"empty string": {
 			input:    aws.String(""),
-			expected: types.String{Value: ""},
+			expected: types.StringValue(""),
 		},
 		"nil string": {
 			input:    nil,
-			expected: types.String{Null: true},
+			expected: types.StringNull(),
 		},
 	}
 
@@ -361,15 +360,15 @@ func TestToFrameworkStringValueWithTransform(t *testing.T) {
 	tests := map[string]testCase{
 		"valid string": {
 			input:    aws.String("TEST"),
-			expected: types.String{Value: "test"},
+			expected: types.StringValue("test"),
 		},
 		"empty string": {
 			input:    aws.String(""),
-			expected: types.String{Value: ""},
+			expected: types.StringValue(""),
 		},
 		"nil string": {
 			input:    nil,
-			expected: types.String{Null: true},
+			expected: types.StringNull(),
 		},
 	}
 

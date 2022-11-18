@@ -58,10 +58,10 @@ func FlattenFrameworkStringList(_ context.Context, vs []*string) types.List {
 	elems := make([]attr.Value, len(vs))
 
 	for i, v := range vs {
-		elems[i] = types.String{Value: aws.ToString(v)}
+		elems[i] = types.StringValue(aws.ToString(v))
 	}
 
-	return types.List{ElemType: types.StringType, Elems: elems}
+	return types.ListValueMust(types.StringType, elems)
 }
 
 // FlattenFrameworkStringValueList is the Plugin Framework variant of FlattenStringValueList.
@@ -70,10 +70,10 @@ func FlattenFrameworkStringValueList(_ context.Context, vs []string) types.List 
 	elems := make([]attr.Value, len(vs))
 
 	for i, v := range vs {
-		elems[i] = types.String{Value: v}
+		elems[i] = types.StringValue(v)
 	}
 
-	return types.List{ElemType: types.StringType, Elems: elems}
+	return types.ListValueMust(types.StringType, elems)
 }
 
 // FlattenFrameworkStringValueSet is the Plugin Framework variant of FlattenStringValueSet.
@@ -82,10 +82,10 @@ func FlattenFrameworkStringValueSet(_ context.Context, vs []string) types.Set {
 	elems := make([]attr.Value, len(vs))
 
 	for i, v := range vs {
-		elems[i] = types.String{Value: v}
+		elems[i] = types.StringValue(v)
 	}
 
-	return types.Set{ElemType: types.StringType, Elems: elems}
+	return types.SetValueMust(types.StringType, elems)
 }
 
 // FlattenFrameworkStringValueMap has no Plugin SDK equivalent as schema.ResourceData.Set can be passed string value maps directly.
@@ -94,30 +94,30 @@ func FlattenFrameworkStringValueMap(_ context.Context, m map[string]string) type
 	elems := make(map[string]attr.Value, len(m))
 
 	for k, v := range m {
-		elems[k] = types.String{Value: v}
+		elems[k] = types.StringValue(v)
 	}
 
-	return types.Map{ElemType: types.StringType, Elems: elems}
+	return types.MapValueMust(types.StringType, elems)
 }
 
 // ToFrameworkInt64Value converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a null Int64.
 func ToFrameworkInt64Value(_ context.Context, v *int64) types.Int64 {
 	if v == nil {
-		return types.Int64{Null: true}
+		return types.Int64Null()
 	}
 
-	return types.Int64{Value: *v}
+	return types.Int64Value(*v)
 }
 
 // ToFrameworkStringValue converts a string pointer to a Framework String value.
 // A nil string pointer is converted to a null String.
 func ToFrameworkStringValue(_ context.Context, v *string) types.String {
 	if v == nil {
-		return types.String{Null: true}
+		return types.StringNull()
 	}
 
-	return types.String{Value: *v}
+	return types.StringValue(*v)
 }
 
 // ToFrameworkStringValueWithTransform converts a string pointer to a Framework String value.
@@ -125,8 +125,8 @@ func ToFrameworkStringValue(_ context.Context, v *string) types.String {
 // A non-nil string pointer has its value transformed by `f`.
 func ToFrameworkStringValueWithTransform(_ context.Context, v *string, f func(string) string) types.String {
 	if v == nil {
-		return types.String{Null: true}
+		return types.StringNull()
 	}
 
-	return types.String{Value: f(*v)}
+	return types.StringValue(f(*v))
 }
