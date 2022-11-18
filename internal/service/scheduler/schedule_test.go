@@ -206,6 +206,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.input", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
@@ -866,6 +867,65 @@ func TestAccSchedulerSchedule_targetArn(t *testing.T) {
 	})
 }
 
+func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_scheduler_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_targetDeadLetterConfig(name, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.0", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetDeadLetterConfig(name, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.1", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1443,6 +1503,38 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name, i),
+	)
+}
+
+func testAccScheduleConfig_targetDeadLetterConfig(name string, index int) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {}
+
+resource "aws_sqs_queue" "dlq" {
+	count = 2
+}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_sqs_queue.test.arn
+    role_arn = aws_iam_role.test.arn
+
+    dead_letter_config {
+      arn = aws_sqs_queue.dlq[%[2]d].arn
+    }
+  }
+}
+`, name, index),
 	)
 }
 

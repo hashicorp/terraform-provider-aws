@@ -157,6 +157,20 @@ func ResourceSchedule() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 						},
+						"dead_letter_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+									},
+								},
+							},
+						},
 						"input": {
 							Type:             schema.TypeString,
 							Optional:         true,

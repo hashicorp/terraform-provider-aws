@@ -5,6 +5,34 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 )
 
+func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.DeadLetterConfig{}
+
+	if v, ok := tfMap["arn"]; ok && v.(string) != "" {
+		a.Arn = aws.String(v.(string))
+	}
+
+	return a
+}
+
+func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := aws.ToString(apiObject.Arn); v != "" {
+		m["arn"] = v
+	}
+
+	return m
+}
+
 func expandFlexibleTimeWindow(tfMap map[string]interface{}) *types.FlexibleTimeWindow {
 	if tfMap == nil {
 		return nil
@@ -80,6 +108,10 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.Arn = aws.String(v)
 	}
 
+	if v, ok := tfMap["dead_letter_config"]; ok && len(v.([]interface{})) > 0 {
+		a.DeadLetterConfig = expandDeadLetterConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["input"].(string); ok && v != "" {
 		a.Input = aws.String(v)
 	}
@@ -104,6 +136,10 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	if v := apiObject.Arn; v != nil && len(*v) > 0 {
 		m["arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.DeadLetterConfig; v != nil {
+		m["dead_letter_config"] = []interface{}{flattenDeadLetterConfig(v)}
 	}
 
 	if v := apiObject.Input; v != nil && len(*v) > 0 {

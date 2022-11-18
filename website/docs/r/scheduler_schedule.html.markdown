@@ -89,10 +89,20 @@ The following arguments are optional:
 
 ### target Configuration Block
 
+The following arguments are required:
+
 * `arn` - (Required) ARN of the target of this schedule.
-* `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
 * `role_arn` - (Required) ARN of the IAM role that EventBridge Scheduler will use for this target when the schedule is invoked. Read more in [Set up the execution role](https://docs.aws.amazon.com/scheduler/latest/UserGuide/setting-up.html#setting-up-execution-role).
+
+The following arguments are optional:
+
+* `dead_letter_config` - (Optional) Information about an Amazon SQS queue that EventBridge Scheduler uses as a dead-letter queue for your schedule. If specified, EventBridge Scheduler delivers failed events that could not be successfully delivered to a target to the queue. Detailed below.
+* `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
 * `sqs_parameters` - (Optional) The templated target type for the Amazon SQS `SendMessage` API operation. Detailed below.
+
+#### dead_letter_config Configuration Block
+
+* `arn` - (Optional) ARN of the SQS queue specified as the destination for the dead-letter queue.
 
 #### sqs_parameters Configuration Block
 
