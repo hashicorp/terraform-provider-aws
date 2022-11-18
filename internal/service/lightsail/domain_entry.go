@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/separator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -95,14 +96,14 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Generate an ID
-	vars := []string{
+	idParts := []string{
 		d.Get("name").(string),
 		d.Get("domain_name").(string),
 		d.Get("type").(string),
 		d.Get("target").(string),
 	}
 
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(separator.FlattenResourceId(idParts))
 
 	return resourceDomainEntryRead(ctx, d, meta)
 }
@@ -160,7 +161,7 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func expandDomainEntry(id string) *lightsail.DomainEntry {
-	id_parts := strings.SplitN(id, "_", -1)
+	id_parts := separator.ExpandResourceId(id)
 	name := id_parts[0]
 	domainName := id_parts[1]
 	recordType := id_parts[2]
@@ -176,7 +177,7 @@ func expandDomainEntry(id string) *lightsail.DomainEntry {
 }
 
 func expandDomainNameFromId(id string) string {
-	id_parts := strings.SplitN(id, "_", -1)
+	id_parts := separator.ExpandResourceId(id)
 	domainName := id_parts[1]
 
 	return domainName
