@@ -107,6 +107,7 @@ The following arguments are optional:
 * `log_level` - (Optional) The log level to write to Cloudwatch logs.
 * `maintenance` - (Optional) Maintenance settings for this channel. See [Maintenance](#maintenance) for more details.
 * `role_arn` - (Optional) Concise argument description.
+* `start_channel` - (Optional) Whether to start/stop channel. Default: `false`
 * `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Settings for the VPC outputs.
 

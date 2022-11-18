@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -65,9 +66,10 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_channel"},
 			},
 		},
 	})
@@ -118,6 +120,43 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 						"name": "test-video-name",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.hls_output_settings.0.h265_packaging_type", "HVC1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMediaLiveChannel_status(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var channel medialive.DescribeChannelOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_channel.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			testAccChannelsPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_start(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelStatus(resourceName, types.ChannelStateRunning),
+				),
+			},
+			{
+				Config: testAccChannelConfig_start(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelStatus(resourceName, types.ChannelStateIdle),
 				),
 			},
 		},
@@ -324,6 +363,33 @@ func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelOu
 		}
 
 		*channel = *resp
+
+		return nil
+	}
+}
+
+func testAccCheckChannelStatus(name string, state types.ChannelState) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, name, errors.New("not set"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
+		ctx := context.Background()
+		resp, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, rs.Primary.ID, err)
+		}
+
+		if resp.State != state {
+			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, rs.Primary.ID, fmt.Errorf("not (%s) got: %s", state, resp.State))
+		}
 
 		return nil
 	}
@@ -601,6 +667,88 @@ resource "aws_medialive_channel" "test" {
   }
 }
 `, rName))
+}
+
+func testAccChannelConfig_start(rName string, start bool) string {
+	return acctest.ConfigCompose(
+		testAccChannelBaseConfig(rName),
+		testAccChannelBaseS3Config(rName),
+		testAccChannelBaseMultiplexConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_channel" "test" {
+  name          = %[1]q
+  channel_class = "STANDARD"
+  role_arn      = aws_iam_role.test.arn
+  start_channel = %[2]t
+
+  input_specification {
+    codec            = "AVC"
+    input_resolution = "HD"
+    maximum_bitrate  = "MAX_20_MBPS"
+  }
+
+  input_attachments {
+    input_attachment_name = "example-input1"
+    input_id              = aws_medialive_input.test.id
+  }
+
+  destinations {
+    id = %[1]q
+
+    settings {
+      url = "s3://${aws_s3_bucket.test1.id}/test1"
+    }
+
+    settings {
+      url = "s3://${aws_s3_bucket.test2.id}/test2"
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+      source = "EMBEDDED"
+    }
+
+    audio_descriptions {
+      audio_selector_name = %[1]q
+      name                = %[1]q
+    }
+
+    video_descriptions {
+      name = "test-video-name"
+    }
+
+    output_groups {
+      output_group_settings {
+        archive_group_settings {
+          destination {
+            destination_ref_id = %[1]q
+          }
+        }
+      }
+
+      outputs {
+        output_name             = "test-output-name"
+        video_description_name  = "test-video-name"
+        audio_description_names = [%[1]q]
+        output_settings {
+          archive_output_settings {
+            name_modifier = "_1"
+            extension     = "m2ts"
+            container_settings {
+              m2ts_settings {
+                audio_buffer_model = "ATSC"
+                buffer_model       = "MULTIPLEX"
+                rate_mode          = "CBR"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, start))
 }
 
 func testAccChannelConfig_update(rName, codec, inputResolution string) string {
