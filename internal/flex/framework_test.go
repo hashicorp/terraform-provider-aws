@@ -282,7 +282,7 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 	}
 }
 
-func TestFromFrameworkInt64(t *testing.T) {
+func TestInt64FromFramework(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -311,7 +311,7 @@ func TestFromFrameworkInt64(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := FromFrameworkInt64(context.Background(), test.input)
+			got := Int64FromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -320,7 +320,7 @@ func TestFromFrameworkInt64(t *testing.T) {
 	}
 }
 
-func TestFromFrameworkString(t *testing.T) {
+func TestStringFromFramework(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -349,7 +349,7 @@ func TestFromFrameworkString(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := FromFrameworkString(context.Background(), test.input)
+			got := StringFromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -358,7 +358,7 @@ func TestFromFrameworkString(t *testing.T) {
 	}
 }
 
-func TestToFrameworkInt64Value(t *testing.T) {
+func TestInt64ToFramework(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -383,7 +383,7 @@ func TestToFrameworkInt64Value(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := ToFrameworkInt64Value(context.Background(), test.input)
+			got := Int64ToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -392,7 +392,7 @@ func TestToFrameworkInt64Value(t *testing.T) {
 	}
 }
 
-func TestToFrameworkStringValue(t *testing.T) {
+func TestStringToFramework(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -417,7 +417,7 @@ func TestToFrameworkStringValue(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := ToFrameworkStringValue(context.Background(), test.input)
+			got := StringToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -426,7 +426,7 @@ func TestToFrameworkStringValue(t *testing.T) {
 	}
 }
 
-func TestToFrameworkStringValueWithTransform(t *testing.T) {
+func TestStringToFrameworkWithTransform(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -451,7 +451,7 @@ func TestToFrameworkStringValueWithTransform(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := ToFrameworkStringValueWithTransform(context.Background(), test.input, strings.ToLower)
+			got := StringToFrameworkWithTransform(context.Background(), test.input, strings.ToLower)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

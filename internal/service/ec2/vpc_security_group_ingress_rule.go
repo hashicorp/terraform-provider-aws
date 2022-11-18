@@ -404,25 +404,25 @@ func (r *resourceSecurityGroupRule) read(ctx context.Context, request resource.R
 	}
 
 	data.ARN = r.arn(ctx, data.ID.Value)
-	data.CIDRIPv4 = flex.ToFrameworkStringValue(ctx, output.CidrIpv4)
-	data.CIDRIPv6 = flex.ToFrameworkStringValue(ctx, output.CidrIpv6)
-	data.Description = flex.ToFrameworkStringValue(ctx, output.Description)
-	data.IPProtocol = flex.ToFrameworkStringValue(ctx, output.IpProtocol)
-	data.PrefixListID = flex.ToFrameworkStringValue(ctx, output.PrefixListId)
+	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
+	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
+	data.Description = flex.StringToFramework(ctx, output.Description)
+	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
+	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
 	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
-	data.SecurityGroupID = flex.ToFrameworkStringValue(ctx, output.GroupId)
-	data.SecurityGroupRuleID = flex.ToFrameworkStringValue(ctx, output.SecurityGroupRuleId)
+	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
+	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
 	// If planned from_port or to_port are null and values of -1 are returned, propagate null.
 	if v := aws.Int64Value(output.FromPort); v == -1 && data.FromPort.IsNull() {
 		data.FromPort = types.Int64{Null: true}
 	} else {
-		data.FromPort = flex.ToFrameworkInt64Value(ctx, output.FromPort)
+		data.FromPort = flex.Int64ToFramework(ctx, output.FromPort)
 	}
 	if v := aws.Int64Value(output.ToPort); v == -1 && data.ToPort.IsNull() {
 		data.ToPort = types.Int64{Null: true}
 	} else {
-		data.ToPort = flex.ToFrameworkInt64Value(ctx, output.ToPort)
+		data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 	}
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -556,7 +556,7 @@ func (r *resourceSecurityGroupRule) flattenReferencedSecurityGroup(ctx context.C
 	}
 
 	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == r.Meta().AccountID {
-		return flex.ToFrameworkStringValue(ctx, apiObject.GroupId)
+		return flex.StringToFramework(ctx, apiObject.GroupId)
 	}
 
 	// [UserID/]GroupID.
@@ -635,7 +635,7 @@ func (m normalizeIPProtocol) Modify(ctx context.Context, request tfsdk.ModifyAtt
 		return
 	}
 
-	if ProtocolForValue(current.Value) == ProtocolForValue(planned.Value) {
+	if ProtocolForValue(current.ValueString()) == ProtocolForValue(planned.ValueString()) {
 		response.AttributePlan = request.AttributeState
 
 		return
