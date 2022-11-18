@@ -39,25 +39,25 @@ func TestAccRDSClustersDataSource_filter(t *testing.T) {
 func testAccClustersDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  database_name                   = "test"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  skip_final_snapshot             = true
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
 }
 
 resource "aws_rds_cluster" "wrong" {
-  cluster_identifier              = "wrong-%[1]s"
-  database_name                   = "test"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  skip_final_snapshot             = true
+  cluster_identifier  = "wrong-%[1]s"
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
 }
 
 data "aws_rds_clusters" "test" {
   filter {
-	name   = "db-cluster-id"
-	values = [aws_rds_cluster.test.cluster_identifier]
+    name   = "db-cluster-id"
+    values = [aws_rds_cluster.test.cluster_identifier]
   }
 }
 `, rName)
