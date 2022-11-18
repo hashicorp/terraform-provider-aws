@@ -2,16 +2,24 @@ package scheduler
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"log"
 	"regexp"
-	"time"
 
-	"github.com/aws/aws-sdk-go/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceSchedule() *schema.Resource {
@@ -24,13 +32,6 @@ func ResourceSchedule() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -88,7 +89,7 @@ func ResourceSchedule() *schema.Resource {
 						"mode": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(scheduler.FlexibleTimeWindowMode_Values(), false),
+							ValidateFunc: validation.StringInSlice(toStringSlice(types.FlexibleTimeWindowMode("").Values()), false),
 						},
 					},
 				},
@@ -129,7 +130,7 @@ func ResourceSchedule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(scheduler.ScheduleState_Values(), false),
+				ValidateFunc: validation.StringInSlice(toStringSlice(types.ScheduleState("").Values()), false),
 			},
 			"target": {
 				Type:     schema.TypeList,
@@ -233,7 +234,7 @@ func ResourceSchedule() *schema.Resource {
 									"launch_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice(scheduler.LaunchType_Values(), false),
+										ValidateFunc: validation.StringInSlice(toStringSlice(types.LaunchType("").Values()), false),
 									},
 									"network_configuration": {
 										Type:     schema.TypeList,
@@ -275,7 +276,7 @@ func ResourceSchedule() *schema.Resource {
 												"type": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringInSlice(scheduler.PlacementConstraintType_Values(), false),
+													ValidateFunc: validation.StringInSlice(toStringSlice(types.PlacementConstraintType("").Values()), false),
 												},
 											},
 										},
@@ -294,7 +295,7 @@ func ResourceSchedule() *schema.Resource {
 												"type": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringInSlice(scheduler.PlacementStrategyType_Values(), false),
+													ValidateFunc: validation.StringInSlice(toStringSlice(types.PlacementStrategyType("").Values()), false),
 												},
 											},
 										},
@@ -307,7 +308,7 @@ func ResourceSchedule() *schema.Resource {
 									"propagate_tags": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice(scheduler.PropagateTags_Values(), false),
+										ValidateFunc: validation.StringInSlice(toStringSlice(types.PropagateTags("").Values()), false),
 									},
 									"reference_id": {
 										Type:         schema.TypeString,
@@ -428,11 +429,38 @@ func ResourceSchedule() *schema.Resource {
 	}
 }
 
+func toStringSlice[T any](origin []T) []string {
+	out := make([]string, 0, len(origin))
+
+	for _, v := range origin {
+		out = append(out, fmt.Sprintf("%v", v))
+	}
+
+	return out
+}
+
+const (
+	ResNameSchedule = "Schedule"
+)
+
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return resourceScheduleRead(ctx, d, meta)
 }
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SchedulerClient
+
+	_, err := findSchedule(ctx, conn, d.Id(), d.Get("group_name").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EventBridge Scheduler Schedule (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
+	}
 	return nil
 }
 
@@ -441,5 +469,23 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SchedulerClient
+
+	log.Printf("[INFO] Deleting EventBridge Scheduler Schedule %s", d.Id())
+
+	_, err := conn.DeleteSchedule(ctx, &scheduler.DeleteScheduleInput{
+		Name: aws.String(d.Id()),
+	})
+	if err != nil {
+		if errors.As(err, &types.ResourceNotFoundException{}) {
+			return nil
+		}
+		return create.DiagError(names.Scheduler, create.ErrActionDeleting, ResNameSchedule, d.Id(), err)
+	}
+
+	return nil
+}
+
+func expandflexible_time_window(tfMap map[string]interface{}) *types.FlexibleTimeWindow {
 	return nil
 }
