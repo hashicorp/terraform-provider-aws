@@ -45,7 +45,7 @@ func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var queueUrls []string
 
-	err := conn.ListQueuesPages(input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
+	err := conn.ListQueuesPagesWithContext(ctx, input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
