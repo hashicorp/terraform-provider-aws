@@ -155,7 +155,7 @@ func (a ARN) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
 
 	switch a.state {
 	case attr.ValueStateKnown:
-		if err := tftypes.ValidateValue(tftypes.Number, a.value); err != nil {
+		if err := tftypes.ValidateValue(t, a.value.String()); err != nil {
 			return tftypes.NewValue(t, tftypes.UnknownValue), err
 		}
 

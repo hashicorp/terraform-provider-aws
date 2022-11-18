@@ -160,7 +160,7 @@ func (d Duration) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
 
 	switch d.state {
 	case attr.ValueStateKnown:
-		if err := tftypes.ValidateValue(tftypes.Number, d.value); err != nil {
+		if err := tftypes.ValidateValue(t, d.value); err != nil {
 			return tftypes.NewValue(t, tftypes.UnknownValue), err
 		}
 
