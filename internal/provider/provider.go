@@ -681,6 +681,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_guardduty_detector": guardduty.DataSourceDetector(),
 
 			"aws_iam_account_alias":           iam.DataSourceAccountAlias(),
+			"aws_iam_attached_role_policies":  iam.DataSourceAttachedRolePolicies(),
 			"aws_iam_group":                   iam.DataSourceGroup(),
 			"aws_iam_instance_profile":        iam.DataSourceInstanceProfile(),
 			"aws_iam_instance_profiles":       iam.DataSourceInstanceProfiles(),
@@ -695,7 +696,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iam_user":                    iam.DataSourceUser(),
 			"aws_iam_user_ssh_key":            iam.DataSourceUserSSHKey(),
 			"aws_iam_users":                   iam.DataSourceUsers(),
-			"aws_iam_attached_role_policies":  iam.DataSourceAttachedRolePolicies(),
 
 			"aws_identitystore_group": identitystore.DataSourceGroup(),
 			"aws_identitystore_user":  identitystore.DataSourceUser(),
