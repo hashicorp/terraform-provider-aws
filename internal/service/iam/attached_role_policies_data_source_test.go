@@ -37,12 +37,12 @@ func TestAccIAMAttachedRolePoliciesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMAttachedRolePoliciesDataSource_withPathPrefixWithResults(t *testing.T) {
+func TestAccIAMAttachedRolePoliciesDataSource_withPathPrefixMatching(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 	dataSourceName := "data.aws_iam_attached_role_policies.test"
 
 	role := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := role
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyPath := "/test/"
 	pathPrefix := policyPath
 
@@ -66,12 +66,12 @@ func TestAccIAMAttachedRolePoliciesDataSource_withPathPrefixWithResults(t *testi
 	})
 }
 
-func TestAccIAMAttachedRolePoliciesDataSource_withPathPrefixWithoutResults(t *testing.T) {
+func TestAccIAMAttachedRolePoliciesDataSource_withPathPrefixNotMatching(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 	dataSourceName := "data.aws_iam_attached_role_policies.test"
 
 	role := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := role
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyPath := "/test/"
 	pathPrefix := "/different/"
 
