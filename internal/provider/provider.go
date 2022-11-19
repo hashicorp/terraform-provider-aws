@@ -695,6 +695,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iam_user":                    iam.DataSourceUser(),
 			"aws_iam_user_ssh_key":            iam.DataSourceUserSSHKey(),
 			"aws_iam_users":                   iam.DataSourceUsers(),
+			"aws_iam_attached_role_policies":  iam.DataSourceAttachedRolePolicies(),
 
 			"aws_identitystore_group": identitystore.DataSourceGroup(),
 			"aws_identitystore_user":  identitystore.DataSourceUser(),
