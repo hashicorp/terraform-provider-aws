@@ -81,7 +81,7 @@ func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *request.GroupName, *request.PolicyName))
-	return nil
+	return resourceGroupPolicyRead(d, meta)
 }
 
 func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
