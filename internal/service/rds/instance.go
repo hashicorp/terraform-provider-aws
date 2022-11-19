@@ -1620,6 +1620,19 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.Get("x_use_blue_green_update").(bool) {
 			conn := meta.(*conns.AWSClient).RDSClient()
 
+			var waiters []func(optFns ...tfresource.OptionsFunc)
+			defer func() {
+				if len(waiters) == 0 {
+					return
+				}
+
+				waiter, waiters := waiters[0], waiters[1:]
+				waiter()
+				for _, waiter := range waiters {
+					waiter(tfresource.WithDelay(0))
+				}
+			}()
+
 			createIn := &rds_sdkv2.CreateBlueGreenDeploymentInput{
 				BlueGreenDeploymentName: aws.String(d.Id()),
 				Source:                  aws.String(d.Get("arn").(string)),
@@ -1653,10 +1666,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return
 				}
 
-				_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate))
-				if err != nil {
-					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
-				}
+				waiters = append(waiters, func(optFns ...tfresource.OptionsFunc) {
+					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate), optFns...)
+					if err != nil {
+						diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+					}
+				})
 			}()
 
 			dep, err = waitBlueGreenDeploymentAvailable(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate))
@@ -1707,12 +1722,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Id(), err)
 			}
 
-			defer func() {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, arn.Identifier, d.Timeout(schema.TimeoutUpdate))
+			waiters = append(waiters, func(optFns ...tfresource.OptionsFunc) {
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, arn.Identifier, d.Timeout(schema.TimeoutUpdate), optFns...)
 				if err != nil {
-					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Id(), err)
 				}
-			}()
+			})
 
 			if diags.HasError() {
 				return
@@ -2276,7 +2291,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"SWITCHOVER_IN_PROGRESS"},
+		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
 		Timeout: timeout,
