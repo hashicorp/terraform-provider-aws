@@ -139,7 +139,7 @@ resource "aws_iam_policy" "test" {
 }
 
 resource "aws_iam_group_policy_attachment" "test" {
-  group       = aws_iam_group.test.name
+  group      = aws_iam_group.test.name
   policy_arn = aws_iam_policy.test.arn
 }
 
@@ -175,7 +175,7 @@ resource "aws_iam_policy" "test" {
 resource "aws_iam_group_policy_attachment" "test" {
   count = length(aws_iam_policy.test)
 
-  group       = aws_iam_group.test.name
+  group      = aws_iam_group.test.name
   policy_arn = aws_iam_policy.test[count.index].arn
 }
 
@@ -209,14 +209,14 @@ resource "aws_iam_policy" "test" {
 }
 
 resource "aws_iam_group_policy_attachment" "test" {
-  group       = aws_iam_group.test.name
+  group      = aws_iam_group.test.name
   policy_arn = aws_iam_policy.test.arn
 }
 
 data "aws_iam_group_policy_attachments" "test" {
   depends_on = [aws_iam_group_policy_attachment.test]
 
-  group        = aws_iam_group.test.name
+  group       = aws_iam_group.test.name
   path_prefix = "%s"
 }
 `, name, policyPath, pathPrefix)
