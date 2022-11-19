@@ -1,4 +1,9 @@
 ## 4.41.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_medialive_channel: Add `start_channel` attribute ([#27882](https://github.com/hashicorp/terraform-provider-aws/issues/27882))
+
 ## 4.40.0 (November 17, 2022)
 
 NOTES:

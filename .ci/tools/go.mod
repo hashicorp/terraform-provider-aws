@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.18
+go 1.19
 
 require (
 	github.com/bflad/tfproviderdocs v0.9.1

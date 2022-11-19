@@ -3,6 +3,7 @@ package medialive
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -655,6 +656,11 @@ func ResourceChannel() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 			},
+			"start_channel": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"vpc": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -757,6 +763,12 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
 	}
 
+	if d.Get("start_channel").(bool) {
+		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+		}
+	}
+
 	return resourceChannelRead(ctx, d, meta)
 }
 
@@ -827,7 +839,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MediaLiveClient
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("tags", "tags_all", "start_channel") {
 		in := &medialive.UpdateChannelInput{
 			ChannelId: aws.String(d.Id()),
 		}
@@ -868,7 +880,18 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.RoleArn = aws.String(d.Get("role_arn").(string))
 		}
 
-		log.Printf("[DEBUG] Updating MediaLive Channel (%s): %#v", d.Id(), in)
+		channel, err := FindChannelByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+		}
+
+		if channel.State == types.ChannelStateRunning {
+			if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
+				return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+			}
+		}
+
 		out, err := conn.UpdateChannel(ctx, in)
 		if err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
@@ -876,6 +899,12 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if _, err := waitChannelUpdated(ctx, conn, aws.ToString(out.Channel.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
+		}
+	}
+
+	if d.Get("start_channel").(bool) {
+		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
 		}
 	}
 
@@ -887,6 +916,29 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("start_channel") {
+		channel, err := FindChannelByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+		}
+
+		switch d.Get("start_channel").(bool) {
+		case true:
+			if channel.State == types.ChannelStateIdle {
+				if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
+					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+				}
+			}
+		default:
+			if channel.State == types.ChannelStateRunning {
+				if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
+					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+				}
+			}
+		}
+	}
+
 	return resourceChannelRead(ctx, d, meta)
 }
 
@@ -895,7 +947,19 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
-	_, err := conn.DeleteChannel(ctx, &medialive.DeleteChannelInput{
+	channel, err := FindChannelByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+	}
+
+	if channel.State == types.ChannelStateRunning {
+		if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+		}
+	}
+
+	_, err = conn.DeleteChannel(ctx, &medialive.DeleteChannelInput{
 		ChannelId: aws.String(d.Id()),
 	})
 
@@ -910,6 +974,42 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	if _, err := waitChannelDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionWaitingForDeletion, ResNameChannel, d.Id(), err)
+	}
+
+	return nil
+}
+
+func startChannel(ctx context.Context, conn *medialive.Client, timeout time.Duration, id string) error {
+	_, err := conn.StartChannel(ctx, &medialive.StartChannelInput{
+		ChannelId: aws.String(id),
+	})
+
+	if err != nil {
+		return fmt.Errorf("starting Medialive Channel (%s): %s", id, err)
+	}
+
+	_, err = waitChannelStarted(ctx, conn, id, timeout)
+
+	if err != nil {
+		return fmt.Errorf("waiting for Medialive Channel (%s) start: %s", id, err)
+	}
+
+	return nil
+}
+
+func stopChannel(ctx context.Context, conn *medialive.Client, timeout time.Duration, id string) error {
+	_, err := conn.StopChannel(ctx, &medialive.StopChannelInput{
+		ChannelId: aws.String(id),
+	})
+
+	if err != nil {
+		return fmt.Errorf("stopping Medialive Channel (%s): %s", id, err)
+	}
+
+	_, err = waitChannelStopped(ctx, conn, id, timeout)
+
+	if err != nil {
+		return fmt.Errorf("waiting for Medialive Channel (%s) stop: %s", id, err)
 	}
 
 	return nil
@@ -955,6 +1055,38 @@ func waitChannelDeleted(ctx context.Context, conn *medialive.Client, id string, 
 	stateConf := &resource.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateDeleting),
 		Target:  []string{},
+		Refresh: statusChannel(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*medialive.DescribeChannelOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitChannelStarted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: enum.Slice(types.ChannelStateStarting),
+		Target:  enum.Slice(types.ChannelStateRunning),
+		Refresh: statusChannel(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*medialive.DescribeChannelOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: enum.Slice(types.ChannelStateStopping),
+		Target:  enum.Slice(types.ChannelStateIdle),
 		Refresh: statusChannel(ctx, conn, id),
 		Timeout: timeout,
 	}

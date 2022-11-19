@@ -22,48 +22,48 @@ func TestBetweenValidator(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"not a String": {
-			val:         types.Bool{Value: true},
+			val:         types.BoolValue(true),
 			expectError: true,
 		},
 		"unknown String": {
-			val: types.String{Unknown: true},
+			val: types.StringUnknown(),
 			min: 1,
 			max: 3,
 		},
 		"null String": {
-			val: types.String{Null: true},
+			val: types.StringNull(),
 			min: 1,
 			max: 3,
 		},
 		"invalid String": {
-			val:         types.String{Value: "test-value"},
+			val:         types.StringValue("test-value"),
 			min:         1,
 			max:         3,
 			expectError: true,
 		},
 		"valid string": {
-			val: types.String{Value: "2"},
+			val: types.StringValue("2"),
 			min: 1,
 			max: 3,
 		},
 		"valid string min": {
-			val: types.String{Value: "1"},
+			val: types.StringValue("1"),
 			min: 1,
 			max: 3,
 		},
 		"valid string max": {
-			val: types.String{Value: "3"},
+			val: types.StringValue("3"),
 			min: 1,
 			max: 3,
 		},
 		"too small string": {
-			val:         types.String{Value: "-1"},
+			val:         types.StringValue("-1"),
 			min:         1,
 			max:         3,
 			expectError: true,
 		},
 		"too large string": {
-			val:         types.String{Value: "42"},
+			val:         types.StringValue("42"),
 			min:         1,
 			max:         3,
 			expectError: true,

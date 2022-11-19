@@ -22,6 +22,6 @@ func TagsAttributeComputedOnly() tfsdk.Attribute {
 }
 
 var (
-	Null    = types.Map{ElemType: types.StringType, Null: true}
-	Unknown = types.Map{ElemType: types.StringType, Unknown: true}
+	Null    = types.MapNull(types.StringType)
+	Unknown = types.MapUnknown(types.StringType)
 )

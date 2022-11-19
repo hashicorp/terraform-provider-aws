@@ -34,19 +34,19 @@ func TestNormalizeIPProtocol(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"planned name, current number (equivalent)": {
-			plannedValue:  types.String{Value: "icmp"},
-			currentValue:  types.String{Value: "1"},
-			expectedValue: types.String{Value: "1"},
+			plannedValue:  types.StringValue("icmp"),
+			currentValue:  types.StringValue("1"),
+			expectedValue: types.StringValue("1"),
 		},
 		"planned number, current name (equivalent)": {
-			plannedValue:  types.String{Value: "1"},
-			currentValue:  types.String{Value: "icmp"},
-			expectedValue: types.String{Value: "icmp"},
+			plannedValue:  types.StringValue("1"),
+			currentValue:  types.StringValue("icmp"),
+			expectedValue: types.StringValue("icmp"),
 		},
 		"planned name, current number (not equivalent)": {
-			plannedValue:  types.String{Value: "icmp"},
-			currentValue:  types.String{Value: "2"},
-			expectedValue: types.String{Value: "icmp"},
+			plannedValue:  types.StringValue("icmp"),
+			currentValue:  types.StringValue("2"),
+			expectedValue: types.StringValue("icmp"),
 		},
 	}
 
