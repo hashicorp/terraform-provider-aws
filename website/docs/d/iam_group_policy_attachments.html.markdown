@@ -35,12 +35,12 @@ resource "aws_iam_policy" "example" {
 }
 
 resource "aws_iam_group_policy_attachment" "example" {
-  group       = aws_iam_group.example.name
+  group      = aws_iam_group.example.name
   policy_arn = aws_iam_policy.example.arn
 }
 
 data "aws_iam_group_policy_attachments" "example" {
-  group        = aws_iam_group.example.name
+  group       = aws_iam_group.example.name
   path_prefix = "/"
 }
 ```
