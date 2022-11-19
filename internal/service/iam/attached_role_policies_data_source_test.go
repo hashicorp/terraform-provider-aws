@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAttachedRolePoliciesDataSource_basic(t *testing.T) {
+func TestAccIAMAttachedRolePoliciesDataSource_basic(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 	dataSourceName := "data.aws_iam_attached_role_policies.test"
 
@@ -37,7 +37,7 @@ func TestAccAttachedRolePoliciesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAttachedRolePoliciesDataSource_withPathPrefixWithResults(t *testing.T) {
+func TestAccIAMAttachedRolePoliciesDataSource_withPathPrefixWithResults(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 	dataSourceName := "data.aws_iam_attached_role_policies.test"
 
