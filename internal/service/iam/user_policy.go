@@ -86,7 +86,7 @@ func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *request.UserName, *request.PolicyName))
-	return nil
+	return resourceUserPolicyRead(d, meta)
 }
 
 func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
