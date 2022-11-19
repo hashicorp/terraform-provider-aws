@@ -94,7 +94,7 @@ func TestAccIAMUserPolicyAttachmentsDataSource_withPathPrefixMatching(t *testing
 	})
 }
 
-func TestAccUserPolicyAttachmentsDataSource_withPathPrefixNotMatching(t *testing.T) {
+func TestAccIAMUserPolicyAttachmentsDataSource_withPathPrefixNotMatching(t *testing.T) {
 	dataSourceName := "data.aws_iam_user_policy_attachments.test"
 
 	user := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
