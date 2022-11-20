@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_elasticache_cluster: Add `outpost_arn` attribute and `cache_nodes.0.outpost_arn` attribute to `cache_nodes` configuration block
+```
+
+```release-note:enhancement
+resource/aws_elasticache_cluster: Add `outpost_mode` and `preferred_outpost_arn` attributes
+```

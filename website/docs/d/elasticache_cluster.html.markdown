@@ -51,6 +51,7 @@ SNS topic that ElastiCache notifications get sent to.
 accept connections.
 * `configuration_endpoint` - (Memcached only) Configuration endpoint to allow host discovery.
 * `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
-* `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
+* `outpost_arn` - The outpost ARN in which the cache cluster was created if created in outpost.
+* `cache_nodes` - List of node objects including `id`, `address`, `port`, `availability_zone` and `outpost_arn`.
    Referenceable e.g., as `${data.aws_elasticache_cluster.bar.cache_nodes.0.address}`
 * `tags` - Tags assigned to the resource

@@ -66,3 +66,12 @@ func CustomizeDiffValidateReplicationGroupAutomaticFailover(_ context.Context, d
 	}
 	return nil
 }
+
+// CustomizeDiffOutpostID causes re-creation when `preferred_outpost_arn` is changed
+func CustomizeDiffOutpostID(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() == "" || !diff.HasChange("preferred_outpost_arn") {
+		return nil
+	}
+
+	return diff.ForceNew("preferred_outpost_arn")
+}

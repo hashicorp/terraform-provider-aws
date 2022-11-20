@@ -96,6 +96,10 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"outpost_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -195,6 +199,13 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"outpost_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{"preferred_outpost_arn"},
+				ValidateFunc: validation.StringInSlice(elasticache.OutpostMode_Values(), false),
+			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -217,6 +228,13 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"preferred_outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -309,6 +327,7 @@ func ResourceCluster() *schema.Resource {
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
+			CustomizeDiffOutpostID,
 			verify.SetTagsDiff,
 		),
 	}
@@ -337,6 +356,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("cluster_id"); ok {
 		req.CacheClusterId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("outpost_mode"); ok {
+		req.OutpostMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		req.PreferredOutpostArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("node_type"); ok {
@@ -470,6 +497,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := setFromCacheCluster(d, c); err != nil {
 		return err
+	}
+
+	if c.PreferredOutpostArn != nil {
+		d.Set("outpost_arn", c.PreferredOutpostArn)
 	}
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
@@ -747,6 +778,7 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			"address":           aws.StringValue(node.Endpoint.Address),
 			"port":              aws.Int64Value(node.Endpoint.Port),
 			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
+			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
 		})
 	}
 

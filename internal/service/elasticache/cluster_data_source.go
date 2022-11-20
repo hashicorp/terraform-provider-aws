@@ -27,6 +27,11 @@ func DataSourceCluster() *schema.Resource {
 				},
 			},
 
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -163,6 +168,10 @@ func DataSourceCluster() *schema.Resource {
 							Computed: true,
 						},
 						"availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"outpost_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
