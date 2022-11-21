@@ -46,7 +46,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	identifier := d.Get("identifier").(string)
 	typeName := d.Get("type_name").(string)
-	resourceDescription, err := FindResourceByID(ctx, conn,
+	resourceDescription, err := FindResource(ctx, conn,
 		identifier,
 		typeName,
 		d.Get("type_version_id").(string),
