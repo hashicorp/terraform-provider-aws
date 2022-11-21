@@ -1,11 +1,12 @@
 package logs
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,10 +17,10 @@ import (
 
 func ResourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDestinationPolicyPut,
-		Read:   resourceDestinationPolicyRead,
-		Update: resourceDestinationPolicyPut,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceDestinationPolicyPut,
+		ReadWithoutTimeout:   resourceDestinationPolicyRead,
+		UpdateWithoutTimeout: resourceDestinationPolicyPut,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -49,7 +50,7 @@ func ResourceDestinationPolicy() *schema.Resource {
 	}
 }
 
-func resourceDestinationPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	name := d.Get("destination_name").(string)
@@ -65,20 +66,20 @@ func resourceDestinationPolicyPut(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.PutDestinationPolicy(input)
 
 	if err != nil {
-		return fmt.Errorf("putting CloudWatch Logs Destination Policy (%s): %w", name, err)
+		return diag.Errorf("putting CloudWatch Logs Destination Policy (%s): %s", name, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(name)
 	}
 
-	return resourceDestinationPolicyRead(d, meta)
+	return resourceDestinationPolicyRead(ctx, d, meta)
 }
 
-func resourceDestinationPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	destination, err := FindDestinationByName(conn, d.Id())
+	destination, err := FindDestinationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Destination Policy (%s) not found, removing from state", d.Id())
@@ -87,7 +88,7 @@ func resourceDestinationPolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading CloudWatch Logs Destination Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("reading CloudWatch Logs Destination Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_policy", destination.AccessPolicy)

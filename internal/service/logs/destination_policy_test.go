@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -62,7 +63,7 @@ func testAccCheckDestinationPolicyExists(n string, v *string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		output, err := tflogs.FindDestinationByName(conn, rs.Primary.ID)
+		output, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
