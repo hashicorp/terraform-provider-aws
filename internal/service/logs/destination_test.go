@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -76,7 +77,7 @@ func testAccCheckDestinationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudwatch_log_destination" {
 			continue
 		}
-		_, err := tflogs.FindDestinationByName(conn, rs.Primary.ID)
+		_, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -105,7 +106,7 @@ func testAccCheckDestinationExists(n string, v *cloudwatchlogs.Destination) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		output, err := tflogs.FindDestinationByName(conn, rs.Primary.ID)
+		output, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
