@@ -697,9 +697,11 @@ resource "aws_cloudcontrolapi_resource" "test" {
 
 func testAccResourceConfig_lambdaFunctionRole(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name                = %[1]q
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
