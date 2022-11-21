@@ -207,6 +207,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.input", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", "185"),
@@ -928,6 +929,68 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 	})
 }
 
+func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	scheduleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_scheduler_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_targetEventBridgeParameters(scheduleName, eventBusName, "test-1", "tf.test.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.0.detail_type", "test-1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.0.source", "tf.test.1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetEventBridgeParameters(scheduleName, eventBusName, "test-2", "tf.test.2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.0.detail_type", "test-2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.0.source", "tf.test.2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_basic(scheduleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1221,6 +1284,7 @@ func testAccCheckScheduleExists(name string, schedule *scheduler.GetScheduleOutp
 }
 
 const testAccScheduleConfig_base = `
+data "aws_caller_identity" "main" {}
 data "aws_partition" "main" {}
 
 resource "aws_iam_role" "test" {
@@ -1231,6 +1295,11 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Principal = {
         Service = "scheduler.${data.aws_partition.main.dns_suffix}"
+      }
+      Condition = {
+        StringEquals = {
+          "aws:SourceAccount": data.aws_caller_identity.main.account_id
+        }
       }
     }
   })
@@ -1599,6 +1668,37 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name, index),
+	)
+}
+
+func testAccScheduleConfig_targetEventBridgeParameters(scheduleName, eventBusName, detailType, source string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[2]q
+}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_cloudwatch_event_bus.test.arn
+    role_arn = aws_iam_role.test.arn
+
+    eventbridge_parameters {
+      detail_type = %[3]q
+      source      = %[4]q
+    }
+  }
+}
+`, scheduleName, eventBusName, detailType, source),
 	)
 }
 

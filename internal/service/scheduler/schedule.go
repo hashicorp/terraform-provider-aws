@@ -171,6 +171,25 @@ func ResourceSchedule() *schema.Resource {
 								},
 							},
 						},
+						"eventbridge_parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"detail_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+									},
+									"source": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
+									},
+								},
+							},
+						},
 						"input": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -284,7 +303,9 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Target = expandTarget(v[0].(map[string]interface{}))
 	}
 
-	out, err := conn.CreateSchedule(ctx, in)
+	out, err := retryWhenIamNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
+		return conn.CreateSchedule(ctx, in)
+	})
 
 	if err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, err)
@@ -406,7 +427,11 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateSchedule(ctx, in)
+
+	_, err := retryWhenIamNotPropagated(ctx, func() (*scheduler.UpdateScheduleOutput, error) {
+		return conn.UpdateSchedule(ctx, in)
+	})
+
 	if err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionUpdating, ResNameSchedule, d.Id(), err)
 	}

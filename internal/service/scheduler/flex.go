@@ -33,6 +33,42 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 	return m
 }
 
+func expandEventBridgeParameters(tfMap map[string]interface{}) *types.EventBridgeParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.EventBridgeParameters{}
+
+	if v, ok := tfMap["detail_type"]; ok && v.(string) != "" {
+		a.DetailType = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["source"]; ok && v.(string) != "" {
+		a.Source = aws.String(v.(string))
+	}
+
+	return a
+}
+
+func flattenEventBridgeParameters(apiObject *types.EventBridgeParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := aws.ToString(apiObject.DetailType); v != "" {
+		m["detail_type"] = v
+	}
+
+	if v := aws.ToString(apiObject.Source); v != "" {
+		m["source"] = v
+	}
+
+	return m
+}
+
 func expandFlexibleTimeWindow(tfMap map[string]interface{}) *types.FlexibleTimeWindow {
 	if tfMap == nil {
 		return nil
@@ -148,6 +184,10 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.DeadLetterConfig = expandDeadLetterConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["eventbridge_parameters"]; ok && len(v.([]interface{})) > 0 {
+		a.EventBridgeParameters = expandEventBridgeParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["input"].(string); ok && v != "" {
 		a.Input = aws.String(v)
 	}
@@ -180,6 +220,10 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	if v := apiObject.DeadLetterConfig; v != nil {
 		m["dead_letter_config"] = []interface{}{flattenDeadLetterConfig(v)}
+	}
+
+	if v := apiObject.EventBridgeParameters; v != nil {
+		m["eventbridge_parameters"] = []interface{}{flattenEventBridgeParameters(v)}
 	}
 
 	if v := apiObject.Input; v != nil && len(*v) > 0 {
