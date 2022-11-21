@@ -333,7 +333,9 @@ func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 	var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
 
 	if !checkIfDefinitionsUnchanged(featureDefinitionsOld, featureDefinitionsNew) {
-		return fmt.Errorf("feature definition")
+		return fmt.Errorf("existing feature definitions should remain unchanged. Only additions of nes feature"+
+			"definitions allowed. Expected:\n%v,\ngot:\n%v",
+			featureDefinitionsOld, featureDefinitionsNew)
 	}
 
 	if d.HasChange("tags_all") {
