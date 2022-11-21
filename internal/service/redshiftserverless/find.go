@@ -133,7 +133,7 @@ func FindSnapshotByName(conn *redshiftserverless.RedshiftServerless, name string
 	return output.Snapshot, nil
 }
 
-func FindResourcePolicyByArn(conn *redshiftserverless.RedshiftServerless, arn string) (*redshiftserverless.ResourcePolicy, error) {
+func FindResourcePolicyByARN(conn *redshiftserverless.RedshiftServerless, arn string) (*redshiftserverless.ResourcePolicy, error) {
 	input := &redshiftserverless.GetResourcePolicyInput{
 		ResourceArn: aws.String(arn),
 	}

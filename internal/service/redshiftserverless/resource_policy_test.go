@@ -75,7 +75,7 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 		if rs.Type != "aws_redshiftserverless_resource_policy" {
 			continue
 		}
-		_, err := tfredshiftserverless.FindResourcePolicyByArn(conn, rs.Primary.ID)
+		_, err := tfredshiftserverless.FindResourcePolicyByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -104,7 +104,7 @@ func testAccCheckResourcePolicyExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
 
-		_, err := tfredshiftserverless.FindResourcePolicyByArn(conn, rs.Primary.ID)
+		_, err := tfredshiftserverless.FindResourcePolicyByARN(conn, rs.Primary.ID)
 
 		return err
 	}

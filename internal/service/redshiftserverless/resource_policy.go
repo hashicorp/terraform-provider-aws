@@ -78,7 +78,7 @@ func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
 
-	out, err := FindResourcePolicyByArn(conn, d.Id())
+	out, err := FindResourcePolicyByARN(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
