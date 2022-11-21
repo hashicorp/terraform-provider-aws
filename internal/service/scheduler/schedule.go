@@ -195,6 +195,20 @@ func ResourceSchedule() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, math.MaxInt)),
 						},
+						"kinesis_parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"partition_key": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
+									},
+								},
+							},
+						},
 						"retry_policy": {
 							Type:     schema.TypeList,
 							Optional: true,

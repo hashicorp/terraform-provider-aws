@@ -105,6 +105,34 @@ func flattenFlexibleTimeWindow(apiObject *types.FlexibleTimeWindow) map[string]i
 	return m
 }
 
+func expandKinesisParameters(tfMap map[string]interface{}) *types.KinesisParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.KinesisParameters{}
+
+	if v, ok := tfMap["partition_key"]; ok && v.(string) != "" {
+		a.PartitionKey = aws.String(v.(string))
+	}
+
+	return a
+}
+
+func flattenKinesisParameters(apiObject *types.KinesisParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := aws.ToString(apiObject.PartitionKey); v != "" {
+		m["partition_key"] = v
+	}
+
+	return m
+}
+
 func expandRetryPolicy(tfMap map[string]interface{}) *types.RetryPolicy {
 	if tfMap == nil {
 		return nil
@@ -192,6 +220,10 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.Input = aws.String(v)
 	}
 
+	if v, ok := tfMap["kinesis_parameters"]; ok && len(v.([]interface{})) > 0 {
+		a.KinesisParameters = expandKinesisParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		a.RoleArn = aws.String(v)
 	}
@@ -228,6 +260,10 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	if v := apiObject.Input; v != nil && len(*v) > 0 {
 		m["input"] = aws.ToString(v)
+	}
+
+	if v := apiObject.KinesisParameters; v != nil {
+		m["kinesis_parameters"] = []interface{}{flattenKinesisParameters(v)}
 	}
 
 	if v := apiObject.RoleArn; v != nil && len(*v) > 0 {
