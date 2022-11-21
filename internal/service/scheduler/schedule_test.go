@@ -213,6 +213,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", "185"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
 				),
 			},
@@ -1225,6 +1226,101 @@ func TestAccSchedulerSchedule_targetRoleArn(t *testing.T) {
 	})
 }
 
+func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_scheduler_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
+						map[string]string{
+							"name":  "key1",
+							"value": "value1",
+						}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
+						map[string]string{
+							"name":  "key1",
+							"value": "value1updated",
+						}),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
+						map[string]string{
+							"name":  "key2",
+							"value": "value2",
+						}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
+						map[string]string{
+							"name":  "key2",
+							"value": "value2",
+						}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSchedulerSchedule_targetSqsParameters(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1890,6 +1986,73 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name, resourceName),
+	)
+}
+
+func testAccScheduleConfig_targetSageMakerPipelineParameters1(name, name1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+data "aws_region" "main" {}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = "arn:aws:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    role_arn = aws_iam_role.test.arn
+
+    sagemaker_pipeline_parameters {
+      pipeline_parameter {
+        name  = %[2]q
+        value = %[3]q
+      }
+    }
+  }
+}
+`, name, name1, value1),
+	)
+}
+
+func testAccScheduleConfig_targetSageMakerPipelineParameters2(name, name1, value1, name2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+data "aws_region" "main" {}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = "arn:aws:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    role_arn = aws_iam_role.test.arn
+
+    sagemaker_pipeline_parameters {
+      pipeline_parameter {
+        name  = %[2]q
+        value = %[3]q
+      }
+
+      pipeline_parameter {
+        name  = %[4]q
+        value = %[5]q
+      }
+    }
+  }
+}
+`, name, name1, value1, name2, value2),
 	)
 }
 

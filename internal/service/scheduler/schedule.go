@@ -244,6 +244,35 @@ func ResourceSchedule() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 						},
+						"sagemaker_pipeline_parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"pipeline_parameter": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 200,
+										Set:      sagemakerPipelineParameterHash,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
+												},
+												"value": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"sqs_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -506,4 +535,9 @@ func ResourceScheduleParseID(id string) (groupName, scheduleName string, err err
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func sagemakerPipelineParameterHash(v interface{}) int {
+	m := v.(map[string]interface{})
+	return create.StringHashcode(fmt.Sprintf("%s-%s", m["name"].(string), m["value"].(string)))
 }

@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
@@ -183,6 +184,74 @@ func expandSqsParameters(tfMap map[string]interface{}) *types.SqsParameters {
 	return a
 }
 
+func expandSageMakerPipelineParameter(tfMap map[string]interface{}) types.SageMakerPipelineParameter {
+	if tfMap == nil {
+		return types.SageMakerPipelineParameter{}
+	}
+
+	a := types.SageMakerPipelineParameter{}
+
+	if v, ok := tfMap["name"]; ok && v.(string) != "" {
+		a.Name = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["value"]; ok && v.(string) != "" {
+		a.Value = aws.String(v.(string))
+	}
+
+	return a
+}
+
+func flattenSageMakerPipelineParameter(apiObject types.SageMakerPipelineParameter) map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if v := aws.ToString(apiObject.Name); v != "" {
+		m["name"] = v
+	}
+
+	if v := aws.ToString(apiObject.Value); v != "" {
+		m["value"] = v
+	}
+
+	return m
+}
+
+func expandSageMakerPipelineParameters(tfMap map[string]interface{}) *types.SageMakerPipelineParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SageMakerPipelineParameters{}
+
+	if v, ok := tfMap["pipeline_parameter"].(*schema.Set); ok && v.Len() > 0 {
+		for _, p := range v.List() {
+			a.PipelineParameterList = append(a.PipelineParameterList, expandSageMakerPipelineParameter(p.(map[string]interface{})))
+		}
+	}
+
+	return a
+}
+
+func flattenSageMakerPipelineParameters(apiObject *types.SageMakerPipelineParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.PipelineParameterList; v != nil {
+		var l []interface{}
+
+		for _, p := range v {
+			l = append(l, flattenSageMakerPipelineParameter(p))
+		}
+
+		m["pipeline_parameter"] = schema.NewSet(sagemakerPipelineParameterHash, l)
+	}
+
+	return m
+}
+
 func flattenSqsParameters(apiObject *types.SqsParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -232,6 +301,10 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.RetryPolicy = expandRetryPolicy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["sagemaker_pipeline_parameters"]; ok && len(v.([]interface{})) > 0 {
+		a.SageMakerPipelineParameters = expandSageMakerPipelineParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["sqs_parameters"]; ok && len(v.([]interface{})) > 0 {
 		a.SqsParameters = expandSqsParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -272,6 +345,10 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	if v := apiObject.RetryPolicy; v != nil {
 		m["retry_policy"] = []interface{}{flattenRetryPolicy(v)}
+	}
+
+	if v := apiObject.SageMakerPipelineParameters; v != nil {
+		m["sagemaker_pipeline_parameters"] = []interface{}{flattenSageMakerPipelineParameters(v)}
 	}
 
 	if v := apiObject.SqsParameters; v != nil {
