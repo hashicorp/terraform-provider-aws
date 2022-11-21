@@ -10,27 +10,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDestinationPolicyPut,
-		Update: resourceDestinationPolicyPut,
 		Read:   resourceDestinationPolicyRead,
-		Delete: resourceDestinationPolicyDelete,
+		Update: resourceDestinationPolicyPut,
+		Delete: schema.Noop,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"destination_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"access_policy": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -41,7 +36,11 @@ func ResourceDestinationPolicy() *schema.Resource {
 					return json
 				},
 			},
-
+			"destination_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"force_update": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -53,46 +52,46 @@ func ResourceDestinationPolicy() *schema.Resource {
 func resourceDestinationPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	destination_name := d.Get("destination_name").(string)
-
-	params := &cloudwatchlogs.PutDestinationPolicyInput{
-		DestinationName: aws.String(destination_name),
+	name := d.Get("destination_name").(string)
+	input := &cloudwatchlogs.PutDestinationPolicyInput{
 		AccessPolicy:    aws.String(d.Get("access_policy").(string)),
+		DestinationName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("force_update"); ok {
-		params.ForceUpdate = aws.Bool(v.(bool))
+		input.ForceUpdate = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.PutDestinationPolicy(params)
+	_, err := conn.PutDestinationPolicy(input)
 
 	if err != nil {
-		return fmt.Errorf("Error creating CloudWatch Log Destination Policy with destination_name %s: %#v", destination_name, err)
+		return fmt.Errorf("putting CloudWatch Logs Destination Policy (%s): %w", name, err)
 	}
 
-	d.SetId(destination_name)
+	if d.IsNewResource() {
+		d.SetId(name)
+	}
+
 	return resourceDestinationPolicyRead(d, meta)
 }
 
 func resourceDestinationPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LogsConn
-	destination, exists, err := LookupDestination(conn, d.Id(), nil)
-	if err != nil {
-		return err
-	}
 
-	if !exists || destination.AccessPolicy == nil {
-		log.Printf("[WARN] CloudWatch Log Destination Policy (%s) not found, removing from state", d.Id())
+	destination, err := FindDestinationByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Logs Destination Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading CloudWatch Logs Destination Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("access_policy", destination.AccessPolicy)
 	d.Set("destination_name", destination.DestinationName)
 
-	return nil
-}
-
-func resourceDestinationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
