@@ -140,7 +140,7 @@ func FindResourcePolicyByArn(conn *redshiftserverless.RedshiftServerless, arn st
 
 	output, err := conn.GetResourcePolicy(input)
 
-	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeValidationException, "does not exist") {
+	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeResourceNotFoundException, "does not exist") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

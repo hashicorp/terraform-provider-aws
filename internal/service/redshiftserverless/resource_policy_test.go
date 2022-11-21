@@ -19,20 +19,19 @@ func TestAccRedshiftServerlessResourcePolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_workgroup.test", "arn"),
-					// resource.TestCheckResourceAttr(resourceName, "amount", "60"),
-					// resource.TestCheckResourceAttr(resourceName, "usage_type", "serverless-compute"),
-					// resource.TestCheckResourceAttr(resourceName, "breach_action", "log"),
-					// resource.TestCheckResourceAttr(resourceName, "period", "monthly"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_snapshot.test", "arn"),
 				),
 			},
 			{
@@ -40,14 +39,6 @@ func TestAccRedshiftServerlessResourcePolicy_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// {
-			// 	Config: testAccResourcePolicyConfig_basic(rName, 120),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckResourcePolicyExists(resourceName),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_workgroup.test", "arn"),
-			// 		resource.TestCheckResourceAttr(resourceName, "amount", "120"),
-			// 	),
-			// },
 		},
 	})
 }
@@ -57,9 +48,12 @@ func TestAccRedshiftServerlessResourcePolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,28 +111,41 @@ func testAccCheckResourcePolicyExists(name string) resource.TestCheckFunc {
 }
 
 func testAccResourcePolicyConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "test" {
+  provider = "awsalternate"
+}
+
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 }
 
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+}
+
+resource "aws_redshiftserverless_snapshot" "test" {
+  namespace_name = aws_redshiftserverless_workgroup.test.namespace_name
+  snapshot_name  = %[1]q
+}
+
 resource "aws_redshiftserverless_resource_policy" "test" {
-  resource_arn = aws_redshiftserverless_namespace.test.arn
+  resource_arn = aws_redshiftserverless_snapshot.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
-    Id      = %[1]q
     Statement = [{
-      Sid    = %[1]q
       Effect = "Allow"
       Principal = {
-        AWS = ["*"]
+        AWS = [data.aws_caller_identity.test.account_id]
       }
       Action = [
         "redshift-serverless:RestoreFromSnapshot",
       ]
-      Resource = [aws_redshiftserverless_namespace.test.arn]
+	  Sid = ""
     }]
   })
 }
-`, rName)
+`, rName))
 }

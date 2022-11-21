@@ -1,6 +1,7 @@
 package redshiftserverless
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -52,9 +54,14 @@ func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 
 	arn := d.Get("resource_arn").(string)
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	input := redshiftserverless.PutResourcePolicyInput{
 		ResourceArn: aws.String(arn),
-		Policy:      aws.String(d.Get("policy").(string)),
+		Policy:      aws.String(policy),
 	}
 
 	out, err := conn.PutResourcePolicy(&input)
@@ -83,7 +90,40 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Set("resource_arn", out.ResourceArn)
-	d.Set("policy", out.Policy)
+
+	doc := resourcePolicyDoc{}
+	log.Printf("policy is %s:", aws.StringValue(out.Policy))
+
+	if err := json.Unmarshal([]byte(aws.StringValue(out.Policy)), &doc); err != nil {
+		return fmt.Errorf("error unmarshaling policy: %w", err)
+	}
+
+	doc.Statement.Resources = nil
+
+	policyDoc := tfiam.IAMPolicyDoc{}
+
+	policyDoc.Id = doc.Id
+	policyDoc.Version = doc.Version
+	policyDoc.Statements = []*tfiam.IAMPolicyStatement{doc.Statement}
+
+	formattedPolicy, err := json.Marshal(policyDoc)
+	if err != nil {
+		return fmt.Errorf("error marshling policy: %w", err)
+	}
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), string(formattedPolicy))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }
@@ -105,4 +145,10 @@ func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
+}
+
+type resourcePolicyDoc struct {
+	Version   string                    `json:",omitempty"`
+	Id        string                    `json:",omitempty"`
+	Statement *tfiam.IAMPolicyStatement `json:"Statement,omitempty"`
 }
