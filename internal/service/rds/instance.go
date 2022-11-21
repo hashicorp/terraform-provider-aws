@@ -1682,13 +1682,35 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			details := dep.SwitchoverDetails
 			// TODO: check len()
 			detail := details[0]
-			targetARN := aws.StringValue(detail.TargetMember)
-			_, err = waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, targetARN, d.Timeout(schema.TimeoutUpdate))
+			targetARN, err := parseDBInstanceARN(aws.StringValue(detail.TargetMember))
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
+			}
+			_, err = waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
 
-			// Do stuff
+			modifyInput := &rds_sdkv2.ModifyDBInstanceInput{
+				ApplyImmediately:     true,
+				DBInstanceIdentifier: aws.String(targetARN.Identifier),
+			}
+
+			needsModify := dbInstancePopulateModify(modifyInput, d)
+
+			if needsModify {
+				log.Printf("[DEBUG] Updating RDS DB Instance (%s): Updating Green environment", d.Id())
+
+				_, err := conn.ModifyDBInstance(ctx, modifyInput)
+				if err != nil {
+					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): updating Green environment: %s", d.Id(), err)
+				}
+
+				_, err = waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): updating Green environment: waiting for completion: %s", d.Id(), err)
+				}
+			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Id())
 
@@ -1970,6 +1992,194 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
+}
+
+func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.ResourceData) bool {
+	needsModify := false
+
+	if d.HasChanges("allocated_storage", "iops") {
+		needsModify = true
+		input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+	}
+
+	if d.HasChange("auto_minor_version_upgrade") {
+		needsModify = true
+		input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+	}
+
+	if d.HasChange("backup_retention_period") {
+		needsModify = true
+		input.BackupRetentionPeriod = aws.Int32(int32(d.Get("backup_retention_period").(int)))
+	}
+
+	if d.HasChange("backup_window") {
+		needsModify = true
+		input.PreferredBackupWindow = aws.String(d.Get("backup_window").(string))
+	}
+
+	if d.HasChange("copy_tags_to_snapshot") {
+		needsModify = true
+		input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+	}
+
+	if d.HasChange("ca_cert_identifier") {
+		needsModify = true
+		input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+	}
+
+	if d.HasChange("customer_owned_ip_enabled") {
+		needsModify = true
+		input.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
+	}
+
+	if d.HasChange("db_subnet_group_name") {
+		needsModify = true
+		input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
+	}
+
+	if d.HasChange("deletion_protection") {
+		needsModify = true
+		input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+	}
+
+	if d.HasChanges("domain", "domain_iam_role_name") {
+		needsModify = true
+		input.Domain = aws.String(d.Get("domain").(string))
+		input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
+	}
+
+	if d.HasChange("enabled_cloudwatch_logs_exports") {
+		needsModify = true
+		oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
+
+		enable := n.Difference(o)
+		disable := o.Difference(n)
+
+		input.CloudwatchLogsExportConfiguration = &types.CloudwatchLogsExportConfiguration{
+			EnableLogTypes:  flex.ExpandStringValueSet(enable),
+			DisableLogTypes: flex.ExpandStringValueSet(disable),
+		}
+	}
+
+	if d.HasChange("iam_database_authentication_enabled") {
+		needsModify = true
+		input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+	}
+
+	if d.HasChange("instance_class") {
+		needsModify = true
+		input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+	}
+
+	if d.HasChange("license_model") {
+		needsModify = true
+		input.LicenseModel = aws.String(d.Get("license_model").(string))
+	}
+
+	if d.HasChange("maintenance_window") {
+		needsModify = true
+		input.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
+	}
+
+	if d.HasChange("max_allocated_storage") {
+		needsModify = true
+		v := d.Get("max_allocated_storage").(int)
+
+		// The API expects the max allocated storage value to be set to the allocated storage
+		// value when disabling autoscaling. This check ensures that value is set correctly
+		// if the update to the Terraform configuration was removing the argument completely.
+		if v == 0 {
+			v = d.Get("allocated_storage").(int)
+		}
+
+		input.MaxAllocatedStorage = aws.Int32(int32(v))
+	}
+
+	if d.HasChange("monitoring_interval") {
+		needsModify = true
+		input.MonitoringInterval = aws.Int32(int32(d.Get("monitoring_interval").(int)))
+	}
+
+	if d.HasChange("monitoring_role_arn") {
+		needsModify = true
+		input.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
+	}
+
+	if d.HasChange("multi_az") {
+		needsModify = true
+		input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+	}
+
+	if d.HasChange("network_type") {
+		needsModify = true
+		input.NetworkType = aws.String(d.Get("network_type").(string))
+	}
+
+	if d.HasChange("option_group_name") {
+		needsModify = true
+		input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
+	}
+
+	if d.HasChange("password") {
+		needsModify = true
+		input.MasterUserPassword = aws.String(d.Get("password").(string))
+	}
+
+	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
+		needsModify = true
+		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(v.(int)))
+		}
+	}
+
+	if d.HasChange("port") {
+		needsModify = true
+		input.DBPortNumber = aws.Int32(int32(d.Get("port").(int)))
+	}
+
+	if d.HasChange("publicly_accessible") {
+		needsModify = true
+		input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+	}
+
+	if d.HasChange("replica_mode") {
+		needsModify = true
+		input.ReplicaMode = d.Get("replica_mode").(types.ReplicaMode)
+	}
+
+	if d.HasChange("security_group_names") {
+		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
+			needsModify = true
+			input.DBSecurityGroups = flex.ExpandStringValueSet(v)
+		}
+	}
+
+	if d.HasChange("storage_type") {
+		needsModify = true
+		input.StorageType = aws.String(d.Get("storage_type").(string))
+
+		if aws.StringValue(input.StorageType) == storageTypeIO1 {
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
+	}
+
+	if d.HasChange("vpc_security_group_ids") {
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+			needsModify = true
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
+		}
+	}
+
+	return needsModify
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {

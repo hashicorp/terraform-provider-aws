@@ -4382,6 +4382,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
+					"latest_restorable_time", // This causes intermittent failures when the value increments
 					"x_use_blue_green_update",
 				},
 			},
@@ -4420,6 +4421,55 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"x_use_blue_green_update",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_updateInstanceClass(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.updated", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
 				),
 			},
 			{
@@ -9245,4 +9295,36 @@ resource "aws_db_instance" "test" {
   x_use_blue_green_update = true
 }
 `, rName, tagKey1, tagValue1))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_updateInstanceClass(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.updated.engine
+  engine_version          = data.aws_rds_orderable_db_instance.updated.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.updated.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+
+  x_use_blue_green_update = true
+}
+
+data "aws_rds_orderable_db_instance" "updated" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = "general-public-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = ["db.t4g.micro", "db.t4g.small"]
+}
+
+`, rName))
 }
