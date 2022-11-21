@@ -24,10 +24,10 @@ import (
 
 func ResourceResource() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourceCreate,
-		DeleteContext: resourceResourceDelete,
-		ReadContext:   resourceResourceRead,
-		UpdateContext: resourceResourceUpdate,
+		CreateWithoutTimeout: resourceResourceCreate,
+		DeleteWithoutTimeout: resourceResourceDelete,
+		ReadWithoutTimeout:   resourceResourceRead,
+		UpdateWithoutTimeout: resourceResourceUpdate,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Hour),
@@ -97,23 +97,19 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateResourceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Cloud Control API Resource (%s): %w", typeName, err))
+		return diag.Errorf("creating Cloud Control API (%s) Resource: %w", typeName, err)
 	}
 
-	if output == nil || output.ProgressEvent == nil {
-		return diag.FromErr(fmt.Errorf("error creating Cloud Control API Resource (%s): empty result", typeName))
-	}
-
-	// Always try to capture the identifier before returning errors
+	// Always try to capture the identifier before returning errors.
 	d.SetId(aws.StringValue(output.ProgressEvent.Identifier))
 
 	output.ProgressEvent, err = waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) create: %w", d.Id(), err))
+		return diag.Errorf("waiting for Cloud Control API (%s) Resource (%s) create: %s", typeName, d.Id(), err)
 	}
 
-	// Some resources do not set the identifier until after creation
+	// Some resources do not set the identifier until after creation.
 	if d.Id() == "" {
 		d.SetId(aws.StringValue(output.ProgressEvent.Identifier))
 	}
@@ -124,9 +120,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
+	typeName := d.Get("type_name").(string)
 	resourceDescription, err := FindResourceByID(ctx, conn,
 		d.Id(),
-		d.Get("type_name").(string),
+		typeName,
 		d.Get("type_version_id").(string),
 		d.Get("role_arn").(string),
 	)
@@ -138,7 +135,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Cloud Control API Resource (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 	}
 
 	d.Set("properties", resourceDescription.Properties)
@@ -155,20 +152,15 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		patchDocument, err := patchDocument(oldRaw.(string), newRaw.(string))
 
 		if err != nil {
-			return diag.Diagnostics{
-				{
-					Severity: diag.Error,
-					Summary:  "JSON Patch Creation Unsuccessful",
-					Detail:   fmt.Sprintf("Creating JSON Patch failed: %s", err.Error()),
-				},
-			}
+			return diag.Errorf("creating JSON Patch: %s", err)
 		}
 
+		typeName := d.Get("type_name").(string)
 		input := &cloudcontrolapi.UpdateResourceInput{
 			ClientToken:   aws.String(resource.UniqueId()),
 			Identifier:    aws.String(d.Id()),
 			PatchDocument: aws.String(patchDocument),
-			TypeName:      aws.String(d.Get("type_name").(string)),
+			TypeName:      aws.String(typeName),
 		}
 
 		if v, ok := d.GetOk("role_arn"); ok {
@@ -182,15 +174,11 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateResourceWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Cloud Control API Resource (%s): %w", d.Id(), err))
-		}
-
-		if output == nil || output.ProgressEvent == nil {
-			return diag.FromErr(fmt.Errorf("error updating Cloud Control API Resource (%s): empty result", d.Id()))
+			return diag.Errorf("updating Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 		}
 
 		if _, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) update: %w", d.Id(), err))
+			return diag.Errorf("waiting for Cloud Control API (%s) Resource (%s) update: %s", typeName, d.Id(), err)
 		}
 	}
 
@@ -200,10 +188,11 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
+	typeName := d.Get("type_name").(string)
 	input := &cloudcontrolapi.DeleteResourceInput{
 		ClientToken: aws.String(resource.UniqueId()),
 		Identifier:  aws.String(d.Id()),
-		TypeName:    aws.String(d.Get("type_name").(string)),
+		TypeName:    aws.String(typeName),
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {
@@ -214,14 +203,11 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		input.TypeVersionId = aws.String(v.(string))
 	}
 
+	log.Printf("[INFO] Deleting Cloud Control API (%s) Resource: %s", typeName, d.Id())
 	output, err := conn.DeleteResourceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Cloud Control API Resource (%s): %w", d.Id(), err))
-	}
-
-	if output == nil || output.ProgressEvent == nil {
-		return diag.FromErr(fmt.Errorf("error deleting Cloud Control API Resource (%s): empty result", d.Id()))
+		return diag.Errorf("deleting Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 	}
 
 	progressEvent, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
@@ -231,7 +217,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) delete: %w", d.Id(), err))
+		return diag.Errorf("waiting for Cloud Control API (%s) Resource (%s) delete: %s", typeName, d.Id(), err)
 	}
 
 	return nil
