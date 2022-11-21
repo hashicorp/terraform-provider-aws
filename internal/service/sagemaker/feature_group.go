@@ -29,10 +29,11 @@ func ResourceFeatureGroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		CustomizeDiff: customdiff.All(
+
 			customdiff.ForceNewIf("feature_definition", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				old, new := d.GetChange("feature_definition")
-				var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(old.([]interface{}))
-				var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(new.([]interface{}))
+				o, n := d.GetChange("feature_definition")
+				var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(o.([]interface{}))
+				var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
 
 				return len(featureDefinitionsNew) < len(featureDefinitionsOld)
 			}),
@@ -89,7 +90,6 @@ func ResourceFeatureGroup() *schema.Resource {
 			"feature_definition": {
 				Type:     schema.TypeList,
 				Required: true,
-				ForceNew: false,
 				MinItems: 1,
 				MaxItems: 2500,
 				Elem: &schema.Resource{
@@ -97,8 +97,6 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// TODO: line below will also force change when new features are added, workaround needded
-							// ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
@@ -107,9 +105,8 @@ func ResourceFeatureGroup() *schema.Resource {
 							),
 						},
 						"feature_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.FeatureType_Values(), false),
 						},
 					},
@@ -331,6 +328,14 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
+	o, n := d.GetChange("feature_definition")
+	var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(o.([]interface{}))
+	var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
+
+	if !checkIfDefinitionsUnchanged(featureDefinitionsOld, featureDefinitionsNew) {
+		return fmt.Errorf("feature definition")
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -338,10 +343,6 @@ func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
 		}
 	}
-
-	o, n := d.GetChange("feature_definition")
-	var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(o.([]interface{}))
-	var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
 
 	var newFeatures []*sagemaker.FeatureDefinition
 
@@ -596,4 +597,24 @@ func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.Da
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func checkIfDefinitionsUnchanged(o []*sagemaker.FeatureDefinition, n []*sagemaker.FeatureDefinition) bool {
+	var res = true
+	for _, elem := range o {
+		var elementExists = false
+		for _, newElem := range n {
+			if *newElem.FeatureName == *elem.FeatureName && *newElem.FeatureType == *elem.FeatureType {
+				elementExists = true
+				break
+			}
+		}
+
+		if !elementExists {
+			res = false
+			break
+		}
+	}
+
+	return res
 }
