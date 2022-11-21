@@ -103,12 +103,12 @@ resource "aws_ivschat_logging_configuration" "example" {
 The following arguments are required:
 
 * `destination_configuration` - (Required) Object containing destination configuration for where chat activity will be logged. This object must contain exactly one of the following children arguments:
-  * `cloudwatch_logs` - An Amazon CloudWatch Logs destination configuration where chat activity will be logged.
-    * `log_group_name` - Name of the Amazon Cloudwatch Logs destination where chat activity will be logged.
-  * `firehose` - An Amazon Kinesis Data Firehose destination configuration where chat activity will be logged.
-    * `delivery_stream_name` - Name of the Amazon Kinesis Firehose delivery stream where chat activity will be logged.
-  * `s3` - An Amazon S3 destination configuration where chat activity will be logged.
-    * `bucket_name` - Name of the Amazon S3 bucket where chat activity will be logged.
+    * `cloudwatch_logs` - An Amazon CloudWatch Logs destination configuration where chat activity will be logged.
+        * `log_group_name` - Name of the Amazon Cloudwatch Logs destination where chat activity will be logged.
+    * `firehose` - An Amazon Kinesis Data Firehose destination configuration where chat activity will be logged.
+        * `delivery_stream_name` - Name of the Amazon Kinesis Firehose delivery stream where chat activity will be logged.
+    * `s3` - An Amazon S3 destination configuration where chat activity will be logged.
+        * `bucket_name` - Name of the Amazon S3 bucket where chat activity will be logged.
 
 The following arguments are optional:
 
