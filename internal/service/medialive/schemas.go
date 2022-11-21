@@ -1,6 +1,8 @@
 package medialive
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
 
 func destinationSchema() *schema.Schema {
 	return &schema.Schema{
@@ -43,5 +45,31 @@ func restartDelaySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,
+	}
+}
+
+func inputLocationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"uri": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"password_param": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"username": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			},
+		},
 	}
 }

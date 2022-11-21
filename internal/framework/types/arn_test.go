@@ -22,21 +22,21 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: fwtypes.ARN{Null: true},
+			expected: fwtypes.ARNNull(),
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: fwtypes.ARN{Unknown: true},
+			expected: fwtypes.ARNUnknown(),
 		},
 		"valid ARN": {
 			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
-			expected: fwtypes.ARN{Value: arn.ARN{
+			expected: fwtypes.ARNValue(arn.ARN{
 				Partition: "aws",
 				Service:   "rds",
 				Region:    "us-east-1", // lintignore:AWSAT003
 				AccountID: "123456789012",
 				Resource:  "db:test",
-			}},
+			}),
 		},
 		"invalid duration": {
 			val:         tftypes.NewValue(tftypes.String, "not ok"),

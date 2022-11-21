@@ -165,6 +165,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
@@ -1009,6 +1010,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_appconfig_configuration_profile":        appconfig.ResourceConfigurationProfile(),
 			"aws_appconfig_deployment":                   appconfig.ResourceDeployment(),
 			"aws_appconfig_deployment_strategy":          appconfig.ResourceDeploymentStrategy(),
+			"aws_appconfig_extension":                    appconfig.ResourceExtension(),
+			"aws_appconfig_extension_association":        appconfig.ResourceExtensionAssociation(),
 			"aws_appconfig_environment":                  appconfig.ResourceEnvironment(),
 			"aws_appconfig_hosted_configuration_version": appconfig.ResourceHostedConfigurationVersion(),
 
@@ -2037,9 +2040,12 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
-			"aws_schemas_discoverer": schemas.ResourceDiscoverer(),
-			"aws_schemas_registry":   schemas.ResourceRegistry(),
-			"aws_schemas_schema":     schemas.ResourceSchema(),
+			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
+
+			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
+			"aws_schemas_registry":        schemas.ResourceRegistry(),
+			"aws_schemas_registry_policy": schemas.ResourceRegistryPolicy(),
+			"aws_schemas_schema":          schemas.ResourceSchema(),
 
 			"aws_secretsmanager_secret":          secretsmanager.ResourceSecret(),
 			"aws_secretsmanager_secret_policy":   secretsmanager.ResourceSecretPolicy(),

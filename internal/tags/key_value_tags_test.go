@@ -2273,7 +2273,7 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:   "empty_typesMap",
-			source: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{}},
+			source: types.MapValueMust(types.StringType, map[string]attr.Value{}),
 			want:   map[string]string{},
 		},
 		{
@@ -2364,10 +2364,10 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name: "non_empty_typesMap",
-			source: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{
-				"key1": types.String{Value: ""},
-				"key2": types.String{Value: "value2"},
-			}},
+			source: types.MapValueMust(types.StringType, map[string]attr.Value{
+				"key1": types.StringValue(""),
+				"key2": types.StringValue("value2"),
+			}),
 			want: map[string]string{
 				"key1": "",
 				"key2": "value2",

@@ -117,6 +117,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"

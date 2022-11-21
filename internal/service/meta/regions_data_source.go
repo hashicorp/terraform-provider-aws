@@ -73,11 +73,8 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 	conn := d.Meta().EC2Conn
 
 	input := &ec2.DescribeRegionsInput{
-		Filters: tfec2.BuildCustomFilters(ctx, data.Filters),
-	}
-
-	if !data.AllRegions.IsNull() {
-		input.AllRegions = aws.Bool(data.AllRegions.Value)
+		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),
+		Filters:    tfec2.BuildCustomFilters(ctx, data.Filters),
 	}
 
 	output, err := conn.DescribeRegionsWithContext(ctx, input)
@@ -93,7 +90,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		names = append(names, aws.StringValue(v.RegionName))
 	}
 
-	data.ID = types.String{Value: d.Meta().Partition}
+	data.ID = types.StringValue(d.Meta().Partition)
 	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

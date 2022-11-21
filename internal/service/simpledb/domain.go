@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -69,7 +70,7 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 
 	conn := r.Meta().SimpleDBConn
 
-	name := data.Name.Value
+	name := data.Name.ValueString()
 	input := &simpledb.CreateDomainInput{
 		DomainName: aws.String(name),
 	}
@@ -82,7 +83,7 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	data.ID = types.String{Value: name}
+	data.ID = types.StringValue(name)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -100,7 +101,7 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 
 	conn := r.Meta().SimpleDBConn
 
-	_, err := FindDomainByName(ctx, conn, data.ID.Value)
+	_, err := FindDomainByName(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -110,7 +111,7 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SimpleDB Domain (%s)", data.ID.Value), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SimpleDB Domain (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
@@ -141,15 +142,15 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 	conn := r.Meta().SimpleDBConn
 
 	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
-		"id": data.ID.Value,
+		"id": data.ID.ValueString(),
 	})
 
 	_, err := conn.DeleteDomainWithContext(ctx, &simpledb.DeleteDomainInput{
-		DomainName: aws.String(data.ID.Value),
+		DomainName: flex.StringFromFramework(ctx, data.ID),
 	})
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting SimpleDB Domain (%s)", data.ID.Value), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting SimpleDB Domain (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}

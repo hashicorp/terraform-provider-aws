@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -2591,7 +2592,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 
 					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-					match, err := tfec2.FindSecurityGroupByID(conn, id)
+					match, err := tfec2.FindSecurityGroupByID(context.Background(), conn, id)
 					if tfresource.NotFound(err) {
 						t.Fatalf("PreConfig check failed: Security Group (%s) not found: %s", id, err)
 					}
@@ -2879,7 +2880,7 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindSecurityGroupByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -2908,7 +2909,7 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		output, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindSecurityGroupByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, "Security Group", rs.Primary.ID, err)
@@ -2952,7 +2953,7 @@ func testAccCheckSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngres
 func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressCount int) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-	group, err := tfec2.FindSecurityGroupByID(conn, id)
+	group, err := tfec2.FindSecurityGroupByID(context.Background(), conn, id)
 	if tfresource.NotFound(err) {
 		return fmt.Errorf("Security Group (%s) not found: %w", id, err)
 	}

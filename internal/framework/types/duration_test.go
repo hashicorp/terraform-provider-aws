@@ -22,15 +22,15 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: fwtypes.Duration{Null: true},
+			expected: fwtypes.DurationNull(),
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: fwtypes.Duration{Unknown: true},
+			expected: fwtypes.DurationUnknown(),
 		},
 		"valid duration": {
 			val:      tftypes.NewValue(tftypes.String, "2h"),
-			expected: fwtypes.Duration{Value: 2 * time.Hour},
+			expected: fwtypes.DurationValue(2 * time.Hour),
 		},
 		"invalid duration": {
 			val:         tftypes.NewValue(tftypes.String, "not ok"),

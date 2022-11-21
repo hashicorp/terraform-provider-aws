@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func (r *resourceSecurityGroupEgressRule) createSecurityGroupRule(ctx context.Co
 	conn := r.Meta().EC2Conn
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
-		GroupId:       aws.String(data.SecurityGroupID.Value),
+		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
 		IpPermissions: []*ec2.IpPermission{r.expandIPPermission(ctx, data)},
 	}
 
@@ -69,8 +70,8 @@ func (r *resourceSecurityGroupEgressRule) deleteSecurityGroupRule(ctx context.Co
 	conn := r.Meta().EC2Conn
 
 	_, err := conn.RevokeSecurityGroupEgressWithContext(ctx, &ec2.RevokeSecurityGroupEgressInput{
-		GroupId:              aws.String(data.SecurityGroupID.Value),
-		SecurityGroupRuleIds: aws.StringSlice([]string{data.ID.Value}),
+		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
+		SecurityGroupRuleIds: flex.StringSliceFromFramework(ctx, data.ID),
 	})
 
 	return err
