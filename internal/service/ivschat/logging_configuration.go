@@ -305,7 +305,7 @@ func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) [
 
 	switch v := apiObject.(type) {
 	case *types.DestinationConfigurationMemberCloudWatchLogs:
-		m["cloudwatch_logs"] = flattenCloudwatchDestinationConfiguration(v.Value)
+		m["cloudwatch_logs"] = flattenCloudWatchDestinationConfiguration(v.Value)
 
 	case *types.DestinationConfigurationMemberFirehose:
 		m["firehose"] = flattenFirehoseDestinationConfiguration(v.Value)
@@ -323,7 +323,7 @@ func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) [
 	return []interface{}{m}
 }
 
-func flattenCloudwatchDestinationConfiguration(apiObject types.CloudWatchLogsDestinationConfiguration) []interface{} {
+func flattenCloudWatchDestinationConfiguration(apiObject types.CloudWatchLogsDestinationConfiguration) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
