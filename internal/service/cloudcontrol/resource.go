@@ -98,7 +98,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateResourceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Cloud Control API (%s) Resource: %w", typeName, err)
+		return diag.Errorf("creating Cloud Control API (%s) Resource: %s", typeName, err)
 	}
 
 	// Always try to capture the identifier before returning errors.
@@ -238,11 +238,11 @@ func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.Re
 	output, err := tfcloudformation.FindTypeByName(ctx, conn, typeName)
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFormation Type (%s): %w", typeName, err)
+		return fmt.Errorf("reading CloudFormation Type (%s): %w", typeName, err)
 	}
 
 	if err := diff.SetNew("schema", output.Schema); err != nil {
-		return fmt.Errorf("error setting schema diff: %w", err)
+		return fmt.Errorf("setting schema New: %w", err)
 	}
 
 	return nil
@@ -266,17 +266,17 @@ func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.R
 	newSchema, err := cfschema.Sanitize(newSchema)
 
 	if err != nil {
-		return fmt.Errorf("error sanitizing CloudFormation Resource Schema JSON: %w", err)
+		return fmt.Errorf("sanitizing CloudFormation Resource Schema JSON: %w", err)
 	}
 
 	cfResourceSchema, err := cfschema.NewResourceJsonSchemaDocument(newSchema)
 
 	if err != nil {
-		return fmt.Errorf("error parsing CloudFormation Resource Schema JSON: %w", err)
+		return fmt.Errorf("parsing CloudFormation Resource Schema JSON: %w", err)
 	}
 
 	if err := cfResourceSchema.ValidateConfigurationDocument(newDesiredState); err != nil {
-		return fmt.Errorf("error validating desired_state against CloudFormation Resource Schema: %w", err)
+		return fmt.Errorf("validating desired_state against CloudFormation Resource Schema: %w", err)
 	}
 
 	// Do nothing further for new resources or if desired state is not changed
@@ -287,19 +287,19 @@ func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.R
 	cfResource, err := cfResourceSchema.Resource()
 
 	if err != nil {
-		return fmt.Errorf("error converting CloudFormation Resource Schema JSON: %w", err)
+		return fmt.Errorf("converting CloudFormation Resource Schema JSON: %w", err)
 	}
 
 	patches, err := jsonpatch.CreatePatch([]byte(oldDesiredStateRaw.(string)), []byte(newDesiredStateRaw.(string)))
 
 	if err != nil {
-		return fmt.Errorf("error creating desired_state JSON Patch: %w", err)
+		return fmt.Errorf("creating desired_state JSON Patch: %w", err)
 	}
 
 	for _, patch := range patches {
 		if cfResource.IsCreateOnlyPropertyPath(patch.Path) {
 			if err := diff.ForceNew("desired_state"); err != nil {
-				return fmt.Errorf("error setting desired_state ForceNew: %w", err)
+				return fmt.Errorf("setting desired_state ForceNew: %w", err)
 			}
 
 			break
