@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_amplify_app: Add support for `WEB_COMPUTE` `platform` value
-```
