@@ -143,7 +143,7 @@ resource "aws_redshiftserverless_resource_policy" "test" {
       Action = [
         "redshift-serverless:RestoreFromSnapshot",
       ]
-	  Sid = ""
+      Sid = ""
     }]
   })
 }
