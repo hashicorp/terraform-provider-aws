@@ -1824,7 +1824,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			d.Set("replicate_source_db", "")
+			if _, err := waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Id(), err)
+			}
 		} else {
 			return errs.AppendErrorf(diags, "cannot elect new source database for replication")
 		}

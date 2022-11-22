@@ -921,6 +921,25 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 					"password",
 				},
 			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_promote(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "replicate_source_db", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "name", sourceResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
 		},
 	})
 }
@@ -6480,6 +6499,29 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_promote(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
   skip_final_snapshot = true
 }
 `, rName))
