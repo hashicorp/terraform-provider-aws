@@ -110,6 +110,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ivschat"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
@@ -1673,6 +1674,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ivs_channel":                 ivs.ResourceChannel(),
 			"aws_ivs_playback_key_pair":       ivs.ResourcePlaybackKeyPair(),
 			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
+
+			"aws_ivschat_logging_configuration": ivschat.ResourceLoggingConfiguration(),
 
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
