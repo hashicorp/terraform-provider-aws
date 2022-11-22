@@ -192,20 +192,47 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("logging_configuration") {
 		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
-			input := &prometheusservice.UpdateLoggingConfigurationInput{
-				LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+
+			// use describe logging configuration to check if the configuration exists
+			describeLoggingInput := &prometheusservice.DescribeLoggingConfigurationInput{
 				WorkspaceId: aws.String(d.Id()),
 			}
-
-			_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
-
+			_, err := conn.DescribeLoggingConfigurationWithContext(ctx, describeLoggingInput)
 			if err != nil {
-				return diag.Errorf("updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+				if _, ok := err.(*prometheusservice.ResourceNotFoundException); ok {
+					input := &prometheusservice.CreateLoggingConfigurationInput{
+						LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+						WorkspaceId: aws.String(d.Id()),
+					}
+					_, err := conn.CreateLoggingConfigurationWithContext(ctx, input)
+					if err != nil {
+						return diag.Errorf("Decribing Prometheus Workspace Logging configuration create (%s)", err)
+					}
+					_, err2 := waitLoggingConfigurationCreated(ctx, conn, *aws.String(d.Id()))
+					if err2 != nil {
+						return diag.Errorf("Waiting on Logging Configuration creation (%s)", err)
+					}
+				} else {
+					return diag.Errorf("Decribing Prometheus Workspace Logging configuration (%s)", Describeerr)
+				}
+
+			} else {
+				input := &prometheusservice.UpdateLoggingConfigurationInput{
+					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+					WorkspaceId: aws.String(d.Id()),
+				}
+				_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+				}
+
+				if _, err := waitLoggingConfigurationUpdated(ctx, conn, d.Id()); err != nil {
+					return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %s", d.Id(), err)
+				}
+
 			}
 
-			if _, err := waitLoggingConfigurationUpdated(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %s", d.Id(), err)
-			}
 		} else {
 			_, err := conn.DeleteLoggingConfigurationWithContext(ctx, &prometheusservice.DeleteLoggingConfigurationInput{
 				WorkspaceId: aws.String(d.Id()),
