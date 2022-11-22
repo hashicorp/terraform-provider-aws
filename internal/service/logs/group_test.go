@@ -336,7 +336,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 		_, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
-			return nil
+			continue
 		}
 
 		if err != nil {
