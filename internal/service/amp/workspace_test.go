@@ -46,6 +46,47 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 	})
 }
 
+func TestAccAMPWorkspace_addLoggingConfig(t *testing.T) {
+	var v prometheusservice.WorkspaceDescription
+	resourceName := "aws_prometheus_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_loggingConfiguration(resourceName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAMPWorkspace_disappears(t *testing.T) {
 	var v prometheusservice.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
