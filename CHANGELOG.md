@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
 * resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
 * resource/aws_medialive_channel: Add `start_channel` attribute ([#27882](https://github.com/hashicorp/terraform-provider-aws/issues/27882))
+* resource/aws_nat_gateway: Update `private_ip` attribute to be configurable ([#27953](https://github.com/hashicorp/terraform-provider-aws/issues/27953))
 
 BUG FIXES:
 
