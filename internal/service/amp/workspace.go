@@ -206,14 +206,14 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 					}
 					_, err := conn.CreateLoggingConfigurationWithContext(ctx, input)
 					if err != nil {
-						return diag.Errorf("Decribing Prometheus Workspace Logging configuration create (%s)", err)
+						return diag.Errorf("describing Prometheus Workspace Logging configuration create (%s)", err)
 					}
 					_, err2 := waitLoggingConfigurationCreated(ctx, conn, *aws.String(d.Id()))
 					if err2 != nil {
-						return diag.Errorf("Waiting on Logging Configuration creation (%s)", err)
+						return diag.Errorf("waiting on Logging Configuration creation (%s)", err)
 					}
 				} else {
-					return diag.Errorf("Decribing Prometheus Workspace Logging configuration (%s)", Describeerr)
+					return diag.Errorf("describing Prometheus Workspace Logging configuration (%s)", err)
 				}
 
 			} else {
