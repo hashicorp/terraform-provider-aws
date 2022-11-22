@@ -94,18 +94,6 @@ const (
 )
 
 const (
-	s3SettingsCompressionTypeGzip = "GZIP"
-	s3SettingsCompressionTypeNone = "NONE"
-)
-
-func s3SettingsCompressionType_Values() []string {
-	return []string{
-		s3SettingsCompressionTypeGzip,
-		s3SettingsCompressionTypeNone,
-	}
-}
-
-const (
 	encryptionModeSseKMS = "SSE_KMS"
 	encryptionModeSseS3  = "SSE_S3"
 )
