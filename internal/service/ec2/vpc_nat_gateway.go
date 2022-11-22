@@ -49,8 +49,11 @@ func ResourceNATGateway() *schema.Resource {
 				Computed: true,
 			},
 			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"subnet_id": {
 				Type:     schema.TypeString,
@@ -81,6 +84,10 @@ func resourceNATGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("connectivity_type"); ok {
 		input.ConnectivityType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("private_ip"); ok {
+		input.PrivateIpAddress = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("subnet_id"); ok {
