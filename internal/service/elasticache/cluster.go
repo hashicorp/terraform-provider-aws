@@ -80,20 +80,20 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						"address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"address": {
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"port": {
 							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"availability_zone": {
-							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -142,6 +142,10 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"ip_discovery": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -154,14 +158,14 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"destination_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
-						},
-						"destination": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 						"log_format": {
 							Type:         schema.TypeString,
@@ -249,21 +253,19 @@ func ResourceCluster() *schema.Resource {
 					"subnet_group_name",
 				},
 			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"security_group_names": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				Computed:   true,
 				ForceNew:   true,
 				Elem:       &schema.Schema{Type: schema.TypeString},
-				Set:        schema.HashString,
 				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
-			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"snapshot_arns": {
 				Type:     schema.TypeList,
@@ -278,6 +280,11 @@ func ResourceCluster() *schema.Resource {
 					),
 				},
 			},
+			"snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"snapshot_retention_limit": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -289,20 +296,11 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-			"final_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
