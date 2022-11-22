@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func newDataSourceRegion(context.Context) (datasource.DataSourceWithConfigure, e
 }
 
 type dataSourceRegion struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -61,15 +61,6 @@ func (d *dataSourceRegion) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceRegion) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -84,7 +75,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	var region *endpoints.Region
 
 	if !data.Endpoint.IsNull() {
-		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.Value)
+		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.ValueString())
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
@@ -96,7 +87,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	}
 
 	if !data.Name.IsNull() {
-		matchingRegion, err := FindRegionByName(data.Name.Value)
+		matchingRegion, err := FindRegionByName(data.Name.ValueString())
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by name", err.Error())
@@ -115,7 +106,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 
 	// Default to provider current region if no other filters matched
 	if region == nil {
-		matchingRegion, err := FindRegionByName(d.meta.Region)
+		matchingRegion, err := FindRegionByName(d.Meta().Region)
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by name", err.Error())
@@ -134,10 +125,10 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	data.Description = types.String{Value: region.Description()}
-	data.Endpoint = types.String{Value: strings.TrimPrefix(regionEndpointEC2.URL, "https://")}
-	data.ID = types.String{Value: region.ID()}
-	data.Name = types.String{Value: region.ID()}
+	data.Description = types.StringValue(region.Description())
+	data.Endpoint = types.StringValue(strings.TrimPrefix(regionEndpointEC2.URL, "https://"))
+	data.ID = types.StringValue(region.ID())
+	data.Name = types.StringValue(region.ID())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

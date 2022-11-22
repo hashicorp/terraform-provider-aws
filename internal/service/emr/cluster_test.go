@@ -1,6 +1,7 @@
 package emr_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -1659,7 +1660,7 @@ func testAccDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
 	}
 
 	for groupName := range managedSecurityGroups {
-		securityGroup, err := tfec2.FindSecurityGroupByNameAndVPCID(conn, groupName, aws.StringValue(vpc.VpcId))
+		securityGroup, err := tfec2.FindSecurityGroupByNameAndVPCID(context.Background(), conn, groupName, aws.StringValue(vpc.VpcId))
 
 		if err != nil {
 			return fmt.Errorf("error describing EMR Managed Security Group (%s): %w", groupName, err)

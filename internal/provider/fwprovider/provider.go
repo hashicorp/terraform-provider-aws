@@ -14,9 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -351,10 +349,6 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
 
-	resources = append(resources, func() resource.Resource {
-		return medialive.NewResourceMultiplexProgram(ctx)
-	})
-
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		for _, v := range sp.FrameworkResources(ctx) {
 			v, err := v(ctx)
@@ -426,11 +420,11 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 
 // wrappedResource wraps a resource, adding common functionality.
 type wrappedResource struct {
-	inner    intf.ResourceWithConfigureAndImportState
+	inner    resource.ResourceWithConfigure
 	typeName string
 }
 
-func newWrappedResource(inner intf.ResourceWithConfigureAndImportState) intf.ResourceWithConfigureAndImportState {
+func newWrappedResource(inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
 	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
 }
 
@@ -479,5 +473,36 @@ func (w *wrappedResource) Configure(ctx context.Context, request resource.Config
 }
 
 func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	w.inner.ImportState(ctx, request, response)
+	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
+		v.ImportState(ctx, request, response)
+
+		return
+	}
+
+	response.Diagnostics.AddError(
+		"Resource Import Not Implemented",
+		"This resource does not support import. Please contact the provider developer for additional information.",
+	)
+}
+
+func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
+		v.ModifyPlan(ctx, request, response)
+
+		return
+	}
+}
+
+func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
+		v.ValidateConfig(ctx, request, response)
+	}
 }

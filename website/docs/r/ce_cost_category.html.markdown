@@ -82,7 +82,7 @@ The following arguments are optional:
 * `dimension` - (Optional) Configuration block for the specific `Dimension` to use for `Expression`. See below.
 * `not` - (Optional) Return results that match both `Dimension` object.
 * `or` - (Optional) Return results that match both `Dimension` object.
-* `tag` - (Optional) Configuration block for the specific `Tag` to use for `Expression`. See below.
+* `tags` - (Optional) Configuration block for the specific `Tag` to use for `Expression`. See below.
 
 ### `cost_category`
 
@@ -96,7 +96,7 @@ The following arguments are optional:
 * `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
-### `tag`
+### `tags`
 
 * `key` - (Optional) Key for the tag.
 * `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.

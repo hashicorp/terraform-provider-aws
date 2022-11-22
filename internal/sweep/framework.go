@@ -14,20 +14,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // Terraform Plugin Framework variants of sweeper helpers.
 
 type SweepFrameworkResource struct {
-	factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error)
+	factory func(context.Context) (fwresource.ResourceWithConfigure, error)
 	id      string // TODO Currently we can only delete a resource if "id" is the only attribute used.
 	meta    interface{}
 }
 
-func NewSweepFrameworkResource(factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), id string, meta interface{}) *SweepFrameworkResource {
+func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) *SweepFrameworkResource {
 	return &SweepFrameworkResource{
 		factory: factory,
 		id:      id,
@@ -56,10 +55,9 @@ func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Durat
 	}
 
 	return err
-
 }
 
-func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), id string, meta interface{}) error {
+func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) error {
 	ctx := context.Background()
 
 	resource, err := factory(ctx)
@@ -73,7 +71,7 @@ func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithCon
 	schema, diags := resource.GetSchema(ctx)
 
 	if diags.HasError() {
-		return errs.NewDiagnosticsError(diags)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	// Simple Terraform State that contains just the resource ID.
@@ -86,7 +84,7 @@ func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithCon
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	if response.Diagnostics.HasError() {
-		return errs.NewDiagnosticsError(response.Diagnostics)
+		return fwdiag.DiagnosticsError(response.Diagnostics)
 	}
 
 	return nil

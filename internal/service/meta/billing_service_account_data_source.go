@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
 func init() {
@@ -21,7 +21,7 @@ func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceW
 }
 
 type dataSourceBillingServiceAccount struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -49,15 +49,6 @@ func (d *dataSourceBillingServiceAccount) GetSchema(context.Context) (tfsdk.Sche
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceBillingServiceAccount) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -73,14 +64,14 @@ func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request data
 	const billingAccountID = "386209384616"
 
 	arn := arn.ARN{
-		Partition: d.meta.Partition,
+		Partition: d.Meta().Partition,
 		Service:   "iam",
 		AccountID: billingAccountID,
 		Resource:  "root",
 	}
 
-	data.ARN = types.String{Value: arn.String()}
-	data.ID = types.String{Value: billingAccountID}
+	data.ARN = types.StringValue(arn.String())
+	data.ID = types.StringValue(billingAccountID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

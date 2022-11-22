@@ -60,6 +60,8 @@ linters-settings:
           - resource.Retry
           - schema.DefaultTimeout
           - validation.*
+          # Terraform Plugin Framework
+          - int64validator.*
           # Go
           - make
           - strconv.FormatFloat

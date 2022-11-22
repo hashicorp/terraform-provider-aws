@@ -1,8 +1,8 @@
 package dynamodb_test
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -321,7 +322,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_basic(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -358,7 +359,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_disappears(t *testing.T) {
-	var table1 dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -371,7 +372,7 @@ func TestAccDynamoDBTable_disappears(t *testing.T) {
 			{
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table1),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -381,7 +382,7 @@ func TestAccDynamoDBTable_disappears(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_Disappears_payPerRequestWithGSI(t *testing.T) {
-	var table1, table2 dynamodb.DescribeTableOutput
+	var table1, table2 dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -419,7 +420,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -493,7 +494,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_enablePITR(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -528,7 +529,7 @@ func TestAccDynamoDBTable_enablePITR(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -566,7 +567,7 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -608,7 +609,7 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -650,7 +651,7 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -688,7 +689,7 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 }
 
 func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -724,7 +725,7 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 }
 
 func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -758,7 +759,7 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 }
 
 func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -798,7 +799,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -898,7 +899,7 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_tags(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -927,7 +928,7 @@ func TestAccDynamoDBTable_tags(t *testing.T) {
 
 // https://github.com/hashicorp/terraform/issues/13243
 func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -995,7 +996,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1085,7 +1086,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15115
 func TestAccDynamoDBTable_lsiNonKeyAttributes(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1124,7 +1125,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1215,7 +1216,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/671
 func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	attributes := fmt.Sprintf("%q, %q", "AnotherAttribute", "RandomAttribute")
@@ -1261,7 +1262,7 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
 func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
-	var table dynamodb.DescribeTableOutput
+	var table dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1291,7 +1292,7 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
 func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
-	var table dynamodb.DescribeTableOutput
+	var table dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1331,7 +1332,7 @@ func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1375,7 +1376,7 @@ func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_lsiUpdate(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1436,7 +1437,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var confBYOK, confEncEnabled, confEncDisabled dynamodb.DescribeTableOutput
+	var confBYOK, confEncEnabled, confEncDisabled dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -1466,28 +1467,18 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 				Config: testAccTableConfig_initialStateEncryptionAmazonCMK(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &confEncDisabled),
+					testAccCheckTableNotRecreated(&confEncDisabled, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
-					func(s *terraform.State) error {
-						if !confEncDisabled.Table.CreationDateTime.Equal(*confBYOK.Table.CreationDateTime) {
-							return fmt.Errorf("DynamoDB table recreated when changing SSE")
-						}
-						return nil
-					},
 				),
 			},
 			{
 				Config: testAccTableConfig_initialStateEncryptionAmazonCMK(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &confEncEnabled),
+					testAccCheckTableNotRecreated(&confEncEnabled, &confEncDisabled),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsAliasDatasourceName, "target_key_arn"),
-					func(s *terraform.State) error {
-						if !confEncEnabled.Table.CreationDateTime.Equal(*confEncDisabled.Table.CreationDateTime) {
-							return fmt.Errorf("DynamoDB table recreated when changing SSE")
-						}
-						return nil
-					},
 				),
 			},
 		},
@@ -1499,7 +1490,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var table dynamodb.DescribeTableOutput
+	var table dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1548,7 +1539,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1597,11 +1588,11 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
-	kmsKeyReplicaResourceName := "aws_kms_key.alt_test"
+	kmsKeyReplicaResourceName := "aws_kms_key.replica"
 	// kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1628,12 +1619,65 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+	kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
+	kmsKeyReplicaResourceName := "aws_kms_key.replica"
+	kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaAmazonManagedKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsAliasReplicaDatasourceName, "target_key_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsAliasDatasourceName, "target_key_arn"),
+				),
+				ExpectNonEmptyPlan: true, // Because of https://github.com/hashicorp/terraform-provider-aws/issues/27850
+			},
+			{
+				Config: testAccTableConfig_replicaCMK(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				Config:            testAccTableConfig_replicaCMK(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1689,7 +1733,7 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1728,7 +1772,7 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1767,7 +1811,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1861,7 +1905,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
+	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1951,7 +1995,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 }
 
 func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
-	var table dynamodb.DescribeTableOutput
+	var table dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1994,7 +2038,7 @@ func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var confBYOK dynamodb.DescribeTableOutput
+	var confBYOK dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -2033,7 +2077,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var confBYOK dynamodb.DescribeTableOutput
+	var confBYOK dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -2075,52 +2119,52 @@ func testAccCheckTableDestroy(s *terraform.State) error {
 			continue
 		}
 
-		log.Printf("[DEBUG] Checking if DynamoDB table %s exists", rs.Primary.ID)
-		// Check if queue exists by checking for its attributes
-		params := &dynamodb.DescribeTableInput{
-			TableName: aws.String(rs.Primary.ID),
-		}
+		_, err := tfdynamodb.FindTableByName(conn, rs.Primary.ID)
 
-		_, err := conn.DescribeTable(params)
-		if err == nil {
-			return fmt.Errorf("DynamoDB table %s still exists. Failing!", rs.Primary.ID)
-		}
-
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DynamoDB Table %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckInitialTableExists(n string, table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
+func testAccCheckInitialTableExists(n string, v *dynamodb.TableDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		log.Printf("[DEBUG] Trying to create initial table state!")
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DynamoDB table name specified!")
+			return fmt.Errorf("No DynamoDB Table ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
-		params := &dynamodb.DescribeTableInput{
-			TableName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeTable(params)
+		output, err := tfdynamodb.FindTableByName(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Problem describing table '%s': %s", rs.Primary.ID, err)
+			return err
 		}
 
-		*table = *resp
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckTableNotRecreated(i, j *dynamodb.TableDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !i.CreationDateTime.Equal(aws.TimeValue(j.CreationDateTime)) {
+			return errors.New("DynamoDB Table was recreated")
+		}
 
 		return nil
 	}
@@ -2432,7 +2476,8 @@ data "aws_kms_alias" "dynamodb" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -2456,7 +2501,8 @@ resource "aws_dynamodb_table" "test" {
 func testAccTableConfig_initialStateEncryptionBYOK(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -3090,12 +3136,14 @@ data "aws_region" "alternate" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
-resource "aws_kms_key" "alt_test" {
-  provider    = "awsalternate"
-  description = "%[1]s-2"
+resource "aws_kms_key" "replica" {
+  provider                = "awsalternate"
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -3112,12 +3160,58 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.alternate.name
-    kms_key_arn = aws_kms_key.alt_test.arn
+    kms_key_arn = aws_kms_key.replica.arn
   }
 
   server_side_encryption {
     enabled     = true
     kms_key_arn = aws_kms_key.test.arn
+  }
+
+  timeouts {
+    create = "20m"
+    update = "20m"
+    delete = "20m"
+  }
+}
+`, rName))
+}
+
+func testAccTableConfig_replicaAmazonManagedKey(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_kms_alias" "dynamodb" {
+  name = "alias/aws/dynamodb"
+}
+
+data "aws_kms_alias" "replica" {
+  name     = "alias/aws/dynamodb"
+  provider = "awsalternate"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  server_side_encryption {
+    enabled = true
   }
 
   timeouts {
@@ -3551,7 +3645,8 @@ resource "aws_dynamodb_table" "source" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -3591,7 +3686,8 @@ resource "aws_dynamodb_table" "source" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 resource "aws_dynamodb_table" "test" {

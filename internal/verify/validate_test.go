@@ -232,7 +232,7 @@ func TestValidateCIDRBlock(t *testing.T) {
 		{"2001::/15", false},
 		{"", false},
 	} {
-		err := validateCIDRBlock(ts.cidr)
+		err := ValidateCIDRBlock(ts.cidr)
 		if !ts.valid && err == nil {
 			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
 		}

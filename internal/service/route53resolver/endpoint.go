@@ -411,7 +411,7 @@ func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Route53Resol
 func endpointHashIPAddress(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-%s-", m["subnet_id"].(string), m["ip"].(string)))
 	return create.StringHashcode(buf.String())
 }
 

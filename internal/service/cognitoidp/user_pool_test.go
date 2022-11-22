@@ -636,6 +636,35 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_smsConfigurationSNSRegion(rName, acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.sns_region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -1826,6 +1855,20 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, rName, externalID))
+}
+
+func testAccUserPoolConfig_smsConfigurationSNSRegion(rName string, snsRegion string) string {
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, "test"), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  sms_configuration {
+    external_id    = "test"
+    sns_caller_arn = aws_iam_role.test.arn
+    sns_region     = %[2]q
+  }
+}
+`, rName, snsRegion))
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSCallerARN2(rName string) string {

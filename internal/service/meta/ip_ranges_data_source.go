@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"golang.org/x/exp/slices"
 )
@@ -31,7 +31,7 @@ func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure,
 }
 
 type dataSourceIPRanges struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -83,15 +83,6 @@ func (d *dataSourceIPRanges) GetSchema(context.Context) (tfsdk.Schema, diag.Diag
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceIPRanges) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -109,7 +100,7 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 		// Data sources make no use of AttributePlanModifiers to set default values.
 		url = "https://ip-ranges.amazonaws.com/ip-ranges.json"
 	} else {
-		url = data.URL.Value
+		url = data.URL.ValueString()
 	}
 
 	bytes, err := readAll(ctx, url)
@@ -165,12 +156,12 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 
 	sort.Strings(ipv6Prefixes)
 
-	data.CreateDate = types.String{Value: ipRanges.CreateDate}
-	data.ID = types.String{Value: ipRanges.SyncToken}
+	data.CreateDate = types.StringValue(ipRanges.CreateDate)
+	data.ID = types.StringValue(ipRanges.SyncToken)
 	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv4Prefixes)
 	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv6Prefixes)
-	data.SyncToken = types.Int64{Value: int64(syncToken)}
-	data.URL = types.String{Value: url}
+	data.SyncToken = types.Int64Value(int64(syncToken))
+	data.URL = types.StringValue(url)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
