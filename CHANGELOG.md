@@ -2,7 +2,14 @@
 
 ENHANCEMENTS:
 
+* resource/aws_amplify_app: Add support for `WEB_COMPUTE` `platform` value in support of [Next.js web apps](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-Amplify-support.html) ([#27925](https://github.com/hashicorp/terraform-provider-aws/issues/27925))
+* resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
+* resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
 * resource/aws_medialive_channel: Add `start_channel` attribute ([#27882](https://github.com/hashicorp/terraform-provider-aws/issues/27882))
+
+BUG FIXES:
+
+* resource/aws_cloudcontrolapi_resource: Remove invalid regular expressions from CloudFormation resource schema ([#27935](https://github.com/hashicorp/terraform-provider-aws/issues/27935))
 
 ## 4.40.0 (November 17, 2022)
 
