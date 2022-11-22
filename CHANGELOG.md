@@ -46,6 +46,7 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Add hosted zone ID for `eu-central-2` AWS Region ([#27814](https://github.com/hashicorp/terraform-provider-aws/issues/27814))
 * data-source/aws_s3_bucket: Add hosted zone ID for `eu-south-2` AWS Region ([#27855](https://github.com/hashicorp/terraform-provider-aws/issues/27855))
 * provider: Support `eu-central-2` as a valid AWS Region ([#27812](https://github.com/hashicorp/terraform-provider-aws/issues/27812))
+* provider: Support `eu-south-2` as a valid AWS Region ([#27847](https://github.com/hashicorp/terraform-provider-aws/issues/27847))
 * resource/aws_acm_certificate: Add `key_algorithm` argument in support of [ECDSA TLS certificates](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) ([#27781](https://github.com/hashicorp/terraform-provider-aws/issues/27781))
 * resource/aws_autoscaling_group: Add support for `price-capacity-optimized` `spot_allocation_strategy` value ([#27795](https://github.com/hashicorp/terraform-provider-aws/issues/27795))
 * resource/aws_cloudwatch_logs_group: Add `skip_destroy` argument ([#26775](https://github.com/hashicorp/terraform-provider-aws/issues/26775))
