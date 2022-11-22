@@ -67,13 +67,10 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"az_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					elasticache.AZModeCrossAz,
-					elasticache.AZModeSingleAz,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.AZMode_Values(), false),
 			},
 			"cache_nodes": {
 				Type:     schema.TypeList,
@@ -129,8 +126,8 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ForceNew:     true,
+				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
@@ -154,8 +151,8 @@ func ResourceCluster() *schema.Resource {
 			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
-				Optional: true,
 				MaxItems: 2,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"destination": {
@@ -232,8 +229,8 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ForceNew:     true,
+				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
@@ -269,9 +266,9 @@ func ResourceCluster() *schema.Resource {
 			},
 			"snapshot_arns": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
