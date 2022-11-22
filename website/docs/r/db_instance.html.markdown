@@ -40,7 +40,9 @@ By default, RDS applies updates to DB Instances in-place, which can lead to serv
 Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
 
 Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
-as other engines are not supported by RDS Blue/Green deployemnts.
+as other engines are not supported by RDS Blue/Green deployments.
+
+Backups must be enabled to use low-downtime updates.
 
 Enable low-downtime updates by setting `x_use_blue_green_update` to `true`.
 

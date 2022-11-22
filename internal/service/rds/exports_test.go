@@ -1,3 +1,3 @@
 package rds
 
-var FindDBInstanceByID = findDBInstanceByID
+var FindDBInstanceByID = findDBInstanceByIDSDKv1

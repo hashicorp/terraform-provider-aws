@@ -191,7 +191,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := findDBInstanceByID(ctx, conn, d.Get("db_instance_identifier").(string))
+	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Get("db_instance_identifier").(string))
 
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("RDS DB Instance", err))

@@ -18,6 +18,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +29,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/exp/slices"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -532,7 +534,31 @@ func ResourceInstance() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if !d.Get("x_use_blue_green_update").(bool) {
+					return nil
+				}
+
+				engine := d.Get("engine").(string)
+				if !slices.Contains(validBlueGreenEngines(), engine) {
+					return fmt.Errorf(`"x_use_blue_green_update" cannot be set when "engine" is %q.`, engine)
+				}
+				return nil
+			},
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if !d.Get("x_use_blue_green_update").(bool) {
+					return nil
+				}
+
+				source := d.Get("replicate_source_db").(string)
+				if source != "" {
+					return errors.New(`"x_use_blue_green_update" cannot be set when "replicate_source_db" is set.`)
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -1444,7 +1470,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(identifier)
 
-	if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) create: %s", d.Id(), err)
 	}
 
@@ -1457,7 +1483,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1471,7 +1497,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return errs.AppendErrorf(diags, "rebooting RDS DB Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1484,7 +1510,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := findDBInstanceByID(ctx, conn, d.Id())
+	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Id())
@@ -1607,6 +1633,31 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient()
 
+	// Separate request to promote a database.
+	if d.HasChange("replicate_source_db") {
+		if d.Get("replicate_source_db").(string) == "" {
+			input := &rds_sdkv2.PromoteReadReplicaInput{
+				BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
+				DBInstanceIdentifier:  aws.String(d.Id()),
+			}
+
+			if attr, ok := d.GetOk("backup_window"); ok {
+				input.PreferredBackupWindow = aws.String(attr.(string))
+			}
+
+			_, err := conn.PromoteReadReplica(ctx, input)
+			if err != nil {
+				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitDBInstanceAvailableSDKv1(ctx, meta.(*conns.AWSClient).RDSConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Id(), err)
+			}
+		} else {
+			return errs.AppendErrorf(diags, "cannot elect new source database for replication")
+		}
+	}
+
 	// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 	// as it results in "InvalidParameterCombination: No modifications were requested".
 	if d.HasChangesExcept(
@@ -1619,18 +1670,35 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"x_use_blue_green_update",
 	) {
 		if d.Get("x_use_blue_green_update").(bool) {
-			var waiters []func(optFns ...tfresource.OptionsFunc)
+			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
 			defer func() {
-				if len(waiters) == 0 {
+				if len(cleaupWaiters) == 0 {
 					return
 				}
 
-				waiter, waiters := waiters[0], waiters[1:]
+				waiter, waiters := cleaupWaiters[0], cleaupWaiters[1:]
 				waiter()
 				for _, waiter := range waiters {
+					// Skip the delay for subsequent waiters. Since we're waiting for all of the waiters
+					// to complete, we don't need to run them concurrently, saving on network traffic.
 					waiter(tfresource.WithDelay(0))
 				}
 			}()
+
+			// Backups must be enabled for Blue/Green Deployments. Enable them first.
+			o, n := d.GetChange("backup_retention_period")
+			if o.(int) == 0 && n.(int) > 0 {
+				input := &rds_sdkv2.ModifyDBInstanceInput{
+					ApplyImmediately:      true,
+					DBInstanceIdentifier:  aws.String(d.Id()),
+					BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
+				}
+
+				err := dbInstanceModify(ctx, conn, input, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): enabling backups: %s", d.Id(), err)
+				}
+			}
 
 			createIn := &rds_sdkv2.CreateBlueGreenDeploymentInput{
 				BlueGreenDeploymentName: aws.String(d.Id()),
@@ -1665,7 +1733,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return
 				}
 
-				waiters = append(waiters, func(optFns ...tfresource.OptionsFunc) {
+				cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
 					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate), optFns...)
 					if err != nil {
 						diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
@@ -1686,7 +1754,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
-			_, err = waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
+			_, err = waitDBInstanceAvailableSDKv1(ctx, meta.(*conns.AWSClient).RDSConn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
@@ -1701,14 +1769,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if needsModify {
 				log.Printf("[DEBUG] Updating RDS DB Instance (%s): Updating Green environment", d.Id())
 
-				_, err := conn.ModifyDBInstance(ctx, modifyInput)
+				err := dbInstanceModify(ctx, conn, modifyInput, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): updating Green environment: %s", d.Id(), err)
-				}
-
-				_, err = waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
-				if err != nil {
-					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): updating Green environment: waiting for completion: %s", d.Id(), err)
 				}
 			}
 
@@ -1745,7 +1808,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Id(), err)
 			}
 
-			waiters = append(waiters, func(optFns ...tfresource.OptionsFunc) {
+			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
 				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, arn.Identifier, d.Timeout(schema.TimeoutUpdate), optFns...)
 				if err != nil {
 					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Id(), err)
@@ -1776,59 +1839,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
 			}
 
-			_, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (interface{}, error) {
-					return conn.ModifyDBInstance(ctx, input)
-				},
-				func(err error) (bool, error) {
-					// Retry for IAM eventual consistency.
-					apiErr, ok := errAs[smithy.APIError](err)
-					if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
-						return true, err
-					}
-
-					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
-					iisErr, ok := errAs[*types.InvalidDBInstanceStateFault](err)
-					if ok && strings.Contains(iisErr.ErrorMessage(), "your request later") {
-						return true, err
-					}
-
-					return false, err
-				},
-			)
-
+			err := dbInstanceModify(ctx, conn, input, d.Timeout(schema.TimeoutUpdate))
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
-
-			if _, err := waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), err)
-			}
-		}
-	}
-
-	// Separate request to promote a database.
-	if d.HasChange("replicate_source_db") {
-		if d.Get("replicate_source_db").(string) == "" {
-			input := &rds_sdkv2.PromoteReadReplicaInput{
-				BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
-				DBInstanceIdentifier:  aws.String(d.Id()),
-			}
-
-			if attr, ok := d.GetOk("backup_window"); ok {
-				input.PreferredBackupWindow = aws.String(attr.(string))
-			}
-
-			_, err := conn.PromoteReadReplica(ctx, input)
-			if err != nil {
-				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Id(), err)
-			}
-
-			if _, err := waitDBInstanceAvailable(ctx, meta.(*conns.AWSClient).RDSConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Id(), err)
-			}
-		} else {
-			return errs.AppendErrorf(diags, "cannot elect new source database for replication")
 		}
 	}
 
@@ -2031,6 +2045,36 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	return needsModify
 }
 
+func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, input *rds_sdkv2.ModifyDBInstanceInput, timeout time.Duration) error {
+	_, err := tfresource.RetryWhenContext(ctx, timeout,
+		func() (interface{}, error) {
+			return conn.ModifyDBInstance(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// Retry for IAM eventual consistency.
+			apiErr, ok := errs.As[smithy.APIError](err)
+			if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+				return true, err
+			}
+
+			if errs.IsA[*types.InvalidDBClusterStateFault](err) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, aws.StringValue(input.DBInstanceIdentifier), timeout); err != nil {
+		return fmt.Errorf("waiting for completion: %w", err)
+	}
+	return nil
+}
+
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn
 
@@ -2083,7 +2127,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			if _, ierr := waitDBInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+			if _, ierr := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
 				return errs.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Id(), ierr)
 			}
 
@@ -2146,7 +2190,7 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 	return result, nil
 }
 
-func findDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
+func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
@@ -2171,7 +2215,30 @@ func findDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBI
 	return dbInstance, nil
 }
 
-func waitDBInstanceAvailable(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
+func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
+	input := &rds_sdkv2.DescribeDBInstancesInput{
+		DBInstanceIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBInstances(ctx, input)
+	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DBInstances) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return &output.DBInstances[0], nil
+}
+
+func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,
@@ -2200,7 +2267,50 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.RDS, id string, time
 			InstanceStatusUpgrading,
 		},
 		Target:  []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstanceSDKv1(ctx, conn, id),
+		Timeout: timeout,
+	}
+	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
+	options := tfresource.Options{
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
+	}
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			InstanceStatusBackingUp,
+			InstanceStatusConfiguringEnhancedMonitoring,
+			InstanceStatusConfiguringIAMDatabaseAuth,
+			InstanceStatusConfiguringLogExports,
+			InstanceStatusCreating,
+			InstanceStatusMaintenance,
+			InstanceStatusModifying,
+			InstanceStatusMovingToVPC,
+			InstanceStatusRebooting,
+			InstanceStatusRenaming,
+			InstanceStatusResettingMasterCredentials,
+			InstanceStatusStarting,
+			InstanceStatusStopping,
+			InstanceStatusStorageFull,
+			InstanceStatusUpgrading,
+		},
+		Target:  []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
+		Refresh: statusDBInstanceSDKv2(ctx, conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -2241,7 +2351,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 			InstanceStatusStorageOptimization,
 		},
 		Target:  []string{},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstanceSDKv1(ctx, conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -2255,9 +2365,9 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 	return nil, err
 }
 
-func statusDBInstance(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDBInstanceByID(ctx, conn, id)
+		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -2271,15 +2381,20 @@ func statusDBInstance(ctx context.Context, conn *rds.RDS, id string) resource.St
 	}
 }
 
-func errIsA[T error](err error) bool {
-	_, ok := errAs[T](err)
-	return ok
-}
+func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDBInstanceByIDSDKv2(ctx, conn, id)
 
-func errAs[T error](err error) (T, bool) {
-	var as T
-	ok := errors.As(err, &as)
-	return as, ok
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.DBInstanceStatus), nil
+	}
 }
 
 func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.BlueGreenDeployment, error) {
@@ -2289,7 +2404,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id
 
 	output, err := conn.DescribeBlueGreenDeployments(ctx, input)
 
-	if errIsA[*types.BlueGreenDeploymentNotFoundFault](err) {
+	if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2360,7 +2475,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
-		if ues, ok := errAs[*resource.UnexpectedStateError](err); ok {
+		if ues, ok := errs.As[*resource.UnexpectedStateError](err); ok {
 			if ues.State == "INVALID_CONFIGURATION" || ues.State == "SWITCHOVER_FAILED" {
 				err = errors.New(aws.StringValue(output.StatusDetails))
 			}
@@ -2409,4 +2524,8 @@ func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id s
 
 		return output, aws.StringValue(output.Status), nil
 	}
+}
+
+func validBlueGreenEngines() []string {
+	return []string{"mariadb", "mysql"}
 }
