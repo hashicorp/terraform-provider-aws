@@ -74,6 +74,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ip_discovery": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Computed: true,

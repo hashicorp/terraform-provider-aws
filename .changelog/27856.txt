@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_elasticache_cluster: Add `ip_discovery` argument
 ```
+
+```release-note:enhancement
+data-source/aws_elasticache_cluster: Add `ip_discovery` attribute
+```

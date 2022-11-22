@@ -32,6 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 * `num_cache_nodes` – The number of cache nodes that the cache cluster has.
 * `engine` – Name of the cache engine.
 * `engine_version` – Version number of the cache engine.
+* `ip_discovery` - The network type for the cache cluster.
 * `subnet_group_name` – Name of the subnet group associated to the cache cluster.
 * `security_group_names` – List of security group names associated with this cache cluster.
 * `security_group_ids` – List VPC security groups associated with the cache cluster.
