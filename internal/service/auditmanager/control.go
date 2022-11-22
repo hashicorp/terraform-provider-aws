@@ -3,306 +3,368 @@ package auditmanager
 import (
 	"context"
 	"errors"
-	"log"
-	"time"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
-	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceControl() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceControlCreate,
-		ReadWithoutTimeout:   resourceControlRead,
-		UpdateWithoutTimeout: resourceControlUpdate,
-		DeleteWithoutTimeout: resourceControlDelete,
+func init() {
+	registerFrameworkResourceFactory(newResourceControl)
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
-			Update: schema.DefaultTimeout(2 * time.Minute),
-			Delete: schema.DefaultTimeout(2 * time.Minute),
-		},
-
-		Schema: map[string]*schema.Schema{
-			"action_plan_instructions": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"action_plan_title": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"control_mapping_sources": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// Note: ForceNew is applied to all Elem attributes because the set type will
-						// not preserve the computed source_id required for Update API requests.
-						"source_description": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"source_frequency": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.SourceFrequency](),
-						},
-						"source_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source_keyword": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"keyword_input_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.KeywordInputType](),
-									},
-									"keyword_value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"source_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"source_set_up_option": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.SourceSetUpOption](),
-						},
-						"source_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.SourceType](),
-						},
-						"troubleshooting_text": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"testing_information": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
-	}
+func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceControl{}, nil
 }
 
 const (
 	ResNameControl = "Control"
 )
 
-func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AuditManagerClient
+type resourceControl struct {
+	framework.ResourceWithConfigure
+}
 
-	in := &auditmanager.CreateControlInput{
-		Name:                  aws.String(d.Get("name").(string)),
-		ControlMappingSources: expandControlMappingSourcesCreate(d.Get("control_mapping_sources").(*schema.Set)),
+func (r *resourceControl) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_auditmanager_control"
+}
+
+func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"action_plan_instructions": schema.StringAttribute{
+				Optional: true,
+			},
+			"action_plan_title": schema.StringAttribute{
+				Optional: true,
+			},
+			"arn": framework.ARNAttribute(),
+			"description": schema.StringAttribute{
+				Optional: true,
+			},
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
+				Required: true,
+			},
+			"tags":     tftags.TagsAttribute(),
+			"tags_all": tftags.TagsAttributeComputedOnly(),
+			"testing_information": schema.StringAttribute{
+				Optional: true,
+			},
+			"type": schema.StringAttribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"control_mapping_sources": schema.SetNestedBlock{
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"source_description": schema.StringAttribute{
+							Optional: true,
+						},
+						"source_frequency": schema.StringAttribute{
+							Optional: true,
+						},
+						"source_id": framework.IDAttribute(),
+						"source_name": schema.StringAttribute{
+							Required: true,
+						},
+						"source_set_up_option": schema.StringAttribute{
+							Required: true,
+						},
+						"source_type": schema.StringAttribute{
+							Required: true,
+						},
+						"troubleshooting_text": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"source_keyword": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"keyword_input_type": schema.StringAttribute{
+										Required: true,
+									},
+									"keyword_value": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().AuditManagerClient
+
+	var plan resourceControlData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("action_plan_instructions"); ok {
-		in.ActionPlanInstructions = aws.String((v.(string)))
-	}
-	if v, ok := d.GetOk("action_plan_title"); ok {
-		in.ActionPlanTitle = aws.String((v.(string)))
-	}
-	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String((v.(string)))
-	}
-	if v, ok := d.GetOk("testing_information"); ok {
-		in.TestingInformation = aws.String((v.(string)))
+	var cms []controlMappingSourcesData
+	resp.Diagnostics.Append(plan.ControlMappingSources.ElementsAs(ctx, &cms, false)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	cmsInput, d := expandControlMappingSourcesCreate(ctx, cms)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := auditmanager.CreateControlInput{
+		Name:                  aws.String(plan.Name.ValueString()),
+		ControlMappingSources: cmsInput,
+	}
+	if !plan.ActionPlanInstructions.IsNull() {
+		in.ActionPlanInstructions = aws.String(plan.ActionPlanInstructions.ValueString())
+	}
+	if !plan.ActionPlanTitle.IsNull() {
+		in.ActionPlanTitle = aws.String(plan.ActionPlanTitle.ValueString())
+	}
+	if !plan.Description.IsNull() {
+		in.Description = aws.String(plan.Description.ValueString())
+	}
+	if !plan.TestingInformation.IsNull() {
+		in.TestingInformation = aws.String(plan.TestingInformation.ValueString())
+	}
+
+	defaultTagsConfig := r.Meta().DefaultTagsConfig
+	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
+	plan.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	out, err := conn.CreateControl(ctx, in)
+	out, err := conn.CreateControl(ctx, &in)
 	if err != nil {
-		return create.DiagError(names.AuditManager, create.ErrActionCreating, ResNameControl, d.Get("name").(string), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameControl, plan.Name.String(), nil),
+			err.Error(),
+		)
+		return
 	}
 	if out == nil || out.Control == nil {
-		return create.DiagError(names.AuditManager, create.ErrActionCreating, ResNameControl, d.Get("name").(string), errors.New("empty output"))
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameControl, plan.Name.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(out.Control.Id))
-	return resourceControlRead(ctx, d, meta)
+	state := plan
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.Control)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AuditManagerClient
+func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().AuditManagerClient
 
-	out, err := FindControlByID(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AuditManager Control (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	var state resourceControlData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := FindControlByID(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		diag.NewWarningDiagnostic(
+			"AWS Resource Not Found During Refresh",
+			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
+		)
+		resp.State.RemoveResource(ctx)
+		return
 	}
 	if err != nil {
-		return create.DiagError(names.AuditManager, create.ErrActionReading, ResNameControl, d.Id(), err)
-	}
-	d.SetId(aws.ToString(out.Id))
-
-	d.Set("action_plan_instructions", aws.ToString(out.ActionPlanInstructions))
-	d.Set("action_plan_title", aws.ToString(out.ActionPlanTitle))
-	d.Set("arn", aws.ToString(out.Arn))
-	if err := d.Set("control_mapping_sources", flattenControlMappingSources(out.ControlMappingSources)); err != nil {
-		return create.DiagError(names.AuditManager, create.ErrActionSetting, ResNameControl, d.Id(), err)
-	}
-	d.Set("description", aws.ToString(out.Description))
-	d.Set("name", aws.ToString(out.Name))
-	d.Set("testing_information", aws.ToString(out.TestingInformation))
-	d.Set("type", string(out.Type))
-
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.AuditManager, create.ErrActionReading, ResNameControl, d.Id(), err)
-	}
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.AuditManager, create.ErrActionSetting, ResNameControl, d.Id(), err)
-	}
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.AuditManager, create.ErrActionSetting, ResNameControl, d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AuditManager, create.ErrActionReading, ResNameControl, state.Name.String(), nil),
+			err.Error(),
+		)
+		return
 	}
 
-	return nil
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AuditManagerClient
+func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().AuditManagerClient
 
-	if d.HasChanges(
-		"action_plan_instructions",
-		"action_plan_title",
-		"control_mapping_sources",
-		"description",
-		"testing_information",
-	) {
+	var plan, state resourceControlData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.Name.Equal(state.Name) ||
+		!plan.ControlMappingSources.Equal(state.ControlMappingSources) ||
+		!plan.ActionPlanInstructions.Equal(state.ActionPlanInstructions) ||
+		!plan.ActionPlanTitle.Equal(state.ActionPlanTitle) ||
+		!plan.Description.Equal(state.Description) ||
+		!plan.TestingInformation.Equal(state.TestingInformation) {
+		var cms []controlMappingSourcesData
+		resp.Diagnostics.Append(plan.ControlMappingSources.ElementsAs(ctx, &cms, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		cmsInput, d := expandControlMappingSourcesUpdate(ctx, cms)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		in := &auditmanager.UpdateControlInput{
-			ControlId:             aws.String(d.Id()),
-			Name:                  aws.String(d.Get("name").(string)),
-			ControlMappingSources: expandControlMappingSourcesUpdate(d.Get("control_mapping_sources").(*schema.Set)),
+			ControlId:             aws.String(plan.ID.ValueString()),
+			Name:                  aws.String(plan.Name.ValueString()),
+			ControlMappingSources: cmsInput,
 		}
-		if v, ok := d.GetOk("action_plan_instructions"); ok {
-			in.ActionPlanInstructions = aws.String((v.(string)))
+		if !plan.ActionPlanInstructions.IsNull() {
+			in.ActionPlanInstructions = aws.String(plan.ActionPlanInstructions.ValueString())
 		}
-		if v, ok := d.GetOk("action_plan_title"); ok {
-			in.ActionPlanTitle = aws.String((v.(string)))
+		if !plan.ActionPlanTitle.IsNull() {
+			in.ActionPlanTitle = aws.String(plan.ActionPlanTitle.ValueString())
 		}
-		if v, ok := d.GetOk("description"); ok {
-			in.Description = aws.String((v.(string)))
+		if !plan.Description.IsNull() {
+			in.Description = aws.String(plan.Description.ValueString())
 		}
-		if v, ok := d.GetOk("testing_information"); ok {
-			in.TestingInformation = aws.String((v.(string)))
+		if !plan.TestingInformation.IsNull() {
+			in.TestingInformation = aws.String(plan.TestingInformation.ValueString())
 		}
 
-		log.Printf("[DEBUG] Updating AuditManager Control (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateControl(ctx, in)
+		out, err := conn.UpdateControl(ctx, in)
 		if err != nil {
-			return create.DiagError(names.AuditManager, create.ErrActionUpdating, ResNameControl, d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameControl, plan.ID.String(), nil),
+				err.Error(),
+			)
+			return
 		}
+		if out == nil || out.Control == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameControl, plan.ID.String(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
+		}
+		state.refreshFromOutput(ctx, r.Meta(), out.Control)
 	}
 
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.AuditManager, create.ErrActionUpdating, ResNameControl, d.Id(), err)
+	if !plan.TagsAll.Equal(state.TagsAll) {
+		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameControl, plan.ID.String(), nil),
+				err.Error(),
+			)
+			return
 		}
+		state.Tags = plan.Tags
+		state.TagsAll = plan.TagsAll
 	}
 
-	return resourceControlRead(ctx, d, meta)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AuditManagerClient
+func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().AuditManagerClient
 
-	log.Printf("[INFO] Deleting AuditManager Control %s", d.Id())
+	var state resourceControlData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	_, err := conn.DeleteControl(ctx, &auditmanager.DeleteControlInput{
-		ControlId: aws.String(d.Id()),
+		ControlId: aws.String(state.ID.ValueString()),
 	})
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
+		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return
 		}
-
-		return create.DiagError(names.AuditManager, create.ErrActionDeleting, ResNameControl, d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AuditManager, create.ErrActionDeleting, ResNameControl, state.ID.String(), nil),
+			err.Error(),
+		)
 	}
-
-	return nil
 }
 
-func FindControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*types.Control, error) {
+func (r *resourceControl) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
+		var plan resourceControlData
+		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		var planCms []controlMappingSourcesData
+		resp.Diagnostics.Append(plan.ControlMappingSources.ElementsAs(ctx, &planCms, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// A net-new control mapping will be missing source_id, so force a replacement
+		//
+		// Attribute level plan modifiers are applied before resource modifiers, so ID's
+		// previously in state should never be unknown.
+		for _, item := range planCms {
+			if item.SourceID.IsUnknown() {
+				resp.RequiresReplace = []path.Path{path.Root("control_mapping_sources")}
+			}
+		}
+	}
+
+	r.SetTagsAll(ctx, req, resp)
+}
+
+func FindControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Control, error) {
 	in := &auditmanager.GetControlInput{
 		ControlId: aws.String(id),
 	}
 	out, err := conn.GetControl(ctx, in)
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
+		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &sdkv2resource.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -318,131 +380,208 @@ func FindControlByID(ctx context.Context, conn *auditmanager.Client, id string) 
 	return out.Control, nil
 }
 
-func flattenControlMappingSources(apiObjects []types.ControlMappingSource) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
+var (
+	controlMappingSourceAttrTypes = map[string]attr.Type{
+		"source_description":   types.StringType,
+		"source_frequency":     types.StringType,
+		"source_id":            types.StringType,
+		"source_keyword":       types.ListType{ElemType: types.ObjectType{AttrTypes: sourceKeywordAttrTypes}},
+		"source_name":          types.StringType,
+		"source_set_up_option": types.StringType,
+		"source_type":          types.StringType,
+		"troubleshooting_text": types.StringType,
 	}
 
-	var tfList []interface{}
-	for _, obj := range apiObjects {
-		m := map[string]interface{}{
-			"source_description":   aws.ToString(obj.SourceDescription),
-			"source_frequency":     string(obj.SourceFrequency),
-			"source_id":            aws.ToString(obj.SourceId),
-			"source_keyword":       flattenControlMappingSourceSourceKeyword(obj.SourceKeyword),
-			"source_name":          aws.ToString(obj.SourceName),
-			"source_set_up_option": string(obj.SourceSetUpOption),
-			"source_type":          string(obj.SourceType),
-			"troubleshooting_text": aws.ToString(obj.TroubleshootingText),
-		}
-
-		tfList = append(tfList, m)
+	sourceKeywordAttrTypes = map[string]attr.Type{
+		"keyword_input_type": types.StringType,
+		"keyword_value":      types.StringType,
 	}
+)
 
-	return tfList
+type resourceControlData struct {
+	ActionPlanInstructions types.String `tfsdk:"action_plan_instructions"`
+	ActionPlanTitle        types.String `tfsdk:"action_plan_title"`
+	ARN                    types.String `tfsdk:"arn"`
+	ControlMappingSources  types.Set    `tfsdk:"control_mapping_sources"`
+	Description            types.String `tfsdk:"description"`
+	ID                     types.String `tfsdk:"id"`
+	Name                   types.String `tfsdk:"name"`
+	Tags                   types.Map    `tfsdk:"tags"`
+	TagsAll                types.Map    `tfsdk:"tags_all"`
+	TestingInformation     types.String `tfsdk:"testing_information"`
+	Type                   types.String `tfsdk:"type"`
 }
 
-func flattenControlMappingSourceSourceKeyword(apiObject *types.SourceKeyword) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{
-		"keyword_input_type": string(apiObject.KeywordInputType),
-		"keyword_value":      aws.ToString(apiObject.KeywordValue),
-	}
-	return []interface{}{m}
+type controlMappingSourcesData struct {
+	SourceDescription   types.String `tfsdk:"source_description"`
+	SourceFrequency     types.String `tfsdk:"source_frequency"`
+	SourceID            types.String `tfsdk:"source_id"`
+	SourceKeyword       types.List   `tfsdk:"source_keyword"`
+	SourceName          types.String `tfsdk:"source_name"`
+	SourceSetUpOption   types.String `tfsdk:"source_set_up_option"`
+	SourceType          types.String `tfsdk:"source_type"`
+	TroubleshootingText types.String `tfsdk:"troubleshooting_text"`
 }
 
-func expandControlMappingSourcesCreate(tfSet *schema.Set) []types.CreateControlMappingSource {
-	tfList := tfSet.List()
-	var ccms []types.CreateControlMappingSource
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		item := types.CreateControlMappingSource{
-			SourceName:        aws.String(m["source_name"].(string)),
-			SourceSetUpOption: types.SourceSetUpOption(m["source_set_up_option"].(string)),
-		}
-		if v, ok := m["source_description"].(string); ok {
-			item.SourceDescription = aws.String(v)
-		}
-		if v, ok := m["source_frequency"].(string); ok {
-			item.SourceFrequency = types.SourceFrequency(v)
-		}
-		if v, ok := m["source_keyword"].([]interface{}); ok {
-			item.SourceKeyword = expandControlMappingSourceSourceKeyword(v)
-		}
-		if v, ok := m["source_type"].(string); ok {
-			item.SourceType = types.SourceType(v)
-		}
-		if v, ok := m["troubleshooting_text"].(string); ok {
-			item.TroubleshootingText = aws.String(v)
-		}
-
-		ccms = append(ccms, item)
-	}
-	return ccms
+type sourceKeywordData struct {
+	KeywordInputType types.String `tfsdk:"keyword_input_type"`
+	KeywordValue     types.String `tfsdk:"keyword_value"`
 }
 
-func expandControlMappingSourcesUpdate(tfSet *schema.Set) []types.ControlMappingSource {
-	tfList := tfSet.List()
-	var cms []types.ControlMappingSource
+// refreshFromOutput writes state data from an AWS response object
+func (rd *resourceControlData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Control) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		item := types.ControlMappingSource{
-			// SourceId is required on update. This is the only field that differs between
-			// the ControlMappingSource and CreateControlMappingSource structs
-			SourceId:          aws.String(m["source_id"].(string)),
-			SourceName:        aws.String(m["source_name"].(string)),
-			SourceSetUpOption: types.SourceSetUpOption(m["source_set_up_option"].(string)),
-		}
-		if v, ok := m["source_description"].(string); ok {
-			item.SourceDescription = aws.String(v)
-		}
-		if v, ok := m["source_frequency"].(string); ok {
-			item.SourceFrequency = types.SourceFrequency(v)
-		}
-		if v, ok := m["source_keyword"].([]interface{}); ok {
-			item.SourceKeyword = expandControlMappingSourceSourceKeyword(v)
-		}
-		if v, ok := m["source_type"].(string); ok {
-			item.SourceType = types.SourceType(v)
-		}
-		if v, ok := m["troubleshooting_text"].(string); ok {
-			item.TroubleshootingText = aws.String(v)
-		}
-
-		cms = append(cms, item)
+	if out == nil {
+		return diags
 	}
-	return cms
+
+	rd.ID = types.StringValue(aws.ToString(out.Id))
+	rd.Name = types.StringValue(aws.ToString(out.Name))
+	cms, d := flattenControlMappingSources(ctx, out.ControlMappingSources)
+	diags.Append(d...)
+	rd.ControlMappingSources = cms
+
+	rd.ActionPlanInstructions = flex.StringToFramework(ctx, out.ActionPlanInstructions)
+	rd.ActionPlanTitle = flex.StringToFramework(ctx, out.ActionPlanTitle)
+	rd.Description = flex.StringToFramework(ctx, out.Description)
+	rd.TestingInformation = flex.StringToFramework(ctx, out.TestingInformation)
+	rd.ARN = flex.StringToFramework(ctx, out.Arn)
+	rd.Type = types.StringValue(string(out.Type))
+
+	defaultTagsConfig := meta.DefaultTagsConfig
+	ignoreTagsConfig := meta.IgnoreTagsConfig
+	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	// AWS APIs often return empty lists of tags when none have been configured.
+	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
+		rd.Tags = tftags.Null
+	} else {
+		rd.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
+	}
+	rd.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+
+	return diags
 }
 
-func expandControlMappingSourceSourceKeyword(tfList []interface{}) *types.SourceKeyword {
+func expandControlMappingSourcesCreate(ctx context.Context, tfList []controlMappingSourcesData) ([]awstypes.CreateControlMappingSource, diag.Diagnostics) {
+	var ccms []awstypes.CreateControlMappingSource
+	var diags diag.Diagnostics
+
+	for _, item := range tfList {
+		new := awstypes.CreateControlMappingSource{
+			SourceName:        aws.String(item.SourceName.ValueString()),
+			SourceSetUpOption: awstypes.SourceSetUpOption(item.SourceSetUpOption.ValueString()),
+			SourceType:        awstypes.SourceType(item.SourceType.ValueString()),
+		}
+
+		if !item.SourceDescription.IsNull() {
+			new.SourceDescription = aws.String(item.SourceDescription.ValueString())
+		}
+		if !item.SourceFrequency.IsNull() {
+			new.SourceFrequency = awstypes.SourceFrequency(item.SourceFrequency.ValueString())
+		}
+		if !item.SourceKeyword.IsNull() {
+			var sk []sourceKeywordData
+			diags.Append(item.SourceKeyword.ElementsAs(ctx, &sk, false)...)
+			new.SourceKeyword = expandSourceKeyword(sk)
+		}
+		if !item.TroubleshootingText.IsNull() {
+			new.TroubleshootingText = aws.String(item.TroubleshootingText.ValueString())
+		}
+		ccms = append(ccms, new)
+	}
+	return ccms, diags
+}
+
+func expandControlMappingSourcesUpdate(ctx context.Context, tfList []controlMappingSourcesData) ([]awstypes.ControlMappingSource, diag.Diagnostics) {
+	var cms []awstypes.ControlMappingSource
+	var diags diag.Diagnostics
+
+	for _, item := range tfList {
+		new := awstypes.ControlMappingSource{
+			SourceId:          aws.String(item.SourceID.ValueString()),
+			SourceName:        aws.String(item.SourceName.ValueString()),
+			SourceSetUpOption: awstypes.SourceSetUpOption(item.SourceSetUpOption.ValueString()),
+			SourceType:        awstypes.SourceType(item.SourceType.ValueString()),
+		}
+
+		if !item.SourceDescription.IsNull() {
+			new.SourceDescription = aws.String(item.SourceDescription.ValueString())
+		}
+		if !item.SourceFrequency.IsNull() {
+			new.SourceFrequency = awstypes.SourceFrequency(item.SourceFrequency.ValueString())
+		}
+		if !item.SourceKeyword.IsNull() {
+			var sk []sourceKeywordData
+			diags.Append(item.SourceKeyword.ElementsAs(ctx, &sk, false)...)
+			new.SourceKeyword = expandSourceKeyword(sk)
+		}
+		if !item.TroubleshootingText.IsNull() {
+			new.TroubleshootingText = aws.String(item.TroubleshootingText.ValueString())
+		}
+		cms = append(cms, new)
+	}
+	return cms, diags
+}
+
+func expandSourceKeyword(tfList []sourceKeywordData) *awstypes.SourceKeyword {
 	if len(tfList) == 0 {
 		return nil
 	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
-		return nil
+	sk := tfList[0]
+	return &awstypes.SourceKeyword{
+		KeywordInputType: awstypes.KeywordInputType(sk.KeywordInputType.ValueString()),
+		KeywordValue:     aws.String(sk.KeywordValue.ValueString()),
+	}
+}
+
+func flattenControlMappingSources(ctx context.Context, apiObject []awstypes.ControlMappingSource) (types.Set, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: controlMappingSourceAttrTypes}
+
+	elems := []attr.Value{}
+	for _, source := range apiObject {
+		sk, d := flattenSourceKeyword(ctx, source.SourceKeyword)
+		diags.Append(d...)
+
+		obj := map[string]attr.Value{
+			"source_description":   flex.StringToFramework(ctx, source.SourceDescription),
+			"source_frequency":     flex.EnumStringToFramework(ctx, string(source.SourceFrequency)),
+			"source_id":            types.StringValue(aws.ToString(source.SourceId)),
+			"source_keyword":       sk,
+			"source_name":          types.StringValue(aws.ToString(source.SourceName)),
+			"source_set_up_option": types.StringValue(string(source.SourceSetUpOption)),
+			"source_type":          types.StringValue(string(source.SourceType)),
+			"troubleshooting_text": flex.StringToFramework(ctx, source.TroubleshootingText),
+		}
+		objVal, d := types.ObjectValue(controlMappingSourceAttrTypes, obj)
+		diags.Append(d...)
+
+		elems = append(elems, objVal)
+	}
+	setVal, d := types.SetValue(elemType, elems)
+	diags.Append(d...)
+
+	return setVal, diags
+}
+
+func flattenSourceKeyword(ctx context.Context, apiObject *awstypes.SourceKeyword) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: sourceKeywordAttrTypes}
+
+	if apiObject == nil {
+		return types.ListValueMust(elemType, []attr.Value{}), diags
 	}
 
-	sk := types.SourceKeyword{}
-	if v, ok := tfMap["keyword_input_type"].(string); ok {
-		sk.KeywordInputType = types.KeywordInputType(v)
+	obj := map[string]attr.Value{
+		"keyword_input_type": flex.EnumStringToFramework(ctx, string(apiObject.KeywordInputType)),
+		"keyword_value":      types.StringValue(aws.ToString(apiObject.KeywordValue)),
 	}
-	if v, ok := tfMap["keyword_value"].(string); ok {
-		sk.KeywordValue = aws.String(v)
-	}
+	objVal, d := types.ObjectValue(sourceKeywordAttrTypes, obj)
+	diags.Append(d...)
 
-	return &sk
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
 }

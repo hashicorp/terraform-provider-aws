@@ -1070,8 +1070,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_athena_named_query":  athena.ResourceNamedQuery(),
 			"aws_athena_workgroup":    athena.ResourceWorkGroup(),
 
-			"aws_auditmanager_control": auditmanager.ResourceControl(),
-
 			"aws_autoscaling_attachment":     autoscaling.ResourceAttachment(),
 			"aws_autoscaling_group":          autoscaling.ResourceGroup(),
 			"aws_autoscaling_group_tag":      autoscaling.ResourceGroupTag(),
@@ -2257,6 +2255,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
 		ServicePackages: []intf.ServicePackageData{
+			auditmanager.ServicePackageData,
 			ec2.ServicePackageData,
 			globalaccelerator.ServicePackageData,
 			medialive.ServicePackageData,

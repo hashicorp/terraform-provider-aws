@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -28,7 +27,6 @@ func TestAccAuditManagerControl_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
-			testAccPreCheckControl(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,7 +62,6 @@ func TestAccAuditManagerControl_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
-			testAccPreCheckControl(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -74,7 +71,7 @@ func TestAccAuditManagerControl_disappears(t *testing.T) {
 				Config: testAccControlConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(resourceName, &control),
-					acctest.CheckResourceDisappears(acctest.Provider, tfauditmanager.ResourceControl(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceControl, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +88,6 @@ func TestAccAuditManagerControl_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
-			testAccPreCheckControl(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -143,7 +139,6 @@ func TestAccAuditManagerControl_optional(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
-			testAccPreCheckControl(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -201,7 +196,6 @@ func TestAccAuditManagerControl_optionalSources(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
-			testAccPreCheckControl(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -299,21 +293,6 @@ func testAccCheckControlExists(name string, control *types.Control) resource.Tes
 		*control = *resp
 
 		return nil
-	}
-}
-
-func testAccPreCheckControl(t *testing.T) {
-	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient
-
-	_, err := conn.ListControls(ctx, &auditmanager.ListControlsInput{
-		ControlType: types.ControlTypeCustom,
-	})
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
