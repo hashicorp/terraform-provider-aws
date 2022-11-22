@@ -4,7 +4,83 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
+
+func expandAwsvpcConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.AwsVpcConfiguration{}
+
+	if v, ok := tfMap["assign_public_ip"].(string); ok && v != "" {
+		a.AssignPublicIp = types.AssignPublicIp(v)
+	}
+
+	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+		a.SecurityGroups = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+		a.Subnets = flex.ExpandStringValueSet(v)
+	}
+
+	return a
+}
+
+func flattenAwsvpcConfiguration(apiObject *types.AwsVpcConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.AssignPublicIp; string(v) != "" {
+		m["assign_public_ip"] = string(v)
+	}
+
+	m["security_groups"] = flex.FlattenStringValueSet(apiObject.SecurityGroups)
+	m["subnets"] = flex.FlattenStringValueSet(apiObject.Subnets)
+
+	return m
+}
+
+func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) types.CapacityProviderStrategyItem {
+	if tfMap == nil {
+		return types.CapacityProviderStrategyItem{}
+	}
+
+	a := types.CapacityProviderStrategyItem{}
+
+	if v, ok := tfMap["base"].(int); ok {
+		a.Base = int32(v)
+	}
+
+	if v, ok := tfMap["capacity_provider"].(string); ok && v != "" {
+		a.CapacityProvider = aws.String(v)
+	}
+
+	if v, ok := tfMap["weight"].(int); ok {
+		a.Weight = int32(v)
+	}
+
+	return a
+}
+
+func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrategyItem) map[string]interface{} {
+	m := map[string]interface{}{}
+
+	m["base"] = apiObject.Base
+
+	if v := aws.ToString(apiObject.CapacityProvider); v != "" {
+		m["capacity_provider"] = v
+	}
+
+	m["weight"] = apiObject.Weight
+
+	return m
+}
 
 func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
 	if tfMap == nil {
@@ -29,6 +105,181 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 
 	if v := aws.ToString(apiObject.Arn); v != "" {
 		m["arn"] = v
+	}
+
+	return m
+}
+
+func expandEcsParameters(tfMap map[string]interface{}) *types.EcsParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.EcsParameters{}
+
+	if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		for _, s := range v.List() {
+			a.CapacityProviderStrategy = append(a.CapacityProviderStrategy, expandCapacityProviderStrategyItem(s.(map[string]interface{})))
+		}
+	}
+
+	if v, ok := tfMap["enable_ecs_managed_tags"].(bool); ok {
+		a.EnableECSManagedTags = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["enable_execute_command"].(bool); ok {
+		a.EnableExecuteCommand = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["group"].(string); ok && v != "" {
+		a.Group = aws.String(v)
+	}
+
+	if v, ok := tfMap["launch_type"].(string); ok && v != "" {
+		a.LaunchType = types.LaunchType(v)
+	}
+
+	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 {
+		a.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["placement_constraints"].(*schema.Set); ok && v.Len() > 0 {
+		for _, c := range v.List() {
+			a.PlacementConstraints = append(a.PlacementConstraints, expandPlacementConstraint(c.(map[string]interface{})))
+		}
+	}
+
+	if v, ok := tfMap["placement_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		for _, c := range v.List() {
+			a.PlacementStrategy = append(a.PlacementStrategy, expandPlacementStrategy(c.(map[string]interface{})))
+		}
+	}
+
+	if v, ok := tfMap["platform_version"].(string); ok && v != "" {
+		a.PlatformVersion = aws.String(v)
+	}
+
+	if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+		a.PropagateTags = types.PropagateTags(v)
+	}
+
+	if v, ok := tfMap["reference_id"].(string); ok && v != "" {
+		a.ReferenceId = aws.String(v)
+	}
+
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && v != nil {
+		for k, v := range v {
+			a.Tags = append(a.Tags, map[string]string{
+				"key":   k,
+				"value": v.(string),
+			})
+		}
+	}
+
+	if v, ok := tfMap["task_count"].(int); ok {
+		a.TaskCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["task_definition_arn"].(string); ok && v != "" {
+		a.TaskDefinitionArn = aws.String(v)
+	}
+
+	return a
+}
+
+func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.CapacityProviderStrategy; v != nil {
+		var l []interface{}
+
+		for _, p := range v {
+			l = append(l, flattenCapacityProviderStrategyItem(p))
+		}
+
+		m["capacity_provider_strategy"] = schema.NewSet(capacityProviderHash, l)
+	}
+
+	if v := apiObject.EnableECSManagedTags; v != nil {
+		m["enable_ecs_managed_tags"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EnableExecuteCommand; v != nil {
+		m["enable_execute_command"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.Group; v != nil {
+		m["group"] = aws.ToString(v)
+	}
+
+	if v := apiObject.LaunchType; string(v) != "" {
+		m["launch_type"] = v
+	}
+
+	if v := apiObject.NetworkConfiguration; v != nil {
+		m["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+	}
+
+	if v := apiObject.PlacementConstraints; len(v) > 0 {
+		var l []interface{}
+
+		for _, c := range v {
+			l = append(l, flattenPlacementConstraint(c))
+		}
+
+		m["placement_constraints"] = schema.NewSet(placementConstraintHash, l)
+	}
+
+	if v := apiObject.PlacementStrategy; len(v) > 0 {
+		var l []interface{}
+
+		for _, s := range v {
+			l = append(l, flattenPlacementStrategy(s))
+		}
+
+		m["placement_strategy"] = schema.NewSet(placementStrategyHash, l)
+	}
+
+	if v := apiObject.PlatformVersion; v != nil {
+		m["platform_version"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PropagateTags; string(v) != "" {
+		m["propagate_tags"] = v
+	}
+
+	if v := apiObject.ReferenceId; v != nil {
+		m["reference_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tags; len(v) > 0 {
+		result := make(map[string]interface{})
+
+		for _, tagMap := range v {
+			key := tagMap["key"]
+
+			// The EventBridge Scheduler API documents raw maps instead of
+			// the key-value structure expected by the RunTask API.
+			if key == "" {
+				continue
+			}
+
+			result[key] = tagMap["value"]
+		}
+
+		m["tags"] = result
+	}
+
+	if v := apiObject.TaskCount; v != nil {
+		m["task_count"] = int(aws.ToInt32(v))
+	}
+
+	if v := aws.ToString(apiObject.TaskDefinitionArn); v != "" {
+		m["task_definition_arn"] = v
 	}
 
 	return m
@@ -129,6 +380,98 @@ func flattenKinesisParameters(apiObject *types.KinesisParameters) map[string]int
 
 	if v := aws.ToString(apiObject.PartitionKey); v != "" {
 		m["partition_key"] = v
+	}
+
+	return m
+}
+
+func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.NetworkConfiguration{}
+
+	if v, ok := tfMap["awsvpc_configuration"].([]interface{}); ok && len(v) > 0 {
+		a.AwsvpcConfiguration = expandAwsvpcConfiguration(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.AwsvpcConfiguration; v != nil {
+		m["awsvpc_configuration"] = []interface{}{flattenAwsvpcConfiguration(v)}
+	}
+
+	return m
+}
+
+func expandPlacementConstraint(tfMap map[string]interface{}) types.PlacementConstraint {
+	if tfMap == nil {
+		return types.PlacementConstraint{}
+	}
+
+	a := types.PlacementConstraint{}
+
+	if v, ok := tfMap["expression"].(string); ok && v != "" {
+		a.Expression = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		a.Type = types.PlacementConstraintType(v)
+	}
+
+	return a
+}
+
+func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if v := aws.ToString(apiObject.Expression); v != "" {
+		m["expression"] = v
+	}
+
+	if v := apiObject.Type; v != "" {
+		m["type"] = string(v)
+	}
+
+	return m
+}
+
+func expandPlacementStrategy(tfMap map[string]interface{}) types.PlacementStrategy {
+	if tfMap == nil {
+		return types.PlacementStrategy{}
+	}
+
+	a := types.PlacementStrategy{}
+
+	if v, ok := tfMap["field"].(string); ok && v != "" {
+		a.Field = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		a.Type = types.PlacementStrategyType(v)
+	}
+
+	return a
+}
+
+func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if v := aws.ToString(apiObject.Field); v != "" {
+		m["field"] = v
+	}
+
+	if v := apiObject.Type; v != "" {
+		m["type"] = string(v)
 	}
 
 	return m
@@ -281,6 +624,10 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.DeadLetterConfig = expandDeadLetterConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["ecs_parameters"]; ok && len(v.([]interface{})) > 0 {
+		a.EcsParameters = expandEcsParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["eventbridge_parameters"]; ok && len(v.([]interface{})) > 0 {
 		a.EventBridgeParameters = expandEventBridgeParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -325,6 +672,10 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	if v := apiObject.DeadLetterConfig; v != nil {
 		m["dead_letter_config"] = []interface{}{flattenDeadLetterConfig(v)}
+	}
+
+	if v := apiObject.EcsParameters; v != nil {
+		m["ecs_parameters"] = []interface{}{flattenEcsParameters(v)}
 	}
 
 	if v := apiObject.EventBridgeParameters; v != nil {

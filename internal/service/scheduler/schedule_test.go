@@ -207,6 +207,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.input", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.kinesis_parameters.#", "0"),
@@ -920,6 +921,180 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var schedule scheduler.GetScheduleOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_scheduler_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_targetEcsParameters1(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetEcsParameters2(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
+						"base":              "2",
+						"capacity_provider": "test1",
+						"weight":            "50",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
+						"base":              "0",
+						"capacity_provider": "test2",
+						"weight":            "50",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", "my-task-group"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.assign_public_ip", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.*", "sg-111111111"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.*", "subnet-11111111"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
+						"type":       "memberOf",
+						"expression": "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
+						"type":  "binpack",
+						"field": "cpu",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "LATEST"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", "TASK_DEFINITION"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", "test-ref-id"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key2", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetEcsParameters3(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
+						"base":              "3",
+						"capacity_provider": "test3",
+						"weight":            "100",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", "my-task-group-2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.assign_public_ip", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.*", "sg-111111112"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.*", "sg-111111113"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.*", "subnet-11111112"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.*", "subnet-11111113"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
+						"type": "distinctInstance",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
+						"type":  "spread",
+						"field": "cpu",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "1.1.0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", "test-ref-id-2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_targetEcsParameters4(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScheduleConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(resourceName, &schedule),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", "0"),
 				),
 			},
 			{
@@ -1825,6 +2000,307 @@ resource "aws_scheduler_schedule" "test" {
   }
 }
 `, name, index),
+	)
+}
+
+func testAccScheduleConfig_targetEcsParameters1(name string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  cpu                      = 256
+  memory                   = 512
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+
+  container_definitions = <<EOF
+[
+  {
+    "name": "first",
+    "image": "service-first",
+    "cpu": 10,
+    "memory": 512,
+    "essential": true
+  }
+]
+EOF
+}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_ecs_cluster.test.arn
+    role_arn = aws_iam_role.test.arn
+
+    ecs_parameters {
+      task_definition_arn = aws_ecs_task_definition.test.arn
+    }
+  }
+}
+`, name),
+	)
+}
+
+func testAccScheduleConfig_targetEcsParameters2(name string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  cpu                      = 256
+  memory                   = 512
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+
+  container_definitions = <<EOF
+[
+  {
+    "name": "first",
+    "image": "service-first",
+    "cpu": 10,
+    "memory": 512,
+    "essential": true
+  }
+]
+EOF
+}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_ecs_cluster.test.arn
+    role_arn = aws_iam_role.test.arn
+
+    ecs_parameters {
+      capacity_provider_strategy {
+        base              = 2
+        capacity_provider = "test1"
+        weight            = 50
+      }
+      
+      capacity_provider_strategy {
+        base              = 0
+        capacity_provider = "test2"
+        weight            = 50
+      }
+
+      enable_ecs_managed_tags = true
+
+      enable_execute_command = false
+
+      group = "my-task-group"
+
+      launch_type = "FARGATE"
+
+      network_configuration {
+        awsvpc_configuration {
+          assign_public_ip = "ENABLED"
+          security_groups  = ["sg-111111111"]
+          subnets          = ["subnet-11111111"]
+        }
+      }
+
+      placement_constraints {
+        type       = "memberOf"
+        expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
+      }
+
+      placement_strategy {
+        type  = "binpack"
+        field = "cpu"
+      }
+
+      platform_version = "LATEST"
+
+      propagate_tags = "TASK_DEFINITION"
+
+      reference_id = "test-ref-id"
+
+      tags = {
+        Key1 = "Value1"
+        Key2 = "Value2"
+      }
+
+      task_count = 3
+
+      task_definition_arn = aws_ecs_task_definition.test.arn
+    }
+  }
+}
+`, name),
+	)
+}
+
+func testAccScheduleConfig_targetEcsParameters3(name string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+locals {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = "${local.name}-2"
+  cpu                      = 256
+  memory                   = 512
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+
+  container_definitions = <<EOF
+[
+  {
+    "name": "first",
+    "image": "service-first",
+    "cpu": 10,
+    "memory": 512,
+    "essential": true
+  }
+]
+EOF
+}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_ecs_cluster.test.arn
+    role_arn = aws_iam_role.test.arn
+
+    ecs_parameters {
+      capacity_provider_strategy {
+        base              = 3
+        capacity_provider = "test3"
+        weight            = 100
+      }
+
+      enable_ecs_managed_tags = false
+
+      enable_execute_command = true
+
+      group = "my-task-group-2"
+
+      launch_type = "FARGATE"
+
+      network_configuration {
+        awsvpc_configuration {
+          assign_public_ip = "DISABLED"
+          security_groups  = ["sg-111111112", "sg-111111113"]
+          subnets          = ["subnet-11111112", "subnet-11111113"]
+        }
+      }
+
+      placement_constraints {
+        type = "distinctInstance"
+      }
+
+      placement_strategy {
+        type  = "spread"
+        field = "cpu"
+      }
+
+      platform_version = "1.1.0"
+
+      reference_id = "test-ref-id-2"
+
+      tags = {
+        Key1 = "Value1updated"
+      }
+
+      task_count = 1
+
+      task_definition_arn = aws_ecs_task_definition.test.arn
+    }
+  }
+}
+`, name),
+	)
+}
+
+func testAccScheduleConfig_targetEcsParameters4(name string) string {
+	return acctest.ConfigCompose(
+		testAccScheduleConfig_base,
+		fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+locals {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = "${local.name}-2"
+  cpu                      = 256
+  memory                   = 512
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+
+  container_definitions = <<EOF
+[
+  {
+    "name": "first",
+    "image": "service-first",
+    "cpu": 10,
+    "memory": 512,
+    "essential": true
+  }
+]
+EOF
+}
+
+resource "aws_scheduler_schedule" "test" {
+  name = %[1]q
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(1 hour)"
+
+  target {
+    arn      = aws_ecs_cluster.test.arn
+    role_arn = aws_iam_role.test.arn
+
+    ecs_parameters {
+      launch_type         = "EC2"
+      task_definition_arn = aws_ecs_task_definition.test.arn
+    }
+  }
+}
+`, name),
 	)
 }
 

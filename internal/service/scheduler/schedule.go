@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -166,6 +167,217 @@ func ResourceSchedule() *schema.Resource {
 									"arn": {
 										Type:             schema.TypeString,
 										Optional:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+									},
+								},
+							},
+						},
+						"ecs_parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_provider_strategy": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 6,
+										Set:      capacityProviderHash,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"base": {
+													Type:             schema.TypeInt,
+													Optional:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 100000)),
+												},
+												"capacity_provider": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
+												},
+												"weight": {
+													Type:             schema.TypeInt,
+													Optional:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 1000)),
+												},
+											},
+										},
+									},
+									"enable_ecs_managed_tags": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"enable_execute_command": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"group": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
+									},
+									"launch_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateDiagFunc: validation.ToDiagFunc(
+											validation.StringInSlice(
+												slices.ApplyToAll(
+													types.LaunchType("").Values(),
+													func(v types.LaunchType) string {
+														return string(v)
+													},
+												),
+												false),
+										),
+									},
+									"network_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"awsvpc_configuration": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"assign_public_ip": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ValidateDiagFunc: validation.ToDiagFunc(
+																	validation.StringInSlice(
+																		slices.ApplyToAll(
+																			types.AssignPublicIp("").Values(),
+																			func(v types.AssignPublicIp) string {
+																				return string(v)
+																			},
+																		),
+																		false),
+																),
+															},
+															"security_groups": {
+																Type:     schema.TypeSet,
+																Required: true,
+																MinItems: 1,
+																MaxItems: 5,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+																Set:      schema.HashString,
+															},
+															"subnets": {
+																Type:     schema.TypeSet,
+																Required: true,
+																MinItems: 1,
+																MaxItems: 16,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+																Set:      schema.HashString,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"placement_constraints": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Set:      placementConstraintHash,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"expression": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
+												},
+												"type": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateDiagFunc: validation.ToDiagFunc(
+														validation.StringInSlice(
+															slices.ApplyToAll(
+																types.PlacementConstraintType("").Values(),
+																func(v types.PlacementConstraintType) string {
+																	return string(v)
+																},
+															),
+															false),
+													),
+												},
+											},
+										},
+									},
+									"placement_strategy": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 5,
+										Set:      placementStrategyHash,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"field": {
+													Type:     schema.TypeString,
+													Optional: true,
+													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+														return strings.EqualFold(old, new)
+													},
+												},
+												"type": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateDiagFunc: validation.ToDiagFunc(
+														validation.StringInSlice(
+															slices.ApplyToAll(
+																types.PlacementStrategyType("").Values(),
+																func(v types.PlacementStrategyType) string {
+																	return string(v)
+																},
+															),
+															false),
+													),
+												},
+											},
+										},
+									},
+									"platform_version": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"propagate_tags": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateDiagFunc: validation.ToDiagFunc(
+											validation.StringInSlice(
+												slices.ApplyToAll(
+													types.PropagateTags("").Values(),
+													func(v types.PropagateTags) string {
+														return string(v)
+													},
+												),
+												false),
+										),
+									},
+									"reference_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"tags": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(0, 256)),
+										},
+										ValidateDiagFunc: validation.MapKeyLenBetween(1, 128),
+									},
+									"task_count": {
+										Type:             schema.TypeInt,
+										Optional:         true,
+										Default:          1,
+										ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 10)),
+									},
+									"task_definition_arn": {
+										Type:             schema.TypeString,
+										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 									},
 								},
@@ -540,4 +752,53 @@ func ResourceScheduleParseID(id string) (groupName, scheduleName string, err err
 func sagemakerPipelineParameterHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	return create.StringHashcode(fmt.Sprintf("%s-%s", m["name"].(string), m["value"].(string)))
+}
+
+func capacityProviderHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["base"].(int); ok {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
+
+	if v, ok := m["capacity_provider"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	if v, ok := m["weight"].(int); ok {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
+
+	return create.StringHashcode(buf.String())
+}
+
+func placementConstraintHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["expression"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	return create.StringHashcode(buf.String())
+}
+
+func placementStrategyHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["field"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+
+	return create.StringHashcode(buf.String())
 }

@@ -97,6 +97,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `dead_letter_config` - (Optional) Information about an Amazon SQS queue that EventBridge Scheduler uses as a dead-letter queue for your schedule. If specified, EventBridge Scheduler delivers failed events that could not be successfully delivered to a target to the queue. Detailed below.
+* `ecs_parameters` - (Optional) Templated target type for the Amazon ECS [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) API operation. Detailed below.
 * `eventbridge_parameters` - (Optional) Templated target type for the EventBridge [`PutEvents`](https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html) API operation. Detailed below.
 * `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
 * `kinesis_parameters` - (Optional) Templated target type for the Amazon Kinesis [`PutRecord`](https://docs.aws.amazon.com/scheduler/latest/APIReference/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
@@ -107,6 +108,54 @@ The following arguments are optional:
 #### dead_letter_config Configuration Block
 
 * `arn` - (Optional) ARN of the SQS queue specified as the destination for the dead-letter queue.
+
+#### ecs_parameters Configuration Block
+
+The following arguments are required:
+
+* `task_definition_arn` - (Required) ARN of the task definition to use.
+
+The following arguments are optional:
+
+* `capacity_provider_strategy` - (Optional) Capacity provider strategy to use for the task. Up to `6` items. Detailed below.
+* `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task. For more information, see [Tagging Your Amazon ECS Resources](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-using-tags.html) in the Amazon ECS Developer Guide.
+* `enable_execute_command` - (Optional) Specifies whether to enable the execute command functionality for the containers in this task.
+* `group` - (Optional) Specifies an ECS task group for the task. Up to `255` characters.
+* `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. One of `EC2`, `FARGATE`, `EXTERNAL`.
+* `network_configuration` - (Optional) Detailed below.
+* `placement_constraints` - (Optional) An array of placement constraint objects to use for the task. You can specify up to `10` constraints per task (including constraints in the task definition and those specified at runtime). Detailed below.
+* `placement_strategy` - (Optional) Set of `0` to `5` placement strategies. Detailed below.
+* `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`.
+* `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. The only valid value is `TASK_DEFINITION`.
+* `reference_id` - (Optional) Reference ID to use for the task.
+* `tags` - (Optional) The metadata that you apply to the task. Each tag consists of a key and an optional value. For more information, see [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) in the Amazon ECS API Reference.
+* `task_count` - (Optional) The number of tasks to create. Between `1` (default) and `10`.
+
+##### capacity_provider_strategy Configuration Block
+
+* `base` - (Optional) How many tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined. Can range from `0` (default) to `100000`.
+* `capacity_provider` - (Required) Short name of the capacity provider.
+* `weight` - (Optional) Designates the relative percentage of the total number of tasks launched that should use the specified capacity provider. The weight value is taken into consideration after the base value, if defined, is satisfied. Can range from `0` to `1000`.
+
+##### network_configuration Configuration Block
+
+* `awsvpc_configuration` - (Optional) Detailed below.
+
+##### awsvpc_configuration Configuration Block
+
+* `assign_public_ip` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. You can specify `ENABLED` only when the `launch_type` is set to `FARGATE`. One of `ENABLED`, `DISABLED`.
+* `security_groups` - (Optional) Set of 1 to 5 Security Group ID-s to be associated with the task. These security groups must all be in the same VPC.
+* `subnets` - (Optional) Set of 1 to 16 subnets to be associated with the task. These subnets must all be in the same VPC.
+
+##### placement_constraints Configuration Block
+
+* `expression` - (Optional) A cluster query language expression to apply to the constraint. You cannot specify an expression if the constraint type is `distinctInstance`. For more information, see [Cluster query language](https://docs.aws.amazon.com/latest/developerguide/cluster-query-language.html) in the Amazon ECS Developer Guide.
+* `type` - (Required) The type of constraint. One of `distinctInstance`, `memberOf`.
+
+##### placement_strategy Configuration Block
+
+* `field` - (Optional) The field to apply the placement strategy against.
+* `type` - (Required) The type of placement strategy. One of `random`, `spread`, `binpack`.
 
 #### eventbridge_parameters Configuration Block
 
