@@ -385,6 +385,12 @@ func ResourceCluster() *schema.Resource {
 							Optional: true,
 							Default:  clusterScalingConfiguration_DefaultMinCapacity,
 						},
+						"seconds_before_timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(60, 600),
+						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
 							Optional:     true,
