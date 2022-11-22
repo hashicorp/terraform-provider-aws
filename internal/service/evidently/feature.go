@@ -61,7 +61,7 @@ func ResourceFeature() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 160),
+				ValidateFunc: validation.StringLenBetween(0, 160),
 			},
 			"entity_overrides": {
 				Type:     schema.TypeMap,
