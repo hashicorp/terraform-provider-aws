@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -186,7 +187,7 @@ func testAccCheckNATGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindNATGatewayByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindNATGatewayByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -215,7 +216,7 @@ func testAccCheckNATGatewayExists(n string, v *ec2.NatGateway) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		output, err := tfec2.FindNATGatewayByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindNATGatewayByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

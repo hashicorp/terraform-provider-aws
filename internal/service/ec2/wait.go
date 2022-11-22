@@ -2037,15 +2037,15 @@ const (
 	natGatewayDeletedTimeout = 30 * time.Minute
 )
 
-func WaitNATGatewayCreated(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+func WaitNATGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.NatGatewayStatePending},
 		Target:  []string{ec2.NatGatewayStateAvailable},
-		Refresh: StatusNATGatewayState(conn, id),
+		Refresh: StatusNATGatewayState(ctx, conn, id),
 		Timeout: natGatewayCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.NatGateway); ok {
 		if state := aws.StringValue(output.State); state == ec2.NatGatewayStateFailed {
@@ -2058,17 +2058,17 @@ func WaitNATGatewayCreated(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
 	return nil, err
 }
 
-func WaitNATGatewayDeleted(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+func WaitNATGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.NatGatewayStateDeleting},
 		Target:     []string{},
-		Refresh:    StatusNATGatewayState(conn, id),
+		Refresh:    StatusNATGatewayState(ctx, conn, id),
 		Timeout:    natGatewayDeletedTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.NatGateway); ok {
 		if state := aws.StringValue(output.State); state == ec2.NatGatewayStateFailed {

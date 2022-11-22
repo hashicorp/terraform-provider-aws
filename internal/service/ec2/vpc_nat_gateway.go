@@ -1,12 +1,13 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,10 +19,10 @@ import (
 
 func ResourceNATGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNATGatewayCreate,
-		Read:   resourceNATGatewayRead,
-		Update: resourceNATGatewayUpdate,
-		Delete: resourceNATGatewayDelete,
+		CreateWithoutTimeout: resourceNATGatewayCreate,
+		ReadWithoutTimeout:   resourceNATGatewayRead,
+		UpdateWithoutTimeout: resourceNATGatewayUpdate,
+		DeleteWithoutTimeout: resourceNATGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -68,7 +69,7 @@ func ResourceNATGateway() *schema.Resource {
 	}
 }
 
-func resourceNATGatewayCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -94,27 +95,27 @@ func resourceNATGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateNatGateway(input)
+	output, err := conn.CreateNatGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 NAT Gateway: %w", err)
+		return diag.Errorf("creating EC2 NAT Gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.NatGateway.NatGatewayId))
 
-	if _, err := WaitNATGatewayCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 NAT Gateway (%s) create: %w", d.Id(), err)
+	if _, err := WaitNATGatewayCreated(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for EC2 NAT Gateway (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceNATGatewayRead(d, meta)
+	return resourceNATGatewayRead(ctx, d, meta)
 }
 
-func resourceNATGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ng, err := FindNATGatewayByID(conn, d.Id())
+	ng, err := FindNATGatewayByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 NAT Gateway (%s) not found, removing from state", d.Id())
@@ -123,7 +124,7 @@ func resourceNATGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 NAT Gateway (%s): %w", d.Id(), err)
+		return diag.Errorf("reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
 	address := ng.NatGatewayAddresses[0]
@@ -138,35 +139,35 @@ func resourceNATGatewayRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceNATGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating EC2 NAT Gateway (%s) tags: %w", d.Id(), err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("updating EC2 NAT Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceNATGatewayRead(d, meta)
+	return resourceNATGatewayRead(ctx, d, meta)
 }
 
-func resourceNATGatewayDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
-	_, err := conn.DeleteNatGateway(&ec2.DeleteNatGatewayInput{
+	_, err := conn.DeleteNatGatewayWithContext(ctx, &ec2.DeleteNatGatewayInput{
 		NatGatewayId: aws.String(d.Id()),
 	})
 
@@ -175,11 +176,11 @@ func resourceNATGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 NAT Gateway (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitNATGatewayDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 NAT Gateway (%s) delete: %w", d.Id(), err)
+	if _, err := WaitNATGatewayDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for EC2 NAT Gateway (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
