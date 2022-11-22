@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_elasticache_cluster: Add `ip_discovery` argument
+resource/aws_elasticache_cluster: Add `ip_discovery` argument in support of IPv6
 ```
 
 ```release-note:enhancement
