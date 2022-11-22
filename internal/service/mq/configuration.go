@@ -19,13 +19,15 @@ import (
 
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationCreate,
-		Read:   resourceConfigurationRead,
-		Update: resourceConfigurationUpdate,
-		Delete: resourceConfigurationDelete,
+		Create:               resourceConfigurationCreate,
+		Read:                 resourceConfigurationRead,
+		Update:               resourceConfigurationUpdate,
+		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.HasChange("description") {
@@ -75,14 +77,14 @@ func ResourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"latest_revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"latest_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -206,12 +208,6 @@ func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return resourceConfigurationRead(d, meta)
-}
-
-func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	// TODO: Delete is not available in the API
-
-	return nil
 }
 
 func suppressXMLEquivalentConfig(k, old, new string, d *schema.ResourceData) bool {
