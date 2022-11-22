@@ -222,7 +222,7 @@ func TestAccElastiCacheCluster_ParameterGroupName_default(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheCluster_IpDiscovery(t *testing.T) {
+func TestAccElastiCacheCluster_ipDiscovery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
