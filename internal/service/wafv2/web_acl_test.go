@@ -2817,7 +2817,7 @@ resource "aws_wafv2_web_acl" "test" {
   rule {
     name     = "rule-1"
     priority = 1
-  
+
     override_action {
       count {}
     }
@@ -2826,7 +2826,7 @@ resource "aws_wafv2_web_acl" "test" {
       managed_rule_group_statement {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
-    
+
         rule_action_override {
           action_to_use {
             count {}
@@ -2842,7 +2842,7 @@ resource "aws_wafv2_web_acl" "test" {
 
           name = "NoUserAgent_HEADER"
         }
-    
+
         scope_down_statement {
           geo_match_statement {
             country_codes = ["US", "NL"]
@@ -2850,19 +2850,19 @@ resource "aws_wafv2_web_acl" "test" {
         }
       }
     }
-  
+
     visibility_config {
       cloudwatch_metrics_enabled = false
       metric_name                = "friendly-rule-metric-name"
       sampled_requests_enabled   = false
     }
   }
-  
+
   tags = {
     Tag1 = "Value1"
     Tag2 = "Value2"
   }
-  
+
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
