@@ -1355,12 +1355,12 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_ipDiscovery(rName, engine, engineVersion, ipDiscovery string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id           = %q
-  engine               = %q
-  engine_version       = %q
-  node_type            = "cache.t3.small"
-  num_cache_nodes      = 1
-  ip_discovery         = %q
+  cluster_id      = %[1]q
+  engine          = %[2]q
+  engine_version  = %[3]q
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+  ip_discovery    = %[4]q
 }
 `, rName, engine, engineVersion, ipDiscovery)
 }
