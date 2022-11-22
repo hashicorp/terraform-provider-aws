@@ -711,10 +711,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 						},
 						"associate_public_ip_address": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"delete_on_termination": {
 							// Use TypeString to allow an "unspecified" value,
@@ -1945,11 +1943,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.AssociateCarrierIpAddress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["associate_public_ip_address"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
-		apiObject.AssociatePublicIpAddress = aws.Bool(v)
-	}
+	apiObject.AssociatePublicIpAddress = aws.Bool(tfMap["associate_public_ip_address"].(bool))
 
 	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
 		v, _ := strconv.ParseBool(v)
@@ -2910,9 +2904,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 		tfMap["associate_carrier_ip_address"] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
-	if v := apiObject.AssociatePublicIpAddress; v != nil {
-		tfMap["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v))
-	}
+	tfMap["associate_public_ip_address"] = aws.BoolValue(apiObject.AssociatePublicIpAddress)
 
 	if v := apiObject.DeleteOnTermination; v != nil {
 		tfMap["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v))
