@@ -2806,67 +2806,67 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_managedRuleGroupStatementRuleActionOverrides(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
 
-	default_action {
-		allow {}
-	}
+  default_action {
+    allow {}
+  }
 
-	rule {
-		name     = "rule-1"
-		priority = 1
-	
-		override_action {
-		  count {}
-		}
+  rule {
+    name     = "rule-1"
+    priority = 1
+  
+    override_action {
+      count {}
+    }
 
-		statement {
-			managed_rule_group_statement {
-				name        = "AWSManagedRulesCommonRuleSet"
-				vendor_name = "AWS"
-		
-				rule_action_override {
-					action_to_use {
-						count {}
-					}
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+    
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
 
-					name = "SizeRestrictions_QUERYSTRING"
-				}
+          name = "SizeRestrictions_QUERYSTRING"
+        }
 
-				rule_action_override {
-					action_to_use {
-						count {}
-					}
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
 
-					name = "NoUserAgent_HEADER"
-				}
-		
-				scope_down_statement {
-					geo_match_statement {
-						country_codes = ["US", "NL"]
-					}
-				}
-			}
-		}
-	
-		visibility_config {
+          name = "NoUserAgent_HEADER"
+        }
+    
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
+        }
+      }
+    }
+  
+    visibility_config {
       cloudwatch_metrics_enabled = false
       metric_name                = "friendly-rule-metric-name"
       sampled_requests_enabled   = false
-		}
-	}
-	
-	tags = {
-		Tag1 = "Value1"
-		Tag2 = "Value2"
-	}
-	
-	visibility_config {
-		cloudwatch_metrics_enabled = false
-		metric_name                = "friendly-metric-name"
-		sampled_requests_enabled   = false
+    }
+  }
+  
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+  
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
