@@ -468,13 +468,7 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
-						},
-						"compression_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      s3SettingsCompressionTypeNone,
-							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
-						},
+						},						
 						"csv_delimiter": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1826,10 +1820,7 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	}
 	if v, ok := tfMap["cdc_path"].(string); ok {
 		apiObject.CdcPath = aws.String(v)
-	}
-	if v, ok := tfMap["compression_type"].(string); ok {
-		apiObject.CompressionType = aws.String(v)
-	}
+	}	
 	if v, ok := tfMap["csv_delimiter"].(string); ok {
 		apiObject.CsvDelimiter = aws.String(v)
 	}
@@ -1948,10 +1939,7 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	}
 	if v := apiObject.CdcPath; v != nil {
 		tfMap["cdc_path"] = aws.StringValue(v)
-	}
-	if v := apiObject.CompressionType; v != nil {
-		tfMap["compression_type"] = aws.StringValue(v)
-	}
+	}	
 	if v := apiObject.CsvDelimiter; v != nil {
 		tfMap["csv_delimiter"] = aws.StringValue(v)
 	}
