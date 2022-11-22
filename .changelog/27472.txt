@@ -1,0 +1,3 @@
+```release-note:bug
+resource/amp: Fix issue where amp workspace fails to create logging configuration during workspace update.
+```
