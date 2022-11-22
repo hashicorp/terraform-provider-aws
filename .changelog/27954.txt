@@ -1,3 +1,7 @@
+```release-note:note
+resource/aws_wafv2_web_acl: The `excluded_rule` attribute has been deprecated. All configurations using `excluded_rule` should be updated to use the new `rule_action_override` attribute instead.
+```
+
 ```release-note:enhancement
-resource/aws_wafv2_web_acl: Add rule_action_override argument
+resource/aws_wafv2_web_acl: Add `rule_action_override` attribute
 ```
