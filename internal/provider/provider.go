@@ -902,7 +902,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_sns_topic": sns.DataSourceTopic(),
 
-			"aws_sqs_queue": sqs.DataSourceQueue(),
+			"aws_sqs_queue":  sqs.DataSourceQueue(),
+			"aws_sqs_queues": sqs.DataSourceQueues(),
 
 			"aws_ssm_document":            ssm.DataSourceDocument(),
 			"aws_ssm_instances":           ssm.DataSourceInstances(),
