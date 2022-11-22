@@ -45,15 +45,15 @@ func ResourceNATGateway() *schema.Resource {
 				Computed: true,
 			},
 			"private_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ip": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPv4Address,
+			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"subnet_id": {
 				Type:     schema.TypeString,
