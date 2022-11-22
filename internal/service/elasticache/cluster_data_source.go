@@ -18,6 +18,42 @@ func DataSourceCluster() *schema.Resource {
 		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cache_nodes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -26,66 +62,28 @@ func DataSourceCluster() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-
-			"node_type": {
+			"configuration_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"num_cache_nodes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"engine": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"parameter_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"replication_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"security_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_type": {
+						"destination": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"destination": {
+						"destination_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -104,72 +102,52 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"snapshot_window": {
+			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"snapshot_retention_limit": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"availability_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"notification_topic_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"num_cache_nodes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"parameter_group_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
-			"configuration_endpoint": {
+			"replication_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cluster_address": {
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"security_group_names": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"snapshot_retention_limit": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"snapshot_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"arn": {
+			"subnet_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cache_nodes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"availability_zone": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
