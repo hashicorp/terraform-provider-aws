@@ -1,7 +1,15 @@
 ## 4.41.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_sqs_queues` ([#27890](https://github.com/hashicorp/terraform-provider-aws/issues/27890))
+* **New Resource:** `aws_ivschat_logging_configuration` ([#27924](https://github.com/hashicorp/terraform-provider-aws/issues/27924))
+* **New Resource:** `aws_rds_clusters` ([#27891](https://github.com/hashicorp/terraform-provider-aws/issues/27891))
+
 ENHANCEMENTS:
 
+* data-source/aws_rds_cluster: Add `engine_mode` attribute ([#27892](https://github.com/hashicorp/terraform-provider-aws/issues/27892))
+* provider: Support `ap-south-2` as a valid AWS Region ([#27950](https://github.com/hashicorp/terraform-provider-aws/issues/27950))
 * resource/aws_amplify_app: Add support for `WEB_COMPUTE` `platform` value in support of [Next.js web apps](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-Amplify-support.html) ([#27925](https://github.com/hashicorp/terraform-provider-aws/issues/27925))
 * resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
 * resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
