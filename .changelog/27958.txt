@@ -1,0 +1,7 @@
+```release-note:bug
+resource/ec2_launch_template: Update `associate_public_ip_address` field from type String to Bool to agree with docs.
+```
+
+```release-note:bug
+data-source/ec2_launch_template: Update `associate_public_ip_address` field from type String to Bool to agree with docs.
+```
