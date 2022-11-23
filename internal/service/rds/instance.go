@@ -1614,7 +1614,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if !aws.BoolValue(input.ApplyImmediately) {
-			log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
+			diags = errs.AppendWarningf(diags, "updating RDS DB Instance (%s): changes will be applied during next maintenance window", d.Id())
 		}
 
 		if d.HasChanges("allocated_storage", "iops") {
