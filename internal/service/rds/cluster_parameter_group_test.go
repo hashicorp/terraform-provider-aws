@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -506,8 +505,7 @@ func testAccClusterParameterGroupDisappears(v *rds.DBClusterParameterGroup) reso
 			}
 			_, err := conn.DescribeDBClusterParameterGroups(opts)
 			if err != nil {
-				dbparamgrouperr, ok := err.(awserr.Error)
-				if ok && dbparamgrouperr.Code() == "DBParameterGroupNotFound" {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
 					return nil
 				}
 				return resource.NonRetryableError(

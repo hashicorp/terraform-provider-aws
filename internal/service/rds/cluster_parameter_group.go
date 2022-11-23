@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -132,7 +131,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 
 	describeResp, err := conn.DescribeDBClusterParameterGroups(&describeOpts)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "DBParameterGroupNotFound" {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
 			log.Printf("[WARN] DB Cluster Parameter Group (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil

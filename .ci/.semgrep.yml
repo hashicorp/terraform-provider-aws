@@ -819,6 +819,11 @@ rules:
               if ... {
                 ...
               }
+          - pattern: |
+              $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
+              if $OK && ... {
+                ...
+              }
     severity: WARNING
 
   - id: fmt-Errorf-awserr-Error-Code

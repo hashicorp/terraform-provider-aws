@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -108,7 +108,7 @@ func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Service Catalog Portfolio: %#v", input)
 	resp, err := conn.DescribePortfolio(&input)
 	if err != nil {
-		if scErr, ok := err.(awserr.Error); ok && scErr.Code() == "ResourceNotFoundException" {
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Service Catalog Portfolio %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
