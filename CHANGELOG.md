@@ -25,6 +25,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudcontrolapi_resource: Remove invalid regular expressions from CloudFormation resource schema ([#27935](https://github.com/hashicorp/terraform-provider-aws/issues/27935))
+* resource/aws_resourcegroups_group: Properly set `configuration.parameters` as optional ([#27985](https://github.com/hashicorp/terraform-provider-aws/issues/27985))
 
 ## 4.40.0 (November 17, 2022)
 
