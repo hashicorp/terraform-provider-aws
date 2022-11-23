@@ -473,7 +473,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 	})
 }
 
-func TestAccSchedulerSchedule_kmsKeyArn(t *testing.T) {
+func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -493,7 +493,7 @@ func TestAccSchedulerSchedule_kmsKeyArn(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_kmsKeyArn(name, 0),
+				Config: testAccScheduleConfig_kmsKeyARN(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test.0", "arn"),
@@ -505,7 +505,7 @@ func TestAccSchedulerSchedule_kmsKeyArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_kmsKeyArn(name, 1),
+				Config: testAccScheduleConfig_kmsKeyARN(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test.1", "arn"),
@@ -826,7 +826,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 	})
 }
 
-func TestAccSchedulerSchedule_targetArn(t *testing.T) {
+func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -846,7 +846,7 @@ func TestAccSchedulerSchedule_targetArn(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_targetArn(name, 0),
+				Config: testAccScheduleConfig_targetARN(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.0", "arn"),
@@ -858,7 +858,7 @@ func TestAccSchedulerSchedule_targetArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetArn(name, 1),
+				Config: testAccScheduleConfig_targetARN(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.1", "arn"),
@@ -932,7 +932,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 	})
 }
 
-func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
+func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -952,7 +952,7 @@ func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_targetEcsParameters1(name),
+				Config: testAccScheduleConfig_targetECSParameters1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
@@ -977,7 +977,7 @@ func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetEcsParameters2(name),
+				Config: testAccScheduleConfig_targetECSParameters2(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "2"),
@@ -1024,7 +1024,7 @@ func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetEcsParameters3(name),
+				Config: testAccScheduleConfig_targetECSParameters3(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "1"),
@@ -1066,7 +1066,7 @@ func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetEcsParameters4(name),
+				Config: testAccScheduleConfig_targetECSParameters4(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
@@ -1354,7 +1354,7 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 	})
 }
 
-func TestAccSchedulerSchedule_targetRoleArn(t *testing.T) {
+func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1374,7 +1374,7 @@ func TestAccSchedulerSchedule_targetRoleArn(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_targetRoleArn(name, "test"),
+				Config: testAccScheduleConfig_targetRoleARN(name, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
@@ -1386,7 +1386,7 @@ func TestAccSchedulerSchedule_targetRoleArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetRoleArn(name, "test1"),
+				Config: testAccScheduleConfig_targetRoleARN(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test1", "arn"),
@@ -1496,7 +1496,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 	})
 }
 
-func TestAccSchedulerSchedule_targetSqsParameters(t *testing.T) {
+func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1516,7 +1516,7 @@ func TestAccSchedulerSchedule_targetSqsParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_targetSqsParameters(name, "test1"),
+				Config: testAccScheduleConfig_targetSQSParameters(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.0.message_group_id", "test1"),
@@ -1528,7 +1528,7 @@ func TestAccSchedulerSchedule_targetSqsParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetSqsParameters(name, "test2"),
+				Config: testAccScheduleConfig_targetSQSParameters(name, "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.0.message_group_id", "test2"),
@@ -1767,7 +1767,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_kmsKeyArn(name string, index int) string {
+func testAccScheduleConfig_kmsKeyARN(name string, index int) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
@@ -1945,7 +1945,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_targetArn(name string, i int) string {
+func testAccScheduleConfig_targetARN(name string, i int) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
@@ -2003,7 +2003,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_targetEcsParameters1(name string) string {
+func testAccScheduleConfig_targetECSParameters1(name string) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
@@ -2053,7 +2053,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_targetEcsParameters2(name string) string {
+func testAccScheduleConfig_targetECSParameters2(name string) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
@@ -2152,7 +2152,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_targetEcsParameters3(name string) string {
+func testAccScheduleConfig_targetECSParameters3(name string) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
@@ -2245,7 +2245,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_targetEcsParameters4(name string) string {
+func testAccScheduleConfig_targetECSParameters4(name string) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
@@ -2424,7 +2424,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_targetRoleArn(name, resourceName string) string {
+func testAccScheduleConfig_targetRoleARN(name, resourceName string) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
@@ -2528,7 +2528,7 @@ resource "aws_scheduler_schedule" "test" {
 	)
 }
 
-func testAccScheduleConfig_targetSqsParameters(name, messageGroupId string) string {
+func testAccScheduleConfig_targetSQSParameters(name, messageGroupId string) string {
 	return acctest.ConfigCompose(
 		testAccScheduleConfig_base,
 		fmt.Sprintf(`
