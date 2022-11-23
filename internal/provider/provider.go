@@ -2047,6 +2047,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
+			"aws_scheduler_schedule":       scheduler.ResourceSchedule(),
 			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
 			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
