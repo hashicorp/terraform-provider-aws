@@ -89,10 +89,13 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.outpost_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "preferred_outpost_arn", ""),
 				),
 			},
 			{
@@ -1201,7 +1204,7 @@ func TestAccElastiCacheCluster_outpost_memcached(t *testing.T) {
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy,
@@ -1240,7 +1243,7 @@ func TestAccElastiCacheCluster_outpost_redis(t *testing.T) {
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy,
@@ -1279,7 +1282,7 @@ func TestAccElastiCacheCluster_outpostID_memcached(t *testing.T) {
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy,
@@ -1311,7 +1314,7 @@ func TestAccElastiCacheCluster_outpostID_redis(t *testing.T) {
 	resourceName := "aws_elasticache_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy,
@@ -1328,25 +1331,6 @@ func TestAccElastiCacheCluster_outpostID_redis(t *testing.T) {
 					testAccCheckClusterExists(resourceName, &post),
 					testAccCheckClusterNotRecreated(&pre, &post),
 				),
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheCluster_outpostARN_none(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_outpostARN_none(rName),
-				// Verify "RequiredWith" in the schema for "outpost_mode" and "preferred_outpost_arn"
-				// throws a plan-time error when only one is configured.
-				ExpectError: regexp.MustCompile(`Missing required argument`),
 			},
 		},
 	})
@@ -1558,18 +1542,6 @@ resource "aws_elasticache_cluster" "test" {
   subnet_group_name	= aws_elasticache_subnet_group.test.name
 }
 `, rName, outpostID)
-}
-
-func testAccClusterConfig_outpostARN_none(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_cluster" "test" {
-  cluster_id      = "%[1]s"
-  outpost_mode	  = "single-outpost"
-  engine          = "redis"
-  node_type       = "cache.r5.large"
-  num_cache_nodes = 1
-}
-`, rName)
 }
 
 func testAccClusterConfig_parameterGroupName(rName, engine, engineVersion, parameterGroupName string) string {
