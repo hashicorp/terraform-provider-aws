@@ -121,17 +121,17 @@ resource "aws_elasticache_subnet_group" "example" {
 }
 
 resource "aws_elasticache_cluster" "example" {
-  cluster_id            = "cluster-example"
-  ## Note that ElastiCache for Outposts only supports `single-outpost` currently
-  outpost_mode		= "single-outpost"
+  cluster_id = "cluster-example"
+  # Note that ElastiCache for Outposts only supports `single-outpost` currently
+  outpost_mode		      = "single-outpost"
   preferred_outpost_arn = data.aws_outposts_outpost.example.arn
   engine                = "memcached"
-  ## Note that ElastiCache for Outposts only supports M5 and R5 node families currently
-  node_type             = "cache.r5.large"
-  num_cache_nodes       = 2
-  parameter_group_name  = "default.memcached1.4"
-  port                  = 11211
-  subnet_group_name	= aws_elasticache_subnet_group.example.name
+  # Note that ElastiCache for Outposts only supports M5 and R5 node families currently
+  node_type            = "cache.r5.large"
+  num_cache_nodes      = 2
+  parameter_group_name = "default.memcached1.4"
+  port                 = 11211
+  subnet_group_name	   = aws_elasticache_subnet_group.example.name
 }
 ```
 
