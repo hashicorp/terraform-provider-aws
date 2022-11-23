@@ -61,3 +61,55 @@ func waitLoggingConfigurationDeleted(ctx context.Context, conn *ivschat.Client, 
 
 	return nil, err
 }
+
+func waitRoomUpdated(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration, updateDetails *ivschat.UpdateRoomInput) (*ivschat.GetRoomOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{statusChangePending},
+		Target:                    []string{statusUpdated},
+		Refresh:                   statusRoom(ctx, conn, id, updateDetails),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivschat.GetRoomOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitRoomDeleted(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration) (*ivschat.GetRoomOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{statusNormal},
+		Target:  []string{},
+		Refresh: statusRoom(ctx, conn, id, nil),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivschat.GetRoomOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitRoomCreated(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration) (*ivschat.GetRoomOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusNormal},
+		Refresh:                   statusRoom(ctx, conn, id, nil),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ivschat.GetRoomOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
