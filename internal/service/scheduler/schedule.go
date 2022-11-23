@@ -237,44 +237,20 @@ func ResourceSchedule() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"awsvpc_configuration": {
-													Type:     schema.TypeList,
+												"assign_public_ip": {
+													Type:     schema.TypeBool,
 													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"assign_public_ip": {
-																Type:     schema.TypeString,
-																Optional: true,
-																ValidateDiagFunc: validation.ToDiagFunc(
-																	validation.StringInSlice(
-																		slices.ApplyToAll(
-																			types.AssignPublicIp("").Values(),
-																			func(v types.AssignPublicIp) string {
-																				return string(v)
-																			},
-																		),
-																		false),
-																),
-															},
-															"security_groups": {
-																Type:     schema.TypeSet,
-																Required: true,
-																MinItems: 1,
-																MaxItems: 5,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-																Set:      schema.HashString,
-															},
-															"subnets": {
-																Type:     schema.TypeSet,
-																Required: true,
-																MinItems: 1,
-																MaxItems: 16,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-																Set:      schema.HashString,
-															},
-														},
-													},
+													Default:  false,
+												},
+												"security_groups": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"subnets": {
+													Type:     schema.TypeSet,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
 										},

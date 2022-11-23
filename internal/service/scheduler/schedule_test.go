@@ -995,11 +995,11 @@ func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", "my-task-group"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.assign_public_ip", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.*", "sg-111111111"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.*", "subnet-11111111"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.assign_public_ip", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111111"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111111"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
 						"type":       "memberOf",
 						"expression": "attribute:ecs.os-family in [LINUX]",
@@ -1037,13 +1037,13 @@ func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", "my-task-group-2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.assign_public_ip", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.*", "sg-111111112"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.security_groups.*", "sg-111111113"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.*", "subnet-11111112"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.*", "subnet-11111113"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111112"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111113"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111112"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111113"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
 						"type": "distinctInstance",
 					}),
@@ -1630,7 +1630,7 @@ resource "aws_iam_role" "test" {
       }
       Condition = {
         StringEquals = {
-          "aws:SourceAccount": data.aws_caller_identity.main.account_id
+          "aws:SourceAccount" : data.aws_caller_identity.main.account_id
         }
       }
     }
@@ -1978,7 +1978,7 @@ func testAccScheduleConfig_targetDeadLetterConfig(name string, index int) string
 resource "aws_sqs_queue" "test" {}
 
 resource "aws_sqs_queue" "dlq" {
-	count = 2
+  count = 2
 }
 
 resource "aws_scheduler_schedule" "test" {
@@ -2100,7 +2100,7 @@ resource "aws_scheduler_schedule" "test" {
         capacity_provider = "test1"
         weight            = 50
       }
-      
+
       capacity_provider_strategy {
         base              = 0
         capacity_provider = "test2"
@@ -2116,11 +2116,9 @@ resource "aws_scheduler_schedule" "test" {
       launch_type = "FARGATE"
 
       network_configuration {
-        awsvpc_configuration {
-          assign_public_ip = "ENABLED"
-          security_groups  = ["sg-111111111"]
-          subnets          = ["subnet-11111111"]
-        }
+        assign_public_ip = true
+        security_groups  = ["sg-111111111"]
+        subnets          = ["subnet-11111111"]
       }
 
       placement_constraints {
@@ -2215,11 +2213,9 @@ resource "aws_scheduler_schedule" "test" {
       launch_type = "FARGATE"
 
       network_configuration {
-        awsvpc_configuration {
-          assign_public_ip = "DISABLED"
-          security_groups  = ["sg-111111112", "sg-111111113"]
-          subnets          = ["subnet-11111112", "subnet-11111113"]
-        }
+        assign_public_ip = false
+        security_groups  = ["sg-111111112", "sg-111111113"]
+        subnets          = ["subnet-11111112", "subnet-11111113"]
       }
 
       placement_constraints {
@@ -2402,7 +2398,7 @@ func testAccScheduleConfig_targetRetryPolicy(name string, maxEventAge, maxRetryA
 resource "aws_sqs_queue" "test" {}
 
 resource "aws_sqs_queue" "dlq" {
-	count = 2
+  count = 2
 }
 
 resource "aws_scheduler_schedule" "test" {

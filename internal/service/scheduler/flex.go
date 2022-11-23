@@ -8,50 +8,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func expandAwsvpcConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &types.AwsVpcConfiguration{}
-
-	if v, ok := tfMap["assign_public_ip"].(string); ok && v != "" {
-		a.AssignPublicIp = types.AssignPublicIp(v)
-	}
-
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
-		a.SecurityGroups = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
-		a.Subnets = flex.ExpandStringValueSet(v)
-	}
-
-	return a
-}
-
-func flattenAwsvpcConfiguration(apiObject *types.AwsVpcConfiguration) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := string(apiObject.AssignPublicIp); v != "" {
-		m["assign_public_ip"] = v
-	}
-
-	if v := apiObject.SecurityGroups; v != nil {
-		m["security_groups"] = flex.FlattenStringValueSet(v)
-	}
-
-	if v := apiObject.Subnets; v != nil {
-		m["subnets"] = flex.FlattenStringValueSet(v)
-	}
-
-	return m
-}
-
 func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) types.CapacityProviderStrategyItem {
 	if tfMap == nil {
 		return types.CapacityProviderStrategyItem{}
@@ -398,13 +354,27 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 		return nil
 	}
 
-	a := &types.NetworkConfiguration{}
+	awsvpcConfig := &types.AwsVpcConfiguration{}
 
-	if v, ok := tfMap["awsvpc_configuration"].([]interface{}); ok && len(v) > 0 {
-		a.AwsvpcConfiguration = expandAwsvpcConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["assign_public_ip"].(bool); ok {
+		if v {
+			awsvpcConfig.AssignPublicIp = types.AssignPublicIpEnabled
+		} else {
+			awsvpcConfig.AssignPublicIp = types.AssignPublicIpDisabled
+		}
 	}
 
-	return a
+	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+		awsvpcConfig.SecurityGroups = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+		awsvpcConfig.Subnets = flex.ExpandStringValueSet(v)
+	}
+
+	return &types.NetworkConfiguration{
+		AwsvpcConfiguration: awsvpcConfig,
+	}
 }
 
 func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[string]interface{} {
@@ -414,8 +384,19 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.AwsvpcConfiguration; v != nil {
-		m["awsvpc_configuration"] = []interface{}{flattenAwsvpcConfiguration(v)}
+	// Follow the example of EventBridge targets by flattening out
+	// the AWS VPC configuration.
+
+	if v := apiObject.AwsvpcConfiguration.AssignPublicIp; v != "" {
+		m["assign_public_ip"] = v == types.AssignPublicIpEnabled
+	}
+
+	if v := apiObject.AwsvpcConfiguration.SecurityGroups; v != nil {
+		m["security_groups"] = flex.FlattenStringValueSet(v)
+	}
+
+	if v := apiObject.AwsvpcConfiguration.Subnets; v != nil {
+		m["subnets"] = flex.FlattenStringValueSet(v)
 	}
 
 	return m
