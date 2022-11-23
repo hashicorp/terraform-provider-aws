@@ -1477,71 +1477,53 @@ resource "aws_elasticache_cluster" "test" {
 }
 
 func testAccClusterConfig_outpost_memcached(rName string, outpostID int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)["%[2]d"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  id = tolist(data.aws_outposts_outposts.test.ids)[%[2]d]
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name       = "tftest-%[1]s"
-  subnet_ids = [aws_subnet.test.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      	= "%[1]s"
-  outpost_mode		= "single-outpost"
+  cluster_id      	    = %[1]q
+  outpost_mode		    = "single-outpost"
   preferred_outpost_arn = data.aws_outposts_outpost.test.arn
-  engine          	= "memcached"
-  node_type       	= "cache.r5.large"
-  num_cache_nodes 	= 1
-  subnet_group_name	= aws_elasticache_subnet_group.test.name
+  engine          	    = "memcached"
+  node_type       	    = "cache.r5.large"
+  num_cache_nodes 	    = 1
+  subnet_group_name	    = aws_elasticache_subnet_group.test.name
 }
-`, rName, outpostID)
+`, rName, outpostID))
 }
 
 func testAccClusterConfig_outpost_redis(rName string, outpostID int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)["%[2]d"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  id = tolist(data.aws_outposts_outposts.test.ids)[%[2]d]
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name       = "tftest-%[1]s"
-  subnet_ids = [aws_subnet.test.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      	= "%[1]s"
-  outpost_mode		= "single-outpost"
+  cluster_id      	    = %[1]q
+  outpost_mode		    = "single-outpost"
   preferred_outpost_arn = data.aws_outposts_outpost.test.arn
-  engine          	= "redis"
-  node_type       	= "cache.r5.large"
-  num_cache_nodes 	= 1
-  subnet_group_name	= aws_elasticache_subnet_group.test.name
+  engine          	    = "redis"
+  node_type       	    = "cache.r5.large"
+  num_cache_nodes 	    = 1
+  subnet_group_name	    = aws_elasticache_subnet_group.test.name
 }
-`, rName, outpostID)
+`, rName, outpostID))
 }
 
 func testAccClusterConfig_parameterGroupName(rName, engine, engineVersion, parameterGroupName string) string {
