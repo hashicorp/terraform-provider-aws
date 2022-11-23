@@ -44,10 +44,6 @@ func ResourceRoom() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"logging_configuration_identifiers": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -171,7 +167,6 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("arn", out.Arn)
-	d.Set("id", out.Id)
 
 	if err := d.Set("logging_configuration_identifiers", flex.FlattenStringValueList(out.LoggingConfigurationIdentifiers)); err != nil {
 		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
