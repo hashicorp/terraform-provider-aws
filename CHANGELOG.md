@@ -1,8 +1,32 @@
 ## 4.41.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_sqs_queues` ([#27890](https://github.com/hashicorp/terraform-provider-aws/issues/27890))
+* **New Resource:** `aws_ivschat_logging_configuration` ([#27924](https://github.com/hashicorp/terraform-provider-aws/issues/27924))
+* **New Resource:** `aws_ivschat_room` ([#27974](https://github.com/hashicorp/terraform-provider-aws/issues/27974))
+* **New Resource:** `aws_rds_clusters` ([#27891](https://github.com/hashicorp/terraform-provider-aws/issues/27891))
+* **New Resource:** `aws_redshiftserverless_resource_policy` ([#27920](https://github.com/hashicorp/terraform-provider-aws/issues/27920))
+
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-south-2` AWS Region ([#27983](https://github.com/hashicorp/terraform-provider-aws/issues/27983))
+* data-source/aws_elasticache_cluster: Add `ip_discovery` and `network_type` attributes ([#27856](https://github.com/hashicorp/terraform-provider-aws/issues/27856))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-south-2` AWS Region ([#27983](https://github.com/hashicorp/terraform-provider-aws/issues/27983))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-south-2` AWS Region ([#27983](https://github.com/hashicorp/terraform-provider-aws/issues/27983))
+* data-source/aws_rds_cluster: Add `engine_mode` attribute ([#27892](https://github.com/hashicorp/terraform-provider-aws/issues/27892))
+* provider: Support `ap-south-2` as a valid AWS Region ([#27950](https://github.com/hashicorp/terraform-provider-aws/issues/27950))
+* resource/aws_amplify_app: Add support for `WEB_COMPUTE` `platform` value in support of [Next.js web apps](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-Amplify-support.html) ([#27925](https://github.com/hashicorp/terraform-provider-aws/issues/27925))
+* resource/aws_elasticache_cluster: Add `ip_discovery` and `network_type` arguments in support of [IPv6 clusters](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/network-type.html) ([#27856](https://github.com/hashicorp/terraform-provider-aws/issues/27856))
+* resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
+* resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
 * resource/aws_medialive_channel: Add `start_channel` attribute ([#27882](https://github.com/hashicorp/terraform-provider-aws/issues/27882))
+* resource/aws_nat_gateway: Update `private_ip` attribute to be configurable ([#27953](https://github.com/hashicorp/terraform-provider-aws/issues/27953))
+
+BUG FIXES:
+
+* resource/aws_cloudcontrolapi_resource: Remove invalid regular expressions from CloudFormation resource schema ([#27935](https://github.com/hashicorp/terraform-provider-aws/issues/27935))
+* resource/aws_resourcegroups_group: Properly set `configuration.parameters` as optional ([#27985](https://github.com/hashicorp/terraform-provider-aws/issues/27985))
 
 ## 4.40.0 (November 17, 2022)
 
@@ -39,6 +63,7 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Add hosted zone ID for `eu-central-2` AWS Region ([#27814](https://github.com/hashicorp/terraform-provider-aws/issues/27814))
 * data-source/aws_s3_bucket: Add hosted zone ID for `eu-south-2` AWS Region ([#27855](https://github.com/hashicorp/terraform-provider-aws/issues/27855))
 * provider: Support `eu-central-2` as a valid AWS Region ([#27812](https://github.com/hashicorp/terraform-provider-aws/issues/27812))
+* provider: Support `eu-south-2` as a valid AWS Region ([#27847](https://github.com/hashicorp/terraform-provider-aws/issues/27847))
 * resource/aws_acm_certificate: Add `key_algorithm` argument in support of [ECDSA TLS certificates](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) ([#27781](https://github.com/hashicorp/terraform-provider-aws/issues/27781))
 * resource/aws_autoscaling_group: Add support for `price-capacity-optimized` `spot_allocation_strategy` value ([#27795](https://github.com/hashicorp/terraform-provider-aws/issues/27795))
 * resource/aws_cloudwatch_logs_group: Add `skip_destroy` argument ([#26775](https://github.com/hashicorp/terraform-provider-aws/issues/26775))

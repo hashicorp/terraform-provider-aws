@@ -222,7 +222,7 @@ func (d Duration) String() string {
 	return d.value.String()
 }
 
-// DurationValue returns the known duration value. If Duration is null or unknown, returns 0.
-func (d Duration) DurationValue() time.Duration {
+// ValueDuration returns the known time.Duration value. If Duration is null or unknown, returns 0.
+func (d Duration) ValueDuration() time.Duration {
 	return d.value
 }

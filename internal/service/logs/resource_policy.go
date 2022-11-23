@@ -1,23 +1,26 @@
 package logs
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourcePolicyPut,
-		Read:   resourceResourcePolicyRead,
-		Update: resourceResourcePolicyPut,
-		Delete: resourceResourcePolicyDelete,
+		CreateWithoutTimeout: resourceResourcePolicyPut,
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut,
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -27,11 +30,6 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"policy_document": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -42,60 +40,66 @@ func ResourceResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
+			"policy_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
-func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	policyName := d.Get("policy_name").(string)
-
+	name := d.Get("policy_name").(string)
 	input := &cloudwatchlogs.PutResourcePolicyInput{
 		PolicyDocument: aws.String(policy),
-		PolicyName:     aws.String(policyName),
+		PolicyName:     aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Writing CloudWatch log resource policy: %#v", input)
-	_, err = conn.PutResourcePolicy(input)
+	output, err := conn.PutResourcePolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Writing CloudWatch log resource policy failed: %s", err.Error())
+		return diag.Errorf("creating CloudWatch Logs Resource Policy (%s): %s", name, err)
 	}
 
-	d.SetId(policyName)
-	return resourceResourcePolicyRead(d, meta)
+	d.SetId(aws.StringValue(output.ResourcePolicy.PolicyName))
+
+	return resourceResourcePolicyRead(ctx, d, meta)
 }
 
-func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
-	policyName := d.Get("policy_name").(string)
-	resourcePolicy, exists, err := LookupResourcePolicy(conn, policyName, nil)
-	if err != nil {
-		return err
-	}
 
-	if !exists {
+	resourcePolicy, err := FindResourcePolicyByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Logs Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("reading CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.StringValue(resourcePolicy.PolicyDocument))
 
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return diag.Errorf("while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
 	d.Set("policy_document", policyToSet)
@@ -103,41 +107,52 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
-	input := cloudwatchlogs.DeleteResourcePolicyInput{
+
+	log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy: %s", d.Id())
+	_, err := conn.DeleteResourcePolicyWithContext(ctx, &cloudwatchlogs.DeleteResourcePolicyInput{
 		PolicyName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Deleting CloudWatch log resource policy: %#v", input)
-	_, err := conn.DeleteResourcePolicy(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting CloudWatch log resource policy '%s' failed: %s", *input.PolicyName, err.Error())
+		return diag.Errorf("deleting CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
 	}
+
 	return nil
 }
 
-func LookupResourcePolicy(conn *cloudwatchlogs.CloudWatchLogs,
-	name string, nextToken *string) (*cloudwatchlogs.ResourcePolicy, bool, error) {
-	input := &cloudwatchlogs.DescribeResourcePoliciesInput{
-		NextToken: nextToken,
-	}
+func FindResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.ResourcePolicy, error) {
+	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
+	var output *cloudwatchlogs.ResourcePolicy
 
-	log.Printf("[DEBUG] Reading CloudWatch log resource policies: %#v", input)
-	resp, err := conn.DescribeResourcePolicies(input)
-	if err != nil {
-		return nil, true, err
-	}
-
-	for _, resourcePolicy := range resp.ResourcePolicies {
-		if aws.StringValue(resourcePolicy.PolicyName) == name {
-			return resourcePolicy, true, nil
+	err := describeResourcePoliciesPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.ResourcePolicies {
+			if aws.StringValue(v.PolicyName) == name {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	if resp.NextToken != nil {
-		return LookupResourcePolicy(conn, name, resp.NextToken)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return nil, false, nil
+	return output, nil
 }

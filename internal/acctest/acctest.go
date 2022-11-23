@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -247,6 +248,15 @@ func providerAccountID(provo *schema.Provider) string {
 // CheckDestroyNoop is a TestCheckFunc to be used as a TestCase's CheckDestroy when no such check can be made.
 func CheckDestroyNoop(_ *terraform.State) error {
 	return nil
+}
+
+// CheckSleep returns a TestCheckFunc that pauses the current goroutine for at least the duration d.
+func CheckSleep(t *testing.T, d time.Duration) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		time.Sleep(d)
+
+		return nil
+	}
 }
 
 // CheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID

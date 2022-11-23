@@ -334,9 +334,9 @@ func StatusInstanceRootBlockDeviceDeleteOnTermination(conn *ec2.EC2, id string) 
 	}
 }
 
-func StatusNATGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusNATGatewayState(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNATGatewayByID(conn, id)
+		output, err := FindNATGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

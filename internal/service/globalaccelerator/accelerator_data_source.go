@@ -122,7 +122,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 				continue
 			}
 
-			if !data.ARN.IsNull() && data.ARN.ARNValue().String() != aws.StringValue(accelerator.AcceleratorArn) {
+			if !data.ARN.IsNull() && data.ARN.ValueARN().String() != aws.StringValue(accelerator.AcceleratorArn) {
 				continue
 			}
 
