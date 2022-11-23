@@ -5,16 +5,18 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
 			"address": {
@@ -184,15 +186,15 @@ func DataSourceInstance() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	ctx := context.TODO()
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := FindDBInstanceByID(ctx, conn, d.Get("db_instance_identifier").(string))
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("RDS DB Instance", err)
+		return diag.FromErr(tfresource.SingularDataSourceFindError("RDS DB Instance", err))
 	}
 
 	d.SetId(aws.StringValue(v.DBInstanceIdentifier))
@@ -265,15 +267,15 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("port", nil)
 	}
 
-	tags, err := ListTags(conn, d.Get("db_instance_arn").(string))
+	tags, err := ListTagsWithContext(ctx, conn, d.Get("db_instance_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
+		return errs.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return errs.AppendErrorf(diags, "setting tags: %w", err)
 	}
 
-	return nil
+	return diags
 }

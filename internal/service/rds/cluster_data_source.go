@@ -2,17 +2,19 @@ package rds
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -136,8 +138,8 @@ func DataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	ctx := context.TODO()
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -145,7 +147,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
-		return fmt.Errorf("reading RDS Cluster (%s): %w", dbClusterID, err)
+		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %w", dbClusterID, err)
 	}
 
 	d.SetId(aws.StringValue(dbc.DBClusterIdentifier))
@@ -197,15 +199,15 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTags(conn, clusterARN)
+	tags, err := ListTagsWithContext(ctx, conn, clusterARN)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for RDS Cluster (%s): %w", d.Id(), err)
+		return errs.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return errs.AppendErrorf(diags, "setting tags: %w", err)
 	}
 
-	return nil
+	return diags
 }
