@@ -72,7 +72,7 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 	return m
 }
 
-func expandEcsParameters(tfMap map[string]interface{}) *types.EcsParameters {
+func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -151,7 +151,7 @@ func expandEcsParameters(tfMap map[string]interface{}) *types.EcsParameters {
 	return a
 }
 
-func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{} {
+func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -570,7 +570,7 @@ func flattenSageMakerPipelineParameters(apiObject *types.SageMakerPipelineParame
 	return m
 }
 
-func expandSqsParameters(tfMap map[string]interface{}) *types.SqsParameters {
+func expandSQSParameters(tfMap map[string]interface{}) *types.SqsParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -584,7 +584,7 @@ func expandSqsParameters(tfMap map[string]interface{}) *types.SqsParameters {
 	return a
 }
 
-func flattenSqsParameters(apiObject *types.SqsParameters) map[string]interface{} {
+func flattenSQSParameters(apiObject *types.SqsParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -614,7 +614,7 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 	}
 
 	if v, ok := tfMap["ecs_parameters"].([]interface{}); ok && len(v) > 0 {
-		a.EcsParameters = expandEcsParameters(v[0].(map[string]interface{}))
+		a.EcsParameters = expandECSParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["eventbridge_parameters"].([]interface{}); ok && len(v) > 0 {
@@ -642,7 +642,7 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 	}
 
 	if v, ok := tfMap["sqs_parameters"].([]interface{}); ok && len(v) > 0 {
-		a.SqsParameters = expandSqsParameters(v[0].(map[string]interface{}))
+		a.SqsParameters = expandSQSParameters(v[0].(map[string]interface{}))
 	}
 
 	return a
@@ -664,7 +664,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 	}
 
 	if v := apiObject.EcsParameters; v != nil {
-		m["ecs_parameters"] = []interface{}{flattenEcsParameters(v)}
+		m["ecs_parameters"] = []interface{}{flattenECSParameters(v)}
 	}
 
 	if v := apiObject.EventBridgeParameters; v != nil {
@@ -692,7 +692,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 	}
 
 	if v := apiObject.SqsParameters; v != nil {
-		m["sqs_parameters"] = []interface{}{flattenSqsParameters(v)}
+		m["sqs_parameters"] = []interface{}{flattenSQSParameters(v)}
 	}
 
 	return m
