@@ -216,7 +216,6 @@ func ResourceCluster() *schema.Resource {
 			"outpost_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ForceNew:     true,
 				RequiredWith: []string{"preferred_outpost_arn"},
 				ValidateFunc: validation.StringInSlice(elasticache.OutpostMode_Values(), false),
