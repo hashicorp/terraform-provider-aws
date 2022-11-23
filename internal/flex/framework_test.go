@@ -621,3 +621,63 @@ func TestStringToFrameworkWithTransform(t *testing.T) {
 		})
 	}
 }
+
+func TestEnumStringToFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid enum": {
+			input:    "TEST",
+			expected: types.StringValue("TEST"),
+		},
+		"empty enum": {
+			input:    "",
+			expected: types.StringNull(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := EnumStringToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestEnumStringToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    string
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid enum": {
+			input:    "TEST",
+			expected: types.StringValue("TEST"),
+		},
+		"empty enum": {
+			input:    "",
+			expected: types.StringValue(""),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := EnumStringToFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}

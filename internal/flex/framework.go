@@ -156,6 +156,21 @@ func BoolToFrameworkLegacy(_ context.Context, v *bool) types.Bool {
 	return types.BoolValue(aws.ToBool(v))
 }
 
+// EnumStringToFramework converts and enum string to a Framework String value.
+// An empty string is converted to a null String.
+func EnumStringToFramework(_ context.Context, v string) types.String {
+	if v == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(v)
+}
+
+// EnumStringToFrameworkLegacy converts and enum string to a Framework String value.
+// An empty string is left as an empty String.
+func EnumStringToFrameworkLegacy(_ context.Context, v string) types.String {
+	return types.StringValue(v)
+}
+
 // Int64ToFramework converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a null Int64.
 func Int64ToFramework(_ context.Context, v *int64) types.Int64 {
@@ -166,7 +181,7 @@ func Int64ToFramework(_ context.Context, v *int64) types.Int64 {
 	return types.Int64Value(aws.ToInt64(v))
 }
 
-// Int64ToFramework converts an int64 pointer to a Framework Int64 value.
+// Int64ToFrameworkLegacy converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a zero Int64.
 func Int64ToFrameworkLegacy(_ context.Context, v *int64) types.Int64 {
 	return types.Int64Value(aws.ToInt64(v))
