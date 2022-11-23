@@ -14,7 +14,7 @@ const (
 	iamPropagationTimeout = 2 * time.Minute
 )
 
-func retryWhenIamNotPropagated[T any](ctx context.Context, f func() (T, error)) (T, error) {
+func retryWhenIAMNotPropagated[T any](ctx context.Context, f func() (T, error)) (T, error) {
 	v, err := tfresource.RetryWhenContext(
 		ctx,
 		iamPropagationTimeout,

@@ -527,7 +527,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Target = expandTarget(v[0].(map[string]interface{}))
 	}
 
-	out, err := retryWhenIamNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
+	out, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
 		return conn.CreateSchedule(ctx, in)
 	})
 
@@ -652,7 +652,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
 
-	_, err := retryWhenIamNotPropagated(ctx, func() (*scheduler.UpdateScheduleOutput, error) {
+	_, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.UpdateScheduleOutput, error) {
 		return conn.UpdateSchedule(ctx, in)
 	})
 
