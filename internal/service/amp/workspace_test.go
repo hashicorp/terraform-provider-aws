@@ -73,15 +73,10 @@ func TestAccAMPWorkspace_addLoggingConfig(t *testing.T) {
 					testAccCheckWorkspaceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
