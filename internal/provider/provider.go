@@ -1676,6 +1676,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
 
 			"aws_ivschat_logging_configuration": ivschat.ResourceLoggingConfiguration(),
+			"aws_ivschat_room":                  ivschat.ResourceRoom(),
 
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
