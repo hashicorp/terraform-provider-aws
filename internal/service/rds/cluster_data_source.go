@@ -147,7 +147,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %w", dbClusterID, err)
+		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
 	d.SetId(aws.StringValue(dbc.DBClusterIdentifier))
@@ -202,11 +202,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	tags, err := ListTagsWithContext(ctx, conn, clusterARN)
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %w", d.Id(), err)
+		return errs.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags: %w", err)
+		return errs.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

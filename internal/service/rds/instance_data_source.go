@@ -270,11 +270,11 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags, err := ListTagsWithContext(ctx, conn, d.Get("db_instance_arn").(string))
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
+		return errs.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", d.Get("db_instance_arn").(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags: %w", err)
+		return errs.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags
