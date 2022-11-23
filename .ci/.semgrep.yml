@@ -806,7 +806,7 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
+          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && ... { $BODY }
           - pattern: |
               if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
                 if $AWSERR.Code() == $CODE { $BODY }

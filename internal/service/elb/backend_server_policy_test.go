@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -80,7 +79,7 @@ func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
 					PolicyNames:      []*string{aws.String(policyName)},
 				})
 			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
+				if !tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException, elb.ErrCodeAccessPointNotFoundException) {
 					continue
 				}
 				return err
