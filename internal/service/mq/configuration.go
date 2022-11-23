@@ -3,13 +3,13 @@ package mq
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,9 +22,9 @@ import (
 
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create:               resourceConfigurationCreate,
-		Read:                 resourceConfigurationRead,
-		Update:               resourceConfigurationUpdate,
+		CreateWithoutTimeout: resourceConfigurationCreate,
+		ReadWithoutTimeout:   resourceConfigurationRead,
+		UpdateWithoutTimeout: resourceConfigurationUpdate,
 		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
 
 		Importer: &schema.ResourceImporter{
@@ -95,7 +95,7 @@ func ResourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MQConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -115,10 +115,10 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreateConfiguration(input)
+	output, err := conn.CreateConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating MQ Configuration (%s): %w", name, err)
+		return diag.Errorf("creating MQ Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
@@ -133,22 +133,22 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error
 			input.Description = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateConfiguration(input)
+		_, err := conn.UpdateConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating MQ Configuration (%s): %w", d.Id(), err)
+			return diag.Errorf("updating MQ Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceConfigurationRead(d, meta)
+	return resourceConfigurationRead(ctx, d, meta)
 }
 
-func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MQConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	configuration, err := FindConfigurationByID(conn, d.Id())
+	configuration, err := FindConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MQ Configuration (%s) not found, removing from state", d.Id())
@@ -157,7 +157,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading MQ Configuration (%s): %w", d.Id(), err)
+		return diag.Errorf("reading MQ Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", configuration.Arn)
@@ -169,19 +169,19 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", configuration.Name)
 
 	revision := strconv.FormatInt(aws.Int64Value(configuration.LatestRevision.Revision), 10)
-	configurationRevision, err := conn.DescribeConfigurationRevision(&mq.DescribeConfigurationRevisionInput{
+	configurationRevision, err := conn.DescribeConfigurationRevisionWithContext(ctx, &mq.DescribeConfigurationRevisionInput{
 		ConfigurationId:       aws.String(d.Id()),
 		ConfigurationRevision: aws.String(revision),
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading MQ Configuration (%s) revision (%s): %w", d.Id(), revision, err)
+		return diag.Errorf("reading MQ Configuration (%s) revision (%s): %s", d.Id(), revision, err)
 	}
 
 	data, err := base64.StdEncoding.DecodeString(aws.StringValue(configurationRevision.Data))
 
 	if err != nil {
-		return fmt.Errorf("base64 decoding: %w", err)
+		return diag.Errorf("base64 decoding: %s", err)
 	}
 
 	d.Set("data", string(data))
@@ -190,17 +190,17 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MQConn
 
 	if d.HasChanges("data", "description") {
@@ -213,30 +213,30 @@ func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error
 			input.Description = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateConfiguration(input)
+		_, err := conn.UpdateConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating MQ Configuration (%s): %w", d.Id(), err)
+			return diag.Errorf("updating MQ Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating MQ Configuration (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating MQ Configuration (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceConfigurationRead(d, meta)
+	return resourceConfigurationRead(ctx, d, meta)
 }
 
-func FindConfigurationByID(conn *mq.MQ, id string) (*mq.DescribeConfigurationOutput, error) {
+func FindConfigurationByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeConfigurationOutput, error) {
 	input := &mq.DescribeConfigurationInput{
 		ConfigurationId: aws.String(id),
 	}
 
-	output, err := conn.DescribeConfiguration(input)
+	output, err := conn.DescribeConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{

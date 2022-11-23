@@ -1,6 +1,7 @@
 package mq_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -194,7 +195,7 @@ func testAccCheckConfigurationExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 
-		_, err := tfmq.FindConfigurationByID(conn, rs.Primary.ID)
+		_, err := tfmq.FindConfigurationByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
