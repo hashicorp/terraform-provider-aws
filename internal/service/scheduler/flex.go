@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func expandAwsvpcConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfiguration {
@@ -36,12 +37,17 @@ func flattenAwsvpcConfiguration(apiObject *types.AwsVpcConfiguration) map[string
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.AssignPublicIp; string(v) != "" {
-		m["assign_public_ip"] = string(v)
+	if v := string(apiObject.AssignPublicIp); v != "" {
+		m["assign_public_ip"] = v
 	}
 
-	m["security_groups"] = flex.FlattenStringValueSet(apiObject.SecurityGroups)
-	m["subnets"] = flex.FlattenStringValueSet(apiObject.Subnets)
+	if v := apiObject.SecurityGroups; v != nil {
+		m["security_groups"] = flex.FlattenStringValueSet(v)
+	}
+
+	if v := apiObject.Subnets; v != nil {
+		m["subnets"] = flex.FlattenStringValueSet(v)
+	}
 
 	return m
 }
@@ -73,8 +79,8 @@ func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrateg
 
 	m["base"] = apiObject.Base
 
-	if v := aws.ToString(apiObject.CapacityProvider); v != "" {
-		m["capacity_provider"] = v
+	if v := apiObject.CapacityProvider; v != nil {
+		m["capacity_provider"] = aws.ToString(v)
 	}
 
 	m["weight"] = apiObject.Weight
@@ -89,8 +95,8 @@ func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfi
 
 	a := &types.DeadLetterConfig{}
 
-	if v, ok := tfMap["arn"]; ok && v.(string) != "" {
-		a.Arn = aws.String(v.(string))
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
+		a.Arn = aws.String(v)
 	}
 
 	return a
@@ -103,8 +109,8 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 
 	m := map[string]interface{}{}
 
-	if v := aws.ToString(apiObject.Arn); v != "" {
-		m["arn"] = v
+	if v := apiObject.Arn; v != nil {
+		m["arn"] = aws.ToString(v)
 	}
 
 	return m
@@ -167,11 +173,13 @@ func expandEcsParameters(tfMap map[string]interface{}) *types.EcsParameters {
 		a.ReferenceId = aws.String(v)
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && v != nil {
-		for k, v := range v {
+	tags := tftags.New(tfMap["tags"].(map[string]interface{}))
+
+	if len(tags) > 0 {
+		for k, v := range tags.IgnoreAWS().Map() {
 			a.Tags = append(a.Tags, map[string]string{
 				"key":   k,
-				"value": v.(string),
+				"value": v,
 			})
 		}
 	}
@@ -195,13 +203,13 @@ func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{}
 	m := map[string]interface{}{}
 
 	if v := apiObject.CapacityProviderStrategy; v != nil {
-		var l []interface{}
+		set := schema.NewSet(capacityProviderHash, nil)
 
 		for _, p := range v {
-			l = append(l, flattenCapacityProviderStrategyItem(p))
+			set.Add(flattenCapacityProviderStrategyItem(p))
 		}
 
-		m["capacity_provider_strategy"] = schema.NewSet(capacityProviderHash, l)
+		m["capacity_provider_strategy"] = set
 	}
 
 	if v := apiObject.EnableECSManagedTags; v != nil {
@@ -216,7 +224,7 @@ func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{}
 		m["group"] = aws.ToString(v)
 	}
 
-	if v := apiObject.LaunchType; string(v) != "" {
+	if v := string(apiObject.LaunchType); v != "" {
 		m["launch_type"] = v
 	}
 
@@ -225,30 +233,30 @@ func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{}
 	}
 
 	if v := apiObject.PlacementConstraints; len(v) > 0 {
-		var l []interface{}
+		set := schema.NewSet(placementConstraintHash, nil)
 
 		for _, c := range v {
-			l = append(l, flattenPlacementConstraint(c))
+			set.Add(flattenPlacementConstraint(c))
 		}
 
-		m["placement_constraints"] = schema.NewSet(placementConstraintHash, l)
+		m["placement_constraints"] = set
 	}
 
 	if v := apiObject.PlacementStrategy; len(v) > 0 {
-		var l []interface{}
+		set := schema.NewSet(placementStrategyHash, nil)
 
 		for _, s := range v {
-			l = append(l, flattenPlacementStrategy(s))
+			set.Add(flattenPlacementStrategy(s))
 		}
 
-		m["placement_strategy"] = schema.NewSet(placementStrategyHash, l)
+		m["placement_strategy"] = set
 	}
 
 	if v := apiObject.PlatformVersion; v != nil {
 		m["platform_version"] = aws.ToString(v)
 	}
 
-	if v := apiObject.PropagateTags; string(v) != "" {
+	if v := string(apiObject.PropagateTags); v != "" {
 		m["propagate_tags"] = v
 	}
 
@@ -257,7 +265,7 @@ func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{}
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		result := make(map[string]interface{})
+		tags := make(map[string]interface{})
 
 		for _, tagMap := range v {
 			key := tagMap["key"]
@@ -268,18 +276,18 @@ func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{}
 				continue
 			}
 
-			result[key] = tagMap["value"]
+			tags[key] = tagMap["value"]
 		}
 
-		m["tags"] = result
+		m["tags"] = tftags.New(tags).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.TaskCount; v != nil {
 		m["task_count"] = int(aws.ToInt32(v))
 	}
 
-	if v := aws.ToString(apiObject.TaskDefinitionArn); v != "" {
-		m["task_definition_arn"] = v
+	if v := apiObject.TaskDefinitionArn; v != nil {
+		m["task_definition_arn"] = aws.ToString(v)
 	}
 
 	return m
@@ -292,12 +300,12 @@ func expandEventBridgeParameters(tfMap map[string]interface{}) *types.EventBridg
 
 	a := &types.EventBridgeParameters{}
 
-	if v, ok := tfMap["detail_type"]; ok && v.(string) != "" {
-		a.DetailType = aws.String(v.(string))
+	if v, ok := tfMap["detail_type"].(string); ok && v != "" {
+		a.DetailType = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"]; ok && v.(string) != "" {
-		a.Source = aws.String(v.(string))
+	if v, ok := tfMap["source"].(string); ok && v != "" {
+		a.Source = aws.String(v)
 	}
 
 	return a
@@ -310,12 +318,12 @@ func flattenEventBridgeParameters(apiObject *types.EventBridgeParameters) map[st
 
 	m := map[string]interface{}{}
 
-	if v := aws.ToString(apiObject.DetailType); v != "" {
-		m["detail_type"] = v
+	if v := apiObject.DetailType; v != nil {
+		m["detail_type"] = aws.ToString(v)
 	}
 
-	if v := aws.ToString(apiObject.Source); v != "" {
-		m["source"] = v
+	if v := apiObject.Source; v != nil {
+		m["source"] = aws.ToString(v)
 	}
 
 	return m
@@ -328,12 +336,12 @@ func expandFlexibleTimeWindow(tfMap map[string]interface{}) *types.FlexibleTimeW
 
 	a := &types.FlexibleTimeWindow{}
 
-	if v, ok := tfMap["maximum_window_in_minutes"]; ok && v.(int) != 0 {
-		a.MaximumWindowInMinutes = aws.Int32(int32(v.(int)))
+	if v, ok := tfMap["maximum_window_in_minutes"].(int); ok && v != 0 {
+		a.MaximumWindowInMinutes = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["mode"]; ok && v.(string) != "" {
-		a.Mode = types.FlexibleTimeWindowMode(v.(string))
+	if v, ok := tfMap["mode"].(string); ok && v != "" {
+		a.Mode = types.FlexibleTimeWindowMode(v)
 	}
 
 	return a
@@ -346,12 +354,12 @@ func flattenFlexibleTimeWindow(apiObject *types.FlexibleTimeWindow) map[string]i
 
 	m := map[string]interface{}{}
 
-	if v := aws.ToInt32(apiObject.MaximumWindowInMinutes); v != 0 {
-		m["maximum_window_in_minutes"] = int(v)
+	if v := apiObject.MaximumWindowInMinutes; v != nil {
+		m["maximum_window_in_minutes"] = int(aws.ToInt32(v))
 	}
 
-	if v := apiObject.Mode; v != "" {
-		m["mode"] = string(v)
+	if v := string(apiObject.Mode); v != "" {
+		m["mode"] = v
 	}
 
 	return m
@@ -364,8 +372,8 @@ func expandKinesisParameters(tfMap map[string]interface{}) *types.KinesisParamet
 
 	a := &types.KinesisParameters{}
 
-	if v, ok := tfMap["partition_key"]; ok && v.(string) != "" {
-		a.PartitionKey = aws.String(v.(string))
+	if v, ok := tfMap["partition_key"].(string); ok && v != "" {
+		a.PartitionKey = aws.String(v)
 	}
 
 	return a
@@ -378,8 +386,8 @@ func flattenKinesisParameters(apiObject *types.KinesisParameters) map[string]int
 
 	m := map[string]interface{}{}
 
-	if v := aws.ToString(apiObject.PartitionKey); v != "" {
-		m["partition_key"] = v
+	if v := apiObject.PartitionKey; v != nil {
+		m["partition_key"] = aws.ToString(v)
 	}
 
 	return m
@@ -434,12 +442,12 @@ func expandPlacementConstraint(tfMap map[string]interface{}) types.PlacementCons
 func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	if v := aws.ToString(apiObject.Expression); v != "" {
-		m["expression"] = v
+	if v := apiObject.Expression; v != nil {
+		m["expression"] = aws.ToString(v)
 	}
 
-	if v := apiObject.Type; v != "" {
-		m["type"] = string(v)
+	if v := string(apiObject.Type); v != "" {
+		m["type"] = v
 	}
 
 	return m
@@ -466,12 +474,12 @@ func expandPlacementStrategy(tfMap map[string]interface{}) types.PlacementStrate
 func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	if v := aws.ToString(apiObject.Field); v != "" {
-		m["field"] = v
+	if v := apiObject.Field; v != nil {
+		m["field"] = aws.ToString(v)
 	}
 
-	if v := apiObject.Type; v != "" {
-		m["type"] = string(v)
+	if v := string(apiObject.Type); v != "" {
+		m["type"] = v
 	}
 
 	return m
@@ -484,12 +492,12 @@ func expandRetryPolicy(tfMap map[string]interface{}) *types.RetryPolicy {
 
 	a := &types.RetryPolicy{}
 
-	if v, ok := tfMap["maximum_event_age_in_seconds"]; ok {
-		a.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
+	if v, ok := tfMap["maximum_event_age_in_seconds"].(int); ok {
+		a.MaximumEventAgeInSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["maximum_retry_attempts"]; ok {
-		a.MaximumRetryAttempts = aws.Int32(int32(v.(int)))
+	if v, ok := tfMap["maximum_retry_attempts"].(int); ok {
+		a.MaximumRetryAttempts = aws.Int32(int32(v))
 	}
 
 	return a
@@ -513,20 +521,6 @@ func flattenRetryPolicy(apiObject *types.RetryPolicy) map[string]interface{} {
 	return m
 }
 
-func expandSqsParameters(tfMap map[string]interface{}) *types.SqsParameters {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &types.SqsParameters{}
-
-	if v, ok := tfMap["message_group_id"]; ok && v.(string) != "" {
-		a.MessageGroupId = aws.String(v.(string))
-	}
-
-	return a
-}
-
 func expandSageMakerPipelineParameter(tfMap map[string]interface{}) types.SageMakerPipelineParameter {
 	if tfMap == nil {
 		return types.SageMakerPipelineParameter{}
@@ -534,12 +528,12 @@ func expandSageMakerPipelineParameter(tfMap map[string]interface{}) types.SageMa
 
 	a := types.SageMakerPipelineParameter{}
 
-	if v, ok := tfMap["name"]; ok && v.(string) != "" {
-		a.Name = aws.String(v.(string))
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		a.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"]; ok && v.(string) != "" {
-		a.Value = aws.String(v.(string))
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		a.Value = aws.String(v)
 	}
 
 	return a
@@ -548,12 +542,12 @@ func expandSageMakerPipelineParameter(tfMap map[string]interface{}) types.SageMa
 func flattenSageMakerPipelineParameter(apiObject types.SageMakerPipelineParameter) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	if v := aws.ToString(apiObject.Name); v != "" {
-		m["name"] = v
+	if v := apiObject.Name; v != nil {
+		m["name"] = aws.ToString(v)
 	}
 
-	if v := aws.ToString(apiObject.Value); v != "" {
-		m["value"] = v
+	if v := apiObject.Value; v != nil {
+		m["value"] = aws.ToString(v)
 	}
 
 	return m
@@ -583,16 +577,30 @@ func flattenSageMakerPipelineParameters(apiObject *types.SageMakerPipelineParame
 	m := map[string]interface{}{}
 
 	if v := apiObject.PipelineParameterList; v != nil {
-		var l []interface{}
+		set := schema.NewSet(sagemakerPipelineParameterHash, nil)
 
 		for _, p := range v {
-			l = append(l, flattenSageMakerPipelineParameter(p))
+			set.Add(flattenSageMakerPipelineParameter(p))
 		}
 
-		m["pipeline_parameter"] = schema.NewSet(sagemakerPipelineParameterHash, l)
+		m["pipeline_parameter"] = set
 	}
 
 	return m
+}
+
+func expandSqsParameters(tfMap map[string]interface{}) *types.SqsParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SqsParameters{}
+
+	if v, ok := tfMap["message_group_id"].(string); ok && v != "" {
+		a.MessageGroupId = aws.String(v)
+	}
+
+	return a
 }
 
 func flattenSqsParameters(apiObject *types.SqsParameters) map[string]interface{} {
@@ -602,8 +610,8 @@ func flattenSqsParameters(apiObject *types.SqsParameters) map[string]interface{}
 
 	m := map[string]interface{}{}
 
-	if v := aws.ToString(apiObject.MessageGroupId); v != "" {
-		m["message_group_id"] = v
+	if v := apiObject.MessageGroupId; v != nil {
+		m["message_group_id"] = aws.ToString(v)
 	}
 
 	return m
@@ -620,40 +628,40 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.Arn = aws.String(v)
 	}
 
-	if v, ok := tfMap["dead_letter_config"]; ok && len(v.([]interface{})) > 0 {
-		a.DeadLetterConfig = expandDeadLetterConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 {
+		a.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["ecs_parameters"]; ok && len(v.([]interface{})) > 0 {
-		a.EcsParameters = expandEcsParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["ecs_parameters"].([]interface{}); ok && len(v) > 0 {
+		a.EcsParameters = expandEcsParameters(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["eventbridge_parameters"]; ok && len(v.([]interface{})) > 0 {
-		a.EventBridgeParameters = expandEventBridgeParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["eventbridge_parameters"].([]interface{}); ok && len(v) > 0 {
+		a.EventBridgeParameters = expandEventBridgeParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["input"].(string); ok && v != "" {
 		a.Input = aws.String(v)
 	}
 
-	if v, ok := tfMap["kinesis_parameters"]; ok && len(v.([]interface{})) > 0 {
-		a.KinesisParameters = expandKinesisParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["kinesis_parameters"].([]interface{}); ok && len(v) > 0 {
+		a.KinesisParameters = expandKinesisParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		a.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["retry_policy"]; ok && len(v.([]interface{})) > 0 {
-		a.RetryPolicy = expandRetryPolicy(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["retry_policy"].([]interface{}); ok && len(v) > 0 {
+		a.RetryPolicy = expandRetryPolicy(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sagemaker_pipeline_parameters"]; ok && len(v.([]interface{})) > 0 {
-		a.SageMakerPipelineParameters = expandSageMakerPipelineParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["sagemaker_pipeline_parameters"].([]interface{}); ok && len(v) > 0 {
+		a.SageMakerPipelineParameters = expandSageMakerPipelineParameters(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sqs_parameters"]; ok && len(v.([]interface{})) > 0 {
-		a.SqsParameters = expandSqsParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["sqs_parameters"].([]interface{}); ok && len(v) > 0 {
+		a.SqsParameters = expandSqsParameters(v[0].(map[string]interface{}))
 	}
 
 	return a
@@ -666,7 +674,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.Arn; v != nil && len(*v) > 0 {
+	if v := apiObject.Arn; v != nil {
 		m["arn"] = aws.ToString(v)
 	}
 
@@ -682,7 +690,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 		m["eventbridge_parameters"] = []interface{}{flattenEventBridgeParameters(v)}
 	}
 
-	if v := apiObject.Input; v != nil && len(*v) > 0 {
+	if v := apiObject.Input; v != nil {
 		m["input"] = aws.ToString(v)
 	}
 
@@ -690,7 +698,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 		m["kinesis_parameters"] = []interface{}{flattenKinesisParameters(v)}
 	}
 
-	if v := apiObject.RoleArn; v != nil && len(*v) > 0 {
+	if v := apiObject.RoleArn; v != nil {
 		m["role_arn"] = aws.ToString(v)
 	}
 

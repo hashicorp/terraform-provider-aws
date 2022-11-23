@@ -28,32 +28,32 @@ func TestResourceScheduleIDFromARN(t *testing.T) {
 		Fails bool
 	}{
 		{
-			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default/test",
+			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default/test", //lintignore:AWSAT003,AWSAT005
 			ID:    "default/test",
 			Fails: false,
 		},
 		{
-			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default/test/test",
+			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default/test/test", //lintignore:AWSAT003,AWSAT005
 			ID:    "",
 			Fails: true,
 		},
 		{
-			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default/",
+			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default/", //lintignore:AWSAT003,AWSAT005
 			ID:    "",
 			Fails: true,
 		},
 		{
-			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule//test",
+			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule//test", //lintignore:AWSAT003,AWSAT005
 			ID:    "",
 			Fails: true,
 		},
 		{
-			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule//",
+			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule//", //lintignore:AWSAT003,AWSAT005
 			ID:    "",
 			Fails: true,
 		},
 		{
-			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default",
+			ARN:   "arn:aws:scheduler:eu-west-1:735669964269:schedule/default", //lintignore:AWSAT003,AWSAT005
 			ID:    "",
 			Fails: true,
 		},
@@ -1002,7 +1002,7 @@ func TestAccSchedulerSchedule_targetEcsParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.awsvpc_configuration.0.subnets.*", "subnet-11111111"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
 						"type":       "memberOf",
-						"expression": "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]",
+						"expression": "attribute:ecs.os-family in [LINUX]",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
 						"type":  "binpack",
@@ -2125,7 +2125,7 @@ resource "aws_scheduler_schedule" "test" {
 
       placement_constraints {
         type       = "memberOf"
-        expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
+        expression = "attribute:ecs.os-family in [LINUX]"
       }
 
       placement_strategy {
@@ -2351,7 +2351,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:aws:scheduler:::aws-sdk:sqs:sendMessage"
+    arn      = "arn:${data.aws_partition.main.partition}:scheduler:::aws-sdk:sqs:sendMessage"
     role_arn = aws_iam_role.test.arn
 
     input = jsonencode({
@@ -2481,7 +2481,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:aws:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {
@@ -2512,7 +2512,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:aws:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {
