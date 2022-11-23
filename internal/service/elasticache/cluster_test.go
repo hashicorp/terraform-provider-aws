@@ -250,6 +250,14 @@ func TestAccElastiCacheCluster_ipDiscovery(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+			{
 				Config: testAccClusterConfig_ipDiscovery(rName, "memcached", "1.6.6", "ipv6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
@@ -258,14 +266,6 @@ func TestAccElastiCacheCluster_ipDiscovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "1.6.6"),
 					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-				},
 			},
 		},
 	})
@@ -1355,7 +1355,30 @@ resource "aws_elasticache_cluster" "test" {
 }
 
 func testAccClusterConfig_ipDiscovery(rName, engine, engineVersion, ipDiscovery string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
+resource "aws_elasticache_subnet_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = %[1]q
   engine          = %[2]q
@@ -1363,8 +1386,12 @@ resource "aws_elasticache_cluster" "test" {
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
   ip_discovery    = %[4]q
+
+  subnet_group_name  = aws_elasticache_subnet_group.test.name
+  security_group_ids = [aws_security_group.test.id]
+  availability_zone  = data.aws_availability_zones.available.names[0]
 }
-`, rName, engine, engineVersion, ipDiscovery)
+`, rName, engine, engineVersion, ipDiscovery))
 }
 
 func testAccClusterConfig_port(rName string, port int) string {
