@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -381,6 +382,10 @@ func ResourceSchedule() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 256),
+													ValidateDiagFunc: validation.ToDiagFunc(validation.All(
+														validation.StringLenBetween(1, 256),
+														validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_]+$`), `must consist of alphanumerics, hyphens and underscores.`),
+													)),
 												},
 												"value": {
 													Type:         schema.TypeString,
@@ -677,7 +682,7 @@ func expandTarget(tfMap map[string]interface{}, defaultTags *tftags.DefaultConfi
 		config.RoleArn = aws.String(v)
 	}
 	if v, ok := tfMap["ecs_parameters"].([]map[string]interface{}); ok && len(v) > 0 {
-		config.EcsParameters = expandECSParameters(v[0], defaultTags)
+		config.EcsParameters = expandEcsParameters(v[0], defaultTags)
 	}
 	if v, ok := tfMap["event_bridge_parameters"].([]map[string]interface{}); ok && len(v) > 0 {
 		config.EventBridgeParameters = expandEventBridgeParameters(v[0])
@@ -689,7 +694,7 @@ func expandTarget(tfMap map[string]interface{}, defaultTags *tftags.DefaultConfi
 		config.SageMakerPipelineParameters = expandSageMakerPipelineParameters(v[0])
 	}
 	if v, ok := tfMap["sqs_parameters"].([]map[string]interface{}); ok && len(v) > 0 {
-		config.SqsParameters = expandSQSParameters(v[0])
+		config.KinesisParameters = expandKinesisParameters(v[0])
 	}
 
 	return config
@@ -718,7 +723,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 		tfMap["role_arn"] = aws.ToString(v)
 	}
 	if v := apiObject.EcsParameters; v != nil {
-		tfMap["ecs_parameters"] = flattenECSParameters(v)
+		tfMap["ecs_parameters"] = flattenEcsParameters(v)
 	}
 	if v := apiObject.EventBridgeParameters; v != nil {
 		tfMap["event_bridge_parameters"] = flattenEventBridgeParameters(v)
@@ -730,7 +735,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 		tfMap["sage_maker_pipeline_parameters"] = flattenSageMakerPipelineParameters(v)
 	}
 	if v := apiObject.SqsParameters; v != nil {
-		tfMap["sqs_parameters"] = flattenSQSParameters(v)
+		tfMap["sqs_parameters"] = flattenSqsParameters(v)
 	}
 
 	return tfMap
@@ -798,7 +803,7 @@ func flattenRetryPolicy(apiObject *types.RetryPolicy) map[string]interface{} {
 	return tfMap
 }
 
-func expandECSParameters(tfMap map[string]interface{}, defaultTags *tftags.DefaultConfig) *types.EcsParameters {
+func expandEcsParameters(tfMap map[string]interface{}, defaultTags *tftags.DefaultConfig) *types.EcsParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -852,7 +857,7 @@ func expandECSParameters(tfMap map[string]interface{}, defaultTags *tftags.Defau
 	return config
 }
 
-func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{} {
+func flattenEcsParameters(apiObject *types.EcsParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -885,7 +890,7 @@ func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{}
 		tfMap["reference_id"] = aws.ToString(v)
 	}
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap["tags"] = tftags.New(v).Map()
+		tfMap["tags"] = tags.New(v).Map()
 	}
 	if v := apiObject.TaskCount; v != nil {
 		tfMap["task_count"] = aws.ToInt32(v)
@@ -898,7 +903,7 @@ func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{}
 }
 
 func expandCapacityProviderStrategy(tfMap []map[string]interface{}) []types.CapacityProviderStrategyItem {
-	if len(tfMap) == 0 {
+	if tfMap == nil || len(tfMap) == 0 {
 		return nil
 	}
 
@@ -1126,7 +1131,7 @@ func flattenKinesisParameters(apiObject *types.KinesisParameters) map[string]int
 }
 
 func expandSageMakerPipelineParameters(tfMap map[string]interface{}) *types.SageMakerPipelineParameters {
-	if len(tfMap) == 0 {
+	if tfMap == nil || len(tfMap) == 0 {
 		return nil
 	}
 
@@ -1175,7 +1180,7 @@ func flattenSageMakerPipelineParameters(apiObject *types.SageMakerPipelineParame
 	return map[string]interface{}{"pipeline_parameter_list": ppMap}
 }
 
-func expandSQSParameters(tfMap map[string]interface{}) *types.SqsParameters {
+func expandSqsParameters(tfMap map[string]interface{}) *types.SqsParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1189,7 +1194,7 @@ func expandSQSParameters(tfMap map[string]interface{}) *types.SqsParameters {
 	return config
 }
 
-func flattenSQSParameters(apiObject *types.SqsParameters) map[string]interface{} {
+func flattenSqsParameters(apiObject *types.SqsParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
