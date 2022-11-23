@@ -16,20 +16,6 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 		Read: dataSourceBrokerInstanceTypeOfferingsRead,
 
 		Schema: map[string]*schema.Schema{
-			"engine_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), false),
-			},
-			"host_instance_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"storage_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), false),
-			},
 			"broker_instance_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -71,6 +57,20 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 						},
 					},
 				},
+			},
+			"engine_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), false),
+			},
+			"host_instance_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), false),
 			},
 		},
 	}
