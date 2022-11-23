@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -439,12 +438,7 @@ func testAccCheckVPNGatewayDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidVpnGatewayID.NotFound" {
+		if !tfawserr.ErrCodeEquals(err, "InvalidVpnGatewayID.NotFound") {
 			return err
 		}
 	}

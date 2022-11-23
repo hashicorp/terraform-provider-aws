@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -156,12 +156,7 @@ func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		// Verify the error is what we want
-		neptuneerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if neptuneerr.Code() != "DBSubnetGroupNotFoundFault" {
+		if !tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
 			return err
 		}
 	}

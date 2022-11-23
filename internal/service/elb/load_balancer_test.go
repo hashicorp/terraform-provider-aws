@@ -9,8 +9,8 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -956,14 +956,8 @@ func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Verify the error
-		providerErr, ok := err.(awserr.Error)
-		if !ok {
+		if !tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
 			return err
-		}
-
-		if providerErr.Code() != elb.ErrCodeAccessPointNotFoundException {
-			return fmt.Errorf("Unexpected error: %s", err)
 		}
 	}
 

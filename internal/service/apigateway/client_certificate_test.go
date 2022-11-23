@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -159,15 +159,9 @@ func testAccCheckClientCertificateDestroy(s *terraform.State) error {
 			return fmt.Errorf("API Gateway Client Certificate still exists: %s", out)
 		}
 
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
+		if !tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			return err
 		}
-		if awsErr.Code() != apigateway.ErrCodeNotFoundException {
-			return err
-		}
-
-		return nil
 	}
 
 	return nil

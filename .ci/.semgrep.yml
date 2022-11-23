@@ -800,7 +800,7 @@ rules:
 
   - id: aws-go-sdk-error-code-helper
     languages: [go]
-    message: 'Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)'
+    message: 'Use `tfawserr` helpers for checking AWS Go SDK v1 errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)'
     paths:
       include:
         - internal/
@@ -810,6 +810,14 @@ rules:
           - pattern: |
               if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
                 if $AWSERR.Code() == $CODE { $BODY }
+              }
+          - pattern: |
+              $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
+              if !$OK {
+                ...
+              }
+              if ... {
+                ...
               }
     severity: WARNING
 

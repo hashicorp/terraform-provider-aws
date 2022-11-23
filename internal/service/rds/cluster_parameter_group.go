@@ -327,12 +327,7 @@ func resourceClusterParameterGroupDeleteRefreshFunc(
 		}
 
 		if _, err := conn.DeleteDBClusterParameterGroup(&deleteOpts); err != nil {
-			rdserr, ok := err.(awserr.Error)
-			if !ok {
-				return d, "error", err
-			}
-
-			if rdserr.Code() != "DBParameterGroupNotFound" {
+			if !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
 				return d, "error", err
 			}
 		}
