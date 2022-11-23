@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,18 +65,9 @@ func ResourceSchedule() *schema.Resource {
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 1440)),
 						},
 						"mode": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateDiagFunc: validation.ToDiagFunc(
-								validation.StringInSlice(
-									slices.ApplyToAll(
-										types.FlexibleTimeWindowMode("").Values(),
-										func(v types.FlexibleTimeWindowMode) string {
-											return string(v)
-										},
-									),
-									false),
-							),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.FlexibleTimeWindowMode](),
 						},
 					},
 				},
@@ -134,19 +125,10 @@ func ResourceSchedule() *schema.Resource {
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  string(types.ScheduleStateEnabled),
-				ValidateDiagFunc: validation.ToDiagFunc(
-					validation.StringInSlice(
-						slices.ApplyToAll(
-							types.ScheduleState("").Values(),
-							func(v types.ScheduleState) string {
-								return string(v)
-							},
-						),
-						false),
-				),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.ScheduleStateEnabled,
+				ValidateDiagFunc: enum.Validate[types.ScheduleState](),
 			},
 			"target": {
 				Type:     schema.TypeList,
@@ -218,18 +200,9 @@ func ResourceSchedule() *schema.Resource {
 										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
 									},
 									"launch_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateDiagFunc: validation.ToDiagFunc(
-											validation.StringInSlice(
-												slices.ApplyToAll(
-													types.LaunchType("").Values(),
-													func(v types.LaunchType) string {
-														return string(v)
-													},
-												),
-												false),
-										),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.LaunchType](),
 									},
 									"network_configuration": {
 										Type:     schema.TypeList,
@@ -268,18 +241,9 @@ func ResourceSchedule() *schema.Resource {
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 												},
 												"type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateDiagFunc: validation.ToDiagFunc(
-														validation.StringInSlice(
-															slices.ApplyToAll(
-																types.PlacementConstraintType("").Values(),
-																func(v types.PlacementConstraintType) string {
-																	return string(v)
-																},
-															),
-															false),
-													),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
 												},
 											},
 										},
@@ -299,18 +263,9 @@ func ResourceSchedule() *schema.Resource {
 													},
 												},
 												"type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateDiagFunc: validation.ToDiagFunc(
-														validation.StringInSlice(
-															slices.ApplyToAll(
-																types.PlacementStrategyType("").Values(),
-																func(v types.PlacementStrategyType) string {
-																	return string(v)
-																},
-															),
-															false),
-													),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
 												},
 											},
 										},
@@ -320,18 +275,9 @@ func ResourceSchedule() *schema.Resource {
 										Optional: true,
 									},
 									"propagate_tags": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateDiagFunc: validation.ToDiagFunc(
-											validation.StringInSlice(
-												slices.ApplyToAll(
-													types.PropagateTags("").Values(),
-													func(v types.PropagateTags) string {
-														return string(v)
-													},
-												),
-												false),
-										),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.PropagateTags](),
 									},
 									"reference_id": {
 										Type:     schema.TypeString,
