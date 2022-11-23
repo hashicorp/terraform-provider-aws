@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -69,9 +70,9 @@ func ResourceSchedule() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"end_date": {
-				Type:         schema.TypeString,
+				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"flexible_time_window": {
 				Type:     schema.TypeList,
@@ -120,9 +121,9 @@ func ResourceSchedule() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"start_date": {
-				Type:         schema.TypeString,
+				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"state": {
 				Type:         schema.TypeString,
@@ -157,6 +158,8 @@ func ResourceSchedule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -170,7 +173,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return resourceScheduleRead(ctx, d, meta)
+	return resourceScheduleGroupRead(ctx, d, meta)
 }
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
