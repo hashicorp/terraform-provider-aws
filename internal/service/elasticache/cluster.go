@@ -67,33 +67,30 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"az_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					elasticache.AZModeCrossAz,
-					elasticache.AZModeSingleAz,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.AZMode_Values(), false),
 			},
 			"cache_nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						"address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"address": {
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"port": {
 							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"availability_zone": {
-							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -129,8 +126,8 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ForceNew:     true,
+				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
@@ -142,20 +139,30 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ip_discovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
+			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
-				Optional: true,
 				MaxItems: 2,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"destination_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
-						},
-						"destination": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 						"log_format": {
 							Type:         schema.TypeString,
@@ -180,6 +187,13 @@ func ResourceCluster() *schema.Resource {
 					return strings.ToLower(val.(string))
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -222,8 +236,8 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ForceNew:     true,
+				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
@@ -243,27 +257,25 @@ func ResourceCluster() *schema.Resource {
 					"subnet_group_name",
 				},
 			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"security_group_names": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				Computed:   true,
 				ForceNew:   true,
 				Elem:       &schema.Schema{Type: schema.TypeString},
-				Set:        schema.HashString,
 				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
-			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"snapshot_arns": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
@@ -271,6 +283,11 @@ func ResourceCluster() *schema.Resource {
 						validation.StringDoesNotContainAny(","),
 					),
 				},
+			},
+			"snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"snapshot_retention_limit": {
 				Type:         schema.TypeInt,
@@ -283,20 +300,11 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-			"final_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -422,6 +430,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.PreferredAvailabilityZones = flex.ExpandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("ip_discovery"); ok {
+		req.IpDiscovery = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		req.NetworkType = aws.String(v.(string))
+	}
+
 	id, arn, err := createCacheCluster(conn, req)
 	if err != nil {
 		return fmt.Errorf("error creating ElastiCache Cache Cluster: %w", err)
@@ -508,6 +524,9 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", c.ARN)
 
+	d.Set("ip_discovery", c.IpDiscovery)
+	d.Set("network_type", c.NetworkType)
+
 	tags, err := ListTags(conn, aws.StringValue(c.ARN))
 
 	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -582,6 +601,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("parameter_group_name") {
 		req.CacheParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ip_discovery") {
+		req.IpDiscovery = aws.String(d.Get("ip_discovery").(string))
 		requestUpdate = true
 	}
 
