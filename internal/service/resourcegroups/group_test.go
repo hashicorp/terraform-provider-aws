@@ -183,6 +183,42 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 	})
 }
 
+func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
+	var v resourcegroups.Group
+	resourceName := "aws_resourcegroups_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	configType1 := "AWS::ResourceGroups::Generic"
+	configType2 := "AWS::EC2::CapacityReservationPool"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_configurationParametersOptional(rName, configType1, configType2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.1.parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckResourceGroupExists(n string, v *resourcegroups.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -360,4 +396,26 @@ resource "aws_resourcegroups_group" "test" {
   }
 }
 `, rName, desc, cType1, autoAllocateHost, cType2)
+}
+
+func testAccGroupConfig_configurationParametersOptional(rName, configType1, configType2 string) string {
+	return fmt.Sprintf(`
+resource "aws_resourcegroups_group" "test" {
+  name = %[1]q
+
+  configuration {
+    type = %[2]q
+    parameters {
+      name = "allowed-resource-types"
+      values = [
+        "AWS::EC2::CapacityReservation",
+      ]
+    }
+  }
+
+  configuration {
+    type = %[3]q
+  }
+}
+`, rName, configType1, configType2)
 }
