@@ -100,7 +100,7 @@ The following arguments are optional:
 * `ecs_parameters` - (Optional) Templated target type for the Amazon ECS [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) API operation. Detailed below.
 * `eventbridge_parameters` - (Optional) Templated target type for the EventBridge [`PutEvents`](https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html) API operation. Detailed below.
 * `input` - (Optional) Text, or well-formed JSON, passed to the target. Read more in [Universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html).
-* `kinesis_parameters` - (Optional) Templated target type for the Amazon Kinesis [`PutRecord`](https://docs.aws.amazon.com/scheduler/latest/APIReference/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
+* `kinesis_parameters` - (Optional) Templated target type for the Amazon Kinesis [`PutRecord`](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html) API operation. Detailed below.
 * `retry_policy` - (Optional) Information about the retry policy settings. Detailed below.
 * `sagemaker_pipeline_parameters` - (Optional) Templated target type for the Amazon SageMaker [`StartPipelineExecution`](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StartPipelineExecution.html) API operation. Detailed below.
 * `sqs_parameters` - (Optional) The templated target type for the Amazon SQS [`SendMessage`](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html) API operation. Detailed below.
@@ -145,7 +145,7 @@ The following arguments are optional:
 
 ##### placement_constraints Configuration Block
 
-* `expression` - (Optional) A cluster query language expression to apply to the constraint. You cannot specify an expression if the constraint type is `distinctInstance`. For more information, see [Cluster query language](https://docs.aws.amazon.com/latest/developerguide/cluster-query-language.html) in the Amazon ECS Developer Guide.
+* `expression` - (Optional) A cluster query language expression to apply to the constraint. You cannot specify an expression if the constraint type is `distinctInstance`. For more information, see [Cluster query language](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html) in the Amazon ECS Developer Guide.
 * `type` - (Required) The type of constraint. One of: `distinctInstance`, `memberOf`.
 
 ##### placement_strategy Configuration Block
