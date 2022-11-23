@@ -20,16 +20,33 @@ func DataSourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"event_bus_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"created_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			"event_bus_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"event_pattern": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			"managed_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -43,24 +60,7 @@ func DataSourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"created_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"managed_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -92,15 +92,15 @@ func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Found EventBridge rule: %#v", *output)
 
 	d.Set("arn", output.Arn)
-	d.Set("name", output.Name)
-	d.Set("state", output.State)
 	d.Set("created_by", output.CreatedBy)
 	d.Set("description", output.Description)
-	d.Set("managed_by", output.ManagedBy)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("event_pattern", output.EventPattern)
-	d.Set("schedule_expression", output.ScheduleExpression)
 	d.Set("event_bus_name", output.EventBusName)
+	d.Set("event_pattern", output.EventPattern)
+	d.Set("managed_by", output.ManagedBy)
+	d.Set("name", output.Name)
+	d.Set("role_arn", output.RoleArn)
+	d.Set("schedule_expression", output.ScheduleExpression)
+	d.Set("state", output.State)
 
 	tags, err := ListTags(conn, *output.Arn)
 	if err != nil {
