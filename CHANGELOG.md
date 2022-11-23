@@ -5,6 +5,7 @@ FEATURES:
 * **New Data Source:** `aws_sqs_queues` ([#27890](https://github.com/hashicorp/terraform-provider-aws/issues/27890))
 * **New Resource:** `aws_ivschat_logging_configuration` ([#27924](https://github.com/hashicorp/terraform-provider-aws/issues/27924))
 * **New Resource:** `aws_rds_clusters` ([#27891](https://github.com/hashicorp/terraform-provider-aws/issues/27891))
+* **New Resource:** `aws_redshiftserverless_resource_policy` ([#27920](https://github.com/hashicorp/terraform-provider-aws/issues/27920))
 
 ENHANCEMENTS:
 
