@@ -34,30 +34,3 @@ func findScheduleGroupByName(ctx context.Context, conn *scheduler.Client, name s
 
 	return out, nil
 }
-
-func findSchedule(ctx context.Context, conn *scheduler.Client, name, groupName string) (*scheduler.GetScheduleOutput, error) {
-	in := &scheduler.GetScheduleInput{
-		Name: aws.String(name),
-	}
-	if groupName != "" {
-		in.GroupName = aws.String(groupName)
-	}
-	out, err := conn.GetSchedule(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil || out.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
