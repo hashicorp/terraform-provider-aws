@@ -557,7 +557,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return resourceScheduleRead(ctx, d, meta)
 }
 
-func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
 	conn := meta.(*conns.AWSClient).SchedulerClient
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
