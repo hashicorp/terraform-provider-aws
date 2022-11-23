@@ -471,8 +471,7 @@ func ResourceEndpoint() *schema.Resource {
 						},
 						"compression_type": {
 							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      s3SettingsCompressionTypeNone,
+							Optional:     true,							
 							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
 						},
 						"csv_delimiter": {
