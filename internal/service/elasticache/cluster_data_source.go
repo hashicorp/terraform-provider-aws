@@ -106,6 +106,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"network_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -179,6 +183,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("engine", cluster.Engine)
 	d.Set("engine_version", cluster.EngineVersion)
 	d.Set("ip_discovery", cluster.IpDiscovery)
+	d.Set("network_type", cluster.NetworkType)
 	d.Set("security_group_names", flattenSecurityGroupNames(cluster.CacheSecurityGroups))
 	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
 

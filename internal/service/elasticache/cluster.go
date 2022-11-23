@@ -188,6 +188,13 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -427,6 +434,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.IpDiscovery = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("network_type"); ok {
+		req.NetworkType = aws.String(v.(string))
+	}
+
 	id, arn, err := createCacheCluster(conn, req)
 	if err != nil {
 		return fmt.Errorf("error creating ElastiCache Cache Cluster: %w", err)
@@ -514,6 +525,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", c.ARN)
 
 	d.Set("ip_discovery", c.IpDiscovery)
+	d.Set("network_type", c.NetworkType)
 
 	tags, err := ListTags(conn, aws.StringValue(c.ARN))
 

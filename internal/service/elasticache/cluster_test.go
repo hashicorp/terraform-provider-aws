@@ -86,11 +86,13 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 				Config: testAccClusterConfig_engineRedis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "ipv4"),
 				),
 			},
 			{
@@ -240,13 +242,11 @@ func TestAccElastiCacheCluster_ipDiscovery(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_ipDiscovery(rName, "memcached", "1.6.6", "ipv4"),
+				Config: testAccClusterConfig_ipDiscovery(rName, "ipv6", "dual_stack"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.6.6"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "1.6.6"),
-					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "dual_stack"),
 				),
 			},
 			{
@@ -256,16 +256,6 @@ func TestAccElastiCacheCluster_ipDiscovery(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 				},
-			},
-			{
-				Config: testAccClusterConfig_ipDiscovery(rName, "memcached", "1.6.6", "ipv6"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.6.6"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "1.6.6"),
-					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
-				),
 			},
 		},
 	})
@@ -1354,7 +1344,7 @@ resource "aws_elasticache_cluster" "test" {
 `, rName, engine, engineVersion, parameterGroupName)
 }
 
-func testAccClusterConfig_ipDiscovery(rName, engine, engineVersion, ipDiscovery string) string {
+func testAccClusterConfig_ipDiscovery(rName, ipDiscovery, networkType string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
 resource "aws_elasticache_subnet_group" "test" {
   name        = %[1]q
@@ -1381,17 +1371,18 @@ resource "aws_security_group" "test" {
 
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = %[1]q
-  engine          = %[2]q
-  engine_version  = %[3]q
+  engine          = "memcached"
+  engine_version  = "1.6.6"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
-  ip_discovery    = %[4]q
+  ip_discovery    = %[2]q
+  network_type    = %[3]q
 
   subnet_group_name  = aws_elasticache_subnet_group.test.name
   security_group_ids = [aws_security_group.test.id]
   availability_zone  = data.aws_availability_zones.available.names[0]
 }
-`, rName, engine, engineVersion, ipDiscovery))
+`, rName, ipDiscovery, networkType))
 }
 
 func testAccClusterConfig_port(rName string, port int) string {
