@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -704,7 +705,7 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// testAccCheckInstanceSnapshot verifies a database snapshot is
+		// testAccCheckInstanceDestroyWithFinalSnapshot verifies a database snapshot is
 		// created, and subsequently deletes it
 		CheckDestroy: testAccCheckInstanceDestroyWithFinalSnapshot,
 		Steps: []resource.TestStep{
@@ -4322,6 +4323,7 @@ func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
 }
 
 func testAccCheckInstanceDestroy(s *terraform.State) error {
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -4329,7 +4331,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+		_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -4427,6 +4429,7 @@ func testAccCheckInstanceReplicaAttributes(source, replica *rds.DBInstance) reso
 // - Tags have been copied to the snapshot
 // The snapshot is deleted.
 func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -4459,7 +4462,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+		_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -4479,6 +4482,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 // - The DBInstance has been destroyed
 // - No DBSnapshot has been produced
 func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -4497,7 +4501,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 			return fmt.Errorf("RDS DB Snapshot %s exists", finalSnapshotID)
 		}
 
-		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+		_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -4523,6 +4527,7 @@ func testAccCheckInstanceNotRecreated(instance1, instance2 *rds.DBInstance) reso
 }
 
 func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckFunc {
+	ctx := context.Background()
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -4535,7 +4540,7 @@ func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -4618,7 +4623,6 @@ resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  publicly_accessible = true
   skip_final_snapshot = true
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
@@ -4633,7 +4637,6 @@ resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  publicly_accessible = true
   skip_final_snapshot = true
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
@@ -5006,8 +5009,6 @@ resource "aws_db_instance" "test" {
   username                = "tfacctest"
   backup_retention_period = 1
 
-  publicly_accessible = true
-
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
 
   skip_final_snapshot       = true
@@ -5114,7 +5115,6 @@ resource "aws_db_instance" "test" {
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                    = "test"
-  publicly_accessible        = false
   password                   = "avoid-plaintext-passwords"
   username                   = "tfacctest"
   backup_retention_period    = 0
@@ -5146,7 +5146,6 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  publicly_accessible     = true
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   backup_retention_period = 1
