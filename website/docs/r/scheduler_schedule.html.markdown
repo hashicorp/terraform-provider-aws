@@ -3,7 +3,7 @@ subcategory: "EventBridge Scheduler"
 layout: "aws"
 page_title: "AWS: aws_scheduler_schedule"
 description: |-
-Provides an EventBridge Scheduler Schedule resource.
+  Provides an EventBridge Scheduler Schedule resource.
 ---
 
 # Resource: aws_scheduler_schedule
