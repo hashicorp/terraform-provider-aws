@@ -1490,13 +1490,13 @@ resource "aws_elasticache_subnet_group" "test" {
 }
 
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      	    = %[1]q
-  outpost_mode		    = "single-outpost"
+  cluster_id            = %[1]q
+  outpost_mode          = "single-outpost"
   preferred_outpost_arn = data.aws_outposts_outpost.test.arn
-  engine          	    = "memcached"
-  node_type       	    = "cache.r5.large"
-  num_cache_nodes 	    = 1
-  subnet_group_name	    = aws_elasticache_subnet_group.test.name
+  engine                = "memcached"
+  node_type             = "cache.r5.large"
+  num_cache_nodes       = 1
+  subnet_group_name     = aws_elasticache_subnet_group.test.name
 }
 `, rName, outpostID))
 }
@@ -1515,13 +1515,13 @@ resource "aws_elasticache_subnet_group" "test" {
 }
 
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      	    = %[1]q
-  outpost_mode		    = "single-outpost"
+  cluster_id            = %[1]q
+  outpost_mode          = "single-outpost"
   preferred_outpost_arn = data.aws_outposts_outpost.test.arn
-  engine          	    = "redis"
-  node_type       	    = "cache.r5.large"
-  num_cache_nodes 	    = 1
-  subnet_group_name	    = aws_elasticache_subnet_group.test.name
+  engine                = "redis"
+  node_type             = "cache.r5.large"
+  num_cache_nodes       = 1
+  subnet_group_name     = aws_elasticache_subnet_group.test.name
 }
 `, rName, outpostID))
 }
