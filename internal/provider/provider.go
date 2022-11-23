@@ -110,6 +110,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ivschat"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
@@ -836,6 +837,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_db_subnet_group":                rds.DataSourceSubnetGroup(),
 			"aws_rds_certificate":                rds.DataSourceCertificate(),
 			"aws_rds_cluster":                    rds.DataSourceCluster(),
+			"aws_rds_clusters":                   rds.DataSourceClusters(),
 			"aws_rds_engine_version":             rds.DataSourceEngineVersion(),
 			"aws_rds_orderable_db_instance":      rds.DataSourceOrderableInstance(),
 			"aws_rds_reserved_instance_offering": rds.DataSourceReservedOffering(),
@@ -902,7 +904,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_sns_topic": sns.DataSourceTopic(),
 
-			"aws_sqs_queue": sqs.DataSourceQueue(),
+			"aws_sqs_queue":  sqs.DataSourceQueue(),
+			"aws_sqs_queues": sqs.DataSourceQueues(),
 
 			"aws_ssm_document":            ssm.DataSourceDocument(),
 			"aws_ssm_instances":           ssm.DataSourceInstances(),
@@ -1672,6 +1675,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ivs_playback_key_pair":       ivs.ResourcePlaybackKeyPair(),
 			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
 
+			"aws_ivschat_logging_configuration": ivschat.ResourceLoggingConfiguration(),
+
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
@@ -1931,6 +1936,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
 			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_resource_policy": redshiftserverless.ResourceResourcePolicy(),
 			"aws_redshiftserverless_snapshot":        redshiftserverless.ResourceSnapshot(),
 			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
 			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),

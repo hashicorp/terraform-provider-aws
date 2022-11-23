@@ -132,3 +132,28 @@ func FindSnapshotByName(conn *redshiftserverless.RedshiftServerless, name string
 
 	return output.Snapshot, nil
 }
+
+func FindResourcePolicyByARN(conn *redshiftserverless.RedshiftServerless, arn string) (*redshiftserverless.ResourcePolicy, error) {
+	input := &redshiftserverless.GetResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetResourcePolicy(input)
+
+	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeResourceNotFoundException, "does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResourcePolicy, nil
+}
