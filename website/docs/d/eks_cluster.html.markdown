@@ -41,6 +41,7 @@ output "identity-oidc-issuer" {
 * `arn` - ARN of the cluster.
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
+* `cluster_id` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `created_at` - Unix epoch time stamp in seconds for when the cluster was created.
 * `enabled_cluster_log_types` - The enabled control plane logs.
 * `endpoint` - Endpoint for your Kubernetes API server.

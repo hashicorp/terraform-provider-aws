@@ -258,6 +258,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the cluster.
 * `certificate_authority` - Attribute block containing `certificate-authority-data` for your cluster. Detailed below.
+* `cluster_id` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `created_at` - Unix epoch timestamp in seconds for when the cluster was created.
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `id` - Name of the cluster.
