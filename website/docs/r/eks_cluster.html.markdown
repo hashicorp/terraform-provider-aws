@@ -250,7 +250,6 @@ The following arguments are supported in the `control_plane_placement` configura
 
     * `group_name` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
 
-
 * `outpost_arns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
 ## Attributes Reference
