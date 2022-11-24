@@ -28,15 +28,18 @@ func ResourceFeatureGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: customdiff.All(
-
-			customdiff.ForceNewIf("feature_definition", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				o, n := d.GetChange("feature_definition")
 				var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(o.([]interface{}))
 				var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
 
-				return len(featureDefinitionsNew) < len(featureDefinitionsOld)
-			}),
+				if !checkIfDefinitionsUnchanged(featureDefinitionsOld, featureDefinitionsNew) {
+					return fmt.Errorf("existing feature_definitions of SageMaker Feature Group (%s) can not "+
+						"be changed", d.Id())
+				}
+				return nil
+			},
 			verify.SetTagsDiff,
 		),
 
@@ -328,16 +331,6 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	o, n := d.GetChange("feature_definition")
-	var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(o.([]interface{}))
-	var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
-
-	if !checkIfDefinitionsUnchanged(featureDefinitionsOld, featureDefinitionsNew) {
-		return fmt.Errorf("existing feature definitions should remain unchanged. Only additions of nes feature"+
-			"definitions allowed. Expected:\n%v,\ngot:\n%v",
-			featureDefinitionsOld, featureDefinitionsNew)
-	}
-
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -345,6 +338,11 @@ func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
 		}
 	}
+
+	o, n := d.GetChange("feature_definition")
+
+	var featureDefinitionsOld = expandFeatureGroupFeatureDefinition(o.([]interface{}))
+	var featureDefinitionsNew = expandFeatureGroupFeatureDefinition(n.([]interface{}))
 
 	var newFeatures []*sagemaker.FeatureDefinition
 
