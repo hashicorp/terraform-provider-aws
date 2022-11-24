@@ -180,6 +180,20 @@ func ResourceCluster() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"control_plane_placement": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"group_name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
 						"outpost_arns": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -640,11 +654,31 @@ func expandOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
 		outpostConfigRequest.ControlPlaneInstanceType = aws.String(v)
 	}
 
+	if v, ok := tfMap["control_plane_placement"].([]interface{}); ok {
+		outpostConfigRequest.ControlPlanePlacement = expandControlPlanePlacement(v)
+	}
+
 	if v, ok := tfMap["outpost_arns"].(*schema.Set); ok && v.Len() > 0 {
 		outpostConfigRequest.OutpostArns = flex.ExpandStringSet(v)
 	}
 
 	return outpostConfigRequest
+}
+
+func expandControlPlanePlacement(tfList []interface{}) *eks.ControlPlanePlacementRequest {
+	tfMap, ok := tfList[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	apiObject := &eks.ControlPlanePlacementRequest{}
+
+	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+		apiObject.GroupName = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func testAccClusterConfig_expandVPCRequest(l []interface{}) *eks.VpcConfigRequest {
@@ -851,7 +885,20 @@ func flattenOutpostConfig(apiObject *eks.OutpostConfigResponse) []interface{} {
 
 	tfMap := map[string]interface{}{
 		"control_plane_instance_type": aws.StringValue(apiObject.ControlPlaneInstanceType),
+		"control_plane_placement":     flattenControlPlanePlacement(apiObject.ControlPlanePlacement),
 		"outpost_arns":                aws.StringValueSlice(apiObject.OutpostArns),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenControlPlanePlacement(apiObject *eks.ControlPlanePlacementResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"group_name": aws.StringValue(apiObject.GroupName),
 	}
 
 	return []interface{}{tfMap}
