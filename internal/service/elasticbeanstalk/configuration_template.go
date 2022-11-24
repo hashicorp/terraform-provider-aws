@@ -3,11 +3,10 @@ package elasticbeanstalk
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -103,16 +102,15 @@ func resourceConfigurationTemplateRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "No Configuration Template named") {
-				log.Printf("[WARN] No Configuration Template named (%s) found", d.Id())
-				d.SetId("")
-				return nil
-			} else if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "No Platform named") {
-				log.Printf("[WARN] No Platform named (%s) found", d.Get("solution_stack_name").(string))
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Configuration Template named") {
+			log.Printf("[WARN] No Configuration Template named (%s) found", d.Id())
+			d.SetId("")
+			return nil
+		}
+		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Platform named") {
+			log.Printf("[WARN] No Platform named (%s) found", d.Get("solution_stack_name").(string))
+			d.SetId("")
+			return nil
 		}
 		return err
 	}

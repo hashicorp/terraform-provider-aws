@@ -3,6 +3,7 @@ package iam
 import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -249,20 +250,22 @@ func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	log.Printf("[INFO] Deleting IAM Server Certificate: %s", d.Id())
+	input := &iam.DeleteServerCertificateInput{
+		ServerCertificateName: aws.String(d.Get("name").(string)),
+	}
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
-			ServerCertificateName: aws.String(d.Get("name").(string)),
-		})
+		_, err := conn.DeleteServerCertificate(input)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+				return nil
+			}
+			var awsErr awserr.Error
+			if errors.As(err, &awsErr) {
 				if awsErr.Code() == iam.ErrCodeDeleteConflictException && strings.Contains(awsErr.Message(), "currently in use by arn") {
 					currentlyInUseBy(awsErr.Message(), meta.(*conns.AWSClient).ELBConn)
 					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
 					return resource.RetryableError(err)
-				}
-				if awsErr.Code() == iam.ErrCodeNoSuchEntityException {
-					return nil
 				}
 			}
 			return resource.NonRetryableError(err)
@@ -271,9 +274,7 @@ func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
-			ServerCertificateName: aws.String(d.Get("name").(string)),
-		})
+		_, err = conn.DeleteServerCertificate(input)
 	}
 
 	return err

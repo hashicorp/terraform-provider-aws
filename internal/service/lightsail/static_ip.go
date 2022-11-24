@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -65,16 +65,13 @@ func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail Static IP (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			log.Printf("[WARN] Lightsail Static IP (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
-	log.Printf("[INFO] Received Lightsail Static IP: %s", *out)
 
 	d.Set("arn", out.StaticIp.Arn)
 	d.Set("ip_address", out.StaticIp.IpAddress)

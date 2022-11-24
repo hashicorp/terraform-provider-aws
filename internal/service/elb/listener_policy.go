@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -77,11 +77,9 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
 
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "LoadBalancerNotFound" {
-				d.SetId("")
-				return fmt.Errorf("LoadBalancerNotFound: %s", err)
-			}
+		if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			d.SetId("")
+			return fmt.Errorf("LoadBalancerNotFound: %s", err)
 		}
 		return fmt.Errorf("Error retrieving ELB description: %s", err)
 	}

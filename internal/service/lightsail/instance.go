@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -193,13 +193,10 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail Instance (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return err
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			log.Printf("[WARN] Lightsail Instance (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
 		return err
 	}

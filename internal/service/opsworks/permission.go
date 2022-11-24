@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -69,16 +68,14 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		StackId:    aws.String(d.Get("stack_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading OpsWorks prermissions for: %s on stack: %s", d.Get("user_arn"), d.Get("stack_id"))
+	log.Printf("[DEBUG] Reading OpsWorks permissions for: %s on stack: %s", d.Get("user_arn"), d.Get("stack_id"))
 
 	resp, err := client.DescribePermissions(req)
 	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() == "ResourceNotFoundException" {
-				log.Printf("[INFO] Permission not found")
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			log.Printf("[INFO] OpsWorks Permissions (%s, %s) not found, removing from state", d.Get("user_arn"), d.Get("stack_id"))
+			d.SetId("")
+			return nil
 		}
 		return err
 	}

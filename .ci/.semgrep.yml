@@ -809,7 +809,7 @@ rules:
           - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && ... { $BODY }
           - pattern: |
               if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                if $AWSERR.Code() == $CODE { $BODY }
+                ...
               }
           - pattern: |
               $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
