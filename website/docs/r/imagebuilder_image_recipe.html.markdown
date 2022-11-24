@@ -51,7 +51,7 @@ The following arguments are required:
 * `component` - Ordered configuration block(s) with components for the image recipe. Detailed below.
 * `name` - Name of the image recipe.
 * `parent_image` - The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN or an AMI ID.
-* `version` - The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: <major>.<minor>.<patch>. For example: 1.0.0.
+* `version` - The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. For example: 1.0.0.
 
 The following attributes are optional:
 
