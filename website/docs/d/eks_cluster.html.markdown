@@ -54,7 +54,7 @@ output "identity-oidc-issuer" {
 * `outpost_config` - Contains Outpost Configuration.
     * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
     * `control_plane_placement` - An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
-      * `group_name` - The name of the placement group for the Kubernetes control plane instances.
+        * `group_name` - The name of the placement group for the Kubernetes control plane instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
 * `role_arn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
