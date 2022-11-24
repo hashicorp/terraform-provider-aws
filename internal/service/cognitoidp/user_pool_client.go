@@ -121,6 +121,11 @@ func ResourceUserPoolClient() *schema.Resource {
 					),
 				},
 			},
+			"client_id": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: false,
+			},
 			"client_secret": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -383,6 +388,7 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
 	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
 	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
+	d.Set("client_id", userPoolClient.ClientId)
 	d.Set("client_secret", userPoolClient.ClientSecret)
 	d.Set("allowed_oauth_flows", flex.FlattenStringSet(userPoolClient.AllowedOAuthFlows))
 	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
