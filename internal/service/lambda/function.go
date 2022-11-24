@@ -903,7 +903,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	// so we cannot just ignore the error as would typically.
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.MeCentral1RegionID || region == endpoints.ApSoutheast3RegionID {
+	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.ApSoutheast3RegionID || region == endpoints.EuCentral2RegionID || region == endpoints.MeCentral1RegionID {
 		return nil
 	}
 
