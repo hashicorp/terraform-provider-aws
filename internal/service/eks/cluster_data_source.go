@@ -209,7 +209,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("outpost_config", flattenOutpostConfig(cluster.OutpostConfig)); err != nil {
 		return fmt.Errorf("error setting outpost_config: %w", err)
 	}
-	
+
 	// Id is only relevant for clusters on Outposts
 	if cluster.OutpostConfig != nil {
 		d.Set("cluster_id", cluster.Id)
