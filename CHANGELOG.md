@@ -4,13 +4,23 @@ FEATURES:
 
 * **New Data Source:** `aws_sqs_queues` ([#27890](https://github.com/hashicorp/terraform-provider-aws/issues/27890))
 * **New Resource:** `aws_ivschat_logging_configuration` ([#27924](https://github.com/hashicorp/terraform-provider-aws/issues/27924))
+* **New Resource:** `aws_ivschat_room` ([#27974](https://github.com/hashicorp/terraform-provider-aws/issues/27974))
 * **New Resource:** `aws_rds_clusters` ([#27891](https://github.com/hashicorp/terraform-provider-aws/issues/27891))
+* **New Resource:** `aws_redshiftserverless_resource_policy` ([#27920](https://github.com/hashicorp/terraform-provider-aws/issues/27920))
+* **New Resource:** `aws_scheduler_schedule` ([#27975](https://github.com/hashicorp/terraform-provider-aws/issues/27975))
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-south-2` AWS Region ([#27983](https://github.com/hashicorp/terraform-provider-aws/issues/27983))
+* data-source/aws_elasticache_cluster: Add `cache_nodes.outpost_arn` and `preferred_outpost_arn` attributes ([#27934](https://github.com/hashicorp/terraform-provider-aws/issues/27934))
+* data-source/aws_elasticache_cluster: Add `ip_discovery` and `network_type` attributes ([#27856](https://github.com/hashicorp/terraform-provider-aws/issues/27856))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-south-2` AWS Region ([#27983](https://github.com/hashicorp/terraform-provider-aws/issues/27983))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-south-2` AWS Region ([#27983](https://github.com/hashicorp/terraform-provider-aws/issues/27983))
 * data-source/aws_rds_cluster: Add `engine_mode` attribute ([#27892](https://github.com/hashicorp/terraform-provider-aws/issues/27892))
 * provider: Support `ap-south-2` as a valid AWS Region ([#27950](https://github.com/hashicorp/terraform-provider-aws/issues/27950))
 * resource/aws_amplify_app: Add support for `WEB_COMPUTE` `platform` value in support of [Next.js web apps](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-Amplify-support.html) ([#27925](https://github.com/hashicorp/terraform-provider-aws/issues/27925))
+* resource/aws_elasticache_cluster: Add `ip_discovery` and `network_type` arguments in support of [IPv6 clusters](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/network-type.html) ([#27856](https://github.com/hashicorp/terraform-provider-aws/issues/27856))
+* resource/aws_elasticache_cluster: Add `outpost_mode` and `preferred_outpost_arn` arguments and `cache_nodes.outpost_arn` attribute. NOTE: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#27934](https://github.com/hashicorp/terraform-provider-aws/issues/27934))
 * resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
 * resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#27923](https://github.com/hashicorp/terraform-provider-aws/issues/27923))
 * resource/aws_medialive_channel: Add `start_channel` attribute ([#27882](https://github.com/hashicorp/terraform-provider-aws/issues/27882))
@@ -19,6 +29,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudcontrolapi_resource: Remove invalid regular expressions from CloudFormation resource schema ([#27935](https://github.com/hashicorp/terraform-provider-aws/issues/27935))
+* resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `sybase` engine ([#27949](https://github.com/hashicorp/terraform-provider-aws/issues/27949))
+* resource/aws_resourcegroups_group: Properly set `configuration.parameters` as optional ([#27985](https://github.com/hashicorp/terraform-provider-aws/issues/27985))
 
 ## 4.40.0 (November 17, 2022)
 

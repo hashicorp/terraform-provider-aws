@@ -34,3 +34,27 @@ func findLoggingConfigurationByID(ctx context.Context, conn *ivschat.Client, id 
 
 	return out, nil
 }
+
+func findRoomByID(ctx context.Context, conn *ivschat.Client, id string) (*ivschat.GetRoomOutput, error) {
+	in := &ivschat.GetRoomInput{
+		Identifier: aws.String(id),
+	}
+	out, err := conn.GetRoom(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}

@@ -122,10 +122,6 @@ func ResourceLoggingConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -203,7 +199,6 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	d.Set("id", out.Id)
 	d.Set("name", out.Name)
 	d.Set("state", out.State)
 
