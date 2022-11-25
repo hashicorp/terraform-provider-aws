@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -56,6 +57,12 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"cluster_endpoint": endpointSchema(),
+			"data_tiering": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+				Default:  false,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -275,6 +282,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
 	}
 
+	if v, ok := d.GetOk("data_tiering"); ok {
+		input.DataTiering = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -488,6 +499,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))
 		d.Set("port", v.Port)
+	}
+
+	if v := aws.StringValue(cluster.DataTiering); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return diag.Errorf("error reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+		}
+
+		d.Set("data_tiering", b)
 	}
 
 	d.Set("description", cluster.Description)
