@@ -195,7 +195,6 @@ func ResourceCluster() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      true,
-				MaxItems:      1,
 				ConflictsWith: []string{"snapshot_name"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
