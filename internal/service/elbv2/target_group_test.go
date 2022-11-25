@@ -615,7 +615,6 @@ port     = 8081
 protocol = "TCP"
 matcher  = "200"
     `
-
 	healthCheckValid := `
 interval = 10
 port     = 8081

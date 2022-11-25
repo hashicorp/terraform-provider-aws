@@ -102,7 +102,11 @@ func ResourceTargetGroup() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc:     validation.StringInSlice(elbv2.ProtocolEnum_Values(), false),
+							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ProtocolEnumHttp,
+								elbv2.ProtocolEnumHttps,
+								elbv2.ProtocolEnumTcp,
+							}, true),
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 						"timeout": {
