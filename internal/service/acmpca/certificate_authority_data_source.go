@@ -183,7 +183,7 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 
 	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(getCertificateAuthorityCsrInput)
 	if err != nil {
-		return fmt.Errorf("reading ACM PCA Certificate Authority Certificate Signing Request: %w", err)
+		log.Printf("[WARN] Error reading ACM PCA Certificate Authority Certificate Signing Request: %w", err)
 	}
 
 	d.Set("certificate_signing_request", "")

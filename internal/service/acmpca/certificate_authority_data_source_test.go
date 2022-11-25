@@ -90,6 +90,44 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 	})
 }
 
+func TestAccACMPCACertificateAuthorityDataSource_ramShared(t *testing.T) {
+	resourceName := "aws_acmpca_certificate_authority.test"
+	datasourceName := "data.aws_acmpca_certificate_authority.test"
+
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
+				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
+			},
+			{
+				Config: testAccCertificateAuthorityDataSourceConfig_ramShared(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", ""),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_after", resourceName, "not_after"),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_before", resourceName, "not_before"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.#", resourceName, "revocation_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.#", resourceName, "revocation_configuration.0.crl_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.0.enabled", resourceName, "revocation_configuration.0.crl_configuration.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "serial", resourceName, "serial"),
+					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCertificateAuthorityDataSourceConfig_arn(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
@@ -154,6 +192,51 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 data "aws_acmpca_certificate_authority" "test" {
   arn = aws_acmpca_certificate_authority.test.arn
+}
+`, commonName)
+}
+
+func testAccCertificateAuthorityDataSourceConfig_ramShared(commonName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_acmpca_certificate_authority" "alternate" {
+  provider = "awsalternate"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+
+resource "aws_ram_resource_share" "alternate" {
+  provider = "awsalternate"
+
+  name                      = "alternate"
+  allow_external_principals = true
+  permission_arns           = ["arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority"]
+}
+
+resource "aws_ram_principal_association" "alternate" {
+  provider = "awsalternate"
+
+  resource_share_arn = aws_ram_resource_share.alternate.arn
+  principal          = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_ram_resource_association" "alternate" {
+  provider = "awsalternate"
+
+  resource_share_arn = aws_ram_resource_share.alternate.arn
+  resource_arn       = aws_acmpca_certificate_authority.alternate.arn
+}
+
+data "aws_acmpca_certificate_authority" "test" {
+  arn = aws_acmpca_certificate_authority.alternate.arn
 }
 `, commonName)
 }

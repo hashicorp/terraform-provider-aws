@@ -1,0 +1,3 @@
+```release-note:bug
+data/aws_acmpca_certificate_authority: Handle `AccessDeniedException` on `acm-pca/GetCertificateAuthorityCsr` when retrieving a shared ACM PCA
+```
