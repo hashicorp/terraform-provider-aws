@@ -1676,6 +1676,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
 
 			"aws_ivschat_logging_configuration": ivschat.ResourceLoggingConfiguration(),
+			"aws_ivschat_room":                  ivschat.ResourceRoom(),
 
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
@@ -2046,6 +2047,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
+			"aws_scheduler_schedule":       scheduler.ResourceSchedule(),
 			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
 			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),

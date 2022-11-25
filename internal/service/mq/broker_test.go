@@ -1,6 +1,7 @@
 package mq_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -1292,7 +1293,7 @@ func testAccCheckBrokerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfmq.FindBrokerByID(conn, rs.Primary.ID)
+		_, err := tfmq.FindBrokerByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1321,7 +1322,7 @@ func testAccCheckBrokerExists(n string, v *mq.DescribeBrokerResponse) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
 
-		output, err := tfmq.FindBrokerByID(conn, rs.Primary.ID)
+		output, err := tfmq.FindBrokerByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

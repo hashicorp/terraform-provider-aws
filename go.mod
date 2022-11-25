@@ -4,10 +4,10 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.141
+	github.com/aws/aws-sdk-go v1.44.144
 	github.com/aws/aws-sdk-go-v2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.19
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.20.11
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.21
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.3
@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.26.0
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.11
@@ -67,7 +67,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.1.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
 	github.com/aws/smithy-go v1.13.4 // indirect
