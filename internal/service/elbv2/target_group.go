@@ -102,11 +102,7 @@ func ResourceTargetGroup() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								elbv2.ProtocolEnumHttp,
-								elbv2.ProtocolEnumHttps,
-								elbv2.ProtocolEnumTcp,
-							}, true),
+							ValidateFunc:     validation.StringInSlice(elbv2.ProtocolEnum_Values(), false),
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 						"timeout": {
@@ -1157,15 +1153,6 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 			if m := healthCheck["path"].(string); m != "" {
 				return fmt.Errorf("%s: health_check.path is not supported for target_groups with TCP protocol", diff.Id())
 			}
-			// Cannot set custom timeout on TCP health checks
-			if t := healthCheck["timeout"].(int); t != 0 && diff.Id() == "" {
-				// timeout has a default value, so only check this if this is a network
-				// LB and is a first run
-				return fmt.Errorf("%s: health_check.timeout is not supported for target_groups with TCP protocol", diff.Id())
-			}
-			if healthCheck["healthy_threshold"].(int) != healthCheck["unhealthy_threshold"].(int) {
-				return fmt.Errorf("%s: health_check.healthy_threshold %d and health_check.unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
-			}
 		}
 	}
 
@@ -1183,28 +1170,6 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		return nil
 	}
 
-	if protocol == elbv2.ProtocolEnumTcp {
-		if diff.HasChange("health_check.0.interval") {
-			if err := diff.ForceNew("health_check.0.interval"); err != nil {
-				return err
-			}
-		}
-		// The health_check configuration block protocol argument has Default: HTTP, however the block
-		// itself is Computed: true. When not configured, a TLS (Network LB) Target Group will default
-		// to health check protocol TLS. We do not want to trigger recreation in this scenario.
-		// ResourceDiff will show 0 changed keys for the configuration block, which we can use to ensure
-		// there was an actual change to trigger the ForceNew.
-		if diff.HasChange("health_check.0.protocol") && len(diff.GetChangedKeysPrefix("health_check.0")) != 0 {
-			if err := diff.ForceNew("health_check.0.protocol"); err != nil {
-				return err
-			}
-		}
-		if diff.HasChange("health_check.0.timeout") {
-			if err := diff.ForceNew("health_check.0.timeout"); err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 
