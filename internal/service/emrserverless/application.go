@@ -31,6 +31,11 @@ func ResourceApplication() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"architecture": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(emrserverless.Architecture_Values(), false),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -203,6 +208,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
+	if v, ok := d.GetOk("architecture"); ok {
+		input.Architecture = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.AutoStartConfiguration = expandAutoStartConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -260,6 +269,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("reading EMR Serverless Application (%s): %w", d.Id(), err)
 	}
 
+	d.Set("architecture", application.Architecture)
 	d.Set("arn", application.Arn)
 	d.Set("name", application.Name)
 	d.Set("release_label", application.ReleaseLabel)
@@ -306,6 +316,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(resource.UniqueId()),
+		}
+
+		if v, ok := d.GetOk("architecture"); ok {
+			input.Architecture = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
