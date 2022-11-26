@@ -142,6 +142,7 @@ func ResourceApplication() *schema.Resource {
 						"disk": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"memory": {
 							Type:     schema.TypeString,
