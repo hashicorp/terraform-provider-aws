@@ -848,6 +848,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
 			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
 
+			"aws_redshiftserverless_credentials": redshiftserverless.DataSourceCredentials(),
+
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
 			"aws_route53_delegation_set":          route53.DataSourceDelegationSet(),
