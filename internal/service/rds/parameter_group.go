@@ -202,7 +202,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		// _and_ the "system"/"engine-default" Source parameters _that appear in the
 		// config_ in the state, or the user gets a perpetual diff. See
 		// terraform-providers/terraform-provider-aws#593 for more context and details.
-		confParams := ExpandParameters(configParams.List())
+		confParams := expandParameters(configParams.List())
 		for _, param := range parameters {
 			if param.Source == nil || param.ParameterName == nil {
 				continue
@@ -227,7 +227,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	err = d.Set("parameter", FlattenParameters(userParams))
+	err = d.Set("parameter", flattenParameters(userParams))
 	if err != nil {
 		return fmt.Errorf("setting 'parameter' in state: %w", err)
 	}
@@ -273,7 +273,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter
-		parameters := ExpandParameters(ns.Difference(os).List())
+		parameters := expandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
@@ -298,13 +298,13 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		toRemove := map[string]*rds.Parameter{}
 
-		for _, p := range ExpandParameters(os.List()) {
+		for _, p := range expandParameters(os.List()) {
 			if p.ParameterName != nil {
 				toRemove[*p.ParameterName] = p
 			}
 		}
 
-		for _, p := range ExpandParameters(ns.List()) {
+		for _, p := range expandParameters(ns.List()) {
 			if p.ParameterName != nil {
 				delete(toRemove, *p.ParameterName)
 			}
