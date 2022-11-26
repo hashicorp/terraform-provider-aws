@@ -33,6 +33,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexp.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
+					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.6.0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.0.enabled", "true"),

@@ -34,6 +34,7 @@ func ResourceApplication() *schema.Resource {
 			"architecture": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      emrserverless.ArchitectureX8664,
 				ValidateFunc: validation.StringInSlice(emrserverless.Architecture_Values(), false),
 			},
 			"arn": {
