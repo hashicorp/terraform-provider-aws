@@ -1,14 +1,14 @@
 ---
-subcategory: "Redshift"
+subcategory: "Redshift Serverless"
 layout: "aws"
 page_title: "AWS: aws_redshiftserverless_credentials"
 description: |-
-  Provides redshift cluster credentials
+  Provides redshift serverless credentials
 ---
 
 # Data Source: aws_redshiftserverless_credentials
 
-Provides redshift subnet group.
+Provides redshift serverless temporary credentials for a workgroup.
 
 ## Example Usage
 
