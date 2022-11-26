@@ -129,6 +129,7 @@ func ResourceApplication() *schema.Resource {
 			"maximum_capacity": {
 				Type:             schema.TypeList,
 				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
