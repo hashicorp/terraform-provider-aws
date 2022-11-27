@@ -157,6 +157,6 @@ In addition to all arguments above, the following attributes are exported:
 $ terraform import aws_api_gateway_deployment.example aabbccddee/1122334
 ```
 
-The `stage_name` and `stage_description` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.
+The `stage_name`, `stage_description`, and `variables` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.
 
 The `triggers` argument cannot be imported.
