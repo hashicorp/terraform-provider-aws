@@ -133,6 +133,20 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"service_connection_defaults": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"namespace": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"setting": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -184,6 +198,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
 		input.CapacityProviders = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("service_connection_defaults"); ok {
+		input.ServiceConnectionDefaults = expandServiceConnectionDefaults(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("setting"); ok {
@@ -292,6 +310,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting default_capacity_provider_strategy: %w", err)
 	}
 
+	if err := d.Set("service_connection_defaults", flattenServiceConnection(cluster.ServiceConnectionDefaults)); err != nil {
+		return fmt.Errorf("error setting service connection: %w", err)
+	}
+
 	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
 		return fmt.Errorf("error setting setting: %w", err)
 	}
@@ -322,6 +344,10 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("setting", "configuration") {
 		input := ecs.UpdateClusterInput{
 			Cluster: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("service_connection_defaults"); ok {
+			input.ServiceConnectionDefaults = expandServiceConnectionDefaults(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("setting"); ok {
@@ -473,6 +499,21 @@ func expandClusterSettings(configured *schema.Set) []*ecs.ClusterSetting {
 	return settings
 }
 
+func expandServiceConnectionDefaults(list []interface{}) *ecs.ServiceConnectionDefaults {
+	if len(list) == 0 {
+		return nil
+	}
+
+	m := list[0].(map[string]interface{})
+
+	var sc ecs.ServiceConnectionDefaults
+	if v, ok := m["namespace"].(string); ok && v != "" {
+		sc.Namespace = aws.String(v)
+	}
+
+	return &sc
+}
+
 func flattenClusterSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 	if len(list) == 0 {
 		return nil
@@ -548,6 +589,18 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenServiceConnectionDefaults(apiObject *ecs.ServiceConnectionDefaults) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"namespace": aws.StringValue(apiObject.Namespace),
+	}
+
+	return []interface{}{result}
 }
 
 func expandClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {

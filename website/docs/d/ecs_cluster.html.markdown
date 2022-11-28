@@ -34,4 +34,5 @@ In addition to all arguments above, the following attributes are exported:
 * `pending_tasks_count` - Number of pending tasks for the ECS Cluster
 * `running_tasks_count` - Number of running tasks for the ECS Cluster
 * `registered_container_instances_count` - The number of registered container instances for the ECS Cluster
+* `service_connection_defaults` - The namespace of the service connection service created in the cluster
 * `setting` - Settings associated with the ECS Cluster.

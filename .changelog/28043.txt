@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ecs_cluster: Add support for 'service_connect
+```
+
+```release-note:enhancement
+resource/aws_ecs_service: Add support for `service_connect'
+```
+
+```release-note:enhancement
+data/aws_ecs_cluster: Add support for `service_connect'
+```

@@ -24,6 +24,11 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"namespace": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -76,6 +81,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 	d.Set("arn", cluster.ClusterArn)
+	d.Set("namespace", cluster.Namespace)
 	d.Set("status", cluster.Status)
 	d.Set("pending_tasks_count", cluster.PendingTasksCount)
 	d.Set("running_tasks_count", cluster.RunningTasksCount)
