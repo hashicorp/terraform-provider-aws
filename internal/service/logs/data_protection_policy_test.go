@@ -270,7 +270,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
 
     Statement = [
       {
-        Sid = "Audit"
+        Sid            = "Audit"
         DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Audit = {
@@ -283,7 +283,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
         }
       },
       {
-        Sid = "Redact"
+        Sid            = "Redact"
         DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Deidentify = {
@@ -311,7 +311,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
 
     Statement = [
       {
-        Sid = "Audit"
+        Sid            = "Audit"
         DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Audit = {
@@ -320,7 +320,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
         }
       },
       {
-        Sid = "Redact"
+        Sid            = "Redact"
         DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Deidentify = {
