@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -356,6 +357,94 @@ func resourceFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func FindFileSystemByID(conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
+	input := &efs.DescribeFileSystemsInput{
+		FileSystemId: aws.String(id),
+	}
+
+	output, err := conn.DescribeFileSystems(input)
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FileSystems == nil || len(output.FileSystems) == 0 || output.FileSystems[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.FileSystems[0], nil
+}
+
+func statusFileSystemLifeCycleState(conn *efs.EFS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindFileSystemByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.LifeCycleState), nil
+	}
+}
+
+const (
+	fileSystemAvailableTimeout      = 10 * time.Minute
+	fileSystemAvailableDelayTimeout = 2 * time.Second
+	fileSystemAvailableMinTimeout   = 3 * time.Second
+	fileSystemDeletedTimeout        = 10 * time.Minute
+	fileSystemDeletedDelayTimeout   = 2 * time.Second
+	fileSystemDeletedMinTimeout     = 3 * time.Second
+)
+
+func waitFileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
+		Target:     []string{efs.LifeCycleStateAvailable},
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
+		Timeout:    fileSystemAvailableTimeout,
+		Delay:      fileSystemAvailableDelayTimeout,
+		MinTimeout: fileSystemAvailableMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.FileSystemDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFileSystemDeleted(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting},
+		Target:     []string{},
+		Refresh:    statusFileSystemLifeCycleState(conn, fileSystemID),
+		Timeout:    fileSystemDeletedTimeout,
+		Delay:      fileSystemDeletedDelayTimeout,
+		MinTimeout: fileSystemDeletedMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.FileSystemDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
