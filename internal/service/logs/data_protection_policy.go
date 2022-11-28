@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-type logsClient interface {
+type LogsClient interface {
 	LogsClient() *cloudwatchlogs.Client
 }
 
@@ -43,7 +43,7 @@ func ResourceDataProtectionPolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -54,7 +54,7 @@ func ResourceDataProtectionPolicy() *schema.Resource {
 }
 
 func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(logsClient).LogsClient()
+	conn := meta.(LogsClient).LogsClient()
 
 	logGroupName := d.Get("log_group_name").(string)
 
@@ -83,7 +83,7 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(logsClient).LogsClient()
+	conn := meta.(LogsClient).LogsClient()
 
 	output, err := FindDataProtectionPolicyByID(ctx, conn, d.Id())
 
@@ -117,7 +117,7 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(logsClient).LogsClient()
+	conn := meta.(LogsClient).LogsClient()
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Data Protection Policy: %s", d.Id())
 	_, err := conn.DeleteDataProtectionPolicy(ctx, &cloudwatchlogs.DeleteDataProtectionPolicyInput{
