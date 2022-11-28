@@ -33,11 +33,11 @@ func ResourceDataProtectionPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"log_group_arn": {
+			"log_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: validLogGroupName,
 			},
 			"policy_document": {
 				Type:             schema.TypeString,
@@ -56,26 +56,27 @@ func ResourceDataProtectionPolicy() *schema.Resource {
 func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(logsClient).LogsClient()
 
+	logGroupName := d.Get("log_group_name").(string)
+
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	logGroupID := d.Get("log_group_arn").(string)
 	input := &cloudwatchlogs.PutDataProtectionPolicyInput{
-		LogGroupIdentifier: aws.String(logGroupID),
+		LogGroupIdentifier: aws.String(logGroupName),
 		PolicyDocument:     aws.String(policy),
 	}
 
 	_, err = conn.PutDataProtectionPolicy(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Data Protection Policy (%s): %s", logGroupID, err)
+		return diag.Errorf("putting CloudWatch Logs Data Protection Policy (%s): %s", logGroupName, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(logGroupID)
+		d.SetId(logGroupName)
 	}
 
 	return resourceDataProtectionPolicyRead(ctx, d, meta)
@@ -96,7 +97,7 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("reading CloudWatch Logs Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("log_group_arn", output.LogGroupIdentifier)
+	d.Set("log_group_name", output.LogGroupIdentifier)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(output.PolicyDocument))
 
