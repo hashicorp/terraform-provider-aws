@@ -1,4 +1,17 @@
 ## 4.42.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_memorydb_cluster: Add `data_tiering` attribute ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
+* resource/aws_memorydb_cluster: Add `data_tiering` attribute ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
+* resource/aws_sns_topic_subscription: Add `filter_policy_scope` argument in support of [SNS message filtering](https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html) ([#28004](https://github.com/hashicorp/terraform-provider-aws/issues/28004))
+
+BUG FIXES:
+
+* resource/aws_lambda_function: Don't fail resource Create if AWS Signer service is not available in the configured Region ([#28008](https://github.com/hashicorp/terraform-provider-aws/issues/28008))
+* resource/aws_memorydb_cluster: Allow more than one element in `snapshot_arns` ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
+* resource/aws_sagemaker_user_profile: `user_settings.jupyter_server_app_settings`, `user_settings.kernel_gateway_app_settings`, and `user_settings.tensor_board_app_settings` are updateable ([#28025](https://github.com/hashicorp/terraform-provider-aws/issues/28025))
+
 ## 4.41.0 (November 25, 2022)
 
 FEATURES:
