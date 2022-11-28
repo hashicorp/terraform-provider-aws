@@ -11,8 +11,8 @@ import (
 
 func TestAccEventsRuleDataSource_basic(t *testing.T) {
 
-	ruleName := fmt.Sprintf("test_rule-%d", sdkacctest.RandInt())
-	busName := fmt.Sprintf("test_bus-%d", sdkacctest.RandInt())
+	ruleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_cloudwatch_event_rule.test"
 	dataSourceName := "data.aws_cloudwatch_event_rule.test"
