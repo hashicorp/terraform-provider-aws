@@ -31,6 +31,7 @@ func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", fmt.Sprintf(`
 {
 	"Name": "Test",
@@ -114,6 +115,7 @@ func TestAccLogsDataProtectionPolicy_policyDocument(t *testing.T) {
 				Config: testAccDataProtectionPolicy_policyDocument1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(resourceName, &policy),
+					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", `
 {
 	"Name": "Test",
@@ -155,6 +157,7 @@ func TestAccLogsDataProtectionPolicy_policyDocument(t *testing.T) {
 				Config: testAccDataProtectionPolicy_policyDocument2(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(resourceName, &policy),
+					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", fmt.Sprintf(`
 {
 	"Name": "Test",
@@ -253,6 +256,8 @@ func testAccCheckDataProtectionPolicyExists(n string, v *cloudwatchlogs.GetDataP
 
 func testAccDataProtectionPolicy_basic(name string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -271,7 +276,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
     Statement = [
       {
         Sid            = "Audit"
-        DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
+        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Audit = {
             FindingsDestination = {
@@ -284,7 +289,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
       },
       {
         Sid            = "Redact"
-        DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
+        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Deidentify = {
             MaskConfig = {}
@@ -299,6 +304,8 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
 
 func testAccDataProtectionPolicy_policyDocument1(name string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -312,7 +319,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
     Statement = [
       {
         Sid            = "Audit"
-        DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
+        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Audit = {
             FindingsDestination = {}
@@ -321,7 +328,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
       },
       {
         Sid            = "Redact"
-        DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
+        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Deidentify = {
             MaskConfig = {}
@@ -336,6 +343,8 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
 
 func testAccDataProtectionPolicy_policyDocument2(name string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -355,8 +364,8 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
       {
         Sid = "Audit"
         DataIdentifier = [
-          "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
-          "arn:aws:dataprotection::aws:data-identifier/DriversLicense-US",
+          "arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress",
+          "arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/DriversLicense-US",
         ]
         Operation = {
           Audit = {
@@ -371,8 +380,8 @@ resource "aws_cloudwatch_log_data_protection_policy" "test" {
       {
         Sid = "Redact"
         DataIdentifier = [
-          "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
-          "arn:aws:dataprotection::aws:data-identifier/DriversLicense-US",
+          "arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress",
+          "arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/DriversLicense-US",
         ]
         Operation = {
           Deidentify = {
