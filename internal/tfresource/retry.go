@@ -22,7 +22,7 @@ type Retryable func(error) (bool, error)
 func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+	err := RetryContext(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
 		var err error
 		var retry bool
 
@@ -227,9 +227,10 @@ func RetryContext(ctx context.Context, timeout time.Duration, f resource.RetryFu
 	}
 
 	c := &resource.StateChangeConf{
-		Pending: []string{"retryableerror"},
-		Target:  []string{"success"},
-		Timeout: timeout,
+		Pending:    []string{"retryableerror"},
+		Target:     []string{"success"},
+		Timeout:    timeout,
+		MinTimeout: 500 * time.Millisecond,
 		Refresh: func() (interface{}, string, error) {
 			rerr := f()
 
