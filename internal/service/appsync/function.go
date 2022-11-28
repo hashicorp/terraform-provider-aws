@@ -39,6 +39,7 @@ func ResourceFunction() *schema.Resource {
 			"code": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				RequiredWith: []string{"runtime"},
 				ValidateFunc: validation.StringLenBetween(1, 32768),
 			},
 			"data_source": {
@@ -56,7 +57,7 @@ func ResourceFunction() *schema.Resource {
 			"function_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "2018-05-29",
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"2018-05-29",
 				}, true),
@@ -80,9 +81,10 @@ func ResourceFunction() *schema.Resource {
 				Optional: true,
 			},
 			"runtime": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"code"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -148,7 +150,6 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("code"); ok {
 		input.Code = aws.String(v.(string))
-		input.FunctionVersion = nil
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -157,6 +158,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("request_mapping_template"); ok {
 		input.RequestMappingTemplate = aws.String(v.(string))
+		input.FunctionVersion = aws.String("2018-05-29")
 	}
 
 	if v, ok := d.GetOk("response_mapping_template"); ok {
