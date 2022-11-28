@@ -1,8 +1,16 @@
 ## 4.42.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_redshiftserverless_credentials` ([#28026](https://github.com/hashicorp/terraform-provider-aws/issues/28026))
+* **New Resource:** `aws_cloudwatch_log_data_protection_policy` ([#28049](https://github.com/hashicorp/terraform-provider-aws/issues/28049))
+
 ENHANCEMENTS:
 
 * data-source/aws_memorydb_cluster: Add `data_tiering` attribute ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
+* resource/aws_db_instance: Add `blue_green_update` argument in support of [RDS Blue/Green Deployments](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html) ([#28046](https://github.com/hashicorp/terraform-provider-aws/issues/28046))
+* resource/aws_emrserverless_application: Add `architecture` argument ([#28027](https://github.com/hashicorp/terraform-provider-aws/issues/28027))
+* resource/aws_emrserverless_application: Mark `maximum_capacity` and `maximum_capacity.disk` as Computed, preventing spurious resource diffs ([#28027](https://github.com/hashicorp/terraform-provider-aws/issues/28027))
 * resource/aws_memorydb_cluster: Add `data_tiering` attribute ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
 * resource/aws_sns_topic_subscription: Add `filter_policy_scope` argument in support of [SNS message filtering](https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html) ([#28004](https://github.com/hashicorp/terraform-provider-aws/issues/28004))
 
