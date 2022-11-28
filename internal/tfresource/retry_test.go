@@ -404,6 +404,22 @@ func TestOptionsApply(t *testing.T) {
 				PollInterval: 1 * time.Minute,
 			},
 		},
+		"NotFoundChecks": {
+			options: tfresource.Options{
+				NotFoundChecks: 10,
+			},
+			expected: resource.StateChangeConf{
+				NotFoundChecks: 10,
+			},
+		},
+		"ContinuousTargetOccurence": {
+			options: tfresource.Options{
+				ContinuousTargetOccurence: 3,
+			},
+			expected: resource.StateChangeConf{
+				ContinuousTargetOccurence: 3,
+			},
+		},
 	}
 
 	for name, testCase := range testCases {
@@ -420,6 +436,12 @@ func TestOptionsApply(t *testing.T) {
 			}
 			if a, e := conf.PollInterval, testCase.expected.PollInterval; a != e {
 				t.Errorf("PollInterval: expected %s, got %s", e, a)
+			}
+			if a, e := conf.NotFoundChecks, testCase.expected.NotFoundChecks; a != e {
+				t.Errorf("NotFoundChecks: expected %d, got %d", e, a)
+			}
+			if a, e := conf.ContinuousTargetOccurence, testCase.expected.ContinuousTargetOccurence; a != e {
+				t.Errorf("ContinuousTargetOccurence: expected %d, got %d", e, a)
 			}
 		})
 	}
