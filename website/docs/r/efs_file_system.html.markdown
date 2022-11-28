@@ -56,7 +56,7 @@ user guide for more information.
 ### Lifecycle Policy Arguments
 For **lifecycle_policy** the following attributes are supported:
 
-* `transition_to_ia` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
+* `transition_to_ia` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_1_DAY`, `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
 * `transition_to_primary_storage_class` - (Optional) Describes the policy used to transition a file from infequent access storage to primary storage. Valid values: `AFTER_1_ACCESS`.
 
 ## Attributes Reference
