@@ -1632,6 +1632,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient()
+	deadline := NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
@@ -1650,7 +1651,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), deadline.remaining()); err != nil {
 				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Id(), err)
 			}
 		} else {
@@ -1670,6 +1671,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"x_use_blue_green_update",
 	) {
 		if d.Get("x_use_blue_green_update").(bool) {
+			orchestrator := newBlueGreenOrchestrator(conn)
+			handler := newInstanceHandler(conn)
 			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
 			defer func() {
 				if len(cleaupWaiters) == 0 {
@@ -1685,46 +1688,31 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 			}()
 
-			// Backups must be enabled for Blue/Green Deployments. Enable them first.
-			o, n := d.GetChange("backup_retention_period")
-			if o.(int) == 0 && n.(int) > 0 {
-				input := &rds_sdkv2.ModifyDBInstanceInput{
-					ApplyImmediately:      true,
-					DBInstanceIdentifier:  aws.String(d.Id()),
-					BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
-				}
-
-				err := dbInstanceModify(ctx, conn, input, d.Timeout(schema.TimeoutUpdate))
-				if err != nil {
-					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): enabling backups: %s", d.Id(), err)
-				}
+			err := handler.precondition(ctx, d)
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			createIn := &rds_sdkv2.CreateBlueGreenDeploymentInput{
-				BlueGreenDeploymentName: aws.String(d.Id()),
-				Source:                  aws.String(d.Get("arn").(string)),
-			}
-
-			if d.HasChange("engine_version") {
-				createIn.TargetEngineVersion = aws.String(d.Get("engine_version").(string))
-			}
-			if d.HasChange("parameter_group_name") {
-				createIn.TargetDBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
-			}
+			createIn := handler.createBlueGreenInput(d)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Creating Blue/Green Deployment", d.Id())
 
-			createOut, err := conn.CreateBlueGreenDeployment(ctx, createIn)
+			dep, err := orchestrator.createDeployment(ctx, createIn)
 			if err != nil {
-				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: %s", d.Id(), err)
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
-			dep := createOut.BlueGreenDeployment
+			deploymentIdentifier := dep.BlueGreenDeploymentIdentifier
 			defer func() {
 				log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment", d.Id())
 
+				if dep == nil {
+					log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment: deployment disappeared", d.Id())
+					return
+				}
+
 				// Ensure that the Blue/Green Deployment is always cleaned up
 				input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
-					BlueGreenDeploymentIdentifier: dep.BlueGreenDeploymentIdentifier,
+					BlueGreenDeploymentIdentifier: deploymentIdentifier,
 				}
 				if aws.StringValue(dep.Status) != "SWITCHOVER_COMPLETED" {
 					input.DeleteTarget = aws.Bool(true)
@@ -1736,82 +1724,84 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate), optFns...)
+					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.remaining(), optFns...)
 					if err != nil {
 						diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
 					}
 				})
 			}()
 
-			dep, err = waitBlueGreenDeploymentAvailable(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate))
+			dep, err = orchestrator.waitForDeploymentAvailable(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.remaining())
 			if err != nil {
-				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			if len(dep.SwitchoverDetails) == 0 {
-				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: empty switchover details", d.Id())
-			}
-			detail := dep.SwitchoverDetails[0]
-			targetARN, err := parseDBInstanceARN(aws.StringValue(detail.TargetMember))
+			targetARN, err := parseDBInstanceARN(aws.StringValue(dep.Target))
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
-			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
+			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, deadline.remaining())
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
 
-			modifyInput := &rds_sdkv2.ModifyDBInstanceInput{
-				ApplyImmediately:     true,
-				DBInstanceIdentifier: aws.String(targetARN.Identifier),
-			}
-
-			needsModify := dbInstancePopulateModify(modifyInput, d)
-
-			if needsModify {
-				log.Printf("[DEBUG] Updating RDS DB Instance (%s): Updating Green environment", d.Id())
-
-				err := dbInstanceModify(ctx, conn, modifyInput, d.Timeout(schema.TimeoutUpdate))
-				if err != nil {
-					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): updating Green environment: %s", d.Id(), err)
-				}
+			err = handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Id()))
+			if err != nil {
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Id())
 
-			switchoverOut, err := conn.SwitchoverBlueGreenDeployment(ctx, &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
-				BlueGreenDeploymentIdentifier: dep.BlueGreenDeploymentIdentifier,
-			})
+			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.remaining())
 			if err != nil {
-				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): switching over Blue/Green Deployment: %s", d.Id(), err)
-			}
-			dep = switchoverOut.BlueGreenDeployment
-
-			dep, err = waitBlueGreenDeploymentSwitchoverCompleted(ctx, conn, aws.StringValue(dep.BlueGreenDeploymentIdentifier), d.Timeout(schema.TimeoutUpdate))
-			if err != nil {
-				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): switching over Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment source", d.Id())
 
-			if len(dep.SwitchoverDetails) == 0 {
-				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: empty switchover details", d.Id())
-			}
-			detail = dep.SwitchoverDetails[0]
-			arn, err := parseDBInstanceARN(aws.StringValue(detail.SourceMember))
+			sourceARN, err := parseDBInstanceARN(aws.StringValue(dep.Source))
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Id(), err)
 			}
-			_, err = conn.DeleteDBInstance(ctx, &rds_sdkv2.DeleteDBInstanceInput{
-				DBInstanceIdentifier: aws.String(arn.Identifier),
+			if d.Get("deletion_protection").(bool) {
+				input := &rds_sdkv2.ModifyDBInstanceInput{
+					ApplyImmediately:     true,
+					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
+					DeletionProtection:   aws.Bool(false),
+				}
+				err := dbInstanceModify(ctx, conn, input, deadline.remaining())
+				if err != nil {
+					return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Id(), err)
+				}
+			}
+			deleteInput := &rds_sdkv2.DeleteDBInstanceInput{
+				DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 				SkipFinalSnapshot:    true,
-			})
+			}
+			_, err = tfresource.RetryWhenContext(ctx, 5*time.Minute,
+				func() (any, error) {
+					return conn.DeleteDBInstance(ctx, deleteInput)
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					apiErr, ok := errs.As[smithy.APIError](err)
+					if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+						return true, err
+					}
+
+					if ok && apiErr.ErrorCode() == errCodeInvalidParameterCombination && strings.Contains(apiErr.ErrorMessage(), "disable deletion pro") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
 			if err != nil {
-				diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Id(), err)
+				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Id(), err)
 			}
 
 			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, arn.Identifier, d.Timeout(schema.TimeoutUpdate), optFns...)
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, sourceARN.Identifier, deadline.remaining(), optFns...)
 				if err != nil {
 					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Id(), err)
 				}
@@ -1841,7 +1831,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
 			}
 
-			err := dbInstanceModify(ctx, conn, input, d.Timeout(schema.TimeoutUpdate))
+			err := dbInstanceModify(ctx, conn, input, deadline.remaining())
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
@@ -1905,8 +1895,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChange("deletion_protection") {
 		needsModify = true
-		input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 	}
+	// Always set this. Fixes TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
+	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 
 	if d.HasChanges("domain", "domain_iam_role_name") {
 		needsModify = true
@@ -2100,7 +2091,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Id())
 	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
 			_, ierr := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutUpdate),
 				func() (interface{}, error) {

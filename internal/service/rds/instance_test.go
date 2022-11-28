@@ -4609,6 +4609,144 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 	})
 }
 
+// TODO: When the only change is to disable deletion_protection, bypass Blue/Green
+func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"x_use_blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v2),
+					// TODO: This should bypass Blue/Green Deployment
+					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"x_use_blue_green_update",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2, v3 rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"x_use_blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_updateInstanceClassWithDeletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.updated", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"x_use_blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_updateInstanceClassWithDeletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v3),
+					// TODO: This should bypass Blue/Green Deployment
+					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
@@ -6424,7 +6562,9 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_deletionProtection(rName string, deletionProtection bool) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage   = 5
   deletion_protection = %[1]t
@@ -9503,4 +9643,61 @@ data "aws_rds_orderable_db_instance" "updated" {
   preferred_instance_classes = ["db.t4g.micro", "db.t4g.small"]
 }
 `, rName))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName string, deletionProtection bool) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+
+  x_use_blue_green_update = true
+
+  deletion_protection = %[2]t
+}
+`, rName, deletionProtection))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_updateInstanceClassWithDeletionProtection(rName string, deletionProtection bool) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.updated.engine
+  engine_version          = data.aws_rds_orderable_db_instance.updated.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.updated.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+
+  x_use_blue_green_update = true
+
+  deletion_protection = %[2]t
+}
+
+data "aws_rds_orderable_db_instance" "updated" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = "general-public-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = ["db.t4g.micro", "db.t4g.small"]
+}
+`, rName, deletionProtection))
 }
