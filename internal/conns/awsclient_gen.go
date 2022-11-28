@@ -3,6 +3,7 @@ package conns
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -330,8 +331,9 @@ type AWSClient struct {
 	SupportedPlatforms        []string
 	TerraformVersion          string
 
-	rdsClient lazyClient[*rds_sdkv2.Client]
-	ssmClient lazyClient[*ssm_sdkv2.Client]
+	logsClient lazyClient[*cloudwatchlogs_sdkv2.Client]
+	rdsClient  lazyClient[*rds_sdkv2.Client]
+	ssmClient  lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA
