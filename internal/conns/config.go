@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -289,6 +290,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
 		}
+	})
+
+	client.logsClient.init(&cfg, func() *cloudwatchlogs.Client {
+		return cloudwatchlogs.NewFromConfig(cfg, func(o *cloudwatchlogs.Options) {
+			if endpoint := c.Endpoints[names.Logs]; endpoint != "" {
+				o.EndpointResolver = cloudwatchlogs.EndpointResolverFromURL(endpoint)
+			}
+		})
 	})
 
 	client.ssmClient.init(&cfg, func() *ssm.Client {
