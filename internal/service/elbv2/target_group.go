@@ -662,10 +662,11 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			healthCheck := healthChecks[0].(map[string]interface{})
 
 			params = &elbv2.ModifyTargetGroupInput{
-				TargetGroupArn:          aws.String(d.Id()),
-				HealthCheckEnabled:      aws.Bool(healthCheck["enabled"].(bool)),
-				HealthyThresholdCount:   aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
-				UnhealthyThresholdCount: aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
+				TargetGroupArn:             aws.String(d.Id()),
+				HealthCheckEnabled:         aws.Bool(healthCheck["enabled"].(bool)),
+				HealthCheckIntervalSeconds: aws.Int64(int64(healthCheck["interval"].(int))),
+				HealthyThresholdCount:      aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
+				UnhealthyThresholdCount:    aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
 			}
 
 			t := healthCheck["timeout"].(int)
@@ -686,7 +687,6 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
-				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
 			}
 			if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
 				params.HealthCheckPort = aws.String(healthCheck["port"].(string))
