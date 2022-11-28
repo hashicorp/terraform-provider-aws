@@ -283,6 +283,7 @@ redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,re
 redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,
 rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,1,,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,
 resiliencehub,resiliencehub,resiliencehub,resiliencehub,,resiliencehub,,,ResilienceHub,ResilienceHub,,1,,,aws_resiliencehub_,,resiliencehub_,Resilience Hub,AWS,,,,,
+resource-explorer-2,resourceexplorer2,resourceexplorer2,resourceexplorer2,,resourceexplorer2,,,ResourceExplorer2,ResourceExplorer2,,,2,,aws_resourceexplorer2_,,resourceexplorer2_,Resource Explorer,AWS,,,,,
 resource-groups,resourcegroups,resourcegroups,resourcegroups,,resourcegroups,,,ResourceGroups,ResourceGroups,,1,,,aws_resourcegroups_,,resourcegroups_,Resource Groups,AWS,,,,,
 resourcegroupstaggingapi,resourcegroupstaggingapi,resourcegroupstaggingapi,resourcegroupstaggingapi,,resourcegroupstaggingapi,,resourcegroupstagging,ResourceGroupsTaggingAPI,ResourceGroupsTaggingAPI,,1,,,aws_resourcegroupstaggingapi_,,resourcegroupstaggingapi_,Resource Groups Tagging,AWS,,,,,
 robomaker,robomaker,robomaker,robomaker,,robomaker,,,RoboMaker,RoboMaker,,1,,,aws_robomaker_,,robomaker_,RoboMaker,AWS,,,,,
