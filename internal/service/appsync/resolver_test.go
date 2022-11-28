@@ -36,12 +36,53 @@ func testAccResolver_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
 					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccResolver_code(t *testing.T) {
+	var resolver1 appsync.Resolver
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	resourceName := "aws_appsync_resolver.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResolverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResolverConfig_code(rName, "test-fixtures/test-code.js"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResolverExists(resourceName, &resolver1),
+					resource.TestCheckResourceAttrSet(resourceName, "code"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResolverConfig_code(rName, "test-fixtures/test-code-updated.js"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResolverExists(resourceName, &resolver1),
+					resource.TestCheckResourceAttrSet(resourceName, "code"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
+				),
 			},
 		},
 	})
@@ -450,6 +491,24 @@ EOF
     $utils.appendError($ctx.result.body, $ctx.result.statusCode)
 #end
 EOF
+}
+`
+}
+
+func testAccResolverConfig_code(rName, code string) string {
+	return testAccResolverConfig_base(rName) + `
+resource "aws_appsync_resolver" "test" {
+  api_id      = aws_appsync_graphql_api.test.id
+  field       = "singlePost"
+  type        = "Query"
+  data_source = aws_appsync_datasource.test.name
+
+  code        = file("%[2]s")
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
 }
 `
 }

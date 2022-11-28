@@ -61,6 +61,7 @@ func ResourceResolver() *schema.Resource {
 			"code": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				RequiredWith: []string{"runtime"},
 				ValidateFunc: validation.StringLenBetween(1, 32768),
 			},
 			"data_source": {
@@ -110,9 +111,10 @@ func ResourceResolver() *schema.Resource {
 				Optional: true,
 			},
 			"runtime": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"code"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {

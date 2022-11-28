@@ -106,6 +106,7 @@ resource "aws_appsync_resolver" "Mutation_pipelineTest" {
 The following arguments are supported:
 
 * `api_id` - (Required) API ID for the GraphQL API.
+* `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
 * `type` - (Required) Type name from the schema defined in the GraphQL API.
 * `field` - (Required) Field name from the schema defined in the GraphQL API.
 * `request_template` - (Optional) Request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
@@ -114,11 +115,19 @@ The following arguments are supported:
 * `max_batch_size` - (Optional) Maximum batching size for a resolver. Valid values are between `0` and `2000`.
 * `kind`  - (Optional) Resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
+* `runtime` - (Optional) Describes a runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [Runtime](#runtime).
 * `pipeline_config` - (Optional) PipelineConfig.
     * `functions` - (Required) List of Function ID.
 * `caching_config` - (Optional) CachingConfig.
     * `caching_keys` - (Optional) List of caching key.
     * `ttl` - (Optional) TTL in seconds.
+
+### Runtime
+
+The following arguments are supported:
+
+* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
+* `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ### Sync Config
 
