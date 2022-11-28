@@ -33,31 +33,6 @@ func FindBackupPolicyByID(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
 	return output.BackupPolicy, nil
 }
 
-func FindFileSystemByID(conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
-	input := &efs.DescribeFileSystemsInput{
-		FileSystemId: aws.String(id),
-	}
-
-	output, err := conn.DescribeFileSystems(input)
-
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.FileSystems == nil || len(output.FileSystems) == 0 || output.FileSystems[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.FileSystems[0], nil
-}
-
 func FindFileSystemPolicyByID(conn *efs.EFS, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
 	input := &efs.DescribeFileSystemPolicyInput{
 		FileSystemId: aws.String(id),

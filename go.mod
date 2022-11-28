@@ -8,19 +8,24 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.19
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.21
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.7
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.3
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.22.0
+	github.com/aws/smithy-go v1.13.4
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.19.0
@@ -30,6 +35,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.15.0
 	github.com/hashicorp/terraform-plugin-framework v0.16.0
@@ -39,6 +45,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
+	github.com/mitchellh/cli v1.1.5
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
@@ -48,9 +55,8 @@ require (
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/tools v0.1.12
 	gopkg.in/yaml.v2 v2.4.0
+	syreclabs.com/go/faker v1.2.3
 )
-
-require github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.0 // indirect
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -66,13 +72,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.1.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
-	github.com/aws/smithy-go v1.13.4 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -84,7 +87,6 @@ require (
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-hclog v1.2.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.6 // indirect
-	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/hc-install v0.4.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.17.3 // indirect
@@ -97,7 +99,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/mitchellh/cli v1.1.5
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
@@ -119,5 +120,4 @@ require (
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
-	syreclabs.com/go/faker v1.2.3
 )
