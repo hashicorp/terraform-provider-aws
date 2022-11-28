@@ -202,6 +202,14 @@ The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](h
 * `log_format` - Valid values are `json` or `text`
 * `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `40m`)
+- `update` - (Default `80m`)
+- `delete` - (Default `40m`)
+
 ## Import
 
 ElastiCache Clusters can be imported using the `cluster_id`, e.g.,
