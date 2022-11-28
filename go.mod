@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.1
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.11
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.22.0
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.19.0
