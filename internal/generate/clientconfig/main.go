@@ -70,19 +70,15 @@ func main() {
 				SDKVersion:        "1",
 				GoPackage:         l[names.ColGoV1Package],
 			})
+		} else if l[names.ColClientSDKV2] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "2",
+				GoPackage:         l[names.ColGoV2Package],
+			})
 		}
-		// if l[names.ColClientSDKV2] != "" {
-		// 	sd := ServiceDatum{
-		// 		ProviderNameUpper: l[names.ColProviderNameUpper],
-		// 		SDKVersion:        "2",
-		// 		GoPackage:         l[names.ColGoV2Package],
-		// 	}
-		// 	if l[names.ColClientSDKV1] != "" {
-		// 		// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`
-		// 		sd.GoPackage = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
-		// 	}
-		// 	td.Services = append(td.Services, sd)
-		// }
+		// TODO: Lazy v2 clients for those with both SDK v1 and v2 clients.
+		// See internal/generate/awsclient/main.go.
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {

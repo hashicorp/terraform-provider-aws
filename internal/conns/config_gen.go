@@ -2,6 +2,10 @@
 package conns
 
 import (
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/ivschat"
+	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -291,7 +295,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
+// sdkv1Conns initializes AWS SDK for Go v1 clients.
+func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.ACMConn = acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACM])}))
 	client.ACMPCAConn = acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACMPCA])}))
 	client.AMPConn = prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AMP])}))
@@ -576,4 +581,23 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.WorkSpacesConn = workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.WorkSpaces])}))
 	client.WorkSpacesWebConn = workspacesweb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.WorkSpacesWeb])}))
 	client.XRayConn = xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.XRay])}))
+}
+
+// sdkv2Conns initializes AWS SDK for Go v2 clients.
+func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.AuditManagerClient = auditmanager.NewFromConfig(cfg, func(o *auditmanager.Options) {
+		if endpoint := c.Endpoints[names.AuditManager]; endpoint != "" {
+			o.EndpointResolver = auditmanager.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.IVSChatClient = ivschat.NewFromConfig(cfg, func(o *ivschat.Options) {
+		if endpoint := c.Endpoints[names.IVSChat]; endpoint != "" {
+			o.EndpointResolver = ivschat.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.ResourceExplorer2Client = resourceexplorer2.NewFromConfig(cfg, func(o *resourceexplorer2.Options) {
+		if endpoint := c.Endpoints[names.ResourceExplorer2]; endpoint != "" {
+			o.EndpointResolver = resourceexplorer2.EndpointResolverFromURL(endpoint)
+		}
+	})
 }

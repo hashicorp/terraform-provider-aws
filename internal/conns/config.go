@@ -194,7 +194,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		DNSSuffix = p.DNSSuffix()
 	}
 
-	c.clientConns(client, sess)
+	c.sdkv1Conns(client, sess)
 
 	client.AccountID = accountID
 	client.DefaultTagsConfig = c.DefaultTagsConfig
