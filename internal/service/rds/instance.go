@@ -129,6 +129,19 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
+			"blue_green_update": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"ca_cert_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -515,10 +528,6 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"x_use_blue_green_update": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"username": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -537,24 +546,24 @@ func ResourceInstance() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				if !d.Get("x_use_blue_green_update").(bool) {
+				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
 
 				engine := d.Get("engine").(string)
 				if !slices.Contains(dbInstanceValidBlueGreenEngines(), engine) {
-					return fmt.Errorf(`"x_use_blue_green_update" cannot be set when "engine" is %q.`, engine)
+					return fmt.Errorf(`"blue_green_update.enabled" cannot be set when "engine" is %q.`, engine)
 				}
 				return nil
 			},
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				if !d.Get("x_use_blue_green_update").(bool) {
+				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
 
 				source := d.Get("replicate_source_db").(string)
 				if source != "" {
-					return errors.New(`"x_use_blue_green_update" cannot be set when "replicate_source_db" is set.`)
+					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
 				}
 				return nil
 			},
@@ -1668,9 +1677,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"replicate_source_db",
 		"skip_final_snapshot",
 		"tags", "tags_all",
-		"x_use_blue_green_update",
+		"blue_green_update",
 	) {
-		if d.Get("x_use_blue_green_update").(bool) {
+		if d.Get("blue_green_update.0.enabled").(bool) {
 			orchestrator := newBlueGreenOrchestrator(conn)
 			handler := newInstanceHandler(conn)
 			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)

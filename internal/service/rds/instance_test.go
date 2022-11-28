@@ -4336,7 +4336,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 					testAccCheckInstanceExists(resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.updated", "version"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 			{
@@ -4349,7 +4349,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 		},
@@ -4388,7 +4388,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 					testAccCheckInstanceExists(resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 			{
@@ -4402,7 +4402,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"latest_restorable_time", // This causes intermittent failures when the value increments
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 		},
@@ -4452,7 +4452,7 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 		},
@@ -4488,7 +4488,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 					testAccCheckInstanceExists(resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.updated", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 			{
@@ -4501,7 +4501,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 		},
@@ -4539,7 +4539,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 					testAccCheckInstanceExists(resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.updated", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 			{
@@ -4552,7 +4552,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 		},
@@ -4589,7 +4589,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.updated", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 			{
@@ -4602,7 +4602,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 		},
@@ -4643,7 +4643,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 			{
@@ -4653,7 +4653,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
 					// TODO: This should bypass Blue/Green Deployment
 					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 			{
@@ -4666,7 +4666,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtection(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 		},
@@ -4707,7 +4707,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 			{
@@ -4717,7 +4717,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.updated", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 			{
@@ -4730,7 +4730,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
-					"x_use_blue_green_update",
+					"blue_green_update",
 				},
 			},
 			{
@@ -4740,7 +4740,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					// TODO: This should bypass Blue/Green Deployment
 					// testAccCheckDBInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "x_use_blue_green_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
 		},
@@ -9472,7 +9472,9 @@ resource "aws_db_instance" "test" {
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 }
 
 data "aws_rds_orderable_db_instance" "test" {
@@ -9517,7 +9519,9 @@ resource "aws_db_instance" "test" {
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 }
 `, rName))
 }
@@ -9539,7 +9543,9 @@ resource "aws_db_instance" "test" {
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 }
 
 resource "aws_db_parameter_group" "test" {
@@ -9575,7 +9581,9 @@ resource "aws_db_instance" "test" {
     %[2]q = %[3]q
   }
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -9597,7 +9605,9 @@ resource "aws_db_instance" "test" {
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 }
 
 data "aws_rds_orderable_db_instance" "updated" {
@@ -9631,7 +9641,9 @@ resource "aws_db_instance" "test" {
   instance_class      = data.aws_rds_orderable_db_instance.updated.instance_class
   skip_final_snapshot = true
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 }
 
 data "aws_rds_orderable_db_instance" "updated" {
@@ -9662,7 +9674,9 @@ resource "aws_db_instance" "test" {
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 
   deletion_protection = %[2]t
 }
@@ -9686,7 +9700,9 @@ resource "aws_db_instance" "test" {
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
 
-  x_use_blue_green_update = true
+  blue_green_update {
+    enabled = true
+  }
 
   deletion_protection = %[2]t
 }

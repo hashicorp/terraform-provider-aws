@@ -44,7 +44,7 @@ as other engines are not supported by RDS Blue/Green deployments.
 
 Backups must be enabled to use low-downtime updates.
 
-Enable low-downtime updates by setting `x_use_blue_green_update` to `true`.
+Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
 
 ## Example Usage
 
@@ -102,9 +102,10 @@ Defaults to true.
   Must be greater than `0` if the database is used as a source for a [Read Replica][instance-replication],
   uses [low-downtime updates](#low-downtime-updates),
   or will use [RDS Blue/Green deployments][blue-green].
-* `backup_window` - (Optional) The daily time range (in UTC) during which
-automated backups are created if they are enabled. Example: "09:46-10:16". Must
-not overlap with `maintenance_window`.
+* `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
+  Example: "09:46-10:16". Must not overlap with `maintenance_window`.
+* `blue_green_update` - (Optional) Enables low-downtime updates using R[RDS Blue/Green deployments][blue-green].
+  See [blue_green_update](#blue_green_update) below
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
 encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
@@ -267,7 +268,12 @@ resource "aws_db_instance" "db" {
 * `source_engine` - (Required, as of Feb 2018 only 'mysql' supported) Source engine for the backup
 * `source_engine_version` - (Required, as of Feb 2018 only '5.6' supported) Version of the source engine used to make the backup
 
-This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
+This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.
+
+## blue_green_update
+
+* `enabled` - (Optional) Enables [low-downtime updates](#Low-Downtime Updates) when `true`.
+  Default is `false`.
 
 [instance-replication]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
