@@ -520,8 +520,8 @@ resource "aws_glue_classifier" "test" {
     contains_header            = "PRESENT"
     delimiter                  = ","
     header                     = ["header_column1", "header_column2"]
-	custom_datatype_configured = true
-	custom_datatypes           = ["%[2]s", "SHORT"]
+    custom_datatype_configured = true
+    custom_datatypes           = ["%[2]s", "SHORT"]
   }
 }
 `, rName, customType)
