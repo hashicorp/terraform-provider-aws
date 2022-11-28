@@ -32,7 +32,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "example" {
 
     Statement = [
       {
-        Sid = "Audit"
+        Sid            = "Audit"
         DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Audit = {
@@ -45,7 +45,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "example" {
         }
       },
       {
-        Sid = "Redact"
+        Sid            = "Redact"
         DataIdentifier = ["arn:aws:dataprotection::aws:data-identifier/EmailAddress"]
         Operation = {
           Deidentify = {
