@@ -848,6 +848,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
 			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
 
+			"aws_redshiftserverless_credentials": redshiftserverless.DataSourceCredentials(),
+
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
 			"aws_route53_delegation_set":          route53.DataSourceDelegationSet(),
@@ -1155,14 +1157,15 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
-			"aws_cloudwatch_log_destination":         logs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":  logs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":               logs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":       logs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":     logs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":              logs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
+			"aws_cloudwatch_log_data_protection_policy": logs.ResourceDataProtectionPolicy(),
+			"aws_cloudwatch_log_destination":            logs.ResourceDestination(),
+			"aws_cloudwatch_log_destination_policy":     logs.ResourceDestinationPolicy(),
+			"aws_cloudwatch_log_group":                  logs.ResourceGroup(),
+			"aws_cloudwatch_log_metric_filter":          logs.ResourceMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":        logs.ResourceResourcePolicy(),
+			"aws_cloudwatch_log_stream":                 logs.ResourceStream(),
+			"aws_cloudwatch_log_subscription_filter":    logs.ResourceSubscriptionFilter(),
+			"aws_cloudwatch_query_definition":           logs.ResourceQueryDefinition(),
 
 			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
 
