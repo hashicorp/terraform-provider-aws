@@ -542,7 +542,7 @@ func ResourceInstance() *schema.Resource {
 				}
 
 				engine := d.Get("engine").(string)
-				if !slices.Contains(validBlueGreenEngines(), engine) {
+				if !slices.Contains(dbInstanceValidBlueGreenEngines(), engine) {
 					return fmt.Errorf(`"x_use_blue_green_update" cannot be set when "engine" is %q.`, engine)
 				}
 				return nil
@@ -1650,7 +1650,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Id(), err)
 			}
 
-			if _, err := waitDBInstanceAvailableSDKv1(ctx, meta.(*conns.AWSClient).RDSConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitDBInstanceAvailableSDKv2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return errs.AppendErrorf(diags, "promoting RDS DB Instance (%s): waiting for completion: %s", d.Id(), err)
 			}
 		} else {
@@ -1720,6 +1720,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 			dep := createOut.BlueGreenDeployment
 			defer func() {
+				log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment", d.Id())
+
 				// Ensure that the Blue/Green Deployment is always cleaned up
 				input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
 					BlueGreenDeploymentIdentifier: dep.BlueGreenDeploymentIdentifier,
@@ -1754,7 +1756,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
-			_, err = waitDBInstanceAvailableSDKv1(ctx, meta.(*conns.AWSClient).RDSConn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
+			_, err = waitDBInstanceAvailableSDKv2(ctx, conn, targetARN.Identifier, d.Timeout(schema.TimeoutUpdate))
 			if err != nil {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Id(), err)
 			}
@@ -1790,7 +1792,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): switching over Blue/Green Deployment: waiting for completion: %s", d.Id(), err)
 			}
 
-			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment", d.Id())
+			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment source", d.Id())
 
 			if len(dep.SwitchoverDetails) == 0 {
 				return errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: empty switchover details", d.Id())
@@ -2526,6 +2528,9 @@ func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id s
 	}
 }
 
-func validBlueGreenEngines() []string {
-	return []string{"mariadb", "mysql"}
+func dbInstanceValidBlueGreenEngines() []string {
+	return []string{
+		InstanceEngineMariaDB,
+		InstanceEngineMySQL,
+	}
 }
