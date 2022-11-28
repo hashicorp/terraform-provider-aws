@@ -3,6 +3,10 @@ resource/aws_lb_target_group: Don't force recreation on `health_check` attribute
 ```
 
 ```release-note:bug
+resource/aws_lb_target_group: Allow `interval` to be updated for TCP health checks
+```
+
+```release-note:bug
 resource/aws_lb_target_group: Allow `timeout` to be set for TCP health checks
 ```
 
