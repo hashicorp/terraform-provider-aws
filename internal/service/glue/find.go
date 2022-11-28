@@ -237,3 +237,27 @@ func FindPartitionIndexByName(conn *glue.Glue, id string) (*glue.PartitionIndexD
 
 	return result, nil
 }
+
+func FindClassifierByName(conn *glue.Glue, name string) (*glue.Classifier, error) {
+	input := &glue.GetClassifierInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetClassifier(input)
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Classifier == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Classifier, nil
+}
