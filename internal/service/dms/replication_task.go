@@ -227,6 +227,8 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
 		input := &dms.ModifyReplicationTaskInput{
 			ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
+			MigrationType:      aws.String(d.Get("migration_type").(string)),
+			TableMappings:      aws.String(d.Get("table_mappings").(string)),
 		}
 
 		if d.HasChange("cdc_start_position") {
@@ -241,16 +243,8 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 			input.CdcStartTime = aws.Time(time.Unix(seconds, 0))
 		}
 
-		if d.HasChange("migration_type") {
-			input.MigrationType = aws.String(d.Get("migration_type").(string))
-		}
-
 		if d.HasChange("replication_task_settings") {
 			input.ReplicationTaskSettings = aws.String(d.Get("replication_task_settings").(string))
-		}
-
-		if d.HasChange("table_mappings") {
-			input.TableMappings = aws.String(d.Get("table_mappings").(string))
 		}
 
 		status := d.Get("status").(string)
