@@ -898,12 +898,9 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka), me-central-1 (UAE) and ap-southeast-3 (Jakarta) region
-	// and returns ambiguous error codes (e.g. AccessDeniedException)
-	// so we cannot just ignore the error as would typically.
-	// We are hardcoding the region here, because go aws sdk endpoints
-	// package does not support Signer service
-	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.MeCentral1RegionID || region == endpoints.ApSoutheast3RegionID {
+	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
+	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
+	if !SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
 		return nil
 	}
 
@@ -1446,6 +1443,36 @@ func waitForFunctionUpdate(conn *lambda.Lambda, functionName string, timeout tim
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+// SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
+// The AWS SDK endpoints package does not support Signer.
+// See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.
+func SignerServiceIsAvailable(region string) bool {
+	availableRegions := map[string]struct{}{
+		endpoints.UsEast2RegionID:      {},
+		endpoints.UsEast1RegionID:      {},
+		endpoints.UsWest1RegionID:      {},
+		endpoints.UsWest2RegionID:      {},
+		endpoints.AfSouth1RegionID:     {},
+		endpoints.ApSouth1RegionID:     {},
+		endpoints.ApNortheast2RegionID: {},
+		endpoints.ApSoutheast1RegionID: {},
+		endpoints.ApSoutheast2RegionID: {},
+		endpoints.ApNortheast1RegionID: {},
+		endpoints.CaCentral1RegionID:   {},
+		endpoints.EuCentral1RegionID:   {},
+		endpoints.EuWest1RegionID:      {},
+		endpoints.EuWest2RegionID:      {},
+		endpoints.EuSouth1RegionID:     {},
+		endpoints.EuWest3RegionID:      {},
+		endpoints.EuNorth1RegionID:     {},
+		endpoints.MeSouth1RegionID:     {},
+		endpoints.SaEast1RegionID:      {},
+	}
+	_, ok := availableRegions[region]
+
+	return ok
 }
 
 func flattenEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {

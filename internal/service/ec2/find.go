@@ -6010,8 +6010,8 @@ func FindManagedPrefixListEntryByIDAndCIDR(ctx context.Context, conn *ec2.EC2, i
 	return nil, &resource.NotFoundError{}
 }
 
-func FindNATGateway(conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) (*ec2.NatGateway, error) {
-	output, err := FindNATGateways(conn, input)
+func FindNATGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) (*ec2.NatGateway, error) {
+	output, err := FindNATGateways(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -6028,10 +6028,10 @@ func FindNATGateway(conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) (*ec2.Na
 	return output[0], nil
 }
 
-func FindNATGateways(conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) ([]*ec2.NatGateway, error) {
+func FindNATGateways(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) ([]*ec2.NatGateway, error) {
 	var output []*ec2.NatGateway
 
-	err := conn.DescribeNatGatewaysPages(input, func(page *ec2.DescribeNatGatewaysOutput, lastPage bool) bool {
+	err := conn.DescribeNatGatewaysPagesWithContext(ctx, input, func(page *ec2.DescribeNatGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -6059,12 +6059,12 @@ func FindNATGateways(conn *ec2.EC2, input *ec2.DescribeNatGatewaysInput) ([]*ec2
 	return output, nil
 }
 
-func FindNATGatewayByID(conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
+func FindNATGatewayByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
 	input := &ec2.DescribeNatGatewaysInput{
 		NatGatewayIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindNATGateway(conn, input)
+	output, err := FindNATGateway(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
