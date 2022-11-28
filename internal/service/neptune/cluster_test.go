@@ -522,10 +522,10 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.2.1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.2.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
 				),
 			},
 			{
@@ -575,10 +575,10 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.2.1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.2.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
 				),
 			},
 			{

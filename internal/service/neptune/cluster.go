@@ -601,82 +601,103 @@ func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptu
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
-	requestUpdate := false
 
-	req := &neptune.ModifyDBClusterInput{
-		AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
-		ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
-		DBClusterIdentifier:      aws.String(d.Id()),
-	}
-
-	if d.HasChange("copy_tags_to_snapshot") {
-		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("vpc_security_group_ids") {
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
-		} else {
-			req.VpcSecurityGroupIds = []*string{}
-		}
-		requestUpdate = true
-	}
-
-	if d.HasChange("enable_cloudwatch_logs_exports") {
-		logs := &neptune.CloudwatchLogsExportConfiguration{}
-
-		old, new := d.GetChange("enable_cloudwatch_logs_exports")
-
-		disableLogTypes := old.(*schema.Set).Difference(new.(*schema.Set))
-
-		if disableLogTypes.Len() > 0 {
-			logs.SetDisableLogTypes(flex.ExpandStringSet(disableLogTypes))
+	if d.HasChangesExcept("tags", "tags_all", "iam_roles", "global_cluster_identifier") {
+		req := &neptune.ModifyDBClusterInput{
+			AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
+			ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+			DBClusterIdentifier:      aws.String(d.Id()),
 		}
 
-		enableLogTypes := new.(*schema.Set).Difference(old.(*schema.Set))
-
-		if enableLogTypes.Len() > 0 {
-			logs.SetEnableLogTypes(flex.ExpandStringSet(enableLogTypes))
+		if d.HasChange("copy_tags_to_snapshot") {
+			req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		}
 
-		req.CloudwatchLogsExportConfiguration = logs
-		requestUpdate = true
-	}
+		if d.HasChange("vpc_security_group_ids") {
+			if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
+				req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
+			} else {
+				req.VpcSecurityGroupIds = []*string{}
+			}
+		}
 
-	if d.HasChange("preferred_backup_window") {
-		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
-		requestUpdate = true
-	}
+		if d.HasChange("enable_cloudwatch_logs_exports") {
+			logs := &neptune.CloudwatchLogsExportConfiguration{}
 
-	if d.HasChange("preferred_maintenance_window") {
-		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
-		requestUpdate = true
-	}
+			old, new := d.GetChange("enable_cloudwatch_logs_exports")
 
-	if d.HasChange("backup_retention_period") {
-		req.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
-		requestUpdate = true
-	}
+			disableLogTypes := old.(*schema.Set).Difference(new.(*schema.Set))
 
-	if d.HasChange("neptune_cluster_parameter_group_name") {
-		req.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
-		requestUpdate = true
-	}
+			if disableLogTypes.Len() > 0 {
+				logs.SetDisableLogTypes(flex.ExpandStringSet(disableLogTypes))
+			}
 
-	if d.HasChange("iam_database_authentication_enabled") {
-		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
-		requestUpdate = true
-	}
+			enableLogTypes := new.(*schema.Set).Difference(old.(*schema.Set))
 
-	if d.HasChange("deletion_protection") {
-		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
-		requestUpdate = true
-	}
+			if enableLogTypes.Len() > 0 {
+				logs.SetEnableLogTypes(flex.ExpandStringSet(enableLogTypes))
+			}
 
-	if d.HasChange("engine_version") {
-		req.EngineVersion = aws.String(d.Get("engine_version").(string))
-		requestUpdate = true
+			req.CloudwatchLogsExportConfiguration = logs
+		}
+
+		if d.HasChange("preferred_backup_window") {
+			req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		}
+
+		if d.HasChange("preferred_maintenance_window") {
+			req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		}
+
+		if d.HasChange("backup_retention_period") {
+			req.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+		}
+
+		if d.HasChange("neptune_cluster_parameter_group_name") {
+			req.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
+		}
+
+		if d.HasChange("iam_database_authentication_enabled") {
+			req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		}
+
+		if d.HasChange("deletion_protection") {
+			req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		}
+
+		if d.HasChange("engine_version") {
+			req.EngineVersion = aws.String(d.Get("engine_version").(string))
+			req.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
+		}
+
+		if d.HasChange("serverless_v2_scaling_configuration") {
+			req.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
+		}
+
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBCluster(req)
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBClusterStateFault) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if tfresource.TimedOut(err) {
+			_, err = conn.ModifyDBCluster(req)
+		}
+		if err != nil {
+			return fmt.Errorf("Failed to modify Neptune Cluster (%s): %w", d.Id(), err)
+		}
+
+		_, err = WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("global_cluster_identifier") {
@@ -702,38 +723,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 			return fmt.Errorf("error removing Neptune Cluster (%s) from Neptune Global Cluster: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("serverless_v2_scaling_configuration") {
-		req.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
-		requestUpdate = true
-	}
-
-	if requestUpdate {
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err := conn.ModifyDBCluster(req)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBClusterStateFault) {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyDBCluster(req)
-		}
-		if err != nil {
-			return fmt.Errorf("Failed to modify Neptune Cluster (%s): %w", d.Id(), err)
-		}
-
-		_, err = WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return fmt.Errorf("waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
