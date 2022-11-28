@@ -155,8 +155,8 @@ func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 
 	createOpts := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
-		ThroughputMode: aws.String(throughputMode),
 		Tags:           Tags(tags.IgnoreAWS()),
+		ThroughputMode: aws.String(throughputMode),
 	}
 
 	if v, ok := d.GetOk("availability_zone_name"); ok {
@@ -208,63 +208,6 @@ func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error creating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
-		}
-	}
-
-	return resourceFileSystemRead(d, meta)
-}
-
-func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
-
-	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
-		throughputMode := d.Get("throughput_mode").(string)
-
-		input := &efs.UpdateFileSystemInput{
-			FileSystemId:   aws.String(d.Id()),
-			ThroughputMode: aws.String(throughputMode),
-		}
-
-		if throughputMode == efs.ThroughputModeProvisioned {
-			input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
-		}
-
-		_, err := conn.UpdateFileSystem(input)
-
-		if err != nil {
-			return fmt.Errorf("error updating EFS file system (%s): %w", d.Id(), err)
-		}
-
-		if _, err := waitFileSystemAvailable(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("lifecycle_policy") {
-		input := &efs.PutLifecycleConfigurationInput{
-			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
-		}
-
-		// Prevent the following error during removal:
-		// InvalidParameter: 1 validation error(s) found.
-		// - missing required field, PutLifecycleConfigurationInput.LifecyclePolicies.
-		if input.LifecyclePolicies == nil {
-			input.LifecyclePolicies = []*efs.LifecyclePolicy{}
-		}
-
-		_, err := conn.PutLifecycleConfiguration(input)
-
-		if err != nil {
-			return fmt.Errorf("error updating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -330,6 +273,63 @@ func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EFSConn
+
+	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
+		throughputMode := d.Get("throughput_mode").(string)
+
+		input := &efs.UpdateFileSystemInput{
+			FileSystemId:   aws.String(d.Id()),
+			ThroughputMode: aws.String(throughputMode),
+		}
+
+		if throughputMode == efs.ThroughputModeProvisioned {
+			input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
+		}
+
+		_, err := conn.UpdateFileSystem(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EFS file system (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waitFileSystemAvailable(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("lifecycle_policy") {
+		input := &efs.PutLifecycleConfigurationInput{
+			FileSystemId:      aws.String(d.Id()),
+			LifecyclePolicies: expandFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
+		}
+
+		// Prevent the following error during removal:
+		// InvalidParameter: 1 validation error(s) found.
+		// - missing required field, PutLifecycleConfigurationInput.LifecyclePolicies.
+		if input.LifecyclePolicies == nil {
+			input.LifecyclePolicies = []*efs.LifecyclePolicy{}
+		}
+
+		_, err := conn.PutLifecycleConfiguration(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
+		}
+	}
+
+	return resourceFileSystemRead(d, meta)
 }
 
 func resourceFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
