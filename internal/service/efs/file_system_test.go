@@ -1,6 +1,7 @@
 package efs_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -384,7 +385,7 @@ func testAccCheckFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfefs.FindFileSystemByID(conn, rs.Primary.ID)
+		_, err := tfefs.FindFileSystemByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -400,26 +401,25 @@ func testAccCheckFileSystemDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckFileSystem(resourceID string, fDesc *efs.FileSystemDescription) resource.TestCheckFunc {
+func testAccCheckFileSystem(n string, v *efs.FileSystemDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
+			return fmt.Errorf("Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No EFS file system ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
-		fs, err := tfefs.FindFileSystemByID(conn, rs.Primary.ID)
+		output, err := tfefs.FindFileSystemByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*fDesc = *fs
+		*v = *output
 
 		return nil
 	}
