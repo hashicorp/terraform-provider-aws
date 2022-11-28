@@ -2274,7 +2274,7 @@ func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string,
 	return nil, err
 }
 
-func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
+func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,

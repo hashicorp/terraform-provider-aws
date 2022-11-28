@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc)
+type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc) //nolint:unused // WIP
 
-type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error // nolint:unused
+type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error //nolint:unused // WIP
 
 type blueGreenOrchestrator struct {
 	conn           *rds_sdkv2.Client
-	cleanupWaiters []cleanupWaiterFunc
+	cleanupWaiters []cleanupWaiterFunc //nolint:unused // WIP
 }
 
 func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
@@ -29,7 +29,7 @@ func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
 	}
 }
 
-func (o *blueGreenOrchestrator) cleanUp(ctx context.Context) { // nolint:unused
+func (o *blueGreenOrchestrator) cleanUp(ctx context.Context) { //nolint:unused // WIP
 	if len(o.cleanupWaiters) == 0 {
 		return
 	}
@@ -157,18 +157,14 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	return nil
 }
 
-type deadline struct {
-	time.Time
-}
+type deadline time.Time
 
 func NewDeadline(duration time.Duration) deadline {
-	return deadline{
-		Time: time.Now().Add(duration),
-	}
+	return deadline(time.Now().Add(duration))
 }
 
 func (d deadline) remaining() time.Duration {
-	if v := d.Time.Sub(time.Now()); v < 0 {
+	if v := time.Until(time.Time(d)); v < 0 {
 		return 0
 	} else {
 		return v
