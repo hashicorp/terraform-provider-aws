@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -296,6 +297,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		return cloudwatchlogs.NewFromConfig(cfg, func(o *cloudwatchlogs.Options) {
 			if endpoint := c.Endpoints[names.Logs]; endpoint != "" {
 				o.EndpointResolver = cloudwatchlogs.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+
+	client.rdsClient.init(&cfg, func() *rds.Client {
+		return rds.NewFromConfig(cfg, func(o *rds.Options) {
+			if endpoint := c.Endpoints[names.RDS]; endpoint != "" {
+				o.EndpointResolver = rds.EndpointResolverFromURL(endpoint)
 			}
 		})
 	})

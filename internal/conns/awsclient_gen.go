@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -331,6 +332,7 @@ type AWSClient struct {
 	TerraformVersion          string
 
 	logsClient lazyClient[*cloudwatchlogs_sdkv2.Client]
+	rdsClient  lazyClient[*rds_sdkv2.Client]
 	ssmClient  lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
