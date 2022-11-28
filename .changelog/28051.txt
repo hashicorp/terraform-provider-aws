@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_neptune_cluster: Fix major version upgrade
+```
