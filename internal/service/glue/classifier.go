@@ -337,11 +337,9 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 	}
 
 	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
-
 		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
 			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
 		}
-
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
 	}
 
@@ -366,11 +364,9 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 	}
 
 	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
-
 		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
 			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
 		}
-
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
 	}
 
