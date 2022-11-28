@@ -35,12 +35,10 @@ func ResourceFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"availability_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"availability_zone_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -48,7 +46,6 @@ func ResourceFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-
 			"creation_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -56,22 +53,16 @@ func ResourceFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
-
-			"performance_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -79,34 +70,6 @@ func ResourceFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"provisioned_throughput_in_mibps": {
-				Type:     schema.TypeFloat,
-				Optional: true,
-			},
-			"number_of_mount_targets": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"throughput_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      efs.ThroughputModeBursting,
-				ValidateFunc: validation.StringInSlice(efs.ThroughputMode_Values(), false),
-			},
-
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -125,6 +88,25 @@ func ResourceFileSystem() *schema.Resource {
 						},
 					},
 				},
+			},
+			"number_of_mount_targets": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"performance_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
+			},
+			"provisioned_throughput_in_mibps": {
+				Type:     schema.TypeFloat,
+				Optional: true,
 			},
 			"size_in_bytes": {
 				Type:     schema.TypeList,
@@ -145,6 +127,14 @@ func ResourceFileSystem() *schema.Resource {
 						},
 					},
 				},
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"throughput_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      efs.ThroughputModeBursting,
+				ValidateFunc: validation.StringInSlice(efs.ThroughputMode_Values(), false),
 			},
 		},
 	}
