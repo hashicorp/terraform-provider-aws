@@ -320,7 +320,7 @@ func ResourceService() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"secret_options": {
+									"secret_option": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -1324,7 +1324,7 @@ func expandLogConfiguration(lc []interface{}) *ecs.LogConfiguration {
 	if v, ok := raw["options"].(map[string]interface{}); ok && len(v) > 0 {
 		config.Options = flex.ExpandStringMap(v)
 	}
-	if v, ok := raw["secret_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["secret_option"].([]interface{}); ok && len(v) > 0 {
 		config.SecretOptions = expandSecretOptions(v)
 	}
 
