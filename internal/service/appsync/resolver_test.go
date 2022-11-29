@@ -496,21 +496,21 @@ EOF
 }
 
 func testAccResolverConfig_code(rName, code string) string {
-	return testAccResolverConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), fmt.Sprintf(`
 resource "aws_appsync_resolver" "test" {
   api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
   type        = "Query"
   data_source = aws_appsync_datasource.test.name
 
-  code        = file("%[2]s")
+  code        = file("%[1]s")
 
   runtime {
     name            = "APPSYNC_JS"
     runtime_version = "1.0.0"
   }
 }
-`
+`, code))
 }
 
 func testAccResolverConfig_dataSource(rName string) string {
