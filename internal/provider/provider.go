@@ -1812,6 +1812,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_neptune_cluster_instance":        neptune.ResourceClusterInstance(),
 			"aws_neptune_cluster_parameter_group": neptune.ResourceClusterParameterGroup(),
 			"aws_neptune_cluster_snapshot":        neptune.ResourceClusterSnapshot(),
+			"aws_neptune_global_cluster":          neptune.ResourceGlobalCluster(),
 			"aws_neptune_event_subscription":      neptune.ResourceEventSubscription(),
 			"aws_neptune_parameter_group":         neptune.ResourceParameterGroup(),
 			"aws_neptune_subnet_group":            neptune.ResourceSubnetGroup(),
