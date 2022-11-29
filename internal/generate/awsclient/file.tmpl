@@ -3,7 +3,7 @@ package conns
 
 import (
 {{ range .Services }}
-	{{ if ne .GoPackageOverride "" }}{{ .GoPackageOverride }}{{ end -}} "github.com/aws/aws-sdk-go{{ if eq .SDKVersion "2" }}-v2{{ end }}/service/{{ .GoPackage }}"
+	{{ .GoPackageOverride }} "github.com/aws/aws-sdk-go{{ if eq .SDKVersion "2" }}-v2{{ end }}/service/{{ .GoPackage }}"
 {{- end }}
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -32,7 +32,7 @@ type AWSClient struct {
 	rdsClient  lazyClient[*rds_sdkv2.Client]
 	ssmClient  lazyClient[*ssm_sdkv2.Client]
 
-	{{ range .Services }}
+{{ range .Services }}
 	{{ .ProviderNameUpper }}{{ if eq .SDKVersion "1" }}Conn{{ else }}Client{{end}} *{{ if ne .GoPackageOverride "" }}{{ .GoPackageOverride }}{{ else }}{{ .GoPackage }}{{ end }}.{{ .ClientTypeName }}
-	{{- end }}
+{{- end }}
 }

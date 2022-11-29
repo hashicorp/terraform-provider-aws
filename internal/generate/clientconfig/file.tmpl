@@ -13,16 +13,16 @@ import (
 
 // sdkv1Conns initializes AWS SDK for Go v1 clients.
 func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
-	{{- range .Services }}
+{{- range .Services }}
 	{{- if eq .SDKVersion "1" }}
 	client.{{ .ProviderNameUpper }}Conn = {{ .GoPackage }}.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.{{ .ProviderNameUpper }}])}))
 	{{- end }}
-	{{- end }}
+{{- end }}
 }
 
 // sdkv2Conns initializes AWS SDK for Go v2 clients.
 func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
-	{{- range .Services }}
+{{- range .Services }}
 	{{- if eq .SDKVersion "2" }}
 	client.{{ .ProviderNameUpper }}Client = {{ .GoPackage }}.NewFromConfig(cfg, func(o *{{ .GoPackage }}.Options) {
 		if endpoint := c.Endpoints[names.{{ .ProviderNameUpper }}]; endpoint != "" {
@@ -30,5 +30,5 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 		}
 	})
 	{{- end }}
-	{{- end }}
+{{- end }}
 }
