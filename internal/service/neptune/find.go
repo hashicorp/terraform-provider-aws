@@ -54,7 +54,6 @@ func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpo
 }
 
 func findGlobalClusterByARN(ctx context.Context, conn *neptune.Neptune, dbClusterARN string) (*neptune.GlobalCluster, error) {
-
 	// Input currently has no filter support, maybe this will change in the future.
 	input := &neptune.DescribeGlobalClustersInput{}
 
@@ -92,7 +91,6 @@ func findGlobalClusterByARN(ctx context.Context, conn *neptune.Neptune, dbCluste
 }
 
 func FindGlobalClusterById(ctx context.Context, conn *neptune.Neptune, globalClusterID string) (*neptune.GlobalCluster, error) {
-
 	input := &neptune.DescribeGlobalClustersInput{
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
@@ -105,7 +103,6 @@ func FindGlobalClusterById(ctx context.Context, conn *neptune.Neptune, globalClu
 		}
 
 		for _, gc := range output.GlobalClusters {
-
 			if gc == nil {
 				continue
 			}
