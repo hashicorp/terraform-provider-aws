@@ -327,11 +327,11 @@ func ResourceService() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"name": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 												"value_from": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
@@ -343,7 +343,7 @@ func ResourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"services": {
+						"service": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -1304,7 +1304,7 @@ func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConf
 		config.Namespace = aws.String(v)
 	}
 
-	if v, ok := raw["services"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := raw["service"].([]interface{}); ok && len(v) > 0 {
 		config.Services = expandServices(v)
 	}
 
