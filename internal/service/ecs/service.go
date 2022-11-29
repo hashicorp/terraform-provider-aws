@@ -349,7 +349,7 @@ func ResourceService() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"client_aliases": {
+									"client_alias": {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Resource{
@@ -1370,7 +1370,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 		}
 
 		var config ecs.ServiceConnectService
-		if v, ok := raw["client_aliases"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw["client_alias"].([]interface{}); ok && len(v) > 0 {
 			config.ClientAliases = expandClientAliases(v)
 		}
 		if v, ok := raw["discovery_name"].(string); ok && v != "" {
