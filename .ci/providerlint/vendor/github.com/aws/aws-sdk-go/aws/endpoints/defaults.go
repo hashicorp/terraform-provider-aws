@@ -3123,6 +3123,37 @@ var awsPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"arc-zonal-shift": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "ap-northeast-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "ap-southeast-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "ap-southeast-3",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-central-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-north-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-east-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-east-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-west-2",
+				}: endpoint{},
+			},
+		},
 		"athena": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
