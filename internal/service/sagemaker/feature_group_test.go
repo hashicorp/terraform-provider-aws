@@ -2,8 +2,10 @@ package sagemaker_test
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -26,6 +28,8 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
 		"tags":                          testAccFeatureGroup_tags,
+		"update":                        testAccFeatureGroup_update,
+		"existingFeaturesCantChange":    testAccFeatureGroup_existingFeaturesCantChange,
 	}
 
 	for name, tc := range testCases {
@@ -206,6 +210,93 @@ func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFeatureGroup_update(t *testing.T) {
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	propagationSleep := func() resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			// Feature addition happen asynchronously, hence we will wait a nominal amount of time
+			// to wait until it is complete
+			log.Print("[DEBUG] Test: Sleep to allow feature.")
+			time.Sleep(5 * time.Second)
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureGroupConfig_multi(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(resourceName, &featureGroup),
+					propagationSleep(),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "Integral"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFeatureGroup_existingFeaturesCantChange(t *testing.T) {
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:      testAccFeatureGroupConfig_featureChanged(rName, fmt.Sprintf(`%[1]s-2`, rName), "String"),
+				ExpectError: regexp.MustCompile("existing feature_definitions of SageMaker Feature Group \\((.+)\\) can not be changed"),
+				PlanOnly:    true,
+			},
+			{
+				Config:      testAccFeatureGroupConfig_featureChanged(rName, rName, "Integral"),
+				ExpectError: regexp.MustCompile("existing feature_definitions of SageMaker Feature Group \\((.+)\\) can not be changed"),
+				PlanOnly:    true,
 			},
 		},
 	})
@@ -483,6 +574,26 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFeatureGroupConfig_featureChanged(rName string, featureName string, featureType string) string {
+	return acctest.ConfigCompose(testAccFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[2]q
+    feature_type = %[3]q
+  }
+
+  online_store_config {
+    enable_online_store = true
+  }
+}
+`, rName, featureName, featureType))
 }
 
 func testAccFeatureGroupConfig_multi(rName string) string {
