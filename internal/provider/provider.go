@@ -490,8 +490,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
-			"aws_cloudwatch_log_group":  logs.DataSourceGroup(),
-			"aws_cloudwatch_log_groups": logs.DataSourceGroups(),
+			"aws_cloudwatch_log_data_protection_policy_document": logs.DataSourceDataProtectionPolicyDocument(),
+			"aws_cloudwatch_log_group":                           logs.DataSourceGroup(),
+			"aws_cloudwatch_log_groups":                          logs.DataSourceGroups(),
 
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
