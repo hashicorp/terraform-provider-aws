@@ -32,6 +32,7 @@ func ResourceService() *schema.Resource {
 		Read:   resourceServiceRead,
 		Update: resourceServiceUpdate,
 		Delete: resourceServiceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceServiceImport,
 		},
@@ -72,16 +73,10 @@ func ResourceService() *schema.Resource {
 				ForceNew: true,
 			},
 			"deployment_circuit_breaker": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				// Ignore missing configuration block
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enable": {
@@ -96,16 +91,10 @@ func ResourceService() *schema.Resource {
 				},
 			},
 			"deployment_controller": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				// Ignore missing configuration block
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -226,13 +215,11 @@ func ResourceService() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 					},
 				},
@@ -329,41 +316,21 @@ func ResourceService() *schema.Resource {
 										ValidateFunc: validation.StringInSlice(ecs.LogDriver_Values(), false),
 									},
 									"options": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeMap,
 										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"awslogs_group": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"awslogs_region": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"awslogs_create_group": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"awslogs_stream_prefix": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"secretoptions": {
+									"secret_options": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"name": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"valuefrom": {
+												"value_from": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -386,7 +353,6 @@ func ResourceService() *schema.Resource {
 									"client_aliases": {
 										Type:     schema.TypeList,
 										Required: true,
-										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"dns_name": {
@@ -466,6 +432,29 @@ func ResourceService() *schema.Resource {
 			capacityProviderStrategyCustomizeDiff,
 		),
 	}
+}
+
+func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// clears diff to avoid extraneous diffs but lets it pass for triggering update
+	fnd := false
+	if v, ok := d.GetOk("force_new_deployment"); ok {
+		fnd = v.(bool)
+	}
+
+	if d.HasChange("triggers") && !fnd {
+		return d.Clear("triggers")
+	}
+
+	if d.HasChange("triggers") && fnd {
+		o, n := d.GetChange("triggers")
+		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
+			return d.Clear("triggers")
+		}
+
+		return nil
+	}
+
+	return nil
 }
 
 func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
@@ -620,7 +609,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.ServiceConnectConfiguration = expandServieConnectConfiguration(v.([]interface{}))
+		input.ServiceConnectConfiguration = expandServiceConnectConfiguration(v.([]interface{}))
 	}
 
 	serviceRegistries := d.Get("service_registries").([]interface{})
@@ -760,6 +749,8 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
+	d.Set("triggers", d.Get("triggers"))
+
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
@@ -815,9 +806,9 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting network_configuration for (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-		return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
-	}
+	//if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
+	//	return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
+	//}
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return fmt.Errorf("error setting service_registries for (%s): %w", d.Id(), err)
@@ -1040,7 +1031,7 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 	return results
 }
 
-func expandServieConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
+func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
 	if len(sc) == 0 {
 		return &ecs.ServiceConnectConfiguration{}
 	}
@@ -1076,201 +1067,95 @@ func expandLogConfiguration(lc []interface{}) *ecs.LogConfiguration {
 	if v, ok := raw["log_driver"].(string); ok && v != "" {
 		config.LogDriver = aws.String(v)
 	}
-	if v, ok := raw["options"].([]interface{}); ok && len(v) > 0 {
-		config.Options = expandOptions(v)
+	if v, ok := raw["options"].(map[string]interface{}); ok && len(v) > 0 {
+		config.Options = flex.ExpandStringMap(v)
 	}
 	if v, ok := raw["secret_options"].([]interface{}); ok && len(v) > 0 {
-		config.Options = expandSecretOptions(v)
+		config.SecretOptions = expandSecretOptions(v)
 	}
 
 	return config
 }
 
-func expandOptions(op []interface{}) *ecs.LogConfigurationOptions {
-	if len(op) == 0 {
-		return &ecs.LogConfigurationOptions{}
-	}
-	raw := op[0].(map[string]interface{})
-
-	config := &ecs.LogConfigurationOptions{}
-	if v, ok := raw["awslogs_group"].(string); ok && v != "" {
-		config.LogsGroup = aws.String(v)
-	}
-	if v, ok := raw["awslogs_region"].(string); ok && v != "" {
-		config.LogsRegion = aws.String(v)
-	}
-	if v, ok := raw["awslogs_create_group"].(string); ok && v != "" {
-		config.LogsCreateGroup = aws.String(v)
-	}
-	if v, ok := raw["awslogs_stream_prefix"].(string); ok && v != "" {
-		config.LogsStreamPrefix = aws.String(v)
-	}
-	return config
-}
-
-func expandSecretOptions(sop []interface{}) *ecs.LogConfigurationSecretOptions {
+func expandSecretOptions(sop []interface{}) []*ecs.Secret {
 	if len(sop) == 0 {
-		return &ecs.LogConfigurationSecretOptions{}
-	}
-	raw := sop[0].(map[string]interface{})
-
-	config := &ecs.LogConfigurationSecretOptions{}
-	if v, ok := raw["name"].(string); ok && v != "" {
-		config.Name = aws.String(v)
-	}
-	if v, ok := raw["valuefrom"].(string); ok && v != "" {
-		config.ValueFrom = aws.String(v)
-	}
-
-	return config
-}
-
-func expandServices(srv []interface{}) *ecs.ServiceConnectConfiguration {
-	if len(srv) == 0 {
-		return &ecs.ServiceConnectConfiguration{}
-	}
-	raw := srv[0].(map[string]interface{})
-
-	config := &ecs.ServiceConnectConfiguration{}
-	if v, ok := raw["client_aliases"].([]interface{}); ok && len(v) > 0 {
-		config.ClientAliases = expandAliases(v)
-	}
-	if v, ok := raw["discovery_name"].(string); ok && v != "" {
-		config.DiscoveryName = aws.String(v)
-	}
-
-	if v, ok := raw["ingress_port_override"].(int); ok {
-		config.DiscoveryName = aws.Int(v)
-	}
-	if v, ok := raw["port_name"].(string); ok && v != "" {
-		config.PortName = aws.String(v)
-	}
-
-	return config
-}
-
-func expandAliases(srv []interface{}) *ecs.ServiceConnectConfiguration {
-	if len(srv) == 0 {
-		return &ecs.ServiceConnectConfiguration{}
-	}
-	raw := srv[0].(map[string]interface{})
-
-	config := &ecs.ServiceConnectConfiguration{}
-
-	if v, ok := raw["port"].(int); ok {
-		config.Port = aws.Int(v)
-	}
-	if v, ok := raw["dns_name"].(string); ok && v != "" {
-		config.DnsName = aws.String(v)
-	}
-
-	return config
-}
-
-func flattenServiceConnectConfiguration(sc *ecs.ServiceConnectConfiguration) []interface{} {
-	if sc == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if sc.ServiceConnectConfiguration != nil {
-		tfMap["enabled"] = aws.Bool(sc.Enabled)
-		tfMap["log_configuration"] = flattenLogConfiguration(sc.LogConfiguration)
-		if sc.Namespace != nil {
-			tfMap["namespace"] = aws.StringValue(sc.Namespace)
-		}
-		tfMap["services"] = flattenServiceConfiguration(sc.Services)
-	}
-	return []interface{}{tfMap}
-}
-
-func flattenLogConfiguration(sc *ecs.LogConfiguration) []interface{} {
-	if sc == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	if sc.LogDriver != nil {
-		tfMap["log_driver"] = aws.StringValue(sc.LogDriver)
-	}
-	if sc.Options != nil {
-		tfMap["options"] = flattenOptions(sc.Options)
-	}
-	if sc.SecretOptions != nil {
-		tfMap["secretoptions"] = flattenSecretOptions(sc.SecretOptions)
-	}
-	return []interface{}{tfMap}
-}
-
-func flattenOptions(sc *ecs.LogConfigurationOptions) []interface{} {
-	if sc == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	if sc.AWSLogsGroup != nil {
-		tfMap["awslogs_group"] = aws.StringValue(sc.AWSLogsGroup)
-	}
-	if sc.AWSLogsRegion != nil {
-		tfMap["awslogs_region"] = aws.StringValue(sc.AWSLogsRegion)
-	}
-	if sc.AWSLogsCreateGroup != nil {
-		tfMap["awslogs_create_group"] = aws.StringValue(sc.AWSLogsCreateGroup)
-	}
-	if sc.AWSLogsStreamPrefix != nil {
-		tfMap["awslogs_stream_prefix"] = aws.StringValue(sc.AWSLogsStreamPrefix)
-	}
-	return []interface{}{tfMap}
-}
-
-func flattenSecretOptions(sc []*ecs.Secret) []interface{} {
-	if len(sc) == 0 {
-		return nil
-	}
-
-	var out []interface{}
-	for _, v := range sc {
-		m := map[string]interface{}{
-			"name":       aws.StringValue(v.Name),
-			"value_from": aws.StringValue(v.ValueFrom),
+	var out []*ecs.Secret
+	for _, item := range sop {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		out = append(out, m)
+		var config ecs.Secret
+		if v, ok := raw["name"].(string); ok && v != "" {
+			config.Name = aws.String(v)
+		}
+		if v, ok := raw["value_from"].(string); ok && v != "" {
+			config.ValueFrom = aws.String(v)
+		}
+
+		out = append(out, &config)
 	}
 
 	return out
 }
 
-func flattenServiceConfiguration(sc []*ecs.ServiceConnectService) []interface{} {
-	if len(sc) == 0 {
+func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
+	if len(srv) == 0 {
 		return nil
 	}
 
-	var out []interface{}
-	for _, v := range sc {
-		tfMap := map[string]interface{}{}
-		tfMap["client_aliases"] = flattenClientAliases(v.ClientAliases)
-		tfMap["discovery_name"] = aws.StringValue(v.DiscoveryName)
-		tfMap["ingress_port_override"] = aws.Int64(v.IngressPortOverride)
-		tfMap["port_name"] = aws.StringValue(v.PortName)
+	var out []*ecs.ServiceConnectService
+	for _, item := range srv {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-		out = append(out, tfMap)
+		var config ecs.ServiceConnectService
+		if v, ok := raw["client_aliases"].([]interface{}); ok && len(v) > 0 {
+			config.ClientAliases = expandClientAliases(v)
+		}
+		if v, ok := raw["discovery_name"].(string); ok && v != "" {
+			config.DiscoveryName = aws.String(v)
+		}
+		if v, ok := raw["ingress_port_override"].(int); ok {
+			config.IngressPortOverride = aws.Int64(int64(v))
+		}
+		if v, ok := raw["port_name"].(string); ok && v != "" {
+			config.PortName = aws.String(v)
+		}
+
+		out = append(out, &config)
 	}
 
 	return out
 }
 
-func flattenClientAliases(sc []*ecs.ServiceConnectClientAlias) []interface{} {
-	if len(sc) == 0 {
+func expandClientAliases(srv []interface{}) []*ecs.ServiceConnectClientAlias {
+	if len(srv) == 0 {
 		return nil
 	}
 
-	var out []interface{}
-	for _, v := range sc {
-		tfMap := map[string]interface{}{}
-		tfMap["dns_name"] = aws.StringValue(v.DnsName)
-		tfMap["port"] = aws.Int64(v.Port)
+	var out []*ecs.ServiceConnectClientAlias
+	for _, item := range srv {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config ecs.ServiceConnectClientAlias
+		if v, ok := raw["port"].(int); ok {
+			config.Port = aws.Int64(int64(v))
+		}
+		if v, ok := raw["dns_name"].(string); ok && v != "" {
+			config.DnsName = aws.String(v)
+		}
+
+		out = append(out, &config)
 	}
 
 	return out
@@ -1414,7 +1299,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("service_connect_configuration") {
-			input.ServiceConnectConfiguration = expandServieConnectConfiguration(d.Get("service_connect_configuration").([]interface{}))
+			input.ServiceConnectConfiguration = expandServiceConnectConfiguration(d.Get("service_connect_configuration").([]interface{}))
 		}
 
 		if d.HasChange("service_registries") {
