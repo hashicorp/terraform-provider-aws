@@ -1,9 +1,17 @@
 ## 4.43.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_neptune_global_cluster` ([#26133](https://github.com/hashicorp/terraform-provider-aws/issues/26133))
+
 ENHANCEMENTS:
 
+* data-source/aws_ecs_cluster: Add `service_connect_defaults` attribute ([#28052](https://github.com/hashicorp/terraform-provider-aws/issues/28052))
 * resource/aws_ce_cost_category: Allow configuration of `effective_start` value ([#28055](https://github.com/hashicorp/terraform-provider-aws/issues/28055))
+* resource/aws_ecs_cluster: Add `service_connect_defaults` argument ([#28052](https://github.com/hashicorp/terraform-provider-aws/issues/28052))
+* resource/aws_ecs_service: Add `service_connect_configuration` argument in support of [ECS Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html) ([#28052](https://github.com/hashicorp/terraform-provider-aws/issues/28052))
 * resource/aws_glue_classifier: Add `custom_datatypes` and `custom_datatype_configured` arguments ([#28048](https://github.com/hashicorp/terraform-provider-aws/issues/28048))
+* resource/aws_neptune_cluster: Add `global_cluster_identifier` argument ([#26133](https://github.com/hashicorp/terraform-provider-aws/issues/26133))
 
 ## 4.42.0 (November 28, 2022)
 
