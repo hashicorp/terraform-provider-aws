@@ -34,12 +34,6 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateClusterName,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -83,12 +77,12 @@ func ResourceCluster() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"s3_bucket_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
 												"s3_bucket_encryption_enabled": {
 													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"s3_bucket_name": {
+													Type:     schema.TypeString,
 													Optional: true,
 												},
 												"s3_key_prefix": {
@@ -121,12 +115,10 @@ func ResourceCluster() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
 						},
-
 						"capacity_provider": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"weight": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -134,6 +126,12 @@ func ResourceCluster() *schema.Resource {
 						},
 					},
 				},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateClusterName,
 			},
 			"service_connect_defaults": {
 				Type:     schema.TypeList,
