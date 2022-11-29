@@ -474,9 +474,9 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
-  
+
   service_connect_defaults {
-     namespace = aws_service_discovery_http_namespace.test[%[3]d].arn
+    namespace = aws_service_discovery_http_namespace.test[%[3]d].arn
   }
 }
 `, rName, ns, idx)

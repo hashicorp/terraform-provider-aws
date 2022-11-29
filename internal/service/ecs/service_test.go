@@ -4409,7 +4409,7 @@ resource "aws_ecs_cluster" "test" {
 
   service_connect_defaults {
     namespace = aws_service_discovery_http_namespace.test.arn
- }
+  }
 }
 
 resource "aws_ecs_task_definition" "test" {
