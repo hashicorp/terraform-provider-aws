@@ -89,7 +89,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if cluster.ServiceConnectDefaults != nil {
 		if err := d.Set("service_connect_defaults", []interface{}{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
-			return diag.Errorf("setting service_connect_defaults: %w", err)
+			return diag.Errorf("setting service_connect_defaults: %s", err)
 		}
 	} else {
 		d.Set("service_connect_defaults", nil)
