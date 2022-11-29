@@ -72,6 +72,22 @@ EOF
 }
 ```
 
+## Example Usage With Code
+
+```terraform
+resource "aws_appsync_function" "example" {
+  api_id      = aws_appsync_graphql_api.example.id
+  data_source = aws_appsync_datasource.example.name
+  name        = "example"
+  code        = file("some-code-dir")
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

@@ -13,7 +13,7 @@ Provides an AppSync Resolver.
 ## Example Usage
 
 ```terraform
-resource "aws_appsync_graphql_api" "test" {
+resource "aws_appsync_graphql_api" "example" {
   authentication_type = "API_KEY"
   name                = "tf-example"
 
@@ -38,8 +38,8 @@ schema {
 EOF
 }
 
-resource "aws_appsync_datasource" "test" {
-  api_id = aws_appsync_graphql_api.test.id
+resource "aws_appsync_datasource" "example" {
+  api_id = aws_appsync_graphql_api.example.id
   name   = "tf_example"
   type   = "HTTP"
 
@@ -49,11 +49,11 @@ resource "aws_appsync_datasource" "test" {
 }
 
 # UNIT type resolver (default)
-resource "aws_appsync_resolver" "test" {
-  api_id      = aws_appsync_graphql_api.test.id
+resource "aws_appsync_resolver" "example" {
+  api_id      = aws_appsync_graphql_api.example.id
   field       = "singlePost"
   type        = "Query"
-  data_source = aws_appsync_datasource.test.name
+  data_source = aws_appsync_datasource.example.name
 
   request_template = <<EOF
 {
@@ -84,19 +84,37 @@ EOF
 }
 
 # PIPELINE type resolver
-resource "aws_appsync_resolver" "Mutation_pipelineTest" {
+resource "aws_appsync_resolver" "Mutation_pipelineExample" {
   type              = "Mutation"
-  api_id            = aws_appsync_graphql_api.test.id
-  field             = "pipelineTest"
+  api_id            = aws_appsync_graphql_api.example.id
+  field             = "pipelineexample"
   request_template  = "{}"
   response_template = "$util.toJson($ctx.result)"
   kind              = "PIPELINE"
   pipeline_config {
     functions = [
-      aws_appsync_function.test1.function_id,
-      aws_appsync_function.test2.function_id,
-      aws_appsync_function.test3.function_id,
+      aws_appsync_function.example1.function_id,
+      aws_appsync_function.example2.function_id,
+      aws_appsync_function.example3.function_id,
     ]
+  }
+}
+```
+
+## Example Usage With Code
+
+```terraform
+resource "aws_appsync_resolver" "example" {
+  api_id      = aws_appsync_graphql_api.example.id
+  field       = "singlePost"
+  type        = "Query"
+  data_source = aws_appsync_datasource.example.name
+
+  code        = file("some-code-dir")
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
   }
 }
 ```
