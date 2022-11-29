@@ -771,8 +771,6 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
-	d.Set("triggers", d.Get("triggers"))
-	
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
