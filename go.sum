@@ -76,6 +76,8 @@ github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2 h1:qQGI444VIllp+BlfPUAEO7
 github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2/go.mod h1:ToDxovZoXnH2AbxzTQ26ySXjpmME5gGa7aiH2rnAVv8=
 github.com/aws/aws-sdk-go-v2/service/rds v1.31.0 h1:lx8pflhN7oogISvAorwqPGFHN7eiVlGEwk21ThYcyoA=
 github.com/aws/aws-sdk-go-v2/service/rds v1.31.0/go.mod h1:wPFe1Cj3nZWmNWKKdkXw961l1dJheTZQ5JjPImqbMuI=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.2 h1:IirJpFu/wVrDitXuapCp+JqU+tSen1WwtJMvtrVzzyI=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.2/go.mod h1:24lb9a+B8Ckl81TXecnjnKmgAMOW0Dgn7yLTNDejOgw=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12 h1:lP9dP8V4ow1YKEZt/zcPfHu2/lAWGmW1pIzgt2iPGRY=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12/go.mod h1:pj8fwktY8PHz60AlgCg/Mwb3nG7JDomW/4eeeud+66w=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19 h1:UNe7/1LUyQ9udyVIdAg++HfuqnBgm3Or8f2nFCfSl0U=
