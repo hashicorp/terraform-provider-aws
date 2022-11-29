@@ -302,7 +302,6 @@ func ResourceService() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							Default:  false,
 						},
 						"log_configuration": {
 							Type:     schema.TypeList,
