@@ -306,6 +306,99 @@ func ResourceService() *schema.Resource {
 				Default:      ecs.SchedulingStrategyReplica,
 				ValidateFunc: validation.StringInSlice(ecs.SchedulingStrategy_Values(), false),
 			},
+			"service_connect_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+							Default:  false,
+						},
+						"log_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_driver": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ecs.LogDriver_Values(), false),
+									},
+									"options": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"secret_options": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"value_from": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"namespace": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"services": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"client_aliases": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"dns_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"port": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
+											},
+										},
+									},
+									"discovery_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"ingress_port_override": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 65535),
+									},
+									"port_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"service_registries": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -340,14 +433,6 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			// modeled after null_resource & aws_api_gateway_deployment
-			// only for _updates in-place_ rather than replacements
-			"triggers": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"wait_for_steady_state": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -358,32 +443,8 @@ func ResourceService() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			capacityProviderStrategyCustomizeDiff,
-			triggersCustomizeDiff,
 		),
 	}
-}
-
-func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	// clears diff to avoid extraneous diffs but lets it pass for triggering update
-	fnd := false
-	if v, ok := d.GetOk("force_new_deployment"); ok {
-		fnd = v.(bool)
-	}
-
-	if d.HasChange("triggers") && !fnd {
-		return d.Clear("triggers")
-	}
-
-	if d.HasChange("triggers") && fnd {
-		o, n := d.GetChange("triggers")
-		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
-			return d.Clear("triggers")
-		}
-
-		return nil
-	}
-
-	return nil
 }
 
 func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
@@ -537,6 +598,10 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.PlacementConstraints = pc
 	}
 
+	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.ServiceConnectConfiguration = expandServiceConnectConfiguration(v.([]interface{}))
+	}
+
 	serviceRegistries := d.Get("service_registries").([]interface{})
 	if len(serviceRegistries) > 0 {
 		srs := make([]*ecs.ServiceRegistry, 0, len(serviceRegistries))
@@ -674,8 +739,6 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
-	d.Set("triggers", d.Get("triggers"))
-
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
@@ -730,6 +793,10 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error setting network_configuration for (%s): %w", d.Id(), err)
 	}
+
+	//if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
+	//	return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
+	//}
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return fmt.Errorf("error setting service_registries for (%s): %w", d.Id(), err)
@@ -952,6 +1019,136 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 	return results
 }
 
+func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
+	if len(sc) == 0 {
+		return &ecs.ServiceConnectConfiguration{}
+	}
+	raw := sc[0].(map[string]interface{})
+
+	config := &ecs.ServiceConnectConfiguration{}
+	if v, ok := raw["enabled"].(bool); ok {
+		config.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := raw["log_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.LogConfiguration = expandLogConfiguration(v)
+	}
+
+	if v, ok := raw["namespace"].(string); ok && v != "" {
+		config.Namespace = aws.String(v)
+	}
+
+	if v, ok := raw["services"].([]interface{}); ok && len(v) > 0 {
+		config.Services = expandServices(v)
+	}
+
+	return config
+}
+
+func expandLogConfiguration(lc []interface{}) *ecs.LogConfiguration {
+	if len(lc) == 0 {
+		return &ecs.LogConfiguration{}
+	}
+	raw := lc[0].(map[string]interface{})
+
+	config := &ecs.LogConfiguration{}
+	if v, ok := raw["log_driver"].(string); ok && v != "" {
+		config.LogDriver = aws.String(v)
+	}
+	if v, ok := raw["options"].(map[string]interface{}); ok && len(v) > 0 {
+		config.Options = flex.ExpandStringMap(v)
+	}
+	if v, ok := raw["secret_options"].([]interface{}); ok && len(v) > 0 {
+		config.SecretOptions = expandSecretOptions(v)
+	}
+
+	return config
+}
+
+func expandSecretOptions(sop []interface{}) []*ecs.Secret {
+	if len(sop) == 0 {
+		return nil
+	}
+
+	var out []*ecs.Secret
+	for _, item := range sop {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config ecs.Secret
+		if v, ok := raw["name"].(string); ok && v != "" {
+			config.Name = aws.String(v)
+		}
+		if v, ok := raw["value_from"].(string); ok && v != "" {
+			config.ValueFrom = aws.String(v)
+		}
+
+		out = append(out, &config)
+	}
+
+	return out
+}
+
+func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
+	if len(srv) == 0 {
+		return nil
+	}
+
+	var out []*ecs.ServiceConnectService
+	for _, item := range srv {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config ecs.ServiceConnectService
+		if v, ok := raw["client_aliases"].([]interface{}); ok && len(v) > 0 {
+			config.ClientAliases = expandClientAliases(v)
+		}
+		if v, ok := raw["discovery_name"].(string); ok && v != "" {
+			config.DiscoveryName = aws.String(v)
+		}
+		if v, ok := raw["ingress_port_override"].(int); ok {
+			config.IngressPortOverride = aws.Int64(int64(v))
+		}
+		if v, ok := raw["port_name"].(string); ok && v != "" {
+			config.PortName = aws.String(v)
+		}
+
+		out = append(out, &config)
+	}
+
+	return out
+}
+
+func expandClientAliases(srv []interface{}) []*ecs.ServiceConnectClientAlias {
+	if len(srv) == 0 {
+		return nil
+	}
+
+	var out []*ecs.ServiceConnectClientAlias
+	for _, item := range srv {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config ecs.ServiceConnectClientAlias
+		if v, ok := raw["port"].(int); ok {
+			config.Port = aws.Int64(int64(v))
+		}
+		if v, ok := raw["dns_name"].(string); ok && v != "" {
+			config.DnsName = aws.String(v)
+		}
+
+		out = append(out, &config)
+	}
+
+	return out
+}
+
 func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface{} {
 	if len(srs) == 0 {
 		return nil
@@ -1087,6 +1284,10 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("propagate_tags") {
 			input.PropagateTags = aws.String(d.Get("propagate_tags").(string))
+		}
+
+		if d.HasChange("service_connect_configuration") {
+			input.ServiceConnectConfiguration = expandServiceConnectConfiguration(d.Get("service_connect_configuration").([]interface{}))
 		}
 
 		if d.HasChange("service_registries") {
