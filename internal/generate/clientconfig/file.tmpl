@@ -44,7 +44,7 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
 {{- range .Services }}
 	{{- if eq .SDKVersion "1,2" }}
-	client.{{ .ProviderPackage }}Client.init(&cfg, func() *{{ .GoV2PackageOverride }}.Client {
+	client.{{ .ProviderPackage }}Client.init(&cfg, func() *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
 		return {{ .GoV2PackageOverride }}.NewFromConfig(cfg, func(o *{{ .GoV2PackageOverride }}.Options) {
 			if endpoint := c.Endpoints[names.{{ .ProviderNameUpper }}]; endpoint != "" {
 				o.EndpointResolver = {{ .GoV2PackageOverride }}.EndpointResolverFromURL(endpoint)

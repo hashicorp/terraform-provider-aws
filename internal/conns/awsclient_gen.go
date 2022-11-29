@@ -644,3 +644,16 @@ type AWSClient struct {
 	WorkSpacesWebConn                *workspacesweb.WorkSpacesWeb
 	XRayConn                         *xray.XRay
 }
+
+func (client *AWSClient) LogsClient() *cloudwatchlogs_sdkv2.Client {
+	return client.logsClient.Client()
+}
+func (client *AWSClient) RDSClient() *rds_sdkv2.Client {
+	return client.rdsClient.Client()
+}
+func (client *AWSClient) S3ControlClient() *s3control_sdkv2.Client {
+	return client.s3controlClient.Client()
+}
+func (client *AWSClient) SSMClient() *ssm_sdkv2.Client {
+	return client.ssmClient.Client()
+}

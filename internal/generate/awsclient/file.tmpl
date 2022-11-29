@@ -45,3 +45,10 @@ type AWSClient struct {
 	{{- end }}
 {{- end }}
 }
+
+{{ range .Services }}
+	{{- if ne .SDKVersion "1,2" }}{{continue}}{{- end }}
+func (client *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
+	return client.{{ .ProviderPackage }}Client.Client()
+}
+{{- end }}

@@ -28,6 +28,7 @@ type ServiceDatum struct {
 	GoV2Package         string
 	GoV2PackageOverride string
 	ProviderNameUpper   string
+	ClientTypeName      string
 	ProviderPackage     string
 }
 
@@ -73,6 +74,7 @@ func main() {
 				SDKVersion:        "1",
 				GoV1Package:       l[names.ColGoV1Package],
 				GoV2Package:       l[names.ColGoV2Package],
+				ClientTypeName:    l[names.ColGoV1ClientTypeName],
 				ProviderPackage:   l[names.ColProviderPackageCorrect],
 			})
 		}
@@ -82,6 +84,7 @@ func main() {
 				SDKVersion:        "2",
 				GoV1Package:       l[names.ColGoV1Package],
 				GoV2Package:       l[names.ColGoV2Package],
+				ClientTypeName:    "Client",
 				ProviderPackage:   l[names.ColProviderPackageCorrect],
 			}
 			if l[names.ColClientSDKV1] != "" {
