@@ -433,14 +433,6 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			// modeled after null_resource & aws_api_gateway_deployment
-			// only for _updates in-place_ rather than replacements
-			"triggers": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"wait_for_steady_state": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -451,32 +443,8 @@ func ResourceService() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			capacityProviderStrategyCustomizeDiff,
-			triggersCustomizeDiff,
 		),
 	}
-}
-
-func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	// clears diff to avoid extraneous diffs but lets it pass for triggering update
-	fnd := false
-	if v, ok := d.GetOk("force_new_deployment"); ok {
-		fnd = v.(bool)
-	}
-
-	if d.HasChange("triggers") && !fnd {
-		return d.Clear("triggers")
-	}
-
-	if d.HasChange("triggers") && fnd {
-		o, n := d.GetChange("triggers")
-		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
-			return d.Clear("triggers")
-		}
-
-		return nil
-	}
-
-	return nil
 }
 
 func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
