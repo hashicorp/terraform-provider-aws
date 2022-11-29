@@ -409,7 +409,7 @@ The `json_mapping_parameters` object supports the following:
 
 The `input_starting_position_configuration` object supports the following:
 
-~> **NOTE**: To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
+~> **NOTE:** To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
 
 * `input_starting_position` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
@@ -485,7 +485,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
 - `update` - (Default `10m`)

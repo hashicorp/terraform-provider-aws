@@ -685,6 +685,42 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 	})
 }
 
+func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
+	var service1, service2 ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_forceNewDeployment(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service1),
+					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_forceNewDeploymentTriggers(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service2),
+					testAccCheckServiceNotRecreated(&service1, &service2),
+					resource.TestCheckResourceAttr(resourceName, "force_new_deployment", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "triggers.update"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.field", "memory"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 	var service1, service2, service3, service4 ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1447,7 +1483,7 @@ resource "aws_route_table" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  subnet_id      = element(aws_subnet.test[*].id, count.index)
   route_table_id = aws_route_table.test.id
 }
 
@@ -1560,7 +1596,7 @@ resource "aws_route_table" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  subnet_id      = element(aws_subnet.test[*].id, count.index)
   route_table_id = aws_route_table.test.id
 }
 
@@ -1936,6 +1972,47 @@ resource "aws_ecs_service" "test" {
   ordered_placement_strategy {
     type  = "binpack"
     field = "memory"
+  }
+}
+`, rName)
+}
+
+func testAccServiceConfig_forceNewDeploymentTriggers(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster              = aws_ecs_cluster.default.id
+  desired_count        = 1
+  force_new_deployment = true
+  name                 = %[1]q
+  task_definition      = aws_ecs_task_definition.test.arn
+
+  ordered_placement_strategy {
+    type  = "binpack"
+    field = "memory"
+  }
+
+  triggers = {
+    update = timestamp()
   }
 }
 `, rName)
@@ -3846,7 +3923,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  subnet_id      = element(aws_subnet.test[*].id, count.index)
   route_table_id = aws_route_table.test.id
 }
 

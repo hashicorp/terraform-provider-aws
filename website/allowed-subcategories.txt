@@ -75,6 +75,7 @@ Connect Customer Profiles
 Connect Participant
 Connect Voice ID
 Connect Wisdom
+Control Tower
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
@@ -120,6 +121,7 @@ Elemental MediaStore
 Elemental MediaStore Data
 Elemental MediaTailor
 EventBridge
+EventBridge Scheduler
 EventBridge Schemas
 FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
@@ -141,6 +143,7 @@ Honeycode
 IAM (Identity & Access Management)
 IAM Access Analyzer
 IVS (Interactive Video)
+IVS (Interactive Video) Chat
 Inspector
 Inspector V2
 IoT 1-Click Devices

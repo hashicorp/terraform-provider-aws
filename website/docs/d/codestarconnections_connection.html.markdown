@@ -35,7 +35,7 @@ The following arguments are supported:
 * `arn` - (Optional) CodeStar Connection ARN.
 * `name` - (Optional) CodeStar Connection name.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence.
 
 ## Attributes Reference
 

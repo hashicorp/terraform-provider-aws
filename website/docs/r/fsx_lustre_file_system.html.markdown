@@ -22,8 +22,6 @@ resource "aws_fsx_lustre_file_system" "example" {
 }
 ```
 
-
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -70,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)

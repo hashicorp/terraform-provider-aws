@@ -56,7 +56,7 @@ The following arguments are optional:
 * `ipv4_prefix_count` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
 * `ipv4_prefixes` - (Optional) One or more IPv4 prefixes assigned to the network interface.
 * `ipv6_address_count` - (Optional) Number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6_addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
-* `ipv6_address_list_enable` - (Optional) Whether `ipv6_addreses_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_addresses_count` become read-only. Default false.
+* `ipv6_address_list_enabled` - (Optional) Whether `ipv6_address_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_address_count` become read-only. Default false.
 * `ipv6_address_list` - (Optional) List of private IPs to assign to the ENI in sequential order.
 * `ipv6_addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6_address_count`.
 * `ipv6_prefix_count` - (Optional) Number of IPv6 prefixes that AWS automatically assigns to the network interface.

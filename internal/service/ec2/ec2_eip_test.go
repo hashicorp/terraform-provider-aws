@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -622,44 +621,6 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIP_Instance_ec2Classic(t *testing.T) {
-	resourceName := "aws_eip.test"
-	var conf ec2.Address
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckEC2Classic(t)
-			// Force to us-east-1 so that testAccCheckEIPExists/testAccCheckEIPDestroy work correctly.
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		CheckDestroy: testAccCheckEIPDestroy,
-		Steps: []resource.TestStep{
-			// Create the EC2-Classic Instance and ENI with the last version that supports that.
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "4.28.0",
-					},
-				},
-				Config: testAccEIPConfig_instanceClassic(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeStandard),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccEIPConfig_instanceClassic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &conf),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckEIPExists(n string, v *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1234,20 +1195,4 @@ resource "aws_eip" "test" {
   }
 }
 `, rName, address, poolName)
-}
-
-func testAccEIPConfig_instanceClassic() string {
-	return acctest.ConfigCompose(
-		testAccLatestAmazonLinuxPVEBSAMIConfig(),
-		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
-		`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-pv-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-}
-
-resource "aws_eip" "test" {
-  instance = aws_instance.test.id
-}
-`)
 }

@@ -43,7 +43,7 @@ The following arguments are supported:
 * `name` - (Optional) Unique name of the load balancer.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match a pair on the desired load balancer.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
+~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
 
 ## Attributes Reference
 
@@ -52,6 +52,6 @@ returned attributes - they are identical.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

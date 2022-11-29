@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccLogsDestination_basic(t *testing.T) {
@@ -19,7 +21,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResourceName := "aws_kinesis_stream.test"
 	roleResourceName := "aws_iam_role.test"
-	rstring := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -28,7 +30,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig_basic(rstring),
+				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
@@ -48,8 +50,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 func TestAccLogsDestination_disappears(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
-
-	rstring := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -58,7 +59,7 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig_basic(rstring),
+				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDestination(), resourceName),
@@ -76,52 +77,55 @@ func testAccCheckDestinationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_cloudwatch_log_destination" {
 			continue
 		}
-		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
+		_, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			return fmt.Errorf("reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if exists {
-			return fmt.Errorf("Bad: Destination still exists: %q", rs.Primary.ID)
-		}
+		return fmt.Errorf("CloudWatch Logs Destination still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
-
 }
 
-func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {
+func testAccCheckDestinationExists(n string, v *cloudwatchlogs.Destination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudWatch Logs Destination ID is set")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
-		destination, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
+
+		output, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if !exists {
-			return fmt.Errorf("Bad: Destination %q does not exist", rs.Primary.ID)
-		}
 
-		*d = *destination
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccDestinationConfig_basic(rstring string) string {
+func testAccDestinationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name        = "RootAccess_%[1]s"
+  name        = %[1]q
   shard_count = 1
 }
 
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "role" {
   statement {
@@ -142,7 +146,7 @@ data "aws_iam_policy_document" "role" {
 }
 
 resource "aws_iam_role" "test" {
-  name               = "CWLtoKinesisRole_%[1]s"
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.role.json
 }
 
@@ -173,15 +177,16 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = "Permissions-Policy-For-CWL_%[1]s"
+  name   = %[1]q
   role   = aws_iam_role.test.id
   policy = data.aws_iam_policy_document.policy.json
 }
 
 resource "aws_cloudwatch_log_destination" "test" {
-  name       = "testDestination_%[1]s"
+  name       = %[1]q
   target_arn = aws_kinesis_stream.test.arn
   role_arn   = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy.test]
 }
 
@@ -211,5 +216,5 @@ resource "aws_cloudwatch_log_destination_policy" "test" {
   destination_name = aws_cloudwatch_log_destination.test.name
   access_policy    = data.aws_iam_policy_document.access.json
 }
-`, rstring)
+`, rName)
 }

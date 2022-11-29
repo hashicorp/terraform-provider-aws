@@ -101,7 +101,7 @@ func sweepVPCLinks(region string) error {
 	}
 	conn := client.(*conns.AWSClient).APIGatewayConn
 
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	err = conn.GetVpcLinksPages(&apigateway.GetVpcLinksInput{}, func(page *apigateway.GetVpcLinksOutput, lastPage bool) bool {
@@ -139,7 +139,7 @@ func sweepClientCertificates(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).APIGatewayConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.GetClientCertificatesPages(&apigateway.GetClientCertificatesInput{}, func(page *apigateway.GetClientCertificatesOutput, lastPage bool) bool {
@@ -183,7 +183,7 @@ func sweepUsagePlans(region string) error {
 	log.Printf("[INFO] Sweeping API Gateway Usage Plans for %s", region)
 
 	conn := client.(*conns.AWSClient).APIGatewayConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.GetUsagePlansPages(&apigateway.GetUsagePlansInput{}, func(page *apigateway.GetUsagePlansOutput, lastPage bool) bool {
@@ -230,7 +230,7 @@ func sweepAPIKeys(region string) error {
 	log.Printf("[INFO] Sweeping API Gateway API Keys for %s", region)
 
 	conn := client.(*conns.AWSClient).APIGatewayConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.GetApiKeysPages(&apigateway.GetApiKeysInput{}, func(page *apigateway.GetApiKeysOutput, lastPage bool) bool {
@@ -276,7 +276,7 @@ func sweepDomainNames(region string) error {
 	log.Printf("[INFO] Sweeping API Gateway Domain Names for %s", region)
 
 	conn := client.(*conns.AWSClient).APIGatewayConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.GetDomainNamesPages(&apigateway.GetDomainNamesInput{}, func(page *apigateway.GetDomainNamesOutput, lastPage bool) bool {

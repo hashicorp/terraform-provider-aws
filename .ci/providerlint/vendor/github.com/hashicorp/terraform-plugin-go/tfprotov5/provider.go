@@ -54,7 +54,7 @@ type GetProviderSchemaResponse struct {
 	// will be specified in the provider block of the user's configuration.
 	Provider *Schema
 
-	// ProviderMeta defines the schema for the provider's metadta, which
+	// ProviderMeta defines the schema for the provider's metadata, which
 	// will be specified in the provider_meta blocks of the terraform block
 	// for a module. This is an advanced feature and its usage should be
 	// coordinated with the Terraform Core team by opening an issue at

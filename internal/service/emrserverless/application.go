@@ -31,6 +31,12 @@ func ResourceApplication() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"architecture": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      emrserverless.ArchitectureX8664,
+				ValidateFunc: validation.StringInSlice(emrserverless.Architecture_Values(), false),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -124,6 +130,7 @@ func ResourceApplication() *schema.Resource {
 			"maximum_capacity": {
 				Type:             schema.TypeList,
 				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
@@ -135,6 +142,7 @@ func ResourceApplication() *schema.Resource {
 						"disk": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"memory": {
 							Type:     schema.TypeString,
@@ -203,6 +211,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
+	if v, ok := d.GetOk("architecture"); ok {
+		input.Architecture = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.AutoStartConfiguration = expandAutoStartConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -260,6 +272,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("reading EMR Serverless Application (%s): %w", d.Id(), err)
 	}
 
+	d.Set("architecture", application.Architecture)
 	d.Set("arn", application.Arn)
 	d.Set("name", application.Name)
 	d.Set("release_label", application.ReleaseLabel)
@@ -306,6 +319,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(resource.UniqueId()),
+		}
+
+		if v, ok := d.GetOk("architecture"); ok {
+			input.Architecture = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -522,7 +539,6 @@ func expandInitialCapacity(tfMap *schema.Set) map[string]*emrserverless.InitialC
 	configs := make(map[string]*emrserverless.InitialCapacityConfig)
 
 	for _, tfMapRaw := range tfMap.List() {
-
 		config, ok := tfMapRaw.(map[string]interface{})
 
 		if !ok {
@@ -547,7 +563,6 @@ func flattenInitialCapacity(apiObject map[string]*emrserverless.InitialCapacityC
 	var tfList []interface{}
 
 	for capacityType, config := range apiObject {
-
 		if config == nil {
 			continue
 		}

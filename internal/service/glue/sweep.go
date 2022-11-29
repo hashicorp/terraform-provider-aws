@@ -256,7 +256,7 @@ func sweepDevEndpoints(region string) error {
 	}
 	input := &glue.GetDevEndpointsInput{}
 	conn := client.(*conns.AWSClient).GlueConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
 		if page == nil {
@@ -305,7 +305,7 @@ func sweepJobs(region string) error {
 	}
 	input := &glue.GetJobsInput{}
 	conn := client.(*conns.AWSClient).GlueConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
 		if page == nil {

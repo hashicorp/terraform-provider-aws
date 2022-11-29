@@ -13,7 +13,6 @@ const (
 // statusEncryptionConfig fetches the Encryption Config and its Status
 func statusEncryptionConfig(conn *xray.XRay) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		output, _ := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 
 		if output == nil || output.EncryptionConfig == nil {

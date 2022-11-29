@@ -392,9 +392,7 @@ func expandRepositoryCatalogData(tfMap map[string]interface{}) *ecrpublic.Reposi
 }
 
 func resourceRepositoryUpdateCatalogData(conn *ecrpublic.ECRPublic, d *schema.ResourceData) error {
-
 	if d.HasChange("catalog_data") {
-
 		if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input := ecrpublic.PutRepositoryCatalogDataInput{
 				RepositoryName: aws.String(d.Id()),

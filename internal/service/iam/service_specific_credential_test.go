@@ -204,7 +204,6 @@ func testAccCheckServiceSpecificCredentialDestroy(s *terraform.State) error {
 		if output != nil {
 			return fmt.Errorf("IAM Service Specific Credential (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 
 	return nil

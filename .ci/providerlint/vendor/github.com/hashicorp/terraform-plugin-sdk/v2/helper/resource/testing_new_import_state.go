@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
-	testing "github.com/mitchellh/go-testing-interface"
+	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest"
@@ -86,8 +86,17 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 			t.Fatal("Cannot import state with no specified config")
 		}
 	}
-	importWd := helper.RequireNewWorkingDir(ctx, t)
-	defer importWd.Close()
+
+	var importWd *plugintest.WorkingDir
+
+	// Use the same working directory to persist the state from import
+	if step.ImportStatePersist {
+		importWd = wd
+	} else {
+		importWd = helper.RequireNewWorkingDir(ctx, t)
+		defer importWd.Close()
+	}
+
 	err = importWd.SetConfig(ctx, step.Config)
 	if err != nil {
 		t.Fatalf("Error setting test config: %s", err)
@@ -95,11 +104,13 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 
 	logging.HelperResourceDebug(ctx, "Running Terraform CLI init and import")
 
-	err = runProviderCommand(ctx, t, func() error {
-		return importWd.Init(ctx)
-	}, importWd, providers)
-	if err != nil {
-		t.Fatalf("Error running init: %s", err)
+	if !step.ImportStatePersist {
+		err = runProviderCommand(ctx, t, func() error {
+			return importWd.Init(ctx)
+		}, importWd, providers)
+		if err != nil {
+			t.Fatalf("Error running init: %s", err)
+		}
 	}
 
 	err = runProviderCommand(ctx, t, func() error {
@@ -126,12 +137,18 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateCheck")
 
 		var states []*terraform.InstanceState
-		for _, r := range importState.RootModule().Resources {
-			if r.Primary != nil {
-				is := r.Primary.DeepCopy()
-				is.Ephemeral.Type = r.Type // otherwise the check function cannot see the type
-				states = append(states, is)
+		for address, r := range importState.RootModule().Resources {
+			if strings.HasPrefix(address, "data.") {
+				continue
 			}
+
+			if r.Primary == nil {
+				continue
+			}
+
+			is := r.Primary.DeepCopy()
+			is.Ephemeral.Type = r.Type // otherwise the check function cannot see the type
+			states = append(states, is)
 		}
 
 		logging.HelperResourceDebug(ctx, "Calling TestStep ImportStateCheck")
@@ -147,20 +164,27 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 	if step.ImportStateVerify {
 		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateVerify")
 
-		newResources := importState.RootModule().Resources
-		oldResources := state.RootModule().Resources
+		// Ensure that we do not match against data sources as they
+		// cannot be imported and are not what we want to verify.
+		// Mode is not present in ResourceState so we use the
+		// stringified ResourceStateKey for comparison.
+		newResources := make(map[string]*terraform.ResourceState)
+		for k, v := range importState.RootModule().Resources {
+			if !strings.HasPrefix(k, "data.") {
+				newResources[k] = v
+			}
+		}
+		oldResources := make(map[string]*terraform.ResourceState)
+		for k, v := range state.RootModule().Resources {
+			if !strings.HasPrefix(k, "data.") {
+				oldResources[k] = v
+			}
+		}
 
 		for _, r := range newResources {
 			// Find the existing resource
 			var oldR *terraform.ResourceState
-			for r2Key, r2 := range oldResources {
-				// Ensure that we do not match against data sources as they
-				// cannot be imported and are not what we want to verify.
-				// Mode is not present in ResourceState so we use the
-				// stringified ResourceStateKey for comparison.
-				if strings.HasPrefix(r2Key, "data.") {
-					continue
-				}
+			for _, r2 := range oldResources {
 
 				if r2.Primary != nil && r2.Primary.ID == r.Primary.ID && r2.Type == r.Type && r2.Provider == r.Provider {
 					oldR = r2

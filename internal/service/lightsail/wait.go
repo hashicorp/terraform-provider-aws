@@ -209,3 +209,22 @@ func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *ligh
 
 	return err
 }
+
+func waitInstanceStateWithContext(ctx context.Context, conn *lightsail.Lightsail, id *string) (*lightsail.GetInstanceStateOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending", "stopping"},
+		Target:     []string{"stopped", "running"},
+		Refresh:    statusInstance(conn, id),
+		Timeout:    OperationTimeout,
+		Delay:      OperationDelay,
+		MinTimeout: OperationMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if out, ok := outputRaw.(*lightsail.GetInstanceStateOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}

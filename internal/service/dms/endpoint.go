@@ -623,6 +623,11 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"use_task_start_time_for_full_load_timestamp": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -864,13 +869,31 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
+	case engineNameSybase:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			input.SybaseSettings = &dms.SybaseSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			input.SybaseSettings = &dms.SybaseSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			// Set connection info in top-level namespace as well
+			expandTopLevelConnectionInfo(d, input)
+		}
 	case engineNameS3:
 		input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 	default:
 		expandTopLevelConnectionInfo(d, input)
 	}
 
-	log.Printf("[DEBUG] Creating DMS Endpoint: %s", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateEndpoint(input)
@@ -1185,6 +1208,30 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
+		case engineNameSybase:
+			if d.HasChanges(
+				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+				"secrets_manager_arn") {
+				if _, ok := d.GetOk("secrets_manager_arn"); ok {
+					input.SybaseSettings = &dms.SybaseSettings{
+						DatabaseName:                aws.String(d.Get("database_name").(string)),
+						SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+						SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+					}
+				} else {
+					input.SybaseSettings = &dms.SybaseSettings{
+						Username:     aws.String(d.Get("username").(string)),
+						Password:     aws.String(d.Get("password").(string)),
+						ServerName:   aws.String(d.Get("server_name").(string)),
+						Port:         aws.Int64(int64(d.Get("port").(int))),
+						DatabaseName: aws.String(d.Get("database_name").(string)),
+					}
+					input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
+
+					// Update connection info in top-level namespace as well
+					expandTopLevelConnectionInfoModify(d, input)
+				}
+			}
 		case engineNameS3:
 			if d.HasChanges("s3_settings") {
 				input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
@@ -1212,7 +1259,6 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Modifying DMS Endpoint: %s", input)
 		_, err := conn.ModifyEndpoint(input)
 
 		if err != nil {
@@ -1401,6 +1447,17 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("database_name", endpoint.MicrosoftSQLServerSettings.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerAccessRoleArn)
 			d.Set("secrets_manager_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameSybase:
+		if endpoint.SybaseSettings != nil {
+			d.Set("username", endpoint.SybaseSettings.Username)
+			d.Set("server_name", endpoint.SybaseSettings.ServerName)
+			d.Set("port", endpoint.SybaseSettings.Port)
+			d.Set("database_name", endpoint.SybaseSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.SybaseSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.SybaseSettings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1905,6 +1962,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
 		apiObject.UseCsvNoSupValue = aws.Bool(v)
 	}
+	if v, ok := tfMap["use_task_start_time_for_full_load_timestamp"].(bool); ok {
+		apiObject.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
+	}
 
 	return apiObject
 }
@@ -2020,6 +2080,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	}
 	if v := apiObject.UseCsvNoSupValue; v != nil {
 		tfMap["use_csv_no_sup_value"] = aws.BoolValue(v)
+	}
+	if v := apiObject.UseTaskStartTimeForFullLoadTimestamp; v != nil {
+		tfMap["use_task_start_time_for_full_load_timestamp"] = aws.BoolValue(v)
 	}
 
 	return []map[string]interface{}{tfMap}

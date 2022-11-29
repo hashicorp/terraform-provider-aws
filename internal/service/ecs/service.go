@@ -340,6 +340,14 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			// modeled after null_resource & aws_api_gateway_deployment
+			// only for _updates in-place_ rather than replacements
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"wait_for_steady_state": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -350,8 +358,32 @@ func ResourceService() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			capacityProviderStrategyCustomizeDiff,
+			triggersCustomizeDiff,
 		),
 	}
+}
+
+func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// clears diff to avoid extraneous diffs but lets it pass for triggering update
+	fnd := false
+	if v, ok := d.GetOk("force_new_deployment"); ok {
+		fnd = v.(bool)
+	}
+
+	if d.HasChange("triggers") && !fnd {
+		return d.Clear("triggers")
+	}
+
+	if d.HasChange("triggers") && fnd {
+		o, n := d.GetChange("triggers")
+		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
+			return d.Clear("triggers")
+		}
+
+		return nil
+	}
+
+	return nil
 }
 
 func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
@@ -419,9 +451,12 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		DeploymentController: deploymentController,
 		SchedulingStrategy:   aws.String(schedulingStrategy),
 		ServiceName:          aws.String(d.Get("name").(string)),
-		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
 		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 		EnableExecuteCommand: aws.Bool(d.Get("enable_execute_command").(bool)),
+	}
+
+	if v, ok := d.GetOk("task_definition"); ok {
+		input.TaskDefinition = aws.String(v.(string))
 	}
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
@@ -534,7 +569,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := serviceCreateWithRetry(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
@@ -569,7 +604,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
@@ -638,6 +673,8 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("propagate_tags", service.PropagateTags)
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
+
+	d.Set("triggers", d.Get("triggers"))
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
@@ -1101,7 +1138,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}

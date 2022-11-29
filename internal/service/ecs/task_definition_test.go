@@ -1002,10 +1002,26 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTaskDefinitionConfig_invalidContainerDefinition(rName),
+				ExpectError: regexp.MustCompile(`invalid container definition supplied at index \(1\)`),
+			},
+		},
+	})
+}
+
 func testAccTaskDefinitionConfig_proxyConfiguration(rName string, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) string {
-
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -1724,7 +1740,6 @@ TASK_DEFINITION
 }
 
 func testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName string, architecture bool, osFamily bool) string {
-
 	var arch string
 	if architecture {
 		arch = `cpu_architecture         = "X86_64"`
@@ -2615,4 +2630,33 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 }
 `)
+}
+
+func testAccTaskDefinitionConfig_invalidContainerDefinition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+	{
+		"cpu": 10,
+		"command": ["sleep", "10"],
+		"entryPoint": ["/"],
+		"essential": true,
+		"image": "mongodb",
+		"memory": 128,
+		"name": "mongodb",
+		"portMappings": [
+			{
+				"containerPort": 28017,
+				"hostPort": 28017
+			}
+		]
+	},
+	null
+]
+TASK_DEFINITION
+}
+`, rName)
 }

@@ -31,8 +31,10 @@ func TestAccRoute53ResolverRulesDataSource_basic(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
-	rName1 := fmt.Sprintf("tf-testacc-r53-resolver-%s", sdkacctest.RandString(8))
-	rName2 := fmt.Sprintf("tf-testacc-r53-resolver-%s", sdkacctest.RandString(8))
+	domainName1 := acctest.RandomDomainName()
+	domainName2 := acctest.RandomDomainName()
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ds1ResourceName := "data.aws_route53_resolver_rules.by_resolver_endpoint_id"
 	ds2ResourceName := "data.aws_route53_resolver_rules.by_resolver_endpoint_id_rule_type_share_status"
 	ds3ResourceName := "data.aws_route53_resolver_rules.by_invalid_owner_id"
@@ -43,7 +45,7 @@ func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2),
+				Config: testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2, domainName1, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(ds1ResourceName, "resolver_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(ds2ResourceName, "resolver_rule_ids.#", "1"),
@@ -101,14 +103,14 @@ data "aws_route53_resolver_rules" "test" {
 }
 `
 
-func testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2 string) string {
-	return testAccRuleConfig_resolverEndpoint(rName1) + fmt.Sprintf(`
+func testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2, domainName1, domainName2 string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName1), fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "forward" {
-  domain_name = "%[1]s.example.com"
+  domain_name = %[3]q
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -116,7 +118,7 @@ resource "aws_route53_resolver_rule" "forward" {
 }
 
 resource "aws_route53_resolver_rule" "recursive" {
-  domain_name = "%[2]s.example.org"
+  domain_name = %[4]q
   rule_type   = "RECURSIVE"
   name        = %[2]q
 }
@@ -137,7 +139,7 @@ data "aws_route53_resolver_rules" "by_invalid_owner_id" {
   owner_id     = "000000000000"
   share_status = "SHARED_WITH_ME"
 }
-`, rName1, rName2)
+`, rName1, rName2, domainName1, domainName2))
 }
 
 func testAccRulesDataSourceConfig_nameRegex(rCount int, rName string) string {

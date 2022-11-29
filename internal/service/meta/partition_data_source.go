@@ -1,49 +1,83 @@
 package meta
 
 import (
-	"log"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func DataSourcePartition() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourcePartitionRead,
+func init() {
+	registerFrameworkDataSourceFactory(newDataSourcePartition)
+}
 
-		Schema: map[string]*schema.Schema{
-			"partition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+// newDataSourcePartition instantiates a new DataSource for the aws_partition data source.
+func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourcePartition{}, nil
+}
 
+type dataSourcePartition struct {
+	framework.DataSourceWithConfigure
+}
+
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSourcePartition) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_partition"
+}
+
+// GetSchema returns the schema for this data source.
+func (d *dataSourcePartition) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"dns_suffix": {
-				Type:     schema.TypeString,
+				Type:     types.StringType,
 				Computed: true,
 			},
-
+			"id": {
+				Type:     types.StringType,
+				Optional: true,
+				Computed: true,
+			},
+			"partition": {
+				Type:     types.StringType,
+				Computed: true,
+			},
 			"reverse_dns_prefix": {
-				Type:     schema.TypeString,
+				Type:     types.StringType,
 				Computed: true,
 			},
 		},
 	}
+
+	return schema, nil
 }
 
-func dataSourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient)
+// Read is called when the provider must read data source values in order to update state.
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourcePartitionData
 
-	log.Printf("[DEBUG] Reading Partition.")
-	d.SetId(meta.(*conns.AWSClient).Partition)
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
-	log.Printf("[DEBUG] Setting AWS Partition to %s.", client.Partition)
-	d.Set("partition", meta.(*conns.AWSClient).Partition)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	log.Printf("[DEBUG] Setting AWS URL Suffix to %s.", client.DNSSuffix)
-	d.Set("dns_suffix", meta.(*conns.AWSClient).DNSSuffix)
+	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix)
+	data.ID = types.StringValue(d.Meta().Partition)
+	data.Partition = types.StringValue(d.Meta().Partition)
+	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix)
 
-	d.Set("reverse_dns_prefix", meta.(*conns.AWSClient).ReverseDNSPrefix)
-	log.Printf("[DEBUG] Setting service prefix to %s.", meta.(*conns.AWSClient).ReverseDNSPrefix)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
 
-	return nil
+type dataSourcePartitionData struct {
+	DNSSuffix        types.String `tfsdk:"dns_suffix"`
+	ID               types.String `tfsdk:"id"`
+	Partition        types.String `tfsdk:"partition"`
+	ReverseDNSPrefix types.String `tfsdk:"reverse_dns_prefix"`
 }

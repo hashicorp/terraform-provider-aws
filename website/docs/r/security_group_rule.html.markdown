@@ -12,8 +12,8 @@ Provides a security group rule resource. Represents a single `ingress` or
 `egress` group rule, which can be added to external Security Groups.
 
 ~> **NOTE on Security Groups and Security Group Rules:** Terraform currently
-provides both a standalone Security Group Rule resource (a single `ingress` or
-`egress` rule), and a [Security Group resource](security_group.html) with `ingress` and `egress` rules
+provides both a standalone Security Group Rule resource (one or many `ingress` or
+`egress` rules), and a [Security Group resource](security_group.html) with `ingress` and `egress` rules
 defined in-line. At this time you cannot use a Security Group with in-line rules
 in conjunction with any Security Group Rule resources. Doing so will cause
 a conflict of rule settings and will overwrite rules.
@@ -113,10 +113,11 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the security group rule.
+* `security_group_rule_id` - If the `aws_security_group_rule` resource has a single source or destination then this is the AWS Security Group Rule resource ID. Otherwise it is empty.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 

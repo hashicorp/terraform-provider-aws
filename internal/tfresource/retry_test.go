@@ -348,7 +348,7 @@ func TestRetryUntilNotFound(t *testing.T) {
 	}
 }
 
-func TestRetryConfigContext_error(t *testing.T) {
+func TestRetryContext_error(t *testing.T) {
 	t.Parallel()
 
 	expected := fmt.Errorf("nope")
@@ -358,7 +358,7 @@ func TestRetryConfigContext_error(t *testing.T) {
 
 	errCh := make(chan error)
 	go func() {
-		errCh <- tfresource.RetryConfigContext(context.Background(), 0*time.Second, 0*time.Second, 0*time.Second, 0*time.Second, 1*time.Second, f)
+		errCh <- tfresource.RetryContext(context.Background(), 1*time.Second, f)
 	}()
 
 	select {
@@ -368,5 +368,81 @@ func TestRetryConfigContext_error(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("timeout")
+	}
+}
+
+func TestOptionsApply(t *testing.T) {
+	testCases := map[string]struct {
+		options  tfresource.Options
+		expected resource.StateChangeConf
+	}{
+		"Nothing": {
+			options:  tfresource.Options{},
+			expected: resource.StateChangeConf{},
+		},
+		"Delay": {
+			options: tfresource.Options{
+				Delay: 1 * time.Minute,
+			},
+			expected: resource.StateChangeConf{
+				Delay: 1 * time.Minute,
+			},
+		},
+		"MinPollInterval": {
+			options: tfresource.Options{
+				MinPollInterval: 1 * time.Minute,
+			},
+			expected: resource.StateChangeConf{
+				MinTimeout: 1 * time.Minute,
+			},
+		},
+		"PollInterval": {
+			options: tfresource.Options{
+				PollInterval: 1 * time.Minute,
+			},
+			expected: resource.StateChangeConf{
+				PollInterval: 1 * time.Minute,
+			},
+		},
+		"NotFoundChecks": {
+			options: tfresource.Options{
+				NotFoundChecks: 10,
+			},
+			expected: resource.StateChangeConf{
+				NotFoundChecks: 10,
+			},
+		},
+		"ContinuousTargetOccurence": {
+			options: tfresource.Options{
+				ContinuousTargetOccurence: 3,
+			},
+			expected: resource.StateChangeConf{
+				ContinuousTargetOccurence: 3,
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			conf := resource.StateChangeConf{}
+
+			testCase.options.Apply(&conf)
+
+			if a, e := conf.Delay, testCase.expected.Delay; a != e {
+				t.Errorf("Delay: expected %s, got %s", e, a)
+			}
+			if a, e := conf.MinTimeout, testCase.expected.MinTimeout; a != e {
+				t.Errorf("MinTimeout: expected %s, got %s", e, a)
+			}
+			if a, e := conf.PollInterval, testCase.expected.PollInterval; a != e {
+				t.Errorf("PollInterval: expected %s, got %s", e, a)
+			}
+			if a, e := conf.NotFoundChecks, testCase.expected.NotFoundChecks; a != e {
+				t.Errorf("NotFoundChecks: expected %d, got %d", e, a)
+			}
+			if a, e := conf.ContinuousTargetOccurence, testCase.expected.ContinuousTargetOccurence; a != e {
+				t.Errorf("ContinuousTargetOccurence: expected %d, got %d", e, a)
+			}
+		})
 	}
 }

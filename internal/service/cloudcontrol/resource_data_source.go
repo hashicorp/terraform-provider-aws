@@ -2,7 +2,6 @@ package cloudcontrol
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +13,7 @@ import (
 
 func DataSourceResource() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceResourceRead,
+		ReadWithoutTimeout: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
 			"identifier": {
@@ -46,15 +45,16 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	identifier := d.Get("identifier").(string)
-	resourceDescription, err := FindResourceByID(ctx, conn,
+	typeName := d.Get("type_name").(string)
+	resourceDescription, err := FindResource(ctx, conn,
 		identifier,
-		d.Get("type_name").(string),
+		typeName,
 		d.Get("type_version_id").(string),
 		d.Get("role_arn").(string),
 	)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Cloud Control API Resource (%s): %w", identifier, err))
+		return diag.Errorf("reading Cloud Control API (%s) Resource (%s): %s", typeName, identifier, err)
 	}
 
 	d.SetId(aws.StringValue(resourceDescription.Identifier))

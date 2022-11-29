@@ -49,7 +49,7 @@ data "aws_subnets" "private" {
 }
 
 resource "aws_instance" "app" {
-  for_each      = toset(data.aws_subnets.example.ids)
+  for_each      = toset(data.aws_subnets.private.ids)
   ami           = var.ami
   instance_type = "t2.micro"
   subnet_id     = each.value
@@ -87,6 +87,6 @@ data "aws_subnets" "selected" {
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

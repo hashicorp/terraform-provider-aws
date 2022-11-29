@@ -93,6 +93,48 @@ resource "aws_elasticache_cluster" "test" {
 }
 ```
 
+### Elasticache Cluster in Outpost
+
+```terraform
+data "aws_outposts_outposts" "example" {}
+
+data "aws_outposts_outpost" "example" {
+  id = tolist(data.aws_outposts_outposts.example.ids)[0]
+}
+
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "example" {
+  vpc_id     = aws_vpc.example.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = "my-subnet"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "example" {
+  name       = "my-cache-subnet"
+  subnet_ids = [aws_subnet.example.id]
+}
+
+resource "aws_elasticache_cluster" "example" {
+  cluster_id = "cluster-example"
+  # Note that ElastiCache for Outposts only supports `single-outpost` currently
+  outpost_mode          = "single-outpost"
+  preferred_outpost_arn = data.aws_outposts_outpost.example.arn
+  engine                = "memcached"
+  # Note that ElastiCache for Outposts only supports M5 and R5 node families currently
+  node_type            = "cache.r5.large"
+  num_cache_nodes      = 2
+  parameter_group_name = "default.memcached1.4"
+  port                 = 11211
+  subnet_group_name    = aws_elasticache_subnet_group.example.name
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -119,13 +161,17 @@ The following arguments are optional:
   Otherwise, specify the full version desired, e.g., `5.0.6`.
   The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
+* `ip_discovery` - (Optional) The IP version to advertise in the discovery protocol. Valid values are `ipv4` or `ipv6`.
 * `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`.
+* `network_type` - (Optional) The IP versions for cache cluster connections. IPv6 is supported with Redis engine `6.2` onword or Memcached version `1.6.6` for all [Nitro system](https://aws.amazon.com/ec2/nitro/) instances. Valid values are `ipv4`, `ipv6` or `dual_stack`.
 * `notification_topic_arn` – (Optional) ARN of an SNS topic to send ElastiCache notifications to. Example: `arn:aws:sns:us-east-1:012345678999:my_sns_topic`.
+* `outpost_mode` - (Optional) Specify the outpost mode that will apply to the cache cluster creation. Valid values are `"single-outpost"` and `"cross-outpost"`, however AWS currently only supports `"single-outpost"` mode.
 * `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcached the default is 11211, and for Redis the default port is 6379. Cannot be provided with `replication_group_id`. Changing this value will re-create the resource.
 * `preferred_availability_zones` - (Optional, Memcached only) List of the Availability Zones in which cache nodes are created. If you are creating your cluster in an Amazon VPC you can only locate nodes in Availability Zones that are associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of `num_cache_nodes`. If you want all the nodes in the same Availability Zone, use `availability_zone` instead, or repeat the Availability Zone multiple times in the list. Default: System chosen Availability Zones. Detecting drift of existing node availability zone is not currently supported. Updating this argument by itself to migrate existing node availability zones is not currently supported and will show a perpetual difference.
+* `preferred_outpost_arn` - (Optional, Required if `outpost_mode` is specified) The outpost ARN in which the cache cluster will be created.
 * `replication_group_id` - (Optional, Required if `engine` is not specified) ID of the replication group to which this cluster should belong. If this parameter is specified, the cluster is added to the specified replication group as a read replica; otherwise, the cluster is a standalone primary that is not part of any replication group.
 * `security_group_ids` – (Optional, VPC only) One or more VPC security groups associated with the cache cluster
 * `security_group_names` – (Optional, EC2 Classic only) List of security group names to associate with this cache cluster. Changing this value will re-create the resource.
@@ -155,6 +201,14 @@ The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](h
 * `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
 * `log_format` - Valid values are `json` or `text`
 * `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `40m`)
+- `update` - (Default `80m`)
+- `delete` - (Default `40m`)
 
 ## Import
 

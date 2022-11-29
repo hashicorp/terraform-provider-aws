@@ -271,7 +271,7 @@ func testAccSnapshotConfigBase(rName string) string {
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
-  subnet_ids = aws_subnet.test.*.id
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_security_group" "test" {

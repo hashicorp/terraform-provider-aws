@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -1108,9 +1109,10 @@ func testAccCheckClusterInstanceExists(n string, v *rds.DBInstance) resource.Tes
 			return fmt.Errorf("No RDS Cluster Instance ID is set")
 		}
 
+		ctx := context.Background()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1123,6 +1125,7 @@ func testAccCheckClusterInstanceExists(n string, v *rds.DBInstance) resource.Tes
 }
 
 func testAccCheckClusterInstanceDestroy(s *terraform.State) error {
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -1130,7 +1133,7 @@ func testAccCheckClusterInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+		_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

@@ -400,7 +400,7 @@ resource "aws_db_proxy" "test" {
   require_tls            = true
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   auth {
     auth_scheme = "SECRETS"
@@ -417,7 +417,7 @@ func testAccProxyEndpointConfig_basic(rName string) string {
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 }
 `, rName)
 }
@@ -427,7 +427,7 @@ func testAccProxyEndpointConfig_targetRole(rName string) string {
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   target_role            = "READ_ONLY"
 }
 `, rName)
@@ -438,7 +438,7 @@ func testAccProxyEndpointConfig_vpcSecurityGroupIDs1(rName string) string {
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
 }
 `, rName)
@@ -449,7 +449,7 @@ func testAccProxyEndpointConfig_vpcSecurityGroupIDs2(rName string) string {
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
 }
 
@@ -465,7 +465,7 @@ func testAccProxyEndpointConfig_tags1(rName, key1, value1 string) string {
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   tags = {
     %[2]q = %[3]q
@@ -479,7 +479,7 @@ func testAccProxyEndpointConfig_tags2(rName, key1, value1, key2, value2 string) 
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
-  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_subnet_ids         = aws_subnet.test[*].id
 
   tags = {
     %[2]q = %[3]q
