@@ -63,7 +63,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 		input.ForceUpdate = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.PutDestinationPolicy(input)
+	_, err := conn.PutDestinationPolicyWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("putting CloudWatch Logs Destination Policy (%s): %s", name, err)

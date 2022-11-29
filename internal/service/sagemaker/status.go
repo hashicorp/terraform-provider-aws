@@ -143,6 +143,10 @@ func StatusDomain(conn *sagemaker.SageMaker, domainID string) resource.StateRefr
 			return nil, domainStatusNotFound, nil
 		}
 
+		if aws.StringValue(output.Status) == sagemaker.DomainStatusFailed {
+			return output, sagemaker.DomainStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }
@@ -201,6 +205,10 @@ func StatusUserProfile(conn *sagemaker.SageMaker, domainID, userProfileName stri
 			return nil, userProfileStatusNotFound, nil
 		}
 
+		if aws.StringValue(output.Status) == sagemaker.UserProfileStatusFailed {
+			return output, sagemaker.UserProfileStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }
@@ -227,6 +235,10 @@ func StatusApp(conn *sagemaker.SageMaker, domainID, userProfileName, appType, ap
 
 		if output == nil {
 			return nil, appStatusNotFound, nil
+		}
+
+		if aws.StringValue(output.Status) == sagemaker.AppStatusFailed {
+			return output, sagemaker.AppStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
 		}
 
 		return output, aws.StringValue(output.Status), nil

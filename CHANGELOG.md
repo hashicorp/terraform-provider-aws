@@ -1,4 +1,28 @@
-## 4.42.0 (Unreleased)
+## 4.43.0 (Unreleased)
+## 4.42.0 (November 28, 2022)
+
+FEATURES:
+
+* **New Data Source:** `aws_redshiftserverless_credentials` ([#28026](https://github.com/hashicorp/terraform-provider-aws/issues/28026))
+* **New Resource:** `aws_cloudwatch_log_data_protection_policy` ([#28049](https://github.com/hashicorp/terraform-provider-aws/issues/28049))
+
+ENHANCEMENTS:
+
+* data-source/aws_memorydb_cluster: Add `data_tiering` attribute ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
+* resource/aws_db_instance: Add `blue_green_update` argument in support of [RDS Blue/Green Deployments](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html) ([#28046](https://github.com/hashicorp/terraform-provider-aws/issues/28046))
+* resource/aws_efs_file_system: Add support for `AFTER_1_DAY` `lifecycle_policy.transition_to_ia` argument ([#28054](https://github.com/hashicorp/terraform-provider-aws/issues/28054))
+* resource/aws_efs_file_system: Add support for `elastic` `throughput_mode` argument ([#28054](https://github.com/hashicorp/terraform-provider-aws/issues/28054))
+* resource/aws_emrserverless_application: Add `architecture` argument ([#28027](https://github.com/hashicorp/terraform-provider-aws/issues/28027))
+* resource/aws_emrserverless_application: Mark `maximum_capacity` and `maximum_capacity.disk` as Computed, preventing spurious resource diffs ([#28027](https://github.com/hashicorp/terraform-provider-aws/issues/28027))
+* resource/aws_memorydb_cluster: Add `data_tiering` attribute ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
+* resource/aws_sns_topic_subscription: Add `filter_policy_scope` argument in support of [SNS message filtering](https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html) ([#28004](https://github.com/hashicorp/terraform-provider-aws/issues/28004))
+
+BUG FIXES:
+
+* resource/aws_lambda_function: Don't fail resource Create if AWS Signer service is not available in the configured Region ([#28008](https://github.com/hashicorp/terraform-provider-aws/issues/28008))
+* resource/aws_memorydb_cluster: Allow more than one element in `snapshot_arns` ([#28022](https://github.com/hashicorp/terraform-provider-aws/issues/28022))
+* resource/aws_sagemaker_user_profile: `user_settings.jupyter_server_app_settings`, `user_settings.kernel_gateway_app_settings`, and `user_settings.tensor_board_app_settings` are updateable ([#28025](https://github.com/hashicorp/terraform-provider-aws/issues/28025))
+
 ## 4.41.0 (November 25, 2022)
 
 FEATURES:
