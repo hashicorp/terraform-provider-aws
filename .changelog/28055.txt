@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_ce_cost_category: Allow setting `effective_start`
+resource/aws_ce_cost_category: Allow configuration of `effective_start` value
 ```
