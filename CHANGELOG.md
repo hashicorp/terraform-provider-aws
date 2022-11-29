@@ -1,4 +1,10 @@
 ## 4.43.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ce_cost_category: Allow configuration of `effective_start` value ([#28055](https://github.com/hashicorp/terraform-provider-aws/issues/28055))
+* resource/aws_glue_classifier: Add `custom_datatypes` and `custom_datatype_configured` arguments ([#28048](https://github.com/hashicorp/terraform-provider-aws/issues/28048))
+
 ## 4.42.0 (November 28, 2022)
 
 FEATURES:
