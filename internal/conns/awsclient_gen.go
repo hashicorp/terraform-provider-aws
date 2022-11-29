@@ -332,9 +332,10 @@ type AWSClient struct {
 	SupportedPlatforms        []string
 	TerraformVersion          string
 
-	logsClient lazyClient[*cloudwatchlogs_sdkv2.Client]
-	rdsClient  lazyClient[*rds_sdkv2.Client]
-	ssmClient  lazyClient[*ssm_sdkv2.Client]
+	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
+	rdsClient       lazyClient[*rds_sdkv2.Client]
+	s3controlClient lazyClient[*s3control_sdkv2.Client]
+	ssmClient       lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA
@@ -584,7 +585,6 @@ type AWSClient struct {
 	Route53ResolverConn              *route53resolver.Route53Resolver
 	S3Conn                           *s3.S3
 	S3ControlConn                    *s3control.S3Control
-	S3ControlClient                  *s3control_sdkv2.Client
 	S3OutpostsConn                   *s3outposts.S3Outposts
 	SESConn                          *ses.SES
 	SESV2Client                      *sesv2.Client

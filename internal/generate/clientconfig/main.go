@@ -23,9 +23,12 @@ const (
 )
 
 type ServiceDatum struct {
-	SDKVersion        string
-	GoPackage         string
-	ProviderNameUpper string
+	SDKVersion          string
+	GoV1Package         string
+	GoV2Package         string
+	GoV2PackageOverride string
+	ProviderNameUpper   string
+	ProviderPackage     string
 }
 
 type TemplateData struct {
@@ -68,17 +71,26 @@ func main() {
 			td.Services = append(td.Services, ServiceDatum{
 				ProviderNameUpper: l[names.ColProviderNameUpper],
 				SDKVersion:        "1",
-				GoPackage:         l[names.ColGoV1Package],
-			})
-		} else if l[names.ColClientSDKV2] != "" {
-			td.Services = append(td.Services, ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "2",
-				GoPackage:         l[names.ColGoV2Package],
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
 			})
 		}
-		// TODO: Lazy v2 clients for those with both SDK v1 and v2 clients.
-		// See internal/generate/awsclient/main.go.
+		if l[names.ColClientSDKV2] != "" {
+			sd := ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "2",
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
+			}
+			if l[names.ColClientSDKV1] != "" {
+				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`.
+				sd.GoV2PackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+				sd.SDKVersion = "1,2"
+			}
+			td.Services = append(td.Services, sd)
+		}
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {

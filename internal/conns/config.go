@@ -6,11 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
-	"github.com/aws/aws-sdk-go-v2/service/s3control"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -182,9 +178,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		DNSSuffix = p.DNSSuffix()
 	}
 
-	c.sdkv1Conns(client, sess)
-	c.sdkv2Conns(client, cfg)
-
 	client.AccountID = accountID
 	client.DefaultTagsConfig = c.DefaultTagsConfig
 	client.DNSSuffix = DNSSuffix
@@ -195,57 +188,35 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
-	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
-		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
-			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
-		} else if partition == endpoints.AwsPartitionID {
-			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-			o.Region = endpoints.UsEast1RegionID
-		}
-	})
+	// API clients (generated).
+	c.sdkv1Conns(client, sess)
+	c.sdkv2Conns(client, cfg)
+	c.sdkv2LazyConns(client, cfg)
 
-	client.S3ControlClient = s3control.NewFromConfig(cfg, func(o *s3control.Options) {
-		if endpoint := c.Endpoints[names.S3Control]; endpoint != "" {
-			o.EndpointResolver = s3control.EndpointResolverFromURL(endpoint)
-		}
-	})
+	// API clients (custom).
 
-	client.logsClient.init(&cfg, func() *cloudwatchlogs.Client {
-		return cloudwatchlogs.NewFromConfig(cfg, func(o *cloudwatchlogs.Options) {
-			if endpoint := c.Endpoints[names.Logs]; endpoint != "" {
-				o.EndpointResolver = cloudwatchlogs.EndpointResolverFromURL(endpoint)
-			}
-		})
-	})
+	// AWS SDK for Go v1.
 
-	client.rdsClient.init(&cfg, func() *rds.Client {
-		return rds.NewFromConfig(cfg, func(o *rds.Options) {
-			if endpoint := c.Endpoints[names.RDS]; endpoint != "" {
-				o.EndpointResolver = rds.EndpointResolverFromURL(endpoint)
-			}
-		})
-	})
-
-	client.ssmClient.init(&cfg, func() *ssm.Client {
-		return ssm.NewFromConfig(cfg, func(o *ssm.Options) {
-			if endpoint := c.Endpoints[names.SSM]; endpoint != "" {
-				o.EndpointResolver = ssm.EndpointResolverFromURL(endpoint)
-			}
-		})
-	})
-
-	// sts
+	// STS.
 	stsConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[names.STS]),
 	}
-
 	if c.STSRegion != "" {
 		stsConfig.Region = aws.String(c.STSRegion)
 	}
-
 	client.STSConn = sts.New(sess.Copy(stsConfig))
 
-	// "Global" services that require customizations
+	// Services that require multiple client configurations.
+	s3Config := &aws.Config{
+		Endpoint:         aws.String(c.Endpoints[names.S3]),
+		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
+	}
+	client.S3Conn = s3.New(sess.Copy(s3Config))
+
+	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
+	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
+
+	// "Global" services that require customizations.
 	globalAcceleratorConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[names.GlobalAccelerator]),
 	}
@@ -262,18 +233,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		Endpoint: aws.String(c.Endpoints[names.Shield]),
 	}
 
-	// Services that require multiple client configurations
-	s3Config := &aws.Config{
-		Endpoint:         aws.String(c.Endpoints[names.S3]),
-		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
-	}
-
-	client.S3Conn = s3.New(sess.Copy(s3Config))
-
-	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
-	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
-
-	// Force "global" services to correct regions
+	// Force "global" services to correct Regions.
 	switch partition {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
@@ -552,6 +512,17 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "Retry your request") {
 				r.Retryable = aws.Bool(true)
 			}
+		}
+	})
+
+	// AWS SDK for Go v2.
+
+	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
+		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
+			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
+		} else if partition == endpoints.AwsPartitionID {
+			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
+			o.Region = endpoints.UsEast1RegionID
 		}
 	})
 

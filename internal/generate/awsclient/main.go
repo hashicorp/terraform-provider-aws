@@ -23,11 +23,13 @@ const (
 )
 
 type ServiceDatum struct {
-	SDKVersion        string
-	GoPackage         string
-	GoPackageOverride string
-	ProviderNameUpper string
-	ClientTypeName    string
+	SDKVersion          string
+	GoV1Package         string
+	GoV2Package         string
+	GoV2PackageOverride string
+	ProviderNameUpper   string
+	ClientTypeName      string
+	ProviderPackage     string
 }
 
 type TemplateData struct {
@@ -70,20 +72,25 @@ func main() {
 			td.Services = append(td.Services, ServiceDatum{
 				ProviderNameUpper: l[names.ColProviderNameUpper],
 				SDKVersion:        "1",
-				GoPackage:         l[names.ColGoV1Package],
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
 				ClientTypeName:    l[names.ColGoV1ClientTypeName],
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
 			})
 		}
 		if l[names.ColClientSDKV2] != "" {
 			sd := ServiceDatum{
 				ProviderNameUpper: l[names.ColProviderNameUpper],
 				SDKVersion:        "2",
-				GoPackage:         l[names.ColGoV2Package],
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
 				ClientTypeName:    "Client",
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
 			}
 			if l[names.ColClientSDKV1] != "" {
-				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`
-				sd.GoPackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`.
+				sd.GoV2PackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+				sd.SDKVersion = "1,2"
 			}
 			td.Services = append(td.Services, sd)
 		}

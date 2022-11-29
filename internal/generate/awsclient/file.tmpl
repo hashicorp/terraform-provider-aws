@@ -3,11 +3,15 @@ package conns
 
 import (
 {{ range .Services }}
-	{{ .GoPackageOverride }} "github.com/aws/aws-sdk-go{{ if eq .SDKVersion "2" }}-v2{{ end }}/service/{{ .GoPackage }}"
+	{{- if eq .SDKVersion "1" }}
+	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	{{- else if eq .SDKVersion "2" }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- else if eq .SDKVersion "1,2" }}
+	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	{{ .GoV2PackageOverride }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- end }}
 {{- end }}
-	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
-	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -28,11 +32,16 @@ type AWSClient struct {
 	SupportedPlatforms        []string
 	TerraformVersion          string
 
-	logsClient lazyClient[*cloudwatchlogs_sdkv2.Client]
-	rdsClient  lazyClient[*rds_sdkv2.Client]
-	ssmClient  lazyClient[*ssm_sdkv2.Client]
+{{ range .Services }}
+	{{- if ne .SDKVersion "1,2" }}{{continue}}{{- end }}
+	{{ .ProviderPackage }}Client lazyClient[*{{ .GoV2PackageOverride }}.{{ .ClientTypeName }}]
+{{- end }}
 
 {{ range .Services }}
-	{{ .ProviderNameUpper }}{{ if eq .SDKVersion "1" }}Conn{{ else }}Client{{end}} *{{ if ne .GoPackageOverride "" }}{{ .GoPackageOverride }}{{ else }}{{ .GoPackage }}{{ end }}.{{ .ClientTypeName }}
+	{{- if eq .SDKVersion "1" }}
+	{{ .ProviderNameUpper }}Conn *{{ .GoV1Package }}.{{ .ClientTypeName }}
+	{{- else if eq .SDKVersion "2" }}
+	{{ .ProviderNameUpper }}Client *{{ .GoV2Package }}.{{ .ClientTypeName }}
+	{{- end }}
 {{- end }}
 }

@@ -4,6 +4,7 @@ package conns
 import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -12,10 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -665,5 +669,37 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
 		}
+	})
+}
+
+// sdkv2LazyConns initializes AWS SDK for Go v2 lazy-load clients.
+func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.logsClient.init(&cfg, func() *cloudwatchlogs_sdkv2.Client {
+		return cloudwatchlogs_sdkv2.NewFromConfig(cfg, func(o *cloudwatchlogs_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.Logs]; endpoint != "" {
+				o.EndpointResolver = cloudwatchlogs_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.rdsClient.init(&cfg, func() *rds_sdkv2.Client {
+		return rds_sdkv2.NewFromConfig(cfg, func(o *rds_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.RDS]; endpoint != "" {
+				o.EndpointResolver = rds_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.s3controlClient.init(&cfg, func() *s3control_sdkv2.Client {
+		return s3control_sdkv2.NewFromConfig(cfg, func(o *s3control_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.S3Control]; endpoint != "" {
+				o.EndpointResolver = s3control_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.ssmClient.init(&cfg, func() *ssm_sdkv2.Client {
+		return ssm_sdkv2.NewFromConfig(cfg, func(o *ssm_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.SSM]; endpoint != "" {
+				o.EndpointResolver = ssm_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
 	})
 }
