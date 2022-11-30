@@ -4790,6 +4790,56 @@ func TestAccRDSInstance_gp3(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_storageThroughput(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 14000, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "14000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
@@ -9786,4 +9836,30 @@ resource "aws_db_instance" "test" {
   allocated_storage = 200
 }
 `, rName))
+}
+
+func testAccInstanceConfig_storageThroughput(rName string, iops, throughput int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQLGp3(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot  = true
+
+  apply_immediately = true
+
+  storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage = 400
+
+  iops               = %[2]d
+  storage_throughput = %[3]d
+}
+`, rName, iops, throughput))
 }
