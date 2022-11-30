@@ -1,4 +1,9 @@
 ## 4.44.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute will always have the value `"DEFAULT"` ([#28085](https://github.com/hashicorp/terraform-provider-aws/issues/28085))
+
 ## 4.43.0 (November 29, 2022)
 
 FEATURES:
