@@ -193,9 +193,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	c.sdkv2Conns(client, cfg)
 	c.sdkv2LazyConns(client, cfg)
 
-	// API clients (custom).
-
-	// AWS SDK for Go v1.
+	// AWS SDK for Go v1 custom API clients.
 
 	// STS.
 	stsConfig := &aws.Config{
@@ -515,7 +513,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	// AWS SDK for Go v2.
+	// AWS SDK for Go v2 custom API clients.
 
 	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
@@ -525,17 +523,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			o.Region = endpoints.UsEast1RegionID
 		}
 	})
-
-	if !c.SkipGetEC2Platforms {
-		supportedPlatforms, err := GetSupportedEC2Platforms(client.EC2Conn)
-		if err != nil {
-			// We intentionally fail *silently* because there's a chance
-			// user just doesn't have ec2:DescribeAccountAttributes permissions
-			log.Printf("[WARN] Unable to get supported EC2 platforms: %s", err)
-		} else {
-			client.SupportedPlatforms = supportedPlatforms
-		}
-	}
 
 	return client, nil
 }

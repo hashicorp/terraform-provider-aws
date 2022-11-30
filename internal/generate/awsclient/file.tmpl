@@ -29,7 +29,6 @@ type AWSClient struct {
 	S3ConnURICleaningDisabled *s3.S3
 	ServicePackages           []intf.ServicePackageData
 	Session                   *session.Session
-	SupportedPlatforms        []string
 	TerraformVersion          string
 
 {{ range .Services }}
@@ -51,4 +50,4 @@ type AWSClient struct {
 func (client *AWSClient) {{ .ProviderNameUpper }}Client() *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
 	return client.{{ .ProviderPackage }}Client.Client()
 }
-{{- end }}
+{{ end }}

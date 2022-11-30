@@ -329,7 +329,6 @@ type AWSClient struct {
 	S3ConnURICleaningDisabled *s3.S3
 	ServicePackages           []intf.ServicePackageData
 	Session                   *session.Session
-	SupportedPlatforms        []string
 	TerraformVersion          string
 
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
@@ -648,12 +647,15 @@ type AWSClient struct {
 func (client *AWSClient) LogsClient() *cloudwatchlogs_sdkv2.Client {
 	return client.logsClient.Client()
 }
+
 func (client *AWSClient) RDSClient() *rds_sdkv2.Client {
 	return client.rdsClient.Client()
 }
+
 func (client *AWSClient) S3ControlClient() *s3control_sdkv2.Client {
 	return client.s3controlClient.Client()
 }
+
 func (client *AWSClient) SSMClient() *ssm_sdkv2.Client {
 	return client.ssmClient.Client()
 }
