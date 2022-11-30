@@ -1,8 +1,10 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +23,10 @@ func ResourceDeployment() *schema.Resource {
 		Read:   resourceDeploymentRead,
 		Update: resourceDeploymentUpdate,
 		Delete: resourceDeploymentDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceDeploymentImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
@@ -220,4 +226,19 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+	if len(idParts) != 2 {
+		return nil, fmt.Errorf("Unexpected format of ID (%s), use: 'REST-API-ID/DEPLOYMENT-ID'", d.Id())
+	}
+
+	restApiID := idParts[0]
+	deploymentID := idParts[1]
+
+	d.SetId(deploymentID)
+	d.Set("rest_api_id", restApiID)
+
+	return []*schema.ResourceData{d}, nil
 }

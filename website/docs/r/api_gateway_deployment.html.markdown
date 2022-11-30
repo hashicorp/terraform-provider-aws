@@ -148,3 +148,15 @@ In addition to all arguments above, the following attributes are exported:
   when allowing API Gateway to invoke a Lambda function,
   e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
 * `created_date` - Creation date of the deployment
+
+## Import
+
+`aws_api_gateway_deployment` can be imported using `REST-API-ID/DEPLOYMENT-ID`, e.g.,
+
+```
+$ terraform import aws_api_gateway_deployment.example aabbccddee/1122334
+```
+
+The `stage_name`, `stage_description`, and `variables` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.
+
+The `triggers` argument cannot be imported.
