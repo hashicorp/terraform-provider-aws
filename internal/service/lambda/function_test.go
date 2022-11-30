@@ -1865,6 +1865,42 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_snapStart(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_snapStartEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.0.apply_on", "PublishedVersions"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_snapStartDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_runtimes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2148,6 +2184,38 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs16.x"
 }
 `, funcName)
+}
+
+func testAccFunctionConfig_snapStartEnabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_java11.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "example.Hello::handleRequest"
+  runtime       = "java11"
+
+  snap_start {
+    apply_on = "PublishedVersions"
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_snapStartDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_java11.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "example.Hello::handleRequest"
+  runtime       = "java11"
+}
+`, rName))
 }
 
 func testAccFunctionConfig_tags1(rName, tagKey1, tagValue1 string) string {
