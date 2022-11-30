@@ -954,9 +954,9 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 
 // TestAccCloudFrontDistribution_retainOnDelete verifies retain_on_delete = true
 // This acceptance test performs the following steps:
-//  * Trigger a Terraform destroy of the resource, which should only disable the distribution
-//  * Check it still exists and is disabled outside Terraform
-//  * Destroy for real outside Terraform
+//   - Trigger a Terraform destroy of the resource, which should only disable the distribution
+//   - Check it still exists and is disabled outside Terraform
+//   - Destroy for real outside Terraform
 func TestAccCloudFrontDistribution_retainOnDelete(t *testing.T) {
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"

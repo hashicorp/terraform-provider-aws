@@ -346,7 +346,7 @@ func awsServiceNameUpper(s string) (string, error) {
 	return "", fmt.Errorf("unable to find AWS service name for %s", s)
 }
 
-//awsServiceNames provides correct names and capitalization as used by AWS in client var
+// awsServiceNames provides correct names and capitalization as used by AWS in client var
 var awsServiceNames map[string]string
 
 func init() {

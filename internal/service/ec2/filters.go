@@ -26,9 +26,9 @@ import (
 // In Terraform configuration this would then look like this, to constrain
 // results by name:
 //
-// tags {
-//   Name = "my-awesome-subnet"
-// }
+//	tags {
+//	  Name = "my-awesome-subnet"
+//	}
 func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 	filters := make([]*ec2.Filter, len(tags))
 
@@ -96,10 +96,10 @@ func ec2TagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
 // attributes or tags. In Terraform configuration, the custom filter blocks
 // then look like this:
 //
-// filter {
-//   name   = "availabilityZone"
-//   values = ["us-west-2a", "us-west-2b"]
-// }
+//	filter {
+//	  name   = "availabilityZone"
+//	  values = ["us-west-2a", "us-west-2b"]
+//	}
 func CustomFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
