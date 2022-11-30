@@ -34,7 +34,7 @@ type TemplateData struct {
 func main() {
 	g := common.NewGenerator()
 
-	g.Infof("generating internal/conns/%s\n", filename)
+	g.Infof("generating internal/conns/%s", filename)
 
 	data, err := common.ReadAllNamesData(namesDataFile)
 
