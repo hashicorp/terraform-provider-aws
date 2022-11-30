@@ -3203,7 +3203,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_mySQLPort(rName),
+				Config: testAccInstanceConfig_mySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
@@ -3211,7 +3211,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 			},
 
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_updateMySQLPort(rName),
+				Config: testAccInstanceConfig_updateMySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port", "3305"),
@@ -5899,7 +5899,7 @@ resource "aws_db_instance" "test" {
 `, rName, iops)
 }
 
-func testAccInstanceConfig_SnapshotInstanceConfig_mySQLPort(rName string) string {
+func testAccInstanceConfig_mySQLPort(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
@@ -5908,9 +5908,9 @@ resource "aws_db_instance" "test" {
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3306
   allocated_storage    = 10
@@ -5921,7 +5921,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_SnapshotInstanceConfig_updateMySQLPort(rName string) string {
+func testAccInstanceConfig_updateMySQLPort(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
@@ -5930,9 +5930,9 @@ resource "aws_db_instance" "test" {
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3305
   allocated_storage    = 10
