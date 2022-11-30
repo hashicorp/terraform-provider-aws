@@ -828,6 +828,7 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
+				"rule_action_override": ruleActionOverrideSchema(),
 				"scope_down_statement": scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
@@ -857,6 +858,7 @@ func excludedRuleSchema() *schema.Schema {
 				},
 			},
 		},
+		Deprecated: "Use rule_action_override instead",
 	}
 }
 
@@ -904,6 +906,40 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
 				"xss_match_statement":                   xssMatchStatementSchema(),
+			},
+		},
+	}
+}
+
+func ruleActionOverrideSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 100,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action_to_use": actionToUseSchema(),
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			},
+		},
+	}
+}
+
+func actionToUseSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"allow":   allowConfigSchema(),
+				"block":   blockConfigSchema(),
+				"captcha": captchaConfigSchema(),
+				"count":   countConfigSchema(),
 			},
 		},
 	}
