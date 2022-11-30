@@ -6,23 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/comprehend"
-	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
-	"github.com/aws/aws-sdk-go-v2/service/fis"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/inspector2"
-	"github.com/aws/aws-sdk-go-v2/service/ivschat"
-	"github.com/aws/aws-sdk-go-v2/service/kendra"
-	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	"github.com/aws/aws-sdk-go-v2/service/rds"
-	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
-	"github.com/aws/aws-sdk-go-v2/service/s3control"
-	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/aws/aws-sdk-go-v2/service/sesv2"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -145,7 +129,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("error configuring Terraform AWS Provider: %s", err)
+		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
 	}
 
 	if !c.SkipRegionValidation {
@@ -157,12 +141,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("error creating AWS SDK v1 session: %s", err)
+		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
 	}
 
 	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("error retrieving account details: %s", err)
+		return nil, diag.Errorf("retrieving AWS account details: %s", err)
 	}
 
 	if accountID == "" {
@@ -172,7 +156,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if len(c.ForbiddenAccountIds) > 0 {
 		for _, forbiddenAccountID := range c.AllowedAccountIds {
 			if accountID == forbiddenAccountID {
-				return nil, diag.Errorf("AWS Account ID not allowed: %s", accountID)
+				return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
 			}
 		}
 	}
@@ -185,7 +169,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			}
 		}
 		if !found {
-			return nil, diag.Errorf("AWS Account ID not allowed: %s", accountID)
+			return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
 		}
 	}
 
@@ -193,8 +177,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
 		DNSSuffix = p.DNSSuffix()
 	}
-
-	c.clientConns(client, sess)
 
 	client.AccountID = accountID
 	client.DefaultTagsConfig = c.DefaultTagsConfig
@@ -206,129 +188,33 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
-	client.ComprehendClient = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
-		if endpoint := c.Endpoints[names.Comprehend]; endpoint != "" {
-			o.EndpointResolver = comprehend.EndpointResolverFromURL(endpoint)
-		}
-	})
+	// API clients (generated).
+	c.sdkv1Conns(client, sess)
+	c.sdkv2Conns(client, cfg)
+	c.sdkv2LazyConns(client, cfg)
 
-	client.ComputeOptimizerClient = computeoptimizer.NewFromConfig(cfg, func(o *computeoptimizer.Options) {
-		if endpoint := c.Endpoints[names.ComputeOptimizer]; endpoint != "" {
-			o.EndpointResolver = computeoptimizer.EndpointResolverFromURL(endpoint)
-		}
-	})
+	// AWS SDK for Go v1 custom API clients.
 
-	client.FISClient = fis.NewFromConfig(cfg, func(o *fis.Options) {
-		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
-			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.IdentityStoreClient = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
-		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
-			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.Inspector2Client = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
-		if endpoint := c.Endpoints[names.Inspector2]; endpoint != "" {
-			o.EndpointResolver = inspector2.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.IVSChatClient = ivschat.NewFromConfig(cfg, func(o *ivschat.Options) {
-		if endpoint := c.Endpoints[names.IVSChat]; endpoint != "" {
-			o.EndpointResolver = ivschat.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.KendraClient = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
-		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
-			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.MediaLiveClient = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
-		if endpoint := c.Endpoints[names.MediaLive]; endpoint != "" {
-			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.RolesAnywhereClient = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
-		if endpoint := c.Endpoints[names.RolesAnywhere]; endpoint != "" {
-			o.EndpointResolver = rolesanywhere.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
-		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
-			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
-		} else if partition == endpoints.AwsPartitionID {
-			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-			o.Region = endpoints.UsEast1RegionID
-		}
-	})
-
-	client.S3ControlClient = s3control.NewFromConfig(cfg, func(o *s3control.Options) {
-		if endpoint := c.Endpoints[names.S3Control]; endpoint != "" {
-			o.EndpointResolver = s3control.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.SchedulerClient = scheduler.NewFromConfig(cfg, func(o *scheduler.Options) {
-		if endpoint := c.Endpoints[names.Scheduler]; endpoint != "" {
-			o.EndpointResolver = scheduler.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.SESV2Client = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
-		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
-			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.TranscribeClient = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
-		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
-			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	client.logsClient.init(&cfg, func() *cloudwatchlogs.Client {
-		return cloudwatchlogs.NewFromConfig(cfg, func(o *cloudwatchlogs.Options) {
-			if endpoint := c.Endpoints[names.Logs]; endpoint != "" {
-				o.EndpointResolver = cloudwatchlogs.EndpointResolverFromURL(endpoint)
-			}
-		})
-	})
-
-	client.rdsClient.init(&cfg, func() *rds.Client {
-		return rds.NewFromConfig(cfg, func(o *rds.Options) {
-			if endpoint := c.Endpoints[names.RDS]; endpoint != "" {
-				o.EndpointResolver = rds.EndpointResolverFromURL(endpoint)
-			}
-		})
-	})
-
-	client.ssmClient.init(&cfg, func() *ssm.Client {
-		return ssm.NewFromConfig(cfg, func(o *ssm.Options) {
-			if endpoint := c.Endpoints[names.SSM]; endpoint != "" {
-				o.EndpointResolver = ssm.EndpointResolverFromURL(endpoint)
-			}
-		})
-	})
-
-	// sts
+	// STS.
 	stsConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[names.STS]),
 	}
-
 	if c.STSRegion != "" {
 		stsConfig.Region = aws.String(c.STSRegion)
 	}
-
 	client.STSConn = sts.New(sess.Copy(stsConfig))
 
-	// "Global" services that require customizations
+	// Services that require multiple client configurations.
+	s3Config := &aws.Config{
+		Endpoint:         aws.String(c.Endpoints[names.S3]),
+		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
+	}
+	client.S3Conn = s3.New(sess.Copy(s3Config))
+
+	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
+	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
+
+	// "Global" services that require customizations.
 	globalAcceleratorConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[names.GlobalAccelerator]),
 	}
@@ -345,18 +231,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		Endpoint: aws.String(c.Endpoints[names.Shield]),
 	}
 
-	// Services that require multiple client configurations
-	s3Config := &aws.Config{
-		Endpoint:         aws.String(c.Endpoints[names.S3]),
-		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
-	}
-
-	client.S3Conn = s3.New(sess.Copy(s3Config))
-
-	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
-	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
-
-	// Force "global" services to correct regions
+	// Force "global" services to correct Regions.
 	switch partition {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
@@ -638,16 +513,16 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	if !c.SkipGetEC2Platforms {
-		supportedPlatforms, err := GetSupportedEC2Platforms(client.EC2Conn)
-		if err != nil {
-			// We intentionally fail *silently* because there's a chance
-			// user just doesn't have ec2:DescribeAccountAttributes permissions
-			log.Printf("[WARN] Unable to get supported EC2 platforms: %s", err)
-		} else {
-			client.SupportedPlatforms = supportedPlatforms
+	// AWS SDK for Go v2 custom API clients.
+
+	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
+		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
+			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
+		} else if partition == endpoints.AwsPartitionID {
+			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
+			o.Region = endpoints.UsEast1RegionID
 		}
-	}
+	})
 
 	return client, nil
 }

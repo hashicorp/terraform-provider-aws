@@ -240,6 +240,7 @@ Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resource Explorer
 Resource Groups
 Resource Groups Tagging
 RoboMaker

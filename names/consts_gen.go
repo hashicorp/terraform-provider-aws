@@ -237,6 +237,7 @@ const (
 	RedshiftServerless           = "redshiftserverless"
 	Rekognition                  = "rekognition"
 	ResilienceHub                = "resiliencehub"
+	ResourceExplorer2            = "resourceexplorer2"
 	ResourceGroups               = "resourcegroups"
 	ResourceGroupsTaggingAPI     = "resourcegroupstaggingapi"
 	RoboMaker                    = "robomaker"
