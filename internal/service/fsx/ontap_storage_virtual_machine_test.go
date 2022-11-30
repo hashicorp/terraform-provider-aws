@@ -44,6 +44,7 @@ func TestAccFSxOntapStorageVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					// Subtype removed in AWS SDK for Go v1.44.147.
 					//resource.TestCheckResourceAttr(resourceName, "subtype", fsx.StorageVirtualMachineSubtypeDefault),
+					resource.TestCheckResourceAttr(resourceName, "subtype", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 				),

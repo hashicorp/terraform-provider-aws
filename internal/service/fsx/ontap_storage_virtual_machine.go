@@ -297,7 +297,7 @@ func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interfa
 	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
 	// Subtype removed in AWS SDK for Go v1.44.147.
 	// d.Set("subtype", storageVirtualMachine.Subtype)
-	d.Set("subtype", nil)
+	d.Set("subtype", "DEFAULT")
 	d.Set("uuid", storageVirtualMachine.UUID)
 
 	if err := d.Set("active_directory_configuration", flattenFsxOntapSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
