@@ -217,7 +217,7 @@ func (a ARN) String() string {
 	return a.value.String()
 }
 
-// ARNValue returns the known arn value. If ARN is null or unknown, returns {}.
-func (a ARN) ARNValue() arn.ARN {
+// ValueARN returns the known arn.ARN value. If ARN is null or unknown, returns {}.
+func (a ARN) ValueARN() arn.ARN {
 	return a.value
 }

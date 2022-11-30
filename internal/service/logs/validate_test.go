@@ -3,6 +3,8 @@ package logs
 import (
 	"strings"
 	"testing"
+
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestValidLogGroupName(t *testing.T) {
@@ -133,6 +135,33 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 		_, errors := validLogMetricFilterTransformationName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Log Metric Filter Transformation Name", v)
+		}
+	}
+}
+
+func TestValidStreamName(t *testing.T) {
+	validNames := []string{
+		"test-log-stream",
+		"my_sample_log_stream",
+		"012345678",
+		"logstream/1234",
+	}
+	for _, v := range validNames {
+		_, errors := validStreamName(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid CloudWatch LogStream name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		sdkacctest.RandString(513),
+		"",
+		"stringwith:colon",
+	}
+	for _, v := range invalidNames {
+		_, errors := validStreamName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid CloudWatch LogStream name", v)
 		}
 	}
 }
