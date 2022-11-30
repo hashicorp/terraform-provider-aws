@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.21
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.7
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.3
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2
