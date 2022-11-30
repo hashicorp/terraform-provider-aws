@@ -1456,6 +1456,26 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"api.ecr-public": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-east-1",
+				}: endpoint{
+					Hostname: "api.ecr-public.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				endpointKey{
+					Region: "us-west-2",
+				}: endpoint{
+					Hostname: "api.ecr-public.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+			},
+		},
 		"api.elastic-inference": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -12089,22 +12109,6 @@ var awsPartition = partition{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
-					Region: "dataplane-ap-south-1",
-				}: endpoint{
-					Hostname: "greengrass-ats.iot.ap-south-1.amazonaws.com",
-					CredentialScope: credentialScope{
-						Region: "ap-south-1",
-					},
-				},
-				endpointKey{
-					Region: "dataplane-us-east-2",
-				}: endpoint{
-					Hostname: "greengrass-ats.iot.us-east-2.amazonaws.com",
-					CredentialScope: credentialScope{
-						Region: "us-east-2",
-					},
-				},
-				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -21690,6 +21694,13 @@ var awsPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"sagemaker-geospatial": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-west-2",
+				}: endpoint{},
+			},
+		},
 		"savingsplans": service{
 			PartitionEndpoint: "aws-global",
 			IsRegionalized:    boxedFalse,
@@ -28147,14 +28158,6 @@ var awscnPartition = partition{
 				endpointKey{
 					Region: "cn-north-1",
 				}: endpoint{},
-				endpointKey{
-					Region: "dataplane-cn-north-1",
-				}: endpoint{
-					Hostname: "greengrass.ats.iot.cn-north-1.amazonaws.com.cn",
-					CredentialScope: credentialScope{
-						Region: "cn-north-1",
-					},
-				},
 			},
 		},
 		"guardduty": service{
