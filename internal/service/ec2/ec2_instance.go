@@ -2622,9 +2622,9 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*instanceOpts,
 		Enabled: aws.Bool(d.Get("monitoring").(bool)),
 	}
 
-	if v := d.Get("iam_instance_profile").(string); v != "" {
+	if v, ok := d.GetOk("iam_instance_profile"); ok {
 		opts.IAMInstanceProfile = &ec2.IamInstanceProfileSpecification{
-			Name: aws.String(v),
+			Name: aws.String(v.(string)),
 		}
 	}
 
