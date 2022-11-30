@@ -52,7 +52,7 @@ The following arguments are optional:
 * `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
 * `database_name` - (Optional) Name of the endpoint database.
 * `elasticsearch_settings` - (Optional) Configuration block for OpenSearch settings. See below.
-* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
+* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.html).
 * `kafka_settings` - (Optional) Configuration block for Kafka settings. See below.
 * `kinesis_settings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
