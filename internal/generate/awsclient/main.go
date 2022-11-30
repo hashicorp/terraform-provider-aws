@@ -4,16 +4,11 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
-	"encoding/csv"
 	"fmt"
-	"go/format"
-	"log"
-	"os"
 	"sort"
-	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,20 +32,14 @@ type TemplateData struct {
 }
 
 func main() {
-	fmt.Printf("Generating internal/conns/%s\n", filename)
+	g := common.NewGenerator()
 
-	f, err := os.Open(namesDataFile)
+	g.Infof("generating internal/conns/%s\n", filename)
+
+	data, err := common.ReadAllNamesData(namesDataFile)
+
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
 	}
 
 	td := TemplateData{}
@@ -100,38 +89,8 @@ func main() {
 		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
 	})
 
-	writeTemplate(tmpl, "awsclient", td)
-}
-
-func writeTemplate(body string, templateName string, td TemplateData) {
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	contents, err := format.Source(buffer.Bytes())
-	if err != nil {
-		log.Fatalf("error formatting generated file: %s", err)
-	}
-
-	if _, err := f.Write(contents); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
+	if err := g.ApplyAndWriteTemplate(filename, "awsclient", tmpl, td); err != nil {
+		g.Fatalf("error: %s", err.Error())
 	}
 }
 
