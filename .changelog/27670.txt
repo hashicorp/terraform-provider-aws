@@ -1,3 +1,7 @@
 ```release-note:enhancement
-resource/aws_db_instance: Add 'gp3' option to storage_type argument & 'storage_throughput' to schema
+resource/aws_db_instance: Add support for `gp3` `storage_type` value
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Add `storage_throughput` argument
 ```
