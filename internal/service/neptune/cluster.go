@@ -1,6 +1,8 @@
 package neptune
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -156,6 +158,11 @@ func ResourceCluster() *schema.Resource {
 					}
 					return
 				},
+			},
+			"global_cluster_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validGlobalCusterIdentifier,
 			},
 			"hosted_zone_id": {
 				Type:     schema.TypeString,
@@ -334,6 +341,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if attr, ok := d.GetOk("global_cluster_identifier"); ok {
+		createDbClusterInput.GlobalClusterIdentifier = aws.String(attr.(string))
+	}
+
 	if attr := d.Get("enable_cloudwatch_logs_exports").(*schema.Set); attr.Len() > 0 {
 		createDbClusterInput.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr)
 		restoreDBClusterFromSnapshotInput.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr)
@@ -473,6 +484,19 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	globalCluster, err := findGlobalClusterByARN(context.TODO(), conn, aws.StringValue(dbc.DBClusterArn))
+
+	// Ignore the following API error for regions/partitions that do not support Neptune Global Clusters:
+	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+	if err != nil && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
+		return fmt.Errorf("error reading Neptune Global Cluster information for DB Cluster (%s): %w", d.Id(), err)
+	}
+
+	if globalCluster != nil {
+		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+	} else {
+		d.Set("global_cluster_identifier", "")
+	}
 	return flattenClusterResource(d, meta, dbc)
 }
 
@@ -655,6 +679,32 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
+	if d.HasChange("global_cluster_identifier") {
+		oRaw, nRaw := d.GetChange("global_cluster_identifier")
+		o := oRaw.(string)
+		n := nRaw.(string)
+
+		if o == "" {
+			return errors.New("existing Neptune Clusters cannot be added to an existing Neptune Global Cluster")
+		}
+
+		if n != "" {
+			return errors.New("existing Neptune Clusters cannot be migrated between existing Neptune Global Clusters")
+		}
+
+		input := &neptune.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			GlobalClusterIdentifier: aws.String(o),
+		}
+
+		log.Printf("[DEBUG] Removing Neptune Cluster from Neptune Global Cluster: %s", input)
+		_, err := conn.RemoveFromGlobalCluster(input)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+			return fmt.Errorf("error removing Neptune Cluster (%s) from Neptune Global Cluster: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("serverless_v2_scaling_configuration") {
 		req.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
 		requestUpdate = true
@@ -748,10 +798,29 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Neptune Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	// Automatically remove from global cluster to bypass this error on deletion:
+	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
+	if d.Get("global_cluster_identifier").(string) != "" {
+		input := &neptune.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
+		}
+
+		log.Printf("[DEBUG] Removing Neptune Cluster from Neptune Global Cluster: %s", input)
+		_, err := conn.RemoveFromGlobalCluster(input)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+			return fmt.Errorf("error removing Neptune Cluster (%s) from Neptune Global Cluster: %w", d.Id(), err)
+		}
+	}
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				return resource.RetryableError(err)
+			}
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
