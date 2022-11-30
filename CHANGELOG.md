@@ -1,4 +1,9 @@
 ## 4.45.0 (Unreleased)
+
+NOTES:
+
+* provider: With AWS's retirement of EC2-Classic the `skip_get_ec2_platforms` attribute has been deprecated and will be removed in a future version ([#28084](https://github.com/hashicorp/terraform-provider-aws/issues/28084))
+
 ## 4.44.0 (November 30, 2022)
 
 NOTES:
