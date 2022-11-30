@@ -3,12 +3,14 @@
 NOTES:
 
 * resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute will always have the value `"DEFAULT"` ([#28085](https://github.com/hashicorp/terraform-provider-aws/issues/28085))
+* resource/aws_wafv2_web_acl: `excluded_rule` on `managed_rule_group_statement` has been deprecated. All configurations using `excluded_rule` should be updated to use the new `rule_action_override` attribute instead ([#27954](https://github.com/hashicorp/terraform-provider-aws/issues/27954))
 
 ENHANCEMENTS:
 
 * resource/aws_api_gateway_deployment: Add import support ([#28030](https://github.com/hashicorp/terraform-provider-aws/issues/28030))
 * resource/aws_kinesisanalyticsv2_application: Add support for `FLINK-1_15` `runtime_environment` value ([#28099](https://github.com/hashicorp/terraform-provider-aws/issues/28099))
 * resource/aws_lambda_function: Add `snap_start` attribute ([#28097](https://github.com/hashicorp/terraform-provider-aws/issues/28097))
+* resource/aws_wafv2_web_acl: Support `rule_action_override` on `managed_rule_group_statement` ([#27954](https://github.com/hashicorp/terraform-provider-aws/issues/27954))
 
 BUG FIXES:
 
