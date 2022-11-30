@@ -274,6 +274,7 @@ func ResourceInstance() *schema.Resource {
 			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
