@@ -45,7 +45,7 @@ func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody s
 		return fmt.Errorf("formatting generated source code: %w", err)
 	}
 
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644) // nolint:gomnd
 
 	if err != nil {
 		return fmt.Errorf("opening file (%s): %w", filename, err)
