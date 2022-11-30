@@ -48,6 +48,7 @@ func ResourceCostCategory() *schema.Resource {
 			},
 			"effective_start": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -389,6 +390,10 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("effective_start"); ok {
+		input.EffectiveStart = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.ResourceTags = Tags(tags.IgnoreAWS())
 	}
@@ -472,6 +477,10 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChange("split_charge_rule") {
 			input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
+		}
+
+		if d.HasChange("effective_start") {
+			input.EffectiveStart = aws.String(d.Get("effective_start").(string))
 		}
 
 		_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)

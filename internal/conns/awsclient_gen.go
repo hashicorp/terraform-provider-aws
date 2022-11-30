@@ -2,16 +2,21 @@
 package conns
 
 import (
+	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -41,7 +46,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/aws/aws-sdk-go/service/auditmanager"
 	"github.com/aws/aws-sdk-go/service/augmentedairuntime"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
@@ -327,7 +331,9 @@ type AWSClient struct {
 	SupportedPlatforms        []string
 	TerraformVersion          string
 
-	ssmClient lazyClient[*ssm_sdkv2.Client]
+	logsClient lazyClient[*cloudwatchlogs_sdkv2.Client]
+	rdsClient  lazyClient[*rds_sdkv2.Client]
+	ssmClient  lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA
@@ -353,7 +359,7 @@ type AWSClient struct {
 	ApplicationCostProfilerConn      *applicationcostprofiler.ApplicationCostProfiler
 	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
 	AthenaConn                       *athena.Athena
-	AuditManagerConn                 *auditmanager.AuditManager
+	AuditManagerClient               *auditmanager.Client
 	AutoScalingConn                  *autoscaling.AutoScaling
 	AutoScalingPlansConn             *autoscalingplans.AutoScalingPlans
 	BackupConn                       *backup.Backup
@@ -460,6 +466,7 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
+	IVSChatClient                    *ivschat.Client
 	IdentityStoreClient              *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
@@ -597,6 +604,7 @@ type AWSClient struct {
 	SageMakerFeatureStoreRuntimeConn *sagemakerfeaturestoreruntime.SageMakerFeatureStoreRuntime
 	SageMakerRuntimeConn             *sagemakerruntime.SageMakerRuntime
 	SavingsPlansConn                 *savingsplans.SavingsPlans
+	SchedulerClient                  *scheduler.Client
 	SchemasConn                      *schemas.Schemas
 	SecretsManagerConn               *secretsmanager.SecretsManager
 	SecurityHubConn                  *securityhub.SecurityHub

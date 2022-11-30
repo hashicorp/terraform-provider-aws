@@ -51,22 +51,6 @@ func statusDBProxyEndpoint(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusDBCluster(conn *rds.RDS, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBClusterByID(conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func statusDBClusterRole(conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
@@ -83,25 +67,9 @@ func statusDBClusterRole(conn *rds.RDS, dbClusterID, roleARN string) resource.St
 	}
 }
 
-func statusDBInstance(conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBClusterActivityStream(ctx context.Context, conn *rds.RDS, dbClusterArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.DBInstanceStatus), nil
-	}
-}
-
-func statusDBClusterActivityStream(conn *rds.RDS, dbClusterArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBClusterWithActivityStream(conn, dbClusterArn)
+		output, err := FindDBClusterWithActivityStream(ctx, conn, dbClusterArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -137,9 +105,9 @@ func statusDBInstanceAutomatedBackup(conn *rds.RDS, arn string) resource.StateRe
 
 // statusDBInstanceHasAutomatedBackup returns whether or not a database instance has a specified automated backup.
 // The connection must be valid for the database instance's Region.
-func statusDBInstanceHasAutomatedBackup(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) resource.StateRefreshFunc {
+func statusDBInstanceHasAutomatedBackup(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(conn, dbInstanceID)
+		output, err := findDBInstanceByIDSDKv1(ctx, conn, dbInstanceID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

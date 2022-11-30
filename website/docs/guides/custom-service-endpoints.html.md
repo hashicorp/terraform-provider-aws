@@ -220,6 +220,7 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
+  <li><code>ivschat</code></li>
   <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
@@ -323,6 +324,7 @@ provider "aws" {
   <li><code>sagemakerfeaturestoreruntime</code></li>
   <li><code>sagemakerruntime</code></li>
   <li><code>savingsplans</code></li>
+  <li><code>scheduler</code></li>
   <li><code>schemas</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>

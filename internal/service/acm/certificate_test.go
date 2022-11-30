@@ -1291,6 +1291,45 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificate_keyAlgorithm(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	var v acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_keyAlgorithm(rootDomain, acm.ValidationMethodDns, acm.KeyAlgorithmEcPrime256v1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          rootDomain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
+					resource.TestCheckResourceAttr(resourceName, "key_algorithm", acm.KeyAlgorithmEcPrime256v1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
@@ -1335,13 +1374,13 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, commonName)
-	newCaKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(newCaKey)
-	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(newCaKey, newCaCertificate, key, commonName)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
+	newCaKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, newCaKey)
+	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, newCaKey, newCaCertificate, key, commonName)
 	withoutChainDomain := acctest.RandomDomainName()
 	var v1, v2, v3 acm.CertificateDetail
 
@@ -1371,7 +1410,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateConfig_privateKeyNoChain(withoutChainDomain),
+				Config: testAccCertificateConfig_privateKeyNoChain(t, withoutChainDomain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v3),
 					testAccCheckCertficateNotRecreated(&v2, &v3),
@@ -1395,10 +1434,10 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, commonName)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
 
 	var v acm.CertificateDetail
 
@@ -1443,7 +1482,7 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_privateKeyNoChain("1.2.3.4"),
+				Config: testAccCertificateConfig_privateKeyNoChain(t, "1.2.3.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
@@ -1465,10 +1504,10 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
 func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
-	key1 := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(key1, "1.2.3.4")
-	key2 := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(key2, "5.6.7.8")
+	key1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key1, "1.2.3.4")
+	key2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key2, "5.6.7.8")
 	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1789,9 +1828,9 @@ resource "aws_acm_certificate" "test" {
 `, domainName, subjectAlternativeNames, validationMethod)
 }
 
-func testAccCertificateConfig_privateKeyNoChain(commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
+func testAccCertificateConfig_privateKeyNoChain(t *testing.T, commonName string) string {
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
@@ -1849,4 +1888,14 @@ resource "aws_acm_certificate" "test" {
   }
 }
 `, domainName, validationMethod)
+}
+
+func testAccCertificateConfig_keyAlgorithm(domainName, validationMethod, keyAlgorithm string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[1]q
+  validation_method = %[2]q
+  key_algorithm     = %[3]q
+}
+`, domainName, validationMethod, keyAlgorithm)
 }

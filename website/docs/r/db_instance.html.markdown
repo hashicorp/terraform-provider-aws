@@ -19,22 +19,32 @@ modification has not yet taken place. You can use the `apply_immediately` flag
 to instruct the service to apply the change immediately (see documentation
 below).
 
-When upgrading the major version of an engine, `allow_major_version_upgrade`
-must be set to `true`.
+When upgrading the major version of an engine, `allow_major_version_upgrade` must be set to `true`.
 
-~> **Note:** using `apply_immediately` can result in a brief downtime as the
-server reboots. See the AWS Docs on [RDS Maintenance][2] for more information.
+~> **Note:** using `apply_immediately` can result in a brief downtime as the server reboots.
+See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more information.
 
-~> **Note:** All arguments including the username and password will be stored in
-the raw state as plain-text. [Read more about sensitive data in
-state](https://www.terraform.io/docs/state/sensitive-data.html).
+~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
+[Read more about sensitive data instate](https://www.terraform.io/docs/state/sensitive-data.html).
 
-> **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds?in=terraform/modules&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
 ## RDS Instance Class Types
-Amazon RDS supports three types of instance classes: Standard, Memory Optimized,
-and Burstable Performance. For more information please read the AWS RDS documentation
-about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+
+Amazon RDS supports three types of instance classes: Standard, Memory Optimized, and Burstable Performance.
+For more information please read the AWS RDS documentation about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
+
+## Low-Downtime Updates
+
+By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions.
+Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
+
+Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
+as other engines are not supported by RDS Blue/Green deployments.
+
+Backups must be enabled to use low-downtime updates.
+
+Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
 
 ## Example Usage
 
@@ -86,11 +96,16 @@ information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DB
 will be applied automatically to the DB instance during the maintenance window.
 Defaults to true.
 * `availability_zone` - (Optional) The AZ for the RDS instance.
-* `backup_retention_period` - (Optional) The days to retain backups for. Must be
-between `0` and `35`. Must be greater than `0` if the database is used as a source for a Read Replica. [See Read Replica][1].
-* `backup_window` - (Optional) The daily time range (in UTC) during which
-automated backups are created if they are enabled. Example: "09:46-10:16". Must
-not overlap with `maintenance_window`.
+* `backup_retention_period` - (Optional) The days to retain backups for.
+  Must be between `0` and `35`.
+  Default is `0`.
+  Must be greater than `0` if the database is used as a source for a [Read Replica][instance-replication],
+  uses [low-downtime updates](#low-downtime-updates),
+  or will use [RDS Blue/Green deployments][blue-green].
+* `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
+  Example: "09:46-10:16". Must not overlap with `maintenance_window`.
+* `blue_green_update` - (Optional) Enables low-downtime updates using R[RDS Blue/Green deployments][blue-green].
+  See [blue_green_update](#blue_green_update) below
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
 encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
@@ -178,7 +193,7 @@ database, and to use this value as the source database. This correlates to the
 a single region) or ARN of the Amazon RDS Database to replicate (if replicating
 cross-region). Note that if you are
 creating a cross-region replica of an encrypted database you will also need to
-specify a `kms_key_id`. See [DB Instance Replication][1] and [Working with
+specify a `kms_key_id`. See [DB Instance Replication][instance-replication] and [Working with
 PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
 for more information on using Replication.
 * `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
@@ -256,12 +271,19 @@ resource "aws_db_instance" "db" {
 * `source_engine` - (Required, as of Feb 2018 only 'mysql' supported) Source engine for the backup
 * `source_engine_version` - (Required, as of Feb 2018 only '5.6' supported) Version of the source engine used to make the backup
 
-This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
+This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.
 
-[1]:
+## blue_green_update
+
+* `enabled` - (Optional) Enables [low-downtime updates](#Low-Downtime Updates) when `true`.
+  Default is `false`.
+
+[instance-replication]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
-[2]:
+[instance-maintenance]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
+[blue-green]:
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html
 
 ## Attributes Reference
 
@@ -302,7 +324,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `40m`)
 - `update` - (Default `80m`)

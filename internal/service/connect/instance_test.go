@@ -39,6 +39,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeConnectManaged),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "true"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
+					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
@@ -61,6 +62,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "false"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
+					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 				),
@@ -207,6 +209,7 @@ resource "aws_connect_instance" "test" {
   identity_management_type         = "CONNECT_MANAGED"
   inbound_calls_enabled            = false
   instance_alias                   = %[1]q
+  multi_party_conference_enabled   = false
   outbound_calls_enabled           = false
 }
 `, rName)

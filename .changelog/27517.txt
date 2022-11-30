@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dynamodb_table_item: Allow the creation of items with the same hash key but different range keys
+```

@@ -129,7 +129,7 @@ func ResourceStack() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
+				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
 			"storage_connectors": {
 				Type:     schema.TypeSet,

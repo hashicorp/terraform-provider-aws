@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, erro
 }
 
 type dataSourceARN struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -71,15 +71,6 @@ func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnosti
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceARN) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) { //nolint:unparam
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -91,14 +82,14 @@ func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest
 		return
 	}
 
-	arn := &data.ARN.Value
+	arn := data.ARN.ValueARN()
 
-	data.Account = types.String{Value: arn.AccountID}
-	data.ID = types.String{Value: arn.String()}
-	data.Partition = types.String{Value: arn.Partition}
-	data.Region = types.String{Value: arn.Region}
-	data.Resource = types.String{Value: arn.Resource}
-	data.Service = types.String{Value: arn.Service}
+	data.Account = types.StringValue(arn.AccountID)
+	data.ID = types.StringValue(arn.String())
+	data.Partition = types.StringValue(arn.Partition)
+	data.Region = types.StringValue(arn.Region)
+	data.Resource = types.StringValue(arn.Resource)
+	data.Service = types.StringValue(arn.Service)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

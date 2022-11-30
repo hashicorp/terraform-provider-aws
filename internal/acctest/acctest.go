@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -247,6 +248,15 @@ func providerAccountID(provo *schema.Provider) string {
 // CheckDestroyNoop is a TestCheckFunc to be used as a TestCase's CheckDestroy when no such check can be made.
 func CheckDestroyNoop(_ *terraform.State) error {
 	return nil
+}
+
+// CheckSleep returns a TestCheckFunc that pauses the current goroutine for at least the duration d.
+func CheckSleep(t *testing.T, d time.Duration) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		time.Sleep(d)
+
+		return nil
+	}
 }
 
 // CheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID
@@ -1421,7 +1431,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 		})
 
 		if err != nil {
-			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
 		}
 
 		issueCertOutput, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
@@ -1437,7 +1447,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 		})
 
 		if err != nil {
-			return fmt.Errorf("error issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", arn, err)
 		}
 
 		// Wait for certificate status to become ISSUED.
@@ -1447,7 +1457,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 		})
 
 		if err != nil {
-			return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
 		}
 
 		getCertOutput, err := conn.GetCertificate(&acmpca.GetCertificateInput{
@@ -1456,7 +1466,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 		})
 
 		if err != nil {
-			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
 		}
 
 		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
@@ -1465,7 +1475,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 		})
 
 		if err != nil {
-			return fmt.Errorf("error importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", arn, err)
 		}
 
 		return err
@@ -1487,7 +1497,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 		})
 
 		if err != nil {
-			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
 		}
 
 		rootCertificateAuthorityArn := aws.StringValue(rootCertificateAuthority.Arn)
@@ -1505,7 +1515,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 		})
 
 		if err != nil {
-			return fmt.Errorf("error issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", arn, err)
 		}
 
 		// Wait for certificate status to become ISSUED.
@@ -1515,7 +1525,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 		})
 
 		if err != nil {
-			return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)
 		}
 
 		getCertOutput, err := conn.GetCertificate(&acmpca.GetCertificateInput{
@@ -1524,7 +1534,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 		})
 
 		if err != nil {
-			return fmt.Errorf("error getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
 		}
 
 		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
@@ -1534,7 +1544,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 		})
 
 		if err != nil {
-			return fmt.Errorf("error importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", arn, err)
 		}
 
 		return err

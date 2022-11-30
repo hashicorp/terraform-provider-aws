@@ -326,6 +326,7 @@ func ResourceInstance() *schema.Resource {
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
@@ -2621,8 +2622,10 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*instanceOpts,
 		Enabled: aws.Bool(d.Get("monitoring").(bool)),
 	}
 
-	opts.IAMInstanceProfile = &ec2.IamInstanceProfileSpecification{
-		Name: aws.String(d.Get("iam_instance_profile").(string)),
+	if v, ok := d.GetOk("iam_instance_profile"); ok {
+		opts.IAMInstanceProfile = &ec2.IamInstanceProfileSpecification{
+			Name: aws.String(v.(string)),
+		}
 	}
 
 	userData := d.Get("user_data").(string)
