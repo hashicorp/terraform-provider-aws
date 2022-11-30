@@ -3158,7 +3158,7 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-
+	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3168,17 +3168,17 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName, 1000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
 
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName, 2000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, 2000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
@@ -5863,7 +5863,7 @@ resource "aws_db_instance" "restore" {
 `, rName, monitoringInterval))
 }
 
-func testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
+func testAccInstanceConfig_iopsUpdate(rName string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -5879,14 +5879,14 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_iops = true
 }
 
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   identifier           = %[1]q
   engine               = data.aws_rds_engine_version.default.engine
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
 
