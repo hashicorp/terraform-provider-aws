@@ -3,6 +3,7 @@ package conns
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
@@ -61,7 +62,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -376,7 +376,7 @@ type AWSClient struct {
 	ChimeSDKMeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	ChimeSDKMessagingConn            *chimesdkmessaging.ChimeSDKMessaging
 	Cloud9Conn                       *cloud9.Cloud9
-	CloudControlConn                 *cloudcontrolapi.CloudControlApi
+	CloudControlClient               *cloudcontrol.Client
 	CloudDirectoryConn               *clouddirectory.CloudDirectory
 	CloudFormationConn               *cloudformation.CloudFormation
 	CloudFrontConn                   *cloudfront.CloudFront
