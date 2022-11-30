@@ -7,6 +7,7 @@ NOTES:
 ENHANCEMENTS:
 
 * resource/aws_api_gateway_deployment: Add import support ([#28030](https://github.com/hashicorp/terraform-provider-aws/issues/28030))
+* resource/aws_kinesisanalyticsv2_application: Add support for `FLINK-1_15` `runtime_environment` value ([#28099](https://github.com/hashicorp/terraform-provider-aws/issues/28099))
 * resource/aws_lambda_function: Add `snap_start` attribute ([#28097](https://github.com/hashicorp/terraform-provider-aws/issues/28097))
 
 BUG FIXES:
