@@ -5142,7 +5142,7 @@ func testAccInstanceConfig_orderableClassMySQL() string {
 	return testAccInstanceConfig_orderableClass("mysql", "general-public-license", "standard", mySQLPreferredInstanceClasses)
 }
 
-func testAccInstanceConfig_orderableClassMySQLGp3() string {
+func testAccInstanceConfig_orderableClassMySQLGP3() string {
 	return testAccInstanceConfig_orderableClass("mysql", "general-public-license", "gp3", mySQLPreferredInstanceClasses)
 }
 
