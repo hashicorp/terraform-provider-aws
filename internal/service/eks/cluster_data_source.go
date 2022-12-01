@@ -190,9 +190,14 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting certificate_authority: %w", err)
 	}
 
+	// cluster_id is only relevant for clusters on Outposts.
+	if cluster.OutpostConfig != nil {
+		d.Set("cluster_id", cluster.Id)
+	}
+
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 
-	if err := d.Set("enabled_cluster_log_types", flattenEnabledLogTypes(cluster.Logging)); err != nil {
+	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return fmt.Errorf("error setting enabled_cluster_log_types: %w", err)
 	}
 
@@ -202,17 +207,12 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting identity: %w", err)
 	}
 
-	if err := d.Set("kubernetes_network_config", flattenNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
+	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
 	}
 
-	if err := d.Set("outpost_config", flattenOutpostConfig(cluster.OutpostConfig)); err != nil {
+	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
 		return fmt.Errorf("error setting outpost_config: %w", err)
-	}
-
-	// Id is only relevant for clusters on Outposts
-	if cluster.OutpostConfig != nil {
-		d.Set("cluster_id", cluster.Id)
 	}
 
 	d.Set("name", cluster.Name)

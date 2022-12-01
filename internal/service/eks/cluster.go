@@ -291,15 +291,15 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	input := &eks.CreateClusterInput{
-		EncryptionConfig:   testAccClusterConfig_expandEncryption(d.Get("encryption_config").([]interface{})),
-		Logging:            expandLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
+		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
+		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
-		ResourcesVpcConfig: testAccClusterConfig_expandVPCRequest(d.Get("vpc_config").([]interface{})),
+		ResourcesVpcConfig: expandVPCConfigRequestForCreate(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 	}
 
 	if _, ok := d.GetOk("kubernetes_network_config"); ok {
-		input.KubernetesNetworkConfig = expandNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+		input.KubernetesNetworkConfig = expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
 	}
 
 	if _, ok := d.GetOk("outpost_config"); ok {
@@ -394,9 +394,14 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting certificate_authority: %w", err)
 	}
 
+	// cluster_id is only relevant for clusters on Outposts.
+	if cluster.OutpostConfig != nil {
+		d.Set("cluster_id", cluster.Id)
+	}
+
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 
-	if err := d.Set("enabled_cluster_log_types", flattenEnabledLogTypes(cluster.Logging)); err != nil {
+	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return fmt.Errorf("error setting enabled_cluster_log_types: %w", err)
 	}
 
@@ -410,17 +415,12 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting identity: %w", err)
 	}
 
-	if err := d.Set("kubernetes_network_config", flattenNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
+	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
 	}
 
-	if err := d.Set("outpost_config", flattenOutpostConfig(cluster.OutpostConfig)); err != nil {
+	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
 		return fmt.Errorf("error setting outpost_config: %w", err)
-	}
-
-	// Id is only relevant for clusters on Outposts
-	if cluster.OutpostConfig != nil {
-		d.Set("cluster_id", cluster.Id)
 	}
 
 	d.Set("name", cluster.Name)
@@ -479,7 +479,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 1 {
 			input := &eks.AssociateEncryptionConfigInput{
 				ClusterName:      aws.String(d.Id()),
-				EncryptionConfig: testAccClusterConfig_expandEncryption(d.Get("encryption_config").([]interface{})),
+				EncryptionConfig: expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
 			}
 
 			log.Printf("[DEBUG] Associating EKS Cluster (%s) encryption config: %s", d.Id(), input)
@@ -501,7 +501,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enabled_cluster_log_types") {
 		input := &eks.UpdateClusterConfigInput{
-			Logging: expandLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
+			Logging: expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 			Name:    aws.String(d.Id()),
 		}
 
@@ -524,7 +524,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
 		input := &eks.UpdateClusterConfigInput{
 			Name:               aws.String(d.Id()),
-			ResourcesVpcConfig: testAccClusterConfig_expandVPCUpdateRequest(d.Get("vpc_config").([]interface{})),
+			ResourcesVpcConfig: expandVPCConfigRequestForUpdate(d.Get("vpc_config").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] Updating EKS Cluster (%s) VPC config: %s", d.Id(), input)
@@ -606,7 +606,34 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func testAccClusterConfig_expandEncryption(tfList []interface{}) []*eks.EncryptionConfig {
+func FindClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
+	input := &eks.DescribeClusterInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.DescribeCluster(input)
+
+	// Sometimes the EKS API returns the ResourceNotFound error in this form:
+	// ClientException: No cluster found for name: tf-acc-test-0o1f8
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Cluster == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Cluster, nil
+}
+
+func expandEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -694,7 +721,7 @@ func expandControlPlanePlacement(tfList []interface{}) *eks.ControlPlanePlacemen
 	return apiObject
 }
 
-func testAccClusterConfig_expandVPCRequest(l []interface{}) *eks.VpcConfigRequest {
+func expandVPCConfigRequestForCreate(l []interface{}) *eks.VpcConfigRequest {
 	if len(l) == 0 {
 		return nil
 	}
@@ -715,7 +742,7 @@ func testAccClusterConfig_expandVPCRequest(l []interface{}) *eks.VpcConfigReques
 	return vpcConfigRequest
 }
 
-func testAccClusterConfig_expandVPCUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
+func expandVPCConfigRequestForUpdate(l []interface{}) *eks.VpcConfigRequest {
 	if len(l) == 0 {
 		return nil
 	}
@@ -734,7 +761,7 @@ func testAccClusterConfig_expandVPCUpdateRequest(l []interface{}) *eks.VpcConfig
 	return vpcConfigRequest
 }
 
-func expandNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConfigRequest {
+func expandKubernetesNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConfigRequest {
 	tfMap, ok := tfList[0].(map[string]interface{})
 
 	if !ok {
@@ -754,7 +781,7 @@ func expandNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConf
 	return apiObject
 }
 
-func expandLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
+func expandLogging(vEnabledLogTypes *schema.Set) *eks.Logging {
 	vEksLogTypes := []interface{}{}
 	for _, eksLogType := range eks.LogType_Values() {
 		vEksLogTypes = append(vEksLogTypes, eksLogType)
@@ -860,7 +887,7 @@ func flattenVPCConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]int
 	return []map[string]interface{}{m}
 }
 
-func flattenEnabledLogTypes(logging *eks.Logging) *schema.Set {
+func flattenLogging(logging *eks.Logging) *schema.Set {
 	enabledLogTypes := []*string{}
 
 	if logging != nil {
@@ -877,7 +904,7 @@ func flattenEnabledLogTypes(logging *eks.Logging) *schema.Set {
 	return flex.FlattenStringSet(enabledLogTypes)
 }
 
-func flattenNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []interface{} {
+func flattenKubernetesNetworkConfigResponse(apiObject *eks.KubernetesNetworkConfigResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -891,21 +918,21 @@ func flattenNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []inte
 	return []interface{}{tfMap}
 }
 
-func flattenOutpostConfig(apiObject *eks.OutpostConfigResponse) []interface{} {
+func flattenOutpostConfigResponse(apiObject *eks.OutpostConfigResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
 		"control_plane_instance_type": aws.StringValue(apiObject.ControlPlaneInstanceType),
-		"control_plane_placement":     flattenControlPlanePlacement(apiObject.ControlPlanePlacement),
+		"control_plane_placement":     flattenControlPlanePlacementResponse(apiObject.ControlPlanePlacement),
 		"outpost_arns":                aws.StringValueSlice(apiObject.OutpostArns),
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenControlPlanePlacement(apiObject *eks.ControlPlanePlacementResponse) []interface{} {
+func flattenControlPlanePlacementResponse(apiObject *eks.ControlPlanePlacementResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

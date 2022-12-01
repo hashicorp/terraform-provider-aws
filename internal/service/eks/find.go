@@ -118,36 +118,6 @@ func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *
 	return version, nil
 }
 
-func FindClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
-	input := &eks.DescribeClusterInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.DescribeCluster(input)
-
-	// Sometimes the EKS API returns the ResourceNotFound error in this form:
-	// ClientException: No cluster found for name: tf-acc-test-0o1f8
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Cluster == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.Cluster, nil
-}
-
 func FindClusterUpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:     aws.String(name),
