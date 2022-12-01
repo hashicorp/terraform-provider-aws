@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_redshiftserverless_workgroup: Wait on `MODIFYING` as well on deletion
+resource/aws_redshiftserverless_workgroup: Wait on `MODIFYING` status on resource Delete
 ```
