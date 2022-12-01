@@ -180,7 +180,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|Fms)"
+            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms)"
     severity: WARNING
   - id: caps3-in-const-name
     languages:
@@ -194,7 +194,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|Fms)"
+            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms)"
     severity: WARNING
   - id: caps3-in-var-name
     languages:
@@ -208,7 +208,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|Fms)"
+            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms)"
     severity: WARNING
   - id: caps4-in-func-name
     languages:
@@ -222,7 +222,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|FSX|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps4-in-const-name
     languages:
@@ -236,7 +236,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|FSX|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps4-in-var-name
     languages:
@@ -250,7 +250,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|FSX|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps5-in-func-name
     languages:
