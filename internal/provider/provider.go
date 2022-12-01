@@ -153,6 +153,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
@@ -2254,6 +2255,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			globalaccelerator.ServicePackageData,
 			medialive.ServicePackageData,
 			meta.ServicePackageData,
+			resourceexplorer2.ServicePackageData,
 			simpledb.ServicePackageData,
 			sts.ServicePackageData,
 		},
