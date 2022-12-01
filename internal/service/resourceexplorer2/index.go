@@ -24,11 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const indexTimeout = 1 * time.Hour
+
 func init() {
 	registerFrameworkResourceFactory(newResourceIndex)
 }
 
-// newResourceSecurityGroupIngressRule instantiates a new Resource for the aws_resourceexplorer2_index resource.
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceIndex{}, nil
 }
@@ -37,13 +38,10 @@ type resourceIndex struct {
 	framework.ResourceWithConfigure
 }
 
-// Metadata should return the full name of the resource, such as
-// examplecloud_thing.
 func (r *resourceIndex) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_resourceexplorer2_index"
 }
 
-// GetSchema returns the schema for this resource.
 func (r *resourceIndex) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
@@ -72,8 +70,6 @@ func (r *resourceIndex) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnosti
 
 // TODO Timeouts
 
-// Create is called when the provider must create a new resource.
-// Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
 func (r *resourceIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceIndexData
 
@@ -107,14 +103,31 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	arn := aws.ToString(output.Arn)
 	data.ID = types.StringValue(arn)
 
-	if _, err := waitIndexCreated(ctx, conn, -1); err != nil {
+	if _, err := waitIndexCreated(ctx, conn, indexTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
 	if data.Type.ValueString() == string(awstypes.IndexTypeAggregator) {
-		// TODO AGGREGATOR type
+		input := &resourceexplorer2.UpdateIndexTypeInput{
+			Arn:  flex.StringFromFramework(ctx, data.ID),
+			Type: awstypes.IndexTypeAggregator,
+		}
+
+		_, err := conn.UpdateIndexType(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", data.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitIndexUpdated(ctx, conn, indexTimeout); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", data.ID.ValueString()), err.Error())
+
+			return
+		}
 	}
 
 	// Set values for unknowns.
@@ -124,8 +137,6 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// Read is called when the provider must read resource values in order to update state.
-// Planned state values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data resourceIndexData
 
@@ -169,17 +180,55 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// Update is called to update the state of the resource.
-// Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
 func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// TODO
+	var old, new resourceIndexData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().ResourceExplorer2Client
+
+	if !new.Type.Equal(old.Type) {
+		input := &resourceexplorer2.UpdateIndexTypeInput{
+			Arn:  flex.StringFromFramework(ctx, new.ID),
+			Type: awstypes.IndexType(new.Type.ValueString()),
+		}
+
+		_, err := conn.UpdateIndexType(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitIndexUpdated(ctx, conn, indexTimeout); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
+	if !new.TagsAll.Equal(old.TagsAll) {
+		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s) tags", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-// Delete is called when the provider must delete the resource.
-// Config values may be read from the DeleteRequest.
-//
-// If execution completes without error, the framework will automatically call DeleteResponse.State.RemoveResource(),
-// so it can be omitted from provider logic.
 func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data resourceIndexData
 
@@ -205,19 +254,19 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	if _, err := waitIndexDeleted(ctx, conn, -1); err != nil {
+	if _, err := waitIndexDeleted(ctx, conn, indexTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) delete", data.ID.ValueString()), err.Error())
 
 		return
 	}
 }
 
-// ImportState is called when the provider must import the state of a resource instance.
-// This method must return enough state so the Read method can properly refresh the full resource.
-//
-// If setting an attribute with the import identifier, it is recommended to use the ImportStatePassthroughID() call in this method.
 func (r *resourceIndex) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+}
+
+func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceIndexData struct {
