@@ -118,35 +118,6 @@ func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *
 	return version, nil
 }
 
-func FindClusterUpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, error) {
-	input := &eks.DescribeUpdateInput{
-		Name:     aws.String(name),
-		UpdateId: aws.String(id),
-	}
-
-	output, err := conn.DescribeUpdate(input)
-
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Update == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.Update, nil
-}
-
 func FindFargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
 	input := &eks.DescribeFargateProfileInput{
 		ClusterName:        aws.String(clusterName),

@@ -1,6 +1,7 @@
 package eks_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -41,6 +42,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
+					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
 					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity.0.oidc.#", "1"),
@@ -673,14 +675,13 @@ func testAccCheckClusterExists(resourceName string, cluster *eks.Cluster) resour
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No EKS Cluster ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := tfeks.FindClusterByName(conn, rs.Primary.ID)
+		output, err := tfeks.FindClusterByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -700,7 +701,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		_, err := tfeks.FindClusterByName(conn, rs.Primary.ID)
+		_, err := tfeks.FindClusterByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
