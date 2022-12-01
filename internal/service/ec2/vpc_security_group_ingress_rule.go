@@ -140,13 +140,7 @@ func (r *resourceSecurityGroupRule) GetSchema(context.Context) (tfsdk.Schema, di
 					int64validator.Between(-1, 65535),
 				},
 			},
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.UseStateForUnknown(),
-				},
-			},
+			"id": framework.IDAttribute(),
 			"ip_protocol": {
 				Type:     types.StringType,
 				Required: true,
