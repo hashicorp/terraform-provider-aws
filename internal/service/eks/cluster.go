@@ -675,6 +675,10 @@ func expandOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
 }
 
 func expandControlPlanePlacement(tfList []interface{}) *eks.ControlPlanePlacementRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
 	tfMap, ok := tfList[0].(map[string]interface{})
 
 	if !ok {

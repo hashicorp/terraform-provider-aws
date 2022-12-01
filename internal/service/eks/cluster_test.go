@@ -620,9 +620,42 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				Config: testAccClusterConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_Outpost_placement(t *testing.T) {
+	var cluster eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	controlPlaneInstanceType := "m5d.large"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_outpostPlacement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_placement.#", "1"),
 				),
 			},
 			{
@@ -1048,12 +1081,14 @@ data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
 
-data "aws_outposts_outposts" "test" {}
+data "aws_outposts_outpost" "test" {
+	id = "op-XXXXXXXX"
+} 
 
 data "aws_subnets" test {
   filter {
     name   = "outpost-arn"
-    values = [tolist(data.aws_outposts_outposts.test.arns)[0]]
+    values = [data.aws_outposts_outpost.test.arn]
   }
 }
 
@@ -1063,13 +1098,56 @@ resource "aws_eks_cluster" "test" {
 
   outpost_config {
     control_plane_instance_type = "m5d.large"
-    outpost_arns                = [tolist(data.aws_outposts_outposts.test.arns)[0]]
+    outpost_arns                = [data.aws_outposts_outpost.test.arn]
   }
 
   vpc_config {
-    endpoint_private_access = true
+	endpoint_private_access = true
     endpoint_public_access  = false
     subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+  }
+}
+`, rName))
+}
+
+func testAccClusterConfig_outpostPlacement(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+data "aws_iam_role" "test" {
+  name = "AmazonEKSLocalOutpostClusterRole"
+}
+	
+data "aws_outposts_outpost" "test" {
+  id = "op-XXXXXXXX"
+} 
+
+data "aws_subnets" test {
+  filter {
+	name   = "outpost-arn"
+	values = [data.aws_outposts_outpost.test.arn]
+  }
+}
+
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = data.aws_iam_role.test.arn
+
+  outpost_config {
+	control_plane_instance_type = "m5d.large"
+	control_plane_placement {
+	  group_name = aws_placement_group.test.name
+	}
+	outpost_arns                = [data.aws_outposts_outpost.test.arn]
+  }
+
+  vpc_config {
+	endpoint_private_access = true
+	endpoint_public_access  = false
+	subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
   }
 }
 `, rName))
