@@ -2,10 +2,12 @@ package acctest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -29,10 +31,16 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
 
-	schema, diags := resource.GetSchema(ctx)
+	var schema tfsdk.Schema
+	var diags diag.Diagnostics
+	if v, ok := resource.(fwresource.ResourceWithGetSchema); ok {
+		schema, diags = v.GetSchema(ctx)
 
-	if diags.HasError() {
-		return fwdiag.DiagnosticsError(diags)
+		if diags.HasError() {
+			return fwdiag.DiagnosticsError(diags)
+		}
+	} else {
+		return errors.New("resource does not implement GetSchema method")
 	}
 
 	// Construct a simple Framework State that contains just top-level attributes.
