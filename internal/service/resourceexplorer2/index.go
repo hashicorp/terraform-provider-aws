@@ -150,7 +150,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
-	output, err := FindIndex(ctx, conn)
+	output, err := findIndex(ctx, conn)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -277,7 +277,7 @@ type resourceIndexData struct {
 	Type    types.String `tfsdk:"type"`
 }
 
-func FindIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceexplorer2.GetIndexOutput, error) {
+func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceexplorer2.GetIndexOutput, error) {
 	input := &resourceexplorer2.GetIndexInput{}
 
 	output, err := conn.GetIndex(ctx, input)
@@ -309,7 +309,7 @@ func FindIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 
 func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkresource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIndex(ctx, conn)
+		output, err := findIndex(ctx, conn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
