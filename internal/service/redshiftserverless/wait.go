@@ -72,6 +72,7 @@ func waitWorkgroupAvailable(conn *redshiftserverless.RedshiftServerless, name st
 func waitWorkgroupDeleted(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
+			redshiftserverless.WorkgroupStatusModifying,
 			redshiftserverless.WorkgroupStatusDeleting,
 		},
 		Target:  []string{},
@@ -123,6 +124,46 @@ func waitEndpointAccessDeleted(conn *redshiftserverless.RedshiftServerless, name
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*redshiftserverless.EndpointAccess); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotAvailable(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Snapshot, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			redshiftserverless.SnapshotStatusCreating,
+		},
+		Target: []string{
+			redshiftserverless.SnapshotStatusAvailable,
+		},
+		Refresh: statusSnapshot(conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshiftserverless.Snapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotDeleted(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Snapshot, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			redshiftserverless.SnapshotStatusAvailable,
+		},
+		Target:  []string{},
+		Refresh: statusSnapshot(conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshiftserverless.Snapshot); ok {
 		return output, err
 	}
 

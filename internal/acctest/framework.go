@@ -3,6 +3,8 @@ package acctest
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
@@ -11,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
@@ -30,20 +32,30 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	schema, diags := resource.GetSchema(ctx)
 
 	if diags.HasError() {
-		return errs.NewDiagnosticsError(diags)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
-	// Simple Terraform State that contains just the resource ID.
+	// Construct a simple Framework State that contains just top-level attributes.
 	state := tfsdk.State{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
-	state.SetAttribute(ctx, path.Root("id"), is.ID)
+
+	for name, v := range is.Attributes {
+		if strings.Contains(name, ".") {
+			continue
+		}
+
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(name), v)); err != nil {
+			log.Printf("[WARN] %s(%s): %s", name, v, err)
+		}
+	}
+
 	response := fwresource.DeleteResponse{}
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	if response.Diagnostics.HasError() {
-		return errs.NewDiagnosticsError(response.Diagnostics)
+		return fwdiag.DiagnosticsError(response.Diagnostics)
 	}
 
 	return nil

@@ -26,6 +26,7 @@ const (
 const (
 	storageTypeStandard = "standard"
 	storageTypeGP2      = "gp2"
+	storageTypeGP3      = "gp3"
 	storageTypeIO1      = "io1"
 )
 
@@ -33,6 +34,7 @@ func StorageType_Values() []string {
 	return []string{
 		storageTypeStandard,
 		storageTypeGP2,
+		storageTypeGP3,
 		storageTypeIO1,
 	}
 }

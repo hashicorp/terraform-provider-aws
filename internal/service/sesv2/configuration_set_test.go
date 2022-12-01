@@ -254,7 +254,7 @@ func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 }
 
 func testAccCheckConfigurationSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sesv2_configuration_set" {
@@ -288,7 +288,7 @@ func testAccCheckConfigurationSetExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSet, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 
 		_, err := tfsesv2.FindConfigurationSetByID(context.Background(), conn, rs.Primary.ID)
 

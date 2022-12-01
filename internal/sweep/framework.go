@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -33,8 +34,8 @@ func NewSweepFrameworkResource(factory func(context.Context) (fwresource.Resourc
 	}
 }
 
-func (sr *SweepFrameworkResource) Delete(ctx context.Context, rc RetryConfig) error {
-	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		err := DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
 
 		if err != nil {
@@ -47,14 +48,13 @@ func (sr *SweepFrameworkResource) Delete(ctx context.Context, rc RetryConfig) er
 		}
 
 		return nil
-	})
+	}, optFns...)
 
 	if tfresource.TimedOut(err) {
 		err = DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
 	}
 
 	return err
-
 }
 
 func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) error {
@@ -71,7 +71,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	schema, diags := resource.GetSchema(ctx)
 
 	if diags.HasError() {
-		return errs.NewDiagnosticsError(diags)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	// Simple Terraform State that contains just the resource ID.
@@ -84,7 +84,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	if response.Diagnostics.HasError() {
-		return errs.NewDiagnosticsError(response.Diagnostics)
+		return fwdiag.DiagnosticsError(response.Diagnostics)
 	}
 
 	return nil

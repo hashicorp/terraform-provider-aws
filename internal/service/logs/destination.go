@@ -1,14 +1,15 @@
 package logs
 
 import (
-	"fmt"
+	"context"
+	"log"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,19 +19,20 @@ import (
 
 func ResourceDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDestinationPut,
-		Update: resourceDestinationPut,
-		Read:   resourceDestinationRead,
-		Delete: resourceDestinationDelete,
+		CreateWithoutTimeout: resourceDestinationPut,
+		ReadWithoutTimeout:   resourceDestinationRead,
+		UpdateWithoutTimeout: resourceDestinationPut,
+		DeleteWithoutTimeout: resourceDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -40,117 +42,115 @@ func ResourceDestination() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[^:*]*`), ""),
 				),
 			},
-
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"target_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
-func resourceDestinationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
 	name := d.Get("name").(string)
-	roleArn := d.Get("role_arn").(string)
-	targetArn := d.Get("target_arn").(string)
-
-	params := &cloudwatchlogs.PutDestinationInput{
+	input := &cloudwatchlogs.PutDestinationInput{
 		DestinationName: aws.String(name),
-		RoleArn:         aws.String(roleArn),
-		TargetArn:       aws.String(targetArn),
+		RoleArn:         aws.String(d.Get("role_arn").(string)),
+		TargetArn:       aws.String(d.Get("target_arn").(string)),
 	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 3*time.Minute, func() (interface{}, error) {
+		return conn.PutDestinationWithContext(ctx, input)
+	}, cloudwatchlogs.ErrCodeInvalidParameterException)
 
-	var err error
-	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
-		_, err = conn.PutDestination(params)
-
-		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeInvalidParameterException) {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutDestination(params)
-	}
 	if err != nil {
-		return fmt.Errorf("Error putting cloudwatch log destination: %s", err)
+		return diag.Errorf("putting CloudWatch Logs Destination (%s): %s", name, err)
 	}
-	d.SetId(name)
 
-	return resourceDestinationRead(d, meta)
+	if d.IsNewResource() {
+		d.SetId(aws.StringValue(outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination.DestinationName))
+	}
+
+	return resourceDestinationRead(ctx, d, meta)
 }
 
-func resourceDestinationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	destination, exists, err := LookupDestination(conn, d.Id(), nil)
-	if err != nil {
-		return err
-	}
+	destination, err := FindDestinationByName(ctx, conn, d.Id())
 
-	if !exists {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Logs Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return diag.Errorf("reading CloudWatch Logs Destination (%s): %s", d.Id(), err)
+	}
+
 	d.Set("arn", destination.Arn)
+	d.Set("name", destination.DestinationName)
 	d.Set("role_arn", destination.RoleArn)
 	d.Set("target_arn", destination.TargetArn)
 
 	return nil
 }
 
-func resourceDestinationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	params := &cloudwatchlogs.DeleteDestinationInput{
+	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
+	_, err := conn.DeleteDestinationWithContext(ctx, &cloudwatchlogs.DeleteDestinationInput{
 		DestinationName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+		return nil
 	}
-	_, err := conn.DeleteDestination(params)
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Destination with name %s", d.Id())
+		return diag.Errorf("deleting CloudWatch Logs Destination (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func LookupDestination(conn *cloudwatchlogs.CloudWatchLogs,
-	name string, nextToken *string) (*cloudwatchlogs.Destination, bool, error) {
+func FindDestinationByName(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.Destination, error) {
 	input := &cloudwatchlogs.DescribeDestinationsInput{
 		DestinationNamePrefix: aws.String(name),
-		NextToken:             nextToken,
 	}
-	resp, err := conn.DescribeDestinations(input)
-	if err != nil {
-		return nil, true, err
-	}
+	var output *cloudwatchlogs.Destination
 
-	for _, destination := range resp.Destinations {
-		if aws.StringValue(destination.DestinationName) == name {
-			return destination, true, nil
+	err := conn.DescribeDestinationsPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeDestinationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.Destinations {
+			if aws.StringValue(v.DestinationName) == name {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	if resp.NextToken != nil {
-		return LookupDestination(conn, name, resp.NextToken)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return nil, false, nil
+	return output, nil
 }

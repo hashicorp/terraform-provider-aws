@@ -116,19 +116,6 @@ func ResourceUserPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"custom_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"estimated_number_of_users": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"auto_verified_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -140,6 +127,16 @@ func ResourceUserPool() *schema.Resource {
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"custom_domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deletion_protection": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cognitoidentityprovider.DeletionProtectionTypeInactive,
+				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.DeletionProtectionType_Values(), false),
 			},
 			"device_configuration": {
 				Type:     schema.TypeList,
@@ -157,6 +154,10 @@ func ResourceUserPool() *schema.Resource {
 						},
 					},
 				},
+			},
+			"domain": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"email_configuration": {
 				Type:             schema.TypeList,
@@ -209,6 +210,10 @@ func ResourceUserPool() *schema.Resource {
 				Computed:      true,
 				ValidateFunc:  validUserPoolEmailVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.email_message"},
+			},
+			"estimated_number_of_users": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
@@ -463,6 +468,12 @@ func ResourceUserPool() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"sns_region": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidRegionName,
+						},
 					},
 				},
 			},
@@ -642,6 +653,10 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		if ok && config != nil {
 			params.AdminCreateUserConfig = expandUserPoolAdminCreateUserConfig(config)
 		}
+	}
+
+	if v, ok := d.GetOk("deletion_protection"); ok {
+		params.DeletionProtection = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("device_configuration"); ok {
@@ -879,6 +894,10 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("sms_authentication_message", userPool.SmsAuthenticationMessage)
 	}
 
+	if userPool.DeletionProtection != nil {
+		d.Set("deletion_protection", userPool.DeletionProtection)
+	}
+
 	if err := d.Set("device_configuration", flattenUserPoolDeviceConfiguration(userPool.DeviceConfiguration)); err != nil {
 		return fmt.Errorf("failed setting device_configuration: %w", err)
 	}
@@ -1052,6 +1071,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		"user_pool_add_ons",
 		"verification_message_template",
 		"account_recovery_setting",
+		"deletion_protection",
 	) {
 		params := &cognitoidentityprovider.UpdateUserPoolInput{
 			UserPoolId: aws.String(d.Id()),
@@ -1074,6 +1094,10 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 				params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 			}
+		}
+
+		if v, ok := d.GetOk("deletion_protection"); ok {
+			params.DeletionProtection = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("device_configuration"); ok {
@@ -1274,6 +1298,10 @@ func expandSMSConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsCo
 		apiObject.SnsCallerArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["sns_region"].(string); ok && v != "" {
+		apiObject.SnsRegion = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1306,6 +1334,10 @@ func flattenSMSConfiguration(apiObject *cognitoidentityprovider.SmsConfiguration
 
 	if v := apiObject.SnsCallerArn; v != nil {
 		tfMap["sns_caller_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SnsRegion; v != nil {
+		tfMap["sns_region"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

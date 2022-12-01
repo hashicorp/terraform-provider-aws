@@ -24,7 +24,7 @@ func TestAccSESV2DedicatedIPPool_basic(t *testing.T) {
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
@@ -51,7 +51,7 @@ func TestAccSESV2DedicatedIPPool_disappears(t *testing.T) {
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
@@ -68,12 +68,47 @@ func TestAccSESV2DedicatedIPPool_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSESV2DedicatedIPPool_scalingMode(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_dedicated_ip_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDedicatedIPPoolConfig_scalingMode(rName, string(types.ScalingModeManaged)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDedicatedIPPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_mode", string(types.ScalingModeManaged)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDedicatedIPPoolConfig_scalingMode(rName, string(types.ScalingModeStandard)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDedicatedIPPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_mode", string(types.ScalingModeStandard)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
@@ -116,7 +151,7 @@ func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 }
 
 func testAccCheckDedicatedIPPoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -149,7 +184,7 @@ func testAccCheckDedicatedIPPoolExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPPool, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 		ctx := context.Background()
 
 		_, err := tfsesv2.FindDedicatedIPPoolByID(ctx, conn, rs.Primary.ID)
@@ -161,8 +196,8 @@ func testAccCheckDedicatedIPPoolExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+func testAccPreCheckDedicatedIPPool(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 	ctx := context.Background()
 
 	_, err := conn.ListDedicatedIpPools(ctx, &sesv2.ListDedicatedIpPoolsInput{})
@@ -180,6 +215,15 @@ resource "aws_sesv2_dedicated_ip_pool" "test" {
   pool_name = %[1]q
 }
 `, rName)
+}
+
+func testAccDedicatedIPPoolConfig_scalingMode(rName, scalingMode string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_dedicated_ip_pool" "test" {
+  pool_name    = %[1]q
+  scaling_mode = %[2]q
+}
+`, rName, scalingMode)
 }
 
 func testAccDedicatedIPPoolConfig_tags1(rName, tagKey1, tagValue1 string) string {

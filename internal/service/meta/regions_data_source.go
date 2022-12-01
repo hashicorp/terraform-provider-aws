@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
@@ -24,7 +24,7 @@ func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type dataSourceRegions struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -59,15 +59,6 @@ func (d *dataSourceRegions) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceRegions) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -79,15 +70,14 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
+	conn := d.Meta().EC2Conn
+
 	input := &ec2.DescribeRegionsInput{
-		Filters: tfec2.BuildCustomFilters(ctx, data.Filters),
+		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),
+		Filters:    tfec2.BuildCustomFilters(ctx, data.Filters),
 	}
 
-	if !data.AllRegions.IsNull() {
-		input.AllRegions = aws.Bool(data.AllRegions.Value)
-	}
-
-	output, err := d.meta.EC2Conn.DescribeRegionsWithContext(ctx, input)
+	output, err := conn.DescribeRegionsWithContext(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Regions", err.Error())
@@ -100,7 +90,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		names = append(names, aws.StringValue(v.RegionName))
 	}
 
-	data.ID = types.String{Value: d.meta.Partition}
+	data.ID = types.StringValue(d.Meta().Partition)
 	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

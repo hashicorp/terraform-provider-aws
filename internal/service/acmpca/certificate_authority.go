@@ -30,6 +30,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 		Read:   resourceCertificateAuthorityRead,
 		Update: resourceCertificateAuthorityUpdate,
 		Delete: resourceCertificateAuthorityDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set(
@@ -40,9 +41,11 @@ func ResourceCertificateAuthority() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
 		},
+
 		MigrateState:  resourceCertificateAuthorityMigrateState,
 		SchemaVersion: 1,
 
@@ -63,28 +66,16 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key_algorithm": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								acmpca.KeyAlgorithmEcPrime256v1,
-								acmpca.KeyAlgorithmEcSecp384r1,
-								acmpca.KeyAlgorithmRsa2048,
-								acmpca.KeyAlgorithmRsa4096,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(acmpca.KeyAlgorithm_Values(), false),
 						},
 						"signing_algorithm": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								acmpca.SigningAlgorithmSha256withecdsa,
-								acmpca.SigningAlgorithmSha256withrsa,
-								acmpca.SigningAlgorithmSha384withecdsa,
-								acmpca.SigningAlgorithmSha384withrsa,
-								acmpca.SigningAlgorithmSha512withecdsa,
-								acmpca.SigningAlgorithmSha512withrsa,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(acmpca.SigningAlgorithm_Values(), false),
 						},
 						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_ASN1Subject.html
 						"subject": {
@@ -199,6 +190,15 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"permanent_deletion_time_in_days": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
+				ValidateFunc: validation.IntBetween(
+					certificateAuthorityPermanentDeletionTimeInDaysMin,
+					certificateAuthorityPermanentDeletionTimeInDaysMax,
+				),
+			},
 			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
 			"revocation_configuration": {
 				Type:     schema.TypeList,
@@ -293,26 +293,20 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Computed:   true,
 				Deprecated: "The reported value of the \"status\" attribute is often inaccurate. Use the resource's \"enabled\" attribute to explicitly set status.",
 			},
-			"permanent_deletion_time_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
-				ValidateFunc: validation.IntBetween(
-					certificateAuthorityPermanentDeletionTimeInDaysMin,
-					certificateAuthorityPermanentDeletionTimeInDaysMax,
-				),
-			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  acmpca.CertificateAuthorityTypeSubordinate,
-				ValidateFunc: validation.StringInSlice([]string{
-					acmpca.CertificateAuthorityTypeRoot,
-					acmpca.CertificateAuthorityTypeSubordinate,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      acmpca.CertificateAuthorityTypeSubordinate,
+				ValidateFunc: validation.StringInSlice(acmpca.CertificateAuthorityType_Values(), false),
+			},
+			"usage_mode": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.CertificateAuthorityUsageMode_Values(), false),
 			},
 		},
 
@@ -330,6 +324,10 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
 		IdempotencyToken:                  aws.String(resource.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("usage_mode"); ok {
+		input.UsageMode = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -396,22 +394,19 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("arn", certificateAuthority.Arn)
-
 	if err := d.Set("certificate_authority_configuration", flattenCertificateAuthorityConfiguration(certificateAuthority.CertificateAuthorityConfiguration)); err != nil {
-		return fmt.Errorf("setting tags: %s", err)
+		return fmt.Errorf("setting certificate_authority_configuration: %w", err)
 	}
-
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
-
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
-		return fmt.Errorf("setting tags: %s", err)
+		return fmt.Errorf("setting revocation_configuration: %w", err)
 	}
-
 	d.Set("serial", certificateAuthority.Serial)
 	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
+	d.Set("usage_mode", certificateAuthority.UsageMode)
 
 	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Id()),

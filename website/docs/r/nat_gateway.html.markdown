@@ -44,6 +44,7 @@ The following arguments are supported:
 
 * `allocation_id` - (Optional) The Allocation ID of the Elastic IP address for the gateway. Required for `connectivity_type` of `public`.
 * `connectivity_type` - (Optional) Connectivity type for the gateway. Valid values are `private` and `public`. Defaults to `public`.
+* `private_ip` - (Optional) The private IPv4 address to assign to the NAT gateway. If you don't provide an address, a private IPv4 address will be automatically assigned.
 * `subnet_id` - (Required) The Subnet ID of the subnet in which to place the gateway.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -52,11 +53,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the NAT Gateway.
-* `allocation_id` - The Allocation ID of the Elastic IP address for the gateway.
-* `subnet_id` - The Subnet ID of the subnet in which the NAT gateway is placed.
-* `network_interface_id` - The ENI ID of the network interface created by the NAT gateway.
-* `private_ip` - The private IP address of the NAT Gateway.
-* `public_ip` - The public IP address of the NAT Gateway.
+* `network_interface_id` - The ID of the network interface associated with the NAT gateway.
+* `public_ip` - The Elastic IP address associated with the NAT gateway.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

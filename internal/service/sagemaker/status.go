@@ -143,6 +143,10 @@ func StatusDomain(conn *sagemaker.SageMaker, domainID string) resource.StateRefr
 			return nil, domainStatusNotFound, nil
 		}
 
+		if aws.StringValue(output.Status) == sagemaker.DomainStatusFailed {
+			return output, sagemaker.DomainStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }
@@ -201,6 +205,10 @@ func StatusUserProfile(conn *sagemaker.SageMaker, domainID, userProfileName stri
 			return nil, userProfileStatusNotFound, nil
 		}
 
+		if aws.StringValue(output.Status) == sagemaker.UserProfileStatusFailed {
+			return output, sagemaker.UserProfileStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }
@@ -229,6 +237,10 @@ func StatusApp(conn *sagemaker.SageMaker, domainID, userProfileName, appType, ap
 			return nil, appStatusNotFound, nil
 		}
 
+		if aws.StringValue(output.Status) == sagemaker.AppStatusFailed {
+			return output, sagemaker.AppStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }
@@ -246,5 +258,21 @@ func StatusProject(conn *sagemaker.SageMaker, name string) resource.StateRefresh
 		}
 
 		return output, aws.StringValue(output.ProjectStatus), nil
+	}
+}
+
+func StatusWorkforce(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindWorkforceByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }

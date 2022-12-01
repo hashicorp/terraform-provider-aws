@@ -333,6 +333,8 @@ service/ipam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_vpc_ipam'
 service/ivs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ivs_'
+service/ivschat:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ivschat_'
 service/kafka:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_msk_'
 service/kafkaconnect:
@@ -501,6 +503,8 @@ service/rekognition:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rekognition_'
 service/resiliencehub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resiliencehub_'
+service/resourceexplorer2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourceexplorer2_'
 service/resourcegroups:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourcegroups_'
 service/resourcegroupstaggingapi:
@@ -541,6 +545,8 @@ service/sagemakerruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemakerruntime_'
 service/savingsplans:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_savingsplans_'
+service/scheduler:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_scheduler_'
 service/schemas:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_schemas_'
 service/secretsmanager:

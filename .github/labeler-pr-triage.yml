@@ -555,6 +555,9 @@ service/ipam:
 service/ivs:
   - 'internal/service/ivs/**/*'
   - 'website/**/ivs_*'
+service/ivschat:
+  - 'internal/service/ivschat/**/*'
+  - 'website/**/ivschat_*'
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
@@ -815,6 +818,9 @@ service/rekognition:
 service/resiliencehub:
   - 'internal/service/resiliencehub/**/*'
   - 'website/**/resiliencehub_*'
+service/resourceexplorer2:
+  - 'internal/service/resourceexplorer2/**/*'
+  - 'website/**/resourceexplorer2_*'
 service/resourcegroups:
   - 'internal/service/resourcegroups/**/*'
   - 'website/**/resourcegroups_*'
@@ -887,6 +893,9 @@ service/sagemakerruntime:
 service/savingsplans:
   - 'internal/service/savingsplans/**/*'
   - 'website/**/savingsplans_*'
+service/scheduler:
+  - 'internal/service/scheduler/**/*'
+  - 'website/**/scheduler_*'
 service/schemas:
   - 'internal/service/schemas/**/*'
   - 'website/**/schemas_*'

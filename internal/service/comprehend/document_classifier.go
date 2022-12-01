@@ -264,7 +264,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 
 func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendConn
+	conn := awsClient.ComprehendClient
 
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
@@ -283,7 +283,7 @@ func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendConn
+	conn := meta.(*conns.AWSClient).ComprehendClient
 
 	out, err := FindDocumentClassifierByID(ctx, conn, d.Id())
 
@@ -347,7 +347,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendConn
+	conn := awsClient.ComprehendClient
 
 	var diags diag.Diagnostics
 
@@ -377,7 +377,7 @@ func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendConn
+	conn := meta.(*conns.AWSClient).ComprehendClient
 
 	log.Printf("[INFO] Stopping Comprehend Document Classifier (%s)", d.Id())
 

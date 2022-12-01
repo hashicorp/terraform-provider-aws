@@ -2,18 +2,23 @@ package rds
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,10 +26,10 @@ import (
 
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceParameterGroupCreate,
-		Read:   resourceParameterGroupRead,
-		Update: resourceParameterGroupUpdate,
-		Delete: resourceParameterGroupDelete,
+		Create:               resourceParameterGroupCreate,
+		Read:                 resourceParameterGroupRead,
+		Update:               resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -117,7 +122,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Create DB Parameter Group: %#v", createOpts)
 	resp, err := conn.CreateDBParameterGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating DB Parameter Group: %s", err)
+		return fmt.Errorf("creating DB Parameter Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DBParameterGroup.DBParameterGroupName))
@@ -197,7 +202,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		// _and_ the "system"/"engine-default" Source parameters _that appear in the
 		// config_ in the state, or the user gets a perpetual diff. See
 		// terraform-providers/terraform-provider-aws#593 for more context and details.
-		confParams := ExpandParameters(configParams.List())
+		confParams := expandParameters(configParams.List())
 		for _, param := range parameters {
 			if param.Source == nil || param.ParameterName == nil {
 				continue
@@ -222,9 +227,9 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	err = d.Set("parameter", FlattenParameters(userParams))
+	err = d.Set("parameter", flattenParameters(userParams))
 	if err != nil {
-		return fmt.Errorf("error setting 'parameter' in state: %#v", err)
+		return fmt.Errorf("setting 'parameter' in state: %w", err)
 	}
 
 	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
@@ -233,18 +238,18 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Parameter Group (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for RDS DB Parameter Group (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -268,7 +273,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter
-		parameters := ExpandParameters(ns.Difference(os).List())
+		parameters := expandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
@@ -286,20 +291,20 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				log.Printf("[DEBUG] Modify DB Parameter Group: %s", modifyOpts)
 				_, err := conn.ModifyDBParameterGroup(&modifyOpts)
 				if err != nil {
-					return fmt.Errorf("Error modifying DB Parameter Group: %s", err)
+					return fmt.Errorf("modifying DB Parameter Group: %s", err)
 				}
 			}
 		}
 
 		toRemove := map[string]*rds.Parameter{}
 
-		for _, p := range ExpandParameters(os.List()) {
+		for _, p := range expandParameters(os.List()) {
 			if p.ParameterName != nil {
 				toRemove[*p.ParameterName] = p
 			}
 		}
 
-		for _, p := range ExpandParameters(ns.List()) {
+		for _, p := range expandParameters(ns.List()) {
 			if p.ParameterName != nil {
 				delete(toRemove, *p.ParameterName)
 			}
@@ -329,7 +334,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				log.Printf("[DEBUG] Reset DB Parameter Group: %s", resetOpts)
 				_, err := conn.ResetDBParameterGroup(&resetOpts)
 				if err != nil {
-					return fmt.Errorf("Error resetting DB Parameter Group: %s", err)
+					return fmt.Errorf("resetting DB Parameter Group: %s", err)
 				}
 			}
 		}
@@ -339,33 +344,35 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS DB Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating RDS DB Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
 	return resourceParameterGroupRead(d, meta)
 }
 
-func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	deleteOpts := rds.DeleteDBParameterGroupInput{
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+	conn := meta.(*conns.AWSClient).RDSClient()
+	deleteOpts := rds_sdkv2.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
+		_, err := conn.DeleteDBParameterGroup(ctx, &deleteOpts)
+		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
+			return nil
+		} else if errs.IsA[*types.InvalidDBParameterGroupStateFault](err) {
+			return resource.RetryableError(err)
+		}
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "DBParameterGroupNotFoundFault") || tfawserr.ErrCodeEquals(err, "InvalidDBParameterGroupState") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
+		_, err = conn.DeleteDBParameterGroup(ctx, &deleteOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting DB parameter group: %s", err)
+		return errs.AppendErrorf(diags, "deleting RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 	return nil
 }

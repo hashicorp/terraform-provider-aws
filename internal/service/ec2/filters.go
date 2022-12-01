@@ -171,7 +171,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 
 	var filters []*ec2.Filter
 
-	for _, v := range filterSet.Elems {
+	for _, v := range filterSet.Elements() {
 		var data customFilterData
 
 		if tfsdk.ValueAs(ctx, v, &data).HasError() {
@@ -184,7 +184,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 
 		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
 			filters = append(filters, &ec2.Filter{
-				Name:   aws.String(data.Name.Value),
+				Name:   flex.StringFromFramework(ctx, data.Name),
 				Values: v,
 			})
 		}

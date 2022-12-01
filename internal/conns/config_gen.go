@@ -2,6 +2,26 @@
 package conns
 
 import (
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/ivschat"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -29,7 +49,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/aws/aws-sdk-go/service/auditmanager"
 	"github.com/aws/aws-sdk-go/service/augmentedairuntime"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
@@ -44,7 +63,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -292,7 +310,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
+// sdkv1Conns initializes AWS SDK for Go v1 clients.
+func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.ACMConn = acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACM])}))
 	client.ACMPCAConn = acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACMPCA])}))
 	client.AMPConn = prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AMP])}))
@@ -317,7 +336,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.ApplicationCostProfilerConn = applicationcostprofiler.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ApplicationCostProfiler])}))
 	client.ApplicationInsightsConn = applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ApplicationInsights])}))
 	client.AthenaConn = athena.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Athena])}))
-	client.AuditManagerConn = auditmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AuditManager])}))
 	client.AutoScalingConn = autoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AutoScaling])}))
 	client.AutoScalingPlansConn = autoscalingplans.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AutoScalingPlans])}))
 	client.BackupConn = backup.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Backup])}))
@@ -333,7 +351,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.ChimeSDKMeetingsConn = chimesdkmeetings.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMeetings])}))
 	client.ChimeSDKMessagingConn = chimesdkmessaging.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMessaging])}))
 	client.Cloud9Conn = cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Cloud9])}))
-	client.CloudControlConn = cloudcontrolapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudControl])}))
 	client.CloudDirectoryConn = clouddirectory.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudDirectory])}))
 	client.CloudFormationConn = cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudFormation])}))
 	client.CloudFrontConn = cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudFront])}))
@@ -578,4 +595,115 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.WorkSpacesConn = workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.WorkSpaces])}))
 	client.WorkSpacesWebConn = workspacesweb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.WorkSpacesWeb])}))
 	client.XRayConn = xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.XRay])}))
+}
+
+// sdkv2Conns initializes AWS SDK for Go v2 clients.
+func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.AuditManagerClient = auditmanager.NewFromConfig(cfg, func(o *auditmanager.Options) {
+		if endpoint := c.Endpoints[names.AuditManager]; endpoint != "" {
+			o.EndpointResolver = auditmanager.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.CloudControlClient = cloudcontrol.NewFromConfig(cfg, func(o *cloudcontrol.Options) {
+		if endpoint := c.Endpoints[names.CloudControl]; endpoint != "" {
+			o.EndpointResolver = cloudcontrol.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.ComprehendClient = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
+		if endpoint := c.Endpoints[names.Comprehend]; endpoint != "" {
+			o.EndpointResolver = comprehend.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.ComputeOptimizerClient = computeoptimizer.NewFromConfig(cfg, func(o *computeoptimizer.Options) {
+		if endpoint := c.Endpoints[names.ComputeOptimizer]; endpoint != "" {
+			o.EndpointResolver = computeoptimizer.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.FISClient = fis.NewFromConfig(cfg, func(o *fis.Options) {
+		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
+			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.IVSChatClient = ivschat.NewFromConfig(cfg, func(o *ivschat.Options) {
+		if endpoint := c.Endpoints[names.IVSChat]; endpoint != "" {
+			o.EndpointResolver = ivschat.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.IdentityStoreClient = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
+		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
+			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.Inspector2Client = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
+		if endpoint := c.Endpoints[names.Inspector2]; endpoint != "" {
+			o.EndpointResolver = inspector2.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.KendraClient = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
+		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
+			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.MediaLiveClient = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
+		if endpoint := c.Endpoints[names.MediaLive]; endpoint != "" {
+			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.ResourceExplorer2Client = resourceexplorer2.NewFromConfig(cfg, func(o *resourceexplorer2.Options) {
+		if endpoint := c.Endpoints[names.ResourceExplorer2]; endpoint != "" {
+			o.EndpointResolver = resourceexplorer2.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.RolesAnywhereClient = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
+		if endpoint := c.Endpoints[names.RolesAnywhere]; endpoint != "" {
+			o.EndpointResolver = rolesanywhere.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.SESV2Client = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
+		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
+			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.SchedulerClient = scheduler.NewFromConfig(cfg, func(o *scheduler.Options) {
+		if endpoint := c.Endpoints[names.Scheduler]; endpoint != "" {
+			o.EndpointResolver = scheduler.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.TranscribeClient = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
+		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
+			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
+		}
+	})
+}
+
+// sdkv2LazyConns initializes AWS SDK for Go v2 lazy-load clients.
+func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.logsClient.init(&cfg, func() *cloudwatchlogs_sdkv2.Client {
+		return cloudwatchlogs_sdkv2.NewFromConfig(cfg, func(o *cloudwatchlogs_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.Logs]; endpoint != "" {
+				o.EndpointResolver = cloudwatchlogs_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.rdsClient.init(&cfg, func() *rds_sdkv2.Client {
+		return rds_sdkv2.NewFromConfig(cfg, func(o *rds_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.RDS]; endpoint != "" {
+				o.EndpointResolver = rds_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.s3controlClient.init(&cfg, func() *s3control_sdkv2.Client {
+		return s3control_sdkv2.NewFromConfig(cfg, func(o *s3control_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.S3Control]; endpoint != "" {
+				o.EndpointResolver = s3control_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.ssmClient.init(&cfg, func() *ssm_sdkv2.Client {
+		return ssm_sdkv2.NewFromConfig(cfg, func(o *ssm_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.SSM]; endpoint != "" {
+				o.EndpointResolver = ssm_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
 }

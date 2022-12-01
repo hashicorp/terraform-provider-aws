@@ -59,14 +59,14 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         statementSchema(level - 1),
+				"and_statement":                         statementSchema(level),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
-				"not_statement":                         statementSchema(level - 1),
-				"or_statement":                          statementSchema(level - 1),
-				"rate_based_statement":                  rateBasedStatementSchema(level - 1),
+				"not_statement":                         statementSchema(level),
+				"or_statement":                          statementSchema(level),
+				"rate_based_statement":                  rateBasedStatementSchema(level),
 				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
@@ -828,6 +828,7 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
+				"rule_action_override": ruleActionOverrideSchema(),
 				"scope_down_statement": scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
@@ -857,6 +858,7 @@ func excludedRuleSchema() *schema.Schema {
 				},
 			},
 		},
+		Deprecated: "Use rule_action_override instead",
 	}
 }
 
@@ -904,6 +906,40 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
 				"xss_match_statement":                   xssMatchStatementSchema(),
+			},
+		},
+	}
+}
+
+func ruleActionOverrideSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 100,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action_to_use": actionToUseSchema(),
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			},
+		},
+	}
+}
+
+func actionToUseSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"allow":   allowConfigSchema(),
+				"block":   blockConfigSchema(),
+				"captcha": captchaConfigSchema(),
+				"count":   countConfigSchema(),
 			},
 		},
 	}

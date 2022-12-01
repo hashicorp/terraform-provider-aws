@@ -16,7 +16,7 @@ func TestExpandParameters(t *testing.T) {
 			"apply_method": "immediate",
 		},
 	}
-	parameters := ExpandParameters(expanded)
+	parameters := expandParameters(expanded)
 
 	expected := &rds.Parameter{
 		ParameterName:  aws.String("character_set_client"),
@@ -70,7 +70,7 @@ func TestFlattenParameters(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := FlattenParameters(tc.Input)
+		output := flattenParameters(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}

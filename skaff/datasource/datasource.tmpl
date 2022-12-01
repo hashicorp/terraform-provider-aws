@@ -165,7 +165,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client{{ else }}Conn{{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get information about a resource from AWS using an API Get,
 	// List, or Describe-type function, or, better yet, using a finder. Data

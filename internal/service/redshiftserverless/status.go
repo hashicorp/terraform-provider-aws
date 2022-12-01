@@ -54,3 +54,19 @@ func statusEndpointAccess(conn *redshiftserverless.RedshiftServerless, name stri
 		return output, aws.StringValue(output.EndpointStatus), nil
 	}
 }
+
+func statusSnapshot(conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSnapshotByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}

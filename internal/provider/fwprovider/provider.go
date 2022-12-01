@@ -14,8 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -129,9 +128,10 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
-				Type:        types.BoolType,
-				Optional:    true,
-				Description: "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				Type:               types.BoolType,
+				Optional:           true,
+				Description:        "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				DeprecationMessage: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:        types.StringType,
@@ -350,10 +350,6 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
 
-	resources = append(resources, func() resource.Resource {
-		return medialive.NewResourceMultiplexProgram(ctx)
-	})
-
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		for _, v := range sp.FrameworkResources(ctx) {
 			v, err := v(ctx)
@@ -368,8 +364,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			}
 
 			resources = append(resources, func() resource.Resource {
-				// TODO Consider wrapping.
-				return v
+				return newWrappedResource(v)
 			})
 		}
 	}
@@ -422,4 +417,93 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
 	w.inner.Configure(ctx, request, response)
+}
+
+// wrappedResource wraps a resource, adding common functionality.
+type wrappedResource struct {
+	inner    resource.ResourceWithConfigure
+	typeName string
+}
+
+func newWrappedResource(inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
+	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return w.inner.GetSchema(ctx)
+}
+
+func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
+
+	w.inner.Create(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create exit", w.typeName))
+}
+
+func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
+
+	w.inner.Update(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update exit", w.typeName))
+}
+
+func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
+
+	w.inner.Delete(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete exit", w.typeName))
+}
+
+func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
+		v.ImportState(ctx, request, response)
+
+		return
+	}
+
+	response.Diagnostics.AddError(
+		"Resource Import Not Implemented",
+		"This resource does not support import. Please contact the provider developer for additional information.",
+	)
+}
+
+func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
+		v.ModifyPlan(ctx, request, response)
+
+		return
+	}
+}
+
+func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
+		v.ValidateConfig(ctx, request, response)
+	}
 }

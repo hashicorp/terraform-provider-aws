@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 )
 
 func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
@@ -107,6 +108,59 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "1.1.1.1/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "192.168.1.0/24"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailInstancePublicPorts_disappears(t *testing.T) {
+	resourceName := "aws_lightsail_instance_public_ports.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstancePublicPortsConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstancePublicPortsExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceInstancePublicPorts(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccLightsailInstancePublicPorts_disappears_Instance(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parentResourceName := "aws_lightsail_instance.test"
+	resourceName := "aws_lightsail_instance_public_ports.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstancePublicPortsConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstancePublicPortsExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceInstance(), parentResourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

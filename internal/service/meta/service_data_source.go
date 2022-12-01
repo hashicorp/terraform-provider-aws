@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
@@ -24,7 +24,7 @@ func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type dataSourceService struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -81,15 +81,6 @@ func (d *dataSourceService) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 	return schema, nil
 }
 
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceService) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
-	}
-}
-
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -102,7 +93,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if !data.ReverseDNSName.IsNull() {
-		v := data.ReverseDNSName.Value
+		v := data.ReverseDNSName.ValueString()
 		serviceParts := strings.Split(v, ".")
 		n := len(serviceParts)
 
@@ -112,14 +103,14 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 			return
 		}
 
-		data.Region = types.String{Value: serviceParts[n-2]}
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(serviceParts[0:n-2], ".")}
-		data.ServiceID = types.String{Value: serviceParts[n-1]}
+		data.Region = types.StringValue(serviceParts[n-2])
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = types.StringValue(serviceParts[n-1])
 	}
 
 	if !data.DNSName.IsNull() {
-		v := data.DNSName.Value
-		serviceParts := slices.Reversed(strings.Split(v, "."))
+		v := data.DNSName.ValueString()
+		serviceParts := slices.Reverse(strings.Split(v, "."))
 		n := len(serviceParts)
 
 		if n < 4 {
@@ -128,13 +119,13 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 			return
 		}
 
-		data.Region = types.String{Value: serviceParts[n-2]}
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(serviceParts[0:n-2], ".")}
-		data.ServiceID = types.String{Value: serviceParts[n-1]}
+		data.Region = types.StringValue(serviceParts[n-2])
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = types.StringValue(serviceParts[n-1])
 	}
 
 	if data.Region.IsNull() {
-		data.Region = types.String{Value: d.meta.Region}
+		data.Region = types.StringValue(d.Meta().Region)
 	}
 
 	if data.ServiceID.IsNull() {
@@ -143,27 +134,27 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	if data.ReverseDNSPrefix.IsNull() || data.ReverseDNSPrefix.IsUnknown() {
-		dnsParts := strings.Split(d.meta.DNSSuffix, ".")
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(slices.Reversed(dnsParts), ".")}
+	if data.ReverseDNSPrefix.IsNull() {
+		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(slices.Reverse(dnsParts), "."))
 	}
 
-	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.Value, data.Region.Value, data.ServiceID.Value)
-	data.ReverseDNSName = types.String{Value: reverseDNSName}
-	data.DNSName = types.String{Value: strings.ToLower(strings.Join(slices.Reversed(strings.Split(reverseDNSName, ".")), "."))}
+	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.ValueString(), data.Region.ValueString(), data.ServiceID.ValueString())
+	data.ReverseDNSName = types.StringValue(reverseDNSName)
+	data.DNSName = types.StringValue(strings.ToLower(strings.Join(slices.Reverse(strings.Split(reverseDNSName, ".")), ".")))
 
-	data.Supported = types.Bool{Value: true}
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.Value); ok {
-		data.Partition = types.String{Value: partition.ID()}
+	data.Supported = types.BoolValue(true)
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.ValueString()); ok {
+		data.Partition = types.StringValue(partition.ID())
 
-		if _, ok := partition.Services()[data.ServiceID.Value]; !ok {
-			data.Supported.Value = false
+		if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
+			data.Supported = types.BoolValue(false)
 		}
 	} else {
-		data.Partition = types.String{Null: true}
+		data.Partition = types.StringNull()
 	}
 
-	data.ID = types.String{Value: reverseDNSName}
+	data.ID = types.StringValue(reverseDNSName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
