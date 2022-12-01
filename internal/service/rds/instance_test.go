@@ -9817,7 +9817,7 @@ data "aws_rds_orderable_db_instance" "updated" {
 
 func testAccInstanceConfig_gp3(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQLGp3(),
+		testAccInstanceConfig_orderableClassMySQLGP3(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier           = %[1]q
@@ -9840,7 +9840,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_storageThroughput(rName string, iops, throughput int) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQLGp3(),
+		testAccInstanceConfig_orderableClassMySQLGP3(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier           = %[1]q
