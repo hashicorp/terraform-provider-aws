@@ -40,14 +40,7 @@ func dataSourceClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error getting token: %w", err)
 	}
 
-	var identifier string
-	if v, ok := d.GetOk("id"); ok {
-		identifier = v.(string)
-	} else {
-		identifier = d.Get("name").(string)
-	}
-
-	d.SetId(identifier)
+	d.SetId(name)
 	d.Set("token", toke.Token)
 
 	return nil

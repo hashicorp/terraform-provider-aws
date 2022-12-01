@@ -110,10 +110,6 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"identity": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -346,14 +342,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating EKS Cluster (%s): %w", name, err)
 	}
 
-	var identifier string
-	if v, ok := d.GetOk("id"); ok {
-		identifier = v.(string)
-	} else {
-		identifier = d.Get("name").(string)
-	}
-
-	d.SetId(identifier)
+	d.SetId(aws.StringValue(output.Cluster.Name))
 
 	_, err = waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
@@ -398,12 +387,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("endpoint", cluster.Endpoint)
-
-	if err := d.Get("id").(string); err != "" {
-		d.Set("id", cluster.Id)
-	} else {
-		d.Set("id", cluster.Name)
-	}
 
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
 		return fmt.Errorf("error setting identity: %w", err)
