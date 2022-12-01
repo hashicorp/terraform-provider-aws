@@ -3,14 +3,21 @@
 NOTES:
 
 * provider: With AWS's retirement of EC2-Classic the `skip_get_ec2_platforms` attribute has been deprecated and will be removed in a future version ([#28084](https://github.com/hashicorp/terraform-provider-aws/issues/28084))
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute has been deprecated and will be removed in a future version ([#28127](https://github.com/hashicorp/terraform-provider-aws/issues/28127))
 
 ENHANCEMENTS:
 
 * data-source/aws_db_instance: Add `storage_throughput` attribute ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
+* data-source/aws_eks_cluster: Add `cluster_id` attribute ([#28112](https://github.com/hashicorp/terraform-provider-aws/issues/28112))
 * resource/aws_db_instance: Add `storage_throughput` argument ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
 * resource/aws_db_instance: Add support for `gp3` `storage_type` value ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
 * resource/aws_db_instance: Change `iops` to `Computed` ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
+* resource/aws_eks_cluster: Add `cluster_id` attribute and `outpost_config.control_plane_placement` argument ([#28112](https://github.com/hashicorp/terraform-provider-aws/issues/28112))
 * resource/aws_redshiftserverless_workgroup: Wait on `MODIFYING` status on resource Delete ([#28114](https://github.com/hashicorp/terraform-provider-aws/issues/28114))
+
+BUG FIXES:
+
+* resource/aws_redshiftserverless_namespace: Fix updating `admin_username` and `admin_user_password` ([#28125](https://github.com/hashicorp/terraform-provider-aws/issues/28125))
 
 ## 4.44.0 (November 30, 2022)
 
