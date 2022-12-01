@@ -79,7 +79,7 @@ func sweepGroups(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] SkippingCloudWatch Logs Log Group sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping CloudWatch Logs Log Group sweep for %s: %s", region, err)
 		return nil
 	}
 
@@ -122,7 +122,7 @@ func sweeplogQueryDefinitions(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] SkippingCloudWatch Logs Query Definition sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping CloudWatch Logs Query Definition sweep for %s: %s", region, err)
 		return nil
 	}
 
@@ -165,7 +165,7 @@ func sweepResourcePolicies(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] SkippingCloudWatch Logs Resource Policy sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping CloudWatch Logs Resource Policy sweep for %s: %s", region, err)
 		return nil
 	}
 

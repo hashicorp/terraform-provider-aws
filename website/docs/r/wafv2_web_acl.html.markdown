@@ -39,11 +39,19 @@ resource "aws_wafv2_web_acl" "example" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "SizeRestrictions_QUERYSTRING"
         }
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "NoUserAgent_HEADER"
         }
 
@@ -448,8 +456,9 @@ You can't nest a `managed_rule_group_statement`, for example for use inside a `n
 
 The `managed_rule_group_statement` block supports the following arguments:
 
-* `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
+* `excluded_rule` - (Optional, **Deprecated**) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details. Use `rule_action_override` instead. (See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_ManagedRuleGroupStatement.html#WAF-Type-ManagedRuleGroupStatement-ExcludedRules))
 * `name` - (Required) Name of the managed rule group.
+* `rule_action_override` - (Optional) Action settings to use in the place of the rule actions that are configured inside the rule group. You specify one override for each rule whose action you want to change. See [Rule Action Override](#rule-action-override) below for details.
 * `scope_down_statement` - Narrows the scope of the statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 * `vendor_name` - (Required) Name of the managed rule group vendor.
 * `version` - (Optional) Version of the managed rule group. You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
@@ -559,6 +568,13 @@ The `xss_match_statement` block supports the following arguments:
 The `excluded_rule` block supports the following arguments:
 
 * `name` - (Required) Name of the rule to exclude. If the rule group is managed by AWS, see the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the appropriate rule group in use.
+
+### Rule Action Override
+
+The `rule_action_override` block supports the following arguments:
+
+* `action_to_use` - (Required) Override action to use, in place of the configured action of the rule in the rule group. See [Action](#action) below for details.
+* `name` - (Required) Name of the rule to override. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the appropriate rule group in use.
 
 ### Field to Match
 

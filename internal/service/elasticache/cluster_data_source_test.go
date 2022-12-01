@@ -36,6 +36,7 @@ func TestAccElastiCacheClusterDataSource_Data_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_type", resourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "num_cache_nodes", resourceName, "num_cache_nodes"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "preferred_outpost_arn", resourceName, "preferred_outpost_arn"),
 				),
 			},
 		},

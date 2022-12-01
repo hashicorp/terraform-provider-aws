@@ -128,9 +128,10 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
-				Type:        types.BoolType,
-				Optional:    true,
-				Description: "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				Type:               types.BoolType,
+				Optional:           true,
+				Description:        "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				DeprecationMessage: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:        types.StringType,

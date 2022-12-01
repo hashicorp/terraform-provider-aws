@@ -270,6 +270,24 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"snap_start": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apply_on": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(lambda.SnapStartApplyOn_Values(), true),
+						},
+						"optimization_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"source_code_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -400,6 +418,7 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("kms_key_arn") ||
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
+		d.HasChange("snap_start") ||
 		d.HasChange("tracing_config") ||
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
@@ -528,6 +547,10 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			SecurityGroupIds: flex.ExpandStringSet(config["security_group_ids"].(*schema.Set)),
 			SubnetIds:        flex.ExpandStringSet(config["subnet_ids"].(*schema.Set)),
 		}
+	}
+
+	if v, ok := d.GetOk("snap_start"); ok {
+		params.SnapStart = expandSnapStart(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("tracing_config"); ok {
@@ -844,6 +867,11 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("dead_letter_config", []interface{}{})
 	}
 
+	snapStart := flattenSnapStart(function.SnapStart)
+	if err := d.Set("snap_start", snapStart); err != nil {
+		return fmt.Errorf("error setting snap_start for Lambda Function (%s): %w", d.Id(), err)
+	}
+
 	// Assume `PassThrough` on partitions that don't support tracing config
 	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
@@ -898,12 +926,9 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka), me-central-1 (UAE) and ap-southeast-3 (Jakarta) region
-	// and returns ambiguous error codes (e.g. AccessDeniedException)
-	// so we cannot just ignore the error as would typically.
-	// We are hardcoding the region here, because go aws sdk endpoints
-	// package does not support Signer service
-	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.MeCentral1RegionID || region == endpoints.ApSoutheast3RegionID {
+	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
+	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
+	if !SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
 		return nil
 	}
 
@@ -1060,6 +1085,10 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			dlcMap := dlcMaps[0].(map[string]interface{})
 			configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
 		}
+	}
+	if d.HasChange("snap_start") {
+		snapStart := d.Get("snap_start").([]interface{})
+		configReq.SnapStart = expandSnapStart(snapStart)
 	}
 	if d.HasChange("tracing_config") {
 		tracingConfig := d.Get("tracing_config").([]interface{})
@@ -1448,6 +1477,36 @@ func waitForFunctionUpdate(conn *lambda.Lambda, functionName string, timeout tim
 	return err
 }
 
+// SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
+// The AWS SDK endpoints package does not support Signer.
+// See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.
+func SignerServiceIsAvailable(region string) bool {
+	availableRegions := map[string]struct{}{
+		endpoints.UsEast2RegionID:      {},
+		endpoints.UsEast1RegionID:      {},
+		endpoints.UsWest1RegionID:      {},
+		endpoints.UsWest2RegionID:      {},
+		endpoints.AfSouth1RegionID:     {},
+		endpoints.ApSouth1RegionID:     {},
+		endpoints.ApNortheast2RegionID: {},
+		endpoints.ApSoutheast1RegionID: {},
+		endpoints.ApSoutheast2RegionID: {},
+		endpoints.ApNortheast1RegionID: {},
+		endpoints.CaCentral1RegionID:   {},
+		endpoints.EuCentral1RegionID:   {},
+		endpoints.EuWest1RegionID:      {},
+		endpoints.EuWest2RegionID:      {},
+		endpoints.EuSouth1RegionID:     {},
+		endpoints.EuWest3RegionID:      {},
+		endpoints.EuNorth1RegionID:     {},
+		endpoints.MeSouth1RegionID:     {},
+		endpoints.SaEast1RegionID:      {},
+	}
+	_, ok := availableRegions[region]
+
+	return ok
+}
+
 func flattenEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1525,4 +1584,28 @@ func flattenEphemeralStorage(response *lambda.EphemeralStorage) []map[string]int
 	m["size"] = aws.Int64Value(response.Size)
 
 	return []map[string]interface{}{m}
+}
+
+func expandSnapStart(tfList []interface{}) *lambda.SnapStart {
+	snapStart := &lambda.SnapStart{ApplyOn: aws.String(lambda.SnapStartApplyOnNone)}
+	if len(tfList) == 1 && tfList[0] != nil {
+		item := tfList[0].(map[string]interface{})
+		snapStart.ApplyOn = aws.String(item["apply_on"].(string))
+	}
+	return snapStart
+}
+
+func flattenSnapStart(apiObject *lambda.SnapStartResponse) []interface{} {
+	if apiObject == nil || apiObject.ApplyOn == nil {
+		return nil
+	}
+	if aws.StringValue(apiObject.ApplyOn) == lambda.SnapStartApplyOnNone {
+		return nil
+	}
+	m := map[string]interface{}{
+		"apply_on":            aws.StringValue(apiObject.ApplyOn),
+		"optimization_status": aws.StringValue(apiObject.OptimizationStatus),
+	}
+
+	return []interface{}{m}
 }

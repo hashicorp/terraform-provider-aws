@@ -89,6 +89,10 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"outpost_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"port": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -209,6 +213,13 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"outpost_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"preferred_outpost_arn"},
+				ValidateFunc: validation.StringInSlice(elasticache.OutpostMode_Values(), false),
+			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -231,6 +242,13 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"preferred_outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -353,6 +371,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("num_cache_nodes"); ok {
 		req.NumCacheNodes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("outpost_mode"); ok {
+		req.OutpostMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("preferred_outpost_arn"); ok {
+		req.PreferredOutpostArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("engine"); ok {
@@ -526,6 +552,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("ip_discovery", c.IpDiscovery)
 	d.Set("network_type", c.NetworkType)
+	d.Set("preferred_outpost_arn", c.PreferredOutpostArn)
 
 	tags, err := ListTags(conn, aws.StringValue(c.ARN))
 
@@ -771,6 +798,7 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			"address":           aws.StringValue(node.Endpoint.Address),
 			"port":              aws.Int64Value(node.Endpoint.Port),
 			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
+			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
 		})
 	}
 

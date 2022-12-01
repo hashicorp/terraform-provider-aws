@@ -949,9 +949,10 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 
 	m := l[0].(map[string]interface{})
 	r := &wafv2.ManagedRuleGroupStatement{
-		ExcludedRules: expandExcludedRules(m["excluded_rule"].([]interface{})),
-		Name:          aws.String(m["name"].(string)),
-		VendorName:    aws.String(m["vendor_name"].(string)),
+		ExcludedRules:       expandExcludedRules(m["excluded_rule"].([]interface{})),
+		Name:                aws.String(m["name"].(string)),
+		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
+		VendorName:          aws.String(m["vendor_name"].(string)),
 	}
 
 	if s, ok := m["scope_down_statement"].([]interface{}); ok && len(s) > 0 && s[0] != nil {
@@ -1025,6 +1026,34 @@ func expandExcludedRule(m map[string]interface{}) *wafv2.ExcludedRule {
 
 	return &wafv2.ExcludedRule{
 		Name: aws.String(m["name"].(string)),
+	}
+}
+
+func expandRuleActionOverrides(l []interface{}) []*wafv2.RuleActionOverride {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	overrides := make([]*wafv2.RuleActionOverride, 0)
+
+	for _, override := range l {
+		if override == nil {
+			continue
+		}
+		overrides = append(overrides, expandRuleActionOverride(override.(map[string]interface{})))
+	}
+
+	return overrides
+}
+
+func expandRuleActionOverride(m map[string]interface{}) *wafv2.RuleActionOverride {
+	if m == nil {
+		return nil
+	}
+
+	return &wafv2.RuleActionOverride{
+		ActionToUse: expandRuleAction(m["action_to_use"].([]interface{})),
+		Name:        aws.String(m["name"].(string)),
 	}
 }
 
@@ -1843,6 +1872,10 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 		tfMap["name"] = aws.StringValue(apiObject.Name)
 	}
 
+	if apiObject.RuleActionOverrides != nil {
+		tfMap["rule_action_override"] = flattenRuleActionOverrides(apiObject.RuleActionOverrides)
+	}
+
 	if apiObject.ScopeDownStatement != nil {
 		tfMap["scope_down_statement"] = []interface{}{flattenStatement(apiObject.ScopeDownStatement)}
 	}
@@ -1902,6 +1935,18 @@ func flattenExcludedRules(r []*wafv2.ExcludedRule) interface{} {
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["name"] = aws.StringValue(rule.Name)
+		out[i] = m
+	}
+
+	return out
+}
+
+func flattenRuleActionOverrides(r []*wafv2.RuleActionOverride) interface{} {
+	out := make([]map[string]interface{}, len(r))
+	for i, override := range r {
+		m := make(map[string]interface{})
+		m["action_to_use"] = flattenRuleAction(override.ActionToUse)
+		m["name"] = aws.StringValue(override.Name)
 		out[i] = m
 	}
 

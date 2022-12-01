@@ -1173,6 +1173,50 @@ func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 	})
 }
 
+func TestAccECSService_ServiceConnect_basic(t *testing.T) {
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_ServiceConnect_full(t *testing.T) {
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectAllAttributes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_Tags_basic(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4352,4 +4396,123 @@ resource "aws_ecs_service" "test" {
   enable_execute_command = %[2]t
 }
 `, rName, enable)
+}
+
+func testAccServiceConfig_serviceConnectBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+
+  service_connect_defaults {
+    namespace = aws_service_discovery_http_namespace.test.arn
+  }
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "bridge"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "portMappings": [
+    {
+      "hostPort": 0,
+      "protocol": "tcp",
+      "containerPort": 27017
+    }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  service_connect_configuration {
+    enabled = true
+  }
+}
+`, rName)
+}
+
+func testAccServiceConfig_serviceConnectAllAttributes(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "bridge"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "portMappings": [
+    {
+      "hostPort": 0,
+      "protocol": "tcp",
+      "containerPort": 27017,
+      "name": "tf-test"
+    }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    log_configuration {
+      log_driver = "json-file"
+
+      options = {
+        key = "value"
+      }
+    }
+
+    service {
+      client_alias {
+        dns_name = "example.com"
+        port     = 8080
+      }
+
+      discovery_name        = "test"
+      ingress_port_override = 8443
+      port_name             = "tf-test"
+    }
+  }
+}
+`, rName)
 }

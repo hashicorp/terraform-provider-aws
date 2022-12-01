@@ -376,6 +376,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 				Optional: true,
 				Description: "Skip getting the supported EC2 platforms. " +
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				Deprecated: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:         nullable.TypeNullableBool,
@@ -848,6 +849,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
 			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
 
+			"aws_redshiftserverless_credentials": redshiftserverless.DataSourceCredentials(),
+
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
 			"aws_route53_delegation_set":          route53.DataSourceDelegationSet(),
@@ -1155,14 +1158,15 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
-			"aws_cloudwatch_log_destination":         logs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":  logs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":               logs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":       logs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":     logs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":              logs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
+			"aws_cloudwatch_log_data_protection_policy": logs.ResourceDataProtectionPolicy(),
+			"aws_cloudwatch_log_destination":            logs.ResourceDestination(),
+			"aws_cloudwatch_log_destination_policy":     logs.ResourceDestinationPolicy(),
+			"aws_cloudwatch_log_group":                  logs.ResourceGroup(),
+			"aws_cloudwatch_log_metric_filter":          logs.ResourceMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":        logs.ResourceResourcePolicy(),
+			"aws_cloudwatch_log_stream":                 logs.ResourceStream(),
+			"aws_cloudwatch_log_subscription_filter":    logs.ResourceSubscriptionFilter(),
+			"aws_cloudwatch_query_definition":           logs.ResourceQueryDefinition(),
 
 			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
 
@@ -1809,6 +1813,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_neptune_cluster_instance":        neptune.ResourceClusterInstance(),
 			"aws_neptune_cluster_parameter_group": neptune.ResourceClusterParameterGroup(),
 			"aws_neptune_cluster_snapshot":        neptune.ResourceClusterSnapshot(),
+			"aws_neptune_global_cluster":          neptune.ResourceGlobalCluster(),
 			"aws_neptune_event_subscription":      neptune.ResourceEventSubscription(),
 			"aws_neptune_parameter_group":         neptune.ResourceParameterGroup(),
 			"aws_neptune_subnet_group":            neptune.ResourceSubnetGroup(),

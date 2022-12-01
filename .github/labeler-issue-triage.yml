@@ -503,6 +503,8 @@ service/rekognition:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rekognition_'
 service/resiliencehub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resiliencehub_'
+service/resourceexplorer2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourceexplorer2_'
 service/resourcegroups:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourcegroups_'
 service/resourcegroupstaggingapi:
