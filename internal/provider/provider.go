@@ -376,6 +376,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 				Optional: true,
 				Description: "Skip getting the supported EC2 platforms. " +
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				Deprecated: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:         nullable.TypeNullableBool,
