@@ -403,17 +403,15 @@ func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.Met
 	w.inner.Metadata(ctx, request, response)
 }
 
-func (w *wrappedDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	if v, ok := w.inner.(datasource.DataSourceWithGetSchema); ok {
-		return v.GetSchema(ctx)
+func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	if v, ok := w.inner.(datasource.DataSourceWithSchema); ok {
+		v.Schema(ctx, request, response)
+		return
 	}
-
-	var diags diag.Diagnostics
-	diags.AddError(
-		"DataSource GetSchema Not Implemented",
+	response.Diagnostics.AddError(
+		"DataSource Schema Not Implemented",
 		"This data source does not support get schema. Please contact the provider developer for additional information.",
 	)
-	return tfsdk.Schema{}, diags
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -442,17 +440,15 @@ func (w *wrappedResource) Metadata(ctx context.Context, request resource.Metadat
 	w.inner.Metadata(ctx, request, response)
 }
 
-func (w *wrappedResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	if v, ok := w.inner.(resource.ResourceWithGetSchema); ok {
-		return v.GetSchema(ctx)
+func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	if v, ok := w.inner.(resource.ResourceWithSchema); ok {
+		v.Schema(ctx, request, response)
+		return
 	}
-
-	var diags diag.Diagnostics
-	diags.AddError(
-		"Resource GetSchema Not Implemented",
+	response.Diagnostics.AddError(
+		"Resource Schema Not Implemented",
 		"This resource does not support get schema. Please contact the provider developer for additional information.",
 	)
-	return tfsdk.Schema{}, diags
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {

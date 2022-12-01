@@ -7,7 +7,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -31,22 +30,20 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
 
-	var schema tfsdk.Schema
-	var diags diag.Diagnostics
-	if v, ok := resource.(fwresource.ResourceWithGetSchema); ok {
-		schema, diags = v.GetSchema(ctx)
-
-		if diags.HasError() {
-			return fwdiag.DiagnosticsError(diags)
+	schemaResp := fwresource.SchemaResponse{}
+	if v, ok := resource.(fwresource.ResourceWithSchema); ok {
+		v.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
+		if schemaResp.Diagnostics.HasError() {
+			return fwdiag.DiagnosticsError(schemaResp.Diagnostics)
 		}
 	} else {
-		return errors.New("resource does not implement GetSchema method")
+		return errors.New("resource does not implement Schema method")
 	}
 
 	// Construct a simple Framework State that contains just top-level attributes.
 	state := tfsdk.State{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
-		Schema: schema,
+		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+		Schema: schemaResp.Schema,
 	}
 
 	for name, v := range is.Attributes {
