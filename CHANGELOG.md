@@ -1,4 +1,27 @@
-## 4.44.0 (Unreleased)
+## 4.45.0 (Unreleased)
+
+NOTES:
+
+* provider: With AWS's retirement of EC2-Classic the `skip_get_ec2_platforms` attribute has been deprecated and will be removed in a future version ([#28084](https://github.com/hashicorp/terraform-provider-aws/issues/28084))
+
+## 4.44.0 (November 30, 2022)
+
+NOTES:
+
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute will always have the value `"DEFAULT"` ([#28085](https://github.com/hashicorp/terraform-provider-aws/issues/28085))
+* resource/aws_wafv2_web_acl: `excluded_rule` on `managed_rule_group_statement` has been deprecated. All configurations using `excluded_rule` should be updated to use the new `rule_action_override` attribute instead ([#27954](https://github.com/hashicorp/terraform-provider-aws/issues/27954))
+
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_deployment: Add import support ([#28030](https://github.com/hashicorp/terraform-provider-aws/issues/28030))
+* resource/aws_kinesisanalyticsv2_application: Add support for `FLINK-1_15` `runtime_environment` value ([#28099](https://github.com/hashicorp/terraform-provider-aws/issues/28099))
+* resource/aws_lambda_function: Add `snap_start` attribute ([#28097](https://github.com/hashicorp/terraform-provider-aws/issues/28097))
+* resource/aws_wafv2_web_acl: Support `rule_action_override` on `managed_rule_group_statement` ([#27954](https://github.com/hashicorp/terraform-provider-aws/issues/27954))
+
+BUG FIXES:
+
+* resource/aws_instance: Change `iam_instance_profile` to `Computed` as the value may be configured via a launch template ([#27972](https://github.com/hashicorp/terraform-provider-aws/issues/27972))
+
 ## 4.43.0 (November 29, 2022)
 
 FEATURES:

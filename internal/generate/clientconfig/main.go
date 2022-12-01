@@ -4,16 +4,11 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
-	"encoding/csv"
 	"fmt"
-	"go/format"
-	"log"
-	"os"
 	"sort"
-	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,9 +18,13 @@ const (
 )
 
 type ServiceDatum struct {
-	SDKVersion        string
-	GoPackage         string
-	ProviderNameUpper string
+	SDKVersion          string
+	GoV1Package         string
+	GoV2Package         string
+	GoV2PackageOverride string
+	ProviderNameUpper   string
+	ClientTypeName      string
+	ProviderPackage     string
 }
 
 type TemplateData struct {
@@ -33,20 +32,14 @@ type TemplateData struct {
 }
 
 func main() {
-	fmt.Printf("Generating internal/conns/%s\n", filename)
+	g := common.NewGenerator()
 
-	f, err := os.Open(namesDataFile)
+	g.Infof("generating internal/conns/%s\n", filename)
+
+	data, err := common.ReadAllNamesData(namesDataFile)
+
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
 	}
 
 	td := TemplateData{}
@@ -68,59 +61,36 @@ func main() {
 			td.Services = append(td.Services, ServiceDatum{
 				ProviderNameUpper: l[names.ColProviderNameUpper],
 				SDKVersion:        "1",
-				GoPackage:         l[names.ColGoV1Package],
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
+				ClientTypeName:    l[names.ColGoV1ClientTypeName],
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
 			})
 		}
-		// if l[names.ColClientSDKV2] != "" {
-		// 	sd := ServiceDatum{
-		// 		ProviderNameUpper: l[names.ColProviderNameUpper],
-		// 		SDKVersion:        "2",
-		// 		GoPackage:         l[names.ColGoV2Package],
-		// 	}
-		// 	if l[names.ColClientSDKV1] != "" {
-		// 		// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`
-		// 		sd.GoPackage = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
-		// 	}
-		// 	td.Services = append(td.Services, sd)
-		// }
+		if l[names.ColClientSDKV2] != "" {
+			sd := ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "2",
+				GoV1Package:       l[names.ColGoV1Package],
+				GoV2Package:       l[names.ColGoV2Package],
+				ClientTypeName:    "Client",
+				ProviderPackage:   l[names.ColProviderPackageCorrect],
+			}
+			if l[names.ColClientSDKV1] != "" {
+				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`.
+				sd.GoV2PackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
+				sd.SDKVersion = "1,2"
+			}
+			td.Services = append(td.Services, sd)
+		}
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {
 		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
 	})
 
-	writeTemplate(tmpl, "awsclient", td)
-}
-
-func writeTemplate(body string, templateName string, td TemplateData) {
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	contents, err := format.Source(buffer.Bytes())
-	if err != nil {
-		log.Fatalf("error formatting generated file: %s", err)
-	}
-
-	if _, err := f.Write(contents); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
+	if err := g.ApplyAndWriteTemplate(filename, "config", tmpl, td); err != nil {
+		g.Fatalf("error: %s", err.Error())
 	}
 }
 

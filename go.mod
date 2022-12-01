@@ -4,23 +4,24 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.146
+	github.com/aws/aws-sdk-go v1.44.150
 	github.com/aws/aws-sdk-go-v2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.19
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.2
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.21
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.7
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.3
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.31.0
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.12
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.1

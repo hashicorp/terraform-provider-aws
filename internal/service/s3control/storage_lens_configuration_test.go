@@ -214,7 +214,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 }
 
 func testAccCheckStorageLensConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_object_lambda_access_point" {
@@ -260,7 +260,7 @@ func testAccCheckStorageLensConfigurationExists(n string) resource.TestCheckFunc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient()
 
 		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(context.Background(), conn, accountID, configID)
 

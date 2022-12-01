@@ -537,6 +537,44 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementRuleActionOverrides(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "1",
+						"override_action.0.none.#":  "0",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                                                              "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                         "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                  "AWS",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#":                                       "2",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.#":                       "1",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.allow.#":               "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.block.#":               "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.captcha.#":             "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.count.#":               "1",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.name":                                  "SizeRestrictions_QUERYSTRING",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.#":                       "1",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.allow.#":               "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.#":               "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.captcha.#":             "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.count.#":               "1",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.name":                                  "NoUserAgent_HEADER",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                       "1",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
+					}),
+				),
+			},
+			{
 				Config: testAccWebACLConfig_managedRuleGroupStatementVersionVersion10(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(resourceName, &v),
@@ -2733,6 +2771,75 @@ resource "aws_wafv2_web_acl" "test" {
         }
 
         excluded_rule {
+          name = "NoUserAgent_HEADER"
+        }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccWebACLConfig_managedRuleGroupStatementRuleActionOverrides(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
+          name = "SizeRestrictions_QUERYSTRING"
+        }
+
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "NoUserAgent_HEADER"
         }
 
