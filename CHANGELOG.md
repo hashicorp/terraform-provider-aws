@@ -4,6 +4,14 @@ NOTES:
 
 * provider: With AWS's retirement of EC2-Classic the `skip_get_ec2_platforms` attribute has been deprecated and will be removed in a future version ([#28084](https://github.com/hashicorp/terraform-provider-aws/issues/28084))
 
+ENHANCEMENTS:
+
+* data-source/aws_db_instance: Add `storage_throughput` attribute ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
+* resource/aws_db_instance: Add `storage_throughput` argument ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
+* resource/aws_db_instance: Add support for `gp3` `storage_type` value ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
+* resource/aws_db_instance: Change `iops` to `Computed` ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
+* resource/aws_redshiftserverless_workgroup: Wait on `MODIFYING` status on resource Delete ([#28114](https://github.com/hashicorp/terraform-provider-aws/issues/28114))
+
 ## 4.44.0 (November 30, 2022)
 
 NOTES:
