@@ -213,11 +213,13 @@ func resourceNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("admin_username") {
-			input.AdminUserPassword = aws.String(d.Get("admin_username").(string))
+			input.AdminUsername = aws.String(d.Get("admin_username").(string))
+			input.AdminUserPassword = aws.String(d.Get("admin_user_password").(string))
 		}
 
 		if d.HasChange("admin_user_password") {
-			input.AdminUsername = aws.String(d.Get("admin_user_password").(string))
+			input.AdminUsername = aws.String(d.Get("admin_username").(string))
+			input.AdminUserPassword = aws.String(d.Get("admin_user_password").(string))
 		}
 
 		if d.HasChange("log_exports") {
