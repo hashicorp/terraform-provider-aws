@@ -24,7 +24,7 @@ func NewGenerator() *Generator {
 	}
 }
 
-func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody string, templateData any) error {
+func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody string, templateData any, formatter func([]byte) ([]byte, error)) error {
 	tmpl, err := template.New(templateName).Parse(templateBody)
 
 	if err != nil {
@@ -38,11 +38,17 @@ func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody s
 		return fmt.Errorf("executing template: %w", err)
 	}
 
-	generatedFileContents, err := format.Source(buffer.Bytes())
+	var generatedFileContents []byte
 
-	if err != nil {
-		g.Infof("%s", buffer.String())
-		return fmt.Errorf("formatting generated source code: %w", err)
+	if formatter != nil {
+		generatedFileContents, err = formatter(buffer.Bytes())
+
+		if err != nil {
+			g.Infof("%s", buffer.String())
+			return fmt.Errorf("formatting generated source code: %w", err)
+		}
+	} else {
+		generatedFileContents = buffer.Bytes()
 	}
 
 	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644) //nolint:gomnd
@@ -60,6 +66,10 @@ func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody s
 	}
 
 	return nil
+}
+
+func (g *Generator) ApplyAndWriteGoTemplate(filename, templateName, templateBody string, templateData any) error {
+	return g.ApplyAndWriteTemplate(filename, templateName, templateBody, templateData, format.Source)
 }
 
 func (g *Generator) Errorf(format string, a ...interface{}) {

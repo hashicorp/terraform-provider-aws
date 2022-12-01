@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func ReadAllNamesData(filename string) ([][]string, error) {
+func ReadAllCSVData(filename string) ([][]string, error) {
 	f, err := os.Open(filename)
 
 	if err != nil {
