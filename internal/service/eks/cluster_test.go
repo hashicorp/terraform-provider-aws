@@ -1082,8 +1082,8 @@ data "aws_iam_role" "test" {
 }
 
 data "aws_outposts_outpost" "test" {
-	id = "op-XXXXXXXX"
-} 
+  id = "op-XXXXXXXX"
+}
 
 data "aws_subnets" test {
   filter {
@@ -1102,7 +1102,7 @@ resource "aws_eks_cluster" "test" {
   }
 
   vpc_config {
-	endpoint_private_access = true
+    endpoint_private_access = true
     endpoint_public_access  = false
     subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
   }
@@ -1115,15 +1115,15 @@ func testAccClusterConfig_outpostPlacement(rName string) string {
 data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
-	
+
 data "aws_outposts_outpost" "test" {
   id = "op-XXXXXXXX"
-} 
+}
 
 data "aws_subnets" test {
   filter {
-	name   = "outpost-arn"
-	values = [data.aws_outposts_outpost.test.arn]
+    name   = "outpost-arn"
+    values = [data.aws_outposts_outpost.test.arn]
   }
 }
 
@@ -1137,17 +1137,17 @@ resource "aws_eks_cluster" "test" {
   role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
-	control_plane_instance_type = "m5d.large"
-	control_plane_placement {
-	  group_name = aws_placement_group.test.name
-	}
-	outpost_arns                = [data.aws_outposts_outpost.test.arn]
+    control_plane_instance_type = "m5d.large"
+    control_plane_placement {
+      group_name = aws_placement_group.test.name
+    }
+    outpost_arns = [data.aws_outposts_outpost.test.arn]
   }
 
   vpc_config {
-	endpoint_private_access = true
-	endpoint_public_access  = false
-	subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+    endpoint_private_access = true
+    endpoint_public_access  = false
+    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
   }
 }
 `, rName))
