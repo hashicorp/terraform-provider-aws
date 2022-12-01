@@ -62,6 +62,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "0"),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
@@ -73,6 +74,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "username", "tfacctest"),
@@ -3156,7 +3158,7 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-
+	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3166,17 +3168,17 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName, 1000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
 
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName, 2000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, 2000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
@@ -3201,7 +3203,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_mySQLPort(rName),
+				Config: testAccInstanceConfig_mySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
@@ -3209,7 +3211,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 			},
 
 			{
-				Config: testAccInstanceConfig_SnapshotInstanceConfig_updateMySQLPort(rName),
+				Config: testAccInstanceConfig_updateMySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port", "3305"),
@@ -4747,6 +4749,97 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 	})
 }
 
+func TestAccRDSInstance_gp3(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_gp3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_storageThroughput(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 14000, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "14000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
@@ -5047,6 +5140,10 @@ data "aws_rds_orderable_db_instance" "test" {
 
 func testAccInstanceConfig_orderableClassMySQL() string {
 	return testAccInstanceConfig_orderableClass("mysql", "general-public-license", "standard", mySQLPreferredInstanceClasses)
+}
+
+func testAccInstanceConfig_orderableClassMySQLGP3() string {
+	return testAccInstanceConfig_orderableClass("mysql", "general-public-license", "gp3", mySQLPreferredInstanceClasses)
 }
 
 func testAccInstanceConfig_orderableClassMariadb() string {
@@ -5861,7 +5958,7 @@ resource "aws_db_instance" "restore" {
 `, rName, monitoringInterval))
 }
 
-func testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
+func testAccInstanceConfig_iopsUpdate(rName string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -5877,14 +5974,14 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_iops = true
 }
 
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   identifier           = %[1]q
   engine               = data.aws_rds_engine_version.default.engine
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
 
@@ -5897,7 +5994,7 @@ resource "aws_db_instance" "bar" {
 `, rName, iops)
 }
 
-func testAccInstanceConfig_SnapshotInstanceConfig_mySQLPort(rName string) string {
+func testAccInstanceConfig_mySQLPort(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
@@ -5906,9 +6003,9 @@ resource "aws_db_instance" "test" {
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3306
   allocated_storage    = 10
@@ -5919,7 +6016,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_SnapshotInstanceConfig_updateMySQLPort(rName string) string {
+func testAccInstanceConfig_updateMySQLPort(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
@@ -5928,9 +6025,9 @@ resource "aws_db_instance" "test" {
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   port                 = 3305
   allocated_storage    = 10
@@ -9716,4 +9813,53 @@ data "aws_rds_orderable_db_instance" "updated" {
   preferred_instance_classes = ["db.t4g.micro", "db.t4g.small"]
 }
 `, rName, deletionProtection))
+}
+
+func testAccInstanceConfig_gp3(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQLGP3(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot  = true
+
+  apply_immediately = true
+
+  storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage = 200
+}
+`, rName))
+}
+
+func testAccInstanceConfig_storageThroughput(rName string, iops, throughput int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQLGP3(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot  = true
+
+  apply_immediately = true
+
+  storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage = 400
+
+  iops               = %[2]d
+  storage_throughput = %[3]d
+}
+`, rName, iops, throughput))
 }
