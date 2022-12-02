@@ -170,7 +170,6 @@ func ExpandResourceId(id string, partCount int) ([]string, error) {
 			emptyPart = true
 			emptyParts = append(emptyParts, index)
 		}
-
 	}
 
 	if emptyPart {
