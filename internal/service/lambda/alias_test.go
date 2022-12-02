@@ -321,7 +321,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
-  description = "IAM policy for for Lamda alias testing"
+  description = "IAM policy for Lamda alias testing"
 
   policy = <<EOF
 {
