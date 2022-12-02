@@ -82,8 +82,6 @@ func (r *resourceIndex) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagn
 	return schema, nil
 }
 
-// TODO Timeouts
-
 func (r *resourceIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceIndexData
 
