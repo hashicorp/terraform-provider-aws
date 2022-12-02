@@ -355,7 +355,7 @@ func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 	return nil, err
 }
 
-func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
+func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) { //nolint:unparam
 	stateConf := &sdkresource.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateUpdating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
