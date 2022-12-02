@@ -1500,6 +1500,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_elasticsearch_domain":              elasticsearch.ResourceDomain(),
 			"aws_elasticsearch_domain_policy":       elasticsearch.ResourceDomainPolicy(),
 			"aws_elasticsearch_domain_saml_options": elasticsearch.ResourceDomainSAMLOptions(),
+			"aws_elasticsearch_domain_vpc_endpoint": elasticsearch.ResourceDomainVpcEndpoint(),
 
 			"aws_elastictranscoder_pipeline": elastictranscoder.ResourcePipeline(),
 			"aws_elastictranscoder_preset":   elastictranscoder.ResourcePreset(),
