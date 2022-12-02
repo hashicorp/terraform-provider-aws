@@ -112,6 +112,8 @@ resource "aws_spot_fleet_request" "foo" {
 -> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
 
 ```terraform
+variable "subnets" {}
+
 resource "aws_spot_fleet_request" "example" {
   iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
   target_capacity                     = 3
@@ -123,7 +125,6 @@ resource "aws_spot_fleet_request" "example" {
 
 
   dynamic "launch_specification" {
-
     for_each = [for s in var.subnets : {
       subnet_id = s[1]
     }]

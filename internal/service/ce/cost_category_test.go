@@ -3,6 +3,7 @@ package ce_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/costexplorer"
@@ -31,12 +32,50 @@ func TestAccCECostCategory_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`costcategory/.+$`)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCECostCategory_effectiveStart(t *testing.T) {
+	var output costexplorer.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCostCategoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_effectiveStart(rName, "2022-11-01T00:00:00Z"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "effective_start", "2022-11-01T00:00:00Z"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCostCategoryConfig_effectiveStart(rName, "2022-10-01T00:00:00Z"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "effective_start", "2022-10-01T00:00:00Z"),
+				),
 			},
 		},
 	})
@@ -470,4 +509,47 @@ resource "aws_ce_cost_category" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccCostCategoryConfig_effectiveStart(rName, date string) string {
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name            = %[1]q
+  rule_version    = "CostCategoryExpression.v1"
+  effective_start = %[2]q
+  rule {
+    value = "production"
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-prod"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+    type = "REGULAR"
+  }
+  rule {
+    value = "staging"
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-stg"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+    type = "REGULAR"
+  }
+  rule {
+    value = "testing"
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-dev"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+    type = "REGULAR"
+  }
+}
+`, rName, date)
 }

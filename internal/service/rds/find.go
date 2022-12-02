@@ -2,7 +2,6 @@ package rds
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -70,7 +69,8 @@ func FindDBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error)
 }
 
 func FindDBClusterRoleByDBClusterIDAndRoleARN(conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
-	dbCluster, err := FindDBClusterByID(conn, dbClusterID)
+	ctx := context.TODO()
+	dbCluster, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
 		return nil, err
@@ -91,43 +91,12 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(conn *rds.RDS, dbClusterID, roleAR
 	return nil, &resource.NotFoundError{}
 }
 
-func FindDBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
-	input := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeDBClusters(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbCluster := output.DBClusters[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbCluster, nil
-}
-
-func FindDBClusterWithActivityStream(conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
-	log.Printf("[DEBUG] Calling conn.DescribeDBCClusters(input) with DBClusterIdentifier set to %s", dbClusterArn)
+func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(dbClusterArn),
 	}
 
-	output, err := conn.DescribeDBClusters(input)
+	output, err := conn.DescribeDBClustersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -186,36 +155,6 @@ func FindDBClusterSnapshotByID(conn *rds.RDS, id string) (*rds.DBClusterSnapshot
 	}
 
 	return dbClusterSnapshot, nil
-}
-
-func FindDBInstanceByID(conn *rds.RDS, id string) (*rds.DBInstance, error) {
-	input := &rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeDBInstances(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.DBInstances) == 0 || output.DBInstances[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbInstance := output.DBInstances[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbInstance.DBInstanceIdentifier) != id {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbInstance, nil
 }
 
 func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
@@ -407,9 +346,9 @@ func findDBInstanceAutomatedBackups(conn *rds.RDS, input *rds.DescribeDBInstance
 	return output, nil
 }
 
-func FindGlobalClusterByDBClusterARN(conn *rds.RDS, dbClusterARN string) (*rds.GlobalCluster, error) {
+func FindGlobalClusterByDBClusterARN(ctx context.Context, conn *rds.RDS, dbClusterARN string) (*rds.GlobalCluster, error) {
 	input := &rds.DescribeGlobalClustersInput{}
-	globalClusters, err := findGlobalClusters(conn, input)
+	globalClusters, err := findGlobalClusters(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -426,12 +365,12 @@ func FindGlobalClusterByDBClusterARN(conn *rds.RDS, dbClusterARN string) (*rds.G
 	return nil, &resource.NotFoundError{LastRequest: dbClusterARN}
 }
 
-func FindGlobalClusterByID(conn *rds.RDS, id string) (*rds.GlobalCluster, error) {
+func FindGlobalClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.GlobalCluster, error) {
 	input := &rds.DescribeGlobalClustersInput{
 		GlobalClusterIdentifier: aws.String(id),
 	}
 
-	output, err := findGlobalCluster(conn, input)
+	output, err := findGlobalCluster(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -447,8 +386,8 @@ func FindGlobalClusterByID(conn *rds.RDS, id string) (*rds.GlobalCluster, error)
 	return output, nil
 }
 
-func findGlobalCluster(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (*rds.GlobalCluster, error) {
-	output, err := findGlobalClusters(conn, input)
+func findGlobalCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (*rds.GlobalCluster, error) {
+	output, err := findGlobalClusters(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -465,10 +404,10 @@ func findGlobalCluster(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (*
 	return output[0], nil
 }
 
-func findGlobalClusters(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) ([]*rds.GlobalCluster, error) {
+func findGlobalClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeGlobalClustersInput) ([]*rds.GlobalCluster, error) {
 	var output []*rds.GlobalCluster
 
-	err := conn.DescribeGlobalClustersPages(input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
+	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

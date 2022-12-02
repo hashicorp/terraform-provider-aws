@@ -121,7 +121,7 @@ The following arguments are optional:
 * `email_sending_account` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration.
 * `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `reply_to_email_address` - (Optional) REPLY-TO email address.
-* `source_arn` - (Optional) ARN of the SES verified email identity to to use. Required if `email_sending_account` is set to `DEVELOPER`.
+* `source_arn` - (Optional) ARN of the SES verified email identity to use. Required if `email_sending_account` is set to `DEVELOPER`.
 
 ### lambda_config
 

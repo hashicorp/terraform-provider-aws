@@ -195,6 +195,14 @@ func testAccFileSystemCheckDataSource(dName, rName string) resource.TestCheckFun
 	}
 }
 
+func testAccFileSystemConfig_dataSourceBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+`, rName)
+}
+
 const testAccFileSystemDataSourceConfig_idNonExistent = `
 data "aws_efs_file_system" "test" {
   file_system_id = "fs-nonexistent"

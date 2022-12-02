@@ -3,6 +3,8 @@ package conns
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -11,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -58,7 +62,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -326,10 +329,12 @@ type AWSClient struct {
 	S3ConnURICleaningDisabled *s3.S3
 	ServicePackages           []intf.ServicePackageData
 	Session                   *session.Session
-	SupportedPlatforms        []string
 	TerraformVersion          string
 
-	ssmClient lazyClient[*ssm_sdkv2.Client]
+	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
+	rdsClient       lazyClient[*rds_sdkv2.Client]
+	s3controlClient lazyClient[*s3control_sdkv2.Client]
+	ssmClient       lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA
@@ -371,7 +376,7 @@ type AWSClient struct {
 	ChimeSDKMeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	ChimeSDKMessagingConn            *chimesdkmessaging.ChimeSDKMessaging
 	Cloud9Conn                       *cloud9.Cloud9
-	CloudControlConn                 *cloudcontrolapi.CloudControlApi
+	CloudControlClient               *cloudcontrol.Client
 	CloudDirectoryConn               *clouddirectory.CloudDirectory
 	CloudFormationConn               *cloudformation.CloudFormation
 	CloudFrontConn                   *cloudfront.CloudFront
@@ -566,6 +571,7 @@ type AWSClient struct {
 	RedshiftServerlessConn           *redshiftserverless.RedshiftServerless
 	RekognitionConn                  *rekognition.Rekognition
 	ResilienceHubConn                *resiliencehub.ResilienceHub
+	ResourceExplorer2Client          *resourceexplorer2.Client
 	ResourceGroupsConn               *resourcegroups.ResourceGroups
 	ResourceGroupsTaggingAPIConn     *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	RoboMakerConn                    *robomaker.RoboMaker
@@ -578,7 +584,6 @@ type AWSClient struct {
 	Route53ResolverConn              *route53resolver.Route53Resolver
 	S3Conn                           *s3.S3
 	S3ControlConn                    *s3control.S3Control
-	S3ControlClient                  *s3control_sdkv2.Client
 	S3OutpostsConn                   *s3outposts.S3Outposts
 	SESConn                          *ses.SES
 	SESV2Client                      *sesv2.Client
@@ -637,4 +642,20 @@ type AWSClient struct {
 	WorkSpacesConn                   *workspaces.WorkSpaces
 	WorkSpacesWebConn                *workspacesweb.WorkSpacesWeb
 	XRayConn                         *xray.XRay
+}
+
+func (client *AWSClient) LogsClient() *cloudwatchlogs_sdkv2.Client {
+	return client.logsClient.Client()
+}
+
+func (client *AWSClient) RDSClient() *rds_sdkv2.Client {
+	return client.rdsClient.Client()
+}
+
+func (client *AWSClient) S3ControlClient() *s3control_sdkv2.Client {
+	return client.s3controlClient.Client()
+}
+
+func (client *AWSClient) SSMClient() *ssm_sdkv2.Client {
+	return client.ssmClient.Client()
 }

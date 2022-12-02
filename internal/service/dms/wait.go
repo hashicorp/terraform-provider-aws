@@ -12,7 +12,7 @@ const (
 	replicationTaskRunningTimeout = 5 * time.Minute
 )
 
-func waitEndpointDeleted(conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.Endpoint, error) {
+func waitEndpointDeleted(conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{endpointStatusDeleting},
 		Target:  []string{},
@@ -20,13 +20,9 @@ func waitEndpointDeleted(conn *dms.DatabaseMigrationService, id string, timeout 
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*dms.Endpoint); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitReplicationTaskDeleted(conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {

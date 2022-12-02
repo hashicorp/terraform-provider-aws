@@ -267,7 +267,7 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func ExpandParameters(configured []interface{}) []*rds.Parameter {
+func expandParameters(configured []interface{}) []*rds.Parameter {
 	var parameters []*rds.Parameter
 
 	// Loop over our configured parameters and create
@@ -295,7 +295,7 @@ func ExpandParameters(configured []interface{}) []*rds.Parameter {
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func FlattenParameters(list []*rds.Parameter) []map[string]interface{} {
+func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterName != nil {

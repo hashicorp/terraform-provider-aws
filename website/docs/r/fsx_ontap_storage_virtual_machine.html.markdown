@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name of the storage virtual machine.
 * `endpoints` - The endpoints that are used to access data or to manage the storage virtual machine using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
 * `id` - Identifier of the storage virtual machine, e.g., `svm-12345678`
-* `subtype` - Describes the SVM's subtype, e.g. `DEFAULT`
+* `subtype` (**Deprecated**) - Describes the SVM's subtype, e.g. `DEFAULT`
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The SVM's UUID (universally unique identifier).
 

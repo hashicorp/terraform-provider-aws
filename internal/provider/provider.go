@@ -110,6 +110,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ivschat"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
@@ -375,6 +376,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 				Optional: true,
 				Description: "Skip getting the supported EC2 platforms. " +
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				Deprecated: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:         nullable.TypeNullableBool,
@@ -836,6 +838,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_db_subnet_group":                rds.DataSourceSubnetGroup(),
 			"aws_rds_certificate":                rds.DataSourceCertificate(),
 			"aws_rds_cluster":                    rds.DataSourceCluster(),
+			"aws_rds_clusters":                   rds.DataSourceClusters(),
 			"aws_rds_engine_version":             rds.DataSourceEngineVersion(),
 			"aws_rds_orderable_db_instance":      rds.DataSourceOrderableInstance(),
 			"aws_rds_reserved_instance_offering": rds.DataSourceReservedOffering(),
@@ -845,6 +848,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshift_orderable_cluster":   redshift.DataSourceOrderableCluster(),
 			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
 			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
+
+			"aws_redshiftserverless_credentials": redshiftserverless.DataSourceCredentials(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
@@ -902,7 +907,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_sns_topic": sns.DataSourceTopic(),
 
-			"aws_sqs_queue": sqs.DataSourceQueue(),
+			"aws_sqs_queue":  sqs.DataSourceQueue(),
+			"aws_sqs_queues": sqs.DataSourceQueues(),
 
 			"aws_ssm_document":            ssm.DataSourceDocument(),
 			"aws_ssm_instances":           ssm.DataSourceInstances(),
@@ -1152,14 +1158,15 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
-			"aws_cloudwatch_log_destination":         logs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":  logs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":               logs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":       logs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":     logs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":              logs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
+			"aws_cloudwatch_log_data_protection_policy": logs.ResourceDataProtectionPolicy(),
+			"aws_cloudwatch_log_destination":            logs.ResourceDestination(),
+			"aws_cloudwatch_log_destination_policy":     logs.ResourceDestinationPolicy(),
+			"aws_cloudwatch_log_group":                  logs.ResourceGroup(),
+			"aws_cloudwatch_log_metric_filter":          logs.ResourceMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":        logs.ResourceResourcePolicy(),
+			"aws_cloudwatch_log_stream":                 logs.ResourceStream(),
+			"aws_cloudwatch_log_subscription_filter":    logs.ResourceSubscriptionFilter(),
+			"aws_cloudwatch_query_definition":           logs.ResourceQueryDefinition(),
 
 			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
 
@@ -1302,6 +1309,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_dms_replication_instance":     dms.ResourceReplicationInstance(),
 			"aws_dms_replication_subnet_group": dms.ResourceReplicationSubnetGroup(),
 			"aws_dms_replication_task":         dms.ResourceReplicationTask(),
+			"aws_dms_s3_endpoint":              dms.ResourceS3Endpoint(),
 
 			"aws_docdb_cluster":                 docdb.ResourceCluster(),
 			"aws_docdb_cluster_instance":        docdb.ResourceClusterInstance(),
@@ -1672,6 +1680,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ivs_playback_key_pair":       ivs.ResourcePlaybackKeyPair(),
 			"aws_ivs_recording_configuration": ivs.ResourceRecordingConfiguration(),
 
+			"aws_ivschat_logging_configuration": ivschat.ResourceLoggingConfiguration(),
+			"aws_ivschat_room":                  ivschat.ResourceRoom(),
+
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
@@ -1803,6 +1814,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_neptune_cluster_instance":        neptune.ResourceClusterInstance(),
 			"aws_neptune_cluster_parameter_group": neptune.ResourceClusterParameterGroup(),
 			"aws_neptune_cluster_snapshot":        neptune.ResourceClusterSnapshot(),
+			"aws_neptune_global_cluster":          neptune.ResourceGlobalCluster(),
 			"aws_neptune_event_subscription":      neptune.ResourceEventSubscription(),
 			"aws_neptune_parameter_group":         neptune.ResourceParameterGroup(),
 			"aws_neptune_subnet_group":            neptune.ResourceSubnetGroup(),
@@ -1931,6 +1943,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
 			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_resource_policy": redshiftserverless.ResourceResourcePolicy(),
 			"aws_redshiftserverless_snapshot":        redshiftserverless.ResourceSnapshot(),
 			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
 			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),
@@ -2040,6 +2053,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
+			"aws_scheduler_schedule":       scheduler.ResourceSchedule(),
 			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
 			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
