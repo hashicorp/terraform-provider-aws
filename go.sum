@@ -204,6 +204,8 @@ github.com/hashicorp/terraform-json v0.14.0 h1:sh9iZ1Y8IFJLx+xQiKHGud6/TSUCM0N8e
 github.com/hashicorp/terraform-json v0.14.0/go.mod h1:5A9HIWPkk4e5aeeXIBbkcOvaZbIYnAIkEyqP2pNSckM=
 github.com/hashicorp/terraform-plugin-framework v0.16.0 h1:kEHh0d6dp5Ig/ey6PYXkWDZPMLIW8Me41T/Oa7bpO4s=
 github.com/hashicorp/terraform-plugin-framework v0.16.0/go.mod h1:Vk5MuIJoE1qksHZawAZr6psx6YXsQBFIKDrWbROrwus=
+github.com/hashicorp/terraform-plugin-framework-timeouts v0.2.0 h1:qo+9WNxAg9UlD0NHoOhi6GJOjQKN6b+JLZJOZ5Nqr8g=
+github.com/hashicorp/terraform-plugin-framework-timeouts v0.2.0/go.mod h1:jIV0yknjnzb3Al+DRMtr25BPlQq8LLoy+36bYQduIg8=
 github.com/hashicorp/terraform-plugin-framework-validators v0.6.0 h1:j8GlgzuTjbbkMnsbiOXerwJTW8Us4saQwo4FfJKd2I0=
 github.com/hashicorp/terraform-plugin-framework-validators v0.6.0/go.mod h1:iOYhZQinlZ0R/M3Q3nCXS4dikZ7P41d5b7ezpe9uoIw=
 github.com/hashicorp/terraform-plugin-go v0.14.1 h1:cwZzPYla82XwAqpLhSzdVsOMU+6H29tczAwrB0z9Zek=
