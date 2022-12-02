@@ -42,18 +42,25 @@ type randomnessSource struct {
 }
 
 var (
-	providerMetasLock = sync.RWMutex{}
-	providerMetas     = make(map[string]*conns.AWSClient, 0)
-
-	randomnessSourcesLock = sync.RWMutex{}
-	randomnessSources     = make(map[string]*randomnessSource, 0)
+	providerMetas = struct {
+		sync.RWMutex
+		mapping map[string]*conns.AWSClient
+	}{
+		mapping: make(map[string]*conns.AWSClient, 0),
+	}
+	randomnessSources = struct {
+		sync.RWMutex
+		mapping map[string]*randomnessSource
+	}{
+		mapping: make(map[string]*randomnessSource, 0),
+	}
 )
 
 // ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient").
 func ProviderMeta(t *testing.T) *conns.AWSClient {
-	providerMetasLock.RLock()
-	meta, ok := providerMetas[t.Name()]
-	providerMetasLock.RUnlock()
+	providerMetas.RLock()
+	meta, ok := providerMetas.mapping[t.Name()]
+	providerMetas.RUnlock()
 
 	if !ok {
 		meta = Provider.Meta().(*conns.AWSClient)
@@ -103,9 +110,9 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 // VCR requires a single HTTP client to handle all interactions.
 func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		providerMetasLock.RLock()
-		meta, ok := providerMetas[testName]
-		providerMetasLock.RUnlock()
+		providerMetas.RLock()
+		meta, ok := providerMetas.mapping[testName]
+		providerMetas.RUnlock()
 
 		if ok {
 			return meta, nil
@@ -218,9 +225,9 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 
 		meta.Session.Config.HTTPClient.Transport = r
 
-		providerMetasLock.Lock()
-		providerMetas[testName] = meta
-		providerMetasLock.Unlock()
+		providerMetas.Lock()
+		providerMetas.mapping[testName] = meta
+		providerMetas.Unlock()
 
 		return meta, nil
 	}
@@ -232,9 +239,9 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 	testName := t.Name()
 
-	randomnessSourcesLock.RLock()
-	s, ok := randomnessSources[testName]
-	randomnessSourcesLock.RUnlock()
+	randomnessSources.RLock()
+	s, ok := randomnessSources.mapping[testName]
+	randomnessSources.RUnlock()
 
 	if ok {
 		return s, nil
@@ -268,9 +275,9 @@ func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 		t.FailNow()
 	}
 
-	randomnessSourcesLock.Lock()
-	randomnessSources[testName] = s
-	randomnessSourcesLock.Unlock()
+	randomnessSources.Lock()
+	randomnessSources.mapping[testName] = s
+	randomnessSources.Unlock()
 
 	return s, nil
 }
@@ -321,9 +328,9 @@ func writeSeedToFile(seed int64, fileName string) error {
 // CloseVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
 func CloseVCRRecorder(t *testing.T) {
 	testName := t.Name()
-	providerMetasLock.RLock()
-	meta, ok := providerMetas[testName]
-	providerMetasLock.RUnlock()
+	providerMetas.RLock()
+	meta, ok := providerMetas.mapping[testName]
+	providerMetas.RUnlock()
 
 	if ok {
 		if !t.Failed() {
@@ -333,15 +340,15 @@ func CloseVCRRecorder(t *testing.T) {
 			}
 		}
 
-		providerMetasLock.Lock()
-		delete(providerMetas, testName)
-		providerMetasLock.Unlock()
+		providerMetas.Lock()
+		delete(providerMetas.mapping, testName)
+		providerMetas.Unlock()
 	}
 
 	// Save the randomness seed.
-	randomnessSourcesLock.RLock()
-	s, ok := randomnessSources[testName]
-	randomnessSourcesLock.RUnlock()
+	randomnessSources.RLock()
+	s, ok := randomnessSources.mapping[testName]
+	randomnessSources.RUnlock()
 
 	if ok {
 		if !t.Failed() {
@@ -351,9 +358,9 @@ func CloseVCRRecorder(t *testing.T) {
 			}
 		}
 
-		randomnessSourcesLock.Lock()
-		delete(randomnessSources, testName)
-		randomnessSourcesLock.Unlock()
+		randomnessSources.Lock()
+		delete(randomnessSources.mapping, testName)
+		randomnessSources.Unlock()
 	}
 }
 
