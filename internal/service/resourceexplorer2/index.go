@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -24,25 +25,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const indexTimeout = 1 * time.Hour
-
 func init() {
 	registerFrameworkResourceFactory(newResourceIndex)
 }
 
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceIndex{}, nil
+	return &resourceIndex{
+		defaultCreateTimeout: 2 * time.Hour,
+		defaultUpdateTimeout: 2 * time.Hour,
+		defaultDeleteTimeout: 10 * time.Minute,
+	}, nil
 }
 
 type resourceIndex struct {
 	framework.ResourceWithConfigure
+
+	defaultCreateTimeout time.Duration
+	defaultUpdateTimeout time.Duration
+	defaultDeleteTimeout time.Duration
 }
 
 func (r *resourceIndex) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_resourceexplorer2_index"
 }
 
-func (r *resourceIndex) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (r *resourceIndex) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"arn": {
@@ -63,6 +70,13 @@ func (r *resourceIndex) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnosti
 				},
 			},
 		},
+		Blocks: map[string]tfsdk.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
 	}
 
 	return schema, nil
@@ -80,6 +94,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	conn := r.Meta().ResourceExplorer2Client
+	createTimeout := timeouts.Create(ctx, data.Timeouts, r.defaultCreateTimeout)
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
@@ -103,7 +118,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	arn := aws.ToString(output.Arn)
 	data.ID = types.StringValue(arn)
 
-	if _, err := waitIndexCreated(ctx, conn, indexTimeout); err != nil {
+	if _, err := waitIndexCreated(ctx, conn, createTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) create", data.ID.ValueString()), err.Error())
 
 		return
@@ -123,7 +138,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 			return
 		}
 
-		if _, err := waitIndexUpdated(ctx, conn, indexTimeout); err != nil {
+		if _, err := waitIndexUpdated(ctx, conn, createTimeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", data.ID.ValueString()), err.Error())
 
 			return
@@ -196,6 +211,7 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 	}
 
 	conn := r.Meta().ResourceExplorer2Client
+	updateTimeout := timeouts.Update(ctx, new.Timeouts, r.defaultUpdateTimeout)
 
 	if !new.Type.Equal(old.Type) {
 		input := &resourceexplorer2.UpdateIndexTypeInput{
@@ -211,7 +227,7 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 			return
 		}
 
-		if _, err := waitIndexUpdated(ctx, conn, indexTimeout); err != nil {
+		if _, err := waitIndexUpdated(ctx, conn, updateTimeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", new.ID.ValueString()), err.Error())
 
 			return
@@ -239,11 +255,11 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 	}
 
 	conn := r.Meta().ResourceExplorer2Client
+	deleteTimeout := timeouts.Delete(ctx, data.Timeouts, r.defaultDeleteTimeout)
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
 		"id": data.ID.ValueString(),
 	})
-
 	_, err := conn.DeleteIndex(ctx, &resourceexplorer2.DeleteIndexInput{
 		Arn: flex.StringFromFramework(ctx, data.ID),
 	})
@@ -254,7 +270,7 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	if _, err := waitIndexDeleted(ctx, conn, indexTimeout); err != nil {
+	if _, err := waitIndexDeleted(ctx, conn, deleteTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) delete", data.ID.ValueString()), err.Error())
 
 		return
@@ -270,11 +286,12 @@ func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyP
 }
 
 type resourceIndexData struct {
-	ARN     types.String `tfsdk:"arn"`
-	ID      types.String `tfsdk:"id"`
-	Tags    types.Map    `tfsdk:"tags"`
-	TagsAll types.Map    `tfsdk:"tags_all"`
-	Type    types.String `tfsdk:"type"`
+	ARN      types.String `tfsdk:"arn"`
+	ID       types.String `tfsdk:"id"`
+	Tags     types.Map    `tfsdk:"tags"`
+	TagsAll  types.Map    `tfsdk:"tags_all"`
+	Timeouts types.Object `tfsdk:"timeouts"`
+	Type     types.String `tfsdk:"type"`
 }
 
 func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceexplorer2.GetIndexOutput, error) {
