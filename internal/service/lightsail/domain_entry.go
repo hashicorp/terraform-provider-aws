@@ -14,9 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/separator"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	DomainEntryIdPartsCount = 4
 )
 
 func ResourceDomainEntry() *schema.Resource {
@@ -103,7 +107,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		d.Get("target").(string),
 	}
 
-	d.SetId(separator.FlattenResourceId(idParts))
+	d.SetId(flex.FlattenResourceId(idParts))
 
 	return resourceDomainEntryRead(ctx, d, meta)
 }
@@ -123,7 +127,13 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.DiagError(names.Lightsail, create.ErrActionReading, ResDomainEntry, d.Id(), err)
 	}
 
-	domainName := expandDomainNameFromId(d.Id())
+	idParts, err := flex.ExpandResourceId(d.Id(), DomainEntryIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandResourceId, ResDomainEntry, d.Id(), err)
+	}
+
+	domainName := expandDomainNameFromIdParts(idParts)
 
 	d.Set("name", flattenDomainEntryName(aws.StringValue(entry.Name), domainName))
 	d.Set("domain_name", domainName)
@@ -137,9 +147,15 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
+	idParts, err := flex.ExpandResourceId(d.Id(), DomainEntryIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionExpandResourceId, ResDomainEntry, d.Id(), err)
+	}
+
 	resp, err := conn.DeleteDomainEntry(&lightsail.DeleteDomainEntryInput{
-		DomainName:  aws.String(expandDomainNameFromId(d.Id())),
-		DomainEntry: expandDomainEntry(d.Id()),
+		DomainName:  aws.String(expandDomainNameFromIdParts(idParts)),
+		DomainEntry: expandDomainEntry(idParts),
 	})
 
 	if err != nil && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
@@ -160,12 +176,11 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func expandDomainEntry(id string) *lightsail.DomainEntry {
-	id_parts := separator.ExpandResourceId(id)
-	name := id_parts[0]
-	domainName := id_parts[1]
-	recordType := id_parts[2]
-	recordTarget := id_parts[3]
+func expandDomainEntry(idParts []string) *lightsail.DomainEntry {
+	name := idParts[0]
+	domainName := idParts[1]
+	recordType := idParts[2]
+	recordTarget := idParts[3]
 
 	entry := &lightsail.DomainEntry{
 		Name:   aws.String(expandDomainEntryName(name, domainName)),
@@ -176,9 +191,8 @@ func expandDomainEntry(id string) *lightsail.DomainEntry {
 	return entry
 }
 
-func expandDomainNameFromId(id string) string {
-	id_parts := separator.ExpandResourceId(id)
-	domainName := id_parts[1]
+func expandDomainNameFromIdParts(idParts []string) string {
+	domainName := idParts[1]
 
 	return domainName
 }

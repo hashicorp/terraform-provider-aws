@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/separator"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -174,7 +174,8 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id s
 }
 
 func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
-	id_parts := separator.ExpandResourceId(id)
+	id_parts, err := flex.ExpandResourceId(id, 4)
+
 	domainName := id_parts[1]
 	name := expandDomainEntryName(id_parts[0], domainName)
 	recordType := id_parts[2]
@@ -184,7 +185,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 		DomainName: aws.String(domainName),
 	}
 
-	if len(id_parts) != 4 {
+	if err != nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 

@@ -19,10 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/separator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/shopspring/decimal"
+)
+
+const (
+	BudgetIdPartsCount = 2
 )
 
 func ResourceBudget() *schema.Resource {
@@ -521,19 +524,19 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 func BudgetCreateResourceID(accountID, budgetName string) string {
 	idParts := []string{accountID, budgetName}
-	id := separator.FlattenResourceId(idParts)
+	id := flex.FlattenResourceId(idParts)
 
 	return id
 }
 
 func BudgetParseResourceID(id string) (string, string, error) {
-	parts := separator.ExpandResourceId(id)
+	parts, err := flex.ExpandResourceId(id, BudgetIdPartsCount)
 
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	if err != nil {
+		return "", "", err
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sBudgetName", id, separator.ResourceIdSeparator)
+	return parts[0], parts[1], nil
 }
 
 func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string) (*budgets.Budget, error) {

@@ -1,8 +1,16 @@
 package flex
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+const (
+	// A common separator to be used for creating resource Ids from a combination of attributes
+	ResourceIdSeparator = ","
 )
 
 // Takes the result of flatmap.Expand for an array of strings
@@ -142,4 +150,39 @@ func PointersMapToStringList(pointers map[string]*string) map[string]interface{}
 		list[i] = *v
 	}
 	return list
+}
+
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant
+// and an expected number of idParts
+// returns a list of the resource attributes used to construct the unique Id
+// or and error message if the resource id does not parse properly
+func ExpandResourceId(id string, partCount int) ([]string, error) {
+	idParts := strings.Split(id, ResourceIdSeparator)
+
+	if len(idParts) != partCount {
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected (%[2]q) parts separated by (%[3]s)", id, partCount, ResourceIdSeparator)
+	}
+
+	var emptyPart bool
+	emptyParts := make([]int, 0, partCount)
+	for index, part := range idParts {
+		if part == "" {
+			emptyPart = true
+			emptyParts = append(emptyParts, index)
+		}
+
+	}
+
+	if emptyPart {
+		return nil, fmt.Errorf("unexpected format for ID. the following id parts indexes are blank (%v)", emptyParts)
+	}
+
+	return idParts, nil
+}
+
+// Takes a list of list of the resource attributes used to construct the unique Id
+// and the expected number of attributes
+// returns a string of resource attributes separated by the ResourceIdSeparator constant
+func FlattenResourceId(idParts []string) string {
+	return strings.Join(idParts, ResourceIdSeparator)
 }

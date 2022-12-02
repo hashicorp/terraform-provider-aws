@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/separator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -381,19 +380,19 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 
 func BudgetActionCreateResourceID(accountID, actionID, budgetName string) string {
 	idParts := []string{accountID, actionID, budgetName}
-	id := separator.FlattenResourceId(idParts)
+	id := flex.FlattenResourceId(idParts)
 
 	return id
 }
 
 func BudgetActionParseResourceID(id string) (string, string, string, error) {
-	parts := separator.ExpandResourceId(id)
+	parts, err := flex.ExpandResourceId(id, 3)
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
+	if err != nil {
+		return "", "", "", err
 	}
 
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sActionID%[2]sBudgetName", id, separator.ResourceIdSeparator)
+	return parts[0], parts[1], parts[2], nil
 }
 
 const (
