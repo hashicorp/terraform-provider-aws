@@ -42,7 +42,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.15.0
 	github.com/hashicorp/terraform-plugin-framework v0.17.0
-	github.com/hashicorp/terraform-plugin-framework-validators v0.6.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.7.0
 	github.com/hashicorp/terraform-plugin-go v0.14.2
 	github.com/hashicorp/terraform-plugin-log v0.7.0
 	github.com/hashicorp/terraform-plugin-mux v0.7.0
