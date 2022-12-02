@@ -1,4 +1,5 @@
-## 4.45.0 (Unreleased)
+## 4.46.0 (Unreleased)
+## 4.45.0 (December  2, 2022)
 
 NOTES:
 
