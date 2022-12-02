@@ -5,6 +5,10 @@ NOTES:
 * provider: With AWS's retirement of EC2-Classic the `skip_get_ec2_platforms` attribute has been deprecated and will be removed in a future version ([#28084](https://github.com/hashicorp/terraform-provider-aws/issues/28084))
 * resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute has been deprecated and will be removed in a future version ([#28127](https://github.com/hashicorp/terraform-provider-aws/issues/28127))
 
+FEATURES:
+
+* **New Resource:** `aws_dms_s3_endpoint` ([#28130](https://github.com/hashicorp/terraform-provider-aws/issues/28130))
+
 ENHANCEMENTS:
 
 * data-source/aws_db_instance: Add `storage_throughput` attribute ([#27670](https://github.com/hashicorp/terraform-provider-aws/issues/27670))
