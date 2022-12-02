@@ -13,7 +13,7 @@ Provides an AppSync Resolver.
 ## Example Usage
 
 ```terraform
-resource "aws_appsync_graphql_api" "example" {
+resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = "tf-example"
 
@@ -38,8 +38,8 @@ schema {
 EOF
 }
 
-resource "aws_appsync_datasource" "example" {
-  api_id = aws_appsync_graphql_api.example.id
+resource "aws_appsync_datasource" "test" {
+  api_id = aws_appsync_graphql_api.test.id
   name   = "tf_example"
   type   = "HTTP"
 
@@ -49,11 +49,11 @@ resource "aws_appsync_datasource" "example" {
 }
 
 # UNIT type resolver (default)
-resource "aws_appsync_resolver" "example" {
-  api_id      = aws_appsync_graphql_api.example.id
+resource "aws_appsync_resolver" "test" {
+  api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
   type        = "Query"
-  data_source = aws_appsync_datasource.example.name
+  data_source = aws_appsync_datasource.test.name
 
   request_template = <<EOF
 {
@@ -84,37 +84,19 @@ EOF
 }
 
 # PIPELINE type resolver
-resource "aws_appsync_resolver" "Mutation_pipelineExample" {
+resource "aws_appsync_resolver" "Mutation_pipelineTest" {
   type              = "Mutation"
-  api_id            = aws_appsync_graphql_api.example.id
-  field             = "pipelineexample"
+  api_id            = aws_appsync_graphql_api.test.id
+  field             = "pipelineTest"
   request_template  = "{}"
   response_template = "$util.toJson($ctx.result)"
   kind              = "PIPELINE"
   pipeline_config {
     functions = [
-      aws_appsync_function.example1.function_id,
-      aws_appsync_function.example2.function_id,
-      aws_appsync_function.example3.function_id,
+      aws_appsync_function.test1.function_id,
+      aws_appsync_function.test2.function_id,
+      aws_appsync_function.test3.function_id,
     ]
-  }
-}
-```
-
-## Example Usage With Code
-
-```terraform
-resource "aws_appsync_resolver" "example" {
-  api_id      = aws_appsync_graphql_api.example.id
-  field       = "singlePost"
-  type        = "Query"
-  data_source = aws_appsync_datasource.example.name
-
-  code        = file("some-code-dir")
-
-  runtime {
-    name            = "APPSYNC_JS"
-    runtime_version = "1.0.0"
   }
 }
 ```
@@ -124,7 +106,6 @@ resource "aws_appsync_resolver" "example" {
 The following arguments are supported:
 
 * `api_id` - (Required) API ID for the GraphQL API.
-* `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
 * `type` - (Required) Type name from the schema defined in the GraphQL API.
 * `field` - (Required) Field name from the schema defined in the GraphQL API.
 * `request_template` - (Optional) Request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
@@ -133,19 +114,11 @@ The following arguments are supported:
 * `max_batch_size` - (Optional) Maximum batching size for a resolver. Valid values are between `0` and `2000`.
 * `kind`  - (Optional) Resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
-* `runtime` - (Optional) Describes a runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [Runtime](#runtime).
 * `pipeline_config` - (Optional) PipelineConfig.
     * `functions` - (Required) List of Function ID.
 * `caching_config` - (Optional) CachingConfig.
     * `caching_keys` - (Optional) List of caching key.
     * `ttl` - (Optional) TTL in seconds.
-
-### Runtime
-
-The following arguments are supported:
-
-* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
-* `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ### Sync Config
 

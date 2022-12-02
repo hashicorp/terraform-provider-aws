@@ -34,56 +34,39 @@ func ResourceResolver() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			"type": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caching_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"caching_keys": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"code": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"runtime"},
-				ValidateFunc: validation.StringLenBetween(1, 32768),
-			},
-			"data_source": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"pipeline_config"},
+				Required: true,
+				ForceNew: true,
 			},
 			"field": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"kind": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      appsync.ResolverKindUnit,
-				ValidateFunc: validation.StringInSlice(appsync.ResolverKind_Values(), true),
+			"data_source": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"pipeline_config"},
 			},
 			"max_batch_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 2000),
+			},
+			"request_template": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"response_template": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"kind": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      appsync.ResolverKindUnit,
+				ValidateFunc: validation.StringInSlice(appsync.ResolverKind_Values(), true),
 			},
 			"pipeline_config": {
 				Type:          schema.TypeList,
@@ -102,29 +85,22 @@ func ResourceResolver() *schema.Resource {
 					},
 				},
 			},
-			"request_template": {
-				Type:     schema.TypeString,
+			"caching_config": {
+				Type:     schema.TypeList,
 				Optional: true,
-			},
-			"response_template": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"runtime": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				RequiredWith: []string{"code"},
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appsync.RuntimeName_Values(), false),
+						"caching_keys": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
-						"runtime_version": {
-							Type:     schema.TypeString,
-							Required: true,
+						"ttl": {
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},
@@ -162,10 +138,9 @@ func ResourceResolver() *schema.Resource {
 					},
 				},
 			},
-			"type": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 		},
 	}
@@ -179,10 +154,6 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 		TypeName:  aws.String(d.Get("type").(string)),
 		FieldName: aws.String(d.Get("field").(string)),
 		Kind:      aws.String(d.Get("kind").(string)),
-	}
-
-	if v, ok := d.GetOk("code"); ok {
-		input.Code = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOkExists("max_batch_size"); ok {
@@ -214,10 +185,6 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("caching_config"); ok {
 		input.CachingConfig = expandResolverCachingConfig(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
-		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
@@ -274,14 +241,9 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("response_template", resolver.ResponseMappingTemplate)
 	d.Set("kind", resolver.Kind)
 	d.Set("max_batch_size", resolver.MaxBatchSize)
-	d.Set("code", resolver.Code)
 
 	if err := d.Set("sync_config", flattenSyncConfig(resolver.SyncConfig)); err != nil {
 		return fmt.Errorf("error setting sync_config: %w", err)
-	}
-
-	if err := d.Set("runtime", flattenRuntime(resolver.Runtime)); err != nil {
-		return fmt.Errorf("error setting runtime: %w", err)
 	}
 
 	if err := d.Set("pipeline_config", flattenPipelineConfig(resolver.PipelineConfig)); err != nil {
@@ -307,14 +269,6 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("data_source"); ok {
 		input.DataSourceName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("code"); ok {
-		input.Code = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
-		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("pipeline_config"); ok {
