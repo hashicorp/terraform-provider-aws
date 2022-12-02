@@ -627,7 +627,7 @@ resource "aws_dms_s3_endpoint" "test" {
         ColumnType     = "INT8"
         ColumnNullable = "false"
         ColumnIsPk     = "true"
-      },{
+        }, {
         ColumnName   = "LastName"
         ColumnType   = "STRING"
         ColumnLength = "20"
@@ -668,7 +668,7 @@ resource "aws_dms_s3_endpoint" "test" {
         ColumnType     = "INT8"
         ColumnNullable = "false"
         ColumnIsPk     = "true"
-      },{
+        }, {
         ColumnName   = "LastName"
         ColumnType   = "STRING"
         ColumnLength = "20"

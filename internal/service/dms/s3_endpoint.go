@@ -420,11 +420,6 @@ func resourceS3EndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cdc_max_batch_interval", s3settings.CdcMaxBatchInterval)
 	d.Set("cdc_min_file_size", s3settings.CdcMinFileSize)
 	d.Set("cdc_path", s3settings.CdcPath)
-
-	if (d.Get("compression_type").(string) != dms.CompressionTypeValueNone || aws.StringValue(s3settings.CompressionType) != "") &&
-		(d.Get("compression_type").(string) != "" || aws.StringValue(s3settings.CompressionType) != dms.CompressionTypeValueNone) {
-
-	}
 	d.Set("compression_type", s3settings.CompressionType)
 	d.Set("csv_delimiter", s3settings.CsvDelimiter)
 	d.Set("csv_no_sup_value", s3settings.CsvNoSupValue)
