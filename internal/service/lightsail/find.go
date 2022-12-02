@@ -174,7 +174,7 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id s
 }
 
 func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
-	id_parts, err := flex.ExpandResourceId(id, 4)
+	id_parts, err := flex.ExpandResourceId(id, DomainEntryIdPartsCount)
 	domainName := id_parts[1]
 	name := expandDomainEntryName(id_parts[0], domainName)
 	recordType := id_parts[2]
