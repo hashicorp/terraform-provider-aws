@@ -560,8 +560,7 @@ func resourceS3EndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return create.Error(names.DMS, create.ErrActionDeleting, ResNameS3Endpoint, d.Id(), err)
 	}
 
-	_, err = waitEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil {
+	if err = waitEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.Error(names.DMS, create.ErrActionWaitingForDeletion, ResNameS3Endpoint, d.Id(), err)
 	}
 
