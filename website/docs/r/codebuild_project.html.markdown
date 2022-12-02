@@ -240,7 +240,7 @@ The following arguments are optional:
 * `cache` - (Optional) Configuration block. Detailed below.
 * `concurrent_build_limit` - (Optional) Specify a maximum number of concurrent builds for the project. The value specified must be greater than 0 and less than the account concurrent running builds limit.
 * `description` - (Optional) Short description of the project.
-* `file_system_locations` - (Optional) A set of file system locations to to mount inside the build. File system locations are documented below.
+* `file_system_locations` - (Optional) A set of file system locations to mount inside the build. File system locations are documented below.
 * `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
 * `project_visibility` - (Optional) Specifies the visibility of the project's builds. Possible values are: `PUBLIC_READ` and `PRIVATE`. Default value is `PRIVATE`.
