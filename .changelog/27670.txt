@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_db_instance: Add support for `gp3` `storage_type` value
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Add `storage_throughput` argument
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add `storage_throughput` attribute
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Change `iops` to `Computed`
+```

@@ -168,6 +168,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"storage_throughput": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -245,6 +249,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set("storage_type", v.StorageType)
 	d.Set("timezone", v.Timezone)
 	var vpcSecurityGroupIDs []string

@@ -274,6 +274,7 @@ func ResourceInstance() *schema.Resource {
 			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -514,6 +515,11 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"storage_throughput": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"storage_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -691,15 +697,18 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("storage_type"); ok {
-			input.StorageType = aws.String(attr.(string))
+		if v, ok := d.GetOk("storage_throughput"); ok {
+			input.StorageThroughput = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("storage_type"); ok {
+			input.StorageType = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
 		outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
@@ -892,6 +901,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
+		if v, ok := d.GetOk("storage_throughput"); ok {
+			input.StorageThroughput = aws.Int64(int64(v.(int)))
+		}
+
 		if v, ok := d.GetOk("storage_type"); ok {
 			input.StorageType = aws.String(v.(string))
 		}
@@ -926,13 +939,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if err != nil {
 			return errs.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
-	} else if _, ok := d.GetOk("snapshot_identifier"); ok {
+	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
-			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
+			DBSnapshotIdentifier:    aws.String(v.(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                    Tags(tags.IgnoreAWS()),
@@ -1099,6 +1112,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
+		if v, ok := d.GetOk("storage_throughput"); ok {
+			modifyDbInstanceInput.StorageThroughput = aws.Int64(int64(v.(int)))
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("storage_type"); ok {
 			modifyDbInstanceInput.StorageType = aws.String(v.(string))
 			requiresModifyDbInstance = true
@@ -1112,7 +1130,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
 		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
@@ -1263,6 +1280,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageType = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("storage_type"); ok {
+			input.StorageType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("tde_credential_arn"); ok {
 			input.TdeCredentialArn = aws.String(v.(string))
 		}
@@ -1271,7 +1292,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
 		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceToPointInTimeWithContext(ctx, input)
@@ -1434,6 +1454,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
 			input.DBSecurityGroups = flex.ExpandStringSet(v)
+		}
+
+		if v, ok := d.GetOk("storage_throughput"); ok {
+			input.StorageThroughput = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("storage_type"); ok {
@@ -1599,6 +1623,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("security_group_names", securityGroupNames)
 	d.Set("status", v.DBInstanceStatus)
 	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set("storage_type", v.StorageType)
 	d.Set("timezone", v.Timezone)
 	d.Set("username", v.MasterUsername)
@@ -1672,12 +1697,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// as it results in "InvalidParameterCombination: No modifications were requested".
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
+		"blue_green_update",
 		"delete_automated_backups",
 		"final_snapshot_identifier",
 		"replicate_source_db",
 		"skip_final_snapshot",
 		"tags", "tags_all",
-		"blue_green_update",
 	) {
 		if d.Get("blue_green_update.0.enabled").(bool) {
 			orchestrator := newBlueGreenOrchestrator(conn)
@@ -2026,6 +2051,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 			needsModify = true
 			input.DBSecurityGroups = flex.ExpandStringValueSet(v)
 		}
+	}
+
+	if d.HasChange("storage_throughput") {
+		needsModify = true
+		input.StorageThroughput = aws.Int32(int32(d.Get("storage_throughput").(int)))
 	}
 
 	if d.HasChange("storage_type") {

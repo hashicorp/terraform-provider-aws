@@ -4,7 +4,7 @@ import (
 	"context"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,7 +42,7 @@ func DataSourceResource() *schema.Resource {
 }
 
 func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudControlConn
+	conn := meta.(*conns.AWSClient).CloudControlClient
 
 	identifier := d.Get("identifier").(string)
 	typeName := d.Get("type_name").(string)
@@ -57,7 +57,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("reading Cloud Control API (%s) Resource (%s): %s", typeName, identifier, err)
 	}
 
-	d.SetId(aws.StringValue(resourceDescription.Identifier))
+	d.SetId(aws.ToString(resourceDescription.Identifier))
 
 	d.Set("properties", resourceDescription.Properties)
 
