@@ -69,7 +69,6 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"Resolver": {
 			"basic":             testAccResolver_basic,
-			"code":              testAccResolver_code,
 			"disappears":        testAccResolver_disappears,
 			"dataSource":        testAccResolver_dataSource,
 			"DataSource_lambda": testAccResolver_DataSource_lambda,
