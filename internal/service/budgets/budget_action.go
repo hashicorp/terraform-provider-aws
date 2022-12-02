@@ -21,6 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	BudgetActionIdPartsCount = 3
+)
+
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
@@ -386,7 +390,7 @@ func BudgetActionCreateResourceID(accountID, actionID, budgetName string) string
 }
 
 func BudgetActionParseResourceID(id string) (string, string, string, error) {
-	parts, err := flex.ExpandResourceId(id, 3)
+	parts, err := flex.ExpandResourceId(id, BudgetActionIdPartsCount)
 
 	if err != nil {
 		return "", "", "", err
