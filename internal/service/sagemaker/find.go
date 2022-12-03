@@ -271,7 +271,6 @@ func listAppsByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName,
 
 	var foundApp *sagemaker.AppDetails
 	for _, app := range output.Apps {
-
 		if aws.StringValue(app.AppName) == appName &&
 			aws.StringValue(app.AppType) == appType &&
 			(aws.StringValue(app.SpaceName) == userProfileOrSpaceName ||
