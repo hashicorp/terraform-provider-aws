@@ -329,7 +329,6 @@ func WaitFeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker
 func WaitUserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			userProfileStatusNotFound,
 			sagemaker.UserProfileStatusPending,
 			sagemaker.UserProfileStatusUpdating,
 		},
@@ -341,6 +340,14 @@ func WaitUserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileNa
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
+		return output, err
+	}
+
+	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.UserProfileStatusFailed || status == sagemaker.UserProfileStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -361,6 +368,10 @@ func WaitUserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.UserProfileStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 

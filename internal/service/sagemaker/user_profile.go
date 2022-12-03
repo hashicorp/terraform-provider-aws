@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -421,25 +422,25 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	UserProfile, err := FindUserProfileByName(conn, domainID, userProfileName)
+	userProfile, err := FindUserProfileByName(conn, domainID, userProfileName)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker User Profile (%s), removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker User Profile (%s); removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
-	arn := aws.StringValue(UserProfile.UserProfileArn)
-	d.Set("user_profile_name", UserProfile.UserProfileName)
-	d.Set("domain_id", UserProfile.DomainId)
-	d.Set("single_sign_on_user_identifier", UserProfile.SingleSignOnUserIdentifier)
-	d.Set("single_sign_on_user_value", UserProfile.SingleSignOnUserValue)
+	arn := aws.StringValue(userProfile.UserProfileArn)
+	d.Set("user_profile_name", userProfile.UserProfileName)
+	d.Set("domain_id", userProfile.DomainId)
+	d.Set("single_sign_on_user_identifier", userProfile.SingleSignOnUserIdentifier)
+	d.Set("single_sign_on_user_value", userProfile.SingleSignOnUserValue)
 	d.Set("arn", arn)
-	d.Set("home_efs_file_system_uid", UserProfile.HomeEfsFileSystemUid)
+	d.Set("home_efs_file_system_uid", userProfile.HomeEfsFileSystemUid)
 
-	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
+	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(userProfile.UserSettings)); err != nil {
 		return fmt.Errorf("setting user_settings for SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 

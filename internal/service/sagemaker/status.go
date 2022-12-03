@@ -16,7 +16,6 @@ const (
 	imageStatusFailed               = "Failed"
 	imageVersionStatusNotFound      = "NotFound"
 	imageVersionStatusFailed        = "Failed"
-	userProfileStatusNotFound       = "NotFound"
 	modelPackageGroupStatusNotFound = "NotFound"
 )
 
@@ -179,15 +178,7 @@ func StatusUserProfile(conn *sagemaker.SageMaker, domainID, userProfileName stri
 		}
 
 		if err != nil {
-			return nil, sagemaker.UserProfileStatusFailed, err
-		}
-
-		if output == nil {
-			return nil, userProfileStatusNotFound, nil
-		}
-
-		if aws.StringValue(output.Status) == sagemaker.UserProfileStatusFailed {
-			return output, sagemaker.UserProfileStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.Status), nil

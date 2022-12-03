@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -645,12 +646,12 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	domain, err := FindDomainByName(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker domain (%s), removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker Domain (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("reading SageMaker domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Domain (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(domain.DomainArn)

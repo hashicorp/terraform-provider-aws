@@ -230,12 +230,19 @@ func FindUserProfileByName(conn *sagemaker.SageMaker, domainID, userProfileName 
 
 	output, err := conn.DescribeUserProfile(input)
 
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
