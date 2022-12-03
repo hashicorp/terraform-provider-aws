@@ -1492,6 +1492,41 @@ func TestAccGlueCrawler_lineage(t *testing.T) {
 	})
 }
 
+func TestAccGlueCrawler_lakeformation(t *testing.T) {
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrawlerConfig_lakeformation(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.0.use_lake_formation_credentials", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCrawlerConfig_lakeformation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.0.use_lake_formation_credentials", "false")),
+			},
+		},
+	})
+}
+
 func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2913,6 +2948,30 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, connectionUrl, tableName)
+}
+
+func testAccCrawlerConfig_lakeformation(rName string, use bool) string {
+	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  lake_formation_configuration {
+    use_lake_formation_credentials = %[2]t
+  }
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+}
+`, rName, use)
 }
 
 func testAccCrawlerConfig_lineage(rName, lineageConfig string) string {

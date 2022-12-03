@@ -178,6 +178,26 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
+			"lake_formation_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"account_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidAccountID,
+						},
+						"use_lake_formation_credentials": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"lineage_configuration": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -414,7 +434,7 @@ func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsC
 	if v, ok := d.GetOk("configuration"); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
+			return nil, fmt.Errorf("configuration contains an invalid JSON: %v", err)
 		}
 		crawlerInput.Configuration = aws.String(configuration)
 	}
@@ -425,6 +445,10 @@ func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsC
 
 	if v, ok := d.GetOk("lineage_configuration"); ok {
 		crawlerInput.LineageConfiguration = expandCrawlerLineageConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("lake_formation_configuration"); ok {
+		crawlerInput.LakeFormationConfiguration = expandLakeFormationConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("recrawl_policy"); ok {
@@ -475,6 +499,10 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 
 	if v, ok := d.GetOk("lineage_configuration"); ok {
 		crawlerInput.LineageConfiguration = expandCrawlerLineageConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("lake_formation_configuration"); ok {
+		crawlerInput.LakeFormationConfiguration = expandLakeFormationConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("recrawl_policy"); ok {
@@ -864,6 +892,10 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting lineage_configuration: %w", err)
 	}
 
+	if err := d.Set("lake_formation_configuration", flattenLakeFormationConfiguration(crawler.LakeFormationConfiguration)); err != nil {
+		return fmt.Errorf("error setting lake_formation_configuration: %w", err)
+	}
+
 	if err := d.Set("recrawl_policy", flattenCrawlerRecrawlPolicy(crawler.RecrawlPolicy)); err != nil {
 		return fmt.Errorf("error setting recrawl_policy: %w", err)
 	}
@@ -1010,6 +1042,35 @@ func flattenCrawlerLineageConfiguration(cfg *glue.LineageConfiguration) []map[st
 
 	m := map[string]interface{}{
 		"crawler_lineage_settings": aws.StringValue(cfg.CrawlerLineageSettings),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandLakeFormationConfiguration(cfg []interface{}) *glue.LakeFormationConfiguration {
+	m := cfg[0].(map[string]interface{})
+
+	target := &glue.LakeFormationConfiguration{}
+
+	if v, ok := m["account_id"].(string); ok {
+		target.AccountId = aws.String(v)
+	}
+
+	if v, ok := m["use_lake_formation_credentials"].(bool); ok {
+		target.UseLakeFormationCredentials = aws.Bool(v)
+	}
+
+	return target
+}
+
+func flattenLakeFormationConfiguration(cfg *glue.LakeFormationConfiguration) []map[string]interface{} {
+	if cfg == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"account_id":                     aws.StringValue(cfg.AccountId),
+		"use_lake_formation_credentials": aws.BoolValue(cfg.UseLakeFormationCredentials),
 	}
 
 	return []map[string]interface{}{m}
