@@ -254,17 +254,12 @@ func FindAppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string
 	return output, nil
 }
 
-// FindAppByName returns the domain corresponding to the specified domain id.
-// Returns nil if no domain is found.
-func FindAppByName(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
-	input := &sagemaker.DescribeAppInput{
-		DomainId:        aws.String(domainID),
-		UserProfileName: aws.String(userProfileName),
-		AppType:         aws.String(appType),
-		AppName:         aws.String(appName),
+func listAppsByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.AppDetails, error) {
+	input := &sagemaker.ListAppsInput{
+		DomainIdEquals: aws.String(domainID),
 	}
 
-	output, err := conn.DescribeApp(input)
+	output, err := conn.ListApps(input)
 
 	if err != nil {
 		return nil, err
@@ -272,6 +267,71 @@ func FindAppByName(conn *sagemaker.SageMaker, domainID, userProfileName, appType
 
 	if output == nil {
 		return nil, nil
+	}
+
+	var foundApp *sagemaker.AppDetails
+	for _, app := range output.Apps {
+
+		if aws.StringValue(app.AppName) == appName &&
+			aws.StringValue(app.AppType) == appType &&
+			(aws.StringValue(app.SpaceName) == userProfileOrSpaceName ||
+				aws.StringValue(app.UserProfileName) == userProfileOrSpaceName) {
+			foundApp = app
+		}
+	}
+
+	if foundApp == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return foundApp, nil
+}
+
+// FindAppByName returns the domain corresponding to the specified domain id.
+// Returns nil if no domain is found.
+func FindAppByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+	foundApp, err := listAppsByName(conn, domainID, userProfileOrSpaceName, appType, appName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	input := &sagemaker.DescribeAppInput{
+		DomainId: aws.String(domainID),
+		AppType:  aws.String(appType),
+		AppName:  aws.String(appName),
+	}
+
+	if foundApp.SpaceName != nil {
+		input.SpaceName = foundApp.SpaceName
+	}
+
+	if foundApp.UserProfileName != nil {
+		input.UserProfileName = foundApp.UserProfileName
+	}
+
+	output, err := conn.DescribeApp(input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "RecordNotFound") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if state := aws.StringValue(output.Status); state == sagemaker.AppStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
@@ -495,6 +555,32 @@ func FindNotebookInstanceByName(conn *sagemaker.SageMaker, name string) (*sagema
 	}
 
 	output, err := conn.DescribeNotebookInstance(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindSpaceByName(conn *sagemaker.SageMaker, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
+	input := &sagemaker.DescribeSpaceInput{
+		SpaceName: aws.String(name),
+		DomainId:  aws.String(domainId),
+	}
+
+	output, err := conn.DescribeSpace(input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
 		return nil, &resource.NotFoundError{

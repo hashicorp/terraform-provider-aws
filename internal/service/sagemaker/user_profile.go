@@ -101,6 +101,20 @@ func ResourceUserProfile() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Required: true,

@@ -125,14 +125,10 @@ func StatusImageVersion(conn *sagemaker.SageMaker, name string) resource.StateRe
 // StatusDomain fetches the Domain and its Status
 func StatusDomain(conn *sagemaker.SageMaker, domainID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &sagemaker.DescribeDomainInput{
-			DomainId: aws.String(domainID),
-		}
+		output, err := FindDomainByName(conn, domainID)
 
-		output, err := conn.DescribeDomain(input)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-			return nil, sagemaker.UserProfileStatusFailed, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
@@ -186,15 +182,10 @@ func StatusFlowDefinition(conn *sagemaker.SageMaker, name string) resource.State
 // StatusUserProfile fetches the UserProfile and its Status
 func StatusUserProfile(conn *sagemaker.SageMaker, domainID, userProfileName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &sagemaker.DescribeUserProfileInput{
-			DomainId:        aws.String(domainID),
-			UserProfileName: aws.String(userProfileName),
-		}
+		output, err := FindUserProfileByName(conn, domainID, userProfileName)
 
-		output, err := conn.DescribeUserProfile(input)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-			return nil, userProfileStatusNotFound, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
@@ -214,31 +205,16 @@ func StatusUserProfile(conn *sagemaker.SageMaker, domainID, userProfileName stri
 }
 
 // StatusApp fetches the App and its Status
-func StatusApp(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) resource.StateRefreshFunc {
+func StatusApp(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &sagemaker.DescribeAppInput{
-			DomainId:        aws.String(domainID),
-			UserProfileName: aws.String(userProfileName),
-			AppType:         aws.String(appType),
-			AppName:         aws.String(appName),
-		}
+		output, err := FindAppByName(conn, domainID, userProfileOrSpaceName, appType, appName)
 
-		output, err := conn.DescribeApp(input)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-			return nil, appStatusNotFound, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, sagemaker.AppStatusFailed, err
-		}
-
-		if output == nil {
-			return nil, appStatusNotFound, nil
-		}
-
-		if aws.StringValue(output.Status) == sagemaker.AppStatusFailed {
-			return output, sagemaker.AppStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.Status), nil
@@ -264,6 +240,22 @@ func StatusProject(conn *sagemaker.SageMaker, name string) resource.StateRefresh
 func StatusWorkforce(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindWorkforceByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func StatusSpace(conn *sagemaker.SageMaker, domainId, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSpaceByName(conn, domainId, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

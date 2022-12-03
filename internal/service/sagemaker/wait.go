@@ -34,6 +34,8 @@ const (
 	ProjectDeletedTimeout             = 15 * time.Minute
 	WorkforceActiveTimeout            = 10 * time.Minute
 	WorkforceDeletedTimeout           = 10 * time.Minute
+	SpaceDeletedTimeout               = 10 * time.Minute
+	SpaceInServiceTimeout             = 10 * time.Minute
 )
 
 // WaitNotebookInstanceInService waits for a NotebookInstance to return InService
@@ -359,20 +361,21 @@ func WaitUserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName
 }
 
 // WaitAppInService waits for a App to return InService
-func WaitAppInService(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+func WaitAppInService(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			appStatusNotFound,
-			sagemaker.AppStatusPending,
-		},
+		Pending: []string{sagemaker.AppStatusPending},
 		Target:  []string{sagemaker.AppStatusInService},
-		Refresh: StatusApp(conn, domainID, userProfileName, appType, appName),
+		Refresh: StatusApp(conn, domainID, userProfileOrSpaceName, appType, appName),
 		Timeout: AppInServiceTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.AppStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -380,21 +383,23 @@ func WaitAppInService(conn *sagemaker.SageMaker, domainID, userProfileName, appT
 }
 
 // WaitAppDeleted waits for a App to return Deleted
-func WaitAppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+func WaitAppDeleted(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.AppStatusDeleting,
 		},
-		Target: []string{
-			sagemaker.AppStatusDeleted,
-		},
-		Refresh: StatusApp(conn, domainID, userProfileName, appType, appName),
+		Target:  []string{},
+		Refresh: StatusApp(conn, domainID, userProfileOrSpaceName, appType, appName),
 		Timeout: AppDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.AppStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -544,6 +549,48 @@ func WaitWorkforceDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Wo
 
 	if output, ok := outputRaw.(*sagemaker.Workforce); ok {
 		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.WorkforceStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSpaceInService(conn *sagemaker.SageMaker, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.SpaceStatusPending, sagemaker.SpaceStatusUpdating},
+		Target:  []string{sagemaker.SpaceStatusInService},
+		Refresh: StatusSpace(conn, domainId, name),
+		Timeout: SpaceInServiceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeSpaceOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.SpaceStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSpaceDeleted(conn *sagemaker.SageMaker, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.SpaceStatusDeleting},
+		Target:  []string{},
+		Refresh: StatusSpace(conn, domainId, name),
+		Timeout: SpaceDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeSpaceOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.SpaceStatusDeleteFailed && reason != "" {
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 

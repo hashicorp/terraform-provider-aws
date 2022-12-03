@@ -216,6 +216,7 @@ func sweepApps(region string) error {
 			d.Set("app_type", app.AppType)
 			d.Set("domain_id", app.DomainId)
 			d.Set("user_profile_name", app.UserProfileName)
+			d.Set("space_name", app.SpaceName)
 
 			err := r.Delete(d, client)
 			if err != nil {
