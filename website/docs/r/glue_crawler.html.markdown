@@ -204,7 +204,7 @@ The following arguments are supported:
 
 ### Lake Formation Configuration
 
-* `account_id` - (Optional) Required for cross account crawls. For same account crawls as the target data, this can ommited.
+* `account_id` - (Optional) Required for cross account crawls. For same account crawls as the target data, this can omitted.
 * `use_lake_formation_credentials` - (Optional) Specifies whether to use Lake Formation credentials for the crawler instead of the IAM role credentials.
 
 ### Lineage Configuration
