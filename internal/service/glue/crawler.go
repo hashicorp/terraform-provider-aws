@@ -21,6 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+func targets() []string {
+	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"}
+}
+
 func ResourceCrawler() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCrawlerCreate,
@@ -34,6 +38,185 @@ func ResourceCrawler() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"catalog_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: targets(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"dlq_event_queue_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"event_queue_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"tables": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"configuration": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+				ValidateFunc: validation.StringIsJSON,
+			},
+			"classifiers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"database_name": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+			},
+			"delta_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: targets(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"delta_tables": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"write_manifest": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 2048),
+			},
+			"dynamodb_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: targets(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"path": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"scan_all": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"scan_rate": {
+							Type:         schema.TypeFloat,
+							Optional:     true,
+							ValidateFunc: validation.FloatBetween(0.1, 1.5),
+						},
+					},
+				},
+			},
+			"jdbc_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: targets(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"enable_additional_metadata": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(glue.JdbcMetadataEntry_Values(), false),
+							},
+						},
+						"exclusions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"lineage_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"crawler_lineage_settings": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.CrawlerLineageSettingsDisable,
+							ValidateFunc: validation.StringInSlice(glue.CrawlerLineageSettings_Values(), false),
+						},
+					},
+				},
+			},
+			"mongodb_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: targets(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"scan_all": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+					},
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -43,14 +226,21 @@ func ResourceCrawler() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#\/]+$`), ""),
 				),
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"database_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+			"recrawl_policy": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"recrawl_behavior": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.RecrawlBehaviorCrawlEverything,
+							ValidateFunc: validation.StringInSlice(glue.RecrawlBehavior_Values(), false),
+						},
+					},
+				},
 			},
 			"role": {
 				Type:     schema.TypeString,
@@ -66,19 +256,9 @@ func ResourceCrawler() *schema.Resource {
 					return old == strings.TrimPrefix(newARN.Resource, "role/")
 				},
 			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
 			"schedule": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"classifiers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"schema_change_policy": {
 				Type:             schema.TypeList,
@@ -102,16 +282,15 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"table_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
+			"security_configuration": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"s3_target": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
+				AtLeastOneOf: targets(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
@@ -145,163 +324,10 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"dynamodb_target": {
-				Type:         schema.TypeList,
+			"table_prefix": {
+				Type:         schema.TypeString,
 				Optional:     true,
-				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"scan_all": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"scan_rate": {
-							Type:         schema.TypeFloat,
-							Optional:     true,
-							ValidateFunc: validation.FloatBetween(0.1, 1.5),
-						},
-					},
-				},
-			},
-			"mongodb_target": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connection_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"scan_all": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-					},
-				},
-			},
-			"jdbc_target": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connection_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"exclusions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"delta_target": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connection_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"delta_tables": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"write_manifest": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"catalog_target": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"database_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"tables": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"configuration": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-				ValidateFunc: validation.StringIsJSON,
-			},
-			"lineage_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"crawler_lineage_settings": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      glue.CrawlerLineageSettingsDisable,
-							ValidateFunc: validation.StringInSlice(glue.CrawlerLineageSettings_Values(), false),
-						},
-					},
-				},
-			},
-			"recrawl_policy": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recrawl_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      glue.RecrawlBehaviorCrawlEverything,
-							ValidateFunc: validation.StringInSlice(glue.RecrawlBehavior_Values(), false),
-						},
-					},
-				},
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -595,9 +621,14 @@ func expandJDBCTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
 	}
 
-	if exclusions, ok := cfg["exclusions"]; ok {
-		target.Exclusions = flex.ExpandStringList(exclusions.([]interface{}))
+	if v, ok := cfg["enable_additional_metadata"].([]interface{}); ok {
+		target.Exclusions = flex.ExpandStringList(v)
 	}
+
+	if v, ok := cfg["exclusions"].([]interface{}); ok {
+		target.Exclusions = flex.ExpandStringList(v)
+	}
+
 	return target
 }
 
@@ -618,6 +649,18 @@ func expandCatalogTarget(cfg map[string]interface{}) *glue.CatalogTarget {
 	target := &glue.CatalogTarget{
 		DatabaseName: aws.String(cfg["database_name"].(string)),
 		Tables:       flex.ExpandStringList(cfg["tables"].([]interface{})),
+	}
+
+	if v, ok := cfg["connection_name"].(string); ok {
+		target.ConnectionName = aws.String(v)
+	}
+
+	if v, ok := cfg["dlq_event_queue_arn"].(string); ok {
+		target.DlqEventQueueArn = aws.String(v)
+	}
+
+	if v, ok := cfg["event_queue_arn"].(string); ok {
+		target.EventQueueArn = aws.String(v)
 	}
 
 	return target
@@ -661,9 +704,12 @@ func expandDeltaTargets(targets []interface{}) []*glue.DeltaTarget {
 
 func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 	target := &glue.DeltaTarget{
-		ConnectionName: aws.String(cfg["connection_name"].(string)),
-		DeltaTables:    flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
-		WriteManifest:  aws.Bool(cfg["write_manifest"].(bool)),
+		DeltaTables:   flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
+		WriteManifest: aws.Bool(cfg["write_manifest"].(bool)),
+	}
+
+	if v, ok := cfg["connection_name"].(string); ok {
+		target.ConnectionName = aws.String(v)
 	}
 
 	return target
@@ -862,8 +908,11 @@ func flattenCatalogTargets(CatalogTargets []*glue.CatalogTarget) []map[string]in
 
 	for _, catalogTarget := range CatalogTargets {
 		attrs := make(map[string]interface{})
+		attrs["connection_name"] = aws.StringValue(catalogTarget.ConnectionName)
 		attrs["tables"] = flex.FlattenStringList(catalogTarget.Tables)
 		attrs["database_name"] = aws.StringValue(catalogTarget.DatabaseName)
+		attrs["event_queue_arn"] = aws.StringValue(catalogTarget.EventQueueArn)
+		attrs["dlq_event_queue_arn"] = aws.StringValue(catalogTarget.DlqEventQueueArn)
 
 		result = append(result, attrs)
 	}
@@ -891,6 +940,7 @@ func flattenJDBCTargets(jdbcTargets []*glue.JdbcTarget) []map[string]interface{}
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.StringValue(jdbcTarget.ConnectionName)
 		attrs["exclusions"] = flex.FlattenStringList(jdbcTarget.Exclusions)
+		attrs["enable_additional_metadata"] = flex.FlattenStringList(jdbcTarget.EnableAdditionalMetadata)
 		attrs["path"] = aws.StringValue(jdbcTarget.Path)
 
 		result = append(result, attrs)
