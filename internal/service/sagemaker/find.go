@@ -177,12 +177,19 @@ func FindDomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.De
 
 	output, err := conn.DescribeDomain(input)
 
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil

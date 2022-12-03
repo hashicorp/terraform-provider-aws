@@ -16,10 +16,8 @@ const (
 	imageStatusFailed               = "Failed"
 	imageVersionStatusNotFound      = "NotFound"
 	imageVersionStatusFailed        = "Failed"
-	domainStatusNotFound            = "NotFound"
 	userProfileStatusNotFound       = "NotFound"
 	modelPackageGroupStatusNotFound = "NotFound"
-	appStatusNotFound               = "NotFound"
 )
 
 // StatusNotebookInstance fetches the NotebookInstance and its Status
@@ -132,15 +130,7 @@ func StatusDomain(conn *sagemaker.SageMaker, domainID string) resource.StateRefr
 		}
 
 		if err != nil {
-			return nil, sagemaker.DomainStatusFailed, err
-		}
-
-		if output == nil {
-			return nil, domainStatusNotFound, nil
-		}
-
-		if aws.StringValue(output.Status) == sagemaker.DomainStatusFailed {
-			return output, sagemaker.DomainStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.Status), nil

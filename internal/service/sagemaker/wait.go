@@ -236,7 +236,6 @@ func WaitImageVersionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker
 func WaitDomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			domainStatusNotFound,
 			sagemaker.DomainStatusPending,
 			sagemaker.DomainStatusUpdating,
 		},
@@ -248,6 +247,10 @@ func WaitDomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.DomainStatusFailed || status == sagemaker.DomainStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -268,6 +271,10 @@ func WaitDomainDeleted(conn *sagemaker.SageMaker, domainID string) (*sagemaker.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.DomainStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
