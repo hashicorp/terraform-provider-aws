@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -148,7 +150,46 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", coreNetwork.CoreNetworkArn)
+	d.Set("description", coreNetwork.Description)
 	d.Set("global_network_id", coreNetwork.GlobalNetworkId)
+	d.Set("state", coreNetwork.State)
+
+	if err := d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339)); err != nil {
+		return diag.Errorf("setting created_at: %s", err)
+	}
+
+	if err := d.Set("edges", flattenEdges(coreNetwork.Edges)); err != nil {
+		return diag.Errorf("setting edges: %s", err)
+	}
+
+	if err := d.Set("segments", flattenSegments(coreNetwork.Segments)); err != nil {
+		return diag.Errorf("setting segments: %s", err)
+	}
+
+	// getting the policy document uses a different API call
+	// policy document is also optional
+	resp, err := conn.GetCoreNetworkPolicyWithContext(ctx, &networkmanager.GetCoreNetworkPolicyInput{
+		CoreNetworkId: aws.String(d.Id()),
+	})
+
+	// policy document is optional. API returns ResourceNotFoundException if there is no policy document
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+			log.Printf("[INFO] Network Manager Core Network %s no Policy Document", d.Id())
+		} else {
+			return diag.Errorf("reading Network Manager Core Network Policy Document (%s): %s", d.Id(), err)
+		}
+	}
+
+	// policy document is optional
+	if resp != nil && resp.CoreNetworkPolicy != nil {
+		encodedPolicyDocument, err := protocol.EncodeJSONValue(resp.CoreNetworkPolicy.PolicyDocument, protocol.NoEscape)
+		if err != nil {
+			return diag.Errorf("reading Network Manager Core Network Policy Document encoding (%s): %s", d.Id(), err)
+		}
+
+		d.Set("policy_document", encodedPolicyDocument)
+	}
 
 	tags := KeyValueTags(coreNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -257,4 +298,36 @@ func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 	}
 
 	return nil, err
+}
+
+func flattenEdges(coreNetworkEdge []*networkmanager.CoreNetworkEdge) []interface{} {
+	if coreNetworkEdge == nil {
+		return []interface{}{}
+	}
+
+	coreNetworkEdges := []interface{}{}
+	for _, edge := range coreNetworkEdge {
+		values := map[string]interface{}{}
+		values["asn"] = aws.Int64Value(edge.Asn)
+		values["edge_location"] = aws.StringValue(edge.EdgeLocation)
+		values["inside_cidr_blocks"] = flex.FlattenStringSet(edge.InsideCidrBlocks)
+		coreNetworkEdges = append(coreNetworkEdges, values)
+	}
+	return coreNetworkEdges
+}
+
+func flattenSegments(coreNetworkSegment []*networkmanager.CoreNetworkSegment) []interface{} {
+	if coreNetworkSegment == nil {
+		return []interface{}{}
+	}
+
+	coreNetworkSegments := []interface{}{}
+	for _, segment := range coreNetworkSegment {
+		values := map[string]interface{}{}
+		values["edge_locations"] = flex.FlattenStringSet(segment.EdgeLocations)
+		values["name"] = aws.StringValue(segment.Name)
+		values["shared_segments"] = flex.FlattenStringSet(segment.SharedSegments)
+		coreNetworkSegments = append(coreNetworkSegments, values)
+	}
+	return coreNetworkSegments
 }
