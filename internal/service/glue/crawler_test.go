@@ -2304,39 +2304,6 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_catalogTargetDlqEventQueue(rName string) string {
 	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
-resource "aws_glue_catalog_database" "test" {
-  count = 2
-  name  = "%[1]s_database_${count.index}"
-}
-
-resource "aws_glue_catalog_table" "test" {
-  count         = 2
-  database_name = aws_glue_catalog_database.test[count.index].name
-  name          = "%[1]s_table_${count.index}"
-  table_type    = "EXTERNAL_TABLE"
-
-  storage_descriptor {
-    location = "s3://${aws_s3_bucket.default.bucket}"
-  }
-}
-
-resource "aws_lakeformation_permissions" "test" {
-  count = 2
-
-  permissions = ["ALL"]
-  principal   = aws_iam_role.test.arn
-
-  table {
-    database_name = aws_glue_catalog_database.test[count.index].name
-    name          = aws_glue_catalog_table.test[count.index].name
-  }
-}
-
-resource "aws_s3_bucket" "default" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
 resource "aws_sqs_queue" "test" {
   name = %[1]q
 
@@ -2378,11 +2345,37 @@ data "aws_iam_policy_document" "role_test_sqs" {
   }
 }
 
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "default" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  table_type    = "EXTERNAL_TABLE"
+
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.default.bucket}"
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
+
 resource "aws_glue_crawler" "test" {
-  depends_on = [
-    aws_iam_role_policy_attachment.test-AWSGlueServiceRole,
-    aws_iam_role_policy.test_sqs,
-  ]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole, aws_iam_role_policy.test]
 
   database_name = aws_glue_catalog_database.test.name
   name          = %[1]q
@@ -2394,7 +2387,7 @@ resource "aws_glue_crawler" "test" {
 
   catalog_target {
     database_name       = aws_glue_catalog_database.test.name
-    tables              = flatten([aws_glue_catalog_table.test[*].name])
+    tables              = [aws_glue_catalog_table.test.name]
     event_queue_arn     = aws_sqs_queue.test.arn
     dlq_event_queue_arn = aws_sqs_queue.test_dlq.arn
   }

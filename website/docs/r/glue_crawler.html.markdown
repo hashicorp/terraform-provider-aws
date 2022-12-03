@@ -128,7 +128,7 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ## Argument Reference
 
-~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target` or `catalog_target`.
+~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
 The following arguments are supported:
 
@@ -161,6 +161,7 @@ The following arguments are supported:
 * `connection_name` - (Required) The name of the connection to use to connect to the JDBC target.
 * `path` - (Required) The path of the JDBC target.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `enable_additional_metadata` - (Optional) Specify a value of `RAWTYPES` or `COMMENTS` to enable additional metadata intable responses. `RAWTYPES` provides the native-level datatype. `COMMENTS` provides comments associated with a column or table in the database.
 
 ### S3 Target
 
@@ -173,8 +174,11 @@ The following arguments are supported:
 
 ### Catalog Target
 
+* `connection_name` - (Optional) The name of the connection for an Amazon S3-backed Data Catalog table to be a target of the crawl when using a Catalog connection type paired with a `NETWORK` Connection type.
 * `database_name` - (Required) The name of the Glue database to be synchronized.
 * `tables` - (Required) A list of catalog tables to be synchronized.
+* `event_queue_arn` - (Optional)  A valid Amazon SQS ARN.
+* `dlq_event_queue_arn` - (Optional)  A valid Amazon SQS ARN.
 
 ~> **Note:** `deletion_behavior` of catalog target doesn't support `DEPRECATE_IN_DATABASE`.
 
@@ -188,7 +192,7 @@ The following arguments are supported:
 
 ### Delta Target
 
-* `connection_name` - (Required) The name of the connection to use to connect to the Delta table target.
+* `connection_name` - (Optional) The name of the connection to use to connect to the Delta table target.
 * `delta_tables` - (Required) A list of the Amazon S3 paths to the Delta tables.
 * `write_manifest` - (Required) Specifies whether to write the manifest files to the Delta table path.
 
