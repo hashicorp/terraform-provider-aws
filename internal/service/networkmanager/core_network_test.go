@@ -66,6 +66,49 @@ func TestAccNetworkManagerCoreNetwork_disappears(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
+	resourceName := "aws_networkmanager_core_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_tags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCoreNetworkConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccCoreNetworkConfig_tags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
@@ -116,4 +159,37 @@ resource "aws_networkmanager_global_network" "test" {}
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
 }`
+}
+
+func testAccCoreNetworkConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_networkmanager_global_network" "test" {}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccCoreNetworkConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_networkmanager_global_network" "test" {}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
