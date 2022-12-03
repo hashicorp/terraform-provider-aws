@@ -129,6 +129,42 @@ func ResourceCoreNetwork() *schema.Resource {
 }
 
 func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	globalNetworkID := d.Get("global_network_id").(string)
+
+	input := &networkmanager.CreateCoreNetworkInput{
+		ClientToken:     aws.String(resource.UniqueId()),
+		GlobalNetworkId: aws.String(globalNetworkID),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("policy_document"); ok {
+		input.PolicyDocument = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Network Manager Core Network: %s", input)
+	output, err := conn.CreateCoreNetworkWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("creating Core Network: %s", err)
+	}
+
+	d.SetId(aws.StringValue(output.CoreNetwork.CoreNetworkId))
+
+	if _, err := waitCoreNetworkCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Network Manager Core Network (%s) create: %s", d.Id(), err)
+	}
+
 	return resourceCoreNetworkRead(ctx, d, meta)
 }
 
@@ -281,6 +317,24 @@ func StatusCoreNetworkState(ctx context.Context, conn *networkmanager.NetworkMan
 
 		return output, aws.StringValue(output.State), nil
 	}
+}
+
+func waitCoreNetworkCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		// CoreNetwork is in PENDING state before AVAILABLE. No value for PENDING at the moment
+		Pending: []string{networkmanager.CoreNetworkStateCreating, "PENDING"},
+		Target:  []string{networkmanager.CoreNetworkStateAvailable},
+		Timeout: timeout,
+		Refresh: StatusCoreNetworkState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.CoreNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
