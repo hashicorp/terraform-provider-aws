@@ -149,9 +149,6 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 	originalSegmentValue := "segmentValue1"
 	updatedSegmentValue := "segmentValue2"
 
-	originalPolicyDocument := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"us-west-2\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", originalSegmentValue)
-	updatedPolicyDocument := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"us-west-2\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", updatedSegmentValue)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
@@ -162,12 +159,12 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 				Config: testAccCoreNetworkConfig_policyDocument(originalSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(resourceName),
+					testAccCheckPolicyDocument(resourceName, originalSegmentValue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "65022",
 						"edge_location":        client.Region,
 						"inside_cidr_blocks.#": "0",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", originalPolicyDocument),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "1",
 						"edge_locations.0":  client.Region,
@@ -185,12 +182,12 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 				Config: testAccCoreNetworkConfig_policyDocument(updatedSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(resourceName),
+					testAccCheckPolicyDocument(resourceName, updatedSegmentValue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "65022",
 						"edge_location":        client.Region,
 						"inside_cidr_blocks.#": "0",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", updatedPolicyDocument),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#": "1",
 						"edge_locations.0": client.Region,
@@ -202,6 +199,24 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckPolicyDocument(n, segmentValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+
+		policyDocumentTarget := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", client.Region, segmentValue)
+
+		if rs.Primary.Attributes["policy_document"] != policyDocumentTarget {
+			return fmt.Errorf("Expected policy_document: %s, given %s", policyDocumentTarget, rs.Primary.Attributes["policy_document"])
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckCoreNetworkDestroy(s *terraform.State) error {
