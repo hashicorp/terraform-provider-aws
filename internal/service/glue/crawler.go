@@ -773,30 +773,19 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
-	glueConn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &glue.GetCrawlerInput{
-		Name: aws.String(d.Id()),
-	}
-
-	crawlerOutput, err := glueConn.GetCrawler(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return fmt.Errorf("error reading Glue crawler: %w", err)
-	}
-
-	crawler := crawlerOutput.Crawler
-	if crawler == nil {
+	crawler, err := FindCrawlerByName(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Glue Crawler (%s): %w", d.Id(), err)
 	}
 
 	crawlerARN := arn.ARN{
@@ -854,7 +843,7 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags, err := ListTags(glueConn, crawlerARN)
+	tags, err := ListTags(conn, crawlerARN)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glue Crawler (%s): %w", crawlerARN, err)

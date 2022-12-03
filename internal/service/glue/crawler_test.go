@@ -9,13 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -1546,20 +1546,14 @@ func testAccCheckCrawlerExists(resourceName string, crawler *glue.Crawler) resou
 			return fmt.Errorf("no ID is set")
 		}
 
-		glueConn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := glueConn.GetCrawler(&glue.GetCrawlerInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		output, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if out.Crawler == nil {
-			return fmt.Errorf("no Glue Crawler found")
-		}
-
-		*crawler = *out.Crawler
+		*crawler = *output
 
 		return nil
 	}
@@ -1572,23 +1566,17 @@ func testAccCheckCrawlerDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		output, err := conn.GetCrawler(&glue.GetCrawlerInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		_, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil
-			}
 			return err
 		}
 
-		crawler := output.Crawler
-		if crawler != nil && aws.StringValue(crawler.Name) == rs.Primary.ID {
-			return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
-		}
-
-		return nil
+		return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
 	}
 
 	return nil
