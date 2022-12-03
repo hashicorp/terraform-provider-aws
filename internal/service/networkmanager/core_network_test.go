@@ -109,6 +109,40 @@ func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
+	resourceName := "aws_networkmanager_core_network.test"
+	originalDescription := "description1"
+	updatedDescription := "description2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_description(originalDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCoreNetworkConfig_description(updatedDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
@@ -192,4 +226,17 @@ resource "aws_networkmanager_core_network" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccCoreNetworkConfig_description(description string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_networkmanager_global_network" "test" {}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+  description       = %[1]q
+}
+`, description)
 }
