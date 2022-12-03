@@ -143,6 +143,67 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
+	client := acctest.Provider.Meta().(*conns.AWSClient)
+	resourceName := "aws_networkmanager_core_network.test"
+	originalSegmentValue := "segmentValue1"
+	updatedSegmentValue := "segmentValue2"
+
+	originalPolicyDocument := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"us-west-2\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", originalSegmentValue)
+	updatedPolicyDocument := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"us-west-2\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", updatedSegmentValue)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_policyDocument(originalSegmentValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
+						"asn":                  "65022",
+						"edge_location":        client.Region,
+						"inside_cidr_blocks.#": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", originalPolicyDocument),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
+						"edge_locations.#":  "1",
+						"edge_locations.0":  client.Region,
+						"name":              originalSegmentValue,
+						"shared_segments.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCoreNetworkConfig_policyDocument(updatedSegmentValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
+						"asn":                  "65022",
+						"edge_location":        client.Region,
+						"inside_cidr_blocks.#": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", updatedPolicyDocument),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
+						"edge_locations.#": "1",
+						"edge_locations.0": client.Region,
+						// during the test name is not shown as the updatedSegmentValue
+						// "name":              updatedSegmentValue,
+						"shared_segments.#": "0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
@@ -239,4 +300,31 @@ resource "aws_networkmanager_core_network" "test" {
   description       = %[1]q
 }
 `, description)
+}
+
+func testAccCoreNetworkConfig_policyDocument(segmentValue string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = data.aws_region.current.name
+    }
+  }
+
+  segments {
+    name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, segmentValue)
 }
