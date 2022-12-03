@@ -1,9 +1,14 @@
-## 4.45.0 (Unreleased)
+## 4.46.0 (Unreleased)
+## 4.45.0 (December  2, 2022)
 
 NOTES:
 
 * provider: With AWS's retirement of EC2-Classic the `skip_get_ec2_platforms` attribute has been deprecated and will be removed in a future version ([#28084](https://github.com/hashicorp/terraform-provider-aws/issues/28084))
 * resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute has been deprecated and will be removed in a future version ([#28127](https://github.com/hashicorp/terraform-provider-aws/issues/28127))
+
+FEATURES:
+
+* **New Resource:** `aws_dms_s3_endpoint` ([#28130](https://github.com/hashicorp/terraform-provider-aws/issues/28130))
 
 ENHANCEMENTS:
 
@@ -3079,7 +3084,7 @@ BUG FIXES:
 
 * aws/resource_aws_amplify_branch: Correctly handle branch names that contain '/' ([#20426](https://github.com/hashicorp/terraform-provider-aws/issues/20426))
 * aws/resource_aws_apigateway_vpc_link: Ensure deletion does not return an error when resource is not found ([#20441](https://github.com/hashicorp/terraform-provider-aws/issues/20441))
-* aws/resource_aws_instance: Fix running `terraform plan` with with `skip_credentials_validation=true` ([#20357](https://github.com/hashicorp/terraform-provider-aws/issues/20357))
+* aws/resource_aws_instance: Fix running `terraform plan` with `skip_credentials_validation=true` ([#20357](https://github.com/hashicorp/terraform-provider-aws/issues/20357))
 * aws/resource_aws_instance: Fix state refresh when launch template was deleted ([#20357](https://github.com/hashicorp/terraform-provider-aws/issues/20357))
 
 ## 3.52.0 (July 29, 2021)

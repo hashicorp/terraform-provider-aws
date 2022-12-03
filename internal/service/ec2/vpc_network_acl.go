@@ -420,7 +420,7 @@ func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{},
 			// to set from_port and to_port to 0 for these rules, to keep the
 			// hashing consistent.
 			if from, to := aws.Int64Value(naclEntry.PortRange.From), aws.Int64Value(naclEntry.PortRange.To); from != 0 || to != 0 {
-				return fmt.Errorf("to_port (%d) and from_port (%d) must both be 0 to use the the 'all' \"-1\" protocol!", to, from)
+				return fmt.Errorf("to_port (%d) and from_port (%d) must both be 0 to use the 'all' \"-1\" protocol!", to, from)
 			}
 		}
 

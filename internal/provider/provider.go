@@ -1309,6 +1309,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_dms_replication_instance":     dms.ResourceReplicationInstance(),
 			"aws_dms_replication_subnet_group": dms.ResourceReplicationSubnetGroup(),
 			"aws_dms_replication_task":         dms.ResourceReplicationTask(),
+			"aws_dms_s3_endpoint":              dms.ResourceS3Endpoint(),
 
 			"aws_docdb_cluster":                 docdb.ResourceCluster(),
 			"aws_docdb_cluster_instance":        docdb.ResourceClusterInstance(),
