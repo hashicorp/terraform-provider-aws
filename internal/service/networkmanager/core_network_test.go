@@ -45,6 +45,27 @@ func TestAccNetworkManagerCoreNetwork_basic(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerCoreNetwork_disappears(t *testing.T) {
+	resourceName := "aws_networkmanager_core_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceCoreNetwork(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
