@@ -409,7 +409,7 @@ func waitCoreNetworkCreated(ctx context.Context, conn *networkmanager.NetworkMan
 	return nil, err
 }
 
-func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
+func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.CoreNetworkStateUpdating},
 		Target:  []string{networkmanager.CoreNetworkStateAvailable},
