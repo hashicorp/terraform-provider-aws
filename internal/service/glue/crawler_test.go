@@ -770,7 +770,7 @@ func TestAccGlueCrawler_CatalogTarget_dlqeventqueue(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_target.0.event_queue_arn", "aws_sqs_queue.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_target.0.dlq_event_queue_arn", "aws_sqs_queue.test_dql", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "catalog_target.0.dlq_event_queue_arn", "aws_sqs_queue.test_dlq", "arn"),
 				),
 			},
 			{
@@ -2375,7 +2375,7 @@ resource "aws_lakeformation_permissions" "test" {
 }
 
 resource "aws_glue_crawler" "test" {
-  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole, aws_iam_role_policy.test]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole, aws_iam_role_policy.test_sqs]
 
   database_name = aws_glue_catalog_database.test.name
   name          = %[1]q
