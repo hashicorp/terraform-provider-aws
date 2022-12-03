@@ -21,6 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	// Allow Policy Version to stabalize
+	policyDocumentStabalizationTimeout = 4 * time.Minute
+
+	// validationExceptionMessage describes the error returned when the policy version has not yet stabalized
+	validationExceptionMessage = "Incorrect input"
+)
+
 // This resource is explicitly NOT exported from the provider until design is finalized.
 // Its Delete handler is used by sweepers.
 func ResourceCoreNetwork() *schema.Resource {
@@ -244,6 +252,70 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
+	if d.HasChange("description") {
+		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
+			CoreNetworkId: aws.String(d.Id()),
+			Description:   aws.String(d.Get("description").(string)),
+		})
+
+		if err != nil {
+			return diag.Errorf("updating Network Manager Core Network (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("policy_document") {
+		v, err := protocol.DecodeJSONValue(d.Get("policy_document").(string), protocol.NoEscape)
+
+		if err != nil {
+			return diag.Errorf("Network Manager Core Network (%s) update: %s", d.Id(), err)
+		}
+
+		resp, err := conn.PutCoreNetworkPolicyWithContext(ctx, &networkmanager.PutCoreNetworkPolicyInput{
+			ClientToken:    aws.String(resource.UniqueId()),
+			CoreNetworkId:  aws.String(d.Id()),
+			PolicyDocument: v,
+		})
+
+		if resp == nil || resp.CoreNetworkPolicy == nil {
+			return diag.Errorf("Network Manager Core Network (%s) put policy document empty response", d.Id())
+		}
+
+		if err != nil {
+			return diag.Errorf("putting Network Manager Core Network policy document (%s): %s", d.Id(), err)
+		}
+
+		policyVersionId := resp.CoreNetworkPolicy.PolicyVersionId
+
+		// new policy documents goes from Pending generation to Ready to execute
+		_, err = tfresource.RetryWhen(
+			policyDocumentStabalizationTimeout,
+			func() (interface{}, error) {
+				return conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
+					CoreNetworkId:   aws.String(d.Id()),
+					PolicyVersionId: policyVersionId,
+				})
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, validationExceptionMessage) {
+					return true, err
+				}
+				return false, err
+			},
+		)
+
+		if err != nil {
+			return diag.Errorf("updating Network Manager Core Network policy document (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -323,6 +395,23 @@ func waitCoreNetworkCreated(ctx context.Context, conn *networkmanager.NetworkMan
 	stateConf := &resource.StateChangeConf{
 		// CoreNetwork is in PENDING state before AVAILABLE. No value for PENDING at the moment
 		Pending: []string{networkmanager.CoreNetworkStateCreating, "PENDING"},
+		Target:  []string{networkmanager.CoreNetworkStateAvailable},
+		Timeout: timeout,
+		Refresh: StatusCoreNetworkState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.CoreNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{networkmanager.CoreNetworkStateUpdating},
 		Target:  []string{networkmanager.CoreNetworkStateAvailable},
 		Timeout: timeout,
 		Refresh: StatusCoreNetworkState(ctx, conn, id),
