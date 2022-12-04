@@ -13,3 +13,7 @@ resource/aws_sagemaker_user_profle: Add `user_settings.jupyter_server_app_settin
 ```release-note:enhancement
 resource/aws_sagemaker_app: Add `space_name` argument
 ```
+
+```release-note:enhancement
+resource/aws_sagemaker_app: Make `user_profile_name` optional
+```
