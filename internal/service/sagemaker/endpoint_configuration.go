@@ -294,6 +294,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 						"volume_size_in_gb": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 512),
 						},
