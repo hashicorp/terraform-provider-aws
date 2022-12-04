@@ -36,6 +36,7 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "0"),
