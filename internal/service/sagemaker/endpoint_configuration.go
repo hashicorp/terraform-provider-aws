@@ -233,6 +233,31 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(60, 3600),
 						},
+						"core_dump_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_s3_uri": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringLenBetween(1, 512),
+										),
+									},
+									"kms_key_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -319,6 +344,31 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(60, 3600),
+						},
+						"core_dump_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_s3_uri": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringLenBetween(1, 512),
+										),
+									},
+									"kms_key_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
 						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
@@ -580,6 +630,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.ServerlessConfig = expandServerlessConfig(v)
 		}
 
+		if v, ok := data["core_dump_config"].([]interface{}); ok && len(v) > 0 {
+			l.CoreDumpConfig = expandCoreDumpConfig(v)
+		}
+
 		containers = append(containers, l)
 	}
 
@@ -619,6 +673,10 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 
 		if i.ServerlessConfig != nil {
 			l["serverless_config"] = flattenServerlessConfig(i.ServerlessConfig)
+		}
+
+		if i.CoreDumpConfig != nil {
+			l["core_dump_config"] = flattenCoreDumpConfig(i.CoreDumpConfig)
 		}
 
 		result = append(result, l)
@@ -837,6 +895,26 @@ func expandServerlessConfig(configured []interface{}) *sagemaker.ProductionVaria
 	return c
 }
 
+func expandCoreDumpConfig(configured []interface{}) *sagemaker.ProductionVariantCoreDumpConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ProductionVariantCoreDumpConfig{}
+
+	if v, ok := m["destination_s3_uri"].(string); ok {
+		c.DestinationS3Uri = aws.String(v)
+	}
+
+	if v, ok := m["kms_key_id"].(string); ok {
+		c.KmsKeyId = aws.String(v)
+	}
+
+	return c
+}
+
 func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -920,6 +998,24 @@ func flattenServerlessConfig(config *sagemaker.ProductionVariantServerlessConfig
 
 	if config.MemorySizeInMB != nil {
 		cfg["memory_size_in_mb"] = aws.Int64Value(config.MemorySizeInMB)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenCoreDumpConfig(config *sagemaker.ProductionVariantCoreDumpConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.DestinationS3Uri != nil {
+		cfg["destination_s3_uri"] = aws.StringValue(config.DestinationS3Uri)
+	}
+
+	if config.KmsKeyId != nil {
+		cfg["kms_key_id"] = aws.StringValue(config.KmsKeyId)
 	}
 
 	return []map[string]interface{}{cfg}
