@@ -363,7 +363,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 									},
 									"kms_key_id": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
 									},
