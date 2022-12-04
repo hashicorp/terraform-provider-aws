@@ -302,7 +302,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 			},
 			"shadow_production_variants": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MinItems: 1,
 				MaxItems: 10,
 				Elem: &schema.Resource{
