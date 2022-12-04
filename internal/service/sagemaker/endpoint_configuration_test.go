@@ -537,7 +537,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     initial_instance_count = 2
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
-  }  
+  }
 }
 `, rName)
 }
