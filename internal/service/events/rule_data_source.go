@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -110,7 +110,7 @@ func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.SetId(*output.Arn)
+	d.SetId(aws.StringValue(output.Arn))
 
 	return nil
 }
