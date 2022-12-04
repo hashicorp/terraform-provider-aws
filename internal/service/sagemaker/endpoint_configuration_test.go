@@ -38,6 +38,47 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_shadowProductionVariants(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.variant_name", "variant-2"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_variant_weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.serverless_config.#", "0"),
 				),
 			},
 			{
@@ -473,6 +514,30 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
   }
+}
+`, rName)
+}
+
+func testAccEndpointConfigurationConfig_shadowProductionVariants(rName string) string {
+	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  shadow_production_variants {
+    variant_name           = "variant-2"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }  
 }
 `, rName)
 }
