@@ -89,6 +89,8 @@ func BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, ne
 
 // ObjectListTags lists S3 object tags.
 func ObjectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error) {
+	// leo
+	// return tftags.KeyValueTags{}, nil
 	input := &s3.GetObjectTaggingInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),

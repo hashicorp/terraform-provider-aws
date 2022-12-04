@@ -45,7 +45,8 @@ func ResourceObject() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceObjectCustomizeDiff,
-			verify.SetTagsDiff,
+			// leo
+			//verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -172,12 +173,13 @@ func ResourceObject() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"version_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"tags": tftags.TagsSchema(),
+			// leo
+			//"tags_all": tftags.TagsSchemaComputed(),
+			//"version_id": {
+			//	Type:     schema.TypeString,
+			//	Computed: true,
+			//},
 			"website_redirect": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -192,8 +194,10 @@ func resourceObjectCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	//// leo
+	//defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	//ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -254,7 +258,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("metadata", metadata); err != nil {
 		return fmt.Errorf("setting metadata: %s", err)
 	}
-	d.Set("version_id", resp.VersionId)
+	//d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
 	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
@@ -275,31 +279,32 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("storage_class", resp.StorageClass)
 	}
 
-	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return ObjectListTags(conn, bucket, key)
-	}, s3.ErrCodeNoSuchBucket)
-
-	if err != nil {
-		return fmt.Errorf("listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	tags, ok := tagsRaw.(tftags.KeyValueTags)
-
-	if !ok {
-		return fmt.Errorf("listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
+	// leo
+	//// Retry due to S3 eventual consistency
+	//tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	//	return ObjectListTags(conn, bucket, key)
+	//}, s3.ErrCodeNoSuchBucket)
+	//
+	//if err != nil {
+	//	return fmt.Errorf("listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	//}
+	//
+	//tags, ok := tagsRaw.(tftags.KeyValueTags)
+	//
+	//if !ok {
+	//	return fmt.Errorf("listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
+	//}
+	//
+	//tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	//
+	////lintignore:AWSR002
+	//if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	//	return fmt.Errorf("setting tags: %w", err)
+	//}
+	//
+	//if err := d.Set("tags_all", tags.Map()); err != nil {
+	//	return fmt.Errorf("setting tags_all: %w", err)
+	//}
 
 	return nil
 }
@@ -364,13 +369,13 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := ObjectUpdateTags(conn, bucket, key, o, n); err != nil {
-			return fmt.Errorf("updating tags: %s", err)
-		}
-	}
+	//if d.HasChange("tags_all") {
+	//	o, n := d.GetChange("tags_all")
+	//
+	//	if err := ObjectUpdateTags(conn, bucket, key, o, n); err != nil {
+	//		return fmt.Errorf("updating tags: %s", err)
+	//	}
+	//}
 
 	return resourceObjectRead(d, meta)
 }
@@ -574,12 +579,12 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 
 func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if hasObjectContentChanges(d) {
-		return d.SetNewComputed("version_id")
+		//return d.SetNewComputed("version_id")
 	}
 
 	if d.HasChange("source_hash") {
-		d.SetNewComputed("version_id")
-		d.SetNewComputed("etag")
+		//d.SetNewComputed("version_id")
+		//d.SetNewComputed("etag")
 	}
 
 	return nil

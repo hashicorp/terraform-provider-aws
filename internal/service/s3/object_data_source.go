@@ -127,7 +127,8 @@ func DataSourceObject() *schema.Resource {
 
 func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	// leo
+	//ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -229,15 +230,16 @@ func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)
 	}
 
-	tags, err := ObjectListTags(conn, bucket, key)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
+	// leo
+	//tags, err := ObjectListTags(conn, bucket, key)
+	//
+	//if err != nil {
+	//	return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
+	//}
+	//
+	//if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	//	return fmt.Errorf("error setting tags: %w", err)
+	//}
 
 	return nil
 }
