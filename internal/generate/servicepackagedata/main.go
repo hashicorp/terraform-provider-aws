@@ -5,41 +5,70 @@ package main
 
 import (
 	_ "embed"
-	"flag"
 	"fmt"
 	"os"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func usage() {
-	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "\tmain.go [flags] [<generated-file>]\n\n")
-	fmt.Fprintf(os.Stderr, "Flags:\n")
-	flag.PrintDefaults()
-}
+const (
+	filename      = `service_package_data_gen.go`
+	namesDataFile = `../../../names/names_data.csv`
+)
 
 func main() {
-	flag.Usage = usage
-	flag.Parse()
-
-	filename := `service_package_data_gen.go`
-	if args := flag.Args(); len(args) > 0 {
-		filename = args[0]
-	}
-
 	g := common.NewGenerator()
-	templateData := &TemplateData{
-		PackageName: os.Getenv("GOPACKAGE"),
+
+	data, err := common.ReadAllCSVData(namesDataFile)
+
+	if err != nil {
+		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
 	}
 
-	if err := g.ApplyAndWriteTemplateGoFormat(filename, "servicepackagedata", tmpl, templateData); err != nil {
-		g.Fatalf("error generating %s service package data: %s", templateData.PackageName, err.Error())
+	td := TemplateData{}
+
+	for i, l := range data {
+		if i < 1 { // no header
+			continue
+		}
+
+		if l[names.ColExclude] != "" {
+			continue
+		}
+
+		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+			continue
+		}
+
+		p := l[names.ColProviderPackageCorrect]
+
+		if l[names.ColProviderPackageActual] != "" {
+			p = l[names.ColProviderPackageActual]
+		}
+
+		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil {
+			continue
+		}
+
+		s := ServiceDatum{
+			ProviderPackage: p,
+		}
+
+		if err := g.ApplyAndWriteTemplateGoFormat(filename, "servicepackagedata", tmpl, s); err != nil {
+			g.Fatalf("error generating %s service package data: %s", p, err.Error())
+		}
+
+		td.Services = append(td.Services, s)
 	}
+}
+
+type ServiceDatum struct {
+	ProviderPackage string
 }
 
 type TemplateData struct {
-	PackageName string
+	Services []ServiceDatum
 }
 
 //go:embed file.tmpl
