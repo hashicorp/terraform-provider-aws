@@ -2245,14 +2245,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
-	meta := &conns.AWSClient{
-		ServicePackages: servicePackages,
-	}
-
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	provider.SetMeta(meta)
+	provider.SetMeta(&conns.AWSClient{
+		ServicePackages: servicePackages,
+	})
 
 	return provider, nil
 }
