@@ -193,7 +193,7 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	// imageName selected from the available AWS Managed AppStream 2.0 Base Images
 	// Reference: https://docs.aws.amazon.com/appstream2/latest/developerguide/base-image-version-history.html
-	imageName := "AppStream-WinServer2012R2-07-19-2021"
+	imageName := "AppStream-WinServer2019-07-12-2022"
 	instanceType := "stream.standard.small"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -271,7 +271,7 @@ func testAccCheckImageBuilderDestroy(s *terraform.State) error {
 func testAccImageBuilderConfig_basic(instanceType, name string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2012R2-07-19-2021"
+  image_name    = "AppStream-WinServer2019-07-12-2022"
   instance_type = %[1]q
   name          = %[2]q
 }
@@ -293,7 +293,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_appstream_image_builder" "test" {
-  image_name                     = "AppStream-WinServer2012R2-07-19-2021"
+  image_name                     = "AppStream-WinServer2019-07-12-2022"
   name                           = %[1]q
   description                    = %[2]q
   enable_default_internet_access = false
@@ -308,7 +308,7 @@ resource "aws_appstream_image_builder" "test" {
 func testAccImageBuilderConfig_tags1(instanceType, name, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2012R2-07-19-2021"
+  image_name    = "AppStream-WinServer2019-07-12-2022"
   instance_type = %[1]q
   name          = %[2]q
 
@@ -322,7 +322,7 @@ resource "aws_appstream_image_builder" "test" {
 func testAccImageBuilderConfig_tags2(instanceType, name, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2012R2-07-19-2021"
+  image_name    = "AppStream-WinServer2019-07-12-2022"
   instance_type = %[1]q
   name          = %[2]q
 
