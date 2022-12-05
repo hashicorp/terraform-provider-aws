@@ -25,7 +25,9 @@ const (
 	imageBuilderStateTimeout = 60 * time.Minute
 	// userOperationTimeout Maximum amount of time to wait for User operation eventual consistency
 	userOperationTimeout = 4 * time.Minute
-	userAvailable        = "AVAILABLE"
+	// iamPropagationTimeout Maximum amount of time to wait for an iam resource eventual consistency
+	iamPropagationTimeout = 2 * time.Minute
+	userAvailable         = "AVAILABLE"
 )
 
 // waitStackStateDeleted waits for a deleted stack
