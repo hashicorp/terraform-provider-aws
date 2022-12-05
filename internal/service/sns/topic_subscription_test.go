@@ -295,6 +295,55 @@ func TestAccSNSTopicSubscription_filterPolicyScope_policyNotSet(t *testing.T) {
 	})
 }
 
+func TestAccSNSTopicSubscription_filterPolicyScope_filterPolicyWithComplexObject(t *testing.T) {
+
+	var attributes map[string]string
+	resourceName := "aws_sns_topic_subscription.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageAttributes")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			{
+				Config: testAccTopicSubscriptionConfig_filterPolicyScope_filterPolicyWithComplexObject(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageBody"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+		},
+	})
+}
+
 func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
@@ -790,6 +839,28 @@ resource "aws_sns_topic_subscription" "test" {
   filter_policy_scope = %[2]s
 }
 `, rName, scope)
+}
+
+func testAccTopicSubscriptionConfig_filterPolicyScope_filterPolicyWithComplexObject(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  sqs_managed_sse_enabled = true
+}
+
+resource "aws_sns_topic_subscription" "test" {
+  topic_arn           = aws_sns_topic.test.arn
+  protocol            = "sqs"
+  endpoint            = aws_sqs_queue.test.arn
+  filter_policy       = jsonencode({ key1 = { object = {key : ["value"]}}})
+  filter_policy_scope = "MessageBody"
+}
+`, rName)
 }
 
 func testAccTopicSubscriptionConfig_filterPolicyScope_policyNotSet(rName string) string {
