@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_appstream_image_builder: fix IAM eventual consistency error for optional role
+```
+
+```release-note:bug
+resource/aws_appstream_image_builder: fix domain_join data mismatch error
+```
