@@ -399,14 +399,16 @@ func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteReques
 	})
 
 	if err != nil {
+		var nfe *mltypes.NotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MediaLive, create.ErrActionDeleting, ResNameMultiplexProgram, state.ProgramName.String(), nil),
 			err.Error(),
 		)
 		return
 	}
-
-	resp.State.RemoveResource(ctx)
 }
 
 func (m *multiplexProgram) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
