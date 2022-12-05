@@ -7,13 +7,15 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	filename      = `service_package_data_gen.go`
+	spdFile       = `service_package_data_gen.go`
+	spsFile       = `../../provider/service_packages_gen.go`
 	namesDataFile = `../../../names/names_data.csv`
 )
 
@@ -55,11 +57,19 @@ func main() {
 			ProviderPackage: p,
 		}
 
-		if err := g.ApplyAndWriteTemplateGoFormat(fmt.Sprintf("../../service/%s/%s", p, filename), "servicepackagedata", tmpl, s); err != nil {
+		if err := g.ApplyAndWriteTemplateGoFormat(fmt.Sprintf("../../service/%s/%s", p, spdFile), "servicepackagedata", spdTmpl, s); err != nil {
 			g.Fatalf("error generating %s service package data: %s", p, err.Error())
 		}
 
 		td.Services = append(td.Services, s)
+	}
+
+	sort.SliceStable(td.Services, func(i, j int) bool {
+		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
+	})
+
+	if err := g.ApplyAndWriteTemplateGoFormat(spsFile, "servicepackages", spsTmpl, td); err != nil {
+		g.Fatalf("error generating service packages list: %s", err.Error())
 	}
 }
 
@@ -71,5 +81,8 @@ type TemplateData struct {
 	Services []ServiceDatum
 }
 
-//go:embed file.tmpl
-var tmpl string
+//go:embed spd.tmpl
+var spdTmpl string
+
+//go:embed sps.tmpl
+var spsTmpl string
