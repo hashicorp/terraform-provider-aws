@@ -45,7 +45,7 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppstreamImageBuilder_withIAMRole(t *testing.T) {
+func TestAccAppStreamImageBuilder_withIAMRole(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.small"
 	imageName := "AppStream-WinServer2019-07-12-2022"
