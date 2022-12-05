@@ -92,7 +92,6 @@ func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 
 func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-	var logGroup cloudwatchlogs.LogGroup
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -107,7 +106,6 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(resourceName, &filter),
-					testAccCheckGroupExists(logGroupResourceName, &logGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
