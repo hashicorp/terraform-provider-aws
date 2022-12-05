@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -225,7 +226,20 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreateImageBuilderWithContext(ctx, input)
+	var err error
+	var output *appstream.CreateImageBuilderOutput
+	err = resource.RetryContext(ctx, iamPropagationTimeout, func() *resource.RetryError {
+		output, err = conn.CreateImageBuilderWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Appstream ImageBuilder (%s): %w", name, err))
