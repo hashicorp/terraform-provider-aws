@@ -137,12 +137,7 @@ func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.Sch
 					int64validator.Between(-1, 65535),
 				},
 			},
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"id": framework.IDAttribute(),
 			"ip_protocol": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
