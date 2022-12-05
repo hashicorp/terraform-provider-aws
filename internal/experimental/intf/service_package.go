@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // ServicePackageData is data about a service package.
@@ -12,5 +13,7 @@ type ServicePackageData interface {
 	Configure(context.Context, any) error
 	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error)
 	FrameworkResources(context.Context) []func(context.Context) (resource.ResourceWithConfigure, error)
+	SDKDataSources(context.Context) []func() *schema.Resource
+	SDKResources(context.Context) []func() *schema.Resource
 	ServicePackageName() string
 }
