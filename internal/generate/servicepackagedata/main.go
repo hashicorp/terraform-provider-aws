@@ -7,6 +7,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -28,14 +29,12 @@ func main() {
 		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
 	}
 
+	g.Infof("Generating per-service %s", filepath.Base(spdFile))
+
 	td := TemplateData{}
 
 	for i, l := range data {
 		if i < 1 { // no header
-			continue
-		}
-
-		if l[names.ColExclude] != "" {
 			continue
 		}
 
@@ -49,7 +48,13 @@ func main() {
 			p = l[names.ColProviderPackageActual]
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil {
+		dir := fmt.Sprintf("../../service/%s", p)
+
+		if _, err := os.Stat(dir); err != nil {
+			continue
+		}
+
+		if v, err := filepath.Glob(fmt.Sprintf("%s/*.go", dir)); err != nil || len(v) == 0 {
 			continue
 		}
 
@@ -67,6 +72,8 @@ func main() {
 	sort.SliceStable(td.Services, func(i, j int) bool {
 		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
 	})
+
+	g.Infof("Generating %s", filepath.Base(spsFile))
 
 	if err := g.ApplyAndWriteTemplateGoFormat(spsFile, "servicepackages", spsTmpl, td); err != nil {
 		g.Fatalf("error generating service packages list: %s", err.Error())

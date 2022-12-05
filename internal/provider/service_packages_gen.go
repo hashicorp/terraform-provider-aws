@@ -48,7 +48,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
@@ -128,6 +127,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -238,7 +238,6 @@ func servicePackages(context.Context) []intf.ServicePackageData {
 		cognitoidentity.ServicePackageData,
 		cognitoidp.ServicePackageData,
 		comprehend.ServicePackageData,
-		computeoptimizer.ServicePackageData,
 		configservice.ServicePackageData,
 		connect.ServicePackageData,
 		controltower.ServicePackageData,
@@ -318,6 +317,7 @@ func servicePackages(context.Context) []intf.ServicePackageData {
 		mediapackage.ServicePackageData,
 		mediastore.ServicePackageData,
 		memorydb.ServicePackageData,
+		meta.ServicePackageData,
 		mq.ServicePackageData,
 		mwaa.ServicePackageData,
 		neptune.ServicePackageData,
