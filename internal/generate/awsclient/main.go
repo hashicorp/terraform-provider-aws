@@ -34,9 +34,9 @@ type TemplateData struct {
 func main() {
 	g := common.NewGenerator()
 
-	g.Infof("generating internal/conns/%s\n", filename)
+	g.Infof("Generating internal/conns/%s", filename)
 
-	data, err := common.ReadAllNamesData(namesDataFile)
+	data, err := common.ReadAllCSVData(namesDataFile)
 
 	if err != nil {
 		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
@@ -89,7 +89,7 @@ func main() {
 		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
 	})
 
-	if err := g.ApplyAndWriteTemplate(filename, "awsclient", tmpl, td); err != nil {
+	if err := g.ApplyAndWriteGoTemplate(filename, "awsclient", tmpl, td); err != nil {
 		g.Fatalf("error: %s", err.Error())
 	}
 }

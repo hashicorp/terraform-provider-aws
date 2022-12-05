@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
@@ -118,6 +119,27 @@ func (t arnType) Description() string {
 	return `An Amazon Resource Name.`
 }
 
+func (t arnType) ValueFromString(ctx context.Context, st types.String) (types.StringValuable, diag.Diagnostics) {
+	if st.IsNull() {
+		return ARNNull(), nil
+	}
+	if st.IsUnknown() {
+		return ARNUnknown(), nil
+	}
+
+	var diags diag.Diagnostics
+	v, err := arn.Parse(st.String())
+	if err != nil {
+		diags.AddError(
+			"ARN ValueFromString Error",
+			fmt.Sprintf("String %s cannot be parsed as an ARN.", st),
+		)
+		return nil, diags
+	}
+
+	return ARNValue(v), diags
+}
+
 func ARNNull() ARN {
 	return ARN{
 		state: attr.ValueStateNull,
@@ -148,6 +170,10 @@ type ARN struct {
 
 func (a ARN) Type(_ context.Context) attr.Type {
 	return ARNType
+}
+
+func (a ARN) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
+	return types.StringValue(a.value.String()), nil
 }
 
 func (a ARN) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {

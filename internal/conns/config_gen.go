@@ -4,9 +4,11 @@ package conns
 import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -62,7 +64,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -351,7 +352,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.ChimeSDKMeetingsConn = chimesdkmeetings.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMeetings])}))
 	client.ChimeSDKMessagingConn = chimesdkmessaging.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMessaging])}))
 	client.Cloud9Conn = cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Cloud9])}))
-	client.CloudControlConn = cloudcontrolapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudControl])}))
 	client.CloudDirectoryConn = clouddirectory.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudDirectory])}))
 	client.CloudFormationConn = cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudFormation])}))
 	client.CloudFrontConn = cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudFront])}))
@@ -605,6 +605,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = auditmanager.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.CloudControlClient = cloudcontrol.NewFromConfig(cfg, func(o *cloudcontrol.Options) {
+		if endpoint := c.Endpoints[names.CloudControl]; endpoint != "" {
+			o.EndpointResolver = cloudcontrol.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.ComprehendClient = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
 		if endpoint := c.Endpoints[names.Comprehend]; endpoint != "" {
 			o.EndpointResolver = comprehend.EndpointResolverFromURL(endpoint)
@@ -674,6 +679,13 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 
 // sdkv2LazyConns initializes AWS SDK for Go v2 lazy-load clients.
 func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.ec2Client.init(&cfg, func() *ec2_sdkv2.Client {
+		return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.EC2]; endpoint != "" {
+				o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
 	client.logsClient.init(&cfg, func() *cloudwatchlogs_sdkv2.Client {
 		return cloudwatchlogs_sdkv2.NewFromConfig(cfg, func(o *cloudwatchlogs_sdkv2.Options) {
 			if endpoint := c.Endpoints[names.Logs]; endpoint != "" {

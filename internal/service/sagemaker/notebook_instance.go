@@ -420,7 +420,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			if _, err := WaitNotebookInstanceInService(conn, d.Id()); err != nil {
-				return fmt.Errorf("waiting for sagemaker notebook instance (%s) to to start after update: %w", d.Id(), err)
+				return fmt.Errorf("waiting for sagemaker notebook instance (%s) to start after update: %w", d.Id(), err)
 			}
 		}
 	}

@@ -1310,6 +1310,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_dms_replication_instance":     dms.ResourceReplicationInstance(),
 			"aws_dms_replication_subnet_group": dms.ResourceReplicationSubnetGroup(),
 			"aws_dms_replication_task":         dms.ResourceReplicationTask(),
+			"aws_dms_s3_endpoint":              dms.ResourceS3Endpoint(),
 
 			"aws_docdb_cluster":                 docdb.ResourceCluster(),
 			"aws_docdb_cluster_instance":        docdb.ResourceClusterInstance(),
@@ -1442,6 +1443,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_vpc_ipam_scope":                                   ec2.ResourceIPAMScope(),
 			"aws_vpc_ipv4_cidr_block_association":                  ec2.ResourceVPCIPv4CIDRBlockAssociation(),
 			"aws_vpc_ipv6_cidr_block_association":                  ec2.ResourceVPCIPv6CIDRBlockAssociation(),
+			"aws_vpc_network_performance_metric_subscription":      ec2.ResourceNetworkPerformanceMetricSubscription(),
 			"aws_vpc_peering_connection":                           ec2.ResourceVPCPeeringConnection(),
 			"aws_vpc_peering_connection_accepter":                  ec2.ResourceVPCPeeringConnectionAccepter(),
 			"aws_vpc_peering_connection_options":                   ec2.ResourceVPCPeeringConnectionOptions(),

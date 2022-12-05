@@ -72,6 +72,7 @@ func waitWorkgroupAvailable(conn *redshiftserverless.RedshiftServerless, name st
 func waitWorkgroupDeleted(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
+			redshiftserverless.WorkgroupStatusModifying,
 			redshiftserverless.WorkgroupStatusDeleting,
 		},
 		Target:  []string{},

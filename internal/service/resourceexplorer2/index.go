@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -49,28 +51,26 @@ func (r *resourceIndex) Metadata(_ context.Context, request resource.MetadataReq
 	response.TypeName = "aws_resourceexplorer2_index"
 }
 
-func (r *resourceIndex) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"arn": {
-				Type:     types.StringType,
+func (r *resourceIndex) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"id":       framework.IDAttribute(),
 			"tags":     tftags.TagsAttribute(),
 			"tags_all": tftags.TagsAttributeComputedOnly(),
-			"type": {
-				Type:     types.StringType,
+			"type": schema.StringAttribute{
 				Required: true,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.IndexType](),
 				},
 			},
 		},
-		Blocks: map[string]tfsdk.Block{
+		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -78,8 +78,6 @@ func (r *resourceIndex) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagn
 			}),
 		},
 	}
-
-	return schema, nil
 }
 
 func (r *resourceIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {

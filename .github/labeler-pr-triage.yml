@@ -1038,6 +1038,7 @@ service/vpc:
   - 'website/**/vpc_dhcp_*'
   - 'website/**/vpc_endpoint*'
   - 'website/**/vpc_ipv*'
+  - 'website/**/vpc_network_performance*'
   - 'website/**/vpc_peering_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'

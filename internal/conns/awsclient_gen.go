@@ -3,9 +3,11 @@ package conns
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -61,7 +63,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -331,6 +332,7 @@ type AWSClient struct {
 	Session                   *session.Session
 	TerraformVersion          string
 
+	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
 	rdsClient       lazyClient[*rds_sdkv2.Client]
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
@@ -376,7 +378,7 @@ type AWSClient struct {
 	ChimeSDKMeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	ChimeSDKMessagingConn            *chimesdkmessaging.ChimeSDKMessaging
 	Cloud9Conn                       *cloud9.Cloud9
-	CloudControlConn                 *cloudcontrolapi.CloudControlApi
+	CloudControlClient               *cloudcontrol.Client
 	CloudDirectoryConn               *clouddirectory.CloudDirectory
 	CloudFormationConn               *cloudformation.CloudFormation
 	CloudFrontConn                   *cloudfront.CloudFront
@@ -642,6 +644,10 @@ type AWSClient struct {
 	WorkSpacesConn                   *workspaces.WorkSpaces
 	WorkSpacesWebConn                *workspacesweb.WorkSpacesWeb
 	XRayConn                         *xray.XRay
+}
+
+func (client *AWSClient) EC2Client() *ec2_sdkv2.Client {
+	return client.ec2Client.Client()
 }
 
 func (client *AWSClient) LogsClient() *cloudwatchlogs_sdkv2.Client {

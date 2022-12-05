@@ -31,5 +31,5 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `db_password` - Temporary password that authorizes the user name returned by `db_user` to log on to the database `db_name`.
-* `db_user` - A database user name that is authorized to log on to the database `db_name` using the password `db_password` . If the specified `db_user` exists in the database, the new user name has the same database privileges as the the user named in `db_user` . By default, the user is added to PUBLIC. the user doesn't exist in the database.
+* `db_user` - A database user name that is authorized to log on to the database `db_name` using the password `db_password` . If the specified `db_user` exists in the database, the new user name has the same database privileges as the user named in `db_user` . By default, the user is added to PUBLIC. the user doesn't exist in the database.
 * `expiration` - Date and time the password in `db_password` expires.
