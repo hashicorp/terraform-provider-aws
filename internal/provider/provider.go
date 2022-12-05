@@ -153,6 +153,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
@@ -1442,6 +1443,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_vpc_ipam_scope":                                   ec2.ResourceIPAMScope(),
 			"aws_vpc_ipv4_cidr_block_association":                  ec2.ResourceVPCIPv4CIDRBlockAssociation(),
 			"aws_vpc_ipv6_cidr_block_association":                  ec2.ResourceVPCIPv6CIDRBlockAssociation(),
+			"aws_vpc_network_performance_metric_subscription":      ec2.ResourceNetworkPerformanceMetricSubscription(),
 			"aws_vpc_peering_connection":                           ec2.ResourceVPCPeeringConnection(),
 			"aws_vpc_peering_connection_accepter":                  ec2.ResourceVPCPeeringConnectionAccepter(),
 			"aws_vpc_peering_connection_options":                   ec2.ResourceVPCPeeringConnectionOptions(),
@@ -2255,6 +2257,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			globalaccelerator.ServicePackageData,
 			medialive.ServicePackageData,
 			meta.ServicePackageData,
+			resourceexplorer2.ServicePackageData,
 			simpledb.ServicePackageData,
 			sts.ServicePackageData,
 		},

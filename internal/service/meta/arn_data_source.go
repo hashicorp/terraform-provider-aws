@@ -6,8 +6,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -32,43 +31,35 @@ func (d *dataSourceARN) Metadata(_ context.Context, request datasource.MetadataR
 	response.TypeName = "aws_arn"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"account": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourceARN) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"account": schema.StringAttribute{
 				Computed: true,
 			},
-			"arn": {
-				Type:     fwtypes.ARNType,
-				Required: true,
+			"arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"partition": {
-				Type:     types.StringType,
+			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": {
-				Type:     types.StringType,
+			"region": schema.StringAttribute{
 				Computed: true,
 			},
-			"resource": {
-				Type:     types.StringType,
+			"resource": schema.StringAttribute{
 				Computed: true,
 			},
-			"service": {
-				Type:     types.StringType,
+			"service": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
-
-	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.
