@@ -291,11 +291,11 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err = d.Set("access_endpoint", flattenAccessEndpoints(imageBuilder.AccessEndpoints)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "access_endpoints", d.Id(), err))
 	}
-	if err = d.Set("domain_join_info", flattenDomainInfo(imageBuilder.DomainJoinInfo)); err != nil {
+	if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "domain_join_info", d.Id(), err))
 	}
 
-	if err = d.Set("vpc_config", flattenVPCConfig(imageBuilder.VpcConfig)); err != nil {
+	if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "vpc_config", d.Id(), err))
 	}
 
