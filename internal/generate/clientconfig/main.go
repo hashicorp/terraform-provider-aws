@@ -89,7 +89,7 @@ func main() {
 		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
 	})
 
-	if err := g.ApplyAndWriteGoTemplate(filename, "config", tmpl, td); err != nil {
+	if err := g.ApplyAndWriteTemplateGoFormat(filename, "config", tmpl, td); err != nil {
 		g.Fatalf("error: %s", err.Error())
 	}
 }

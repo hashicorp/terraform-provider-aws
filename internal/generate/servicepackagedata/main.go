@@ -33,7 +33,7 @@ func main() {
 		PackageName: os.Getenv("GOPACKAGE"),
 	}
 
-	if err := g.ApplyAndWriteGoTemplate(filename, "servicepackagedata", tmpl, templateData); err != nil {
+	if err := g.ApplyAndWriteTemplateGoFormat(filename, "servicepackagedata", tmpl, templateData); err != nil {
 		g.Fatalf("error generating %s service package data: %s", templateData.PackageName, err.Error())
 	}
 }

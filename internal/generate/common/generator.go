@@ -24,7 +24,28 @@ func NewGenerator() *Generator {
 	}
 }
 
-func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody string, templateData any, formatter func([]byte) ([]byte, error)) error {
+func (g *Generator) ApplyAndWriteTemplateGoFormat(filename, templateName, templateBody string, templateData any) error {
+	return g.applyAndWriteTemplate(filename, templateName, templateBody, templateData, format.Source)
+}
+
+func (g *Generator) ApplyAndWriteTemplateNoFormat(filename, templateName, templateBody string, templateData any) error {
+	return g.applyAndWriteTemplate(filename, templateName, templateBody, templateData, nil)
+}
+
+func (g *Generator) Errorf(format string, a ...interface{}) {
+	g.ui.Error(fmt.Sprintf(format, a...))
+}
+
+func (g *Generator) Fatalf(format string, a ...interface{}) {
+	g.Errorf(format, a...)
+	os.Exit(1)
+}
+
+func (g *Generator) Infof(format string, a ...interface{}) {
+	g.ui.Info(fmt.Sprintf(format, a...))
+}
+
+func (g *Generator) applyAndWriteTemplate(filename, templateName, templateBody string, templateData any, formatter func([]byte) ([]byte, error)) error {
 	tmpl, err := template.New(templateName).Parse(templateBody)
 
 	if err != nil {
@@ -66,21 +87,4 @@ func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody s
 	}
 
 	return nil
-}
-
-func (g *Generator) ApplyAndWriteGoTemplate(filename, templateName, templateBody string, templateData any) error {
-	return g.ApplyAndWriteTemplate(filename, templateName, templateBody, templateData, format.Source)
-}
-
-func (g *Generator) Errorf(format string, a ...interface{}) {
-	g.ui.Error(fmt.Sprintf(format, a...))
-}
-
-func (g *Generator) Fatalf(format string, a ...interface{}) {
-	g.Errorf(format, a...)
-	os.Exit(1)
-}
-
-func (g *Generator) Infof(format string, a ...interface{}) {
-	g.ui.Info(fmt.Sprintf(format, a...))
 }
