@@ -45,6 +45,29 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppstreamImageBuilder_withIAMRole(t *testing.T) {
+	resourceName := "aws_appstream_image_builder.test"
+	instanceType := "stream.standard.small"
+	imageName := "AppStream-WinServer2019-07-12-2022"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		CheckDestroy:             testAccCheckImageBuilderDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageBuilderConfig_withIAMRole(rName, imageName, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageBuilderExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAppStreamImageBuilder_disappears(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.medium"
@@ -321,4 +344,30 @@ resource "aws_appstream_image_builder" "test" {
   name          = %[4]q
 }
 `, acctest.Region(), imageName, instanceType, rName)
+}
+
+func testAccImageBuilderConfig_withIAMRole(rName, imageName, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_image_builder" "test" {
+  name          = %[1]q
+  instance_type = %[2]q
+  iam_role_arn  = aws_iam_role.test.arn
+  image_name    = %[3]q
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["appstream.amazonaws.com"]
+    }
+  }
+}
+`, rName, instanceType, imageName)
 }
