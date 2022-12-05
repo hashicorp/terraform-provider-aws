@@ -55,7 +55,7 @@ func main() {
 			ProviderPackage: p,
 		}
 
-		if err := g.ApplyAndWriteTemplateGoFormat(filename, "servicepackagedata", tmpl, s); err != nil {
+		if err := g.ApplyAndWriteTemplateGoFormat(fmt.Sprintf("../../service/%s/%s", p, filename), "servicepackagedata", tmpl, s); err != nil {
 			g.Fatalf("error generating %s service package data: %s", p, err.Error())
 		}
 
