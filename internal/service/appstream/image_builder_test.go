@@ -47,7 +47,7 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 
 func TestAccAppStreamImageBuilder_withIAMRole(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
-	instanceType := "stream.standard.small"
+	instanceType := "stream.standard.medium"
 	imageName := "AppStream-WinServer2019-07-12-2022"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +150,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageBuilderDestroy,
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
