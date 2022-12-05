@@ -33,7 +33,7 @@ func FindAppMonitorByName(conn *cloudwatchrum.CloudWatchRUM, name string) (*clou
 	return output.AppMonitor, nil
 }
 
-func FindMetricsDestinationsByName(conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.MetricDestinationSummary, error) {
+func FindMetricsDestinationByName(conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.MetricDestinationSummary, error) {
 	input := cloudwatchrum.ListRumMetricsDestinationsInput{
 		AppMonitorName: aws.String(name),
 	}

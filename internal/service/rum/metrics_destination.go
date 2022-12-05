@@ -79,7 +79,7 @@ func resourceMetricsDestinationPut(d *schema.ResourceData, meta interface{}) err
 func resourceMetricsDestinationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RUMConn
 
-	dest, err := FindMetricsDestinationsByName(conn, d.Id())
+	dest, err := FindMetricsDestinationByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Unable to find CloudWatch RUM Metric Destination (%s); removing from state", d.Id())
 		d.SetId("")

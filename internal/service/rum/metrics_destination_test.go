@@ -98,7 +98,7 @@ func testAccCheckMetricsDestinationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudwatchrum.FindMetricsDestinationsByName(conn, rs.Primary.ID)
+		_, err := tfcloudwatchrum.FindMetricsDestinationByName(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -123,7 +123,7 @@ func testAccCheckMetricsDestinationExists(n string, dest *cloudwatchrum.MetricDe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
-		resp, err := tfcloudwatchrum.FindMetricsDestinationsByName(conn, rs.Primary.ID)
+		resp, err := tfcloudwatchrum.FindMetricsDestinationByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
