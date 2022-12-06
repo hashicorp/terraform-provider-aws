@@ -1212,6 +1212,39 @@ func FindInstanceTypeOfferings(conn *ec2.EC2, input *ec2.DescribeInstanceTypeOff
 	return output, nil
 }
 
+func FindPublicIpv4Pools(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) ([]*ec2.PublicIpv4Pool, error) {
+	var output []*ec2.PublicIpv4Pool
+
+	err := conn.DescribePublicIpv4PoolsPages(input, func(page *ec2.DescribePublicIpv4PoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.PublicIpv4Pools {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPoolIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindLocalGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]*ec2.LocalGatewayRouteTable, error) {
 	var output []*ec2.LocalGatewayRouteTable
 
