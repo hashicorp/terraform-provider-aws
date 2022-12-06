@@ -82,7 +82,7 @@ resource "aws_vpc_ipam_pool" "test_pool_1" {
 	ipam_scope_id  = aws_vpc_ipam.test_ipam.private_default_scope_id
 	locale         = data.aws_region.current.name
 	tags = {
-		Name = "test-1"
+		Name = %[1]q
 	  }
 }
 
@@ -91,7 +91,7 @@ resource "aws_vpc_ipam_pool" "test_pool_2" {
 	ipam_scope_id  = aws_vpc_ipam.test_ipam.private_default_scope_id
 	locale         = data.aws_region.current.name
 	tags = {
-		Name = "test-2"
+		Name = %[1]q
 		UniqueTagKey = "unimportant"
 	  }
 }
@@ -143,7 +143,7 @@ func testAccVPCPublicIpv4PoolsDataSourceConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_public_ipv4_pools" "test" {
   tags = {
-    Name = "not_a_real_tag"
+    Name = %[1]q
   }
 }
 `, rName)
