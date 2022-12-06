@@ -13,7 +13,13 @@ type ServicePackageData interface {
 	Configure(context.Context, any) error
 	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error)
 	FrameworkResources(context.Context) []func(context.Context) (resource.ResourceWithConfigure, error)
-	SDKDataSources(context.Context) []func() *schema.Resource
-	SDKResources(context.Context) []func() *schema.Resource
+	SDKDataSources(context.Context) []struct {
+		TypeName string
+		Factory  func() *schema.Resource
+	}
+	SDKResources(context.Context) []struct {
+		TypeName string
+		Factory  func() *schema.Resource
+	}
 	ServicePackageName() string
 }
