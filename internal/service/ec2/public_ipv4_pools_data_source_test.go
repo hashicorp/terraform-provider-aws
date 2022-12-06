@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -92,7 +92,7 @@ resource "aws_vpc_ipam_pool" "test_pool_2" {
 	locale         = data.aws_region.current.name
 	tags = {
 		Name = "test-2"
-		UniqueTagName = "true"
+		UniqueTagKey = "unimportant"
 	  }
 }
 
@@ -119,18 +119,18 @@ resource "aws_vpc_ipam_pool_cidr" "test_cidr_4" {
 }
 
 func testAccVPCPublicIpv4PoolsDataSourceConfig_filter(rName string) string {
-	return acctest.ConfigCompose(testAccNetworkInterfacesDataSourceConfig_Base(rName), `
+	return acctest.ConfigCompose(testAccVPCPublicIpv4PoolsDataSourceConfig_Base(rName), `
 data "aws_vpc_public_ipv4_pools" "test" {
   filter {
-    name   = "tag-name"
-    values = ["UniqueTagName"]
+    name   = "tag-key"
+    values = ["UniqueTagKey"]
   }
 }
 `)
 }
 
 func testAccVPCPublicIpv4PoolsDataSourceConfig_tags(rName string) string {
-	return acctest.ConfigCompose(testAccPublicIpv4PoolsDataSourceConfig_Base(rName), `
+	return acctest.ConfigCompose(testAccVPCPublicIpv4PoolsDataSourceConfig_Base(rName), `
 data "aws_vpc_public_ipv4_pools" "test" {
   tags = {
     Name = aws_vpc_ipam_pool.test_pool_1.tags.Name
