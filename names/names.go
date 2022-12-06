@@ -31,6 +31,7 @@ const (
 	IVSChatEndpointID           = "ivschat"
 	KendraEndpointID            = "kendra"
 	MediaLiveEndpointID         = "medialive"
+	PipesEndpointID             = "pipes"
 	ResourceExplorer2EndpointID = "resource-explorer-2"
 	RolesAnywhereEndpointID     = "rolesanywhere"
 	Route53DomainsEndpointID    = "route53domains"

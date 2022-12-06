@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -557,6 +558,7 @@ type AWSClient struct {
 	PinpointConn                     *pinpoint.Pinpoint
 	PinpointEmailConn                *pinpointemail.PinpointEmail
 	PinpointSMSVoiceConn             *pinpointsmsvoice.PinpointSMSVoice
+	PipesClient                      *pipes.Client
 	PollyConn                        *polly.Polly
 	PricingConn                      *pricing.Pricing
 	ProtonConn                       *proton.Proton
