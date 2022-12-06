@@ -13,7 +13,7 @@ import (
 func TestAccVPCPublicIpv4PoolsDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,7 +32,7 @@ func TestAccVPCPublicIpv4PoolsDataSource_filter(t *testing.T) {
 func TestAccVPCPublicIpv4PoolsDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -41,7 +41,7 @@ func TestAccVPCPublicIpv4PoolsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCPublicIpv4PoolsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_public_ipv4_pools.test", "pools.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_vpc_public_ipv4_pools.test", "pools.#", "2"),
 				),
 			},
 		},
@@ -51,7 +51,7 @@ func TestAccVPCPublicIpv4PoolsDataSource_tags(t *testing.T) {
 func TestAccVPCPublicIpv4PoolsDataSource_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -79,7 +79,7 @@ resource "aws_vpc_ipam" "test_ipam" {
 
 resource "aws_vpc_ipam_pool" "test_pool_1" {
 	address_family = "ipv4"
-	ipam_scope_id  = aws_vpc_ipam.test_ipam.private_default_scope_id
+	ipam_scope_id  = aws_vpc_ipam.test_ipam.public_default_scope_id
 	locale         = data.aws_region.current.name
 	tags = {
 		Name = %[1]q
@@ -88,32 +88,12 @@ resource "aws_vpc_ipam_pool" "test_pool_1" {
 
 resource "aws_vpc_ipam_pool" "test_pool_2" {
 	address_family = "ipv4"
-	ipam_scope_id  = aws_vpc_ipam.test_ipam.private_default_scope_id
+	ipam_scope_id  = aws_vpc_ipam.test_ipam.public_default_scope_id
 	locale         = data.aws_region.current.name
 	tags = {
 		Name = %[1]q
 		UniqueTagKey = "unimportant"
 	  }
-}
-
-resource "aws_vpc_ipam_pool_cidr" "test_cidr_1" {
-	ipam_pool_id = aws_vpc_ipam_pool.test_pool_1.id
-	cidr         = "172.1.0.0/16"
-}
-
-resource "aws_vpc_ipam_pool_cidr" "test_cidr_2" {
-	ipam_pool_id = aws_vpc_ipam_pool.test_pool_1.id
-	cidr         = "172.2.0.0/16"
-}
-
-resource "aws_vpc_ipam_pool_cidr" "test_cidr_3" {
-	ipam_pool_id = aws_vpc_ipam_pool.test_pool_2.id
-	cidr         = "172.3.0.0/16"
-}
-
-resource "aws_vpc_ipam_pool_cidr" "test_cidr_4" {
-	ipam_pool_id = aws_vpc_ipam_pool.test_pool_2.id
-	cidr         = "172.4.0.0/16"
 }
 `, rName)
 }
