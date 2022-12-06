@@ -69,16 +69,8 @@ func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 		publicIpv4Pools = append(publicIpv4Pools, pool)
 	}
 
-	// TIP: == 3. Set ID
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("pools", publicIpv4Pools)
-
-	//ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	//lintignore:AWSR002
-	//if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-	//	return create.DiagError(names.EC2, create.ErrActionSetting, DSNamePublicIpv4Pools, d.Id(), err)
-	//}
 
 	return nil
 }
