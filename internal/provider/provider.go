@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -2239,10 +2240,67 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		},
 	}
 
-	servicePackages := servicePackages(ctx)
-
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		return configure(ctx, provider, d)
+	}
+
+	var errs *multierror.Error
+	servicePackages := servicePackages(ctx)
+
+	for _, sp := range servicePackages {
+		for _, v := range sp.SDKDataSources(ctx) {
+			typeName := v.TypeName
+
+			if _, ok := provider.DataSourcesMap[typeName]; ok {
+				errs = multierror.Append(errs, fmt.Errorf("duplicate data source: %s", typeName))
+				continue
+			}
+
+			ds := v.Factory()
+
+			if v := ds.ReadWithoutTimeout; v != nil {
+				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
+			}
+
+			provider.DataSourcesMap[typeName] = ds
+		}
+	}
+
+	for _, sp := range servicePackages {
+		for _, v := range sp.SDKResources(ctx) {
+			typeName := v.TypeName
+
+			if _, ok := provider.ResourcesMap[typeName]; ok {
+				errs = multierror.Append(errs, fmt.Errorf("duplicate resource: %s", typeName))
+				continue
+			}
+
+			r := v.Factory()
+
+			if v := r.CreateWithoutTimeout; v != nil {
+				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
+			}
+			if v := r.ReadWithoutTimeout; v != nil {
+				r.ReadWithoutTimeout = wrappedReadContextFunc(v)
+			}
+			if v := r.UpdateWithoutTimeout; v != nil {
+				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v)
+			}
+			if v := r.DeleteWithoutTimeout; v != nil {
+				r.DeleteWithoutTimeout = wrappedDeleteContextFunc(v)
+			}
+			if v := r.Importer; v != nil {
+				if v := v.StateContext; v != nil {
+					r.Importer.StateContext = wrappedStateContextFunc(v)
+				}
+			}
+
+			provider.ResourcesMap[typeName] = r
+		}
+	}
+
+	if err := errs.ErrorOrNil(); err != nil {
+		return nil, err
 	}
 
 	// Set the provider Meta (instance data) here.
@@ -2346,15 +2404,15 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	providerData, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+	meta, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
 
 	if diags.HasError() {
 		return nil, diags
 	}
 
 	// Configure each service.
-	for _, v := range providerData.ServicePackages {
-		if err := v.Configure(ctx, providerData); err != nil {
+	for _, v := range meta.ServicePackages {
+		if err := v.Configure(ctx, meta); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
 	}
@@ -2363,7 +2421,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		return nil, diags
 	}
 
-	return providerData, diags
+	return meta, diags
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -2697,4 +2755,34 @@ func expandEndpoints(tfList []interface{}) (map[string]string, error) {
 	}
 
 	return endpoints, nil
+}
+
+func wrappedCreateContextFunc(f schema.CreateContextFunc) schema.CreateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedReadContextFunc(f schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedUpdateContextFunc(f schema.UpdateContextFunc) schema.UpdateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedDeleteContextFunc(f schema.DeleteContextFunc) schema.DeleteContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedStateContextFunc(f schema.StateContextFunc) schema.StateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		return f(ctx, d, meta)
+	}
 }
