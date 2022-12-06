@@ -1,4 +1,10 @@
 ## 4.46.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_resourceexplorer2_index` ([#28144](https://github.com/hashicorp/terraform-provider-aws/issues/28144))
+* **New Resource:** `aws_vpc_network_performance_metric_subscription` ([#28150](https://github.com/hashicorp/terraform-provider-aws/issues/28150))
+
 ## 4.45.0 (December  2, 2022)
 
 NOTES:

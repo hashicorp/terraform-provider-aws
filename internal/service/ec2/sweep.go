@@ -363,6 +363,12 @@ func init() {
 		Name: "aws_ami",
 		F:    sweepAMIs,
 	})
+
+	// aws_vpc_network_performance_metric_subscription
+	resource.AddTestSweepers("aws_vpc_network_performance_metric_subscription", &resource.Sweeper{
+		Name: "aws_vpc_network_performance_metric_subscription",
+		F:    sweepNetworkPerformanceMetricSubscriptions,
+	})
 }
 
 func sweepCapacityReservations(region string) error {
@@ -2447,6 +2453,50 @@ func sweepAMIs(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping AMIs (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepNetworkPerformanceMetricSubscriptions(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeAwsNetworkPerformanceMetricSubscriptionsPages(input, func(page *ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Subscriptions {
+			r := ResourceNetworkPerformanceMetricSubscription()
+			id := NetworkPerformanceMetricSubscriptionCreateResourceID(aws.StringValue(v.Source), aws.StringValue(v.Destination), aws.StringValue(v.Metric), aws.StringValue(v.Statistic))
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 AWS Network Performance Metric Subscription sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 AWS Network Performance Metric Subscriptions (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 AWS Network Performance Metric Subscriptions (%s): %w", region, err)
 	}
 
 	return nil
