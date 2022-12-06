@@ -16,11 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	filename      = `../../sweep/sweep_test.go`
-	namesDataFile = "../../../names/names_data.csv"
-)
-
 type ServiceDatum struct {
 	ProviderPackage string
 }
@@ -30,6 +25,10 @@ type TemplateData struct {
 }
 
 func main() {
+	const (
+		filename      = `../../sweep/sweep_test.go`
+		namesDataFile = "../../../names/names_data.csv"
+	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../"))
