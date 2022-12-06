@@ -22,14 +22,14 @@ func registerFrameworkResourceFactory(factory func(context.Context) (resource.Re
 }
 
 func registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	spd.sdkResourceFactories = append(spd.sdkResourceFactories, struct {
+	spd.sdkDataSourceFactories = append(spd.sdkDataSourceFactories, struct {
 		TypeName string
 		Factory  func() *schema.Resource
 	}{TypeName: typeName, Factory: factory})
 }
 
 func registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	spd.sdkDataSourceFactories = append(spd.sdkDataSourceFactories, struct {
+	spd.sdkResourceFactories = append(spd.sdkResourceFactories, struct {
 		TypeName string
 		Factory  func() *schema.Resource
 	}{TypeName: typeName, Factory: factory})
