@@ -2755,30 +2755,40 @@ func expandEndpoints(tfList []interface{}) (map[string]string, error) {
 
 func wrappedCreateContextFunc(f schema.CreateContextFunc) schema.CreateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
 		return f(ctx, d, meta)
 	}
 }
 
 func wrappedReadContextFunc(f schema.ReadContextFunc) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
 		return f(ctx, d, meta)
 	}
 }
 
 func wrappedUpdateContextFunc(f schema.UpdateContextFunc) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
 		return f(ctx, d, meta)
 	}
 }
 
 func wrappedDeleteContextFunc(f schema.DeleteContextFunc) schema.DeleteContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
 		return f(ctx, d, meta)
 	}
 }
 
 func wrappedStateContextFunc(f schema.StateContextFunc) schema.StateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
 		return f(ctx, d, meta)
 	}
 }
