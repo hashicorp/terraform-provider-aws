@@ -54,8 +54,8 @@ github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.1 h1:j+g0avkzN/7dzPSj60X
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.1/go.mod h1:SXAGVDOsruAdfPRbnAzUf6CbpHQWBWpuPLyRjfkxUMQ=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.10.20 h1:kkediRa5hEDgCKcVaxT2jzhsmwrBdk3jj2noC8HlkAw=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.10.20/go.mod h1:SVE2D67723Ccdap/1jPuGZYnjpJy5mRQa2ovdcPrBJ4=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.0 h1:/RFnaZHehAtDteT8Ds9SNpMaNbkyVrKizWQPaMXLI8I=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.0/go.mod h1:9feOMWt3rxs46DqBVHco7z1KxRG36bKUqtv306cAtaA=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.1 h1:JO95wZ1lbTeGDdPLb5bTp4oxmZyGLfLXDzdfLhhRHfQ=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.1/go.mod h1:LpFZR0QsWbDJGtipKU9FsT0RptrLURfO1Qpz4UxahVc=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.1 h1:EIBfuiNhrjWSRg7u11/IoWMYTpM5H61h76pDA5oIStE=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.1/go.mod h1:fsAJ+RPuXLlxKQHkWBvrbhEi4vQf7MuQNCrGXsvJAKA=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.1 h1:tWazrGp2FDgYGHwrEqQisFjIIv+s7TwXUajFziPCZKw=
