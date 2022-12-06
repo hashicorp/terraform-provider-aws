@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -38,7 +39,10 @@ func ResourceCoreNetwork() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceCoreNetworkCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -329,6 +333,17 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	if _, err := waitCoreNetworkDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Network Manager Core Network (%s) delete: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceCoreNetworkCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if d.HasChange("policy_document") {
+		if o, n := d.GetChange("policy_document"); !verify.JSONStringsEqual(o.(string), n.(string)) {
+			d.SetNewComputed("edges")
+			d.SetNewComputed("segments")
+		}
 	}
 
 	return nil

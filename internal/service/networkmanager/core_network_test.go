@@ -189,10 +189,9 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#": "1",
-						"edge_locations.0": client.Region,
-						// during the test name is not shown as the updatedSegmentValue
-						// "name":              updatedSegmentValue,
+						"edge_locations.#":  "1",
+						"edge_locations.0":  client.Region,
+						"name":              updatedSegmentValue,
 						"shared_segments.#": "0",
 					}),
 				),
