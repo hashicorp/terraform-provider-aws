@@ -7,6 +7,7 @@ FEATURES:
 
 BUG FIXES:
 
+* resource/aws_dms_s3_endpoint: Fix disparate handling of endpoint attributes in different regions ([#28220](https://github.com/hashicorp/terraform-provider-aws/issues/28220))
 * resource/aws_evidently_feature: Fix  `description` attribute to accept strings between `0` and `160` in length ([#27948](https://github.com/hashicorp/terraform-provider-aws/issues/27948))
 
 ## 4.45.0 (December  2, 2022)
