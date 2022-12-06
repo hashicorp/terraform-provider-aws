@@ -26,7 +26,10 @@ func DataSourcePublicIpv4Pools() *schema.Resource {
 			"pools": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeMap},
+				Elem: &schema.Schema{
+					Type: schema.TypeMap,
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
