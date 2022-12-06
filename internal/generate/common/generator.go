@@ -45,6 +45,24 @@ func (g *Generator) Infof(format string, a ...interface{}) {
 	g.ui.Info(fmt.Sprintf(format, a...))
 }
 
+func (g *Generator) WriteFile(filename string, body []byte) error {
+	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644) //nolint:gomnd
+
+	if err != nil {
+		return fmt.Errorf("opening file (%s): %w", filename, err)
+	}
+
+	defer f.Close()
+
+	_, err = f.Write(body)
+
+	if err != nil {
+		return fmt.Errorf("writing to file (%s): %w", filename, err)
+	}
+
+	return nil
+}
+
 func (g *Generator) applyAndWriteTemplate(filename, templateName, templateBody string, templateData any, formatter func([]byte) ([]byte, error)) error {
 	tmpl, err := template.New(templateName).Parse(templateBody)
 
@@ -72,19 +90,5 @@ func (g *Generator) applyAndWriteTemplate(filename, templateName, templateBody s
 		generatedFileContents = buffer.Bytes()
 	}
 
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644) //nolint:gomnd
-
-	if err != nil {
-		return fmt.Errorf("opening file (%s): %w", filename, err)
-	}
-
-	defer f.Close()
-
-	_, err = f.Write(generatedFileContents)
-
-	if err != nil {
-		return fmt.Errorf("writing to file (%s): %w", filename, err)
-	}
-
-	return nil
+	return g.WriteFile(filename, generatedFileContents)
 }
