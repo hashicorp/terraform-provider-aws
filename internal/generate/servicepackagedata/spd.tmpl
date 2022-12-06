@@ -41,31 +41,19 @@ func (d *servicePackageData) Configure(ctx context.Context, meta any) error {
 }
 
 func (d *servicePackageData) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	v := d.frameworkDataSourceFactories
-	d.frameworkDataSourceFactories = nil
-
-	return v
+	return d.frameworkDataSourceFactories
 }
 
 func (d *servicePackageData) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	v := d.frameworkResourceFactories
-	d.frameworkResourceFactories = nil
-
-	return v
+	return d.frameworkResourceFactories
 }
 
 func (d *servicePackageData) SDKDataSources(ctx context.Context) []struct {TypeName string; Factory func() *schema.Resource} {
-	v := d.sdkDataSourceFactories
-	d.sdkDataSourceFactories = nil
-
-	return v
+	return d.sdkDataSourceFactories
 }
 
 func (d *servicePackageData) SDKResources(ctx context.Context) []struct {TypeName string; Factory func() *schema.Resource} {
-	v := d.sdkResourceFactories
-	d.sdkResourceFactories = nil
-
-	return v
+	return d.sdkResourceFactories
 }
 
 func (d *servicePackageData) ServicePackageName() string {
