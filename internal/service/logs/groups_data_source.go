@@ -10,7 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceGroups() *schema.Resource {
+func init() {
+	registerSDKDataSourceFactory("aws_cloudwatch_log_groups", dataSourceGroups)
+}
+
+func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupsRead,
 

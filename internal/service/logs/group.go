@@ -17,7 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceGroup() *schema.Resource {
+func init() {
+	registerSDKResourceFactory("aws_cloudwatch_log_group", resourceGroup)
+}
+
+func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,

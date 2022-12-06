@@ -10,7 +10,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceGroup() *schema.Resource {
+func init() {
+	registerSDKDataSourceFactory("aws_cloudwatch_log_group", dataSourceGroup)
+}
+
+func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
