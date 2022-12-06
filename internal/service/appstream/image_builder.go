@@ -285,7 +285,6 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("domain_join_info", nil)
 	}
 
-
 	if imageBuilder.VpcConfig != nil {
 		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "vpc_config", d.Id(), err))
