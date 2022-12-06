@@ -2980,6 +2980,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)RAM"
+            - pattern-not-regex: Framework
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: ram-in-test-name
