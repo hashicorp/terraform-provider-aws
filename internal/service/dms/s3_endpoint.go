@@ -411,7 +411,6 @@ func resourceS3EndpointRead(d *schema.ResourceData, meta interface{}) error {
 
 	s3settings := endpoint.S3Settings
 	d.Set("add_column_name", s3settings.AddColumnName)
-	d.Set("add_trailing_padding_character", s3settings.AddTrailingPaddingCharacter)
 	d.Set("bucket_folder", s3settings.BucketFolder)
 	d.Set("bucket_name", s3settings.BucketName)
 	d.Set("canned_acl_for_objects", s3settings.CannedAclForObjects)
@@ -420,35 +419,39 @@ func resourceS3EndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cdc_max_batch_interval", s3settings.CdcMaxBatchInterval)
 	d.Set("cdc_min_file_size", s3settings.CdcMinFileSize)
 	d.Set("cdc_path", s3settings.CdcPath)
-	d.Set("compression_type", s3settings.CompressionType)
 	d.Set("csv_delimiter", s3settings.CsvDelimiter)
-	d.Set("csv_no_sup_value", s3settings.CsvNoSupValue)
 	d.Set("csv_null_value", s3settings.CsvNullValue)
 	d.Set("csv_row_delimiter", s3settings.CsvRowDelimiter)
-	d.Set("data_format", s3settings.DataFormat)
 	d.Set("data_page_size", s3settings.DataPageSize)
-	d.Set("date_partition_delimiter", strings.ToUpper(aws.StringValue(s3settings.DatePartitionDelimiter)))
-	d.Set("date_partition_enabled", s3settings.DatePartitionEnabled)
-	d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
-	d.Set("date_partition_timezone", s3settings.DatePartitionTimezone)
 	d.Set("dict_page_size_limit", s3settings.DictPageSizeLimit)
 	d.Set("enable_statistics", s3settings.EnableStatistics)
 	d.Set("encoding_type", s3settings.EncodingType)
-	d.Set("encryption_mode", s3settings.EncryptionMode)
 	d.Set("expected_bucket_owner", s3settings.ExpectedBucketOwner)
 	d.Set("ignore_header_rows", s3settings.IgnoreHeaderRows)
 	d.Set("include_op_for_full_load", s3settings.IncludeOpForFullLoad)
 	d.Set("max_file_size", s3settings.MaxFileSize)
-	d.Set("parquet_timestamp_in_millisecond", s3settings.ParquetTimestampInMillisecond)
-	d.Set("parquet_version", s3settings.ParquetVersion)
-	d.Set("preserve_transactions", s3settings.PreserveTransactions)
 	d.Set("rfc_4180", s3settings.Rfc4180)
 	d.Set("row_group_length", s3settings.RowGroupLength)
-	d.Set("server_side_encryption_kms_key_id", s3settings.ServerSideEncryptionKmsKeyId)
 	d.Set("service_access_role_arn", s3settings.ServiceAccessRoleArn)
 	d.Set("timestamp_column_name", s3settings.TimestampColumnName)
-	d.Set("use_csv_no_sup_value", s3settings.UseCsvNoSupValue)
 	d.Set("use_task_start_time_for_full_load_timestamp", s3settings.UseTaskStartTimeForFullLoadTimestamp)
+
+	if d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget {
+		d.Set("add_trailing_padding_character", s3settings.AddTrailingPaddingCharacter)
+		d.Set("compression_type", s3settings.CompressionType)
+		d.Set("csv_no_sup_value", s3settings.CsvNoSupValue)
+		d.Set("data_format", s3settings.DataFormat)
+		d.Set("date_partition_delimiter", strings.ToUpper(aws.StringValue(s3settings.DatePartitionDelimiter)))
+		d.Set("date_partition_enabled", s3settings.DatePartitionEnabled)
+		d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
+		d.Set("date_partition_timezone", s3settings.DatePartitionTimezone)
+		d.Set("encryption_mode", s3settings.EncryptionMode)
+		d.Set("parquet_timestamp_in_millisecond", s3settings.ParquetTimestampInMillisecond)
+		d.Set("parquet_version", s3settings.ParquetVersion)
+		d.Set("preserve_transactions", s3settings.PreserveTransactions)
+		d.Set("server_side_encryption_kms_key_id", s3settings.ServerSideEncryptionKmsKeyId)
+		d.Set("use_csv_no_sup_value", s3settings.UseCsvNoSupValue)
+	}
 
 	p, err := structure.NormalizeJsonString(aws.StringValue(s3settings.ExternalTableDefinition))
 	if err != nil {
@@ -610,7 +613,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.CdcPath = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("compression_type"); ok { // likely only useful for target
+	if v, ok := d.GetOk("compression_type"); ok && target { // likely only useful for target
 		s3s.CompressionType = aws.String(v.(string))
 	}
 
@@ -642,7 +645,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.DatePartitionDelimiter = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get("date_partition_enabled").(bool); ok { // likely only useful for target
+	if v, ok := d.Get("date_partition_enabled").(bool); ok && target { // likely only useful for target
 		s3s.DatePartitionEnabled = aws.Bool(v)
 	}
 
