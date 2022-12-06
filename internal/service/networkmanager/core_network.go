@@ -15,18 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
-	// Allow Policy Version to stabalize
-	policyDocumentStabalizationTimeout = 4 * time.Minute
-
-	// validationExceptionMessage describes the error returned when the policy version has not yet stabalized
-	validationExceptionMessage = "Incorrect input"
+	// CoreNetwork is in PENDING state before AVAILABLE. No value for PENDING at the moment.
+	coreNetworkStatePending = "PENDING"
 )
 
 // This resource is explicitly NOT exported from the provider until design is finalized.
@@ -65,7 +61,7 @@ func ResourceCoreNetwork() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"edges": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -78,7 +74,7 @@ func ResourceCoreNetwork() *schema.Resource {
 							Computed: true,
 						},
 						"inside_cidr_blocks": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -105,12 +101,12 @@ func ResourceCoreNetwork() *schema.Resource {
 				},
 			},
 			"segments": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"edge_locations": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -119,7 +115,7 @@ func ResourceCoreNetwork() *schema.Resource {
 							Computed: true,
 						},
 						"shared_segments": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -160,7 +156,6 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Core Network: %s", input)
 	output, err := conn.CreateCoreNetworkWithContext(ctx, input)
 
 	if err != nil {
@@ -194,42 +189,34 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", coreNetwork.CoreNetworkArn)
-	d.Set("description", coreNetwork.Description)
-	d.Set("global_network_id", coreNetwork.GlobalNetworkId)
-	d.Set("state", coreNetwork.State)
-
-	if err := d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339)); err != nil {
-		return diag.Errorf("setting created_at: %s", err)
+	if coreNetwork.CreatedAt != nil {
+		d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
+	} else {
+		d.Set("created_at", nil)
 	}
-
-	if err := d.Set("edges", flattenEdges(coreNetwork.Edges)); err != nil {
+	d.Set("description", coreNetwork.Description)
+	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {
 		return diag.Errorf("setting edges: %s", err)
 	}
-
-	if err := d.Set("segments", flattenSegments(coreNetwork.Segments)); err != nil {
+	d.Set("global_network_id", coreNetwork.GlobalNetworkId)
+	if err := d.Set("segments", flattenCoreNetworkSegments(coreNetwork.Segments)); err != nil {
 		return diag.Errorf("setting segments: %s", err)
 	}
+	d.Set("state", coreNetwork.State)
 
 	// getting the policy document uses a different API call
 	// policy document is also optional
-	resp, err := conn.GetCoreNetworkPolicyWithContext(ctx, &networkmanager.GetCoreNetworkPolicyInput{
-		CoreNetworkId: aws.String(d.Id()),
-	})
+	coreNetworkPolicy, err := findCoreNetworkPolicyByID(ctx, conn, d.Id())
 
-	// policy document is optional. API returns ResourceNotFoundException if there is no policy document
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-			log.Printf("[INFO] Network Manager Core Network %s no Policy Document", d.Id())
-		} else {
-			return diag.Errorf("reading Network Manager Core Network Policy Document (%s): %s", d.Id(), err)
-		}
-	}
+	if tfresource.NotFound(err) {
+		d.Set("policy_document", nil)
+	} else if err != nil {
+		return diag.Errorf("reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
+	} else {
+		encodedPolicyDocument, err := protocol.EncodeJSONValue(coreNetworkPolicy.PolicyDocument, protocol.NoEscape)
 
-	// policy document is optional
-	if resp != nil && resp.CoreNetworkPolicy != nil {
-		encodedPolicyDocument, err := protocol.EncodeJSONValue(resp.CoreNetworkPolicy.PolicyDocument, protocol.NoEscape)
 		if err != nil {
-			return diag.Errorf("reading Network Manager Core Network Policy Document encoding (%s): %s", d.Id(), err)
+			return diag.Errorf("encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
 		}
 
 		d.Set("policy_document", encodedPolicyDocument)
@@ -271,44 +258,41 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 		v, err := protocol.DecodeJSONValue(d.Get("policy_document").(string), protocol.NoEscape)
 
 		if err != nil {
-			return diag.Errorf("Network Manager Core Network (%s) update: %s", d.Id(), err)
+			return diag.Errorf("decoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
 		}
 
-		resp, err := conn.PutCoreNetworkPolicyWithContext(ctx, &networkmanager.PutCoreNetworkPolicyInput{
+		output, err := conn.PutCoreNetworkPolicyWithContext(ctx, &networkmanager.PutCoreNetworkPolicyInput{
 			ClientToken:    aws.String(resource.UniqueId()),
 			CoreNetworkId:  aws.String(d.Id()),
 			PolicyDocument: v,
 		})
 
-		if resp == nil || resp.CoreNetworkPolicy == nil {
-			return diag.Errorf("Network Manager Core Network (%s) put policy document empty response", d.Id())
-		}
-
 		if err != nil {
-			return diag.Errorf("putting Network Manager Core Network policy document (%s): %s", d.Id(), err)
+			return diag.Errorf("putting Network Manager Core Network (%s) policy: %s", d.Id(), err)
 		}
 
-		policyVersionId := resp.CoreNetworkPolicy.PolicyVersionId
+		policyVersionID := aws.Int64Value(output.CoreNetworkPolicy.PolicyVersionId)
 
 		// new policy documents goes from Pending generation to Ready to execute
 		_, err = tfresource.RetryWhen(
-			policyDocumentStabalizationTimeout,
+			4*time.Minute,
 			func() (interface{}, error) {
 				return conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
 					CoreNetworkId:   aws.String(d.Id()),
-					PolicyVersionId: policyVersionId,
+					PolicyVersionId: aws.Int64(policyVersionID),
 				})
 			},
 			func(err error) (bool, error) {
-				if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, validationExceptionMessage) {
+				if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "Incorrect input") {
 					return true, err
 				}
+
 				return false, err
 			},
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager Core Network policy document (%s): %s", d.Id(), err)
+			return diag.Errorf("executing Network Manager Core Network (%s) change set (%d): %s", d.Id(), policyVersionID, err)
 		}
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -375,7 +359,32 @@ func FindCoreNetworkByID(ctx context.Context, conn *networkmanager.NetworkManage
 	return output.CoreNetwork, nil
 }
 
-func StatusCoreNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func findCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.CoreNetworkPolicy, error) {
+	input := &networkmanager.GetCoreNetworkPolicyInput{
+		CoreNetworkId: aws.String(id),
+	}
+
+	output, err := conn.GetCoreNetworkPolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CoreNetworkPolicy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CoreNetworkPolicy, nil
+}
+
+func statusCoreNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCoreNetworkByID(ctx, conn, id)
 
@@ -393,11 +402,10 @@ func StatusCoreNetworkState(ctx context.Context, conn *networkmanager.NetworkMan
 
 func waitCoreNetworkCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
 	stateConf := &resource.StateChangeConf{
-		// CoreNetwork is in PENDING state before AVAILABLE. No value for PENDING at the moment
-		Pending: []string{networkmanager.CoreNetworkStateCreating, "PENDING"},
+		Pending: []string{networkmanager.CoreNetworkStateCreating, coreNetworkStatePending},
 		Target:  []string{networkmanager.CoreNetworkStateAvailable},
 		Timeout: timeout,
-		Refresh: StatusCoreNetworkState(ctx, conn, id),
+		Refresh: statusCoreNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -414,7 +422,7 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkMan
 		Pending: []string{networkmanager.CoreNetworkStateUpdating},
 		Target:  []string{networkmanager.CoreNetworkStateAvailable},
 		Timeout: timeout,
-		Refresh: StatusCoreNetworkState(ctx, conn, id),
+		Refresh: statusCoreNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -431,7 +439,7 @@ func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 		Pending: []string{networkmanager.CoreNetworkStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: StatusCoreNetworkState(ctx, conn, id),
+		Refresh: statusCoreNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -443,34 +451,82 @@ func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 	return nil, err
 }
 
-func flattenEdges(coreNetworkEdge []*networkmanager.CoreNetworkEdge) []interface{} {
-	if coreNetworkEdge == nil {
-		return []interface{}{}
+func flattenCoreNetworkEdge(apiObject *networkmanager.CoreNetworkEdge) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	coreNetworkEdges := []interface{}{}
-	for _, edge := range coreNetworkEdge {
-		values := map[string]interface{}{}
-		values["asn"] = aws.Int64Value(edge.Asn)
-		values["edge_location"] = aws.StringValue(edge.EdgeLocation)
-		values["inside_cidr_blocks"] = flex.FlattenStringSet(edge.InsideCidrBlocks)
-		coreNetworkEdges = append(coreNetworkEdges, values)
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Asn; v != nil {
+		tfMap["asn"] = aws.Int64Value(v)
 	}
-	return coreNetworkEdges
+
+	if v := apiObject.EdgeLocation; v != nil {
+		tfMap["edge_location"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.InsideCidrBlocks; v != nil {
+		tfMap["inside_cidr_blocks"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
 }
 
-func flattenSegments(coreNetworkSegment []*networkmanager.CoreNetworkSegment) []interface{} {
-	if coreNetworkSegment == nil {
-		return []interface{}{}
+func flattenCoreNetworkEdges(apiObjects []*networkmanager.CoreNetworkEdge) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	coreNetworkSegments := []interface{}{}
-	for _, segment := range coreNetworkSegment {
-		values := map[string]interface{}{}
-		values["edge_locations"] = flex.FlattenStringSet(segment.EdgeLocations)
-		values["name"] = aws.StringValue(segment.Name)
-		values["shared_segments"] = flex.FlattenStringSet(segment.SharedSegments)
-		coreNetworkSegments = append(coreNetworkSegments, values)
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenCoreNetworkEdge(apiObject))
 	}
-	return coreNetworkSegments
+
+	return tfList
+}
+
+func flattenCoreNetworkSegment(apiObject *networkmanager.CoreNetworkSegment) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EdgeLocations; v != nil {
+		tfMap["edge_locations"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SharedSegments; v != nil {
+		tfMap["shared_segments"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenCoreNetworkSegments(apiObjects []*networkmanager.CoreNetworkSegment) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenCoreNetworkSegment(apiObject))
+	}
+
+	return tfList
 }
