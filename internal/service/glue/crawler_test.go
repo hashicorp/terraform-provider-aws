@@ -1642,7 +1642,7 @@ func testAccCrawlerConfig_base(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name               = %q
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
@@ -1689,13 +1689,13 @@ EOF
 }
 
 func testAccCrawlerConfig_classifiersSingle(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_classifier" "test1" {
-  name = %q
+  name = %[2]q
 
   grok_classifier {
     classification = "example"
@@ -1704,7 +1704,7 @@ resource "aws_glue_classifier" "test1" {
 }
 
 resource "aws_glue_classifier" "test2" {
-  name = %q
+  name = %[3]q
 
   grok_classifier {
     classification = "example"
@@ -1716,7 +1716,7 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   classifiers   = [aws_glue_classifier.test1.id]
-  name          = %q
+  name          = %[4]q
   database_name = aws_glue_catalog_database.test.name
   role          = aws_iam_role.test.name
 
@@ -1724,17 +1724,17 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName+"1", rName+"2", rName)
+`, rName, rName+"1", rName+"2", rName))
 }
 
 func testAccCrawlerConfig_classifiersMultiple(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_classifier" "test1" {
-  name = %q
+  name = %[2]q
 
   grok_classifier {
     classification = "example"
@@ -1743,7 +1743,7 @@ resource "aws_glue_classifier" "test1" {
 }
 
 resource "aws_glue_classifier" "test2" {
-  name = %q
+  name = %[3]q
 
   grok_classifier {
     classification = "example"
@@ -1755,7 +1755,7 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   classifiers   = [aws_glue_classifier.test1.id, aws_glue_classifier.test2.id]
-  name          = %q
+  name          = %[4]q
   database_name = aws_glue_catalog_database.test.name
   role          = aws_iam_role.test.name
 
@@ -1763,53 +1763,53 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName+"1", rName+"2", rName)
+`, rName, rName+"1", rName+"2", rName))
 }
 
 func testAccCrawlerConfig_configuration(rName, configuration string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  configuration = %s
+  configuration = %[2]s
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[3]q
   role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, strconv.Quote(configuration), rName)
+`, rName, strconv.Quote(configuration), rName))
 }
 
 func testAccCrawlerConfig_description(rName, description string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  description   = %q
-  name          = %q
+  description   = %[2]q
+  name          = %[3]q
   role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, description, rName)
+`, rName, description, rName))
 }
 
 func testAccCrawlerConfig_dynamoDBTarget(rName, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1825,11 +1825,11 @@ resource "aws_glue_crawler" "test" {
     path = %[2]q
   }
 }
-`, rName, path)
+`, rName, path))
 }
 
 func testAccCrawlerConfig_dynamoDBTargetScanAll(rName, path string, scanAll bool) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1846,11 +1846,11 @@ resource "aws_glue_crawler" "test" {
     scan_all = %[3]t
   }
 }
-`, rName, path, scanAll)
+`, rName, path, scanAll))
 }
 
 func testAccCrawlerConfig_dynamoDBTargetScanRate(rName, path string, scanRate float64) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1867,11 +1867,11 @@ resource "aws_glue_crawler" "test" {
     scan_rate = %[3]g
   }
 }
-`, rName, path, scanRate)
+`, rName, path, scanRate))
 }
 
 func testAccCrawlerConfig_jdbcTarget(rName, jdbcConnectionUrl, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1898,11 +1898,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[3]q
   }
 }
-`, rName, jdbcConnectionUrl, path)
+`, rName, jdbcConnectionUrl, path))
 }
 
 func testAccCrawlerConfig_jdbcTargetExclusions1(rName, jdbcConnectionUrl, exclusion1 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1930,11 +1930,11 @@ resource "aws_glue_crawler" "test" {
     path            = "database-name/table1"
   }
 }
-`, rName, jdbcConnectionUrl, exclusion1)
+`, rName, jdbcConnectionUrl, exclusion1))
 }
 
 func testAccCrawlerConfig_jdbcTargetExclusions2(rName, jdbcConnectionUrl, exclusion1, exclusion2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1962,11 +1962,11 @@ resource "aws_glue_crawler" "test" {
     path            = "database-name/table1"
   }
 }
-`, rName, jdbcConnectionUrl, exclusion1, exclusion2)
+`, rName, jdbcConnectionUrl, exclusion1, exclusion2))
 }
 
 func testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, path1, path2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1998,11 +1998,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[4]q
   }
 }
-`, rName, jdbcConnectionUrl, path1, path2)
+`, rName, jdbcConnectionUrl, path1, path2))
 }
 
 func testAccCrawlerConfig_roleARNNoPath(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2018,7 +2018,7 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_roleARNPath(rName string) string {
@@ -2118,7 +2118,7 @@ resource "aws_glue_crawler" "test" {
 }
 
 func testAccCrawlerConfig_s3Target(rName, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2134,11 +2134,11 @@ resource "aws_glue_crawler" "test" {
     path = %[2]q
   }
 }
-`, rName, path)
+`, rName, path))
 }
 
 func testAccCrawlerConfig_s3TargetExclusions1(rName, exclusion1 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2155,30 +2155,13 @@ resource "aws_glue_crawler" "test" {
     path       = "s3://bucket1"
   }
 }
-`, rName, exclusion1)
+`, rName, exclusion1))
 }
 
 func testAccCrawlerConfig_s3TargetConnectionName(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-glue-connection-base"
-  }
-}
-
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name   = "%[1]s"
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -2187,17 +2170,9 @@ resource "aws_security_group" "test" {
     self      = true
     to_port   = 65535
   }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-glue-connection-base"
+    Name = %[1]q
   }
 }
 
@@ -2233,11 +2208,11 @@ resource "aws_glue_crawler" "test" {
     path            = "s3://bucket1"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_s3TargetExclusions2(rName, exclusion1, exclusion2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2254,11 +2229,11 @@ resource "aws_glue_crawler" "test" {
     path       = "s3://bucket1"
   }
 }
-`, rName, exclusion1, exclusion2)
+`, rName, exclusion1, exclusion2))
 }
 
 func testAccCrawlerConfig_s3TargetEventQueue(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2322,11 +2297,11 @@ resource "aws_glue_crawler" "test" {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_catalogTargetDlqEventQueue(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
 
@@ -2424,11 +2399,11 @@ resource "aws_glue_crawler" "test" {
 }
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_s3TargetDlqEventQueue(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2500,11 +2475,11 @@ resource "aws_glue_crawler" "test" {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_s3TargetMultiple(rName, path1, path2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2524,11 +2499,11 @@ resource "aws_glue_crawler" "test" {
     path = %[3]q
   }
 }
-`, rName, path1, path2)
+`, rName, path1, path2))
 }
 
 func testAccCrawlerConfig_catalogTarget(rName string, tableCount int) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2587,11 +2562,11 @@ resource "aws_glue_crawler" "test" {
 }
 EOF
 }
-`, rName, tableCount)
+`, rName, tableCount))
 }
 
 func testAccCrawlerConfig_catalogTargetMultiple(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   count = 2
   name  = "%[1]s_database_${count.index}"
@@ -2655,11 +2630,11 @@ resource "aws_glue_crawler" "test" {
 }
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_schedule(rName, schedule string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2676,11 +2651,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, schedule)
+`, rName, schedule))
 }
 
 func testAccCrawlerConfig_schemaChangePolicy(rName, deleteBehavior, updateBehavior string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2701,11 +2676,11 @@ resource "aws_glue_crawler" "test" {
     update_behavior = %[3]q
   }
 }
-`, rName, deleteBehavior, updateBehavior)
+`, rName, deleteBehavior, updateBehavior))
 }
 
 func testAccCrawlerConfig_tablePrefix(rName, tablePrefix string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2722,11 +2697,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, tablePrefix)
+`, rName, tablePrefix))
 }
 
 func testAccCrawlerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2747,11 +2722,11 @@ resource "aws_glue_crawler" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccCrawlerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2773,11 +2748,11 @@ resource "aws_glue_crawler" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccCrawlerConfig_securityConfiguration(rName, securityConfiguration string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2812,11 +2787,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, securityConfiguration)
+`, rName, securityConfiguration))
 }
 
 func testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2844,11 +2819,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[3]q
   }
 }
-`, rName, connectionUrl, path)
+`, rName, connectionUrl, path))
 }
 
 func testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl string, scan bool) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2877,11 +2852,11 @@ resource "aws_glue_crawler" "test" {
     scan_all        = %[3]t
   }
 }
-`, rName, connectionUrl, scan)
+`, rName, connectionUrl, scan))
 }
 
 func testAccCrawlerConfig_mongoDBMultiple(rName, connectionUrl, path1, path2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2914,11 +2889,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[4]q
   }
 }
-`, rName, connectionUrl, path1, path2)
+`, rName, connectionUrl, path1, path2))
 }
 
 func testAccCrawlerConfig_deltaTarget(rName, connectionUrl, tableName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2947,11 +2922,11 @@ resource "aws_glue_crawler" "test" {
     write_manifest  = false
   }
 }
-`, rName, connectionUrl, tableName)
+`, rName, connectionUrl, tableName))
 }
 
 func testAccCrawlerConfig_lakeformation(rName string, use bool) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2971,11 +2946,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, use)
+`, rName, use))
 }
 
 func testAccCrawlerConfig_lineage(rName, lineageConfig string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2995,11 +2970,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, lineageConfig)
+`, rName, lineageConfig))
 }
 
 func testAccCrawlerConfig_recrawlPolicy(rName, policy string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -3024,11 +2999,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, policy)
+`, rName, policy))
 }
 
 func testAccCrawlerConfig_s3TargetSampleSize(rName string, size int) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -3045,5 +3020,5 @@ resource "aws_glue_crawler" "test" {
     path        = "s3://bucket1"
   }
 }
-`, rName, size)
+`, rName, size))
 }
