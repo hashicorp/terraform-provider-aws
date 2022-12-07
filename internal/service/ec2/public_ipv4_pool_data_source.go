@@ -77,3 +77,50 @@ func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 
 	return nil
 }
+
+func flattenPublicIpv4Pool(pool *ec2.PublicIpv4Pool) map[string]interface{} {
+	if pool == nil {
+		return map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"description":                   aws.StringValue(pool.Description),
+		"network_border_group":          aws.StringValue(pool.NetworkBorderGroup),
+		"pool_address_ranges":           flattenPublicIpv4PoolRanges(pool.PoolAddressRanges),
+		"pool_id":                       aws.StringValue(pool.PoolId),
+		"tags":                          flattenTags(pool.Tags),
+		"total_address_count":           aws.Int64Value(pool.TotalAddressCount),
+		"total_available_address_count": aws.Int64Value(pool.TotalAvailableAddressCount),
+	}
+
+	return m
+}
+
+func flattenPublicIpv4PoolRanges(pool_ranges []*ec2.PublicIpv4PoolRange) []interface{} {
+	result := []interface{}{}
+
+	if pool_ranges == nil {
+		return result
+	}
+
+	for _, v := range pool_ranges {
+		range_map := map[string]interface{}{
+			"address_count":           aws.Int64Value(v.AddressCount),
+			"available_address_count": aws.Int64Value(v.AvailableAddressCount),
+			"first_address":           aws.StringValue(v.FirstAddress),
+			"last_address":            aws.StringValue(v.LastAddress),
+		}
+		result = append(result, range_map)
+	}
+
+	return result
+}
+
+func flattenTags(tags []*ec2.Tag) map[string]string {
+	result := make(map[string]string)
+	for _, t := range tags {
+		result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
+	}
+
+	return result
+}

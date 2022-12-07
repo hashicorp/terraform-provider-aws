@@ -95,6 +95,26 @@ resource "aws_vpc_ipam_pool" "test_pool_2" {
 		UniqueTagKey = "unimportant"
 	  }
 }
+
+resource "aws_vpc_ipam_pool_cidr" "test_cidr_1" {
+	ipam_pool_id = aws_vpc_ipam_pool.test_pool_1.id
+	cidr         = "172.1.0.0/16"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test_cidr_2" {
+	ipam_pool_id = aws_vpc_ipam_pool.test_pool_1.id
+	cidr         = "172.2.0.0/16"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test_cidr_3" {
+	ipam_pool_id = aws_vpc_ipam_pool.test_pool_2.id
+	cidr         = "172.3.0.0/16"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test_cidr_4" {
+	ipam_pool_id = aws_vpc_ipam_pool.test_pool_2.id
+	cidr         = "172.4.0.0/16"
+}
 `, rName)
 }
 
