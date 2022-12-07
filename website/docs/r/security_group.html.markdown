@@ -21,6 +21,8 @@ a conflict of rule settings and will overwrite rules.
 
 ~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/10329).
 
+~> **NOTE:** The `cidr_blocks` and `ipv6_cidr_blocks` parameters is an optional parameter in the ingress and egress block. If nothing is spesified, the traffic will be blocked as described in the note later in this page redarding Egress rules.
+
 ## Example Usage
 
 ### Basic Usage
