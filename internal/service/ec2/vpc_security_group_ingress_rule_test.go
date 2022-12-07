@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -26,9 +27,9 @@ func TestNormalizeIPProtocol(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		plannedValue  types.String
-		currentValue  types.String
-		expectedValue types.String
+		plannedValue  attr.Value
+		currentValue  attr.Value
+		expectedValue attr.Value
 		expectError   bool
 	}
 	tests := map[string]testCase{
@@ -53,15 +54,15 @@ func TestNormalizeIPProtocol(t *testing.T) {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			request := planmodifier.StringRequest{
-				Path:       path.Root("test"),
-				PlanValue:  test.plannedValue,
-				StateValue: test.currentValue,
+			request := tfsdk.ModifyAttributePlanRequest{
+				AttributePath:  path.Root("test"),
+				AttributePlan:  test.plannedValue,
+				AttributeState: test.currentValue,
 			}
-			response := planmodifier.StringResponse{
-				PlanValue: request.PlanValue,
+			response := tfsdk.ModifyAttributePlanResponse{
+				AttributePlan: request.AttributePlan,
 			}
-			tfec2.NormalizeIPProtocol().PlanModifyString(ctx, request, &response)
+			tfec2.NormalizeIPProtocol().Modify(ctx, request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -71,7 +72,7 @@ func TestNormalizeIPProtocol(t *testing.T) {
 				t.Fatalf("got unexpected error: %s", response.Diagnostics)
 			}
 
-			if diff := cmp.Diff(response.PlanValue, test.expectedValue); diff != "" {
+			if diff := cmp.Diff(response.AttributePlan, test.expectedValue); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})

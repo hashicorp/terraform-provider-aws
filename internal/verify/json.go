@@ -40,7 +40,17 @@ func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) b
 }
 
 func SuppressEquivalentJSONDiffs(k, old, new string, d *schema.ResourceData) bool {
-	return JSONStringsEqual(old, new)
+	ob := bytes.NewBufferString("")
+	if err := json.Compact(ob, []byte(old)); err != nil {
+		return false
+	}
+
+	nb := bytes.NewBufferString("")
+	if err := json.Compact(nb, []byte(new)); err != nil {
+		return false
+	}
+
+	return JSONBytesEqual(ob.Bytes(), nb.Bytes())
 }
 
 func SuppressEquivalentJSONOrYAMLDiffs(k, old, new string, d *schema.ResourceData) bool {
@@ -71,20 +81,6 @@ func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
 
 func looksLikeJSONString(s interface{}) bool {
 	return regexp.MustCompile(`^\s*{`).MatchString(s.(string))
-}
-
-func JSONStringsEqual(s1, s2 string) bool {
-	b1 := bytes.NewBufferString("")
-	if err := json.Compact(b1, []byte(s1)); err != nil {
-		return false
-	}
-
-	b2 := bytes.NewBufferString("")
-	if err := json.Compact(b2, []byte(s2)); err != nil {
-		return false
-	}
-
-	return JSONBytesEqual(b1.Bytes(), b2.Bytes())
 }
 
 func JSONBytesEqual(b1, b2 []byte) bool {

@@ -7,7 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -32,42 +33,52 @@ func (d *dataSourceService) Metadata(_ context.Context, request datasource.Metad
 	response.TypeName = "aws_service"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"dns_name": schema.StringAttribute{
+// GetSchema returns the schema for this data source.
+func (d *dataSourceService) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"dns_name": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"partition": schema.StringAttribute{
+			"partition": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"region": schema.StringAttribute{
+			"region": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"reverse_dns_name": schema.StringAttribute{
+			"reverse_dns_name": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"reverse_dns_prefix": schema.StringAttribute{
+			"reverse_dns_prefix": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"service_id": schema.StringAttribute{
+			"service_id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"supported": schema.BoolAttribute{
+			"supported": {
+				Type:     types.BoolType,
 				Computed: true,
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

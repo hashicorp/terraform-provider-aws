@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -22,28 +22,31 @@ func (validator ipv4CIDRNetworkAddressValidator) MarkdownDescription(ctx context
 }
 
 // Validate performs the validation.
-func (validator ipv4CIDRNetworkAddressValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+func (validator ipv4CIDRNetworkAddressValidator) Validate(ctx context.Context, request tfsdk.ValidateAttributeRequest, response *tfsdk.ValidateAttributeResponse) {
+	s, ok := validateString(ctx, request, response)
+
+	if !ok {
 		return
 	}
 
-	if err := verify.ValidateIPv4CIDRBlock(request.ConfigValue.ValueString()); err != nil {
+	if err := verify.ValidateIPv4CIDRBlock(s); err != nil {
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
-			request.Path,
+			request.AttributePath,
 			validator.Description(ctx),
 			err.Error(),
 		))
+
 		return
 	}
 }
 
-// IPv4CIDRNetworkAddress returns a string validator which ensures that any configured
+// IPv4CIDRNetworkAddress returns an AttributeValidator which ensures that any configured
 // attribute value:
 //
 //   - Is a string, which represents a valid IPv4 CIDR network address.
 //
 // Null (unconfigured) and unknown (known after apply) values are skipped.
-func IPv4CIDRNetworkAddress() validator.String {
+func IPv4CIDRNetworkAddress() tfsdk.AttributeValidator {
 	return ipv4CIDRNetworkAddressValidator{}
 }
 
@@ -61,14 +64,16 @@ func (validator ipv6CIDRNetworkAddressValidator) MarkdownDescription(ctx context
 }
 
 // Validate performs the validation.
-func (validator ipv6CIDRNetworkAddressValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
-	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+func (validator ipv6CIDRNetworkAddressValidator) Validate(ctx context.Context, request tfsdk.ValidateAttributeRequest, response *tfsdk.ValidateAttributeResponse) {
+	s, ok := validateString(ctx, request, response)
+
+	if !ok {
 		return
 	}
 
-	if err := verify.ValidateIPv6CIDRBlock(request.ConfigValue.ValueString()); err != nil {
+	if err := verify.ValidateIPv6CIDRBlock(s); err != nil {
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
-			request.Path,
+			request.AttributePath,
 			validator.Description(ctx),
 			err.Error(),
 		))
@@ -77,12 +82,12 @@ func (validator ipv6CIDRNetworkAddressValidator) ValidateString(ctx context.Cont
 	}
 }
 
-// IPv6CIDRNetworkAddress returns a string validator which ensures that any configured
+// IPv6CIDRNetworkAddress returns an AttributeValidator which ensures that any configured
 // attribute value:
 //
 //   - Is a string, which represents a valid IPv6 CIDR network address.
 //
 // Null (unconfigured) and unknown (known after apply) values are skipped.
-func IPv6CIDRNetworkAddress() validator.String {
+func IPv6CIDRNetworkAddress() tfsdk.AttributeValidator {
 	return ipv6CIDRNetworkAddressValidator{}
 }

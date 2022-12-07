@@ -121,7 +121,6 @@ Elemental MediaStore
 Elemental MediaStore Data
 Elemental MediaTailor
 EventBridge
-EventBridge Pipes
 EventBridge Scheduler
 EventBridge Schemas
 FIS (Fault Injection Simulator)

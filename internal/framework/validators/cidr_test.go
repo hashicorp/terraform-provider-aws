@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 )
@@ -14,10 +15,14 @@ func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         types.String
+		val         attr.Value
 		expectError bool
 	}
 	tests := map[string]testCase{
+		"not a String": {
+			val:         types.BoolValue(true),
+			expectError: true,
+		},
 		"unknown String": {
 			val: types.StringUnknown(),
 		},
@@ -44,13 +49,13 @@ func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			request := validator.StringRequest{
-				Path:           path.Root("test"),
-				PathExpression: path.MatchRoot("test"),
-				ConfigValue:    test.val,
+			request := tfsdk.ValidateAttributeRequest{
+				AttributePath:           path.Root("test"),
+				AttributePathExpression: path.MatchRoot("test"),
+				AttributeConfig:         test.val,
 			}
-			response := validator.StringResponse{}
-			fwvalidators.IPv4CIDRNetworkAddress().ValidateString(context.Background(), request, &response)
+			response := tfsdk.ValidateAttributeResponse{}
+			fwvalidators.IPv4CIDRNetworkAddress().Validate(context.Background(), request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -67,10 +72,14 @@ func TestIPv6CIDRNetworkAddressValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         types.String
+		val         attr.Value
 		expectError bool
 	}
 	tests := map[string]testCase{
+		"not a String": {
+			val:         types.BoolValue(true),
+			expectError: true,
+		},
 		"unknown String": {
 			val: types.StringUnknown(),
 		},
@@ -97,13 +106,13 @@ func TestIPv6CIDRNetworkAddressValidator(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			request := validator.StringRequest{
-				Path:           path.Root("test"),
-				PathExpression: path.MatchRoot("test"),
-				ConfigValue:    test.val,
+			request := tfsdk.ValidateAttributeRequest{
+				AttributePath:           path.Root("test"),
+				AttributePathExpression: path.MatchRoot("test"),
+				AttributeConfig:         test.val,
 			}
-			response := validator.StringResponse{}
-			fwvalidators.IPv6CIDRNetworkAddress().ValidateString(context.Background(), request, &response)
+			response := tfsdk.ValidateAttributeResponse{}
+			fwvalidators.IPv6CIDRNetworkAddress().Validate(context.Background(), request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

@@ -7,11 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -40,19 +39,22 @@ func (r *resourceDomain) Metadata(_ context.Context, request resource.MetadataRe
 	response.TypeName = "aws_simpledb_domain"
 }
 
-// Schema returns the schema for this resource.
-func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
+// GetSchema returns the schema for this resource.
+func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			"name": {
+				Type:     types.StringType,
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.RequiresReplace(),
 				},
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 // Create is called when the provider must create a new resource.

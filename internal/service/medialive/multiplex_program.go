@@ -9,16 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	mltypes "github.com/aws/aws-sdk-go-v2/service/medialive/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	resourceHelper "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -48,131 +43,129 @@ func (m *multiplexProgram) Metadata(_ context.Context, request resource.Metadata
 	response.TypeName = "aws_medialive_multiplex_program"
 }
 
-func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
+func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"id": framework.IDAttribute(),
-			"multiplex_id": schema.StringAttribute{
+			"multiplex_id": {
+				Type:     types.StringType,
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.RequiresReplace(),
 				},
 			},
-			"program_name": schema.StringAttribute{
+			"program_name": {
+				Type:     types.StringType,
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.RequiresReplace(),
 				},
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"multiplex_program_settings": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"program_number": schema.Int64Attribute{
-							Required: true,
+		Blocks: map[string]tfsdk.Block{
+			"multiplex_program_settings": {
+				NestingMode: tfsdk.BlockNestingModeList,
+				MinItems:    1,
+				MaxItems:    1,
+				Attributes: map[string]tfsdk.Attribute{
+					"program_number": {
+						Type:     types.Int64Type,
+						Required: true,
+					},
+					"preferred_channel_pipeline": {
+						Type:     types.StringType,
+						Required: true,
+						Validators: []tfsdk.AttributeValidator{
+							enum.FrameworkValidate[mltypes.PreferredChannelPipeline](),
 						},
-						"preferred_channel_pipeline": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[mltypes.PreferredChannelPipeline](),
+					},
+				},
+				Blocks: map[string]tfsdk.Block{
+					"service_descriptor": {
+						NestingMode: tfsdk.BlockNestingModeList,
+						MaxItems:    1,
+						Attributes: map[string]tfsdk.Attribute{
+							"provider_name": {
+								Type:     types.StringType,
+								Required: true,
+							},
+							"service_name": {
+								Type:     types.StringType,
+								Required: true,
 							},
 						},
 					},
-					Blocks: map[string]schema.Block{
-						"service_descriptor": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"provider_name": schema.StringAttribute{
-										Required: true,
-									},
-									"service_name": schema.StringAttribute{
-										Required: true,
-									},
+					"video_settings": {
+						NestingMode: tfsdk.BlockNestingModeList,
+						MaxItems:    1,
+						Attributes: map[string]tfsdk.Attribute{
+							"constant_bitrate": {
+								Type:     types.Int64Type,
+								Optional: true,
+								Computed: true,
+								PlanModifiers: []tfsdk.AttributePlanModifier{
+									resource.UseStateForUnknown(),
 								},
 							},
 						},
-						"video_settings": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"constant_bitrate": schema.Int64Attribute{
+						Blocks: map[string]tfsdk.Block{
+							"statemux_settings": {
+								DeprecationMessage: "Configure statmux_settings instead of statemux_settings. This block will be removed in the next major version of the provider.",
+								NestingMode:        tfsdk.BlockNestingModeList,
+								MaxItems:           1,
+								Attributes: map[string]tfsdk.Attribute{
+									"minimum_bitrate": {
+										Type:     types.Int64Type,
 										Optional: true,
 										Computed: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.UseStateForUnknown(),
+										PlanModifiers: []tfsdk.AttributePlanModifier{
+											resource.UseStateForUnknown(),
+										},
+									},
+									"maximum_bitrate": {
+										Type:     types.Int64Type,
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []tfsdk.AttributePlanModifier{
+											resource.UseStateForUnknown(),
+										},
+									},
+									"priority": {
+										Type:     types.Int64Type,
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []tfsdk.AttributePlanModifier{
+											resource.UseStateForUnknown(),
 										},
 									},
 								},
-								Blocks: map[string]schema.Block{
-									"statemux_settings": schema.ListNestedBlock{
-										DeprecationMessage: "Configure statmux_settings instead of statemux_settings. This block will be removed in the next major version of the provider.",
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"minimum_bitrate": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-												"maximum_bitrate": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-												"priority": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-											},
+							},
+							"statmux_settings": {
+								NestingMode: tfsdk.BlockNestingModeList,
+								MaxItems:    1,
+								Attributes: map[string]tfsdk.Attribute{
+									"minimum_bitrate": {
+										Type:     types.Int64Type,
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []tfsdk.AttributePlanModifier{
+											resource.UseStateForUnknown(),
 										},
 									},
-									"statmux_settings": schema.ListNestedBlock{
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
+									"maximum_bitrate": {
+										Type:     types.Int64Type,
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []tfsdk.AttributePlanModifier{
+											resource.UseStateForUnknown(),
 										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"minimum_bitrate": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-												"maximum_bitrate": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-												"priority": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-											},
+									},
+									"priority": {
+										Type:     types.Int64Type,
+										Optional: true,
+										Computed: true,
+										PlanModifiers: []tfsdk.AttributePlanModifier{
+											resource.UseStateForUnknown(),
 										},
 									},
 								},
@@ -183,6 +176,8 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -399,16 +394,14 @@ func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteReques
 	})
 
 	if err != nil {
-		var nfe *mltypes.NotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MediaLive, create.ErrActionDeleting, ResNameMultiplexProgram, state.ProgramName.String(), nil),
 			err.Error(),
 		)
 		return
 	}
+
+	resp.State.RemoveResource(ctx)
 }
 
 func (m *multiplexProgram) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

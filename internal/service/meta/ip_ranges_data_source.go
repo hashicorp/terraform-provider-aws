@@ -12,7 +12,8 @@ import (
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -39,41 +40,47 @@ func (d *dataSourceIPRanges) Metadata(_ context.Context, request datasource.Meta
 	response.TypeName = "aws_ip_ranges"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceIPRanges) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"cidr_blocks": schema.ListAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
-			},
-			"create_date": schema.StringAttribute{
+// GetSchema returns the schema for this data source.
+func (d *dataSourceIPRanges) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"cidr_blocks": {
+				Type:     types.ListType{ElemType: types.StringType},
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			"create_date": {
+				Type:     types.StringType,
+				Computed: true,
+			},
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"ipv6_cidr_blocks": schema.ListAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
-			},
-			"regions": schema.SetAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-			"services": schema.SetAttribute{
-				ElementType: types.StringType,
-				Required:    true,
-			},
-			"sync_token": schema.Int64Attribute{
+			"ipv6_cidr_blocks": {
+				Type:     types.ListType{ElemType: types.StringType},
 				Computed: true,
 			},
-			"url": schema.StringAttribute{
+			"regions": {
+				Type:     types.SetType{ElemType: types.StringType},
+				Optional: true,
+			},
+			"services": {
+				Type:     types.SetType{ElemType: types.StringType},
+				Required: true,
+			},
+			"sync_token": {
+				Type:     types.Int64Type,
+				Computed: true,
+			},
+			"url": {
+				Type:     types.StringType,
 				Optional: true,
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

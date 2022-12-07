@@ -36,7 +36,7 @@ builds:
       - goarch: arm64
         goos: openbsd
     ldflags:
-      - -s -w -X 'github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}'
+      - -s -w -X version.ProviderVersion={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'
 checksum:
   algorithm: sha256

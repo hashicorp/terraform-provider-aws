@@ -19,12 +19,19 @@ import (
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_basic(t *testing.T) {
 	var v networkmanager.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,12 +61,19 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_basic(t *testing.T)
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testing.T) {
 	var v networkmanager.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -77,12 +91,19 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testi
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) {
 	var v networkmanager.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +192,7 @@ func testAccCheckTransitGatewayRouteTableAttachmentDestroy(s *terraform.State) e
 func testAccTransitGatewayRouteTableAttachmentConfig_base(rName string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_transit_gateway_peering" "test" {
-  core_network_id     = aws_networkmanager_core_network.test.id
+  core_network_id     = awscc_networkmanager_core_network.test.id
   transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 
   tags = {

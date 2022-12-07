@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
@@ -28,25 +29,31 @@ func (d *dataSourcePartition) Metadata(_ context.Context, request datasource.Met
 	response.TypeName = "aws_partition"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourcePartition) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"dns_suffix": schema.StringAttribute{
+// GetSchema returns the schema for this data source.
+func (d *dataSourcePartition) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"dns_suffix": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"partition": schema.StringAttribute{
+			"partition": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"reverse_dns_prefix": schema.StringAttribute{
+			"reverse_dns_prefix": {
+				Type:     types.StringType,
 				Computed: true,
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

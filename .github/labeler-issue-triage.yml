@@ -473,8 +473,6 @@ service/pinpointemail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointemail_'
 service/pinpointsmsvoice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoice_'
-service/pipes:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pipes_'
 service/polly:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_polly_'
 service/pricing:

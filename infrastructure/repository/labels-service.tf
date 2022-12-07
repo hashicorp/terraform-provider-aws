@@ -224,7 +224,6 @@ variable "service_labels" {
     "pinpoint",
     "pinpointemail",
     "pinpointsmsvoice",
-    "pipes",
     "polly",
     "pricing",
     "proton",

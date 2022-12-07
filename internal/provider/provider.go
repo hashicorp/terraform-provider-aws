@@ -153,7 +153,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
@@ -1832,7 +1831,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
-			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
 			"aws_networkmanager_global_network":                           networkmanager.ResourceGlobalNetwork(),
@@ -2260,7 +2258,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			globalaccelerator.ServicePackageData,
 			medialive.ServicePackageData,
 			meta.ServicePackageData,
-			resourceexplorer2.ServicePackageData,
 			simpledb.ServicePackageData,
 			sts.ServicePackageData,
 		},

@@ -43,11 +43,3 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the organizational unit.
-
-## Import
-
-Control Tower Controls can be imported using their `organizational_unit_arn/control_identifier`, e.g.,
-
-```
-$ terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
-```

@@ -20,18 +20,22 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	vpnResourceName := "aws_vpn_connection.test"
-	coreNetworkResourceName := "aws_networkmanager_core_network.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
-	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
-	if err != nil {
-		t.Fatal(err)
+	coreNetwork := "awscc_networkmanager_core_network.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
 	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bgpASN := 65000
+	vpnIP := "172.0.0.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +45,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "SITE_TO_SITE_VPN"),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetwork, "core_network_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
@@ -64,17 +68,21 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
-	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
-	if err != nil {
-		t.Fatal(err)
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
 	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bgpASN := 65001
+	vpnIP := "172.0.0.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,17 +100,21 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	var v networkmanager.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
-	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
-	if err != nil {
-		t.Fatal(err)
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
 	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bgpASN := 65002
+	vpnIP := "172.0.0.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,14 +205,9 @@ func testAccSiteToSiteVPNAttachmentConfig_base(rName string, bgpASN int, vpnIP s
 data "aws_region" "current" {}
 
 resource "aws_customer_gateway" "test" {
-  bgp_asn     = %[2]d
-  ip_address  = %[3]q
-  type        = "ipsec.1"
-  device_name = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
+  bgp_asn    = %[2]d
+  ip_address = %[3]q
+  type       = "ipsec.1"
 }
 
 resource "aws_vpn_connection" "test" {
@@ -218,13 +225,9 @@ resource "aws_networkmanager_global_network" "test" {
   }
 }
 
-resource "aws_networkmanager_core_network" "test" {
+resource "awscc_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
-
-  tags = {
-    Name = %[1]q
-  }
+  policy_document   = jsonencode(jsondecode(data.aws_networkmanager_core_network_policy_document.test.json))
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -273,7 +276,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 func testAccSiteToSiteVPNAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), `
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network.test.id
+  core_network_id    = awscc_networkmanager_core_network.test.id
   vpn_connection_arn = aws_vpn_connection.test.arn
 
   tags = {
@@ -291,7 +294,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 func testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, tagKey1, tagValue1 string, bgpASN int) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network.test.id
+  core_network_id    = awscc_networkmanager_core_network.test.id
   vpn_connection_arn = aws_vpn_connection.test.arn
 
   tags = {
@@ -309,7 +312,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 func testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, tagKey1, tagValue1, tagKey2, tagValue2 string, bgpASN int) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network.test.id
+  core_network_id    = awscc_networkmanager_core_network.test.id
   vpn_connection_arn = aws_vpn_connection.test.arn
 
   tags = {

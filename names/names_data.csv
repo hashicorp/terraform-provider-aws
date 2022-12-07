@@ -265,7 +265,6 @@ personalize-runtime,personalizeruntime,personalizeruntime,personalizeruntime,,pe
 pinpoint,pinpoint,pinpoint,pinpoint,,pinpoint,,,Pinpoint,Pinpoint,,1,,,aws_pinpoint_,,pinpoint_,Pinpoint,Amazon,,,,,
 pinpoint-email,pinpointemail,pinpointemail,pinpointemail,,pinpointemail,,,PinpointEmail,PinpointEmail,,1,,,aws_pinpointemail_,,pinpointemail_,Pinpoint Email,Amazon,,,,,
 pinpoint-sms-voice,pinpointsmsvoice,pinpointsmsvoice,pinpointsmsvoice,,pinpointsmsvoice,,,PinpointSMSVoice,PinpointSMSVoice,,1,,,aws_pinpointsmsvoice_,,pinpointsmsvoice_,Pinpoint SMS and Voice,Amazon,,,,,
-pipes,pipes,pipes,pipes,,pipes,,,Pipes,Pipes,,,2,,aws_pipes_,,pipes_,EventBridge Pipes,Amazon,,,,,
 polly,polly,polly,polly,,polly,,,Polly,Polly,,1,,,aws_polly_,,polly_,Polly,Amazon,,,,,
 ,,,,,,,,,,,,,,,,,Porting Assistant for .NET,,x,,,,No SDK support
 pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,1,,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,

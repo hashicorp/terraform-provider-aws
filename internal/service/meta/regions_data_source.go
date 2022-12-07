@@ -6,7 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -32,26 +33,30 @@ func (d *dataSourceRegions) Metadata(_ context.Context, request datasource.Metad
 	response.TypeName = "aws_regions"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"all_regions": schema.BoolAttribute{
+// GetSchema returns the schema for this data source.
+func (d *dataSourceRegions) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"all_regions": {
+				Type:     types.BoolType,
 				Optional: true,
 			},
-			"id": schema.StringAttribute{
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"names": schema.SetAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
+			"names": {
+				Type:     types.SetType{ElemType: types.StringType},
+				Computed: true,
 			},
 		},
-		Blocks: map[string]schema.Block{
+		Blocks: map[string]tfsdk.Block{
 			"filter": tfec2.CustomFiltersBlock(),
 		},
 	}
+
+	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

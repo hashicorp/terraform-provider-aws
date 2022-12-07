@@ -2,7 +2,6 @@ package acctest
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -30,20 +29,16 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
 
-	schemaResp := fwresource.SchemaResponse{}
-	if v, ok := resource.(fwresource.ResourceWithSchema); ok {
-		v.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
-		if schemaResp.Diagnostics.HasError() {
-			return fwdiag.DiagnosticsError(schemaResp.Diagnostics)
-		}
-	} else {
-		return errors.New("resource does not implement Schema method")
+	schema, diags := resource.GetSchema(ctx)
+
+	if diags.HasError() {
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	// Construct a simple Framework State that contains just top-level attributes.
 	state := tfsdk.State{
-		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
-		Schema: schemaResp.Schema,
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
+		Schema: schema,
 	}
 
 	for name, v := range is.Attributes {

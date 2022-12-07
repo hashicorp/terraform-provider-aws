@@ -20,12 +20,19 @@ func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 	var v networkmanager.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,12 +62,19 @@ func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 func TestAccNetworkManagerTransitGatewayPeering_disappears(t *testing.T) {
 	var v networkmanager.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,12 +92,19 @@ func TestAccNetworkManagerTransitGatewayPeering_disappears(t *testing.T) {
 func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 	var v networkmanager.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,13 +214,9 @@ resource "aws_networkmanager_global_network" "test" {
   }
 }
 
-resource "aws_networkmanager_core_network" "test" {
+resource "awscc_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
-
-  tags = {
-    Name = %[1]q
-  }
+  policy_document   = jsonencode(jsondecode(data.aws_networkmanager_core_network_policy_document.test.json))
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -222,7 +239,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 func testAccTransitGatewayPeeringConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), `
 resource "aws_networkmanager_transit_gateway_peering" "test" {
-  core_network_id     = aws_networkmanager_core_network.test.id
+  core_network_id     = awscc_networkmanager_core_network.test.id
   transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 
   depends_on = [aws_ec2_transit_gateway_policy_table.test]
@@ -233,7 +250,7 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
 func testAccTransitGatewayPeeringConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_transit_gateway_peering" "test" {
-  core_network_id     = aws_networkmanager_core_network.test.id
+  core_network_id     = awscc_networkmanager_core_network.test.id
   transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 
   tags = {
@@ -248,7 +265,7 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
 func testAccTransitGatewayPeeringConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_transit_gateway_peering" "test" {
-  core_network_id     = aws_networkmanager_core_network.test.id
+  core_network_id     = awscc_networkmanager_core_network.test.id
   transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 
   tags = {

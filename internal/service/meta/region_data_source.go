@@ -7,7 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
@@ -31,27 +32,33 @@ func (d *dataSourceRegion) Metadata(_ context.Context, request datasource.Metada
 	response.TypeName = "aws_region"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceRegion) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+// GetSchema returns the schema for this data source.
+func (d *dataSourceRegion) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"description": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"endpoint": schema.StringAttribute{
+			"endpoint": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			"name": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

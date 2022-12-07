@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -35,57 +36,65 @@ func (d *dataSourceAccelerator) Metadata(_ context.Context, request datasource.M
 	response.TypeName = "aws_globalaccelerator_accelerator"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceAccelerator) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
-				Computed:   true,
+// GetSchema returns the schema for this data source.
+func (d *dataSourceAccelerator) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"arn": {
+				Type:     fwtypes.ARNType,
+				Optional: true,
+				Computed: true,
 			},
-			"attributes": schema.ListAttribute{
-				ElementType: types.ObjectType{
+			"attributes": {
+				Type: types.ListType{ElemType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"flow_logs_enabled":   types.BoolType,
 						"flow_logs_s3_bucket": types.StringType,
 						"flow_logs_s3_prefix": types.StringType,
 					},
-				},
+				}},
 				Computed: true,
 			},
-			"dns_name": schema.StringAttribute{
+			"dns_name": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"enabled": schema.BoolAttribute{
+			"enabled": {
+				Type:     types.BoolType,
 				Computed: true,
 			},
-			"hosted_zone_id": schema.StringAttribute{
+			"hosted_zone_id": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address_type": schema.StringAttribute{
+			"ip_address_type": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"ip_sets": schema.ListAttribute{
-				ElementType: types.ObjectType{
+			"ip_sets": {
+				Type: types.ListType{ElemType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"ip_addresses": types.ListType{ElemType: types.StringType},
 						"ip_family":    types.StringType,
 					},
-				},
+				}},
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			"name": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
 			"tags": tftags.TagsAttributeComputedOnly(),
 		},
 	}
+
+	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

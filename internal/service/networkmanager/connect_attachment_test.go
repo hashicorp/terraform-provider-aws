@@ -19,12 +19,19 @@ import (
 func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -53,12 +60,19 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,12 +101,19 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,12 +131,19 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 	var v networkmanager.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -236,13 +264,9 @@ resource "aws_networkmanager_global_network" "test" {
   }
 }
 
-resource "aws_networkmanager_core_network" "test" {
+resource "awscc_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
-
-  tags = {
-    Name = %[1]q
-  }
+  policy_document   = jsonencode(jsondecode(data.aws_networkmanager_core_network_policy_document.test.json))
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -288,7 +312,7 @@ func testAccConnectAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -301,7 +325,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id         = aws_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
   edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
@@ -326,7 +350,7 @@ func testAccConnectAttachmentConfig_basic_NoDependsOn(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -339,7 +363,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id         = aws_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
   edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
@@ -361,7 +385,7 @@ func testAccConnectAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) stri
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -374,7 +398,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id         = aws_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
   edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
@@ -399,7 +423,7 @@ func testAccConnectAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, ta
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -412,7 +436,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 resource "aws_networkmanager_connect_attachment" "test" {
-  core_network_id         = aws_networkmanager_core_network.test.id
+  core_network_id         = awscc_networkmanager_core_network.test.id
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
   edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {

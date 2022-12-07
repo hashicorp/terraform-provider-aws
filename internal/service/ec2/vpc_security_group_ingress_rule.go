@@ -11,12 +11,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -106,72 +104,91 @@ type resourceSecurityGroupRule struct {
 	framework.ResourceWithConfigure
 }
 
-// Schema returns the schema for this resource.
-func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+// GetSchema returns the schema for this resource.
+func (r *resourceSecurityGroupRule) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"arn": {
+				Type:     types.StringType,
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.UseStateForUnknown(),
 				},
 			},
-			"cidr_ipv4": schema.StringAttribute{
+			"cidr_ipv4": {
+				Type:     types.StringType,
 				Optional: true,
-				Validators: []validator.String{
+				Validators: []tfsdk.AttributeValidator{
 					fwvalidators.IPv4CIDRNetworkAddress(),
 				},
 			},
-			"cidr_ipv6": schema.StringAttribute{
+			"cidr_ipv6": {
+				Type:     types.StringType,
 				Optional: true,
-				Validators: []validator.String{
+				Validators: []tfsdk.AttributeValidator{
 					fwvalidators.IPv6CIDRNetworkAddress(),
 				},
 			},
-			"description": schema.StringAttribute{
+			"description": {
+				Type:     types.StringType,
 				Optional: true,
 			},
-			"from_port": schema.Int64Attribute{
+			"from_port": {
+				Type:     types.Int64Type,
 				Optional: true,
-				Validators: []validator.Int64{
+				Validators: []tfsdk.AttributeValidator{
 					int64validator.Between(-1, 65535),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"ip_protocol": schema.StringAttribute{
+			"id": {
+				Type:     types.StringType,
+				Computed: true,
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.UseStateForUnknown(),
+				},
+			},
+			"ip_protocol": {
+				Type:     types.StringType,
 				Required: true,
-				PlanModifiers: []planmodifier.String{
+				PlanModifiers: []tfsdk.AttributePlanModifier{
 					NormalizeIPProtocol(),
 				},
 			},
-			"prefix_list_id": schema.StringAttribute{
+			"prefix_list_id": {
+				Type:     types.StringType,
 				Optional: true,
 			},
-			"referenced_security_group_id": schema.StringAttribute{
+			"referenced_security_group_id": {
+				Type:     types.StringType,
 				Optional: true,
 			},
-			"security_group_id": schema.StringAttribute{
+			"security_group_id": {
+				Type:     types.StringType,
 				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.RequiresReplace(),
 				},
 			},
-			"security_group_rule_id": schema.StringAttribute{
+			"security_group_rule_id": {
+				Type:     types.StringType,
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.UseStateForUnknown(),
 				},
 			},
 			"tags":     tftags.TagsAttribute(),
 			"tags_all": tftags.TagsAttributeComputedOnly(),
-			"to_port": schema.Int64Attribute{
+			"to_port": {
+				Type:     types.Int64Type,
 				Optional: true,
-				Validators: []validator.Int64{
+				Validators: []tfsdk.AttributeValidator{
 					int64validator.Between(-1, 65535),
 				},
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 // Update is called to update the state of the resource.
@@ -538,7 +555,7 @@ func (d *resourceSecurityGroupRuleData) sourceAttributeName() string {
 
 type normalizeIPProtocol struct{}
 
-func NormalizeIPProtocol() planmodifier.String {
+func NormalizeIPProtocol() tfsdk.AttributePlanModifier {
 	return normalizeIPProtocol{}
 }
 
@@ -550,17 +567,37 @@ func (m normalizeIPProtocol) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m normalizeIPProtocol) PlanModifyString(ctx context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
-	if request.StateValue.IsNull() {
-		response.PlanValue = request.PlanValue
+func (m normalizeIPProtocol) Modify(ctx context.Context, request tfsdk.ModifyAttributePlanRequest, response *tfsdk.ModifyAttributePlanResponse) {
+	if request.AttributeState == nil {
+		response.AttributePlan = request.AttributePlan
+
 		return
 	}
 
-	// If the state value is semantically equivalent to the planned value
-	// then return the state value, else return the planned value.
-	if ProtocolForValue(request.StateValue.ValueString()) == ProtocolForValue(request.PlanValue.ValueString()) {
-		response.PlanValue = request.StateValue
+	// If the current value is semantically equivalent to the planned value
+	// then return the current value, else return the planned value.
+
+	var planned types.String
+
+	response.Diagnostics = append(response.Diagnostics, tfsdk.ValueAs(ctx, request.AttributePlan, &planned)...)
+
+	if response.Diagnostics.HasError() {
 		return
 	}
-	response.PlanValue = request.PlanValue
+
+	var current types.String
+
+	response.Diagnostics = append(response.Diagnostics, tfsdk.ValueAs(ctx, request.AttributeState, &current)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if ProtocolForValue(current.ValueString()) == ProtocolForValue(planned.ValueString()) {
+		response.AttributePlan = request.AttributeState
+
+		return
+	}
+
+	response.AttributePlan = request.AttributePlan
 }

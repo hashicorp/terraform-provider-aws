@@ -5,7 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -30,25 +31,31 @@ func (d *dataSourceCallerIdentity) Metadata(_ context.Context, request datasourc
 	response.TypeName = "aws_caller_identity"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceCallerIdentity) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"account_id": schema.StringAttribute{
+// GetSchema returns the schema for this data source.
+func (d *dataSourceCallerIdentity) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"account_id": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"arn": schema.StringAttribute{
+			"arn": {
+				Type:     types.StringType,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
-			"user_id": schema.StringAttribute{
+			"user_id": {
+				Type:     types.StringType,
 				Computed: true,
 			},
 		},
 	}
+
+	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

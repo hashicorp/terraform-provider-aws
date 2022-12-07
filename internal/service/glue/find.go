@@ -261,27 +261,3 @@ func FindClassifierByName(conn *glue.Glue, name string) (*glue.Classifier, error
 
 	return output.Classifier, nil
 }
-
-func FindCrawlerByName(conn *glue.Glue, name string) (*glue.Crawler, error) {
-	input := &glue.GetCrawlerInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.GetCrawler(input)
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Crawler == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Crawler, nil
-}
