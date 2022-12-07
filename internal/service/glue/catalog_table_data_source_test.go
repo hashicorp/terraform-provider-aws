@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestAccGlueDataCatalogDataSource_basic(t *testing.T) {
+func TestAccDataCatalogDataSource_basic(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 	datasourceName := "data.aws_glue_catalog_table.test"
 
@@ -20,12 +20,12 @@ func TestAccGlueDataCatalogDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:  acctest.Providers,
+		Providers:  acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueDataCatalogDataSourceConfig(dbName, tName),
+				Config: testAccDataCatalogDataSourceConfig(dbName, tName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGlueDataCatalogCheckDataSource(datasourceName),
+					testAccDataCatalogCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "database_name", resourceName, "database_name"),
@@ -47,7 +47,7 @@ func TestAccGlueDataCatalogDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccGlueDataCatalogCheckDataSource(name string) resource.TestCheckFunc {
+func testAccDataCatalogCheckDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -58,7 +58,7 @@ func testAccGlueDataCatalogCheckDataSource(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccGlueDataCatalogDataSourceConfig(dbName, tName string) string {
+func testAccDataCatalogDataSourceConfig(dbName, tName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q

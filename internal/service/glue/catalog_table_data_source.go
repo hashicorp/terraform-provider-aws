@@ -337,7 +337,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 
 	out, err := conn.GetTableWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return diag.Errorf("No Glue table %s found for catalog_id: %s, database_name: %s", name, catalogID,
 				dbName)
 		}
