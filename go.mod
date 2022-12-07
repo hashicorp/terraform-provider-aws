@@ -19,6 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.13
@@ -78,7 +79,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.20 // indirect
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.0.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
