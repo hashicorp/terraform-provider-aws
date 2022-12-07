@@ -5,6 +5,8 @@ FEATURES:
 * **New Resource:** `aws_networkmanager_core_network` ([#28155](https://github.com/hashicorp/terraform-provider-aws/issues/28155))
 * **New Resource:** `aws_resourceexplorer2_index` ([#28144](https://github.com/hashicorp/terraform-provider-aws/issues/28144))
 * **New Resource:** `aws_vpc_network_performance_metric_subscription` ([#28150](https://github.com/hashicorp/terraform-provider-aws/issues/28150))
+* **New Data Source:** `aws_vpc_public_ipv4_pool` ([#17425](https://github.com/hashicorp/terraform-provider-aws/issues/17425))
+* **New Data Source:** `aws_vpc_public_ipv4_pools` ([#17425](https://github.com/hashicorp/terraform-provider-aws/issues/17425))
 
 ENHANCEMENTS:
 
