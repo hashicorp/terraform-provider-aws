@@ -13,23 +13,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourcePublicIpv4Pools() *schema.Resource {
+func DataSourcePublicIpv4Pool() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourcePublicIpv4PoolsRead,
+		ReadWithoutTimeout: dataSourcePublicIpv4PoolRead,
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
-			"pool_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"pool_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"pools": {
-				Type:     schema.TypeList,
+			"pool": {
+				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{Type: schema.TypeString},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
@@ -37,14 +33,14 @@ func DataSourcePublicIpv4Pools() *schema.Resource {
 }
 
 const (
-	DSNamePublicIpv4Pools = "Public IPv4 Pools Data Source"
+	DSNamePublicIpv4Pool = "Public IPv4 Pool Data Source"
 )
 
-func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePublicIpv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribePublicIpv4PoolsInput{}
 
-	if v, ok := d.GetOk("pool_ids"); ok {
+	if v, ok := d.GetOk("pool_id"); ok {
 		input.PoolIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -60,20 +56,15 @@ func dataSourcePublicIpv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 		input.Filters = nil
 	}
 
-	publicIpv4Pools := []map[string]interface{}{}
-
-	output, err := FindPublicIpv4Pools(ctx, conn, input)
+	output, err := FindPublicIpv4Pool(ctx, conn, input)
 	if err != nil {
-		create.DiagError(names.EC2, create.ErrActionSetting, DSNamePublicIpv4Pools, d.Id(), err)
+		create.DiagError(names.EC2, create.ErrActionSetting, DSNamePublicIpv4Pool, d.Id(), err)
 	}
 
-	for _, v := range output {
-		pool := flattenPublicIpv4Pool(v)
-		publicIpv4Pools = append(publicIpv4Pools, pool)
-	}
+	pool := flattenPublicIpv4Pool(output[0])
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("pools", publicIpv4Pools)
+	d.Set("pool", pool)
 
 	return nil
 }
