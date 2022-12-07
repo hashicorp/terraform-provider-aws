@@ -5630,6 +5630,9 @@ var awsPartition = partition{
 					Region: "eu-north-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "eu-south-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-west-1",
 				}: endpoint{},
 				endpointKey{
@@ -17230,6 +17233,9 @@ var awsPartition = partition{
 					Region: "ap-southeast-2",
 				}: endpoint{},
 				endpointKey{
+					Region: "ap-southeast-3",
+				}: endpoint{},
+				endpointKey{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -20003,7 +20009,9 @@ var awsPartition = partition{
 		},
 		"resource-explorer-2": service{
 			Defaults: endpointDefaults{
-				defaultKey{}: endpoint{},
+				defaultKey{}: endpoint{
+					DNSSuffix: "api.aws",
+				},
 				defaultKey{
 					Variant: fipsVariant,
 				}: endpoint{
@@ -28612,7 +28620,9 @@ var awscnPartition = partition{
 		},
 		"resource-explorer-2": service{
 			Defaults: endpointDefaults{
-				defaultKey{}: endpoint{},
+				defaultKey{}: endpoint{
+					DNSSuffix: "api.amazonwebservices.com.cn",
+				},
 				defaultKey{
 					Variant: fipsVariant,
 				}: endpoint{
@@ -32809,7 +32819,9 @@ var awsusgovPartition = partition{
 		},
 		"resource-explorer-2": service{
 			Defaults: endpointDefaults{
-				defaultKey{}: endpoint{},
+				defaultKey{}: endpoint{
+					DNSSuffix: "api.aws",
+				},
 				defaultKey{
 					Variant: fipsVariant,
 				}: endpoint{
