@@ -114,8 +114,8 @@ var (
 		"confirmation_was_authenticated": SubscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                SubscriptionAttributeNameDeliveryPolicy,
 		"endpoint":                       SubscriptionAttributeNameEndpoint,
-		"filter_policy_scope":            SubscriptionAttributeNameFilterPolicyScope,
 		"filter_policy":                  SubscriptionAttributeNameFilterPolicy,
+		"filter_policy_scope":            SubscriptionAttributeNameFilterPolicyScope,
 		"owner_id":                       SubscriptionAttributeNameOwner,
 		"pending_confirmation":           SubscriptionAttributeNamePendingConfirmation,
 		"protocol":                       SubscriptionAttributeNameProtocol,
@@ -260,7 +260,69 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
+func handleFilterPolicyUpdate(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
+
+	// In case both FilterPolicy and FilterPolicyScope are going to be updated, those changes should be made in specific order
+	// to mitigate issue with updating MessageAttribute filter policy to MessageBody nested fiter policy,
+	// when policy is updated before scope and fails due to MessageAttributes does not support nested filter policy.
+	//
+	// Error: setting SNS Topic Subscription (arn:aws:sns:eu-west-1:<accountId>:<subscription_name>) attribute (FilterPolicy):
+	// InvalidParameter: Invalid parameter: Filter policy scope MessageAttributes does not support nested filter policy
+
+	filterPolicyScope, containsFilterPolicyScopeUpdate := attributes[SubscriptionAttributeNameFilterPolicyScope]
+	filterPolicy, containsFilterPolicyUpdate := attributes[SubscriptionAttributeNameFilterPolicy]
+
+	if containsFilterPolicyScopeUpdate && containsFilterPolicyUpdate {
+
+		//MessageBody filterScope supports both nested and simple objects filterPolicy
+
+		switch filterPolicyScope {
+
+		case SubscriptionFilterPolicyScopeMessageBody:
+
+			err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+
+			if err != nil {
+				return err
+			}
+
+			err = putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicy, filterPolicy)
+
+			if err != nil {
+				return err
+			}
+
+			return nil
+
+		case SubscriptionFilterPolicyScopeMessageAttributes:
+
+			err := putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicy, filterPolicy)
+
+			if err != nil {
+				return err
+			}
+
+			err = putSubscriptionAttribute(ctx, conn, arn, SubscriptionAttributeNameFilterPolicyScope, filterPolicyScope)
+
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	return nil
+}
+
 func putSubscriptionAttributes(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
+
+	err := handleFilterPolicyUpdate(ctx, conn, arn, attributes)
+
+	if err != nil {
+		return err
+	}
+
 	for name, value := range attributes {
 		err := putSubscriptionAttribute(ctx, conn, arn, name, value)
 
