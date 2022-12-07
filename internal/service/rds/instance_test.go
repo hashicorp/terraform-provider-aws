@@ -5146,6 +5146,14 @@ func testAccInstanceConfig_orderableClassMySQLGP3() string {
 	return testAccInstanceConfig_orderableClass("mysql", "general-public-license", "gp3", mySQLPreferredInstanceClasses)
 }
 
+func testAccInstanceConfig_orderableClassPostgres() string {
+	return testAccInstanceConfig_orderableClass("postgres", "postgresql-license", "standard", postgresPreferredInstanceClasses)
+}
+
+func testAccInstanceConfig_orderableClassPostgresGP3() string {
+	return testAccInstanceConfig_orderableClass("postgres", "postgresql-license", "gp3", postgresPreferredInstanceClasses)
+}
+
 func testAccInstanceConfig_orderableClassMariadb() string {
 	return testAccInstanceConfig_orderableClass("mariadb", "general-public-license", "standard", mariaDBPreferredInstanceClasses)
 }
@@ -6765,28 +6773,18 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_EnabledCloudWatchLogsExports_postgreSQL(rName string) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "default" {
-  engine = "postgres"
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = [%[1]s]
-}
-
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage               = 10
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
   engine                          = data.aws_rds_engine_version.default.engine
-  identifier                      = %[2]q
+  identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
 }
-`, postgresPreferredInstanceClasses, rName)
+`, rName))
 }
 
 func testAccInstanceConfig_maxAllocatedStorage(rName string, maxAllocatedStorage int) string {
