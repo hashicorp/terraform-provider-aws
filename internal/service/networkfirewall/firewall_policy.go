@@ -39,6 +39,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"encryption_configuration": encryptionConfigurationSchema(),
 			"firewall_policy": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -166,6 +167,9 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("encryption_configuration"); ok {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
+	}
 
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
@@ -205,6 +209,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("arn", resp.FirewallPolicyArn)
 	d.Set("description", resp.Description)
+	d.Set("encryption_configuration", flattenEncryptionConfiguration(resp.EncryptionConfiguration))
 	d.Set("name", resp.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
@@ -229,7 +234,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
-	if d.HasChanges("description", "firewall_policy") {
+	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
 			FirewallPolicy:    expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 			FirewallPolicyArn: aws.String(d.Id()),
@@ -239,6 +244,9 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		// Only pass non-empty description values, else API request returns an InternalServiceError
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
+		}
+		if d.HasChange("encryption_configuration") {
+			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating NetworkFirewall Firewall Policy: %s", input)
