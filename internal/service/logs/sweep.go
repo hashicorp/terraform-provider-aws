@@ -68,7 +68,7 @@ func sweepGroups(region string) error {
 		}
 
 		for _, v := range page.LogGroups {
-			r := ResourceGroup()
+			r := resourceGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.LogGroupName))
 
