@@ -49,6 +49,7 @@ func init() {
 			"aws_efs_mount_target",
 			"aws_efs_file_system",
 			"aws_sagemaker_user_profile",
+			"aws_sagemaker_space",
 		},
 	})
 
@@ -117,6 +118,14 @@ func init() {
 		F:    sweepStudioLifecyclesConfig,
 		Dependencies: []string{
 			"aws_sagemaker_domain",
+		},
+	})
+
+	resource.AddTestSweepers("aws_sagemaker_space", &resource.Sweeper{
+		Name: "aws_sagemaker_space",
+		F:    sweepUserProfiles,
+		Dependencies: []string{
+			"aws_sagemaker_app",
 		},
 	})
 
@@ -194,6 +203,45 @@ func sweepAppImagesConfig(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
+func sweepSpaces(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListSpacesPages(&sagemaker.ListSpacesInput{}, func(page *sagemaker.ListSpacesOutput, lastPage bool) bool {
+		for _, space := range page.Spaces {
+
+			r := ResourceSpace()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(space.SpaceName))
+			d.Set("domain_id", space.DomainId)
+			d.Set("space_name", space.SpaceName)
+
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker Space sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Spaces: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func sweepApps(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -229,7 +277,7 @@ func sweepApps(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping SageMaker App sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
 
