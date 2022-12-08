@@ -337,6 +337,9 @@ func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List
 }
 
 func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
+	elementType := ElementType[viewSearchFilterData]()
+	attributeTypes := AttributeTypes[viewSearchFilterData]()
+
 	// The default is
 	//
 	//   "Filters": {
@@ -346,11 +349,11 @@ func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awsty
 	// a view that performs no filtering.
 	// See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_CreateView.html#API_CreateView_Example_1.
 	if apiObject == nil || len(aws.ToString(apiObject.FilterString)) == 0 {
-		return types.ListNull(viewSearchFilterElementType)
+		return types.ListNull(elementType)
 	}
 
-	return types.ListValueMust(viewSearchFilterElementType, []attr.Value{
-		types.ObjectValueMust(viewSearchFilterAttributeTypes, map[string]attr.Value{
+	return types.ListValueMust(elementType, []attr.Value{
+		types.ObjectValueMust(attributeTypes, map[string]attr.Value{
 			"filter_string": flex.StringToFramework(ctx, apiObject.FilterString),
 		}),
 	})
@@ -385,8 +388,10 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 }
 
 func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
-	if apiObjects == nil {
-		return types.ListNull(viewIncludedPropertyElementType)
+	elementType := ElementType[viewIncludedPropertyData]()
+
+	if len(apiObjects) == 0 {
+		return types.ListNull(elementType)
 	}
 
 	var elements []attr.Value
@@ -395,11 +400,11 @@ func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects
 		elements = append(elements, r.flattenIncludedProperty(ctx, apiObject))
 	}
 
-	return types.ListValueMust(viewIncludedPropertyElementType, elements)
+	return types.ListValueMust(elementType, elements)
 }
 
 func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
-	return types.ObjectValueMust(viewSearchFilterAttributeTypes, map[string]attr.Value{
+	return types.ObjectValueMust(AttributeTypes[viewSearchFilterData](), map[string]attr.Value{
 		"name": flex.StringToFramework(ctx, apiObject.Name),
 	})
 }
@@ -419,21 +424,31 @@ type viewSearchFilterData struct {
 	FilterString types.String `tfsdk:"filter_string"`
 }
 
-var viewSearchFilterAttributeTypes = map[string]attr.Type{
-	"filter_string": types.StringType,
+func (d viewSearchFilterData) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"filter_string": types.StringType,
+	}
 }
 
-var viewSearchFilterElementType = types.ObjectType{AttrTypes: viewSearchFilterAttributeTypes}
+// TODO: Move these to a shared package.
+func AttributeTypes[T interface{ AttributeTypes() map[string]attr.Type }]() map[string]attr.Type {
+	var t T
+	return t.AttributeTypes()
+}
+
+func ElementType[T interface{ AttributeTypes() map[string]attr.Type }]() types.ObjectType {
+	return types.ObjectType{AttrTypes: AttributeTypes[T]()}
+}
 
 type viewIncludedPropertyData struct {
 	Name types.String `tfsdk:"name"`
 }
 
-var viewIncludedPropertyAttributeTypes = map[string]attr.Type{
-	"name": types.StringType,
+func (d viewIncludedPropertyData) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"name": types.StringType,
+	}
 }
-
-var viewIncludedPropertyElementType = types.ObjectType{AttrTypes: viewIncludedPropertyAttributeTypes}
 
 func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn string) (*resourceexplorer2.GetViewOutput, error) {
 	input := &resourceexplorer2.GetViewInput{
