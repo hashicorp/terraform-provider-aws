@@ -50,7 +50,7 @@ The following arguments are supported:
 
 * `html_body` - (Required) The email HTML body.
 * `subject` - (Required) The email subject.
-* `test_body` - (Required) The email text body.
+* `text_body` - (Required) The email text body.
 
 #### actions
 
