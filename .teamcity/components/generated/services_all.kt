@@ -19,6 +19,7 @@ val services = mapOf(
     "appstream" to ServiceSpec("AppStream 2.0", vpcLock = true, parallelismOverride = 10),
     "appsync" to ServiceSpec("AppSync"),
     "athena" to ServiceSpec("Athena"),
+    "auditmanager" to ServiceSpec("Audit Manager"),
     "autoscaling" to ServiceSpec("Auto Scaling", vpcLock = true),
     "autoscalingplans" to ServiceSpec("Auto Scaling Plans"),
     "backup" to ServiceSpec("Backup"),

@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -2256,6 +2257,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
 		ServicePackages: []intf.ServicePackageData{
+			auditmanager.ServicePackageData,
 			ec2.ServicePackageData,
 			globalaccelerator.ServicePackageData,
 			medialive.ServicePackageData,

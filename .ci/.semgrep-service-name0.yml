@@ -1173,6 +1173,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Athena"
     severity: WARNING
+  - id: auditmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in func name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: auditmanager-in-test-name
+    languages:
+      - go
+    message: Include "AuditManager" in test name
+    paths:
+      include:
+        - internal/service/auditmanager/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAuditManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: auditmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in const name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+    severity: WARNING
+  - id: auditmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "AuditManager" in var name inside auditmanager package
+    paths:
+      include:
+        - internal/service/auditmanager
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AuditManager"
+    severity: WARNING
   - id: autoscaling-in-func-name
     languages:
       - go
@@ -3128,49 +3186,4 @@ rules:
             - pattern-regex: "(?i)Connect"
             - pattern-not-regex: .*uickConnect.*
             - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-test-name
-    languages:
-      - go
-    message: Include "Connect" in test name
-    paths:
-      include:
-        - internal/service/connect/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnect"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-const-name
-    languages:
-      - go
-    message: Do not use "Connect" in const name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-    severity: WARNING
-  - id: connect-in-var-name
-    languages:
-      - go
-    message: Do not use "Connect" in var name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
     severity: WARNING
