@@ -3,6 +3,9 @@ package glue
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -11,25 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"regexp"
-	"time"
 )
 
 func DataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceCatalogTableRead,
+
 		Schema: map[string]*schema.Schema{
-			"query_as_of_time": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"transaction_id"},
-				ValidateFunc:  validation.IsRFC3339Time,
-			},
-			"transaction_id": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"query_as_of_time"},
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -64,6 +55,27 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"partition_index": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"index_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"keys": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"partition_keys": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -83,6 +95,12 @@ func DataSourceCatalogTable() *schema.Resource {
 						},
 					},
 				},
+			},
+			"query_as_of_time": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"transaction_id"},
+				ValidateFunc:  validation.IsRFC3339Time,
 			},
 			"retention": {
 				Type:     schema.TypeInt,
@@ -181,15 +199,15 @@ func DataSourceCatalogTable() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"registry_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 												"schema_arn": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 												"schema_name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"registry_name": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -219,13 +237,13 @@ func DataSourceCatalogTable() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"skewed_column_values": {
-										Type:     schema.TypeList,
+									"skewed_column_value_location_maps": {
+										Type:     schema.TypeMap,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"skewed_column_value_location_maps": {
-										Type:     schema.TypeMap,
+									"skewed_column_values": {
+										Type:     schema.TypeList,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -279,6 +297,11 @@ func DataSourceCatalogTable() *schema.Resource {
 					},
 				},
 			},
+			"transaction_id": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"query_as_of_time"},
+			},
 			"view_original_text": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -286,27 +309,6 @@ func DataSourceCatalogTable() *schema.Resource {
 			"view_expanded_text": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"partition_index": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"index_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"keys": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"index_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 		},
 	}
