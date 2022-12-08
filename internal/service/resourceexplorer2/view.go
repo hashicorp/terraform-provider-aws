@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -86,14 +87,19 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 			"tags_all": tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"filters": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"filter_string": schema.StringAttribute{
-						Required: true,
-						Validators: []validator.String{
-							stringvalidator.LengthAtMost(2048),
+			"filters": schema.ListNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"filter_string": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(2048),
+							},
 						},
 					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
 			},
 			"included_property": schema.ListNestedBlock{
@@ -308,31 +314,45 @@ func (r *resourceView) ConfigValidators(context.Context) []resource.ConfigValida
 	}
 }
 
-func (r *resourceView) expandSearchFilter(ctx context.Context, tfObject types.Object) *awstypes.SearchFilter {
-	if tfObject.IsNull() || tfObject.IsUnknown() {
+func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List) *awstypes.SearchFilter {
+	if tfList.IsNull() || tfList.IsUnknown() {
 		return nil
 	}
 
-	var data viewSearchFilterData
+	var data []viewSearchFilterData
 
-	if diags := tfObject.As(ctx, &data, types.ObjectAsOptions{}); diags.HasError() {
+	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
+		return nil
+	}
+
+	if len(data) == 0 {
 		return nil
 	}
 
 	apiObject := &awstypes.SearchFilter{
-		FilterString: flex.StringFromFramework(ctx, data.FilterString),
+		FilterString: flex.StringFromFramework(ctx, data[0].FilterString),
 	}
 
 	return apiObject
 }
 
-func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.Object {
-	if apiObject == nil {
-		return types.ObjectNull(viewSearchFilterAttributeTypes)
+func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
+	// The default is
+	//
+	//   "Filters": {
+	// 	   "FilterString": ""
+	//   },
+	//
+	// a view that performs no filtering.
+	// See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_CreateView.html#API_CreateView_Example_1.
+	if apiObject == nil || len(aws.ToString(apiObject.FilterString)) == 0 {
+		return types.ListNull(viewSearchFilterElementType)
 	}
 
-	return types.ObjectValueMust(viewSearchFilterAttributeTypes, map[string]attr.Value{
-		"filter_string": flex.StringToFramework(ctx, apiObject.FilterString),
+	return types.ListValueMust(viewSearchFilterElementType, []attr.Value{
+		types.ObjectValueMust(viewSearchFilterAttributeTypes, map[string]attr.Value{
+			"filter_string": flex.StringToFramework(ctx, apiObject.FilterString),
+		}),
 	})
 }
 
@@ -365,10 +385,8 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 }
 
 func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
-	elementType := types.ObjectType{AttrTypes: viewIncludedPropertyAttributeTypes}
-
 	if apiObjects == nil {
-		return types.ListNull(elementType)
+		return types.ListNull(viewIncludedPropertyElementType)
 	}
 
 	var elements []attr.Value
@@ -377,7 +395,7 @@ func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects
 		elements = append(elements, r.flattenIncludedProperty(ctx, apiObject))
 	}
 
-	return types.ListValueMust(elementType, elements)
+	return types.ListValueMust(viewIncludedPropertyElementType, elements)
 }
 
 func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
@@ -388,7 +406,7 @@ func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject aw
 
 type resourceViewData struct {
 	ARN                types.String `tfsdk:"arn"`
-	Filters            types.Object `tfsdk:"filters"`
+	Filters            types.List   `tfsdk:"filters"`
 	ID                 types.String `tfsdk:"id"`
 	IncludedProperties types.List   `tfsdk:"included_property"`
 	Name               types.String `tfsdk:"name"`
@@ -405,6 +423,8 @@ var viewSearchFilterAttributeTypes = map[string]attr.Type{
 	"filter_string": types.StringType,
 }
 
+var viewSearchFilterElementType = types.ObjectType{AttrTypes: viewSearchFilterAttributeTypes}
+
 type viewIncludedPropertyData struct {
 	Name types.String `tfsdk:"name"`
 }
@@ -412,6 +432,8 @@ type viewIncludedPropertyData struct {
 var viewIncludedPropertyAttributeTypes = map[string]attr.Type{
 	"name": types.StringType,
 }
+
+var viewIncludedPropertyElementType = types.ObjectType{AttrTypes: viewIncludedPropertyAttributeTypes}
 
 func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn string) (*resourceexplorer2.GetViewOutput, error) {
 	input := &resourceexplorer2.GetViewInput{
