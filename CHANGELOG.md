@@ -19,6 +19,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_db_instance: Fix error modifying `allocated_storage` when `storage_type` is `"gp3"` ([#28243](https://github.com/hashicorp/terraform-provider-aws/issues/28243))
 * resource/aws_dms_s3_endpoint: Fix disparate handling of endpoint attributes in different regions ([#28220](https://github.com/hashicorp/terraform-provider-aws/issues/28220))
 * resource/aws_evidently_feature: Fix  `description` attribute to accept strings between `0` and `160` in length ([#27948](https://github.com/hashicorp/terraform-provider-aws/issues/27948))
 * resource/aws_lb_target_group: Allow `healthy_threshold` and `unhealthy_threshold` to be set to different values for TCP health checks. ([#28018](https://github.com/hashicorp/terraform-provider-aws/issues/28018))
