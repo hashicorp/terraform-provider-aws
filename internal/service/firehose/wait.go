@@ -11,19 +11,18 @@ import (
 )
 
 const (
-	deliveryStreamCreatedTimeout = 20 * time.Minute
 	deliveryStreamDeletedTimeout = 20 * time.Minute
 
 	deliveryStreamEncryptionEnabledTimeout  = 10 * time.Minute
 	deliveryStreamEncryptionDisabledTimeout = 10 * time.Minute
 )
 
-func waitDeliveryStreamCreated(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
+func waitDeliveryStreamCreated(conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamStatusCreating},
 		Target:  []string{firehose.DeliveryStreamStatusActive},
 		Refresh: statusDeliveryStream(conn, name),
-		Timeout: deliveryStreamCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -1596,6 +1597,9 @@ func ResourceDeliveryStream() *schema.Resource {
 				Computed: true,
 			},
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+		},
 	}
 }
 
@@ -2649,7 +2653,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
 
-	s, err := waitDeliveryStreamCreated(conn, sn)
+	s, err := waitDeliveryStreamCreated(conn, sn, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) create: %w", sn, err)

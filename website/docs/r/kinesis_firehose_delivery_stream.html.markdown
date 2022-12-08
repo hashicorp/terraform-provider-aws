@@ -700,6 +700,12 @@ In addition to all arguments above, the following attributes are exported:
 
 [1]: https://aws.amazon.com/documentation/firehose/
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+
 ## Import
 
 Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
