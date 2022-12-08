@@ -177,7 +177,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	}
 
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
-	data.Type = types.StringValue(string(output.Type))
+	data.Type = flex.StringValueToFramework(ctx, output.Type)
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
