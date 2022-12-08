@@ -8,31 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAppMonitorByName(conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.AppMonitor, error) {
-	input := cloudwatchrum.GetAppMonitorInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.GetAppMonitor(&input)
-
-	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AppMonitor == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AppMonitor, nil
-}
-
 func FindMetricsDestinationByName(conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.MetricDestinationSummary, error) {
 	input := cloudwatchrum.ListRumMetricsDestinationsInput{
 		AppMonitorName: aws.String(name),
