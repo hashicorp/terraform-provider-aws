@@ -1,6 +1,7 @@
 package rum_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -98,7 +99,8 @@ func testAccCheckMetricsDestinationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudwatchrum.FindMetricsDestinationByName(conn, rs.Primary.ID)
+		_, err := tfcloudwatchrum.FindMetricsDestinationByName(context.Background(), conn, rs.Primary.ID)
+
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -106,29 +108,32 @@ func testAccCheckMetricsDestinationDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("CloudWatch RUM Metrics Destination %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckMetricsDestinationExists(n string, dest *cloudwatchrum.MetricDestinationSummary) resource.TestCheckFunc {
+func testAccCheckMetricsDestinationExists(n string, v *cloudwatchrum.MetricDestinationSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No cloudwatchrum Metrics Destination ID is set")
+			return fmt.Errorf("No CloudWatch RUM Metrics Destination ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
-		resp, err := tfcloudwatchrum.FindMetricsDestinationByName(conn, rs.Primary.ID)
+
+		output, err := tfcloudwatchrum.FindMetricsDestinationByName(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*dest = *resp
+		*v = *output
 
 		return nil
 	}
