@@ -1332,7 +1332,6 @@ resource "aws_lakeformation_permissions" "test" {
 }
 
 func testAccPermissionsConfig_lfTag(rName string, key string) string {
-
 	if len(key) == 0 {
 		key = rName
 	}
@@ -1395,7 +1394,6 @@ resource "aws_lakeformation_permissions" "test" {
 }
 
 func testAccPermissionsConfig_lfTagPolicy(rName string, keyName string) string {
-
 	if len(keyName) == 0 {
 		keyName = rName
 	}
