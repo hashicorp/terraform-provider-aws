@@ -66,7 +66,7 @@ The following arguments are supported:
 * `number_of_buckets` - Is if the table contains any dimension columns.
 * `output_format` - Output format: SequenceFileOutputFormat (binary), or IgnoreKeyTextOutputFormat, or a custom format.
 * `parameters` - User-supplied properties in key-value form.
-* `schema_reference` - Object that references a schema stored in the AWS Glue Schema Registry. See [`schema_reference`](#schema-reference) below.
+* `schema_reference` - Object that references a schema stored in the AWS Glue Schema Registry. See [`schema_reference`](#schema_reference) below.
 * `ser_de_info` - Configuration block for serialization and deserialization ("SerDe") information. See [`ser_de_info`](#ser_de_info) below.
 * `skewed_info` - Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewed_info`](#skewed_info) below.
 * `sort_columns` - Configuration block for the sort order of each bucket in the table. See [`sort_columns`](#sort_columns) below.
