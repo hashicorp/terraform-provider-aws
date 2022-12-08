@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataCatalogDataSource_basic(t *testing.T) {
+func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 	datasourceName := "data.aws_glue_catalog_table.test"
 
@@ -23,7 +23,7 @@ func TestAccDataCatalogDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogDataSourceConfig(dbName, tName),
+				Config: testAccCatalogTableDataSourceConfig_basic(dbName, tName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
@@ -46,7 +46,7 @@ func TestAccDataCatalogDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataCatalogDataSourceConfig(dbName, tName string) string {
+func testAccCatalogTableDataSourceConfig_basic(dbName, tName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
