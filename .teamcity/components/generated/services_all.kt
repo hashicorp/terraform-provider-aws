@@ -130,6 +130,7 @@ val services = mapOf(
     "organizations" to ServiceSpec("Organizations"),
     "outposts" to ServiceSpec("Outposts"),
     "pinpoint" to ServiceSpec("Pinpoint"),
+    "pipes" to ServiceSpec("EventBridge Pipes"),
     "pricing" to ServiceSpec("Pricing Calculator"),
     "qldb" to ServiceSpec("QLDB (Quantum Ledger Database)"),
     "quicksight" to ServiceSpec("QuickSight"),

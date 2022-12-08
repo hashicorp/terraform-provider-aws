@@ -12,13 +12,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.74.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.8
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.13
