@@ -46,6 +46,7 @@ func ResourceRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"encryption_configuration": encryptionConfigurationSchema(),
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -425,6 +426,9 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("encryption_configuration"); ok {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
+	}
 	if v, ok := d.GetOk("rule_group"); ok {
 		if vRaw := v.([]interface{}); len(vRaw) > 0 && vRaw[0] != nil {
 			input.RuleGroup = expandRuleGroup(vRaw)
@@ -485,6 +489,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("arn", resp.RuleGroupArn)
 	d.Set("capacity", resp.Capacity)
 	d.Set("description", resp.Description)
+	d.Set("encryption_configuration", flattenEncryptionConfiguration(resp.EncryptionConfiguration))
 	d.Set("name", resp.RuleGroupName)
 	d.Set("type", resp.Type)
 	d.Set("update_token", output.UpdateToken)
@@ -513,7 +518,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Updating NetworkFirewall Rule Group %s", arn)
 
-	if d.HasChanges("description", "rule_group", "rules", "type") {
+	if d.HasChanges("description", "encryption_configuration", "rule_group", "rules", "type") {
 		// Provide updated object with the currently configured fields
 		input := &networkfirewall.UpdateRuleGroupInput{
 			RuleGroupArn: aws.String(arn),
@@ -522,6 +527,9 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
+		}
+		if d.HasChange("encryption_configuration") {
+			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
 		// Network Firewall UpdateRuleGroup API method only allows one of Rules or RuleGroup
@@ -532,6 +540,19 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Rules = aws.String(d.Get("rules").(string))
 		} else if d.HasChange("rule_group") {
 			input.RuleGroup = expandRuleGroup(d.Get("rule_group").([]interface{}))
+		}
+
+		// If neither "rules" or "rule_group" are set at this point, neither have changed but
+		// at least one must still be sent to allow other attributes (ex. description) to update.
+		// Give precedence again to "rules", as documented above.
+		if input.Rules == nil && input.RuleGroup == nil {
+			if v, ok := d.GetOk("rules"); ok {
+				input.Rules = aws.String(v.(string))
+			} else if v, ok := d.GetOk("rule_group"); ok {
+				if vRaw := v.([]interface{}); len(vRaw) > 0 && vRaw[0] != nil {
+					input.RuleGroup = expandRuleGroup(vRaw)
+				}
+			}
 		}
 
 		_, err := conn.UpdateRuleGroupWithContext(ctx, input)
