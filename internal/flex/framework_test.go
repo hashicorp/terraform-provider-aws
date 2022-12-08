@@ -622,19 +622,22 @@ func TestStringToFrameworkWithTransform(t *testing.T) {
 	}
 }
 
-func TestEnumStringToFramework(t *testing.T) {
+func TestStringValueToFramework(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    string
+		input    custom
 		expected types.String
 	}
 	tests := map[string]testCase{
-		"valid enum": {
+		"valid": {
 			input:    "TEST",
 			expected: types.StringValue("TEST"),
 		},
-		"empty enum": {
+		"empty": {
 			input:    "",
 			expected: types.StringNull(),
 		},
@@ -643,7 +646,7 @@ func TestEnumStringToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := EnumStringToFramework(context.Background(), test.input)
+			got := StringValueToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -652,19 +655,22 @@ func TestEnumStringToFramework(t *testing.T) {
 	}
 }
 
-func TestEnumStringToFrameworkLegacy(t *testing.T) {
+func TestStringValueToFrameworkLegacy(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    string
+		input    custom
 		expected types.String
 	}
 	tests := map[string]testCase{
-		"valid enum": {
+		"valid": {
 			input:    "TEST",
 			expected: types.StringValue("TEST"),
 		},
-		"empty enum": {
+		"empty": {
 			input:    "",
 			expected: types.StringValue(""),
 		},
@@ -673,7 +679,7 @@ func TestEnumStringToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			got := EnumStringToFrameworkLegacy(context.Background(), test.input)
+			got := StringValueToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

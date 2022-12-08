@@ -546,7 +546,7 @@ func flattenControlMappingSources(ctx context.Context, apiObject []awstypes.Cont
 
 		obj := map[string]attr.Value{
 			"source_description":   flex.StringToFramework(ctx, source.SourceDescription),
-			"source_frequency":     flex.EnumStringToFramework(ctx, string(source.SourceFrequency)),
+			"source_frequency":     flex.StringValueToFramework(ctx, source.SourceFrequency),
 			"source_id":            types.StringValue(aws.ToString(source.SourceId)),
 			"source_keyword":       sk,
 			"source_name":          types.StringValue(aws.ToString(source.SourceName)),
@@ -574,7 +574,7 @@ func flattenSourceKeyword(ctx context.Context, apiObject *awstypes.SourceKeyword
 	}
 
 	obj := map[string]attr.Value{
-		"keyword_input_type": flex.EnumStringToFramework(ctx, string(apiObject.KeywordInputType)),
+		"keyword_input_type": flex.StringValueToFramework(ctx, apiObject.KeywordInputType),
 		"keyword_value":      types.StringValue(aws.ToString(apiObject.KeywordValue)),
 	}
 	objVal, d := types.ObjectValue(sourceKeywordAttrTypes, obj)
