@@ -2,8 +2,14 @@
 
 FEATURES:
 
+* **New Resource:** `aws_networkmanager_core_network` ([#28155](https://github.com/hashicorp/terraform-provider-aws/issues/28155))
 * **New Resource:** `aws_resourceexplorer2_index` ([#28144](https://github.com/hashicorp/terraform-provider-aws/issues/28144))
 * **New Resource:** `aws_vpc_network_performance_metric_subscription` ([#28150](https://github.com/hashicorp/terraform-provider-aws/issues/28150))
+
+ENHANCEMENTS:
+
+* resource/aws_glue_crawler: Add `catalog_target.dlq_event_queue_arn`, `catalog_target.event_queue_arn`, `catalog_target.connection_name`, `lake_formation_configuration`, and `jdbc_target.enable_additional_metadata` arguments ([#28156](https://github.com/hashicorp/terraform-provider-aws/issues/28156))
+* resource/aws_glue_crawler: Make `delta_target.connection_name` optional ([#28156](https://github.com/hashicorp/terraform-provider-aws/issues/28156))
 
 BUG FIXES:
 

@@ -19,21 +19,14 @@ import (
 func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 	var v networkmanager.VpcAttachment
 	resourceName := "aws_networkmanager_vpc_attachment.test"
-	coreNetworkResourceName := "awscc_networkmanager_core_network.test"
+	coreNetworkResourceName := "aws_networkmanager_core_network.test"
 	vpcResourceName := "aws_vpc.test"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"awscc": {
-			Source:            "hashicorp/awscc",
-			VersionConstraint: "0.29.0",
-		},
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +36,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "0"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, "core_network_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -69,19 +62,12 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 	var v networkmanager.VpcAttachment
 	resourceName := "aws_networkmanager_vpc_attachment.test"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"awscc": {
-			Source:            "hashicorp/awscc",
-			VersionConstraint: "0.29.0",
-		},
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,19 +85,12 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 	var v networkmanager.VpcAttachment
 	resourceName := "aws_networkmanager_vpc_attachment.test"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"awscc": {
-			Source:            "hashicorp/awscc",
-			VersionConstraint: "0.29.0",
-		},
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -151,19 +130,12 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 	var v networkmanager.VpcAttachment
 	resourceName := "aws_networkmanager_vpc_attachment.test"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"awscc": {
-			Source:            "hashicorp/awscc",
-			VersionConstraint: "0.29.0",
-		},
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -289,9 +261,9 @@ resource "aws_networkmanager_global_network" "test" {
   }
 }
 
-resource "awscc_networkmanager_core_network" "test" {
+resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = jsonencode(jsondecode(data.aws_networkmanager_core_network_policy_document.test.json))
+  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -341,7 +313,7 @@ func testAccVPCAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVPCAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 }
 
@@ -356,7 +328,7 @@ func testAccVPCAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 
   tags = {
@@ -375,7 +347,7 @@ func testAccVPCAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagVal
 	return acctest.ConfigCompose(testAccVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 
   tags = {
@@ -395,7 +367,7 @@ func testAccVPCAttachmentConfig_updates(rName string, nSubnets int, ipv6Support 
 	return acctest.ConfigCompose(testAccVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = slice(aws_subnet.test[*].arn, 0, %[2]d)
-  core_network_id = awscc_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 
   options {
