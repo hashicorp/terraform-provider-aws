@@ -10,11 +10,15 @@ ENHANCEMENTS:
 
 * resource/aws_glue_crawler: Add `catalog_target.dlq_event_queue_arn`, `catalog_target.event_queue_arn`, `catalog_target.connection_name`, `lake_formation_configuration`, and `jdbc_target.enable_additional_metadata` arguments ([#28156](https://github.com/hashicorp/terraform-provider-aws/issues/28156))
 * resource/aws_glue_crawler: Make `delta_target.connection_name` optional ([#28156](https://github.com/hashicorp/terraform-provider-aws/issues/28156))
+* resource/aws_networkfirewall_firewall: Add `encryption_configuration` attribute ([#28242](https://github.com/hashicorp/terraform-provider-aws/issues/28242))
+* resource/aws_networkfirewall_firewall_policy: Add `encryption_configuration` attribute ([#28242](https://github.com/hashicorp/terraform-provider-aws/issues/28242))
+* resource/aws_networkfirewall_rule_group: Add `encryption_configuration` attribute ([#28242](https://github.com/hashicorp/terraform-provider-aws/issues/28242))
 
 BUG FIXES:
 
 * resource/aws_dms_s3_endpoint: Fix disparate handling of endpoint attributes in different regions ([#28220](https://github.com/hashicorp/terraform-provider-aws/issues/28220))
 * resource/aws_evidently_feature: Fix  `description` attribute to accept strings between `0` and `160` in length ([#27948](https://github.com/hashicorp/terraform-provider-aws/issues/27948))
+* resource/aws_sns_topic_subscription: Fix unsupported `FilterPolicyScope` attribute error in the aws-cn partition ([#28253](https://github.com/hashicorp/terraform-provider-aws/issues/28253))
 
 ## 4.45.0 (December  2, 2022)
 
