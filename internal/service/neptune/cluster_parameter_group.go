@@ -183,6 +183,29 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
+	params := describeParametersResp.Parameters
+
+	customParams := []*string{aws.String("neptune_streams"), aws.String("neptune_query_timeout")}
+	// now we will look for a couple of "system" parameters that are not returned by the API
+	// but are still important to track in the state
+	describeParametersOpts = neptune.DescribeDBClusterParametersInput{
+		DBClusterParameterGroupName: aws.String(d.Id()),
+		Source:                      aws.String("system"),
+		Filters: []*neptune.Filter{
+			{
+				Name:   aws.String("parameter-name"),
+				Values: customParams,
+			},
+		},
+	}
+
+	describeParametersResp, err = conn.DescribeDBClusterParameters(&describeParametersOpts)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
+	}
+
+	params = append(params, describeParametersResp.Parameters...)
+
 	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting neptune parameter: %s", err)
 	}
