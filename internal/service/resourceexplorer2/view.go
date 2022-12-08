@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -126,24 +128,10 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	name := create.Name(data.Name.ValueString(), data.NamePrefix.ValueString())
 	input := &resourceexplorer2.CreateViewInput{
-		ClientToken: aws.String(sdkresource.UniqueId()),
-		ViewName:    aws.String(name),
-	}
-
-	if v, diags := r.expandSearchFilter(ctx, data.Filters); diags.HasError() {
-		response.Diagnostics.Append(diags...)
-
-		return
-	} else {
-		input.Filters = v
-	}
-
-	if v, diags := r.expandIncludedProperties(ctx, data.IncludedProperties); diags.HasError() {
-		response.Diagnostics.Append(diags...)
-
-		return
-	} else {
-		input.IncludedProperties = v
+		ClientToken:        aws.String(sdkresource.UniqueId()),
+		Filters:            r.expandSearchFilter(ctx, data.Filters),
+		IncludedProperties: r.expandIncludedProperties(ctx, data.IncludedProperties),
+		ViewName:           aws.String(name),
 	}
 
 	if len(tags) > 0 {
@@ -197,7 +185,31 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	data.ARN = flex.StringToFramework(ctx, output.View.ViewArn)
+	view := output.View
+	data.ARN = flex.StringToFramework(ctx, view.ViewArn)
+	data.Filters = r.flattenSearchFilter(ctx, view.Filters)
+	data.IncludedProperties = r.flattenIncludedProperties(ctx, view.IncludedProperties)
+
+	arn, err := arn.Parse(data.ARN.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError("parsing Resource Explorer View ARN", err.Error())
+
+		return
+	}
+
+	// view/${ViewName}/${ViewUuid}
+	parts := strings.Split(arn.Resource, "/")
+
+	if n := len(parts); n != 3 {
+		response.Diagnostics.AddError("incorrect Resource Explorer View ARN format", fmt.Sprintf("%d parts", n))
+
+		return
+	}
+
+	name := parts[1]
+	data.Name = types.StringValue(name)
+	data.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(name))
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
@@ -296,37 +308,43 @@ func (r *resourceView) ConfigValidators(context.Context) []resource.ConfigValida
 	}
 }
 
-func (r *resourceView) expandSearchFilter(ctx context.Context, tfObject types.Object) (*awstypes.SearchFilter, diag.Diagnostics) {
+func (r *resourceView) expandSearchFilter(ctx context.Context, tfObject types.Object) *awstypes.SearchFilter {
 	if tfObject.IsNull() || tfObject.IsUnknown() {
-		return nil, nil
+		return nil
 	}
 
 	var data viewSearchFilterData
 
-	diags := tfObject.As(ctx, &data, types.ObjectAsOptions{})
-
-	if diags.HasError() {
-		return nil, diags
+	if diags := tfObject.As(ctx, &data, types.ObjectAsOptions{}); diags.HasError() {
+		return nil
 	}
 
 	apiObject := &awstypes.SearchFilter{
 		FilterString: flex.StringFromFramework(ctx, data.FilterString),
 	}
 
-	return apiObject, nil
+	return apiObject
 }
 
-func (r *resourceView) expandIncludedProperties(ctx context.Context, tfList types.List) ([]awstypes.IncludedProperty, diag.Diagnostics) {
+func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.Object {
+	if apiObject == nil {
+		return types.ObjectNull(viewSearchFilterAttributeTypes)
+	}
+
+	return types.ObjectValueMust(viewSearchFilterAttributeTypes, map[string]attr.Value{
+		"filter_string": flex.StringToFramework(ctx, apiObject.FilterString),
+	})
+}
+
+func (r *resourceView) expandIncludedProperties(ctx context.Context, tfList types.List) []awstypes.IncludedProperty {
 	if tfList.IsNull() || tfList.IsUnknown() {
-		return nil, nil
+		return nil
 	}
 
 	var data []viewIncludedPropertyData
 
-	diags := tfList.ElementsAs(ctx, &data, false)
-
-	if diags.HasError() {
-		return nil, diags
+	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
+		return nil
 	}
 
 	var apiObjects []awstypes.IncludedProperty
@@ -335,7 +353,7 @@ func (r *resourceView) expandIncludedProperties(ctx context.Context, tfList type
 		apiObjects = append(apiObjects, r.expandIncludedProperty(ctx, v))
 	}
 
-	return apiObjects, nil
+	return apiObjects
 }
 
 func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncludedPropertyData) awstypes.IncludedProperty {
@@ -344,6 +362,28 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 	}
 
 	return apiObject
+}
+
+func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
+	elementType := types.ObjectType{AttrTypes: viewIncludedPropertyAttributeTypes}
+
+	if apiObjects == nil {
+		return types.ListNull(elementType)
+	}
+
+	var elements []attr.Value
+
+	for _, apiObject := range apiObjects {
+		elements = append(elements, r.flattenIncludedProperty(ctx, apiObject))
+	}
+
+	return types.ListValueMust(elementType, elements)
+}
+
+func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
+	return types.ObjectValueMust(viewSearchFilterAttributeTypes, map[string]attr.Value{
+		"name": flex.StringToFramework(ctx, apiObject.Name),
+	})
 }
 
 type resourceViewData struct {
@@ -361,8 +401,16 @@ type viewSearchFilterData struct {
 	FilterString types.String `tfsdk:"filter_string"`
 }
 
+var viewSearchFilterAttributeTypes = map[string]attr.Type{
+	"filter_string": types.StringType,
+}
+
 type viewIncludedPropertyData struct {
 	Name types.String `tfsdk:"name"`
+}
+
+var viewIncludedPropertyAttributeTypes = map[string]attr.Type{
+	"name": types.StringType,
 }
 
 func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn string) (*resourceexplorer2.GetViewOutput, error) {
