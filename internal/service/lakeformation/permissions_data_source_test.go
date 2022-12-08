@@ -92,6 +92,7 @@ func testAccPermissionsDataSource_lfTag(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
+	keyName := rName + ":colon"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
@@ -100,7 +101,22 @@ func testAccPermissionsDataSource_lfTag(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionsDataSourceConfig_lfTag(rName),
+				Config: testAccPermissionsDataSourceConfig_lfTag(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.#", dataSourceName, "lf_tag.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.key", dataSourceName, "lf_tag.0.key"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", dataSourceName, "lf_tag.0.values"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.0", dataSourceName, "permissions.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.1", dataSourceName, "permissions.1"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.#", dataSourceName, "permissions_with_grant_option.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.0", dataSourceName, "permissions_with_grant_option.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.1", dataSourceName, "permissions_with_grant_option.1"),
+				),
+			},
+			{
+				Config: testAccPermissionsDataSourceConfig_lfTag(rName, keyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.#", dataSourceName, "lf_tag.#"),
@@ -122,6 +138,7 @@ func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
+	keyName := rName + ":colon"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
@@ -130,7 +147,24 @@ func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionsDataSourceConfig_lfTagPolicy(rName),
+				Config: testAccPermissionsDataSourceConfig_lfTagPolicy(rName, keyName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.#", dataSourceName, "lf_tag_policy.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.resource_type", dataSourceName, "lf_tag_policy.0.resource_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.#", dataSourceName, "lf_tag_policy.0.expression.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", dataSourceName, "lf_tag_policy.0.expression.0.key"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", dataSourceName, "lf_tag_policy.0.expression.0.values"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.0", dataSourceName, "permissions.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.1", dataSourceName, "permissions.1"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.2", dataSourceName, "permissions.2"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.#", dataSourceName, "permissions_with_grant_option.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.0", dataSourceName, "permissions_with_grant_option.0"),
+				),
+			},
+			{
+				Config: testAccPermissionsDataSourceConfig_lfTagPolicy(rName+"2", keyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.#", dataSourceName, "lf_tag_policy.#"),
@@ -378,7 +412,10 @@ data "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccPermissionsDataSourceConfig_lfTag(rName string) string {
+func testAccPermissionsDataSourceConfig_lfTag(rName string, keyName string) string {
+	if len(keyName) == 0 {
+		keyName = rName
+	}
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
@@ -412,7 +449,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_lakeformation_lf_tag" "test" {
-  key    = %[1]q
+  key    = %[2]q
   values = ["value1", "value2"]
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
@@ -440,10 +477,13 @@ data "aws_lakeformation_permissions" "test" {
     values = aws_lakeformation_lf_tag.test.values
   }
 }
-`, rName)
+`, rName, keyName)
 }
 
-func testAccPermissionsDataSourceConfig_lfTagPolicy(rName string) string {
+func testAccPermissionsDataSourceConfig_lfTagPolicy(rName string, keyName string) string {
+	if len(keyName) == 0 {
+		keyName = rName
+	}
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -478,7 +518,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_lakeformation_lf_tag" "test" {
-  key    = %[1]q
+  key    = %[2]q
   values = ["value1", "value2"]
 
   # for consistency, ensure that admins are setup before testing
@@ -518,7 +558,7 @@ data "aws_lakeformation_permissions" "test" {
     }
   }
 }
-`, rName)
+`, rName, keyName)
 }
 
 func testAccPermissionsDataSourceConfig_table(rName string) string {

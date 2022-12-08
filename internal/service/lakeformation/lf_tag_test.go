@@ -103,6 +103,14 @@ func testAccLFTag_values(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),
 			},
+			{
+				Config:  testAccLFTagConfig_values(rName+":Colon", []string{"value1", "value2"}),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLFTagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "key", rName+":Colon"),
+				),
+			},
 		},
 	})
 }

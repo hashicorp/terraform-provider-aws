@@ -172,7 +172,7 @@ func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ReadLFTagID(id string) (catalogID string, tagKey string, err error) {
-	idParts := strings.Split(id, ":")
+	idParts := strings.SplitN(id, ":", 2)
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("unexpected format of ID (%q), expected CATALOG-ID:TAG-KEY", id)
 	}
