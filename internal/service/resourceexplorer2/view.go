@@ -68,7 +68,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(64),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]$`), `can include letters, digits, and the dash (-) character`),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
 			"name_prefix": schema.StringAttribute{
@@ -80,7 +80,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(64 - sdkresource.UniqueIDSuffixLength),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]$`), `can include letters, digits, and the dash (-) character`),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
 			"tags":     tftags.TagsAttribute(),
@@ -246,20 +246,27 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 
 	conn := r.Meta().ResourceExplorer2Client
 
-	// if !new.Type.Equal(old.Type) {
-	// 	input := &resourceexplorer2.UpdateIndexTypeInput{
-	// 		Arn:  flex.StringFromFramework(ctx, new.ID),
-	// 		Type: awstypes.IndexType(new.Type.ValueString()),
-	// 	}
+	if !new.Filters.Equal(old.Filters) || !new.IncludedProperties.Equal(old.IncludedProperties) {
+		input := &resourceexplorer2.UpdateViewInput{
+			ViewArn: flex.StringFromFramework(ctx, new.ID),
+		}
 
-	// 	_, err := conn.UpdateIndexType(ctx, input)
+		if !new.Filters.Equal(old.Filters) {
+			input.Filters = r.expandSearchFilter(ctx, new.Filters)
+		}
 
-	// 	if err != nil {
-	// 		response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s)", new.ID.ValueString()), err.Error())
+		if !new.IncludedProperties.Equal(old.IncludedProperties) {
+			input.IncludedProperties = r.expandIncludedProperties(ctx, new.IncludedProperties)
+		}
 
-	// 		return
-	// 	}
-	// }
+		_, err := conn.UpdateView(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer View (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
 
 	if !new.TagsAll.Equal(old.TagsAll) {
 		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
@@ -404,7 +411,7 @@ func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects
 }
 
 func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
-	return types.ObjectValueMust(AttributeTypes[viewSearchFilterData](), map[string]attr.Value{
+	return types.ObjectValueMust(AttributeTypes[viewIncludedPropertyData](), map[string]attr.Value{
 		"name": flex.StringToFramework(ctx, apiObject.Name),
 	})
 }
@@ -479,7 +486,7 @@ type propertyName string
 
 // Enum values for propertyName.
 const (
-	propertyNameTags propertyName = "Tags"
+	propertyNameTags propertyName = "tags"
 )
 
 func (propertyName) Values() []propertyName {
