@@ -131,11 +131,24 @@ func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func FindMetricsDestinationByName(ctx context.Context, conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.MetricDestinationSummary, error) {
-	input := cloudwatchrum.ListRumMetricsDestinationsInput{
+	input := &cloudwatchrum.ListRumMetricsDestinationsInput{
 		AppMonitorName: aws.String(name),
 	}
+	var output []*cloudwatchrum.MetricDestinationSummary
 
-	output, err := conn.ListRumMetricsDestinations(&input)
+	err := conn.ListRumMetricsDestinationsPagesWithContext(ctx, input, func(page *cloudwatchrum.ListRumMetricsDestinationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Destinations {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -148,13 +161,13 @@ func FindMetricsDestinationByName(ctx context.Context, conn *cloudwatchrum.Cloud
 		return nil, err
 	}
 
-	if output == nil || len(output.Destinations) == 0 || output.Destinations[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.Destinations); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.Destinations[0], nil
+	return output[0], nil
 }
