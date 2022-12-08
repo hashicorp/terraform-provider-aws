@@ -364,11 +364,11 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("owner", table.Owner)
 	d.Set("retention", table.Retention)
 
-	if err := d.Set("storage_descriptor", flattenGlueStorageDescriptor(table.StorageDescriptor)); err != nil {
+	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
 		return diag.Errorf("error setting storage_descriptor: %s", err)
 	}
 
-	if err := d.Set("partition_keys", flattenGlueColumns(table.PartitionKeys)); err != nil {
+	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
 		return diag.Errorf("error setting partition_keys: %s", err)
 	}
 
@@ -381,7 +381,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if table.TargetTable != nil {
-		if err := d.Set("target_table", []interface{}{flattenGlueTableTargetTable(table.TargetTable)}); err != nil {
+		if err := d.Set("target_table", []interface{}{flattenTableTargetTable(table.TargetTable)}); err != nil {
 			return diag.Errorf("error setting target_table: %s", err)
 		}
 	} else {
@@ -399,7 +399,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
-		if err := d.Set("partition_index", flattenGluePartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
+		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
 			return diag.Errorf("error setting partition_index: %s", err)
 		}
 	}
