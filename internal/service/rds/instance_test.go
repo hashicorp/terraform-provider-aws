@@ -4749,7 +4749,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 	})
 }
 
-func TestAccRDSInstance_gp3(t *testing.T) {
+func TestAccRDSInstance_gp3MySQL(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -4765,9 +4765,10 @@ func TestAccRDSInstance_gp3(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_gp3(rName),
+				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
@@ -4785,6 +4786,120 @@ func TestAccRDSInstance_gp3(t *testing.T) {
 					"delete_automated_backups",
 					"blue_green_update",
 				},
+			},
+			{
+				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_gp3Postgres(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_gp3SQLServer(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassSQLServerExGP3, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassSQLServerExGP3, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
 			},
 		},
 	})
@@ -4833,6 +4948,58 @@ func TestAccRDSInstance_storageThroughput(t *testing.T) {
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "14000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_storageTypePostgres(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageTypePostgres(rName, "gp2", 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_storageTypePostgres(rName, "gp3", 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
 			},
@@ -5146,12 +5313,24 @@ func testAccInstanceConfig_orderableClassMySQLGP3() string {
 	return testAccInstanceConfig_orderableClass("mysql", "general-public-license", "gp3", mySQLPreferredInstanceClasses)
 }
 
+func testAccInstanceConfig_orderableClassPostgres() string {
+	return testAccInstanceConfig_orderableClass("postgres", "postgresql-license", "standard", postgresPreferredInstanceClasses)
+}
+
+func testAccInstanceConfig_orderableClassPostgresGP3() string {
+	return testAccInstanceConfig_orderableClass("postgres", "postgresql-license", "gp3", postgresPreferredInstanceClasses)
+}
+
 func testAccInstanceConfig_orderableClassMariadb() string {
 	return testAccInstanceConfig_orderableClass("mariadb", "general-public-license", "standard", mariaDBPreferredInstanceClasses)
 }
 
 func testAccInstanceConfig_orderableClassSQLServerEx() string {
 	return testAccInstanceConfig_orderableClass("sqlserver-ex", "license-included", "standard", sqlServerPreferredInstanceClasses)
+}
+
+func testAccInstanceConfig_orderableClassSQLServerExGP3() string {
+	return testAccInstanceConfig_orderableClass("sqlserver-ex", "license-included", "gp3", sqlServerPreferredInstanceClasses)
 }
 
 func testAccInstanceConfig_orderableClassSQLServerSe() string {
@@ -6765,28 +6944,18 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_EnabledCloudWatchLogsExports_postgreSQL(rName string) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "default" {
-  engine = "postgres"
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = [%[1]s]
-}
-
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage               = 10
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
   engine                          = data.aws_rds_engine_version.default.engine
-  identifier                      = %[2]q
+  identifier                      = %[1]q
   instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
 }
-`, postgresPreferredInstanceClasses, rName)
+`, rName))
 }
 
 func testAccInstanceConfig_maxAllocatedStorage(rName string, maxAllocatedStorage int) string {
@@ -9815,16 +9984,16 @@ data "aws_rds_orderable_db_instance" "updated" {
 `, rName, deletionProtection))
 }
 
-func testAccInstanceConfig_gp3(rName string) string {
+func testAccInstanceConfig_gp3(rName string, orderableClassConfig func() string, allocatedStorage int) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQLGP3(),
+		orderableClassConfig(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier           = %[1]q
   engine               = data.aws_rds_engine_version.default.engine
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "test"
+  db_name              = data.aws_rds_engine_version.default.engine == "sqlserver-ex" ? null : "test"
   password             = "avoid-plaintext-passwords"
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
@@ -9833,9 +10002,9 @@ resource "aws_db_instance" "test" {
   apply_immediately = true
 
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
-  allocated_storage = 200
+  allocated_storage = %[2]d
 }
-`, rName))
+`, rName, allocatedStorage))
 }
 
 func testAccInstanceConfig_storageThroughput(rName string, iops, throughput int) string {
@@ -9862,4 +10031,29 @@ resource "aws_db_instance" "test" {
   storage_throughput = %[3]d
 }
 `, rName, iops, throughput))
+}
+
+func testAccInstanceConfig_storageTypePostgres(rName string, storageType string, allocatedStorage int) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "postgres"
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  instance_class       = "db.m6g.large"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot  = true
+
+  apply_immediately = true
+
+  storage_type      = %[2]q
+  allocated_storage = %[3]d
+}
+`, rName, storageType, allocatedStorage)
 }

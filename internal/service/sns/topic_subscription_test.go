@@ -1205,6 +1205,8 @@ resource "aws_sns_topic_subscription" "test" {
   protocol               = "https"
   endpoint               = replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://davematthews:granny@")
   endpoint_auto_confirms = true
+
+  confirmation_timeout_in_minutes = 3
 }
 `, rName)
 }

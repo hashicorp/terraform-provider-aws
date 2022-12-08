@@ -2,14 +2,31 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_glue_catalog_table` ([#23256](https://github.com/hashicorp/terraform-provider-aws/issues/23256))
+* **New Resource:** `aws_auditmanager_control` ([#27857](https://github.com/hashicorp/terraform-provider-aws/issues/27857))
 * **New Resource:** `aws_networkmanager_core_network` ([#28155](https://github.com/hashicorp/terraform-provider-aws/issues/28155))
 * **New Resource:** `aws_resourceexplorer2_index` ([#28144](https://github.com/hashicorp/terraform-provider-aws/issues/28144))
+* **New Resource:** `aws_rum_metrics_destination` ([#28143](https://github.com/hashicorp/terraform-provider-aws/issues/28143))
 * **New Resource:** `aws_vpc_network_performance_metric_subscription` ([#28150](https://github.com/hashicorp/terraform-provider-aws/issues/28150))
+
+ENHANCEMENTS:
+
+* resource/aws_glue_crawler: Add `catalog_target.dlq_event_queue_arn`, `catalog_target.event_queue_arn`, `catalog_target.connection_name`, `lake_formation_configuration`, and `jdbc_target.enable_additional_metadata` arguments ([#28156](https://github.com/hashicorp/terraform-provider-aws/issues/28156))
+* resource/aws_glue_crawler: Make `delta_target.connection_name` optional ([#28156](https://github.com/hashicorp/terraform-provider-aws/issues/28156))
+* resource/aws_networkfirewall_firewall: Add `encryption_configuration` attribute ([#28242](https://github.com/hashicorp/terraform-provider-aws/issues/28242))
+* resource/aws_networkfirewall_firewall_policy: Add `encryption_configuration` attribute ([#28242](https://github.com/hashicorp/terraform-provider-aws/issues/28242))
+* resource/aws_networkfirewall_rule_group: Add `encryption_configuration` attribute ([#28242](https://github.com/hashicorp/terraform-provider-aws/issues/28242))
 
 BUG FIXES:
 
+* resource/aws_db_instance: Fix error modifying `allocated_storage` when `storage_type` is `"gp3"` ([#28243](https://github.com/hashicorp/terraform-provider-aws/issues/28243))
 * resource/aws_dms_s3_endpoint: Fix disparate handling of endpoint attributes in different regions ([#28220](https://github.com/hashicorp/terraform-provider-aws/issues/28220))
 * resource/aws_evidently_feature: Fix  `description` attribute to accept strings between `0` and `160` in length ([#27948](https://github.com/hashicorp/terraform-provider-aws/issues/27948))
+* resource/aws_lb_target_group: Allow `healthy_threshold` and `unhealthy_threshold` to be set to different values for TCP health checks. ([#28018](https://github.com/hashicorp/terraform-provider-aws/issues/28018))
+* resource/aws_lb_target_group: Allow `interval` to be updated for TCP health checks ([#28018](https://github.com/hashicorp/terraform-provider-aws/issues/28018))
+* resource/aws_lb_target_group: Allow `timeout` to be set for TCP health checks ([#28018](https://github.com/hashicorp/terraform-provider-aws/issues/28018))
+* resource/aws_lb_target_group: Don't force recreation on `health_check` attribute changes ([#28018](https://github.com/hashicorp/terraform-provider-aws/issues/28018))
+* resource/aws_sns_topic_subscription: Fix unsupported `FilterPolicyScope` attribute error in the aws-cn partition ([#28253](https://github.com/hashicorp/terraform-provider-aws/issues/28253))
 
 ## 4.45.0 (December  2, 2022)
 

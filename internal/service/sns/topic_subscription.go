@@ -406,8 +406,16 @@ func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 func resourceTopicSubscriptionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 	hasPolicy := diff.Get("filter_policy").(string) != ""
 	hasScope := !diff.GetRawConfig().GetAttr("filter_policy_scope").IsNull()
+	hadScope := diff.Get("filter_policy_scope").(string) != ""
 
 	if hasPolicy && !hasScope {
+		if !hadScope {
+			// When the filter_policy_scope hasn't been read back from the API,
+			// don't attempt to set a value. Either the default will be computed
+			// on the next read, or this is a partition that doesn't support it.
+			return nil
+		}
+
 		// When the scope is removed from configuration, the API will
 		// continue reading back the last value so long as the policy
 		// itself still exists. The expected result would be to revert
