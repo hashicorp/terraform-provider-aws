@@ -2,12 +2,12 @@ package glue_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/glue"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"testing"
 )
 
 func TestAccDataCatalogDataSource_basic(t *testing.T) {
@@ -18,14 +18,13 @@ func TestAccDataCatalogDataSource_basic(t *testing.T) {
 	tName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:  acctest.ProtoV5ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataCatalogDataSourceConfig(dbName, tName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataCatalogCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "database_name", resourceName, "database_name"),
@@ -45,17 +44,6 @@ func TestAccDataCatalogDataSource_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccDataCatalogCheckDataSource(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		return nil
-	}
 }
 
 func testAccDataCatalogDataSourceConfig(dbName, tName string) string {
