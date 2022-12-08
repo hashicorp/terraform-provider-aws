@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_cognito_risk_configuration: Correct documentation for notify_email_type text_body
+```
