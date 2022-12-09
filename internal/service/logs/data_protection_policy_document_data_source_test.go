@@ -2,6 +2,7 @@ package logs_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -48,6 +49,36 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
 						testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnBadOrderOfStatements(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnBadOrderOfStatements,
+				ExpectError: regexp.MustCompile(`the first policy statement must contain only the audit operation`),
+			},
+		},
+	})
+}
+
+func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnNoOperation(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnNoOperation,
+				ExpectError: regexp.MustCompile(`the second policy statement must contain only the deidentify operation`),
 			},
 		},
 	})
@@ -314,5 +345,61 @@ const testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON = `
             }
         }
     ]
+}
+`
+
+const testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnBadOrderOfStatements = `
+data "aws_cloudwatch_log_data_protection_policy_document" "test" {
+  name = "Test"
+
+  statement {
+    data_identifiers = [
+      "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+    ]
+
+    operation {
+      deidentify {
+        mask_config {}
+      }
+    }
+  }
+
+  statement {
+    data_identifiers = [
+      "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+    ]
+
+    operation {
+      audit {
+        findings_destination {}
+      }
+    }
+  }
+}
+`
+
+const testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnNoOperation = `
+data "aws_cloudwatch_log_data_protection_policy_document" "test" {
+  name = "Test"
+
+  statement {
+    data_identifiers = [
+      "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+    ]
+
+    operation {
+      audit {
+        findings_destination {}
+      }
+    }
+  }
+
+  statement {
+    data_identifiers = [
+      "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+    ]
+
+    operation {}
+  }
 }
 `

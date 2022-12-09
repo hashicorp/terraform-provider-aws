@@ -244,14 +244,26 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 		}
 	}
 
-	result, err := json.MarshalIndent(document, "", "  ")
+	// The schema requires exactly 2 elements, which is assumed here.
+
+	if op := document.Statements[0].Operation; op.Audit == nil || op.Deidentify != nil {
+		return diag.Errorf("the first policy statement must contain only the audit operation")
+	}
+
+	if op := document.Statements[1].Operation; op.Audit != nil || op.Deidentify == nil {
+		return diag.Errorf("the second policy statement must contain only the deidentify operation")
+	}
+
+	jsonBytes, err := json.MarshalIndent(document, "", "  ")
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.Set("json", string(result))
-	d.SetId(strconv.Itoa(create.StringHashcode(string(result))))
+	jsonString := string(jsonBytes)
+
+	d.Set("json", jsonString)
+	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return nil
 }
