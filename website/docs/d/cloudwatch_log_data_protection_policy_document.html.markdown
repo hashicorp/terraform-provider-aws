@@ -14,8 +14,6 @@ Generates a CloudWatch Log Group Data Protection Policy document in JSON format 
 
 ## Example Usage
 
-### Basic Usage
-
 ```terraform
 resource "aws_cloudwatch_log_data_protection_policy" "example" {
   log_group_name  = aws_cloudwatch_log_group.example.name
@@ -102,7 +100,7 @@ The following arguments are optional:
 
 * `cloudwatch_logs` - (Optional) Configures CloudWatch Logs as a findings destination.
 * `firehose` - (Optional) Configures Kinesis Firehose as a findings destination.
-* `s3` - (Optional) Configures S3 as a findings destination. 
+* `s3` - (Optional) Configures S3 as a findings destination.
 
 ###### cloudwatch_logs Configuration Block
 

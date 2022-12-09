@@ -104,7 +104,7 @@ resource "aws_cloudwatch_log_group" "audit" {
 }
 
 resource "aws_s3_bucket" "audit" {
-  bucket        =  %[2]q
+  bucket        = %[2]q
   force_destroy = true
 }
 
@@ -173,7 +173,7 @@ resource "aws_kinesis_firehose_delivery_stream" "audit" {
   }
 
   tags = {
-    // This tag appears after create.
+    # This tag appears after create.
     LogDeliveryEnabled = "true"
   }
 }
@@ -228,6 +228,7 @@ data "aws_cloudwatch_log_data_protection_policy_document" "test" {
 }
 
 func testAccDataProtectionPolicyDocumentDataSourceConfig_basic_expectedJSON(name string) string {
+	// lintignore:AWSAT005
 	return fmt.Sprintf(`
 {
     "Description": "Test Document Description",
@@ -274,6 +275,7 @@ func testAccDataProtectionPolicyDocumentDataSourceConfig_basic_expectedJSON(name
 }
 
 func testAccDataProtectionPolicyDocumentDataSourceConfig_empty(logGroupName string) string {
+	// lintignore:AWSAT005
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -319,6 +321,7 @@ data "aws_cloudwatch_log_data_protection_policy_document" "test" {
 		logGroupName)
 }
 
+// lintignore:AWSAT005
 const testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON = `
 {
     "Name": "Test",
@@ -348,6 +351,7 @@ const testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON = `
 }
 `
 
+// lintignore:AWSAT005
 const testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnBadOrderOfStatements = `
 data "aws_cloudwatch_log_data_protection_policy_document" "test" {
   name = "Test"
@@ -378,6 +382,7 @@ data "aws_cloudwatch_log_data_protection_policy_document" "test" {
 }
 `
 
+// lintignore:AWSAT005
 const testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnNoOperation = `
 data "aws_cloudwatch_log_data_protection_policy_document" "test" {
   name = "Test"
