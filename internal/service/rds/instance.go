@@ -1888,8 +1888,12 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChanges("allocated_storage", "iops") {
 		needsModify = true
-		input.Iops = aws.Int32(int32(d.Get("iops").(int)))
 		input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+
+		// Send Iops if it has changed or not (StorageType == "gp3" and AllocatedStorage < threshold).
+		if d.HasChange("iops") || !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
@@ -2189,6 +2193,22 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta inte
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
+}
+
+// See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
+func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool {
+	if storageType := d.Get("storage_type").(string); storageType != storageTypeGP3 {
+		return false
+	}
+
+	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get("engine").(string); engine {
+	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
+		return allocatedStorage < 400
+	case InstanceEngineOracleEnterprise, InstanceEngineOracleEnterpriseCDB, InstanceEngineOracleStandard2, InstanceEngineOracleStandard2CDB:
+		return allocatedStorage < 200
+	}
+
+	return false
 }
 
 func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.DBInstance) {
