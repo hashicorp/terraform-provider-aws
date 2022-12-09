@@ -26,8 +26,9 @@ func DataSourceDataProtectionPolicyDocument() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"version": {
 				Type:     schema.TypeString,

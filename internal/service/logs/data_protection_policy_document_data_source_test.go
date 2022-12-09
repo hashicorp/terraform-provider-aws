@@ -32,6 +32,27 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
+	logGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Logs),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_empty(logGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
+						testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataProtectionPolicyDocumentDataSourceConfig_basic(logGroupName, targetName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -220,3 +241,78 @@ func testAccDataProtectionPolicyDocumentDataSourceConfig_basic_expectedJSON(name
 }
 `, name)
 }
+
+func testAccDataProtectionPolicyDocumentDataSourceConfig_empty(logGroupName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_data_protection_policy" "test" {
+  log_group_name  = aws_cloudwatch_log_group.test.name
+  policy_document = data.aws_cloudwatch_log_data_protection_policy_document.test.json
+}
+
+data "aws_cloudwatch_log_data_protection_policy_document" "test" {
+  name = "Test"
+
+  statement {
+    data_identifiers = [
+      "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+    ]
+
+    operation {
+      audit {
+        findings_destination {}
+      }
+    }
+  }
+
+  statement {
+    data_identifiers = [
+      "arn:aws:dataprotection::aws:data-identifier/EmailAddress",
+    ]
+
+    operation {
+      deidentify {
+        mask_config {}
+      }
+    }
+  }
+}
+`,
+		logGroupName)
+}
+
+const testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON = `
+{
+    "Name": "Test",
+    "Version": "2021-06-01",
+    "Statement": [
+        {
+            "DataIdentifier": [
+                "arn:aws:dataprotection::aws:data-identifier/EmailAddress"
+            ],
+            "Operation": {
+                "Audit": {
+                    "FindingsDestination": {}
+                }
+            }
+        },
+        {
+            "DataIdentifier": [
+                "arn:aws:dataprotection::aws:data-identifier/EmailAddress"
+            ],
+            "Operation": {
+                "Deidentify": {
+                    "MaskConfig": {}
+                }
+            }
+        }
+    ]
+}
+`
