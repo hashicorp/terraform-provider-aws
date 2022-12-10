@@ -289,12 +289,14 @@ resource "aws_ssoadmin_permissions_boundary_attachment" "test" {
 
 func testAccPermissionsBoundaryAttachmentConfig_managedPolicyAndCustomerManagedPolicyRefBothDefined(rName, rNamePolicy1, rNamePolicy2 string) string {
 	return acctest.ConfigCompose(testAccPermissionsBoundaryAttachmentConfig_base(rName, rNamePolicy1, rNamePolicy2), `
+data "aws_partition" "partition" {}
+
 resource "aws_ssoadmin_permissions_boundary_attachment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 
   permissions_boundary {
-    managed_policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+    managed_policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/ReadOnlyAccess"
     customer_managed_policy_reference {
       name = aws_iam_policy.test1.name
       path = "/"
