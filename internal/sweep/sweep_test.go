@@ -22,6 +22,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
