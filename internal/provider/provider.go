@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -675,6 +676,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
 
+			"aws_glue_catalog_table":                    glue.DataSourceCatalogTable(),
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
@@ -1169,7 +1171,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_log_subscription_filter":    logs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":           logs.ResourceQueryDefinition(),
 
-			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
+			"aws_rum_app_monitor":         rum.ResourceAppMonitor(),
+			"aws_rum_metrics_destination": rum.ResourceMetricsDestination(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
@@ -2254,6 +2257,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
 		ServicePackages: []intf.ServicePackageData{
+			auditmanager.ServicePackageData,
 			ec2.ServicePackageData,
 			globalaccelerator.ServicePackageData,
 			medialive.ServicePackageData,
