@@ -2082,16 +2082,15 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 	}
 	for _, runtime := range lambda.Runtime_Values() {
 		// EOL runtimes.
+		// https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy.
 		switch runtime {
-		case lambda.RuntimeRuby25:
-			fallthrough
-		case lambda.RuntimeNodejs43Edge:
-			fallthrough
 		case lambda.RuntimeDotnetcore21:
 			fallthrough
-		case lambda.RuntimeDotnetcore20:
+		case lambda.RuntimePython27:
 			fallthrough
-		case lambda.RuntimeDotnetcore10:
+		case lambda.RuntimePython36:
+			fallthrough
+		case lambda.RuntimeRuby25:
 			fallthrough
 		case lambda.RuntimeNodejs10X:
 			fallthrough
@@ -2099,9 +2098,15 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 			fallthrough
 		case lambda.RuntimeNodejs610:
 			fallthrough
+		case lambda.RuntimeNodejs43Edge:
+			fallthrough
 		case lambda.RuntimeNodejs43:
 			fallthrough
 		case lambda.RuntimeNodejs:
+			fallthrough
+		case lambda.RuntimeDotnetcore20:
+			fallthrough
+		case lambda.RuntimeDotnetcore10:
 			continue
 		}
 
