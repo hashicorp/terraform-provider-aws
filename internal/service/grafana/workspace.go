@@ -190,7 +190,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_configuration"); ok {
-		input.VpcConfiguration = expandVpcConfiguration(v.([]interface{}))
+		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Grafana Workspace: %s", input)
@@ -250,7 +250,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
 
-	if err := d.Set("vpc_configuration", flattenVpcConfiguration(workspace.VpcConfiguration)); err != nil {
+	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
 		return fmt.Errorf("error setting vpc_configuration: %w", err)
 	}
 
@@ -361,7 +361,7 @@ func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandVpcConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration {
+func expandVPCConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -381,7 +381,7 @@ func expandVpcConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration 
 	return &out
 }
 
-func flattenVpcConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} {
+func flattenVPCConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
