@@ -84,6 +84,10 @@ func expandRuleAction(l []interface{}) *wafv2.RuleAction {
 		action.Captcha = expandCaptchaAction(v.([]interface{}))
 	}
 
+	if v, ok := m["challenge"]; ok && len(v.([]interface{})) > 0 {
+		action.Challenge = expandChallengeAction(v.([]interface{}))
+	}
+
 	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
 		action.Count = expandCountAction(v.([]interface{}))
 	}
@@ -131,6 +135,25 @@ func expandBlockAction(l []interface{}) *wafv2.BlockAction {
 
 func expandCaptchaAction(l []interface{}) *wafv2.CaptchaAction {
 	action := &wafv2.CaptchaAction{}
+
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return action
+	}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandCustomRequestHandling(v)
+	}
+
+	return action
+}
+
+func expandChallengeAction(l []interface{}) *wafv2.ChallengeAction {
+	action := &wafv2.ChallengeAction{}
 
 	if len(l) == 0 || l[0] == nil {
 		return action
@@ -1118,6 +1141,10 @@ func flattenRuleAction(a *wafv2.RuleAction) interface{} {
 		m["captcha"] = flattenCaptcha(a.Captcha)
 	}
 
+	if a.Challenge != nil {
+		m["challenge"] = flattenChallenge(a.Challenge)
+	}
+
 	if a.Count != nil {
 		m["count"] = flattenCount(a.Count)
 	}
@@ -1153,6 +1180,20 @@ func flattenBlock(a *wafv2.BlockAction) []interface{} {
 }
 
 func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if a.CustomRequestHandling != nil {
+		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenChallenge(a *wafv2.ChallengeAction) []interface{} {
 	if a == nil {
 		return []interface{}{}
 	}

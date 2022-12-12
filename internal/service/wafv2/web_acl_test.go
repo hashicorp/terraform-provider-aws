@@ -558,12 +558,14 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.allow.#":               "0",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.block.#":               "0",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.captcha.#":             "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.challenge.#":           "0",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.0.count.#":               "1",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.0.name":                                  "SizeRestrictions_QUERYSTRING",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.#":                       "1",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.allow.#":               "0",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.block.#":               "0",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.captcha.#":             "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.challenge.#":           "0",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.1.action_to_use.0.count.#":               "1",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.1.name":                                  "NoUserAgent_HEADER",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                       "1",
@@ -1466,10 +1468,11 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.allow.0.custom_request_handling.0.insert_header.0.value": "test-value-1",
 						"action.0.allow.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
 						"action.0.allow.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
-						"action.0.block.#":   "0",
-						"action.0.captcha.#": "0",
-						"action.0.count.#":   "0",
-						"priority":           "1",
+						"action.0.block.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
+						"action.0.count.#":     "0",
+						"priority":             "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -1495,12 +1498,13 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":               "rule-1",
-						"action.#":           "1",
-						"action.0.allow.#":   "0",
-						"action.0.block.#":   "0",
-						"action.0.captcha.#": "0",
-						"action.0.count.#":   "1",
+						"name":                 "rule-1",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
+						"action.0.count.#":     "1",
 						"action.0.count.0.custom_request_handling.#":                       "1",
 						"action.0.count.0.custom_request_handling.0.insert_header.#":       "2",
 						"action.0.count.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
@@ -1527,11 +1531,12 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":               "rule-1",
-						"action.#":           "1",
-						"action.0.allow.#":   "0",
-						"action.0.block.#":   "0",
-						"action.0.captcha.#": "1",
+						"name":                 "rule-1",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "0",
+						"action.0.captcha.#":   "1",
+						"action.0.challenge.#": "0",
 						"action.0.captcha.0.custom_request_handling.#":                       "1",
 						"action.0.captcha.0.custom_request_handling.0.insert_header.#":       "2",
 						"action.0.captcha.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
@@ -1540,6 +1545,33 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.captcha.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
 						"action.0.count.#": "0",
 						"priority":         "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_customRequestHandlingChallenge(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                 "rule-1",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "1",
+						"action.0.count.#":     "0",
+						"priority":             "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -2381,6 +2413,48 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name, firstHeader, secondHeader)
+}
+
+func testAccWebACLConfig_customRequestHandlingChallenge(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      challenge {}
+      }
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
 }
 
 func testAccWebACLConfig_customRequestHandlingCount(name, firstHeader string, secondHeader string) string {

@@ -3,7 +3,7 @@ subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl"
 description: |-
-  Creates a WAFv2 Web ACL resource.
+Creates a WAFv2 Web ACL resource.
 ---
 
 # Resource: aws_wafv2_web_acl
@@ -318,6 +318,7 @@ The `action` block supports the following arguments:
 * `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
 * `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
 * `captcha` - (Optional) Instructs AWS WAF to run a Captcha check against the web request. See [Captcha](#captcha) below for details.
+* `challenge` - (Optional) Instructs AWS WAF to run a check against the request to verify that the request is coming from a legitimate client session. See [Challenge](#challenge) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
 
 ### Override Action
@@ -346,6 +347,13 @@ The `block` block supports the following arguments:
 The `captcha` block supports the following arguments:
 
 * `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Challenge
+
+The `challenge` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
 
 ### Count
 
