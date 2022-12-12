@@ -216,7 +216,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if stringEquals, ok := statement.Condition["StringEquals"]; ok {
-		d.Set("source_account", stringEquals["AWS:SourceAccount"])
+		d.Set("source_account", stringEquals["aws:SourceAccount"])
 		d.Set("event_source_token", stringEquals["lambda:EventSourceToken"])
 		d.Set("principal_org_id", stringEquals["aws:PrincipalOrgID"])
 		d.Set("function_url_auth_type", stringEquals["lambda:FunctionUrlAuthType"])

@@ -47,8 +47,8 @@ func TestPermissionUnmarshalling(t *testing.T) {
 
 	expectedSourceAccount := "319201112229"
 	strEquals := stmt.Condition["StringEquals"]
-	if strEquals["AWS:SourceAccount"] != expectedSourceAccount {
-		t.Fatalf("Expected Source Account to match (%q != %q)", strEquals["AWS:SourceAccount"], expectedSourceAccount)
+	if strEquals["aws:SourceAccount"] != expectedSourceAccount {
+		t.Fatalf("Expected Source Account to match (%q != %q)", strEquals["aws:SourceAccount"], expectedSourceAccount)
 	}
 
 	expectedEventSourceToken := "test-event-source-token"
@@ -981,7 +981,7 @@ var testPolicy = []byte(`{
     {
       "Condition": {
         "StringEquals": {
-          "AWS:SourceAccount": "319201112229",
+          "aws:SourceAccount": "319201112229",
           "lambda:EventSourceToken": "test-event-source-token"
         },
         "ArnLike": {

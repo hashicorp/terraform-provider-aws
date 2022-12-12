@@ -198,7 +198,7 @@ resource "aws_lambda_permission" "url" {
   # Adds the following condition keys
   # "Condition": {
   #      "StringEquals": {
-  #        "AWS:SourceAccount": "444455556666",
+  #        "aws:SourceAccount": "444455556666",
   #        "lambda:FunctionUrlAuthType": "AWS_IAM"
   #      }
   #    }
