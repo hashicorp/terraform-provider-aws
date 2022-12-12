@@ -218,7 +218,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTagsWithContext(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
@@ -244,7 +244,7 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
 		}
 	}
@@ -306,9 +306,6 @@ func waitSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait, catching any errors
 	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }

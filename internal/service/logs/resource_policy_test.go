@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccLogsResourcePolicy_basic(t *testing.T) {
@@ -19,15 +21,15 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicyExists(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -40,7 +42,7 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 			{
 				Config: testAccResourcePolicyConfig_basic2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicyExists(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -55,15 +57,15 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicyExists(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"rds.%s\"]},\"Resource\":[\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"]}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -71,7 +73,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 			{
 				Config: testAccResourcePolicyConfig_newOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicyExists(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"rds.%s\"]},\"Resource\":[\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"]}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -80,27 +82,26 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 	})
 }
 
-func testAccCheckResourcePolicy(pr string, resourcePolicy *cloudwatchlogs.ResourcePolicy) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(n string, v *cloudwatchlogs.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
-		rs, ok := s.RootModule().Resources[pr]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No CloudWatch Logs Resource Policy ID is set")
 		}
 
-		policy, exists, err := tflogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+
+		output, err := tflogs.FindResourcePolicyByName(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if !exists {
-			return fmt.Errorf("Resource policy does not exist: %q", rs.Primary.ID)
-		}
 
-		*resourcePolicy = *policy
+		*v = *output
 
 		return nil
 	}
@@ -114,15 +115,17 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, exists, err := tflogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
+		_, err := tflogs.FindResourcePolicyByName(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Resource Policy (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if exists {
-			return fmt.Errorf("Resource policy exists: %q", rs.Primary.ID)
-		}
+		return fmt.Errorf("CloudWatch Logs Resource Policy still exists: %s", rs.Primary.ID)
 	}
 
 	return nil

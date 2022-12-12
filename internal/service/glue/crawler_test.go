@@ -9,13 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -25,10 +25,10 @@ func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_dynamoDBTarget(rName, "table1"),
@@ -93,10 +93,10 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanAll(rName, "table1", false),
@@ -137,10 +137,10 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_dynamoDBTargetScanRate(rName, "table1", 0.5),
@@ -183,10 +183,10 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_jdbcTarget(rName, jdbcConnectionUrl, "database-name/%"),
@@ -255,10 +255,10 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_jdbcTargetExclusions2(rName, jdbcConnectionUrl, "exclusion1", "exclusion2"),
@@ -298,10 +298,10 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, "database-name/table1", "database-name/table2"),
@@ -359,10 +359,10 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, "database-name/%"),
@@ -401,10 +401,10 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl, false),
@@ -453,10 +453,10 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_mongoDBMultiple(rName, connectionUrl, "database-name/table1", "database-name/table2"),
@@ -511,10 +511,10 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_deltaTarget(rName, connectionUrl, "s3://table1"),
@@ -553,10 +553,10 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
@@ -622,10 +622,10 @@ func TestAccGlueCrawler_S3Target_connectionName(t *testing.T) {
 	connectionName := "aws_glue_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetConnectionName(rName),
@@ -651,10 +651,10 @@ func TestAccGlueCrawler_S3Target_sampleSize(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetSampleSize(rName, 1),
@@ -687,10 +687,10 @@ func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetExclusions2(rName, "exclusion1", "exclusion2"),
@@ -728,10 +728,10 @@ func TestAccGlueCrawler_S3Target_eventqueue(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetEventQueue(rName),
@@ -752,16 +752,46 @@ func TestAccGlueCrawler_S3Target_eventqueue(t *testing.T) {
 	})
 }
 
+func TestAccGlueCrawler_CatalogTarget_dlqeventqueue(t *testing.T) {
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrawlerConfig_catalogTargetDlqEventQueue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "catalog_target.0.event_queue_arn", "aws_sqs_queue.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "catalog_target.0.dlq_event_queue_arn", "aws_sqs_queue.test_dlq", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueCrawler_S3Target_dlqeventqueue(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetDlqEventQueue(rName),
@@ -769,8 +799,8 @@ func TestAccGlueCrawler_S3Target_dlqeventqueue(t *testing.T) {
 					testAccCheckCrawlerExists(resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "s3_target.0.event_queue_arn", "sqs", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "s3_target.0.dlq_event_queue_arn", "sqs", fmt.Sprintf("%sdlq", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_target.0.event_queue_arn", "aws_sqs_queue.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_target.0.dlq_event_queue_arn", "aws_sqs_queue.test_dlq", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVENT_MODE"),
 				),
 			},
@@ -789,10 +819,10 @@ func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3TargetMultiple(rName, "s3://bucket1", "s3://bucket2"),
@@ -843,10 +873,10 @@ func TestAccGlueCrawler_catalogTarget(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_catalogTarget(rName, 1),
@@ -916,10 +946,10 @@ func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_catalogTarget(rName, 1),
@@ -972,10 +1002,10 @@ func TestAccGlueCrawler_disappears(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
@@ -995,10 +1025,10 @@ func TestAccGlueCrawler_classifiers(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_classifiersSingle(rName),
@@ -1042,10 +1072,10 @@ func TestAccGlueCrawler_Configuration(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_configuration(rName, configuration1),
@@ -1083,10 +1113,10 @@ func TestAccGlueCrawler_description(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_description(rName, "description1"),
@@ -1118,10 +1148,10 @@ func TestAccGlueCrawler_RoleARN_noPath(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_roleARNNoPath(rName),
@@ -1145,10 +1175,10 @@ func TestAccGlueCrawler_RoleARN_path(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_roleARNPath(rName),
@@ -1172,10 +1202,10 @@ func TestAccGlueCrawler_RoleName_path(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_roleNamePath(rName),
@@ -1199,10 +1229,10 @@ func TestAccGlueCrawler_schedule(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_schedule(rName, "cron(0 1 * * ? *)"),
@@ -1240,10 +1270,10 @@ func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_schemaChangePolicy(rName, glue.DeleteBehaviorDeleteFromDatabase, glue.UpdateBehaviorUpdateInDatabase),
@@ -1278,10 +1308,10 @@ func TestAccGlueCrawler_tablePrefix(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_tablePrefix(rName, "prefix1"),
@@ -1312,10 +1342,10 @@ func TestAccGlueCrawler_removeTablePrefix(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_tablePrefix(rName, "prefix"),
@@ -1346,10 +1376,10 @@ func TestAccGlueCrawler_tags(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_tags1(rName, "key1", "value1"),
@@ -1391,10 +1421,10 @@ func TestAccGlueCrawler_security(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_securityConfiguration(rName, "security_configuration1"),
@@ -1425,10 +1455,10 @@ func TestAccGlueCrawler_lineage(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_lineage(rName, "ENABLE"),
@@ -1462,16 +1492,51 @@ func TestAccGlueCrawler_lineage(t *testing.T) {
 	})
 }
 
+func TestAccGlueCrawler_lakeformation(t *testing.T) {
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrawlerConfig_lakeformation(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.0.use_lake_formation_credentials", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCrawlerConfig_lakeformation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lake_formation_configuration.0.use_lake_formation_credentials", "false")),
+			},
+		},
+	})
+}
+
 func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCrawlerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrawlerConfig_recrawlPolicy(rName, "CRAWL_EVERYTHING"),
@@ -1516,20 +1581,14 @@ func testAccCheckCrawlerExists(resourceName string, crawler *glue.Crawler) resou
 			return fmt.Errorf("no ID is set")
 		}
 
-		glueConn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := glueConn.GetCrawler(&glue.GetCrawlerInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		output, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if out.Crawler == nil {
-			return fmt.Errorf("no Glue Crawler found")
-		}
-
-		*crawler = *out.Crawler
+		*crawler = *output
 
 		return nil
 	}
@@ -1542,23 +1601,17 @@ func testAccCheckCrawlerDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		output, err := conn.GetCrawler(&glue.GetCrawlerInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		_, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil
-			}
 			return err
 		}
 
-		crawler := output.Crawler
-		if crawler != nil && aws.StringValue(crawler.Name) == rs.Primary.ID {
-			return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
-		}
-
-		return nil
+		return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -1589,7 +1642,7 @@ func testAccCrawlerConfig_base(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name               = %q
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
@@ -1636,13 +1689,13 @@ EOF
 }
 
 func testAccCrawlerConfig_classifiersSingle(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_classifier" "test1" {
-  name = %q
+  name = %[2]q
 
   grok_classifier {
     classification = "example"
@@ -1651,7 +1704,7 @@ resource "aws_glue_classifier" "test1" {
 }
 
 resource "aws_glue_classifier" "test2" {
-  name = %q
+  name = %[3]q
 
   grok_classifier {
     classification = "example"
@@ -1663,7 +1716,7 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   classifiers   = [aws_glue_classifier.test1.id]
-  name          = %q
+  name          = %[4]q
   database_name = aws_glue_catalog_database.test.name
   role          = aws_iam_role.test.name
 
@@ -1671,17 +1724,17 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName+"1", rName+"2", rName)
+`, rName, rName+"1", rName+"2", rName))
 }
 
 func testAccCrawlerConfig_classifiersMultiple(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_classifier" "test1" {
-  name = %q
+  name = %[2]q
 
   grok_classifier {
     classification = "example"
@@ -1690,7 +1743,7 @@ resource "aws_glue_classifier" "test1" {
 }
 
 resource "aws_glue_classifier" "test2" {
-  name = %q
+  name = %[3]q
 
   grok_classifier {
     classification = "example"
@@ -1702,7 +1755,7 @@ resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   classifiers   = [aws_glue_classifier.test1.id, aws_glue_classifier.test2.id]
-  name          = %q
+  name          = %[4]q
   database_name = aws_glue_catalog_database.test.name
   role          = aws_iam_role.test.name
 
@@ -1710,53 +1763,53 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, rName+"1", rName+"2", rName)
+`, rName, rName+"1", rName+"2", rName))
 }
 
 func testAccCrawlerConfig_configuration(rName, configuration string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  configuration = %s
+  configuration = %[2]s
   database_name = aws_glue_catalog_database.test.name
-  name          = %q
+  name          = %[3]q
   role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, strconv.Quote(configuration), rName)
+`, rName, strconv.Quote(configuration), rName))
 }
 
 func testAccCrawlerConfig_description(rName, description string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  description   = %q
-  name          = %q
+  description   = %[2]q
+  name          = %[3]q
   role          = aws_iam_role.test.name
 
   s3_target {
     path = "s3://bucket-name"
   }
 }
-`, rName, description, rName)
+`, rName, description, rName))
 }
 
 func testAccCrawlerConfig_dynamoDBTarget(rName, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1772,11 +1825,11 @@ resource "aws_glue_crawler" "test" {
     path = %[2]q
   }
 }
-`, rName, path)
+`, rName, path))
 }
 
 func testAccCrawlerConfig_dynamoDBTargetScanAll(rName, path string, scanAll bool) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1793,11 +1846,11 @@ resource "aws_glue_crawler" "test" {
     scan_all = %[3]t
   }
 }
-`, rName, path, scanAll)
+`, rName, path, scanAll))
 }
 
 func testAccCrawlerConfig_dynamoDBTargetScanRate(rName, path string, scanRate float64) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1814,11 +1867,11 @@ resource "aws_glue_crawler" "test" {
     scan_rate = %[3]g
   }
 }
-`, rName, path, scanRate)
+`, rName, path, scanRate))
 }
 
 func testAccCrawlerConfig_jdbcTarget(rName, jdbcConnectionUrl, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1845,11 +1898,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[3]q
   }
 }
-`, rName, jdbcConnectionUrl, path)
+`, rName, jdbcConnectionUrl, path))
 }
 
 func testAccCrawlerConfig_jdbcTargetExclusions1(rName, jdbcConnectionUrl, exclusion1 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1877,11 +1930,11 @@ resource "aws_glue_crawler" "test" {
     path            = "database-name/table1"
   }
 }
-`, rName, jdbcConnectionUrl, exclusion1)
+`, rName, jdbcConnectionUrl, exclusion1))
 }
 
 func testAccCrawlerConfig_jdbcTargetExclusions2(rName, jdbcConnectionUrl, exclusion1, exclusion2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1909,11 +1962,11 @@ resource "aws_glue_crawler" "test" {
     path            = "database-name/table1"
   }
 }
-`, rName, jdbcConnectionUrl, exclusion1, exclusion2)
+`, rName, jdbcConnectionUrl, exclusion1, exclusion2))
 }
 
 func testAccCrawlerConfig_jdbcTargetMultiple(rName, jdbcConnectionUrl, path1, path2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1945,11 +1998,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[4]q
   }
 }
-`, rName, jdbcConnectionUrl, path1, path2)
+`, rName, jdbcConnectionUrl, path1, path2))
 }
 
 func testAccCrawlerConfig_roleARNNoPath(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1965,7 +2018,7 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_roleARNPath(rName string) string {
@@ -2065,7 +2118,7 @@ resource "aws_glue_crawler" "test" {
 }
 
 func testAccCrawlerConfig_s3Target(rName, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2081,11 +2134,11 @@ resource "aws_glue_crawler" "test" {
     path = %[2]q
   }
 }
-`, rName, path)
+`, rName, path))
 }
 
 func testAccCrawlerConfig_s3TargetExclusions1(rName, exclusion1 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2102,30 +2155,13 @@ resource "aws_glue_crawler" "test" {
     path       = "s3://bucket1"
   }
 }
-`, rName, exclusion1)
+`, rName, exclusion1))
 }
 
 func testAccCrawlerConfig_s3TargetConnectionName(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-glue-connection-base"
-  }
-}
-
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name   = "%[1]s"
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -2134,17 +2170,9 @@ resource "aws_security_group" "test" {
     self      = true
     to_port   = 65535
   }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-glue-connection-base"
+    Name = %[1]q
   }
 }
 
@@ -2180,11 +2208,11 @@ resource "aws_glue_crawler" "test" {
     path            = "s3://bucket1"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_s3TargetExclusions2(rName, exclusion1, exclusion2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2201,11 +2229,11 @@ resource "aws_glue_crawler" "test" {
     path       = "s3://bucket1"
   }
 }
-`, rName, exclusion1, exclusion2)
+`, rName, exclusion1, exclusion2))
 }
 
 func testAccCrawlerConfig_s3TargetEventQueue(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2269,11 +2297,113 @@ resource "aws_glue_crawler" "test" {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
 }
-`, rName)
+`, rName))
+}
+
+func testAccCrawlerConfig_catalogTargetDlqEventQueue(rName string) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  visibility_timeout_seconds = 3600
+}
+
+resource "aws_sqs_queue" "test_dlq" {
+  name = "%[1]sdlq"
+
+  visibility_timeout_seconds = 3600
+}
+
+resource "aws_iam_role_policy" "test_sqs" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.role_test_sqs.json
+}
+
+data "aws_iam_policy_document" "role_test_sqs" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:GetQueueUrl",
+      "sqs:ListDeadLetterSourceQueues",
+      "sqs:DeleteMessageBatch",
+      "sqs:ReceiveMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ListQueueTags",
+      "sqs:SetQueueAttributes",
+      "sqs:PurgeQueue",
+    ]
+
+    resources = [
+      aws_sqs_queue.test_dlq.arn,
+      aws_sqs_queue.test.arn,
+    ]
+  }
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "default" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  table_type    = "EXTERNAL_TABLE"
+
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.default.bucket}"
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole, aws_iam_role_policy.test_sqs]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  schema_change_policy {
+    delete_behavior = "LOG"
+  }
+
+  catalog_target {
+    database_name       = aws_glue_catalog_database.test.name
+    tables              = [aws_glue_catalog_table.test.name]
+    event_queue_arn     = aws_sqs_queue.test.arn
+    dlq_event_queue_arn = aws_sqs_queue.test_dlq.arn
+  }
+
+  configuration = <<EOF
+{
+  "Version": 1,
+  "Grouping": {
+    "TableGroupingPolicy": "CombineCompatibleSchemas"
+  }
+}
+EOF
+}
+`, rName))
 }
 
 func testAccCrawlerConfig_s3TargetDlqEventQueue(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2345,11 +2475,11 @@ resource "aws_glue_crawler" "test" {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_s3TargetMultiple(rName, path1, path2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2369,11 +2499,11 @@ resource "aws_glue_crawler" "test" {
     path = %[3]q
   }
 }
-`, rName, path1, path2)
+`, rName, path1, path2))
 }
 
 func testAccCrawlerConfig_catalogTarget(rName string, tableCount int) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2432,11 +2562,11 @@ resource "aws_glue_crawler" "test" {
 }
 EOF
 }
-`, rName, tableCount)
+`, rName, tableCount))
 }
 
 func testAccCrawlerConfig_catalogTargetMultiple(rName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   count = 2
   name  = "%[1]s_database_${count.index}"
@@ -2500,11 +2630,11 @@ resource "aws_glue_crawler" "test" {
 }
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccCrawlerConfig_schedule(rName, schedule string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2521,11 +2651,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, schedule)
+`, rName, schedule))
 }
 
 func testAccCrawlerConfig_schemaChangePolicy(rName, deleteBehavior, updateBehavior string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2546,11 +2676,11 @@ resource "aws_glue_crawler" "test" {
     update_behavior = %[3]q
   }
 }
-`, rName, deleteBehavior, updateBehavior)
+`, rName, deleteBehavior, updateBehavior))
 }
 
 func testAccCrawlerConfig_tablePrefix(rName, tablePrefix string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2567,11 +2697,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, tablePrefix)
+`, rName, tablePrefix))
 }
 
 func testAccCrawlerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2592,11 +2722,11 @@ resource "aws_glue_crawler" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccCrawlerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2618,11 +2748,11 @@ resource "aws_glue_crawler" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccCrawlerConfig_securityConfiguration(rName, securityConfiguration string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2657,11 +2787,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, securityConfiguration)
+`, rName, securityConfiguration))
 }
 
 func testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, path string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2689,11 +2819,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[3]q
   }
 }
-`, rName, connectionUrl, path)
+`, rName, connectionUrl, path))
 }
 
 func testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl string, scan bool) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2722,11 +2852,11 @@ resource "aws_glue_crawler" "test" {
     scan_all        = %[3]t
   }
 }
-`, rName, connectionUrl, scan)
+`, rName, connectionUrl, scan))
 }
 
 func testAccCrawlerConfig_mongoDBMultiple(rName, connectionUrl, path1, path2 string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2759,11 +2889,11 @@ resource "aws_glue_crawler" "test" {
     path            = %[4]q
   }
 }
-`, rName, connectionUrl, path1, path2)
+`, rName, connectionUrl, path1, path2))
 }
 
 func testAccCrawlerConfig_deltaTarget(rName, connectionUrl, tableName string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2792,11 +2922,35 @@ resource "aws_glue_crawler" "test" {
     write_manifest  = false
   }
 }
-`, rName, connectionUrl, tableName)
+`, rName, connectionUrl, tableName))
+}
+
+func testAccCrawlerConfig_lakeformation(rName string, use bool) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  lake_formation_configuration {
+    use_lake_formation_credentials = %[2]t
+  }
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+}
+`, rName, use))
 }
 
 func testAccCrawlerConfig_lineage(rName, lineageConfig string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2816,11 +2970,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, lineageConfig)
+`, rName, lineageConfig))
 }
 
 func testAccCrawlerConfig_recrawlPolicy(rName, policy string) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2845,11 +2999,11 @@ resource "aws_glue_crawler" "test" {
     path = "s3://bucket-name"
   }
 }
-`, rName, policy)
+`, rName, policy))
 }
 
 func testAccCrawlerConfig_s3TargetSampleSize(rName string, size int) string {
-	return testAccCrawlerConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2866,5 +3020,5 @@ resource "aws_glue_crawler" "test" {
     path        = "s3://bucket1"
   }
 }
-`, rName, size)
+`, rName, size))
 }

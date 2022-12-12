@@ -83,7 +83,7 @@ POLICY
 }
 ```
 
-### Log Publishing to CloudWatch Logs
+### Log publishing to CloudWatch Logs
 
 ```terraform
 resource "aws_cloudwatch_log_group" "example" {
@@ -215,6 +215,94 @@ CONFIG
 }
 ```
 
+### Enabling fine-grained access control on an existing domain
+
+This example shows two configurations: one to create a domain without fine-grained access control and the second to modify the domain to enable fine-grained access control. For more information, see [Enabling fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html).
+
+#### First apply
+
+```terraform
+resource "aws_opensearch_domain" "example" {
+  domain_name    = "ggkitty"
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = false
+    anonymous_auth_enabled         = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "example"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+```
+
+#### Second apply
+
+Notice that the only change is `advanced_security_options.0.enabled` is now set to `true`.
+
+```terraform
+resource "aws_opensearch_domain" "example" {
+  domain_name    = "ggkitty"
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    anonymous_auth_enabled         = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "example"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -236,12 +324,13 @@ The following arguments are optional:
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `node_to_node_encryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
 * `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running OpenSearch 5.3 and later, Amazon OpenSearch takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions, OpenSearch takes daily automated snapshots.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/vpc.html)). Detailed below.
 
 ### advanced_security_options
 
-* `enabled` - (Required, Forces new resource) Whether advanced security is enabled.
+* `anonymous_auth_enabled` - (Optional) Whether Anonymous auth is enabled. Enables fine-grained access control on an existing domain. Ignored unless `advanced_security_options` are enabled. _Can only be enabled on an existing domain._
+* `enabled` - (Required, Forces new resource when changing from `true` to `false`) Whether advanced security is enabled.
 * `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. Default is `false`.
 * `master_user_options` - (Optional) Configuration block for the main user. Detailed below.
 
@@ -310,7 +399,8 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 ### ebs_options
 
 * `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
-* `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the Provisioned IOPS EBS volume type.
+* `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the GP3 and Provisioned IOPS EBS volume types.
+* `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type. Valid values are between `125` and `1000`.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
 
@@ -357,17 +447,17 @@ In addition to all arguments above, the following attributes are exported:
 * `domain_name` - Name of the OpenSearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
 
 ## Timeouts
 
-`aws_opensearch_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Optional, Default: `60m`) How long to wait for creation.
-* `update` - (Optional, Default: `180m`) How long to wait for updates.
-* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 

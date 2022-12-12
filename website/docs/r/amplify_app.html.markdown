@@ -128,62 +128,61 @@ resource "aws_amplify_app" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name for an Amplify app.
-* `access_token` - (Optional) The personal access token for a third-party source control system for an Amplify app. The personal access token is used to create a webhook and a read-only deploy key. The token is not stored.
-* `auto_branch_creation_config` - (Optional) The automated branch creation configuration for an Amplify app. An `auto_branch_creation_config` block is documented below.
-* `auto_branch_creation_patterns` - (Optional) The automated branch creation glob patterns for an Amplify app.
-* `basic_auth_credentials` - (Optional) The credentials for basic authorization for an Amplify app.
+* `name` - (Required) Name for an Amplify app.
+* `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. The personal access token is used to create a webhook and a read-only deploy key. The token is not stored.
+* `auto_branch_creation_config` - (Optional) Automated branch creation configuration for an Amplify app. An `auto_branch_creation_config` block is documented below.
+* `auto_branch_creation_patterns` - (Optional) Automated branch creation glob patterns for an Amplify app.
+* `basic_auth_credentials` - (Optional) Credentials for basic authorization for an Amplify app.
 * `build_spec` - (Optional) The [build specification](https://docs.aws.amazon.com/amplify/latest/userguide/build-settings.html) (build spec) for an Amplify app.
-* `custom_rule` - (Optional) The custom rewrite and redirect rules for an Amplify app. A `custom_rule` block is documented below.
-* `description` - (Optional) The description for an Amplify app.
+* `custom_rule` - (Optional) Custom rewrite and redirect rules for an Amplify app. A `custom_rule` block is documented below.
+* `description` - (Optional) Description for an Amplify app.
 * `enable_auto_branch_creation` - (Optional) Enables automated branch creation for an Amplify app.
 * `enable_basic_auth` - (Optional) Enables basic authorization for an Amplify app. This will apply to all branches that are part of this app.
 * `enable_branch_auto_build` - (Optional) Enables auto-building of branches for the Amplify App.
 * `enable_branch_auto_deletion` - (Optional) Automatically disconnects a branch in the Amplify Console when you delete a branch from your Git repository.
-* `environment_variables` - (Optional) The environment variables map for an Amplify app.
-* `iam_service_role_arn` - (Optional) The AWS Identity and Access Management (IAM) service role for an Amplify app.
-* `oauth_token` - (Optional) The OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
-* `platform` - (Optional) The platform or framework for an Amplify app. Valid values: `WEB`.
-* `repository` - (Optional) The repository for an Amplify app.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
+* `environment_variables` - (Optional) Environment variables map for an Amplify app.
+* `iam_service_role_arn` - (Optional) AWS Identity and Access Management (IAM) service role for an Amplify app.
+* `oauth_token` - (Optional) OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
+* `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`, `WEB_COMPUTE`. Default value: `WEB`.
+* `repository` - (Optional) Repository for an Amplify app.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 An `auto_branch_creation_config` block supports the following arguments:
 
-* `basic_auth_credentials` - (Optional) The basic authorization credentials for the autocreated branch.
-* `build_spec` - (Optional) The build specification (build spec) for the autocreated branch.
+* `basic_auth_credentials` - (Optional) Basic authorization credentials for the autocreated branch.
+* `build_spec` - (Optional) Build specification (build spec) for the autocreated branch.
 * `enable_auto_build` - (Optional) Enables auto building for the autocreated branch.
 * `enable_basic_auth` - (Optional) Enables basic authorization for the autocreated branch.
 * `enable_performance_mode` - (Optional) Enables performance mode for the branch.
 * `enable_pull_request_preview` - (Optional) Enables pull request previews for the autocreated branch.
-* `environment_variables` - (Optional) The environment variables for the autocreated branch.
-* `framework` - (Optional) The framework for the autocreated branch.
-* `pull_request_environment_name` - (Optional) The Amplify environment name for the pull request.
+* `environment_variables` - (Optional) Environment variables for the autocreated branch.
+* `framework` - (Optional) Framework for the autocreated branch.
+* `pull_request_environment_name` - (Optional) Amplify environment name for the pull request.
 * `stage` - (Optional) Describes the current stage for the autocreated branch. Valid values: `PRODUCTION`, `BETA`, `DEVELOPMENT`, `EXPERIMENTAL`, `PULL_REQUEST`.
 
 A `custom_rule` block supports the following arguments:
 
-* `condition` - (Optional) The condition for a URL rewrite or redirect rule, such as a country code.
-* `source` - (Required) The source pattern for a URL rewrite or redirect rule.
-* `status` - (Optional) The status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
-* `target` - (Required) The target pattern for a URL rewrite or redirect rule.
+* `condition` - (Optional) Condition for a URL rewrite or redirect rule, such as a country code.
+* `source` - (Required) Source pattern for a URL rewrite or redirect rule.
+* `status` - (Optional) Status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
+* `target` - (Required) Target pattern for a URL rewrite or redirect rule.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Amplify app.
-* `default_domain` - The default domain for the Amplify app.
-* `id` - The unique ID of the Amplify app.
+* `arn` - ARN of the Amplify app.
+* `default_domain` - Default domain for the Amplify app.
+* `id` - Unique ID of the Amplify app.
 * `production_branch` - Describes the information about a production branch for an Amplify app. A `production_branch` block is documented below.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `production_branch` block supports the following attributes:
 
-* `branch_name` - The branch name for the production branch.
-* `last_deploy_time` - The last deploy time of the production branch.
-* `status` - The status of the production branch.
-* `thumbnail_url` - The thumbnail URL for the production branch.
+* `branch_name` - Branch name for the production branch.
+* `last_deploy_time` - Last deploy time of the production branch.
+* `status` - Status of the production branch.
+* `thumbnail_url` - Thumbnail URL for the production branch.
 
 ## Import
 

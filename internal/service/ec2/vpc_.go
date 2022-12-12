@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -82,14 +83,16 @@ func ResourceVPC() *schema.Resource {
 				Computed: true,
 			},
 			"enable_classiclink": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: `With the retirement of EC2-Classic the enable_classiclink attribute has been deprecated and will be removed in a future version.`,
 			},
 			"enable_classiclink_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: `With the retirement of EC2-Classic the enable_classiclink_dns_support attribute has been deprecated and will be removed in a future version.`,
 			},
 			"enable_dns_hostnames": {
 				Type:     schema.TypeBool,
@@ -100,6 +103,11 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+			},
+			"enable_network_address_usage_metrics": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 			"instance_tenancy": {
 				Type:         schema.TypeString,
@@ -171,6 +179,10 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	if _, ok := d.GetOk("enable_classiclink"); ok {
+		return errors.New(`with the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled`)
+	}
+
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
@@ -231,11 +243,12 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	vpcInfo := vpcInfo{
-		vpc:                         vpc,
-		enableClassicLink:           false,
-		enableClassicLinkDNSSupport: false,
-		enableDnsHostnames:          false,
-		enableDnsSupport:            true,
+		vpc:                              vpc,
+		enableClassicLink:                false,
+		enableClassicLinkDNSSupport:      false,
+		enableDnsHostnames:               false,
+		enableDnsSupport:                 true,
+		enableNetworkAddressUsageMetrics: false,
 	}
 
 	if err := modifyVPCAttributesOnCreate(conn, d, &vpcInfo); err != nil {
@@ -312,6 +325,12 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_dns_support", v)
 	}
 
+	if v, err := FindVPCAttribute(conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+	} else {
+		d.Set("enable_network_address_usage_metrics", v)
+	}
+
 	if v, err := FindVPCDefaultNetworkACL(conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
 	} else {
@@ -327,7 +346,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
-	if v, err := FindVPCDefaultSecurityGroup(conn, d.Id()); err != nil {
+	if v, err := FindVPCDefaultSecurityGroup(context.TODO(), conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
 		d.Set("default_security_group_id", nil)
 	} else {
@@ -394,6 +413,12 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enable_dns_support") {
 		if err := modifyVPCDNSSupport(conn, d.Id(), d.Get("enable_dns_support").(bool)); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("enable_network_address_usage_metrics") {
+		if err := modifyVPCNetworkAddressUsageMetrics(conn, d.Id(), d.Get("enable_network_address_usage_metrics").(bool)); err != nil {
 			return err
 		}
 	}
@@ -476,7 +501,15 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPC (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPC (%s): %w", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(vpcDeletedTimeout, func() (interface{}, error) {
+		return FindVPCByID(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 VPC (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -544,11 +577,12 @@ func defaultIPv6CIDRBlockAssociation(vpc *ec2.Vpc, associationID string) *ec2.Vp
 }
 
 type vpcInfo struct {
-	vpc                         *ec2.Vpc
-	enableClassicLink           bool
-	enableClassicLinkDNSSupport bool
-	enableDnsHostnames          bool
-	enableDnsSupport            bool
+	vpc                              *ec2.Vpc
+	enableClassicLink                bool
+	enableClassicLinkDNSSupport      bool
+	enableDnsHostnames               bool
+	enableDnsSupport                 bool
+	enableNetworkAddressUsageMetrics bool
 }
 
 // modifyVPCAttributesOnCreate sets VPC attributes on resource Create.
@@ -562,6 +596,12 @@ func modifyVPCAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, vpcInfo 
 
 	if new, old := d.Get("enable_dns_support").(bool), vpcInfo.enableDnsSupport; old != new {
 		if err := modifyVPCDNSSupport(conn, d.Id(), new); err != nil {
+			return err
+		}
+	}
+
+	if new, old := d.Get("enable_network_address_usage_metrics").(bool), vpcInfo.enableNetworkAddressUsageMetrics; old != new {
+		if err := modifyVPCNetworkAddressUsageMetrics(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
@@ -658,6 +698,25 @@ func modifyVPCDNSSupport(conn *ec2.EC2, vpcID string, v bool) error {
 
 	if _, err := WaitVPCAttributeUpdated(conn, vpcID, ec2.VpcAttributeNameEnableDnsSupport, v); err != nil {
 		return fmt.Errorf("error waiting for EC2 VPC (%s) EnableDnsSupport update: %w", vpcID, err)
+	}
+
+	return nil
+}
+
+func modifyVPCNetworkAddressUsageMetrics(conn *ec2.EC2, vpcID string, v bool) error {
+	input := &ec2.ModifyVpcAttributeInput{
+		EnableNetworkAddressUsageMetrics: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(v),
+		},
+		VpcId: aws.String(vpcID),
+	}
+
+	if _, err := conn.ModifyVpcAttribute(input); err != nil {
+		return fmt.Errorf("error modifying EC2 VPC (%s) EnableNetworkAddressUsageMetrics: %w", vpcID, err)
+	}
+
+	if _, err := WaitVPCAttributeUpdated(conn, vpcID, ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPC (%s) EnableNetworkAddressUsageMetrics update: %w", vpcID, err)
 	}
 
 	return nil

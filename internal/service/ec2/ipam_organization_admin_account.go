@@ -1,7 +1,7 @@
 package ec2
 
 // ec2 has no action for Describe() to see if IPAM delegated admin has already been assigned
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"fmt"
 	"log"
 

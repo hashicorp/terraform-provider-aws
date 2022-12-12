@@ -39,3 +39,9 @@ The `filter` configuration block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `local_gateway_virtual_interface_ids` - Set of EC2 Local Gateway Virtual Interface identifiers.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +15,6 @@ import (
 )
 
 func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_route53_vpc_association_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,9 +22,9 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckVPCAssociationAuthorizationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_basic(),
@@ -45,7 +43,6 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 }
 
 func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_route53_vpc_association_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,9 +50,9 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckVPCAssociationAuthorizationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_basic(),

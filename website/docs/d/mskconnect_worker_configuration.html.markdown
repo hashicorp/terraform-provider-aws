@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - the Amazon Resource Name (ARN) of the worker configuration.
+* `arn` - the ARN of the worker configuration.
 * `description` - a summary description of the worker configuration.
 * `latest_revision` - an ID of the latest successfully created revision of the worker configuration.
 * `properties_file_content` - contents of connect-distributed.properties file.

@@ -22,9 +22,9 @@ func testAccAdminAccount_basic(t *testing.T) {
 			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAdminAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAdminAccountConfig_basic(),

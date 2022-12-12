@@ -20,8 +20,6 @@ import (
 )
 
 const (
-	filename = `tags_gen.go`
-
 	sdkV1 = 1
 	sdkV2 = 2
 )
@@ -34,6 +32,8 @@ var (
 	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
 
+	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
@@ -49,7 +49,7 @@ var (
 	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
 	tagType               = flag.String("TagType", "Tag", "tagType")
 	tagType2              = flag.String("TagType2", "", "tagType")
-	TagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
+	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
 	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
 	tagTypeKeyElem        = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
 	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
@@ -57,11 +57,14 @@ var (
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
+	updateTagsFunc        = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
-	sdkVersion = flag.Int("AwsSdkVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
 func usage() {
@@ -80,7 +83,7 @@ type TemplateBody struct {
 	updateTags       string
 }
 
-func NewTemplateBody(version int) *TemplateBody {
+func NewTemplateBody(version int, kvtValues bool) *TemplateBody {
 	switch version {
 	case sdkV1:
 		return &TemplateBody{
@@ -92,6 +95,16 @@ func NewTemplateBody(version int) *TemplateBody {
 			"\n" + v1.UpdateTagsBody,
 		}
 	case sdkV2:
+		if kvtValues {
+			return &TemplateBody{
+				"\n" + v2.GetTagBody,
+				v2.HeaderBody,
+				"\n" + v2.ListTagsBody,
+				"\n" + v2.ServiceTagsValueMapBody,
+				"\n" + v2.ServiceTagsSliceBody,
+				"\n" + v2.UpdateTagsBody,
+			}
+		}
 		return &TemplateBody{
 			"\n" + v2.GetTagBody,
 			v2.HeaderBody,
@@ -111,6 +124,8 @@ type TemplateData struct {
 	ClientType             string
 	ServicePackage         string
 
+	GetTagFunc              string
+	ListTagsFunc            string
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
 	ListTagsInIDNeedSlice   string
@@ -140,22 +155,27 @@ type TemplateData struct {
 	UntagInNeedTagType      bool
 	UntagInTagsElem         string
 	UntagOp                 string
+	UpdateTagsFunc          string
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
 	ContextPkg      bool
 	FmtPkg          bool
 	HelperSchemaPkg bool
+	SkipTypesImp    bool
 	StrConvPkg      bool
 	TfResourcePkg   bool
-
-	AwsSdkVersion int
 }
 
 func main() {
 	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
+
+	filename := `tags_gen.go`
+	if args := flag.Args(); len(args) > 0 {
+		filename = args[0]
+	}
 
 	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
 		log.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
@@ -204,9 +224,12 @@ func main() {
 		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *updateTags),
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
+		SkipTypesImp:    *skipTypesImp,
 		StrConvPkg:      awsPkg == "autoscaling",
 		TfResourcePkg:   *getTag,
 
+		GetTagFunc:              *getTagFunc,
+		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
 		ListTagsInIDElem:        *listTagsInIDElem,
 		ListTagsInIDNeedSlice:   *listTagsInIDNeedSlice,
@@ -225,8 +248,8 @@ func main() {
 		TagResTypeElem:          *tagResTypeElem,
 		TagType:                 *tagType,
 		TagType2:                *tagType2,
-		TagTypeAddBoolElem:      *TagTypeAddBoolElem,
-		TagTypeAddBoolElemSnake: ToSnakeCase(*TagTypeAddBoolElem),
+		TagTypeAddBoolElem:      *tagTypeAddBoolElem,
+		TagTypeAddBoolElemSnake: ToSnakeCase(*tagTypeAddBoolElem),
 		TagTypeIDElem:           *tagTypeIDElem,
 		TagTypeKeyElem:          *tagTypeKeyElem,
 		TagTypeValElem:          *tagTypeValElem,
@@ -235,9 +258,10 @@ func main() {
 		UntagInNeedTagType:      *untagInNeedTagType,
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
+		UpdateTagsFunc:          *updateTagsFunc,
 	}
 
-	templateBody := NewTemplateBody(*sdkVersion)
+	templateBody := NewTemplateBody(*sdkVersion, *kvtValues)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,
@@ -246,31 +270,31 @@ func main() {
 			templateData.AWSService = ""
 			templateData.TagPackage = ""
 		}
-		writeTemplate(templateBody.header, "header", templateData)
+		writeTemplate(filename, templateBody.header, "header", templateData)
 	}
 
 	if *getTag {
-		writeTemplate(templateBody.getTag, "gettag", templateData)
+		writeTemplate(filename, templateBody.getTag, "gettag", templateData)
 	}
 
 	if *listTags {
-		writeTemplate(templateBody.listTags, "listtags", templateData)
+		writeTemplate(filename, templateBody.listTags, "listtags", templateData)
 	}
 
 	if *serviceTagsMap {
-		writeTemplate(templateBody.serviceTagsMap, "servicetagsmap", templateData)
+		writeTemplate(filename, templateBody.serviceTagsMap, "servicetagsmap", templateData)
 	}
 
 	if *serviceTagsSlice {
-		writeTemplate(templateBody.serviceTagsSlice, "servicetagsslice", templateData)
+		writeTemplate(filename, templateBody.serviceTagsSlice, "servicetagsslice", templateData)
 	}
 
 	if *updateTags {
-		writeTemplate(templateBody.updateTags, "updatetags", templateData)
+		writeTemplate(filename, templateBody.updateTags, "updatetags", templateData)
 	}
 }
 
-func writeTemplate(body string, templateName string, td TemplateData) {
+func writeTemplate(filename, body, templateName string, td TemplateData) {
 	// If the file doesn't exist, create it, or append to the file
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

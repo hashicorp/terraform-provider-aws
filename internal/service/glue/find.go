@@ -27,13 +27,35 @@ func FindDevEndpointByName(conn *glue.Glue, name string) (*glue.DevEndpoint, err
 	}
 
 	if output == nil || output.DevEndpoint == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DevEndpoint, nil
+}
+
+func FindJobByName(conn *glue.Glue, name string) (*glue.Job, error) {
+	input := &glue.GetJobInput{
+		JobName: aws.String(name),
+	}
+
+	output, err := conn.GetJob(input)
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return output.DevEndpoint, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Job == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Job, nil
 }
 
 // FindTableByName returns the Table corresponding to the specified name.
@@ -113,7 +135,6 @@ func FindSchemaVersionByID(conn *glue.Glue, id string) (*glue.GetSchemaVersionOu
 
 // FindPartitionByValues returns the Partition corresponding to the specified Partition Values.
 func FindPartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) {
-
 	catalogID, dbName, tableName, values, err := readPartitionID(id)
 	if err != nil {
 		return nil, err
@@ -131,7 +152,7 @@ func FindPartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) 
 		return nil, err
 	}
 
-	if output == nil && output.Partition == nil {
+	if output == nil || output.Partition == nil {
 		return nil, nil
 	}
 
@@ -166,7 +187,6 @@ func FindConnectionByName(conn *glue.Glue, name, catalogID string) (*glue.Connec
 
 // FindPartitionIndexByName returns the Partition Index corresponding to the specified Partition Index Name.
 func FindPartitionIndexByName(conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
-
 	catalogID, dbName, tableName, partIndex, err := readPartitionIndexID(id)
 	if err != nil {
 		return nil, err
@@ -216,4 +236,52 @@ func FindPartitionIndexByName(conn *glue.Glue, id string) (*glue.PartitionIndexD
 	}
 
 	return result, nil
+}
+
+func FindClassifierByName(conn *glue.Glue, name string) (*glue.Classifier, error) {
+	input := &glue.GetClassifierInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetClassifier(input)
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Classifier == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Classifier, nil
+}
+
+func FindCrawlerByName(conn *glue.Glue, name string) (*glue.Crawler, error) {
+	input := &glue.GetCrawlerInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetCrawler(input)
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Crawler == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Crawler, nil
 }

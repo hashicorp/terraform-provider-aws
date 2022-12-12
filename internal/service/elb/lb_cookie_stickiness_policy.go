@@ -109,7 +109,7 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error retrieving ELB Classic (%s) LB Cookie Policy (%s): %w", lbName, policyName, err)
+		return fmt.Errorf("retrieving ELB Classic (%s) LB Cookie Policy (%s): %w", lbName, policyName, err)
 	}
 
 	if len(getResp.PolicyDescriptions) != 1 {

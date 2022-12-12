@@ -1,10 +1,10 @@
 package autoscaling
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
-
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 
@@ -306,15 +306,17 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				},
 			},
 			"vpc_classic_link_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				ForceNew:   true,
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_id attribute has been deprecated and will be removed in a future version.`,
 			},
 			"vpc_classic_link_security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Optional:   true,
+				ForceNew:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 		},
 	}
@@ -323,6 +325,14 @@ func ResourceLaunchConfiguration() *schema.Resource {
 func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
+
+	if _, ok := d.GetOk("vpc_classic_link_id"); ok {
+		return errors.New(`with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
+	}
+
+	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok && v.(*schema.Set).Len() > 0 {
+		return errors.New(`with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
+	}
 
 	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
@@ -335,14 +345,6 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	associatePublicIPAddress := d.GetRawConfig().GetAttr("associate_public_ip_address")
 	if associatePublicIPAddress.IsKnown() && !associatePublicIPAddress.IsNull() {
 		input.AssociatePublicIpAddress = aws.Bool(associatePublicIPAddress.True())
-	}
-
-	if v, ok := d.GetOk("vpc_classic_link_id"); ok {
-		input.ClassicLinkVPCId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.ClassicLinkVPCSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("iam_instance_profile"); ok {

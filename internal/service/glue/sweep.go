@@ -40,7 +40,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_glue_dev_endpoint", &resource.Sweeper{
 		Name: "aws_glue_dev_endpoint",
-		F:    sweepDevEndpoint,
+		F:    sweepDevEndpoints,
 	})
 
 	resource.AddTestSweepers("aws_glue_job", &resource.Sweeper{
@@ -151,7 +151,11 @@ func sweepClassifiers(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting Glue Classifier: %s", name)
-			err := DeleteClassifier(conn, name)
+			r := ResourceClassifier()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			err := r.Delete(d, client)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Classifier %s: %s", name, err)
 			}
@@ -249,42 +253,50 @@ func sweepCrawlers(region string) error {
 	return nil
 }
 
-func sweepDevEndpoint(region string) error {
+func sweepDevEndpoints(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
-
 	input := &glue.GetDevEndpointsInput{}
+	conn := client.(*conns.AWSClient).GlueConn
+	sweepResources := make([]sweep.Sweepable, 0)
+
 	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
-		if len(page.DevEndpoints) == 0 {
-			log.Printf("[INFO] No Glue Dev Endpoints to sweep")
-			return false
+		if page == nil {
+			return !lastPage
 		}
-		for _, endpoint := range page.DevEndpoints {
-			name := aws.StringValue(endpoint.EndpointName)
+
+		for _, v := range page.DevEndpoints {
+			name := aws.StringValue(v.EndpointName)
 			if !strings.HasPrefix(name, sweep.ResourcePrefix) {
 				log.Printf("[INFO] Skipping Glue Dev Endpoint: %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", name)
-			_, err := conn.DeleteDevEndpoint(&glue.DeleteDevEndpointInput{
-				EndpointName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Dev Endpoint %s: %s", name, err)
-			}
+			r := ResourceDevEndpoint()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Dev Endpoint sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Glue Dev Endpoint: %s", err)
+		return fmt.Errorf("error listing Glue Dev Endpoints (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Glue Dev Endpoints (%s): %w", region, err)
 	}
 
 	return nil
@@ -295,31 +307,39 @@ func sweepJobs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
-
 	input := &glue.GetJobsInput{}
-	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
-		if len(page.Jobs) == 0 {
-			log.Printf("[INFO] No Glue Jobs to sweep")
-			return false
-		}
-		for _, job := range page.Jobs {
-			name := aws.StringValue(job.Name)
+	conn := client.(*conns.AWSClient).GlueConn
+	sweepResources := make([]sweep.Sweepable, 0)
 
-			log.Printf("[INFO] Deleting Glue Job: %s", name)
-			err := DeleteJob(conn, name)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", name, err)
-			}
+	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.Jobs {
+			r := ResourceJob()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Glue Job sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Glue Jobs: %s", err)
+		return fmt.Errorf("error listing Glue Jobs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Glue Jobs (%s): %w", region, err)
 	}
 
 	return nil

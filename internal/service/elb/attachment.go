@@ -94,7 +94,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error retrieving ELB Classic LB (%s): %w", elbName, err)
+		return fmt.Errorf("retrieving ELB Classic LB (%s): %w", elbName, err)
 	}
 	if !d.IsNewResource() && len(resp.LoadBalancerDescriptions) != 1 {
 		log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)

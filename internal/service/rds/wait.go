@@ -150,32 +150,31 @@ func waitDBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN str
 	return nil, err
 }
 
-func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+func waitDBClusterInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			InstanceStatusAvailable,
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
+			InstanceStatusConfiguringIAMDatabaseAuth,
 			InstanceStatusConfiguringLogExports,
 			InstanceStatusCreating,
-			InstanceStatusDeleting,
-			InstanceStatusIncompatibleParameters,
-			InstanceStatusIncompatibleRestore,
+			InstanceStatusMaintenance,
 			InstanceStatusModifying,
+			InstanceStatusRebooting,
+			InstanceStatusRenaming,
+			InstanceStatusResettingMasterCredentials,
 			InstanceStatusStarting,
-			InstanceStatusStopping,
-			InstanceStatusStorageFull,
 			InstanceStatusStorageOptimization,
+			InstanceStatusUpgrading,
 		},
-		Target:                    []string{},
-		Refresh:                   statusDBInstance(conn, id),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		Delay:                     30 * time.Second,
-		ContinuousTargetOccurence: 3,
+		Target:     []string{InstanceStatusAvailable},
+		Refresh:    statusDBInstanceSDKv1(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*rds.DBInstance); ok {
 		return output, err
@@ -184,7 +183,40 @@ func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rd
 	return nil, err
 }
 
-func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+func waitDBClusterInstanceUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			InstanceStatusBackingUp,
+			InstanceStatusConfiguringEnhancedMonitoring,
+			InstanceStatusConfiguringIAMDatabaseAuth,
+			InstanceStatusConfiguringLogExports,
+			InstanceStatusCreating,
+			InstanceStatusMaintenance,
+			InstanceStatusModifying,
+			InstanceStatusRebooting,
+			InstanceStatusRenaming,
+			InstanceStatusResettingMasterCredentials,
+			InstanceStatusStarting,
+			InstanceStatusStorageOptimization,
+			InstanceStatusUpgrading,
+		},
+		Target:     []string{InstanceStatusAvailable},
+		Refresh:    statusDBInstanceSDKv1(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			InstanceStatusConfiguringLogExports,
@@ -192,13 +224,13 @@ func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duratio
 			InstanceStatusModifying,
 		},
 		Target:     []string{},
-		Refresh:    statusDBInstance(conn, id),
+		Refresh:    statusDBInstanceSDKv1(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*rds.DBInstance); ok {
 		return output, err
@@ -214,7 +246,7 @@ func waitActivityStreamStarted(ctx context.Context, conn *rds.RDS, dbClusterArn 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{rds.ActivityStreamStatusStarting},
 		Target:     []string{rds.ActivityStreamStatusStarted},
-		Refresh:    statusDBClusterActivityStream(conn, dbClusterArn),
+		Refresh:    statusDBClusterActivityStream(ctx, conn, dbClusterArn),
 		Timeout:    dbClusterActivityStreamStartedTimeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -234,7 +266,7 @@ func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, dbClusterArn 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{rds.ActivityStreamStatusStopping},
 		Target:     []string{},
-		Refresh:    statusDBClusterActivityStream(conn, dbClusterArn),
+		Refresh:    statusDBClusterActivityStream(ctx, conn, dbClusterArn),
 		Timeout:    dbClusterActivityStreamStoppedTimeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -266,15 +298,15 @@ func waitDBInstanceAutomatedBackupCreated(conn *rds.RDS, arn string, timeout tim
 
 // waitDBInstanceAutomatedBackupDeleted waits for a specified automated backup to be deleted from a database instance.
 // The connection must be valid for the database instance's Region.
-func waitDBInstanceAutomatedBackupDeleted(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration) (*rds.DBInstance, error) {
+func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration) (*rds.DBInstance, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{strconv.FormatBool(true)},
 		Target:  []string{strconv.FormatBool(false)},
-		Refresh: statusDBInstanceHasAutomatedBackup(conn, dbInstanceID, dbInstanceAutomatedBackupsARN),
+		Refresh: statusDBInstanceHasAutomatedBackup(ctx, conn, dbInstanceID, dbInstanceAutomatedBackupsARN),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*rds.DBInstance); ok {
 		return output, err
@@ -332,4 +364,22 @@ func waitDBProxyUpdated(conn *rds.RDS, name string, timeout time.Duration) (*rds
 	}
 
 	return nil, err
+}
+
+func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ReservedInstanceStatePaymentPending,
+		},
+		Target:         []string{ReservedInstanceStateActive},
+		Refresh:        statusReservedInstance(ctx, conn, id),
+		NotFoundChecks: 5,
+		Timeout:        timeout,
+		MinTimeout:     10 * time.Second,
+		Delay:          30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }

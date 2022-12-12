@@ -1,17 +1,18 @@
 package logs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccLogsStream_basic(t *testing.T) {
@@ -20,10 +21,10 @@ func TestAccLogsStream_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rName),
@@ -47,10 +48,10 @@ func TestAccLogsStream_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rName),
@@ -72,10 +73,10 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConfig_basic(rName),
@@ -90,24 +91,26 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckStreamExists(n string, ls *cloudwatchlogs.LogStream) resource.TestCheckFunc {
+func testAccCheckStreamExists(n string, v *cloudwatchlogs.LogStream) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		logGroupName := rs.Primary.Attributes["log_group_name"]
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudWatch Logs Log Stream ID is set")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
-		logGroup, exists, err := tflogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
+
+		output, err := tflogs.FindLogStreamByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if !exists {
-			return fmt.Errorf("Bad: LogStream %q does not exist", rs.Primary.ID)
-		}
 
-		*ls = *logGroup
+		*v = *output
 
 		return nil
 	}
@@ -121,61 +124,30 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		logGroupName := rs.Primary.Attributes["log_group_name"]
-		_, exists, err := tflogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
+		_, err := tflogs.FindLogStreamByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Stream (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if exists {
-			return fmt.Errorf("Bad: LogStream still exists: %q", rs.Primary.ID)
-		}
-
+		return fmt.Errorf("CloudWatch Logs Log Stream still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccStreamImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccStreamImportStateIdFunc(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
+			return "", fmt.Errorf("Not Found: %s", n)
 		}
 
 		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["log_group_name"], rs.Primary.ID), nil
-	}
-}
-
-func TestValidateStreamName(t *testing.T) {
-	validNames := []string{
-		"test-log-stream",
-		"my_sample_log_stream",
-		"012345678",
-		"logstream/1234",
-	}
-	for _, v := range validNames {
-		_, errors := tflogs.ValidStreamName(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid CloudWatch LogStream name: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		sdkacctest.RandString(513),
-		"",
-		"stringwith:colon",
-	}
-	for _, v := range invalidNames {
-		_, errors := tflogs.ValidStreamName(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid CloudWatch LogStream name", v)
-		}
 	}
 }
 

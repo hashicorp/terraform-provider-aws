@@ -565,7 +565,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.CreateReplicationGroup(params)
 
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Replication Group with tags: %s. Trying create without tags.", err)
 
 		params.Tags = nil
@@ -588,7 +588,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
-		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+		if _, err := waitGlobalReplicationGroupAvailable(context.TODO(), conn, v.(string), globalReplicationGroupDefaultCreatedTimeout); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) to be available: %w", v, err)
 		}
 	}
@@ -598,7 +598,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		err := UpdateTags(conn, aws.StringValue(resp.ReplicationGroup.ARN), nil, tags)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed adding tags after create for ElastiCache Replication Group (%s): %w", d.Id(), err)
 			}
@@ -717,7 +717,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 	tags, err := ListTags(conn, aws.StringValue(rgp.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		return fmt.Errorf("listing tags for ElastiCache Replication Group (%s): %w", aws.StringValue(rgp.ARN), err)
 	}
 
@@ -844,7 +844,6 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("log_delivery_configuration") {
-
 		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
 		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
@@ -930,7 +929,6 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			params.UserGroupIdsToRemove = flex.ExpandStringSet(remove)
 			requestUpdate = true
 		}
-
 	}
 
 	if requestUpdate {
@@ -970,7 +968,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed updating ElastiCache Replication Group (%s) tags: %w", d.Id(), err)
 			}
@@ -1050,13 +1048,12 @@ func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicati
 		return err
 	}
 
-	_, err = WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	_, err = waitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
 	if err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
 	return nil
-
 }
 
 func deleteReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string, timeout time.Duration) error {
@@ -1095,11 +1092,8 @@ func deleteReplicationGroup(replicationGroupID string, conn *elasticache.ElastiC
 	}
 
 	_, err = WaitReplicationGroupDeleted(conn, replicationGroupID, timeout)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func flattenNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {

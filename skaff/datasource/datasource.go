@@ -3,7 +3,9 @@ package datasource
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,15 +25,17 @@ var datasourceTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	DataSource          string
-	DataSourceLower     string
-	IncludeComments     bool
-	ServicePackage      string
-	Service             string
-	ServiceLower        string
-	AWSServiceName      string
-	AWSGoSDKV2          bool
-	HumanDataSourceName string
+	DataSource           string
+	DataSourceLower      string
+	DataSourceSnake      string
+	IncludeComments      bool
+	HumanFriendlyService string
+	ServicePackage       string
+	Service              string
+	ServiceLower         string
+	AWSServiceName       string
+	AWSGoSDKV2           bool
+	HumanDataSourceName  string
 }
 
 func Create(dsName, snakeName string, comments, force, v2 bool) error {
@@ -54,6 +58,8 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
+	snakeName = resource.ToSnakeCase(dsName, snakeName)
+
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
@@ -64,29 +70,36 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
-	templateData := TemplateData{
-		DataSource:          dsName,
-		DataSourceLower:     strings.ToLower(dsName),
-		IncludeComments:     comments,
-		ServicePackage:      servicePackage,
-		Service:             s,
-		ServiceLower:        strings.ToLower(s),
-		AWSServiceName:      sn,
-		AWSGoSDKV2:          v2,
-		HumanDataSourceName: fmt.Sprintf("%s Data Source", resource.HumanResName(dsName)),
+	hf, err := names.HumanFriendly(servicePackage)
+	if err != nil {
+		return fmt.Errorf("error getting human-friendly name: %w", err)
 	}
 
-	f := fmt.Sprintf("%s_data_source.go", resource.ToSnakeCase(dsName, snakeName))
+	templateData := TemplateData{
+		DataSource:           dsName,
+		DataSourceLower:      strings.ToLower(dsName),
+		DataSourceSnake:      snakeName,
+		HumanFriendlyService: hf,
+		IncludeComments:      comments,
+		ServicePackage:       servicePackage,
+		Service:              s,
+		ServiceLower:         strings.ToLower(s),
+		AWSServiceName:       sn,
+		AWSGoSDKV2:           v2,
+		HumanDataSourceName:  resource.HumanResName(dsName),
+	}
+
+	f := fmt.Sprintf("%s_data_source.go", snakeName)
 	if err = writeTemplate("newds", f, datasourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource template: %w", err)
 	}
 
-	tf := fmt.Sprintf("%s_data_source_test.go", resource.ToSnakeCase(dsName, snakeName))
+	tf := fmt.Sprintf("%s_data_source_test.go", snakeName)
 	if err = writeTemplate("dstest", tf, datasourceTestTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource test template: %w", err)
 	}
 
-	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, resource.ToSnakeCase(dsName, snakeName))
+	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)
 	wf = filepath.Join("..", "..", "..", "website", "docs", "d", wf)
 	if err = writeTemplate("webdoc", wf, websiteTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource website doc template: %w", err)
@@ -96,7 +109,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 }
 
 func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
-	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
+	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}
 

@@ -108,11 +108,7 @@ func waitServiceInactive(conn *ecs.ECS, id, cluster string, timeout time.Duratio
 
 	_, err := stateConf.WaitForState()
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // waitServiceActive waits for an ECS Service to reach the status "ACTIVE". Does not return tags.

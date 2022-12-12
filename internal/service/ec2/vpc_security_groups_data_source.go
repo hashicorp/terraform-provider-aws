@@ -1,11 +1,14 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -13,7 +16,11 @@ import (
 
 func DataSourceSecurityGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecurityGroupsRead,
+		ReadWithoutTimeout: dataSourceSecurityGroupsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -37,7 +44,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSecurityGroupsInput{}
@@ -54,10 +61,10 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroups(conn, input)
+	output, err := FindSecurityGroups(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Security Groups: %w", err)
+		return diag.Errorf("reading EC2 Security Groups: %s", err)
 	}
 
 	var arns, securityGroupIDs, vpcIDs []string

@@ -15,10 +15,10 @@ import (
 
 func TestAccIoTCertificate_csr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_csr,
@@ -37,10 +37,10 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 
 func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_keys,
@@ -58,14 +58,14 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 }
 
 func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "testcert")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "testcert")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_existingCertificate(acctest.TLSPEMEscapeNewlines(certificate)),
@@ -110,7 +110,6 @@ func testAccCheckCertificateDestroy_basic(s *terraform.State) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil

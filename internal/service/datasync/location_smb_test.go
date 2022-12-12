@@ -23,10 +23,10 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationSMBDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationSMBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
@@ -70,10 +70,10 @@ func TestAccDataSyncLocationSMB_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationSMBDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationSMBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
@@ -93,10 +93,10 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationSMBDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationSMBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_tags1(rName, "key1", "value1"),
@@ -213,10 +213,11 @@ func testAccCheckLocationSMBNotRecreated(i, j *datasync.DescribeLocationSmbOutpu
 	}
 }
 
-func testAccLocationSMBBaseConfig(rName string) string {
+func testAccLocationSMBConfig_base(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.2xlarge", "m5.4xlarge"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "m5.2xlarge", "m5.4xlarge"),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -225,28 +226,11 @@ data "aws_ssm_parameter" "aws_service_datasync_ami" {
   name = "/aws/service/datasync/ami"
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-smb"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-smb"
-  }
-}
-
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-datasync-location-smb"
+    Name = %[1]q
   }
 }
 
@@ -259,11 +243,12 @@ resource "aws_default_route_table" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test-datasync-location-smb"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   egress {
@@ -281,7 +266,7 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test-datasync-smb"
+    Name = %[1]q
   }
 }
 
@@ -292,10 +277,10 @@ resource "aws_instance" "test" {
   associate_public_ip_address = true
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test.id
+  subnet_id                   = aws_subnet.test[0].id
 
   tags = {
-    Name = "tf-acc-test-datasync-smb"
+    Name = %[1]q
   }
 }
 
@@ -307,7 +292,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccLocationSMBConfig_basic(rName, dir string) string {
-	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationSMBConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   password        = "ZaphodBeeblebroxPW"
@@ -315,11 +300,11 @@ resource "aws_datasync_location_smb" "test" {
   subdirectory    = %[1]q
   user            = "Guest"
 }
-`, dir)
+`, dir))
 }
 
 func testAccLocationSMBConfig_tags1(rName, key1, value1 string) string {
-	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationSMBConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   password        = "ZaphodBeeblebroxPW"
@@ -331,11 +316,11 @@ resource "aws_datasync_location_smb" "test" {
     %[1]q = %[2]q
   }
 }
-`, key1, value1)
+`, key1, value1))
 }
 
 func testAccLocationSMBConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationSMBConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   password        = "ZaphodBeeblebroxPW"
@@ -348,5 +333,5 @@ resource "aws_datasync_location_smb" "test" {
     %[3]q = %[4]q
   }
 }
-`, key1, value1, key2, value2)
+`, key1, value1, key2, value2))
 }

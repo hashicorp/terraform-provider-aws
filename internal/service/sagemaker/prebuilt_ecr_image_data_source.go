@@ -81,6 +81,7 @@ const (
 )
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+
 var prebuiltECRImageIDByRegion_blazing = map[string]string{
 	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
@@ -99,16 +100,18 @@ var prebuiltECRImageIDByRegion_blazing = map[string]string{
 	endpoints.EuWest1RegionID:      "685385470294",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
-	endpoints.MeSouth1RegionID:     "249704162688",
-	endpoints.SaEast1RegionID:      "855470959533",
-	endpoints.UsEast1RegionID:      "811284229777",
-	endpoints.UsEast2RegionID:      "825641698319",
-	endpoints.UsGovWest1RegionID:   "226302683700",
-	endpoints.UsWest1RegionID:      "632365934929",
-	endpoints.UsWest2RegionID:      "433757028032",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "249704162688",
+	endpoints.SaEast1RegionID:    "855470959533",
+	endpoints.UsEast1RegionID:    "811284229777",
+	endpoints.UsEast2RegionID:    "825641698319",
+	endpoints.UsGovWest1RegionID: "226302683700",
+	endpoints.UsWest1RegionID:    "632365934929",
+	endpoints.UsWest2RegionID:    "433757028032",
 }
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+
 var prebuiltECRImageIDByRegion_deepAR = map[string]string{
 	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
@@ -126,16 +129,18 @@ var prebuiltECRImageIDByRegion_deepAR = map[string]string{
 	endpoints.EuWest1RegionID:      "224300973850",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
-	endpoints.MeSouth1RegionID:     "249704162688",
-	endpoints.SaEast1RegionID:      "855470959533",
-	endpoints.UsEast1RegionID:      "522234722520",
-	endpoints.UsEast2RegionID:      "566113047672",
-	endpoints.UsGovWest1RegionID:   "226302683700",
-	endpoints.UsWest1RegionID:      "632365934929",
-	endpoints.UsWest2RegionID:      "156387875391",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "249704162688",
+	endpoints.SaEast1RegionID:    "855470959533",
+	endpoints.UsEast1RegionID:    "522234722520",
+	endpoints.UsEast2RegionID:    "566113047672",
+	endpoints.UsGovWest1RegionID: "226302683700",
+	endpoints.UsWest1RegionID:    "632365934929",
+	endpoints.UsWest2RegionID:    "156387875391",
 }
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+
 var PrebuiltECRImageIDByRegion_factorMachines = map[string]string{
 	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
@@ -154,16 +159,18 @@ var PrebuiltECRImageIDByRegion_factorMachines = map[string]string{
 	endpoints.EuWest1RegionID:      "438346466558",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
-	endpoints.MeSouth1RegionID:     "249704162688",
-	endpoints.SaEast1RegionID:      "855470959533",
-	endpoints.UsEast1RegionID:      "382416733822",
-	endpoints.UsEast2RegionID:      "404615174143",
-	endpoints.UsGovWest1RegionID:   "226302683700",
-	endpoints.UsWest1RegionID:      "632365934929",
-	endpoints.UsWest2RegionID:      "174872318107",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "249704162688",
+	endpoints.SaEast1RegionID:    "855470959533",
+	endpoints.UsEast1RegionID:    "382416733822",
+	endpoints.UsEast2RegionID:    "404615174143",
+	endpoints.UsGovWest1RegionID: "226302683700",
+	endpoints.UsWest1RegionID:    "632365934929",
+	endpoints.UsWest2RegionID:    "174872318107",
 }
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+
 var prebuiltECRImageIDByRegion_lda = map[string]string{
 	endpoints.ApNortheast1RegionID: "258307448986",
 	endpoints.ApNortheast2RegionID: "293181348795",
@@ -182,6 +189,7 @@ var prebuiltECRImageIDByRegion_lda = map[string]string{
 }
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+
 var prebuiltECRImageIDByRegion_xgBoost = map[string]string{
 	endpoints.AfSouth1RegionID:     "510948584623",
 	endpoints.ApEast1RegionID:      "651117190479",
@@ -200,17 +208,19 @@ var prebuiltECRImageIDByRegion_xgBoost = map[string]string{
 	endpoints.EuWest1RegionID:      "141502667606",
 	endpoints.EuWest2RegionID:      "764974769150",
 	endpoints.EuWest3RegionID:      "659782779980",
-	endpoints.MeSouth1RegionID:     "801668240914",
-	endpoints.SaEast1RegionID:      "737474898029",
-	endpoints.UsEast1RegionID:      "683313688378",
-	endpoints.UsEast2RegionID:      "257758044811",
-	endpoints.UsGovWest1RegionID:   "414596584902",
-	endpoints.UsWest1RegionID:      "746614075791",
-	endpoints.UsWest2RegionID:      "246618743249",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "801668240914",
+	endpoints.SaEast1RegionID:    "737474898029",
+	endpoints.UsEast1RegionID:    "683313688378",
+	endpoints.UsEast2RegionID:    "257758044811",
+	endpoints.UsGovWest1RegionID: "414596584902",
+	endpoints.UsWest1RegionID:    "746614075791",
+	endpoints.UsWest2RegionID:    "246618743249",
 }
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
 // https://docs.aws.amazon.com/sagemaker/latest/dg/pre-built-docker-containers-scikit-learn-spark.html
+
 var PrebuiltECRImageIDByRegion_sparkML = map[string]string{
 	endpoints.AfSouth1RegionID:     "510948584623",
 	endpoints.ApEast1RegionID:      "651117190479",
@@ -228,17 +238,19 @@ var PrebuiltECRImageIDByRegion_sparkML = map[string]string{
 	endpoints.EuWest1RegionID:      "141502667606",
 	endpoints.EuWest2RegionID:      "764974769150",
 	endpoints.EuWest3RegionID:      "659782779980",
-	endpoints.MeSouth1RegionID:     "801668240914",
-	endpoints.SaEast1RegionID:      "737474898029",
-	endpoints.UsEast1RegionID:      "683313688378",
-	endpoints.UsEast2RegionID:      "257758044811",
-	endpoints.UsGovWest1RegionID:   "414596584902",
-	endpoints.UsWest1RegionID:      "746614075791",
-	endpoints.UsWest2RegionID:      "246618743249",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "801668240914",
+	endpoints.SaEast1RegionID:    "737474898029",
+	endpoints.UsEast1RegionID:    "683313688378",
+	endpoints.UsEast2RegionID:    "257758044811",
+	endpoints.UsGovWest1RegionID: "414596584902",
+	endpoints.UsWest1RegionID:    "746614075791",
+	endpoints.UsWest2RegionID:    "246618743249",
 }
 
 // https://github.com/aws/deep-learning-containers/blob/master/available_images.md
 // https://github.com/aws/sagemaker-tensorflow-serving-container
+
 var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
@@ -254,16 +266,18 @@ var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
 	endpoints.EuWest1RegionID:      "763104351884",
 	endpoints.EuWest2RegionID:      "763104351884",
 	endpoints.EuWest3RegionID:      "763104351884",
-	endpoints.MeSouth1RegionID:     "217643126080",
-	endpoints.SaEast1RegionID:      "763104351884",
-	endpoints.UsEast1RegionID:      "763104351884",
-	endpoints.UsEast2RegionID:      "763104351884",
-	endpoints.UsIsoEast1RegionID:   "886529160074",
-	endpoints.UsWest1RegionID:      "763104351884",
-	endpoints.UsWest2RegionID:      "763104351884",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "217643126080",
+	endpoints.SaEast1RegionID:    "763104351884",
+	endpoints.UsEast1RegionID:    "763104351884",
+	endpoints.UsEast2RegionID:    "763104351884",
+	endpoints.UsIsoEast1RegionID: "886529160074",
+	endpoints.UsWest1RegionID:    "763104351884",
+	endpoints.UsWest2RegionID:    "763104351884",
 }
 
 // https://github.com/aws/sagemaker-tensorflow-serving-container
+
 var prebuiltECRImageIDByRegion_tensorFlowServing = map[string]string{
 	endpoints.ApEast1RegionID:      "057415533634",
 	endpoints.ApNortheast1RegionID: "520713654638",
@@ -279,12 +293,13 @@ var prebuiltECRImageIDByRegion_tensorFlowServing = map[string]string{
 	endpoints.EuWest1RegionID:      "520713654638",
 	endpoints.EuWest2RegionID:      "520713654638",
 	endpoints.EuWest3RegionID:      "520713654638",
-	endpoints.MeSouth1RegionID:     "724002660598",
-	endpoints.SaEast1RegionID:      "520713654638",
-	endpoints.UsEast1RegionID:      "520713654638",
-	endpoints.UsEast2RegionID:      "520713654638",
-	endpoints.UsWest1RegionID:      "520713654638",
-	endpoints.UsWest2RegionID:      "520713654638",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID: "724002660598",
+	endpoints.SaEast1RegionID:  "520713654638",
+	endpoints.UsEast1RegionID:  "520713654638",
+	endpoints.UsEast2RegionID:  "520713654638",
+	endpoints.UsWest1RegionID:  "520713654638",
+	endpoints.UsWest2RegionID:  "520713654638",
 }
 
 func DataSourcePrebuiltECRImage() *schema.Resource {

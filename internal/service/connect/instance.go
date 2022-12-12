@@ -88,6 +88,11 @@ func ResourceInstance() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
 				),
 			},
+			"multi_party_conference_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false, //verified default result from ListInstanceAttributes()
+			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
 				Required: true,
@@ -252,10 +257,8 @@ func resourceInstanceUpdateAttribute(ctx context.Context, conn *connect.Connect,
 	}
 
 	_, err := conn.UpdateInstanceAttributeWithContext(ctx, input)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func resourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {

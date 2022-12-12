@@ -2,10 +2,27 @@
 package conns
 
 import (
-	"fmt"
-
+	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/pipes"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -33,7 +50,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/aws/aws-sdk-go/service/auditmanager"
 	"github.com/aws/aws-sdk-go/service/augmentedairuntime"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
@@ -48,7 +64,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -73,14 +88,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitosync"
-	"github.com/aws/aws-sdk-go/service/comprehend"
 	"github.com/aws/aws-sdk-go/service/comprehendmedical"
-	"github.com/aws/aws-sdk-go/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/aws/aws-sdk-go/service/connectcontactlens"
 	"github.com/aws/aws-sdk-go/service/connectparticipant"
 	"github.com/aws/aws-sdk-go/service/connectwisdomservice"
+	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/aws/aws-sdk-go/service/customerprofiles"
@@ -121,7 +135,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/aws/aws-sdk-go/service/fis"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/forecastqueryservice"
 	"github.com/aws/aws-sdk-go/service/forecastservice"
@@ -140,10 +153,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/aws/aws-sdk-go/service/inspector2"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -194,7 +205,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/marketplacemetering"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediapackagevod"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -240,6 +250,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
+	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/aws/aws-sdk-go/service/resiliencehub"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
@@ -266,7 +277,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
@@ -305,6 +315,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -318,9 +329,15 @@ type AWSClient struct {
 	Region                    string
 	ReverseDNSPrefix          string
 	S3ConnURICleaningDisabled *s3.S3
+	ServicePackages           []intf.ServicePackageData
 	Session                   *session.Session
-	SupportedPlatforms        []string
 	TerraformVersion          string
+
+	ec2Client       lazyClient[*ec2_sdkv2.Client]
+	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
+	rdsClient       lazyClient[*rds_sdkv2.Client]
+	s3controlClient lazyClient[*s3control_sdkv2.Client]
+	ssmClient       lazyClient[*ssm_sdkv2.Client]
 
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA
@@ -346,7 +363,7 @@ type AWSClient struct {
 	ApplicationCostProfilerConn      *applicationcostprofiler.ApplicationCostProfiler
 	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
 	AthenaConn                       *athena.Athena
-	AuditManagerConn                 *auditmanager.AuditManager
+	AuditManagerClient               *auditmanager.Client
 	AutoScalingConn                  *autoscaling.AutoScaling
 	AutoScalingPlansConn             *autoscalingplans.AutoScalingPlans
 	BackupConn                       *backup.Backup
@@ -362,7 +379,7 @@ type AWSClient struct {
 	ChimeSDKMeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	ChimeSDKMessagingConn            *chimesdkmessaging.ChimeSDKMessaging
 	Cloud9Conn                       *cloud9.Cloud9
-	CloudControlConn                 *cloudcontrolapi.CloudControlApi
+	CloudControlClient               *cloudcontrol.Client
 	CloudDirectoryConn               *clouddirectory.CloudDirectory
 	CloudFormationConn               *cloudformation.CloudFormation
 	CloudFrontConn                   *cloudfront.CloudFront
@@ -383,13 +400,14 @@ type AWSClient struct {
 	CognitoIDPConn                   *cognitoidentityprovider.CognitoIdentityProvider
 	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
 	CognitoSyncConn                  *cognitosync.CognitoSync
-	ComprehendConn                   *comprehend.Comprehend
+	ComprehendClient                 *comprehend.Client
 	ComprehendMedicalConn            *comprehendmedical.ComprehendMedical
-	ComputeOptimizerConn             *computeoptimizer.ComputeOptimizer
+	ComputeOptimizerClient           *computeoptimizer.Client
 	ConfigServiceConn                *configservice.ConfigService
 	ConnectConn                      *connect.Connect
 	ConnectContactLensConn           *connectcontactlens.ConnectContactLens
 	ConnectParticipantConn           *connectparticipant.ConnectParticipant
+	ControlTowerConn                 *controltower.ControlTower
 	CustomerProfilesConn             *customerprofiles.CustomerProfiles
 	DAXConn                          *dax.DAX
 	DLMConn                          *dlm.DLM
@@ -429,7 +447,7 @@ type AWSClient struct {
 	ElasticsearchConn                *elasticsearchservice.ElasticsearchService
 	EventsConn                       *eventbridge.EventBridge
 	EvidentlyConn                    *cloudwatchevidently.CloudWatchEvidently
-	FISConn                          *fis.FIS
+	FISClient                        *fis.Client
 	FMSConn                          *fms.FMS
 	FSxConn                          *fsx.FSx
 	FinSpaceConn                     *finspace.Finspace
@@ -452,10 +470,11 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
-	IdentityStoreConn                *identitystore.IdentityStore
+	IVSChatClient                    *ivschat.Client
+	IdentityStoreClient              *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
-	Inspector2Conn                   *inspector2.Inspector2
+	Inspector2Client                 *inspector2.Client
 	IoTConn                          *iot.IoT
 	IoT1ClickDevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
 	IoT1ClickProjectsConn            *iot1clickprojects.IoT1ClickProjects
@@ -474,7 +493,7 @@ type AWSClient struct {
 	KMSConn                          *kms.KMS
 	KafkaConn                        *kafka.Kafka
 	KafkaConnectConn                 *kafkaconnect.KafkaConnect
-	KendraConn                       *kendra.Client
+	KendraClient                     *kendra.Client
 	KeyspacesConn                    *keyspaces.Keyspaces
 	KinesisConn                      *kinesis.Kinesis
 	KinesisAnalyticsConn             *kinesisanalytics.KinesisAnalytics
@@ -509,7 +528,7 @@ type AWSClient struct {
 	MarketplaceMeteringConn          *marketplacemetering.MarketplaceMetering
 	MediaConnectConn                 *mediaconnect.MediaConnect
 	MediaConvertConn                 *mediaconvert.MediaConvert
-	MediaLiveConn                    *medialive.MediaLive
+	MediaLiveClient                  *medialive.Client
 	MediaPackageConn                 *mediapackage.MediaPackage
 	MediaPackageVODConn              *mediapackagevod.MediaPackageVod
 	MediaStoreConn                   *mediastore.MediaStore
@@ -539,6 +558,7 @@ type AWSClient struct {
 	PinpointConn                     *pinpoint.Pinpoint
 	PinpointEmailConn                *pinpointemail.PinpointEmail
 	PinpointSMSVoiceConn             *pinpointsmsvoice.PinpointSMSVoice
+	PipesClient                      *pipes.Client
 	PollyConn                        *polly.Polly
 	PricingConn                      *pricing.Pricing
 	ProtonConn                       *proton.Proton
@@ -552,13 +572,16 @@ type AWSClient struct {
 	RUMConn                          *cloudwatchrum.CloudWatchRUM
 	RedshiftConn                     *redshift.Redshift
 	RedshiftDataConn                 *redshiftdataapiservice.RedshiftDataAPIService
+	RedshiftServerlessConn           *redshiftserverless.RedshiftServerless
 	RekognitionConn                  *rekognition.Rekognition
 	ResilienceHubConn                *resiliencehub.ResilienceHub
+	ResourceExplorer2Client          *resourceexplorer2.Client
 	ResourceGroupsConn               *resourcegroups.ResourceGroups
 	ResourceGroupsTaggingAPIConn     *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	RoboMakerConn                    *robomaker.RoboMaker
+	RolesAnywhereClient              *rolesanywhere.Client
 	Route53Conn                      *route53.Route53
-	Route53DomainsConn               *route53domains.Client
+	Route53DomainsClient             *route53domains.Client
 	Route53RecoveryClusterConn       *route53recoverycluster.Route53RecoveryCluster
 	Route53RecoveryControlConfigConn *route53recoverycontrolconfig.Route53RecoveryControlConfig
 	Route53RecoveryReadinessConn     *route53recoveryreadiness.Route53RecoveryReadiness
@@ -567,7 +590,7 @@ type AWSClient struct {
 	S3ControlConn                    *s3control.S3Control
 	S3OutpostsConn                   *s3outposts.S3Outposts
 	SESConn                          *ses.SES
-	SESV2Conn                        *sesv2.SESV2
+	SESV2Client                      *sesv2.Client
 	SFNConn                          *sfn.SFN
 	SMSConn                          *sms.SMS
 	SNSConn                          *sns.SNS
@@ -586,6 +609,7 @@ type AWSClient struct {
 	SageMakerFeatureStoreRuntimeConn *sagemakerfeaturestoreruntime.SageMakerFeatureStoreRuntime
 	SageMakerRuntimeConn             *sagemakerruntime.SageMakerRuntime
 	SavingsPlansConn                 *savingsplans.SavingsPlans
+	SchedulerClient                  *scheduler.Client
 	SchemasConn                      *schemas.Schemas
 	SecretsManagerConn               *secretsmanager.SecretsManager
 	SecurityHubConn                  *securityhub.SecurityHub
@@ -605,7 +629,7 @@ type AWSClient struct {
 	TextractConn                     *textract.Textract
 	TimestreamQueryConn              *timestreamquery.TimestreamQuery
 	TimestreamWriteConn              *timestreamwrite.TimestreamWrite
-	TranscribeConn                   *transcribe.Client
+	TranscribeClient                 *transcribe.Client
 	TranscribeStreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	TransferConn                     *transfer.Transfer
 	TranslateConn                    *translate.Translate
@@ -624,16 +648,22 @@ type AWSClient struct {
 	XRayConn                         *xray.XRay
 }
 
-// PartitionHostname returns a hostname with the provider domain suffix for the partition
-// e.g. PREFIX.amazonaws.com
-// The prefix should not contain a trailing period.
-func (client *AWSClient) PartitionHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s", prefix, client.DNSSuffix)
+func (client *AWSClient) EC2Client() *ec2_sdkv2.Client {
+	return client.ec2Client.Client()
 }
 
-// RegionalHostname returns a hostname with the provider domain suffix for the region and partition
-// e.g. PREFIX.us-west-2.amazonaws.com
-// The prefix should not contain a trailing period.
-func (client *AWSClient) RegionalHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
+func (client *AWSClient) LogsClient() *cloudwatchlogs_sdkv2.Client {
+	return client.logsClient.Client()
+}
+
+func (client *AWSClient) RDSClient() *rds_sdkv2.Client {
+	return client.rdsClient.Client()
+}
+
+func (client *AWSClient) S3ControlClient() *s3control_sdkv2.Client {
+	return client.s3controlClient.Client()
+}
+
+func (client *AWSClient) SSMClient() *ssm_sdkv2.Client {
+	return client.ssmClient.Client()
 }

@@ -7,14 +7,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func SecurityGroupMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+func SecurityGroupMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
-		log.Println("[INFO] Found AWS SecurityGroup State v0; migrating to v1")
+		log.Println("[INFO] Found Security Group State v0; migrating to v1")
 		return migrateSecurityGroupStateV0toV1(is)
 	default:
-		return is, fmt.Errorf("Unexpected schema version: %d", v)
+		return is, fmt.Errorf("unexpected schema version: %d", v)
 	}
 }
 
@@ -30,5 +29,6 @@ func migrateSecurityGroupStateV0toV1(is *terraform.InstanceState) (*terraform.In
 	is.Attributes["revoke_rules_on_delete"] = "false"
 
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
+
 	return is, nil
 }

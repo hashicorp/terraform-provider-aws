@@ -36,7 +36,7 @@ func sweepConnectors(region string) error {
 	}
 	conn := client.(*conns.AWSClient).KafkaConnectConn
 	input := &kafkaconnect.ListConnectorsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListConnectorsPages(input, func(page *kafkaconnect.ListConnectorsOutput, lastPage bool) bool {
 		if page == nil {
@@ -79,7 +79,7 @@ func sweepCustomPlugins(region string) error {
 	}
 	conn := client.(*conns.AWSClient).KafkaConnectConn
 	input := &kafkaconnect.ListCustomPluginsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListCustomPluginsPages(input, func(page *kafkaconnect.ListCustomPluginsOutput, lastPage bool) bool {
 		if page == nil {

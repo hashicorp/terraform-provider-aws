@@ -92,13 +92,13 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 	time.Sleep(1 * time.Minute)
 	_, err := conn.CreateImage(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Image %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker Image %s: %w", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := WaitImageCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Image (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Image (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceImageRead(d, meta)
@@ -116,8 +116,7 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Unable to find SageMaker Image (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker Image (%s): %w", d.Id(), err)
-
+		return fmt.Errorf("reading SageMaker Image (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(image.ImageArn)
@@ -130,18 +129,18 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Image (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Image (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -181,11 +180,11 @@ func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] sagemaker Image update config: %#v", *input)
 		_, err := conn.UpdateImage(input)
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker Image: %w", err)
+			return fmt.Errorf("updating SageMaker Image: %w", err)
 		}
 
 		if _, err := WaitImageCreated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for SageMaker Image (%s) to update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker Image (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -193,7 +192,7 @@ func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Image (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Image (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -211,14 +210,14 @@ func resourceImageDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Image (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Image (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitImageDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error waiting for SageMaker Image (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Image (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

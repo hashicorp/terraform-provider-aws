@@ -1,7 +1,8 @@
 package elb
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -421,7 +422,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(context.TODO(), ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
@@ -471,18 +472,18 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 	tags, err := ListTags(elbconn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	// There's only one health check, so save that to state as we
@@ -801,7 +802,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(elbconn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ELB(%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating ELB(%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -917,7 +918,6 @@ func ValidHeathCheckTarget(v interface{}, k string) (ws []string, errors []error
 				"than 1024 characters in the Health Check target: %s",
 				k, value))
 		}
-
 	}
 
 	return ws, errors

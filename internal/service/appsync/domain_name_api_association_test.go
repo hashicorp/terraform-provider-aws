@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,7 +16,6 @@ import (
 )
 
 func testAccDomainNameAPIAssociation_basic(t *testing.T) {
-	var providers []*schema.Provider
 	var association appsync.ApiAssociation
 	appsyncCertDomain := getCertDomain(t)
 
@@ -25,10 +23,10 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDomainNameAPIAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
@@ -57,17 +55,16 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 
 func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 	var association appsync.ApiAssociation
-	var providers []*schema.Provider
 	appsyncCertDomain := getCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDomainNameAPIAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
@@ -101,14 +98,12 @@ func testAccCheckDomainNameAPIAssociationDestroy(s *terraform.State) error {
 		}
 
 		return nil
-
 	}
 	return nil
 }
 
 func testAccCheckDomainNameAPIAssociationExists(resourceName string, DomainNameAPIAssociation *appsync.ApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Domain Name Not found in state: %s", resourceName)

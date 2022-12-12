@@ -16,10 +16,10 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDataSourceConfig_basic(rName),

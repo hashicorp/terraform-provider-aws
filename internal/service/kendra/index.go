@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,36 +87,56 @@ func ResourceIndex() *schema.Resource {
 			"document_metadata_configuration_updates": {
 				Type:     schema.TypeSet,
 				Computed: true,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 500,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 30),
 						},
 						"relevance": {
 							Type:     schema.TypeList,
 							Computed: true,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"duration": {
 										Type:     schema.TypeString,
 										Computed: true,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10),
+											validation.StringMatch(
+												regexp.MustCompile(`[0-9]+[s]`),
+												"numeric string followed by the character \"s\"",
+											),
+										),
 									},
 									"freshness": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"importance": {
-										Type:     schema.TypeInt,
-										Computed: true,
+										Type:         schema.TypeInt,
+										Computed:     true,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 10),
 									},
 									"rank_order": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:             schema.TypeString,
+										Computed:         true,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.Order](),
 									},
 									"values_importance_map": {
 										Type:     schema.TypeMap,
 										Computed: true,
+										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeInt},
 									},
 								},
@@ -123,40 +145,47 @@ func ResourceIndex() *schema.Resource {
 						"search": {
 							Type:     schema.TypeList,
 							Computed: true,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"displayable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"facetable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"searchable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 									"sortable": {
 										Type:     schema.TypeBool,
 										Computed: true,
+										Optional: true,
 									},
 								},
 							},
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.DocumentAttributeValueType](),
 						},
 					},
 				},
 			},
 			"edition": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      string(types.IndexEditionEnterpriseEdition),
-				ValidateFunc: validation.StringInSlice(indexEditionValues(types.IndexEdition("").Values()...), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          string(types.IndexEditionEnterpriseEdition),
+				ValidateDiagFunc: enum.Validate[types.IndexEdition](),
 			},
 			"error_message": {
 				Type:     schema.TypeString,
@@ -239,10 +268,10 @@ func ResourceIndex() *schema.Resource {
 				Computed: true,
 			},
 			"user_context_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      string(types.UserContextPolicyAttributeFilter),
-				ValidateFunc: validation.StringInSlice(userContextPolicyValues(types.UserContextPolicy("").Values()...), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(types.UserContextPolicyAttributeFilter),
+				ValidateDiagFunc: enum.Validate[types.UserContextPolicy](),
 			},
 			"user_group_resolution_configuration": {
 				Type:     schema.TypeList,
@@ -251,9 +280,9 @@ func ResourceIndex() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"user_group_resolution_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(userGroupResolutionModeValues(types.UserGroupResolutionMode("").Values()...), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.UserGroupResolutionMode](),
 						},
 					},
 				},
@@ -305,9 +334,9 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 65),
 									},
 									"key_location": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(keyLocationValues(types.KeyLocation("").Values()...), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.KeyLocation](),
 									},
 									"secrets_manager_arn": {
 										Type:         schema.TypeString,
@@ -343,7 +372,7 @@ func ResourceIndex() *schema.Resource {
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -418,8 +447,19 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
+	callUpdateIndex := false
+
 	// CreateIndex API does not support capacity_units but UpdateIndex does
 	if v, ok := d.GetOk("capacity_units"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		callUpdateIndex = true
+	}
+
+	// CreateIndex API does not support document_metadata_configuration_updates but UpdateIndex does
+	if v, ok := d.GetOk("document_metadata_configuration_updates"); ok && v.(*schema.Set).Len() >= 13 {
+		callUpdateIndex = true
+	}
+
+	if callUpdateIndex {
 		return resourceIndexUpdate(ctx, d, meta)
 	}
 
@@ -427,7 +467,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -505,11 +545,11 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	id := d.Id()
 
-	if d.HasChanges("capacity_units", "description", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("capacity_units", "description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
 		}
@@ -518,6 +558,9 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
+		}
+		if d.HasChange("document_metadata_configuration_updates") {
+			input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
 		}
 		if d.HasChange("name") {
 			input.Name = aws.String(d.Get("name").(string))
@@ -572,7 +615,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	id := d.Id()
 
@@ -635,10 +678,9 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.S
 }
 
 func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-
 	stateConf := &resource.StateChangeConf{
-		Pending: IndexStatusValues(types.IndexStatusCreating),
-		Target:  IndexStatusValues(types.IndexStatusActive),
+		Pending: enum.Slice(types.IndexStatusCreating),
+		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
 	}
@@ -656,10 +698,9 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-
 	stateConf := &resource.StateChangeConf{
-		Pending: IndexStatusValues(types.IndexStatusUpdating),
-		Target:  IndexStatusValues(types.IndexStatusActive),
+		Pending: enum.Slice(types.IndexStatusUpdating),
+		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
 	}
@@ -678,7 +719,7 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 
 func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: IndexStatusValues(types.IndexStatusDeleting),
+		Pending: enum.Slice(types.IndexStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
@@ -708,6 +749,96 @@ func expandCapacityUnits(capacityUnits []interface{}) *types.CapacityUnitsConfig
 	result := &types.CapacityUnitsConfiguration{
 		QueryCapacityUnits:   aws.Int32(int32(tfMap["query_capacity_units"].(int))),
 		StorageCapacityUnits: aws.Int32(int32(tfMap["storage_capacity_units"].(int))),
+	}
+
+	return result
+}
+
+func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []interface{}) []types.DocumentMetadataConfiguration {
+	if len(documentMetadataConfigurationUpdates) == 0 {
+		return nil
+	}
+
+	documentMetadataConfigurationUpdateConfigs := []types.DocumentMetadataConfiguration{}
+
+	for _, documentMetadataConfigurationUpdate := range documentMetadataConfigurationUpdates {
+		tfMap := documentMetadataConfigurationUpdate.(map[string]interface{})
+		documentMetadataConfigurationUpdateConfig := types.DocumentMetadataConfiguration{
+			Name: aws.String(tfMap["name"].(string)),
+			Type: types.DocumentAttributeValueType(tfMap["type"].(string)),
+		}
+
+		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}), tfMap["type"].(string))
+		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]interface{}))
+
+		documentMetadataConfigurationUpdateConfigs = append(documentMetadataConfigurationUpdateConfigs, documentMetadataConfigurationUpdateConfig)
+	}
+
+	return documentMetadataConfigurationUpdateConfigs
+}
+
+func expandRelevance(relevance []interface{}, documentAttributeValueType string) *types.Relevance {
+	if len(relevance) == 0 || relevance[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := relevance[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.Relevance{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		result.Duration = aws.String(v)
+	}
+
+	// You can only set the Freshness field on one DATE type field
+	if v, ok := tfMap["freshness"].(bool); ok && documentAttributeValueType == string(types.DocumentAttributeValueTypeDateValue) {
+		result.Freshness = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["importance"].(int); ok {
+		result.Importance = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["rank_order"].(string); ok && v != "" {
+		result.RankOrder = types.Order(v)
+	}
+
+	if v, ok := tfMap["values_importance_map"].(map[string]interface{}); ok && len(v) > 0 {
+		result.ValueImportanceMap = flex.ExpandInt32Map(v)
+	}
+
+	return result
+}
+
+func expandSearch(search []interface{}) *types.Search {
+	if len(search) == 0 || search[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := search[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.Search{}
+
+	if v, ok := tfMap["displayable"].(bool); ok {
+		result.Displayable = v
+	}
+
+	if v, ok := tfMap["facetable"].(bool); ok {
+		result.Facetable = v
+	}
+
+	if v, ok := tfMap["searchable"].(bool); ok {
+		result.Searchable = v
+	}
+
+	if v, ok := tfMap["sortable"].(bool); ok {
+		result.Sortable = v
 	}
 
 	return result
@@ -852,7 +983,7 @@ func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []type
 	for _, documentMetadataConfiguration := range documentMetadataConfigurations {
 		values := map[string]interface{}{
 			"name":      documentMetadataConfiguration.Name,
-			"relevance": flattenRelevance(documentMetadataConfiguration.Relevance),
+			"relevance": flattenRelevance(documentMetadataConfiguration.Relevance, string(documentMetadataConfiguration.Type)),
 			"search":    flattenSearch(documentMetadataConfiguration.Search),
 			"type":      documentMetadataConfiguration.Type,
 		}
@@ -863,7 +994,7 @@ func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []type
 	return documentMetadataConfigurationsList
 }
 
-func flattenRelevance(relevance *types.Relevance) []interface{} {
+func flattenRelevance(relevance *types.Relevance, documentAttributeValueType string) []interface{} {
 	if relevance == nil {
 		return []interface{}{}
 	}
@@ -876,7 +1007,7 @@ func flattenRelevance(relevance *types.Relevance) []interface{} {
 		values["duration"] = aws.ToString(v)
 	}
 
-	if v := relevance.Freshness; v != nil {
+	if v := relevance.Freshness; v != nil && documentAttributeValueType == string(types.DocumentAttributeValueTypeDateValue) {
 		values["freshness"] = aws.ToBool(v)
 	}
 
@@ -1037,55 +1168,4 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	return []interface{}{values}
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func indexEditionValues(input ...types.IndexEdition) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func userContextPolicyValues(input ...types.UserContextPolicy) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func userGroupResolutionModeValues(input ...types.UserGroupResolutionMode) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func keyLocationValues(input ...types.KeyLocation) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func IndexStatusValues(input ...types.IndexStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }

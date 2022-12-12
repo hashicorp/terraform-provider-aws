@@ -137,6 +137,7 @@ provider "aws" {
   <li><code>connect</code></li>
   <li><code>connectcontactlens</code></li>
   <li><code>connectparticipant</code></li>
+  <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
   <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
@@ -202,7 +203,7 @@ provider "aws" {
   <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
-  <li><code>inspector2</code></li>
+  <li><code>inspector2</code> (or <code>inspectorv2</code>)</li>
   <li><code>iot</code></li>
   <li><code>iot1clickdevices</code> (or <code>iot1clickdevicesservice</code>)</li>
   <li><code>iot1clickprojects</code></li>
@@ -219,6 +220,7 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
+  <li><code>ivschat</code></li>
   <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
@@ -287,6 +289,7 @@ provider "aws" {
   <li><code>pinpoint</code></li>
   <li><code>pinpointemail</code></li>
   <li><code>pinpointsmsvoice</code></li>
+  <li><code>pipes</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
   <li><code>proton</code></li>
@@ -299,11 +302,14 @@ provider "aws" {
   <li><code>rdsdata</code> (or <code>rdsdataservice</code>)</li>
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
+  <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
   <li><code>resiliencehub</code></li>
+  <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
   <li><code>robomaker</code></li>
+  <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
   <li><code>route53recoverycluster</code></li>
@@ -320,6 +326,7 @@ provider "aws" {
   <li><code>sagemakerfeaturestoreruntime</code></li>
   <li><code>sagemakerruntime</code></li>
   <li><code>savingsplans</code></li>
+  <li><code>scheduler</code></li>
   <li><code>schemas</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>

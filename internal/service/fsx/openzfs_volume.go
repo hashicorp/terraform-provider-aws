@@ -128,6 +128,12 @@ func ResourceOpenzfsVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"record_size_kib": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      128,
+				ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+			},
 			"storage_capacity_quota_gib": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -209,6 +215,10 @@ func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error
 		input.OpenZFSConfiguration.ReadOnly = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("record_size_kib"); ok {
+		input.OpenZFSConfiguration.RecordSizeKiB = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("storage_capacity_quota_gib"); ok {
 		input.OpenZFSConfiguration.StorageCapacityQuotaGiB = aws.Int64(int64(v.(int)))
 	}
@@ -286,6 +296,7 @@ func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", volume.Name)
 	d.Set("parent_volume_id", openzfsConfig.ParentVolumeId)
 	d.Set("read_only", openzfsConfig.ReadOnly)
+	d.Set("record_size_kib", openzfsConfig.RecordSizeKiB)
 	d.Set("storage_capacity_quota_gib", openzfsConfig.StorageCapacityQuotaGiB)
 	d.Set("storage_capacity_reservation_gib", openzfsConfig.StorageCapacityReservationGiB)
 	d.Set("volume_type", volume.VolumeType)
@@ -357,6 +368,10 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 			input.OpenZFSConfiguration.ReadOnly = aws.Bool(d.Get("read_only").(bool))
 		}
 
+		if d.HasChange("record_size_kib") {
+			input.OpenZFSConfiguration.RecordSizeKiB = aws.Int64(int64(d.Get("record_size_kib").(int)))
+		}
+
 		if d.HasChange("storage_capacity_quota_gib") {
 			input.OpenZFSConfiguration.StorageCapacityQuotaGiB = aws.Int64(int64(d.Get("storage_capacity_quota_gib").(int)))
 		}
@@ -378,7 +393,6 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 		if _, err := waitVolumeUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx OpenZFS Volume (%s) update: %w", d.Id(), err)
 		}
-
 	}
 
 	return resourceOpenzfsVolumeRead(d, meta)
@@ -418,7 +432,6 @@ func expandOpenzfsVolumeUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUser
 	}
 
 	return quotas
-
 }
 
 func expandOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
@@ -441,7 +454,6 @@ func expandOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.Open
 	}
 
 	return &out
-
 }
 
 func expandOpenzfsVolumeNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
@@ -455,7 +467,6 @@ func expandOpenzfsVolumeNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	}
 
 	return exports
-
 }
 
 func expandOpenzfsVolumeNFSExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
@@ -479,7 +490,6 @@ func expandOpenzfsVolumeClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSCl
 	}
 
 	return configurations
-
 }
 
 func expandOpenzfsVolumeClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {

@@ -1,6 +1,6 @@
 package serverlessrepo
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"fmt"
 	"log"
 	"strings"

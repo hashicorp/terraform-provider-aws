@@ -93,7 +93,7 @@ func UpdateTagsWithContext(ctx context.Context, conn elasticbeanstalkiface.Elast
 	_, err := conn.UpdateTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil

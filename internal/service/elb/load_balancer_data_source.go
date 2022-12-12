@@ -1,6 +1,7 @@
 package elb
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -216,7 +217,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Reading ELB: %s", input)
 	resp, err := conn.DescribeLoadBalancers(input)
 	if err != nil {
-		return fmt.Errorf("error retrieving LB: %w", err)
+		return fmt.Errorf("retrieving LB: %w", err)
 	}
 	if len(resp.LoadBalancerDescriptions) != 1 {
 		return fmt.Errorf("search returned %d results, please revise so only one is returned", len(resp.LoadBalancerDescriptions))
@@ -240,7 +241,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	describeAttrsResp, err := conn.DescribeLoadBalancerAttributes(describeAttrsOpts)
 	if err != nil {
-		return fmt.Errorf("error retrieving ELB: %w", err)
+		return fmt.Errorf("retrieving ELB: %w", err)
 	}
 
 	lbAttrs := describeAttrsResp.LoadBalancerAttributes
@@ -269,9 +270,9 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = aws.StringValue(lb.VPCId)
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(context.TODO(), ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
 			if err != nil {
-				return fmt.Errorf("error looking up ELB Security Group ID: %w", err)
+				return fmt.Errorf("looking up ELB Security Group ID: %w", err)
 			} else {
 				d.Set("source_security_group_id", sg.GroupId)
 			}
@@ -319,11 +320,11 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ELB (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for ELB (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	// There's only one health check, so save that to state as we

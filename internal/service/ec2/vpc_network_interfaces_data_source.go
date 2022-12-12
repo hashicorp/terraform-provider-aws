@@ -1,7 +1,9 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,6 +15,10 @@ import (
 func DataSourceNetworkInterfaces() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNetworkInterfacesRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -45,7 +51,7 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 
 	networkInterfaceIDs := []string{}
 
-	output, err := FindNetworkInterfaces(conn, input)
+	output, err := FindNetworkInterfacesWithContext(context.TODO(), conn, input)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Network Interfaces: %w", err)

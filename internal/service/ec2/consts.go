@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -24,7 +25,7 @@ const (
 
 func FleetOnDemandAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
+		slices.RemoveAll(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
 		FleetOnDemandAllocationStrategyLowestPrice,
 	)
 }
@@ -36,7 +37,7 @@ const (
 
 func SpotAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
+		slices.RemoveAll(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
 		SpotAllocationStrategyLowestPrice,
 	)
 }
@@ -86,6 +87,18 @@ const (
 )
 
 const (
+	managedPrefixListAddressFamilyIPv4 = "IPv4"
+	managedPrefixListAddressFamilyIPv6 = "IPv6"
+)
+
+func managedPrefixListAddressFamily_Values() []string {
+	return []string{
+		managedPrefixListAddressFamilyIPv4,
+		managedPrefixListAddressFamilyIPv6,
+	}
+}
+
+const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
 	vpnTunnelOptionsDPDTimeoutActionRestart = "restart"
@@ -108,6 +121,18 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 	return []string{
 		vpnTunnelOptionsIKEVersion1,
 		vpnTunnelOptionsIKEVersion2,
+	}
+}
+
+const (
+	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
+	vpnTunnelCloudWatchLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogOutputFormatText,
 	}
 }
 
@@ -228,16 +253,6 @@ const (
 	TargetStorageTierStandard = "standard"
 )
 
-func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
-	for i, v := range slice {
-		if v == s {
-			return append(slice[:i], slice[i+1:]...)
-		}
-	}
-
-	return slice
-}
-
 const (
 	OutsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
 	OutsideIPAddressTypePublicIPv4  = "PublicIpv4"
@@ -247,5 +262,17 @@ func outsideIPAddressType_Values() []string {
 	return []string{
 		OutsideIPAddressTypePrivateIPv4,
 		OutsideIPAddressTypePublicIPv4,
+	}
+}
+
+const (
+	securityGroupRuleTypeEgress  = "egress"
+	securityGroupRuleTypeIngress = "ingress"
+)
+
+func securityGroupRuleType_Values() []string {
+	return []string{
+		securityGroupRuleTypeEgress,
+		securityGroupRuleTypeIngress,
 	}
 }

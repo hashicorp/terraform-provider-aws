@@ -29,11 +29,11 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),
@@ -69,11 +69,11 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
@@ -108,11 +108,11 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_tags1(rName, "key1", "value1"),
@@ -156,11 +156,11 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),
@@ -175,7 +175,7 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 }
 
 func testAccCheckMedicalVocabularyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transcribe_medical_vocabulary" {
@@ -209,7 +209,7 @@ func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcr
 			return fmt.Errorf("No Transcribe MedicalVocabulary is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 		resp, err := tftranscribe.FindMedicalVocabularyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
@@ -222,8 +222,8 @@ func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcr
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+func testAccMedicalVocabularyPreCheck(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	input := &transcribe.ListMedicalVocabulariesInput{}
 
@@ -248,13 +248,13 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object1" {
   bucket = aws_s3_bucket.test.id
   key    = "transcribe/test1.txt"
-  source = "test-fixtures/test1.txt"
+  source = "test-fixtures/medical_vocabulary_test1.txt"
 }
 
 resource "aws_s3_object" "object2" {
   bucket = aws_s3_bucket.test.id
   key    = "transcribe/test2.txt"
-  source = "test-fixtures/test2.txt"
+  source = "test-fixtures/medical_vocabulary_test2.txt"
 }
 
 `, rName)

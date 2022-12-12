@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -31,9 +32,9 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
@@ -68,9 +69,9 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
@@ -99,9 +100,10 @@ func testAccCheckClusterActivityStreamExistsProvider(resourceName string, dbClus
 			return fmt.Errorf("DBCluster ID is not set")
 		}
 
+		ctx := context.Background()
 		conn := provider.Meta().(*conns.AWSClient).RDSConn
 
-		response, err := tfrds.FindDBClusterWithActivityStream(conn, rs.Primary.ID)
+		response, err := tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -114,7 +116,6 @@ func testAccCheckClusterActivityStreamExistsProvider(resourceName string, dbClus
 
 func testAccCheckClusterActivityStreamAttributes(v *rds.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if aws.StringValue(v.DBClusterArn) == "" {
 			return fmt.Errorf("empty RDS Cluster arn")
 		}
@@ -144,6 +145,7 @@ func testAccCheckClusterActivityStreamDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterActivityStreamDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	ctx := context.Background()
 	conn := provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -153,7 +155,7 @@ func testAccCheckClusterActivityStreamDestroyWithProvider(s *terraform.State, pr
 
 		var err error
 
-		_, err = tfrds.FindDBClusterWithActivityStream(conn, rs.Primary.ID)
+		_, err = tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			// Return nil if the cluster is already destroyed
 			if tfresource.NotFound(err) {
@@ -177,7 +179,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = "%[1]s"
-  availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true

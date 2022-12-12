@@ -1,6 +1,6 @@
 package autoscaling
 
-import (
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
 	"fmt"
@@ -12,8 +12,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -23,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -844,25 +848,26 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	initialLifecycleHooks := d.Get("initial_lifecycle_hook").(*schema.Set).List()
 	twoPhases := len(initialLifecycleHooks) > 0
 
-	maxSize := aws.Int64(int64(d.Get("max_size").(int)))
-	minSize := aws.Int64(int64(d.Get("min_size").(int)))
+	maxSize := d.Get("max_size").(int)
+	minSize := d.Get("min_size").(int)
+	desiredCapacity := d.Get("desired_capacity").(int)
 
 	if twoPhases {
 		createInput.MaxSize = aws.Int64(0)
 		createInput.MinSize = aws.Int64(0)
 
-		updateInput.MaxSize = maxSize
-		updateInput.MinSize = minSize
+		updateInput.MaxSize = aws.Int64(int64(maxSize))
+		updateInput.MinSize = aws.Int64(int64(minSize))
 
-		if v, ok := d.GetOk("desired_capacity"); ok {
-			updateInput.DesiredCapacity = aws.Int64(int64(v.(int)))
+		if desiredCapacity > 0 {
+			updateInput.DesiredCapacity = aws.Int64(int64(desiredCapacity))
 		}
 	} else {
-		createInput.MaxSize = maxSize
-		createInput.MinSize = minSize
+		createInput.MaxSize = aws.Int64(int64(maxSize))
+		createInput.MinSize = aws.Int64(int64(minSize))
 
-		if v, ok := d.GetOk("desired_capacity"); ok {
-			createInput.DesiredCapacity = aws.Int64(int64(v.(int)))
+		if desiredCapacity > 0 {
+			createInput.DesiredCapacity = aws.Int64(int64(desiredCapacity))
 		}
 	}
 
@@ -976,8 +981,35 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := waitForASGCapacity(d, meta, CapacitySatisfiedCreate); err != nil {
-		return err
+	if v, ok := d.GetOk("wait_for_capacity_timeout"); ok {
+		if v, _ := time.ParseDuration(v.(string)); v > 0 {
+			// On creation all targets are minimums.
+			f := func(nASG, nELB int) error {
+				minSize := minSize
+				if desiredCapacity > 0 {
+					minSize = desiredCapacity
+				}
+
+				if nASG < minSize {
+					return fmt.Errorf("want at least %d healthy instance(s) in Auto Scaling Group, have %d", minSize, nASG)
+				}
+
+				minELBCapacity := d.Get("min_elb_capacity").(int)
+				if waitForELBCapacity := d.Get("wait_for_elb_capacity").(int); waitForELBCapacity > 0 {
+					minELBCapacity = waitForELBCapacity
+				}
+
+				if nELB < minELBCapacity {
+					return fmt.Errorf("want at least %d healthy instance(s) registered to Load Balancer, have %d", minELBCapacity, nELB)
+				}
+
+				return nil
+			}
+
+			if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn, meta.(*conns.AWSClient).ELBV2Conn, d.Id(), f, v); err != nil {
+				return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
+			}
+		}
 	}
 
 	if v, ok := d.GetOk("suspended_processes"); ok && v.(*schema.Set).Len() > 0 {
@@ -1372,7 +1404,6 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 				}
 			}
-
 		}
 
 		if add := flex.ExpandStringSet(ns.Difference(os)); len(add) > 0 {
@@ -1453,8 +1484,32 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if shouldWaitForCapacity {
-		if err := waitForASGCapacity(d, meta, CapacitySatisfiedUpdate); err != nil {
-			return fmt.Errorf("error waiting for Auto Scaling Group Capacity: %w", err)
+		if v, ok := d.GetOk("wait_for_capacity_timeout"); ok {
+			if v, _ := time.ParseDuration(v.(string)); v > 0 {
+				// On update all targets are specific.
+				f := func(nASG, nELB int) error {
+					minSize := d.Get("min_size").(int)
+					if desiredCapacity := d.Get("desired_capacity").(int); desiredCapacity > minSize {
+						minSize = desiredCapacity
+					}
+
+					if nASG != minSize {
+						return fmt.Errorf("want exactly %d healthy instance(s) in Auto Scaling Group, have %d", minSize, nASG)
+					}
+
+					if waitForELBCapacity := d.Get("wait_for_elb_capacity").(int); waitForELBCapacity > 0 {
+						if nELB != waitForELBCapacity {
+							return fmt.Errorf("want exactly %d healthy instance(s) registered to Load Balancer, have %d", waitForELBCapacity, nELB)
+						}
+					}
+
+					return nil
+				}
+
+				if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn, meta.(*conns.AWSClient).ELBV2Conn, d.Id(), f, v); err != nil {
+					return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
+				}
+			}
 		}
 	}
 
@@ -1703,6 +1758,78 @@ func drainWarmPool(conn *autoscaling.AutoScaling, name string, timeout time.Dura
 	return nil
 }
 
+func findELBInstanceStates(conn *elb.ELB, g *autoscaling.Group) (map[string]map[string]string, error) {
+	instanceStates := make(map[string]map[string]string)
+
+	for _, v := range g.LoadBalancerNames {
+		lbName := aws.StringValue(v)
+		input := &elb.DescribeInstanceHealthInput{
+			LoadBalancerName: aws.String(lbName),
+		}
+
+		output, err := conn.DescribeInstanceHealth(input)
+
+		if err != nil {
+			return nil, fmt.Errorf("reading load balancer (%s) instance health: %w", lbName, err)
+		}
+
+		instanceStates[lbName] = make(map[string]string)
+
+		for _, v := range output.InstanceStates {
+			instanceID := aws.StringValue(v.InstanceId)
+			if instanceID == "" {
+				continue
+			}
+			state := aws.StringValue(v.State)
+			if state == "" {
+				continue
+			}
+
+			instanceStates[lbName][instanceID] = state
+		}
+	}
+
+	return instanceStates, nil
+}
+
+func findELBV2InstanceStates(conn *elbv2.ELBV2, g *autoscaling.Group) (map[string]map[string]string, error) {
+	instanceStates := make(map[string]map[string]string)
+
+	for _, v := range g.TargetGroupARNs {
+		targetGroupARN := aws.StringValue(v)
+		input := &elbv2.DescribeTargetHealthInput{
+			TargetGroupArn: aws.String(targetGroupARN),
+		}
+
+		output, err := conn.DescribeTargetHealth(input)
+
+		if err != nil {
+			return nil, fmt.Errorf("reading target group (%s) instance health: %w", targetGroupARN, err)
+		}
+
+		instanceStates[targetGroupARN] = make(map[string]string)
+
+		for _, v := range output.TargetHealthDescriptions {
+			if v.Target == nil || v.TargetHealth == nil {
+				continue
+			}
+
+			instanceID := aws.StringValue(v.Target.Id)
+			if instanceID == "" {
+				continue
+			}
+			state := aws.StringValue(v.TargetHealth.State)
+			if state == "" {
+				continue
+			}
+
+			instanceStates[targetGroupARN][instanceID] = state
+		}
+	}
+
+	return instanceStates, nil
+}
+
 func findGroup(conn *autoscaling.AutoScaling, input *autoscaling.DescribeAutoScalingGroupsInput) (*autoscaling.Group, error) {
 	output, err := findGroups(conn, input)
 
@@ -1763,6 +1890,57 @@ func FindGroupByName(conn *autoscaling.AutoScaling, name string) (*autoscaling.G
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}
+	}
+
+	return output, nil
+}
+
+func findInstanceRefresh(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) (*autoscaling.InstanceRefresh, error) {
+	output, err := FindInstanceRefreshes(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindInstanceRefreshes(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) ([]*autoscaling.InstanceRefresh, error) {
+	var output []*autoscaling.InstanceRefresh
+
+	err := describeInstanceRefreshesPages(conn, input, func(page *autoscaling.DescribeInstanceRefreshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceRefreshes {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
@@ -1840,6 +2018,47 @@ func findLoadBalancerTargetGroupStates(conn *autoscaling.AutoScaling, name strin
 	return output, nil
 }
 
+func findScalingActivities(conn *autoscaling.AutoScaling, input *autoscaling.DescribeScalingActivitiesInput) ([]*autoscaling.Activity, error) {
+	var output []*autoscaling.Activity
+
+	err := conn.DescribeScalingActivitiesPages(input, func(page *autoscaling.DescribeScalingActivitiesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Activities {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findScalingActivitiesByName(conn *autoscaling.AutoScaling, name string) ([]*autoscaling.Activity, error) {
+	input := &autoscaling.DescribeScalingActivitiesInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+
+	return findScalingActivities(conn, input)
+}
+
 func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
 	input := &autoscaling.DescribeWarmPoolInput{
 		AutoScalingGroupName: aws.String(name),
@@ -1878,55 +2097,103 @@ func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.Desc
 	return output, nil
 }
 
-func findInstanceRefresh(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) (*autoscaling.InstanceRefresh, error) {
-	output, err := FindInstanceRefreshes(conn, input)
+func statusGroupCapacity(conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Check for fatal error in activity logs.
+		scalingActivities, err := findScalingActivitiesByName(conn, name)
 
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
-}
-
-func FindInstanceRefreshes(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) ([]*autoscaling.InstanceRefresh, error) {
-	var output []*autoscaling.InstanceRefresh
-
-	err := describeInstanceRefreshesPages(conn, input, func(page *autoscaling.DescribeInstanceRefreshesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			return nil, "", fmt.Errorf("reading scaling activities: %w", err)
 		}
 
-		for _, v := range page.InstanceRefreshes {
-			if v == nil {
+		var errors *multierror.Error
+
+		for _, v := range scalingActivities {
+			if statusCode := aws.StringValue(v.StatusCode); statusCode == autoscaling.ScalingActivityStatusCodeFailed && aws.Int64Value(v.Progress) == 100 {
+				errors = multierror.Append(errors, fmt.Errorf("Scaling activity (%s): %s: %s", aws.StringValue(v.ActivityId), statusCode, aws.StringValue(v.StatusMessage)))
+			}
+		}
+
+		err = errors.ErrorOrNil()
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		g, err := FindGroupByName(conn, name)
+
+		if err != nil {
+			return nil, "", fmt.Errorf("reading Auto Scaling Group (%s): %w", name, err)
+		}
+
+		lbInstanceStates, err := findELBInstanceStates(elbconn, g)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		targetGroupInstanceStates, err := findELBV2InstanceStates(elbv2conn, g)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		nASG := 0
+		nELB := 0
+
+		for _, v := range g.Instances {
+			instanceID := aws.StringValue(v.InstanceId)
+			if instanceID == "" {
 				continue
 			}
 
-			output = append(output, v)
+			if aws.StringValue(v.HealthStatus) != InstanceHealthStatusHealthy {
+				continue
+			}
+
+			if aws.StringValue(v.LifecycleState) != autoscaling.LifecycleStateInService {
+				continue
+			}
+
+			increment := 1
+			if v := aws.StringValue(v.WeightedCapacity); v != "" {
+				v, _ := strconv.Atoi(v)
+				increment = v
+			}
+
+			nASG += increment
+
+			inAll := true
+
+			for _, v := range lbInstanceStates {
+				if state, ok := v[instanceID]; ok && state != tfelb.InstanceStateInService {
+					inAll = false
+					break
+				}
+			}
+
+			if inAll {
+				for _, v := range targetGroupInstanceStates {
+					if state, ok := v[instanceID]; ok && state != elbv2.TargetHealthStateEnumHealthy {
+						inAll = false
+						break
+					}
+				}
+			}
+
+			if inAll {
+				nELB += increment
+			}
 		}
 
-		return !lastPage
-	})
+		err = cb(nASG, nELB)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return struct{}{}, err.Error(), nil //nolint:nilerr // err is passed via the result State
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		return struct{}{}, "ok", nil
 	}
-
-	return output, nil
 }
 
 func statusGroupInstanceCount(conn *autoscaling.AutoScaling, name string) resource.StateRefreshFunc {
@@ -2050,6 +2317,22 @@ func statusWarmPoolInstanceCount(conn *autoscaling.AutoScaling, name string) res
 
 		return output, strconv.Itoa(len(output.Instances)), nil
 	}
+}
+
+func waitGroupCapacitySatisfied(conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{"ok"},
+		Refresh: statusGroupCapacity(conn, elbconn, elbv2conn, name, cb),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(struct{ err error }); ok {
+		tfresource.SetLastError(err, output.err)
+	}
+
+	return err
 }
 
 func waitGroupDrained(conn *autoscaling.AutoScaling, name string, timeout time.Duration) (*autoscaling.Group, error) {

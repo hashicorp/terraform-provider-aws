@@ -22,10 +22,10 @@ func TestAccSSMParameter_basic(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
@@ -56,10 +56,10 @@ func TestAccSSMParameter_tier(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tier(rName, ssm.ParameterTierAdvanced),
@@ -98,10 +98,10 @@ func TestAccSSMParameter_Tier_intelligentTieringToStandard(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tier(rName, ssm.ParameterTierIntelligentTiering),
@@ -146,10 +146,10 @@ func TestAccSSMParameter_Tier_intelligentTieringToAdvanced(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tier(rName, ssm.ParameterTierIntelligentTiering),
@@ -197,10 +197,10 @@ func TestAccSSMParameter_Tier_intelligentTieringOnCreation(t *testing.T) {
 	value := sdkacctest.RandString(5000) // Maximum size for Standard tier is 4 KB
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tierWithValue(rName, ssm.ParameterTierIntelligentTiering, value),
@@ -228,10 +228,10 @@ func TestAccSSMParameter_Tier_intelligentTieringOnUpdate(t *testing.T) {
 	advancedSizedValue := sdkacctest.RandString(5000)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_tierWithValue(rName, ssm.ParameterTierIntelligentTiering, standardSizedValue),
@@ -257,10 +257,10 @@ func TestAccSSMParameter_disappears(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
@@ -280,15 +280,36 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
+			{
+
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+
+					input := &ssm.PutParameterInput{
+						Name:  aws.String(fmt.Sprintf("%s-%s", "test_parameter", name)),
+						Type:  aws.String(ssm.ParameterTypeString),
+						Value: aws.String("This value is set using the SDK"),
+					}
+
+					_, err := conn.PutParameter(input)
+					if err != nil {
+						t.Fatalf("creating SSM Parameter: (%s):, %s", name, err)
+					}
+				},
+				Config: testAccParameterConfig_basicOverwrite(name, "String", "This value is set using Terraform"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"),
 				),
 			},
 			{
@@ -303,7 +324,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "test3"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "4"),
 				),
 			},
 		},
@@ -315,10 +336,10 @@ func TestAccSSMParameter_Overwrite_cascade(t *testing.T) {
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_cascadeOverwrite(name, "test1"),
@@ -342,10 +363,10 @@ func TestAccSSMParameter_Overwrite_tags(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_overwriteTags1(rName, true, "key1", "value1"),
@@ -372,10 +393,10 @@ func TestAccSSMParameter_Overwrite_noOverwriteTags(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_overwriteTags1(rName, false, "key1", "value1"),
@@ -402,10 +423,10 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basicTags1(rName, "key1", "value1"),
@@ -438,10 +459,10 @@ func TestAccSSMParameter_tags(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basicTags1(rName, "key1", "value1"),
@@ -484,10 +505,10 @@ func TestAccSSMParameter_updateType(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "SecureString", "test2"),
@@ -515,10 +536,10 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test2"),
@@ -547,10 +568,10 @@ func TestAccSSMParameter_changeNameForcesNew(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(before, "String", "test2"),
@@ -581,10 +602,10 @@ func TestAccSSMParameter_fullPath(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
@@ -611,10 +632,10 @@ func TestAccSSMParameter_Secure_basic(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_basic(name, "SecureString", "secret"),
@@ -641,10 +662,10 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_insecure(rName, "String", "notsecret"),
@@ -681,10 +702,10 @@ func TestAccSSMParameter_Secure_insecureChangeSecure(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_insecure(rName, "String", "notsecret"),
@@ -720,16 +741,45 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_dataTypeEC2Image(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ec2:image"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) { //nosemgrep:ci.ssm-in-func-name
+	var param ssm.Parameter
+	webhookName := sdkacctest.RandString(16)
+	rName := fmt.Sprintf("/d9d01087-4a3f-49e0-b0b4-d568d7826553/ssm/integrations/webhook/%s", webhookName)
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_dataTypeSSMIntegration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ssm:integration"),
 				),
 			},
 			{
@@ -749,10 +799,10 @@ func TestAccSSMParameter_Secure_key(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_secureKey(name, "secret", randString),
@@ -780,10 +830,10 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckParameterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_secure(name, "secret"),
@@ -943,6 +993,18 @@ resource "aws_ssm_parameter" "test" {
   data_type = "aws:ec2:image"
   type      = "String"
   value     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+}
+`, rName))
+}
+
+func testAccParameterConfig_dataTypeSSMIntegration(rName string) string { // nosemgrep:ci.ssm-in-func-name
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name      = %[1]q
+  data_type = "aws:ssm:integration"
+  type      = "SecureString"
+  value     = "{\"description\": \"My first webhook integration for Automation.\", \"url\": \"https://example.com\"}"
 }
 `, rName))
 }

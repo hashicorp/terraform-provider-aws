@@ -459,6 +459,12 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"storage_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(kafka.StorageMode_Values(), true),
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"zookeeper_connect_string": {
@@ -512,6 +518,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("storage_mode"); ok {
+		input.StorageMode = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateClusterWithContext(ctx, input)
@@ -621,6 +631,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("open_monitoring", nil)
 	}
+
+	d.Set("storage_mode", cluster.StorageMode)
 
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
@@ -925,7 +937,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}

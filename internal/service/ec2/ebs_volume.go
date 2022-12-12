@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -122,6 +123,7 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		ClientToken:       aws.String(resource.UniqueId()),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
 	}
 
@@ -161,7 +163,6 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VolumeType = aws.String(value.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EBS Volume: %s", input)
 	output, err := conn.CreateVolume(input)
 
 	if err != nil {

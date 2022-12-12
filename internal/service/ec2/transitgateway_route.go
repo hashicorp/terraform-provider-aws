@@ -71,13 +71,13 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 	_, err := conn.CreateTransitGatewayRoute(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Transit Gateway Route (%s): %w", id, err)
+		return fmt.Errorf("creating EC2 Transit Gateway Route (%s): %w", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := WaitTransitGatewayRouteCreated(conn, transitGatewayRouteTableID, destination); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Route (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway Route (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceTransitGatewayRouteRead(d, meta)
@@ -103,17 +103,17 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Transit Gateway Route (%s): %w", d.Id(), err)
 	}
 
 	transitGatewayRoute := outputRaw.(*ec2.TransitGatewayRoute)
 
 	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
-	d.Set("transit_gateway_attachment_id", "")
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 && transitGatewayRoute.TransitGatewayAttachments[0] != nil {
 		d.Set("transit_gateway_attachment_id", transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
 		d.Set("blackhole", false)
 	} else {
+		d.Set("transit_gateway_attachment_id", "")
 		d.Set("blackhole", true)
 	}
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
@@ -141,11 +141,11 @@ func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway Route (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Transit Gateway Route (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayRouteDeleted(conn, transitGatewayRouteTableID, destination); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Route (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway Route (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

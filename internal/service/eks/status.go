@@ -41,38 +41,6 @@ func statusAddonUpdate(ctx context.Context, conn *eks.EKS, clusterName, addonNam
 	}
 }
 
-func statusCluster(conn *eks.EKS, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindClusterByName(conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
-func statusClusterUpdate(conn *eks.EKS, name, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindClusterUpdateByNameAndID(conn, name, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func statusFargateProfile(conn *eks.EKS, clusterName, fargateProfileName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)

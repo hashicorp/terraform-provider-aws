@@ -22,16 +22,13 @@ github_actions:
   - '.github/*.yml'
   - '.github/workflows/*.yml'
 linter:
+  - '.ci/**/*'
   - '.github/workflows/acctest-terraform-lint.yml'
+  - '.github/workflows/providerlint.yml'
+  - '.github/workflows/semgrep-ci.yml'
   - '.github/workflows/terraform_provider.yml'
   - '.github/workflows/website.yml'
-  - '.golangci.yml'
-  - '.markdownlinkcheck.json'
-  - '.markdownlint.yml'
-  - '.semgrep.yml'
-  - '.tflint.hcl'
-  - 'providerlint/**/*'
-  - 'staticcheck.conf'
+  - '.github/workflows/workflow-lint.yml'
 pre-service-packages:
   - '**/data_source_aws_*'
   - '**/resource_aws_*'
@@ -274,6 +271,9 @@ service/connectcontactlens:
 service/connectparticipant:
   - 'internal/service/connectparticipant/**/*'
   - 'website/**/connectparticipant_*'
+service/controltower:
+  - 'internal/service/controltower/**/*'
+  - 'website/**/controltower_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -555,6 +555,9 @@ service/ipam:
 service/ivs:
   - 'internal/service/ivs/**/*'
   - 'website/**/ivs_*'
+service/ivschat:
+  - 'internal/service/ivschat/**/*'
+  - 'website/**/ivschat_*'
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
@@ -663,7 +666,7 @@ service/mediaconvert:
   - 'website/**/media_convert_*'
 service/medialive:
   - 'internal/service/medialive/**/*'
-  - 'website/**/media_live_*'
+  - 'website/**/medialive_*'
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'
@@ -769,6 +772,9 @@ service/pinpointemail:
 service/pinpointsmsvoice:
   - 'internal/service/pinpointsmsvoice/**/*'
   - 'website/**/pinpointsmsvoice_*'
+service/pipes:
+  - 'internal/service/pipes/**/*'
+  - 'website/**/pipes_*'
 service/polly:
   - 'internal/service/polly/**/*'
   - 'website/**/polly_*'
@@ -806,12 +812,18 @@ service/redshift:
 service/redshiftdata:
   - 'internal/service/redshiftdata/**/*'
   - 'website/**/redshiftdata_*'
+service/redshiftserverless:
+  - 'internal/service/redshiftserverless/**/*'
+  - 'website/**/redshiftserverless_*'
 service/rekognition:
   - 'internal/service/rekognition/**/*'
   - 'website/**/rekognition_*'
 service/resiliencehub:
   - 'internal/service/resiliencehub/**/*'
   - 'website/**/resiliencehub_*'
+service/resourceexplorer2:
+  - 'internal/service/resourceexplorer2/**/*'
+  - 'website/**/resourceexplorer2_*'
 service/resourcegroups:
   - 'internal/service/resourcegroups/**/*'
   - 'website/**/resourcegroups_*'
@@ -821,6 +833,9 @@ service/resourcegroupstaggingapi:
 service/robomaker:
   - 'internal/service/robomaker/**/*'
   - 'website/**/robomaker_*'
+service/rolesanywhere:
+  - 'internal/service/rolesanywhere/**/*'
+  - 'website/**/rolesanywhere_*'
 service/route53:
   - 'internal/service/route53/**/*'
   - 'website/**/route53_delegation_*'
@@ -881,6 +896,9 @@ service/sagemakerruntime:
 service/savingsplans:
   - 'internal/service/savingsplans/**/*'
   - 'website/**/savingsplans_*'
+service/scheduler:
+  - 'internal/service/scheduler/**/*'
+  - 'website/**/scheduler_*'
 service/schemas:
   - 'internal/service/schemas/**/*'
   - 'website/**/schemas_*'
@@ -1023,6 +1041,7 @@ service/vpc:
   - 'website/**/vpc_dhcp_*'
   - 'website/**/vpc_endpoint*'
   - 'website/**/vpc_ipv*'
+  - 'website/**/vpc_network_performance*'
   - 'website/**/vpc_peering_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'

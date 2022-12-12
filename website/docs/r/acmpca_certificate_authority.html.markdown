@@ -31,6 +31,22 @@ resource "aws_acmpca_certificate_authority" "example" {
 }
 ```
 
+### Short-lived certificate
+
+```terraform
+resource "aws_acmpca_certificate_authority" "example" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "example.com"
+    }
+  }
+}
+```
+
 ### Enable Certificate Revocation List
 
 ```terraform
@@ -94,14 +110,15 @@ The following arguments are supported:
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
-* `tags` - (Optional) Specifies a key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) The type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
-* `permanent_deletion_time_in_days` - (Optional) The number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
+* `usage_mode` - (Optional) Specifies whether the CA issues general-purpose certificates that typically require a revocation mechanism, or short-lived certificates that may optionally omit revocation because they expire quickly. Short-lived certificate validity is limited to seven days. Defaults to `GENERAL_PURPOSE`. Valid values: `GENERAL_PURPOSE` and `SHORT_LIVED_CERTIFICATE`.
+* `tags` - (Optional) Key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` - (Optional) Type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
+* `permanent_deletion_time_in_days` - (Optional) Number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
 
 ### certificate_authority_configuration
 
-* `key_algorithm` - (Required) Type of the public key algorithm and size, in bits, of the key pair that your key pair creates when it issues a certificate. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
-* `signing_algorithm` - (Required) Name of the algorithm your private CA uses to sign certificate requests. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
+* `key_algorithm` - (Required) Type of the public key algorithm and size, in bits, of the key pair that your key pair creates when it issues a certificate. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
+* `signing_algorithm` - (Required) Name of the algorithm your private CA uses to sign certificate requests. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
 * `subject` - (Required) Nested argument that contains X.500 distinguished name information. At least one nested attribute must be specified.
 
 #### subject
@@ -114,13 +131,13 @@ Contains information about the certificate subject. Identifies the entity that o
 * `generation_qualifier` - (Optional) Typically a qualifier appended to the name of an individual. Examples include Jr. for junior, Sr. for senior, and III for third. Must be less than or equal to 3 characters in length.
 * `given_name` - (Optional) First name. Must be less than or equal to 16 characters in length.
 * `initials` - (Optional) Concatenation that typically contains the first letter of the `given_name`, the first letter of the middle name if one exists, and the first letter of the `surname`. Must be less than or equal to 5 characters in length.
-* `locality` - (Optional) The locality (such as a city or town) in which the certificate subject is located. Must be less than or equal to 128 characters in length.
+* `locality` - (Optional) Locality (such as a city or town) in which the certificate subject is located. Must be less than or equal to 128 characters in length.
 * `organization` - (Optional) Legal name of the organization with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
-* `organizational_unit` - (Optional) A subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
+* `organizational_unit` - (Optional) Subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
 * `pseudonym` - (Optional) Typically a shortened version of a longer `given_name`. For example, Jonathan is often shortened to John. Elizabeth is often shortened to Beth, Liz, or Eliza. Must be less than or equal to 128 characters in length.
 * `state` - (Optional) State in which the subject of the certificate is located. Must be less than or equal to 128 characters in length.
 * `surname` - (Optional) Family name. In the US and the UK for example, the surname of an individual is ordered last. In Asian cultures the surname is typically ordered first. Must be less than or equal to 40 characters in length.
-* `title` - (Optional) A title such as Mr. or Ms. which is pre-pended to the name to refer formally to the certificate subject. Must be less than or equal to 64 characters in length.
+* `title` - (Optional) Title such as Mr. or Ms. which is pre-pended to the name to refer formally to the certificate subject. Must be less than or equal to 64 characters in length.
 
 ### revocation_configuration
 
@@ -139,14 +156,14 @@ the custom OCSP responder endpoint. Defined below.
 #### ocsp_configuration
 
 * `enabled` - (Required) Boolean value that specifies whether a custom OCSP responder is enabled.
-* `ocsp_custom_cname` - (Optional) A CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
+* `ocsp_custom_cname` - (Optional) CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Amazon Resource Name (ARN) of the certificate authority.
-* `arn` - Amazon Resource Name (ARN) of the certificate authority.
+* `id` - ARN of the certificate authority.
+* `arn` - ARN of the certificate authority.
 * `certificate` - Base64-encoded certificate authority (CA) certificate. Only available after the certificate authority certificate has been imported.
 * `certificate_chain` - Base64-encoded certificate chain that includes any intermediate certificates and chains up to root on-premises certificate that you used to sign your private CA certificate. The chain does not include your private CA certificate. Only available after the certificate authority certificate has been imported.
 * `certificate_signing_request` - The base64 PEM-encoded certificate signing request (CSR) for your private CA certificate.
@@ -154,18 +171,17 @@ In addition to all arguments above, the following attributes are exported:
 * `not_before` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
 * `status` - (**Deprecated** use the `enabled` attribute instead) Status of the certificate authority.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_acmpca_certificate_authority` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1m`) How long to wait for a certificate authority to be created.
+* `create` - (Default `1m`)
 
 ## Import
 
-`aws_acmpca_certificate_authority` can be imported by using the certificate authority Amazon Resource Name (ARN), e.g.,
+`aws_acmpca_certificate_authority` can be imported by using the certificate authority ARN, e.g.,
 
 ```
 $ terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012

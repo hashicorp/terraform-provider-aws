@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -96,23 +97,23 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetPublicKey(request)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id(), err)
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		return names.Error(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id(), errors.New("empty response after creation"))
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), errors.New("empty response after creation"))
 	}
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig

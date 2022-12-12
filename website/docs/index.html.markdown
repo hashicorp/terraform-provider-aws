@@ -14,7 +14,7 @@ with the proper credentials before you can use it.
 Use the navigation to the left to read about the available resources.
 
 To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) on HashiCorp's Learn platform. Interact with AWS services,
+hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
 including Lambda, RDS, and IAM by following the [AWS services
 tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
@@ -27,7 +27,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.0"
+      version = "~> 4.0"
     }
   }
 }
@@ -48,7 +48,7 @@ Terraform 0.12 and earlier:
 ```terraform
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 3.0"
+  version = "~> 4.0"
   region  = "us-east-1"
 }
 
@@ -131,7 +131,6 @@ Other environment variables related to authorization are:
 * `AWS_CONFIG_FILE`
 * `AWS_SHARED_CREDENTIALS_FILE`
 
-
 ### Shared Configuration and Credentials Files
 
 The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
@@ -186,7 +185,7 @@ provider "aws" {
 }
 ```
 
-> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial.
 
 ### Assuming an IAM Role Using A Web Identity
 
@@ -197,7 +196,7 @@ Usage:
 
 ```terraform
 provider "aws" {
-  assume_role {
+  assume_role_with_web_identity {
     role_arn                = "arn:aws:iam::123456789012:role/ROLE_NAME"
     session_name            = "SESSION_NAME"
     web_identity_token_file = "/Users/tf_user/secrets/web-identity-token"
@@ -261,6 +260,7 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 |Policy|`policy`|N/A|
 |Policy ARNs|`policy_arns`|N/A|
 |Session Name|`session_name`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|
 |Tags|`tags`|N/A|
 |Transitive Tag Keys|`transitive_tag_keys`|N/A|
 
@@ -275,7 +275,7 @@ In the provider, all parameters for assuming an IAM role are set in the `assume_
 See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|-----------------------|
+|-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
 |Web Identity Token|`web_identity_token`|N/A|N/A|
 |Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
@@ -320,7 +320,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   and the shared configuration parameter `max_attempts`.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
   Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
-* `region` - (Optional) The AWS region where the provider will operate. The region must be set.
+* `region` - (Optional) AWS region where the provider will operate. The region must be set.
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
@@ -331,7 +331,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `shared_credentials_file` - (Optional, **Deprecated**) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skip_credentials_validation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
-* `skip_get_ec2_platforms` - (Optional) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
+* `skip_get_ec2_platforms` - (Optional, **Deprecated**) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
 * `skip_metadata_api_check` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.
 * `skip_region_validation` - (Optional) Whether to skip validating the region. Useful for AWS-like implementations that use their own region names or to bypass the validation for regions that aren't publicly available yet.
 * `skip_requesting_account_id` - (Optional) Whether to skip requesting the account ID.  Useful for AWS API implementations that do not have the IAM, STS API, or metadata API.  When set to `true` and not determined previously, returns an empty account ID when manually constructing ARN attributes with the following:
@@ -459,13 +459,17 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 The `assume_role` configuration block supports the following arguments:
 
-* `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
-* `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration. You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
+* `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session.
+  You can provide a value from 15 minutes up to the maximum session duration setting for the role.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration.
+  You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
-* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to assume.
+* `role_arn` - (Required) ARN of the IAM Role to assume.
 * `session_name` - (Optional) Session name to use when assuming the role.
+* `source_identity` - (Optional) Source identity specified by the principal assuming the role.
 * `tags` - (Optional) Map of assume role session tags.
 * `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.
 
@@ -473,19 +477,24 @@ The `assume_role` configuration block supports the following arguments:
 
 The `assume_role_with_web_identity` configuration block supports the following arguments:
 
-* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `duration` - (Optional) Duration of the assume role session.
+  You can provide a value from 15 minutes up to the maximum session duration setting for the role.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
-* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to assume. Can also be set with the `AWS_ROLE_ARN` environment variable.
-* `session_name` - (Optional) Session name to use when assuming the role. Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
-* `web_identity_token` - (Optional) The value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
+* `role_arn` - (Required) ARN of the IAM Role to assume.
+  Can also be set with the `AWS_ROLE_ARN` environment variable.
+* `session_name` - (Optional) Session name to use when assuming the role.
+  Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
+* `web_identity_token` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
   One of `web_identity_token` or `web_identity_token_file` is required.
 * `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token_file` or `web_identity_token` is required. Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
+  One of `web_identity_token_file` or `web_identity_token` is required.
+  Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
 
 ### default_tags Configuration Block
 
-> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial.
 
 Example: Resource with provider default tags
 

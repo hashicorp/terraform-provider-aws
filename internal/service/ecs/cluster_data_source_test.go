@@ -16,9 +16,9 @@ func TestAccECSClusterDataSource_ecsCluster(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
@@ -27,6 +27,7 @@ func TestAccECSClusterDataSource_ecsCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "service_connect_defaults.#", resourceName, "service_connect_defaults.#"),
 					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
 				),
 			},
@@ -40,9 +41,9 @@ func TestAccECSClusterDataSource_ecsClusterContainerInsights(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_containerInsights(rName),

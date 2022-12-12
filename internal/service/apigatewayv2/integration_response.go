@@ -81,7 +81,7 @@ func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Creating API Gateway v2 integration response: %s", req)
 	resp, err := conn.CreateIntegrationResponse(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("creating API Gateway v2 integration response: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.IntegrationResponseId))
@@ -103,14 +103,14 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("reading API Gateway v2 integration response: %s", err)
 	}
 
 	d.Set("content_handling_strategy", resp.ContentHandlingStrategy)
 	d.Set("integration_response_key", resp.IntegrationResponseKey)
 	err = d.Set("response_templates", flex.PointersMapToStringList(resp.ResponseTemplates))
 	if err != nil {
-		return fmt.Errorf("error setting response_templates: %s", err)
+		return fmt.Errorf("setting response_templates: %s", err)
 	}
 	d.Set("template_selection_expression", resp.TemplateSelectionExpression)
 
@@ -141,7 +141,7 @@ func resourceIntegrationResponseUpdate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Updating API Gateway v2 integration response: %s", req)
 	_, err := conn.UpdateIntegrationResponse(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("updating API Gateway v2 integration response: %s", err)
 	}
 
 	return resourceIntegrationResponseRead(d, meta)
@@ -160,7 +160,7 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 integration response: %s", err)
 	}
 
 	return nil
@@ -169,7 +169,7 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 func resourceIntegrationResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/integration-id/integration-response-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id/integration-response-id'", d.Id())
 	}
 
 	d.SetId(parts[2])

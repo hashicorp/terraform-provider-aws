@@ -70,13 +70,13 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 * `synonyms` - (Optional) Additional values related to the slot type value. Each item must be less than or equal to 140 characters in length.
 * `value` - (Required) The value of the slot type. Must be less than or equal to 140 characters in length.
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Defaults to 1 min) Used when creating the slot type
-* `update` - (Defaults to 1 min) Used when updating the slot type
-* `delete` - (Defaults to 5 mins) Used when deleting the slot type
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Attributes Reference
 

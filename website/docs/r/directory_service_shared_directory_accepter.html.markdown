@@ -47,6 +47,13 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_account_id` - Account identifier of the directory owner.
 * `owner_directory_id` - Identifier of the Managed Microsoft AD directory from the perspective of the directory owner.
 
+## Timeouts
+
+`aws_directory_service_shared_directory_accepter` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
+
+- `create` - (Default `60 minutes`) Used for directory creation
+- `delete` - (Default `60 minutes`) Used for directory deletion
+
 ## Import
 
 Directory Service Shared Directories can be imported using the shared directory ID, e.g.,

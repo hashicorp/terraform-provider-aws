@@ -26,9 +26,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_basic(rName),
@@ -59,9 +59,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_basic(rName),
@@ -85,9 +85,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_description(rName, "test"),
@@ -110,9 +110,9 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublicDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicDNSNamespaceConfig_tags1(rName, "key1", "value1"),
@@ -156,7 +156,7 @@ func testAccCheckPublicDNSNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -185,7 +185,7 @@ func testAccCheckPublicDNSNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}

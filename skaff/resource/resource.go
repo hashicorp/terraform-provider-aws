@@ -3,7 +3,9 @@ package resource
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -23,15 +25,17 @@ var resourceTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	Resource          string
-	ResourceLower     string
-	IncludeComments   bool
-	ServicePackage    string
-	Service           string
-	ServiceLower      string
-	AWSServiceName    string
-	AWSGoSDKV2        bool
-	HumanResourceName string
+	Resource             string
+	ResourceLower        string
+	ResourceSnake        string
+	HumanFriendlyService string
+	IncludeComments      bool
+	ServicePackage       string
+	Service              string
+	ServiceLower         string
+	AWSServiceName       string
+	AWSGoSDKV2           bool
+	HumanResourceName    string
 }
 
 func ToSnakeCase(upper string, snakeName string) string {
@@ -74,6 +78,8 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
+	snakeName = ToSnakeCase(resName, snakeName)
+
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
@@ -84,29 +90,36 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
-	templateData := TemplateData{
-		Resource:          resName,
-		ResourceLower:     strings.ToLower(resName),
-		IncludeComments:   comments,
-		ServicePackage:    servicePackage,
-		Service:           s,
-		ServiceLower:      strings.ToLower(s),
-		AWSServiceName:    sn,
-		AWSGoSDKV2:        v2,
-		HumanResourceName: HumanResName(resName),
+	hf, err := names.HumanFriendly(servicePackage)
+	if err != nil {
+		return fmt.Errorf("error getting human-friendly name: %w", err)
 	}
 
-	f := fmt.Sprintf("%s.go", ToSnakeCase(resName, snakeName))
+	templateData := TemplateData{
+		Resource:             resName,
+		ResourceLower:        strings.ToLower(resName),
+		ResourceSnake:        snakeName,
+		HumanFriendlyService: hf,
+		IncludeComments:      comments,
+		ServicePackage:       servicePackage,
+		Service:              s,
+		ServiceLower:         strings.ToLower(s),
+		AWSServiceName:       sn,
+		AWSGoSDKV2:           v2,
+		HumanResourceName:    HumanResName(resName),
+	}
+
+	f := fmt.Sprintf("%s.go", snakeName)
 	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 
-	tf := fmt.Sprintf("%s_test.go", ToSnakeCase(resName, snakeName))
+	tf := fmt.Sprintf("%s_test.go", snakeName)
 	if err = writeTemplate("restest", tf, resourceTestTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource test template: %w", err)
 	}
 
-	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, ToSnakeCase(resName, snakeName))
+	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)
 	wf = filepath.Join("..", "..", "..", "website", "docs", "r", wf)
 	if err = writeTemplate("webdoc", wf, websiteTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource website doc template: %w", err)
@@ -116,7 +129,7 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 }
 
 func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
-	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
+	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}
 

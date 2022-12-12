@@ -12,7 +12,6 @@ import (
 )
 
 func ResourceDomainNameAPIAssociation() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceDomainNameAPIAssociationCreate,
 		Read:   resourceDomainNameAPIAssociationRead,

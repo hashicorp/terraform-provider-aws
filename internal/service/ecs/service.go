@@ -32,6 +32,7 @@ func ResourceService() *schema.Resource {
 		Read:   resourceServiceRead,
 		Update: resourceServiceUpdate,
 		Delete: resourceServiceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceServiceImport,
 		},
@@ -72,16 +73,10 @@ func ResourceService() *schema.Resource {
 				ForceNew: true,
 			},
 			"deployment_circuit_breaker": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				// Ignore missing configuration block
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enable": {
@@ -96,16 +91,10 @@ func ResourceService() *schema.Resource {
 				},
 			},
 			"deployment_controller": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				// Ignore missing configuration block
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -226,13 +215,11 @@ func ResourceService() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 					},
 				},
@@ -306,6 +293,98 @@ func ResourceService() *schema.Resource {
 				Default:      ecs.SchedulingStrategyReplica,
 				ValidateFunc: validation.StringInSlice(ecs.SchedulingStrategy_Values(), false),
 			},
+			"service_connect_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"log_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_driver": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ecs.LogDriver_Values(), false),
+									},
+									"options": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"secret_option": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"value_from": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"namespace": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"service": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"client_alias": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"dns_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"port": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
+											},
+										},
+									},
+									"discovery_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"ingress_port_override": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 65535),
+									},
+									"port_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"service_registries": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -340,6 +419,14 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			// modeled after null_resource & aws_api_gateway_deployment
+			// only for _updates in-place_ rather than replacements
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"wait_for_steady_state": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -350,59 +437,9 @@ func ResourceService() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			capacityProviderStrategyCustomizeDiff,
+			triggersCustomizeDiff,
 		),
 	}
-}
-
-func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	// to be backward compatible, should ForceNew almost always (previous behavior), unless:
-	//   force_new_deployment is true and
-	//   neither the old set nor new set is 0 length
-	if v := d.Get("force_new_deployment").(bool); !v {
-		return capacityProviderStrategyForceNew(d)
-	}
-
-	old, new := d.GetChange("capacity_provider_strategy")
-
-	ol := old.(*schema.Set).Len()
-	nl := new.(*schema.Set).Len()
-
-	if (ol == 0 && nl > 0) || (ol > 0 && nl == 0) {
-		return capacityProviderStrategyForceNew(d)
-	}
-
-	return nil
-}
-
-func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
-	for _, key := range d.GetChangedKeysPrefix("capacity_provider_strategy") {
-		if d.HasChange(key) {
-			if err := d.ForceNew(key); err != nil {
-				return fmt.Errorf("while attempting to force a new ECS service for capacity_provider_strategy: %w", err)
-			}
-		}
-	}
-	return nil
-}
-
-func resourceServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if len(strings.Split(d.Id(), "/")) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", d.Id())
-	}
-	cluster := strings.Split(d.Id(), "/")[0]
-	name := strings.Split(d.Id(), "/")[1]
-	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", name, cluster)
-
-	d.SetId(name)
-	clusterArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "ecs",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("cluster/%s", cluster),
-	}.String()
-	d.Set("cluster", clusterArn)
-	return []*schema.ResourceData{d}, nil
 }
 
 func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
@@ -419,9 +456,12 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		DeploymentController: deploymentController,
 		SchedulingStrategy:   aws.String(schedulingStrategy),
 		ServiceName:          aws.String(d.Get("name").(string)),
-		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
 		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 		EnableExecuteCommand: aws.Bool(d.Get("enable_execute_command").(bool)),
+	}
+
+	if v, ok := d.GetOk("task_definition"); ok {
+		input.TaskDefinition = aws.String(v.(string))
 	}
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
@@ -502,6 +542,10 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.PlacementConstraints = pc
 	}
 
+	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.ServiceConnectConfiguration = expandServiceConnectConfiguration(v.([]interface{}))
+	}
+
 	serviceRegistries := d.Get("service_registries").([]interface{})
 	if len(serviceRegistries) > 0 {
 		srs := make([]*ecs.ServiceRegistry, 0, len(serviceRegistries))
@@ -534,7 +578,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := serviceCreateWithRetry(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
@@ -569,7 +613,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
@@ -639,6 +683,8 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
+	d.Set("triggers", d.Get("triggers"))
+
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
@@ -694,6 +740,10 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting network_configuration for (%s): %w", d.Id(), err)
 	}
 
+	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
+	// 	return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
+	// }
+
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return fmt.Errorf("error setting service_registries for (%s): %w", d.Id(), err)
 	}
@@ -709,6 +759,326 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
+	return nil
+}
+
+func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ECSConn
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ecs.UpdateServiceInput{
+			Cluster:            aws.String(d.Get("cluster").(string)),
+			ForceNewDeployment: aws.Bool(d.Get("force_new_deployment").(bool)),
+			Service:            aws.String(d.Id()),
+		}
+
+		schedulingStrategy := d.Get("scheduling_strategy").(string)
+
+		if schedulingStrategy == ecs.SchedulingStrategyDaemon {
+			if d.HasChange("deployment_minimum_healthy_percent") {
+				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
+					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
+				}
+			}
+		} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
+			if d.HasChange("desired_count") {
+				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+			}
+
+			if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
+				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
+					MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
+					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
+				}
+			}
+		}
+
+		if d.HasChange("deployment_circuit_breaker") {
+			if input.DeploymentConfiguration == nil {
+				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+			}
+
+			// To remove an existing deployment circuit breaker, specify an empty object.
+			input.DeploymentConfiguration.DeploymentCircuitBreaker = &ecs.DeploymentCircuitBreaker{}
+
+			if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("ordered_placement_strategy") {
+			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementStrategy
+			// To remove an existing placement strategy, specify an empty object.
+			input.PlacementStrategy = []*ecs.PlacementStrategy{}
+
+			if v, ok := d.GetOk("ordered_placement_strategy"); ok && len(v.([]interface{})) > 0 {
+				ps, err := expandPlacementStrategy(v.([]interface{}))
+
+				if err != nil {
+					return err
+				}
+
+				input.PlacementStrategy = ps
+			}
+		}
+
+		if d.HasChange("placement_constraints") {
+			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementConstraints
+			// To remove all existing placement constraints, specify an empty array.
+			input.PlacementConstraints = []*ecs.PlacementConstraint{}
+
+			if v, ok := d.Get("placement_constraints").(*schema.Set); ok && v.Len() > 0 {
+				pc, err := expandPlacementConstraints(v.List())
+
+				if err != nil {
+					return err
+				}
+
+				input.PlacementConstraints = pc
+			}
+		}
+
+		if d.HasChange("platform_version") {
+			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
+		}
+
+		if d.HasChange("health_check_grace_period_seconds") {
+			input.HealthCheckGracePeriodSeconds = aws.Int64(int64(d.Get("health_check_grace_period_seconds").(int)))
+		}
+
+		if d.HasChange("task_definition") {
+			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
+		}
+
+		if d.HasChange("network_configuration") {
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		}
+
+		if d.HasChange("capacity_provider_strategy") {
+			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+		}
+
+		if d.HasChange("enable_execute_command") {
+			input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
+		}
+
+		if d.HasChange("enable_ecs_managed_tags") {
+			input.EnableECSManagedTags = aws.Bool(d.Get("enable_ecs_managed_tags").(bool))
+		}
+
+		if d.HasChange("load_balancer") {
+			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
+				input.LoadBalancers = expandLoadBalancers(v.List())
+			}
+		}
+
+		if d.HasChange("propagate_tags") {
+			input.PropagateTags = aws.String(d.Get("propagate_tags").(string))
+		}
+
+		if d.HasChange("service_connect_configuration") {
+			input.ServiceConnectConfiguration = expandServiceConnectConfiguration(d.Get("service_connect_configuration").([]interface{}))
+		}
+
+		if d.HasChange("service_registries") {
+			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
+		}
+
+		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
+		// Retry due to IAM eventual consistency
+		err := resource.Retry(propagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateService(input)
+
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			_, err = conn.UpdateService(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating ECS Service (%s): %w", d.Id(), err)
+		}
+
+		cluster := d.Get("cluster").(string)
+		if d.Get("wait_for_steady_state").(bool) {
+			if _, err := waitServiceStable(conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after update: %w", d.Id(), err)
+			}
+		} else {
+			if _, err := waitServiceActive(conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for ECS service (%s) to become active after update: %w", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] failed updating tags for ECS Service (%s): %s", d.Id(), err)
+			return resourceServiceRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for ECS Service (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceServiceRead(d, meta)
+}
+
+func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ECSConn
+
+	service, err := FindServiceNoTagsByID(context.TODO(), conn, d.Id(), d.Get("cluster").(string))
+	if tfresource.NotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error retrieving ECS Service (%s) for deletion: %w", d.Id(), err)
+	}
+
+	if aws.StringValue(service.Status) == serviceStatusInactive {
+		return nil
+	}
+
+	// Drain the ECS service
+	if aws.StringValue(service.Status) != serviceStatusDraining && aws.StringValue(service.SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
+		log.Printf("[DEBUG] Draining ECS Service (%s)", d.Id())
+		_, err = conn.UpdateService(&ecs.UpdateServiceInput{
+			Service:      aws.String(d.Id()),
+			Cluster:      aws.String(d.Get("cluster").(string)),
+			DesiredCount: aws.Int64(0),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	input := ecs.DeleteServiceInput{
+		Service: aws.String(d.Id()),
+		Cluster: aws.String(d.Get("cluster").(string)),
+	}
+	// Wait until the ECS service is drained
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteService(&input)
+
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "The service cannot be stopped while deployments are active.") {
+				return resource.RetryableError(err)
+			}
+
+			if tfawserr.ErrMessageContains(err, "DependencyViolation", "has a dependent object") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteService(&input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting ECS Service (%s): %w", d.Id(), err)
+	}
+
+	if err := waitServiceInactive(conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for ECS Service (%s) to be deleted: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	if len(strings.Split(d.Id(), "/")) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", d.Id())
+	}
+	cluster := strings.Split(d.Id(), "/")[0]
+	name := strings.Split(d.Id(), "/")[1]
+	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", name, cluster)
+
+	d.SetId(name)
+	clusterArn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		Service:   "ecs",
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("cluster/%s", cluster),
+	}.String()
+	d.Set("cluster", clusterArn)
+	return []*schema.ResourceData{d}, nil
+}
+
+func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// clears diff to avoid extraneous diffs but lets it pass for triggering update
+	fnd := false
+	if v, ok := d.GetOk("force_new_deployment"); ok {
+		fnd = v.(bool)
+	}
+
+	if d.HasChange("triggers") && !fnd {
+		return d.Clear("triggers")
+	}
+
+	if d.HasChange("triggers") && fnd {
+		o, n := d.GetChange("triggers")
+		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
+			return d.Clear("triggers")
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
+func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// to be backward compatible, should ForceNew almost always (previous behavior), unless:
+	//   force_new_deployment is true and
+	//   neither the old set nor new set is 0 length
+	if v := d.Get("force_new_deployment").(bool); !v {
+		return capacityProviderStrategyForceNew(d)
+	}
+
+	old, new := d.GetChange("capacity_provider_strategy")
+
+	ol := old.(*schema.Set).Len()
+	nl := new.(*schema.Set).Len()
+
+	if (ol == 0 && nl > 0) || (ol > 0 && nl == 0) {
+		return capacityProviderStrategyForceNew(d)
+	}
+
+	return nil
+}
+
+func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
+	for _, key := range d.GetChangedKeysPrefix("capacity_provider_strategy") {
+		if d.HasChange(key) {
+			if err := d.ForceNew(key); err != nil {
+				return fmt.Errorf("while attempting to force a new ECS service for capacity_provider_strategy: %w", err)
+			}
+		}
+	}
 	return nil
 }
 
@@ -915,6 +1285,136 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 	return results
 }
 
+func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
+	if len(sc) == 0 {
+		return &ecs.ServiceConnectConfiguration{}
+	}
+	raw := sc[0].(map[string]interface{})
+
+	config := &ecs.ServiceConnectConfiguration{}
+	if v, ok := raw["enabled"].(bool); ok {
+		config.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := raw["log_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.LogConfiguration = expandLogConfiguration(v)
+	}
+
+	if v, ok := raw["namespace"].(string); ok && v != "" {
+		config.Namespace = aws.String(v)
+	}
+
+	if v, ok := raw["service"].([]interface{}); ok && len(v) > 0 {
+		config.Services = expandServices(v)
+	}
+
+	return config
+}
+
+func expandLogConfiguration(lc []interface{}) *ecs.LogConfiguration {
+	if len(lc) == 0 {
+		return &ecs.LogConfiguration{}
+	}
+	raw := lc[0].(map[string]interface{})
+
+	config := &ecs.LogConfiguration{}
+	if v, ok := raw["log_driver"].(string); ok && v != "" {
+		config.LogDriver = aws.String(v)
+	}
+	if v, ok := raw["options"].(map[string]interface{}); ok && len(v) > 0 {
+		config.Options = flex.ExpandStringMap(v)
+	}
+	if v, ok := raw["secret_option"].([]interface{}); ok && len(v) > 0 {
+		config.SecretOptions = expandSecretOptions(v)
+	}
+
+	return config
+}
+
+func expandSecretOptions(sop []interface{}) []*ecs.Secret {
+	if len(sop) == 0 {
+		return nil
+	}
+
+	var out []*ecs.Secret
+	for _, item := range sop {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config ecs.Secret
+		if v, ok := raw["name"].(string); ok && v != "" {
+			config.Name = aws.String(v)
+		}
+		if v, ok := raw["value_from"].(string); ok && v != "" {
+			config.ValueFrom = aws.String(v)
+		}
+
+		out = append(out, &config)
+	}
+
+	return out
+}
+
+func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
+	if len(srv) == 0 {
+		return nil
+	}
+
+	var out []*ecs.ServiceConnectService
+	for _, item := range srv {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config ecs.ServiceConnectService
+		if v, ok := raw["client_alias"].([]interface{}); ok && len(v) > 0 {
+			config.ClientAliases = expandClientAliases(v)
+		}
+		if v, ok := raw["discovery_name"].(string); ok && v != "" {
+			config.DiscoveryName = aws.String(v)
+		}
+		if v, ok := raw["ingress_port_override"].(int); ok {
+			config.IngressPortOverride = aws.Int64(int64(v))
+		}
+		if v, ok := raw["port_name"].(string); ok && v != "" {
+			config.PortName = aws.String(v)
+		}
+
+		out = append(out, &config)
+	}
+
+	return out
+}
+
+func expandClientAliases(srv []interface{}) []*ecs.ServiceConnectClientAlias {
+	if len(srv) == 0 {
+		return nil
+	}
+
+	var out []*ecs.ServiceConnectClientAlias
+	for _, item := range srv {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config ecs.ServiceConnectClientAlias
+		if v, ok := raw["port"].(int); ok {
+			config.Port = aws.Int64(int64(v))
+		}
+		if v, ok := raw["dns_name"].(string); ok && v != "" {
+			config.DnsName = aws.String(v)
+		}
+
+		out = append(out, &config)
+	}
+
+	return out
+}
+
 func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface{} {
 	if len(srs) == 0 {
 		return nil
@@ -936,248 +1436,6 @@ func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface
 		results = append(results, c)
 	}
 	return results
-}
-
-func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
-
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &ecs.UpdateServiceInput{
-			Cluster:            aws.String(d.Get("cluster").(string)),
-			ForceNewDeployment: aws.Bool(d.Get("force_new_deployment").(bool)),
-			Service:            aws.String(d.Id()),
-		}
-
-		schedulingStrategy := d.Get("scheduling_strategy").(string)
-
-		if schedulingStrategy == ecs.SchedulingStrategyDaemon {
-			if d.HasChange("deployment_minimum_healthy_percent") {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-				}
-			}
-		} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
-			if d.HasChange("desired_count") {
-				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
-			}
-
-			if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-					MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
-					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-				}
-			}
-		}
-
-		if d.HasChange("deployment_circuit_breaker") {
-			if input.DeploymentConfiguration == nil {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
-			}
-
-			// To remove an existing deployment circuit breaker, specify an empty object.
-			input.DeploymentConfiguration.DeploymentCircuitBreaker = &ecs.DeploymentCircuitBreaker{}
-
-			if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
-			}
-		}
-
-		if d.HasChange("ordered_placement_strategy") {
-			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementStrategy
-			// To remove an existing placement strategy, specify an empty object.
-			input.PlacementStrategy = []*ecs.PlacementStrategy{}
-
-			if v, ok := d.GetOk("ordered_placement_strategy"); ok && len(v.([]interface{})) > 0 {
-				ps, err := expandPlacementStrategy(v.([]interface{}))
-
-				if err != nil {
-					return err
-				}
-
-				input.PlacementStrategy = ps
-			}
-		}
-
-		if d.HasChange("placement_constraints") {
-			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementConstraints
-			// To remove all existing placement constraints, specify an empty array.
-			input.PlacementConstraints = []*ecs.PlacementConstraint{}
-
-			if v, ok := d.Get("placement_constraints").(*schema.Set); ok && v.Len() > 0 {
-				pc, err := expandPlacementConstraints(v.List())
-
-				if err != nil {
-					return err
-				}
-
-				input.PlacementConstraints = pc
-			}
-		}
-
-		if d.HasChange("platform_version") {
-			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
-		}
-
-		if d.HasChange("health_check_grace_period_seconds") {
-			input.HealthCheckGracePeriodSeconds = aws.Int64(int64(d.Get("health_check_grace_period_seconds").(int)))
-		}
-
-		if d.HasChange("task_definition") {
-			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
-		}
-
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
-		}
-
-		if d.HasChange("capacity_provider_strategy") {
-			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
-		}
-
-		if d.HasChange("enable_execute_command") {
-			input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
-		}
-
-		if d.HasChange("enable_ecs_managed_tags") {
-			input.EnableECSManagedTags = aws.Bool(d.Get("enable_ecs_managed_tags").(bool))
-		}
-
-		if d.HasChange("load_balancer") {
-			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
-				input.LoadBalancers = expandLoadBalancers(v.List())
-			}
-		}
-
-		if d.HasChange("propagate_tags") {
-			input.PropagateTags = aws.String(d.Get("propagate_tags").(string))
-		}
-
-		if d.HasChange("service_registries") {
-			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
-		}
-
-		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
-		// Retry due to IAM eventual consistency
-		err := resource.Retry(propagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
-			_, err := conn.UpdateService(input)
-
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateService(input)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating ECS Service (%s): %w", d.Id(), err)
-		}
-
-		cluster := d.Get("cluster").(string)
-		if d.Get("wait_for_steady_state").(bool) {
-			if _, err := waitServiceStable(conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after update: %w", d.Id(), err)
-			}
-		} else {
-			if _, err := waitServiceActive(conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for ECS service (%s) to become active after update: %w", d.Id(), err)
-			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(conn, d.Id(), o, n)
-
-		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for ECS Service (%s): %s", d.Id(), err)
-			return resourceServiceRead(d, meta)
-		}
-
-		if err != nil {
-			return fmt.Errorf("failed updating tags for ECS Service (%s): %w", d.Id(), err)
-		}
-	}
-
-	return resourceServiceRead(d, meta)
-}
-
-func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
-
-	service, err := FindServiceNoTagsByID(context.TODO(), conn, d.Id(), d.Get("cluster").(string))
-	if tfresource.NotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error retrieving ECS Service (%s) for deletion: %w", d.Id(), err)
-	}
-
-	if aws.StringValue(service.Status) == serviceStatusInactive {
-		return nil
-	}
-
-	// Drain the ECS service
-	if aws.StringValue(service.Status) != serviceStatusDraining && aws.StringValue(service.SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
-		log.Printf("[DEBUG] Draining ECS Service (%s)", d.Id())
-		_, err = conn.UpdateService(&ecs.UpdateServiceInput{
-			Service:      aws.String(d.Id()),
-			Cluster:      aws.String(d.Get("cluster").(string)),
-			DesiredCount: aws.Int64(0),
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	input := ecs.DeleteServiceInput{
-		Service: aws.String(d.Id()),
-		Cluster: aws.String(d.Get("cluster").(string)),
-	}
-	// Wait until the ECS service is drained
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteService(&input)
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "The service cannot be stopped while deployments are active.") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, "DependencyViolation", "has a dependent object") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteService(&input)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting ECS Service (%s): %w", d.Id(), err)
-	}
-
-	if err := waitServiceInactive(conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for ECS Service (%s) to be deleted: %w", d.Id(), err)
-	}
-
-	return nil
 }
 
 func resourceLoadBalancerHash(v interface{}) int {

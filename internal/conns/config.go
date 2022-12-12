@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
-	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -79,8 +77,8 @@ type Config struct {
 	UseFIPSEndpoint                bool
 }
 
-// Client configures and returns a fully initialized AWSClient
-func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
+// ConfigureProvider configures the provided provider Meta (instance data).
+func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWSClient, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
@@ -131,7 +129,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("error configuring Terraform AWS Provider: %s", err)
+		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
 	}
 
 	if !c.SkipRegionValidation {
@@ -143,12 +141,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 
 	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("error creating AWS SDK v1 session: %s", err)
+		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
 	}
 
 	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("error retrieving account details: %s", err)
+		return nil, diag.Errorf("retrieving AWS account details: %s", err)
 	}
 
 	if accountID == "" {
@@ -158,7 +156,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	if len(c.ForbiddenAccountIds) > 0 {
 		for _, forbiddenAccountID := range c.AllowedAccountIds {
 			if accountID == forbiddenAccountID {
-				return nil, diag.Errorf("AWS Account ID not allowed: %s", accountID)
+				return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
 			}
 		}
 	}
@@ -171,7 +169,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 			}
 		}
 		if !found {
-			return nil, diag.Errorf("AWS Account ID not allowed: %s", accountID)
+			return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
 		}
 	}
 
@@ -179,8 +177,6 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
 		DNSSuffix = p.DNSSuffix()
 	}
-
-	client := c.clientConns(sess)
 
 	client.AccountID = accountID
 	client.DefaultTagsConfig = c.DefaultTagsConfig
@@ -192,39 +188,33 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
-	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
-		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
-			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
-		}
-	})
+	// API clients (generated).
+	c.sdkv1Conns(client, sess)
+	c.sdkv2Conns(client, cfg)
+	c.sdkv2LazyConns(client, cfg)
 
-	client.Route53DomainsConn = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
-		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
-			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
-		} else if partition == endpoints.AwsPartitionID {
-			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-			o.Region = endpoints.UsEast1RegionID
-		}
-	})
+	// AWS SDK for Go v1 custom API clients.
 
-	client.TranscribeConn = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
-		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
-			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
-		}
-	})
-
-	// sts
+	// STS.
 	stsConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[names.STS]),
 	}
-
 	if c.STSRegion != "" {
 		stsConfig.Region = aws.String(c.STSRegion)
 	}
-
 	client.STSConn = sts.New(sess.Copy(stsConfig))
 
-	// "Global" services that require customizations
+	// Services that require multiple client configurations.
+	s3Config := &aws.Config{
+		Endpoint:         aws.String(c.Endpoints[names.S3]),
+		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
+	}
+	client.S3Conn = s3.New(sess.Copy(s3Config))
+
+	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
+	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
+
+	// "Global" services that require customizations.
 	globalAcceleratorConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[names.GlobalAccelerator]),
 	}
@@ -241,18 +231,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		Endpoint: aws.String(c.Endpoints[names.Shield]),
 	}
 
-	// Services that require multiple client configurations
-	s3Config := &aws.Config{
-		Endpoint:         aws.String(c.Endpoints[names.S3]),
-		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
-	}
-
-	client.S3Conn = s3.New(sess.Copy(s3Config))
-
-	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
-	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
-
-	// Force "global" services to correct regions
+	// Force "global" services to correct Regions.
 	switch partition {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
@@ -534,16 +513,16 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 	})
 
-	if !c.SkipGetEC2Platforms {
-		supportedPlatforms, err := GetSupportedEC2Platforms(client.EC2Conn)
-		if err != nil {
-			// We intentionally fail *silently* because there's a chance
-			// user just doesn't have ec2:DescribeAccountAttributes permissions
-			log.Printf("[WARN] Unable to get supported EC2 platforms: %s", err)
-		} else {
-			client.SupportedPlatforms = supportedPlatforms
+	// AWS SDK for Go v2 custom API clients.
+
+	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
+		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
+			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
+		} else if partition == endpoints.AwsPartitionID {
+			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
+			o.Region = endpoints.UsEast1RegionID
 		}
-	}
+	})
 
 	return client, nil
 }
