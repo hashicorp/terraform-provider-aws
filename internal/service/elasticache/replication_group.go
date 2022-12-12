@@ -161,6 +161,12 @@ func ResourceReplicationGroup() *schema.Resource {
 					"snapshot_name",
 				},
 			},
+			"ip_discovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
+			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -209,6 +215,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -461,6 +474,14 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.CacheParameterGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("ip_discovery"); ok {
+		req.IpDiscovery = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		req.NetworkType = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("port"); ok {
 		params.Port = aws.Int64(int64(v.(int)))
 	}
@@ -677,6 +698,9 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
+	d.Set("ip_discovery", rgp.IpDiscovery)
+	d.Set("network_type", rgp.NetworkType)
+
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rgp.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
@@ -813,6 +837,16 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("replication_group_description") {
 		params.ReplicationGroupDescription = aws.String(d.Get("replication_group_description").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ip_discovery") {
+		params.IpDiscovery = aws.String(d.Get("ip_discovery").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("network_type") {
+		req.IpDiscovery = aws.String(d.Get("network_type").(string))
 		requestUpdate = true
 	}
 

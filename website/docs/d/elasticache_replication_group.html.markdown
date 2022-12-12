@@ -32,6 +32,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the created ElastiCache Replication Group.
 * `auth_token_enabled` - Whether an AuthToken (password) is enabled.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
+* `ip_discovery` - The IP version advertised in the discovery protocol.
+* `network_type` - The IP versions for cache cluster connections.
 * `node_type` – The cluster node type.
 * `num_cache_clusters` – The number of cache clusters that the replication group has.
 * `num_node_groups` - Number of node groups (shards) for the replication group.
