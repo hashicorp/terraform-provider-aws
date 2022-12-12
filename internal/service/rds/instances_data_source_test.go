@@ -58,7 +58,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_instance" "wrong" {
-  identifier          = "wrong-%[1]s"
+  identifier           = "wrong-%[1]s"
   allocated_storage    = 10
   engine               = data.aws_rds_engine_version.default.engine
   engine_version       = data.aws_rds_engine_version.default.version
