@@ -307,7 +307,7 @@ func testAccCheckAppExists(n string, app *sagemaker.DescribeAppOutput) resource.
 	}
 }
 
-func testAccAppBaseConfig(rName string) string {
+func testAccAppConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -353,18 +353,18 @@ resource "aws_sagemaker_user_profile" "test" {
 }
 
 func testAccAppConfig_basic(rName string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
   app_name          = %[1]q
   app_type          = "JupyterServer"
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppConfig_space(rName string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_space" "test" {
   domain_id  = aws_sagemaker_domain.test.id
   space_name = "%[1]s-space"
@@ -376,11 +376,11 @@ resource "aws_sagemaker_app" "test" {
   app_type   = "JupyterServer"
   space_name = aws_sagemaker_space.test.space_name
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return tacctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
@@ -391,11 +391,11 @@ resource "aws_sagemaker_app" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAppConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
@@ -407,11 +407,11 @@ resource "aws_sagemaker_app" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAppConfig_resourceSpec(rName string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
@@ -422,11 +422,11 @@ resource "aws_sagemaker_app" "test" {
     instance_type = "system"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppConfig_resourceSpecLifecycle(rName, uName string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
   studio_lifecycle_config_app_type = "JupyterServer"
@@ -462,5 +462,5 @@ resource "aws_sagemaker_app" "test" {
     lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
   }
 }
-`, rName, uName)
+`, rName, uName))
 }
