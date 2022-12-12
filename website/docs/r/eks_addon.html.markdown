@@ -56,7 +56,7 @@ Example to create a `coredns` managed addon with custom `configuration_values`.
 
 ```terraform
 resource "aws_eks_addon" "example" {
-  cluster_name         = "mycluser"
+  cluster_name         = "mycluster"
   addon_name           = "coredns"
   addon_version        = "v1.8.7-eksbuild.3"
   resolve_conflicts    = "OVERWRITE"
