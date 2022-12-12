@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_cloudwatch_log_data_protection_policy_document` ([#28272](https://github.com/hashicorp/terraform-provider-aws/issues/28272))
 * **New Resource:** `aws_auditmanager_framework` ([#28257](https://github.com/hashicorp/terraform-provider-aws/issues/28257))
 
 ## 4.46.0 (December  8, 2022)
