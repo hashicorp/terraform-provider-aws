@@ -200,7 +200,7 @@ func TestAccFSxDataRepositoryAssociation_dataRepositoryPathUpdated(t *testing.T)
 	})
 }
 
-//lintignore:AT002
+// lintignore:AT002
 func TestAccFSxDataRepositoryAssociation_importedFileChunkSize(t *testing.T) {
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
@@ -234,7 +234,7 @@ func TestAccFSxDataRepositoryAssociation_importedFileChunkSize(t *testing.T) {
 	})
 }
 
-//lintignore:AT002
+// lintignore:AT002
 func TestAccFSxDataRepositoryAssociation_importedFileChunkSizeUpdated(t *testing.T) {
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
