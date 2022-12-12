@@ -47,6 +47,9 @@ For **report_delivery_channel** the following attributes are supported:
 ### Report Setting Attributes
 For **report_setting** the following attributes are supported:
 
+* `accounts` - (Optional) Specifies the list of accounts a report covers.
 * `framework_arns` - ARNs of the frameworks a report covers.
 * `number_of_frameworks` - Specifies the number of frameworks a report covers.
+* `organization_units` - (Optional) Specifies the list of Organizational Units a report covers.
+* `regions` - (Optional) Specifies the list of regions a report covers.
 * `report_template` - Identifies the report template for the report. Reports are built using a report template.
