@@ -380,7 +380,7 @@ resource "aws_sagemaker_app" "test" {
 }
 
 func testAccAppConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return tacctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
