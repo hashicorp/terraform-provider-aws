@@ -233,6 +233,7 @@ func TestAccCloudWatchMetricStream_updateName(t *testing.T) {
 func TestAccCloudWatchMetricStream_tags(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	newTag := sdkacctest.RandString(7)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -245,6 +246,15 @@ func TestAccCloudWatchMetricStream_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+				),
+			},
+			{
+				Config: testAccMetricStreamConfig_updateTags(rName, newTag),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Mercedes", newTag),
 				),
 			},
 			{
@@ -504,10 +514,10 @@ resource "aws_iam_role_policy" "firehose_to_s3" {
                 "s3:ListBucket",
                 "s3:ListBucketMultipartUploads",
                 "s3:PutObject"
-            ],      
-            "Resource": [        
+            ],
+            "Resource": [
                 "${aws_s3_bucket.bucket.arn}",
-                "${aws_s3_bucket.bucket.arn}/*"		    
+                "${aws_s3_bucket.bucket.arn}/*"
             ]
         }
     ]
@@ -635,6 +645,26 @@ resource "aws_cloudwatch_metric_stream" "test" {
   }
 }
 `, rName)
+}
+
+func testAccMetricStreamConfig_updateTags(rName, label string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudwatch_metric_stream" "test" {
+  name          = %[1]q
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  output_format = "json"
+
+  tags = {
+    Name     = %[1]q
+    Mercedes = %[2]q
+  }
+}
+`, rName, label)
 }
 
 func testAccMetricStreamConfig_additionalStatistics(rName string, stat string) string {

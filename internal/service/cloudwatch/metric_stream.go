@@ -24,7 +24,7 @@ func ResourceMetricStream() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceMetricStreamCreate,
 		ReadContext:   resourceMetricStreamRead,
-		UpdateContext: resourceMetricStreamCreate,
+		UpdateContext: resourceMetricStreamUpdate,
 		DeleteContext: resourceMetricStreamDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -232,6 +232,47 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	return resourceMetricStreamRead(ctx, d, meta)
+}
+
+func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudWatchConn
+
+	if d.HasChangesExcept("tags_all", "tags") {
+		params := cloudwatch.PutMetricStreamInput{
+			Name:         aws.String(d.Get("name").(string)),
+			FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
+			RoleArn:      aws.String(d.Get("role_arn").(string)),
+			OutputFormat: aws.String(d.Get("output_format").(string)),
+		}
+
+		if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
+			params.IncludeFilters = expandMetricStreamFilters(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
+			params.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("statistics_configuration"); ok && v.(*schema.Set).Len() > 0 {
+			params.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set))
+		}
+
+		log.Printf("[DEBUG] Updating CloudWatch Metric Stream: %#v", params)
+		_, err := conn.PutMetricStreamWithContext(ctx, &params)
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error updatingCloudWatch Metric Stream (%s): %w", d.Id(), err))
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			log.Printf("[WARN] failed updating tags for CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		}
+	}
 	return resourceMetricStreamRead(ctx, d, meta)
 }
 
