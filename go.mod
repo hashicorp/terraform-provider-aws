@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.3
