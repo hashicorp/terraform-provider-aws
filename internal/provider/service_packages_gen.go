@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -214,6 +215,7 @@ func servicePackages(context.Context) []intf.ServicePackage {
 		appstream.ServicePackage,
 		appsync.ServicePackage,
 		athena.ServicePackage,
+		auditmanager.ServicePackage,
 		autoscaling.ServicePackage,
 		autoscalingplans.ServicePackage,
 		backup.ServicePackage,

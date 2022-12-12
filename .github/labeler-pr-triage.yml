@@ -772,6 +772,9 @@ service/pinpointemail:
 service/pinpointsmsvoice:
   - 'internal/service/pinpointsmsvoice/**/*'
   - 'website/**/pinpointsmsvoice_*'
+service/pipes:
+  - 'internal/service/pipes/**/*'
+  - 'website/**/pipes_*'
 service/polly:
   - 'internal/service/polly/**/*'
   - 'website/**/polly_*'

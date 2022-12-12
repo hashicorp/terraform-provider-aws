@@ -16,7 +16,7 @@ import (
 
 const (
 	spFile        = `service_package_gen.go`
-	spsFile       = `../../provider/service_packages.go`
+	spsFile       = `../../provider/service_packages_gen.go`
 	namesDataFile = `../../../names/names_data.csv`
 )
 

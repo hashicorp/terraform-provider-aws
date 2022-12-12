@@ -668,6 +668,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
 
+			"aws_glue_catalog_table":                    glue.DataSourceCatalogTable(),
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
@@ -1161,7 +1162,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_log_subscription_filter":    logs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":           logs.ResourceQueryDefinition(),
 
-			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
+			"aws_rum_app_monitor":         rum.ResourceAppMonitor(),
+			"aws_rum_metrics_destination": rum.ResourceMetricsDestination(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
@@ -1822,6 +1824,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
+			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
 			"aws_networkmanager_global_network":                           networkmanager.ResourceGlobalNetwork(),
@@ -2041,6 +2044,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_notebook_instance":                         sagemaker.ResourceNotebookInstance(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": sagemaker.ResourceNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_project":                                   sagemaker.ResourceProject(),
+			"aws_sagemaker_space":                                     sagemaker.ResourceSpace(),
 			"aws_sagemaker_servicecatalog_portfolio_status":           sagemaker.ResourceServicecatalogPortfolioStatus(),
 			"aws_sagemaker_studio_lifecycle_config":                   sagemaker.ResourceStudioLifecycleConfig(),
 			"aws_sagemaker_user_profile":                              sagemaker.ResourceUserProfile(),

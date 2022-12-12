@@ -1179,12 +1179,21 @@ To run sweepers with an assumed role, use the following additional environment v
 
 ### Sweeper Checklists
 
-- __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be swept, at `internal/sweep/sweep_test.go`.
 - __Add Resource Sweeper Implementation__: See [Writing Test Sweepers](#writing-test-sweepers).
+- __Add Service To Sweeper List__: Once a `sweep.go` file is present in the service subdirectory, run `make gen` to regenerate the list of imports in `internal/sweep/sweep_test.go`.
 
 ### Writing Test Sweepers
 
-The first step is to initialize the resource into the test sweeper framework:
+Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
+
+```go
+//go:build sweep
+// +build sweep
+
+package example
+```
+
+Next, initialize the resource into the test sweeper framework:
 
 ```go
 func init() {

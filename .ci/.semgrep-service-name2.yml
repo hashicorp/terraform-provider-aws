@@ -2707,6 +2707,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Pinpoint"
     severity: WARNING
+  - id: pipes-in-func-name
+    languages:
+      - go
+    message: Do not use "Pipes" in func name inside pipes package
+    paths:
+      include:
+        - internal/service/pipes
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Pipes"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: pipes-in-test-name
+    languages:
+      - go
+    message: Include "Pipes" in test name
+    paths:
+      include:
+        - internal/service/pipes/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccPipes"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: pipes-in-const-name
+    languages:
+      - go
+    message: Do not use "Pipes" in const name inside pipes package
+    paths:
+      include:
+        - internal/service/pipes
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Pipes"
+    severity: WARNING
+  - id: pipes-in-var-name
+    languages:
+      - go
+    message: Do not use "Pipes" in var name inside pipes package
+    paths:
+      include:
+        - internal/service/pipes
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Pipes"
+    severity: WARNING
   - id: pricing-in-func-name
     languages:
       - go
@@ -3113,32 +3171,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccRedshift"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: redshift-in-const-name
-    languages:
-      - go
-    message: Do not use "Redshift" in const name inside redshift package
-    paths:
-      include:
-        - internal/service/redshift
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Redshift"
-    severity: WARNING
-  - id: redshift-in-var-name
-    languages:
-      - go
-    message: Do not use "Redshift" in var name inside redshift package
-    paths:
-      include:
-        - internal/service/redshift
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Redshift"
     severity: WARNING

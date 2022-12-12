@@ -51,6 +51,49 @@ func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) {
+	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewallPolicy_statefulDefaultActions(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1317,4 +1360,43 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFirewallPolicyConfig_encryptionConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %q
+
+  encryption_configuration {
+    key_id = aws_kms_key.test.arn
+    type   = "CUSTOMER_KMS"
+  }
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+`, rName)
+}
+
+// The KMS key resource must stay in state while removing encryption configuration. If not
+// (ie. using the _basic config), the KMS key is deleted before the firewall policy is updated,
+// leaving the policy in a "misconfigured" state. This causes update to fail with:
+//
+// InvalidRequestException: firewall policy has KMS key misconfigured
+func testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %q
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+`, rName)
 }

@@ -10,12 +10,12 @@ func {{ .Name }}PagesWithContext(ctx context.Context, conn {{ .RecvType }}, inpu
 			return err
 		}
 
-		lastPage := aws.StringValue(output.{{ .Paginator }}) == ""
+		lastPage := aws.StringValue(output.{{ .OutputPaginator }}) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
 
-		input.{{ .Paginator }} = output.{{ .Paginator }}
+		input.{{ .InputPaginator }} = output.{{ .OutputPaginator }}
 	}
 	return nil
 }

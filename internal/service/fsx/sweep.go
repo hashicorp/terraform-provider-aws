@@ -56,6 +56,9 @@ func init() {
 	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
 		Name: "aws_fsx_windows_file_system",
 		F:    sweepWindowsFileSystems,
+		Dependencies: []string{
+			"aws_storagegateway_file_system_association",
+		},
 	})
 }
 
