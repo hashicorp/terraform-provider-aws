@@ -2260,9 +2260,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			provider.DataSourcesMap[typeName] = ds
 		}
-	}
 
-	for _, sp := range servicePackages {
 		for _, v := range sp.SDKResources(ctx) {
 			typeName := v.TypeName
 
