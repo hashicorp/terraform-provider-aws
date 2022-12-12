@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	registerSDKDataSourceFactory("aws_cloudwatch_log_groups", dataSourceGroups)
+	sp_.registerSDKDataSourceFactory("aws_cloudwatch_log_groups", dataSourceGroups)
 }
 
 func dataSourceGroups() *schema.Resource {

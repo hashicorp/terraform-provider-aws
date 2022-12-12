@@ -11,30 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 )
 
-var sp = &servicePackage{}
-
-func registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	sp.frameworkDataSourceFactories = append(sp.frameworkDataSourceFactories, factory)
-}
-
-func registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	sp.frameworkResourceFactories = append(sp.frameworkResourceFactories, factory)
-}
-
-func registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	sp.sdkDataSourceFactories = append(sp.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	sp.sdkResourceFactories = append(sp.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
 type servicePackage struct {
 	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
 	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
@@ -78,4 +54,29 @@ func (p *servicePackage) ServicePackageName() string {
 	return "controltower"
 }
 
-var ServicePackage intf.ServicePackage = sp
+func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
+	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+}
+
+func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
+	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+}
+
+func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
+	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
+		TypeName string
+		Factory  func() *schema.Resource
+	}{TypeName: typeName, Factory: factory})
+}
+
+func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
+	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
+		TypeName string
+		Factory  func() *schema.Resource
+	}{TypeName: typeName, Factory: factory})
+}
+
+var (
+	sp_                                = &servicePackage{}
+	ServicePackage intf.ServicePackage = sp_
+)

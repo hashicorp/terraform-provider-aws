@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	registerSDKDataSourceFactory("aws_cloudwatch_log_data_protection_policy_document", dataSourceDataProtectionPolicyDocument)
+	sp_.registerSDKDataSourceFactory("aws_cloudwatch_log_data_protection_policy_document", dataSourceDataProtectionPolicyDocument)
 }
 
 func dataSourceDataProtectionPolicyDocument() *schema.Resource {

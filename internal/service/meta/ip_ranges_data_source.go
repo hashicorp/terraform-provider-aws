@@ -21,7 +21,7 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceIPRanges)
+	sp_.registerFrameworkDataSourceFactory(newDataSourceIPRanges)
 }
 
 // newDataSourceIPRanges instantiates a new DataSource for the aws_ip_ranges data source.

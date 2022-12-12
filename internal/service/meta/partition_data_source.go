@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourcePartition)
+	sp_.registerFrameworkDataSourceFactory(newDataSourcePartition)
 }
 
 // newDataSourcePartition instantiates a new DataSource for the aws_partition data source.

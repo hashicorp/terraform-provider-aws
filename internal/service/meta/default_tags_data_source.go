@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
+	sp_.registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
 }
 
 // newDataSourceDefaultTags instantiates a new DataSource for the aws_default_tags data source.

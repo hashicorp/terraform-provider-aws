@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceARN)
+	sp_.registerFrameworkDataSourceFactory(newDataSourceARN)
 }
 
 // newDataSourceARN instantiates a new DataSource for the aws_arn data source.
