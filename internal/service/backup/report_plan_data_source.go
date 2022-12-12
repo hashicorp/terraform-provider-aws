@@ -63,6 +63,13 @@ func DataSourceReportPlan() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"accounts": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"framework_arns": {
 							Type:     schema.TypeSet,
 							Computed: true,
@@ -73,6 +80,20 @@ func DataSourceReportPlan() *schema.Resource {
 						"number_of_frameworks": {
 							Type:     schema.TypeInt,
 							Computed: true,
+						},
+						"organization_units": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"regions": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"report_template": {
 							Type:     schema.TypeString,

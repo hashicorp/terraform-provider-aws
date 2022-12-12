@@ -84,6 +84,13 @@ func ResourceReportPlan() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"accounts": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"framework_arns": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -94,6 +101,20 @@ func ResourceReportPlan() *schema.Resource {
 						"number_of_frameworks": {
 							Type:     schema.TypeInt,
 							Optional: true,
+						},
+						"organization_units": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"regions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						// A report plan template cannot be updated
 						"report_template": {
@@ -295,12 +316,24 @@ func expandReportSetting(reportSetting []interface{}) *backup.ReportSetting {
 		ReportTemplate: aws.String(tfMap["report_template"].(string)),
 	}
 
+	if v, ok := tfMap["accounts"]; ok && v.(*schema.Set).Len() > 0 {
+		result.Accounts = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := tfMap["framework_arns"]; ok && v.(*schema.Set).Len() > 0 {
 		result.FrameworkArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["number_of_frameworks"].(int); ok && v > 0 {
 		result.NumberOfFrameworks = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["organization_units"]; ok && v.(*schema.Set).Len() > 0 {
+		result.OrganizationUnits = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["regions"]; ok && v.(*schema.Set).Len() > 0 {
+		result.Regions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	return result
@@ -335,12 +368,24 @@ func flattenReportSetting(reportSetting *backup.ReportSetting) []interface{} {
 		"report_template": aws.StringValue(reportSetting.ReportTemplate),
 	}
 
+	if reportSetting.Accounts != nil && len(reportSetting.Accounts) > 0 {
+		values["accounts"] = flex.FlattenStringSet(reportSetting.Accounts)
+	}
+
 	if reportSetting.FrameworkArns != nil && len(reportSetting.FrameworkArns) > 0 {
 		values["framework_arns"] = flex.FlattenStringSet(reportSetting.FrameworkArns)
 	}
 
 	if reportSetting.NumberOfFrameworks != nil {
 		values["number_of_frameworks"] = aws.Int64Value(reportSetting.NumberOfFrameworks)
+	}
+
+	if reportSetting.OrganizationUnits != nil && len(reportSetting.OrganizationUnits) > 0 {
+		values["organization_units"] = flex.FlattenStringSet(reportSetting.OrganizationUnits)
+	}
+
+	if reportSetting.Regions != nil && len(reportSetting.Regions) > 0 {
+		values["regions"] = flex.FlattenStringSet(reportSetting.Regions)
 	}
 
 	return []interface{}{values}
