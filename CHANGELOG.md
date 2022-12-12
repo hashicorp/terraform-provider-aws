@@ -5,6 +5,10 @@ FEATURES:
 * **New Data Source:** `aws_cloudwatch_log_data_protection_policy_document` ([#28272](https://github.com/hashicorp/terraform-provider-aws/issues/28272))
 * **New Resource:** `aws_auditmanager_framework` ([#28257](https://github.com/hashicorp/terraform-provider-aws/issues/28257))
 
+ENHANCEMENTS:
+
+* resource/aws_sagemaker_endpoint_configuration: Add `shadow_production_variants`, `production_variants.container_startup_health_check_timeout_in_seconds`, `production_variants.core_dump_config`, `production_variants.model_data_download_timeout_in_seconds`, and `production_variants.volume_size_in_gb` arguments ([#28159](https://github.com/hashicorp/terraform-provider-aws/issues/28159))
+
 BUG FIXES:
 
 * resource/aws_db_instance: Ensure that `apply_immediately` default value is applied ([#25768](https://github.com/hashicorp/terraform-provider-aws/issues/25768))
