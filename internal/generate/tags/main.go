@@ -852,7 +852,7 @@ func ToSnakeCase(str string) string {
 	return strings.ToLower(result)
 }
 
-//awsServiceNames provides correct names and capitalization as used by AWS in client var
+// awsServiceNames provides correct names and capitalization as used by AWS in client var
 var awsServiceNames map[string]string
 
 func init() {

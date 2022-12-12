@@ -44,8 +44,7 @@ func HasResourceUniqueIdPlusAdditionalSuffix(s string, additionalSuffix string) 
 //
 // An expected usage might be:
 //
-//   d.Set("name_prefix", naming.NamePrefixFromName(d.Id()))
-//
+//	d.Set("name_prefix", naming.NamePrefixFromName(d.Id()))
 func NamePrefixFromName(name string) *string {
 	return NamePrefixFromNameWithSuffix(name, "")
 }
