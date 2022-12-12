@@ -252,6 +252,7 @@ networkmanager,networkmanager,networkmanager,networkmanager,,networkmanager,,,Ne
 ,,,,,,,,,,,,,,,,,NICE DCV,,x,,,,No SDK support
 nimble,nimble,nimblestudio,nimble,,nimble,,nimblestudio,Nimble,NimbleStudio,,1,,,aws_nimble_,,nimble_,Nimble Studio,Amazon,,,,,
 opensearch,opensearch,opensearchservice,opensearch,,opensearch,,opensearchservice,OpenSearch,OpenSearchService,,1,,,aws_opensearch_,,opensearch_,OpenSearch,Amazon,,,,,
+opensearchserverless,opensearchserverless,opensearchserverless,opensearchserverless,,opensearchserverless,,,OpenSearchServerless,OpenSearchServerless,,,2,,aws_opensearchserverless_,,opensearchserverless_,OpenSearch Serverless,Amazon,,,,,
 opsworks,opsworks,opsworks,opsworks,,opsworks,,,OpsWorks,OpsWorks,,1,,,aws_opsworks_,,opsworks_,OpsWorks,AWS,,,,,
 opsworks-cm,opsworkscm,opsworkscm,opsworkscm,,opsworkscm,,,OpsWorksCM,OpsWorksCM,,1,,,aws_opsworkscm_,,opsworkscm_,OpsWorks CM,AWS,,,,,
 organizations,organizations,organizations,organizations,,organizations,,,Organizations,Organizations,,1,,,aws_organizations_,,organizations_,Organizations,AWS,,,,,

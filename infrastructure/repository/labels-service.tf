@@ -212,6 +212,7 @@ variable "service_labels" {
     "networkmanager",
     "nimble",
     "opensearch",
+    "opensearchserverless",
     "opsworks",
     "opsworkscm",
     "organizations",

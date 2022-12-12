@@ -127,6 +127,7 @@ val services = mapOf(
     "networkfirewall" to ServiceSpec("Network Firewall", vpcLock = true),
     "networkmanager" to ServiceSpec("Network Manager"),
     "opensearch" to ServiceSpec("OpenSearch"),
+    "opensearchserverless" to ServiceSpec("OpenSearch Serverless"),
     "opsworks" to ServiceSpec("OpsWorks", vpcLock = true),
     "organizations" to ServiceSpec("Organizations"),
     "outposts" to ServiceSpec("Outposts"),

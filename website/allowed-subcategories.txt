@@ -213,6 +213,7 @@ Network Firewall
 Network Manager
 Nimble Studio
 OpenSearch
+OpenSearch Serverless
 OpsWorks
 OpsWorks CM
 Organizations

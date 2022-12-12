@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -546,6 +547,7 @@ type AWSClient struct {
 	NetworkManagerConn               *networkmanager.NetworkManager
 	NimbleConn                       *nimblestudio.NimbleStudio
 	OpenSearchConn                   *opensearchservice.OpenSearchService
+	OpenSearchServerlessClient       *opensearchserverless.Client
 	OpsWorksConn                     *opsworks.OpsWorks
 	OpsWorksCMConn                   *opsworkscm.OpsWorksCM
 	OrganizationsConn                *organizations.Organizations
