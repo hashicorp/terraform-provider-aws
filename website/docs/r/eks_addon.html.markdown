@@ -38,6 +38,32 @@ resource "aws_eks_addon" "example" {
 }
 ```
 
+## Example add-on usage with custom configuration_values
+Custom add-on configuration can be passed using `configuration_values` as a single JSON string while creating or updating the add-on.
+
+~> **Note:** `configuration_values` is a single JSON string should match the valid JSON schema for each add-on with specific version.
+
+To find the correct JSON schema for each add-on can be extracted using [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) call.
+This below is an example for extracting the `configuration_values` schema for `coredns`.
+
+```bash
+ aws eks describe-addon-configuration \
+ --addon-name coredns \
+ --addon-version v1.8.7-eksbuild.2
+```
+
+Example to create a `coredns` managed addon with custom `configuration_values`.
+
+```terraform
+resource "aws_eks_addon" "example" {
+  cluster_name          = aws_eks_cluster.example.name
+  addon_name            = "coredns"
+  addon_version         = "v1.8.7-eksbuild.3"
+  resolve_conflicts     = "OVERWRITE"
+  configuration_values  = "{\"replicaCount\":4,\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"150Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"150Mi\"}}}"
+}
+```
+
 ### Example IAM Role for EKS Addon "vpc-cni" with AWS managed policy
 
 ```terraform
@@ -96,6 +122,7 @@ The following arguments are optional:
 
 * `addon_version` – (Optional) The version of the EKS add-on. The version must
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
+* `configuration_values` - (Optional) custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html). 
 * `resolve_conflicts` - (Optional) Define how to resolve parameter value conflicts
   when migrating an existing add-on to an Amazon EKS add-on or when applying
   version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.

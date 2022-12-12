@@ -246,6 +246,38 @@ func TestAccEKSAddon_serviceAccountRoleARN(t *testing.T) {
 	})
 }
 
+func TestAccEKSAddon_configurationValues(t *testing.T) {
+	var addon eks.Addon
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_addon.test"
+	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
+	addonName := "vpc-cni"
+	addonVersion := "v1.10.4-eksbuild.1"
+	ctx := context.Background()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", configurationValues),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"resolve_conflicts"},
+			},
+		},
+	})
+}
+
 func TestAccEKSAddon_tags(t *testing.T) {
 	var addon1, addon2, addon3 eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -911,4 +943,16 @@ resource "aws_eks_addon" "test" {
   }
 }
 `, rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues string) string {
+	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+resource "aws_eks_addon" "test" {
+  cluster_name 			= aws_eks_cluster.test.name
+  addon_name   			= %[2]q
+  addon_version     	= %[3]q
+  configuration_values  = %[4]q
+  resolve_conflicts     = "OVERWRITE"
+}
+`, rName, addonName, addonVersion, configurationValues))
 }
