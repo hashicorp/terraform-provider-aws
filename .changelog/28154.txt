@@ -7,7 +7,7 @@ resource/aws_sagemaker_domain: Add `default_space_settings` and `default_user_se
 ```
 
 ```release-note:enhancement
-resource/aws_sagemaker_user_profle: Add `user_settings.jupyter_server_app_settings.code_repository` argument
+resource/aws_sagemaker_user_profile: Add `user_settings.jupyter_server_app_settings.code_repository` argument
 ```
 
 ```release-note:enhancement
