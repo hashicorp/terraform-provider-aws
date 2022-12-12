@@ -49,7 +49,7 @@ With the `disallowed_cidrs` attribute:
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
-  ipam_pool_id  = aws_vpc_ipam_pool.example.id
+  ipam_pool_id   = aws_vpc_ipam_pool.example.id
   netmask_length = 28
 
   disallowed_cidrs = [

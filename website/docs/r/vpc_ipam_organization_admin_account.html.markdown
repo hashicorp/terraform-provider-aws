@@ -24,7 +24,7 @@ data "aws_caller_identity" "delegated" {
 }
 
 provider "aws" {
-  alias  = "ipam_delegate_account"
+  alias = "ipam_delegate_account"
 
   # authentication arguments omitted
 }
