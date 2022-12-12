@@ -528,7 +528,7 @@ func TestAccACMCertificate_tags(t *testing.T) {
 	})
 }
 
-// lintignore:AT002
+//lintignore:AT002
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 
@@ -584,7 +584,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	})
 }
 
-// lintignore:AT002
+//lintignore:AT002
 func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
 	resourceName := "aws_acm_certificate.test"
 

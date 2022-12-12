@@ -35,7 +35,7 @@ const testAccCheckAWSElbHostedZoneIdConfig = `
 data "aws_elb_hosted_zone_id" "main" {}
 `
 
-// lintignore:AWSAT003
+//lintignore:AWSAT003
 const testAccCheckAWSElbHostedZoneIdExplicitRegionConfig = `
 data "aws_elb_hosted_zone_id" "regional" {
   region = "eu-west-1"
