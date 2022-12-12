@@ -542,7 +542,7 @@ resource "aws_grafana_workspace" "test" {
 
   vpc_configuration {
     subnet_ids         = aws_subnet.test[*].id
-	security_group_ids = [aws_security_group.test.id]
+    security_group_ids = [aws_security_group.test.id]
   }
 }
 `, rName))
