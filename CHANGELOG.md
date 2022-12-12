@@ -1,5 +1,9 @@
 ## 3.75.3 (Unreleased)
 
+NOTES:
+
+* provider: Add OpenBSD to list of OSes which the provider is built on ([#28300](https://github.com/hashicorp/terraform-provider-aws/issues/28300))
+
 ENHANCEMENTS:
 
 * resource/aws_security_group: Do not pass `from_port` or `to_port` values to the AWS API if a `rule`'s `protocol` value is `-1` or `all` ([#27685](https://github.com/hashicorp/terraform-provider-aws/issues/27685))
