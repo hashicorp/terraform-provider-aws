@@ -1,21 +1,21 @@
 ---
 subcategory: "RDS (Relational Database)"
 layout: "aws"
-page_title: "AWS: aws_rds_instances"
+page_title: "AWS: aws_db_instances"
 description: |-
-  Terraform data source for managing an AWS RDS (Relational Database) Clusters.
+  Terraform data source for listing RDS Database Instances.
 ---
 
-# Data Source: aws_rds_instances
+# Data Source: aws_db_instances
 
-Terraform data source for managing an AWS RDS (Relational Database) Clusters.
+Terraform data source for listing RDS Database Instances.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_rds_instances" "example" {
+data "aws_db_instances" "example" {
   filter {
     name   = "db-instance-id"
     values = ["my-database-id"]
@@ -40,5 +40,5 @@ The following arguments are supported by the `filter` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `instance_arns` - Set of instance ARNs of the matched RDS instances.
-* `instance_identifiers` - Set of ARNs of instance identifiers of the matched RDS instances.
+* `instance_arns` - ARNs of the matched RDS instances.
+* `instance_identifiers` - Identifiers of the matched RDS instances.
