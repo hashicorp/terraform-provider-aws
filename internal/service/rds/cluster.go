@@ -1262,12 +1262,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return errs.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
 		}
 
+		clusterARN := d.Get("arn").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			DbClusterIdentifier:     aws.String(clusterARN),
 			GlobalClusterIdentifier: aws.String(o),
 		}
 
-		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
+		log.Printf("[DEBUG] Removing RDS Cluster (%s) from RDS Global Cluster: %s", clusterARN, o)
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
@@ -1316,13 +1317,14 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
 	if d.Get("global_cluster_identifier").(string) != "" {
+		clusterARN := d.Get("arn").(string)
 		globalClusterID := d.Get("global_cluster_identifier").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			DbClusterIdentifier:     aws.String(clusterARN),
 			GlobalClusterIdentifier: aws.String(globalClusterID),
 		}
 
-		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
+		log.Printf("[DEBUG] Removing RDS Cluster (%s) from RDS Global Cluster: %s", clusterARN, globalClusterID)
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
