@@ -2292,6 +2292,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					r.Importer.StateContext = wrappedStateContextFunc(v)
 				}
 			}
+			if v := r.CustomizeDiff; v != nil {
+				r.CustomizeDiff = wrappedCustomizeDiffFunc(v)
+			}
+			for _, stateUpgrader := range r.StateUpgraders {
+				if v := stateUpgrader.Upgrade; v != nil {
+					stateUpgrader.Upgrade = wrappedStateUpgradeFunc(v)
+				}
+			}
 
 			provider.ResourcesMap[typeName] = r
 		}
@@ -2792,5 +2800,21 @@ func wrappedStateContextFunc(f schema.StateContextFunc) schema.StateContextFunc 
 		ctx = meta.(*conns.AWSClient).InitContext(ctx)
 
 		return f(ctx, d, meta)
+	}
+}
+
+func wrappedCustomizeDiffFunc(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedStateUpgradeFunc(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
+	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, rawState, meta)
 	}
 }
