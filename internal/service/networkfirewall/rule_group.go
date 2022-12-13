@@ -58,6 +58,46 @@ func ResourceRuleGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"reference_sets": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip_set_references": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
+												},
+												"ip_set_reference": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 5,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"reference_arn": {
+																Type:     schema.TypeString,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"rule_variables": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -705,6 +745,17 @@ func expandRuleGroup(l []interface{}) *networkfirewall.RuleGroup {
 		return nil
 	}
 	ruleGroup := &networkfirewall.RuleGroup{}
+	if tfList, ok := tfMap["reference_sets"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
+		referenceSets := &networkfirewall.ReferenceSets{}
+		rvMap, ok := tfList[0].(map[string]interface{})
+		if ok {
+			if v, ok := rvMap["ip_set_references"].(*schema.Set); ok && v.Len() > 0 {
+				referenceSets.IPSetReferences = expandIPSetReferences(v.List())
+			}
+
+			ruleGroup.ReferenceSets = referenceSets
+		}
+	}
 	if tfList, ok := tfMap["rule_variables"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
 		ruleVariables := &networkfirewall.RuleVariables{}
 		rvMap, ok := tfList[0].(map[string]interface{})
@@ -780,7 +831,35 @@ func expandIPSets(l []interface{}) map[string]*networkfirewall.IPSet {
 
 	return m
 }
+func expandIPSetReferences(l []interface{}) map[string]*networkfirewall.IPSetReference {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
 
+	m := make(map[string]*networkfirewall.IPSetReference)
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if key, ok := tfMap["key"].(string); ok && key != "" {
+			if tfList, ok := tfMap["ip_set_reference"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
+				tfMap, ok := tfList[0].(map[string]interface{})
+				if ok {
+					if tfSet, ok := tfMap["reference_arn"].(string); ok && tfSet != "" {
+						ipSetReference := &networkfirewall.IPSetReference{
+							ReferenceArn: aws.String(tfSet),
+						}
+						m[key] = ipSetReference
+					}
+				}
+			}
+		}
+	}
+
+	return m
+}
 func expandPortSets(l []interface{}) map[string]*networkfirewall.PortSet {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -973,9 +1052,48 @@ func flattenRuleGroup(r *networkfirewall.RuleGroup) []interface{} {
 	}
 
 	m := map[string]interface{}{
+		"reference_sets":        flattenReferenceSets(r.ReferenceSets),
 		"rule_variables":        flattenRuleVariables(r.RuleVariables),
 		"rules_source":          flattenRulesSource(r.RulesSource),
 		"stateful_rule_options": flattenStatefulRulesOptions(r.StatefulRuleOptions),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenReferenceSets(rv *networkfirewall.ReferenceSets) []interface{} {
+	if rv == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"ip_set_references": flattenIPSetReferences(rv.IPSetReferences),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenIPSetReferences(m map[string]*networkfirewall.IPSetReference) []interface{} {
+	if m == nil {
+		return []interface{}{}
+	}
+	sets := make([]interface{}, 0, len(m))
+	for k, v := range m {
+		tfMap := map[string]interface{}{
+			"key":              k,
+			"ip_set_reference": flattenIPSetReference(v),
+		}
+		sets = append(sets, tfMap)
+	}
+
+	return sets
+}
+
+func flattenIPSetReference(i *networkfirewall.IPSetReference) []interface{} {
+	if i == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"reference_arn": aws.StringValue(i.ReferenceArn),
 	}
 
 	return []interface{}{m}

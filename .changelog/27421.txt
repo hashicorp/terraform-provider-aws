@@ -1,0 +1,3 @@
+```release-note:feature
+resource/aws_networkfirewall_rule_group: Enabled ReferenceSets
+```
