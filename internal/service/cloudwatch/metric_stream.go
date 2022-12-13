@@ -436,7 +436,7 @@ func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, n
 	return nil, err
 }
 
-func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.CloudWatch, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) {
+func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.CloudWatch, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{metricStreamStateStopped},
 		Target:  []string{metricStreamStateRunning},
