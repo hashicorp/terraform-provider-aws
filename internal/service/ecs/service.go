@@ -1376,7 +1376,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 		if v, ok := raw["discovery_name"].(string); ok && v != "" {
 			config.DiscoveryName = aws.String(v)
 		}
-		if v, ok := raw["ingress_port_override"].(int); ok {
+		if v, ok := raw["ingress_port_override"].(int); ok && v != 0 {
 			config.IngressPortOverride = aws.Int64(int64(v))
 		}
 		if v, ok := raw["port_name"].(string); ok && v != "" {
