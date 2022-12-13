@@ -838,6 +838,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_db_cluster_snapshot":            rds.DataSourceClusterSnapshot(),
 			"aws_db_event_categories":            rds.DataSourceEventCategories(),
 			"aws_db_instance":                    rds.DataSourceInstance(),
+			"aws_db_instances":                   rds.DataSourceInstances(),
 			"aws_db_proxy":                       rds.DataSourceProxy(),
 			"aws_db_snapshot":                    rds.DataSourceSnapshot(),
 			"aws_db_subnet_group":                rds.DataSourceSubnetGroup(),
