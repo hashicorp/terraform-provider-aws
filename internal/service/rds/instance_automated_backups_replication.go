@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -139,13 +140,17 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 		return err
 	}
 
-	log.Printf("[DEBUG] Stopping RDS instance automated backups replication: %s", d.Id())
+	log.Printf("[DEBUG] Stopping RDS Instance Automated Backups Replication: %s", d.Id())
 	_, err = conn.StopDBInstanceAutomatedBackupsReplication(&rds.StopDBInstanceAutomatedBackupsReplicationInput{
 		SourceDBInstanceArn: aws.String(d.Get("source_db_instance_arn").(string)),
 	})
 
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("stopping RDS instance automated backups replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("stopping RDS Instance Automated Backups Replication (%s): %w", d.Id(), err)
 	}
 
 	// Create a new client to the source region.

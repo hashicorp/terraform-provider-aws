@@ -356,6 +356,8 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	deleteOpts := rds_sdkv2.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
+
+	log.Printf("[DEBUG] Deleting RDS DB Parameter Group: %s", d.Id())
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(ctx, &deleteOpts)
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
