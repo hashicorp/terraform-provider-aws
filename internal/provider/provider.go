@@ -2174,6 +2174,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
 			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
 			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
+			"aws_ssoadmin_permissions_boundary_attachment":    ssoadmin.ResourcePermissionsBoundaryAttachment(),
 
 			"aws_storagegateway_cache":                   storagegateway.ResourceCache(),
 			"aws_storagegateway_cached_iscsi_volume":     storagegateway.ResourceCachediSCSIVolume(),
