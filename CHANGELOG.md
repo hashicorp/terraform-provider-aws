@@ -4,10 +4,15 @@ FEATURES:
 
 * **New Data Source:** `aws_cloudwatch_log_data_protection_policy_document` ([#28272](https://github.com/hashicorp/terraform-provider-aws/issues/28272))
 * **New Resource:** `aws_auditmanager_framework` ([#28257](https://github.com/hashicorp/terraform-provider-aws/issues/28257))
+* **New Resource:** `aws_sagemaker_space` ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 
 ENHANCEMENTS:
 
+* resource/aws_sagemaker_app: Add `space_name` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
+* resource/aws_sagemaker_app: Make `user_profile_name` optional ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
+* resource/aws_sagemaker_domain: Add `default_space_settings` and `default_user_settings.jupyter_server_app_settings.code_repository` arguments ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_endpoint_configuration: Add `shadow_production_variants`, `production_variants.container_startup_health_check_timeout_in_seconds`, `production_variants.core_dump_config`, `production_variants.model_data_download_timeout_in_seconds`, and `production_variants.volume_size_in_gb` arguments ([#28159](https://github.com/hashicorp/terraform-provider-aws/issues/28159))
+* resource/aws_sagemaker_user_profile: Add `user_settings.jupyter_server_app_settings.code_repository` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 
 BUG FIXES:
 
