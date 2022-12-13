@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "mybucket" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
-  bucket = aws_s3_bucket.mybucket.bucket
+  bucket = aws_s3_bucket.mybucket.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -38,7 +38,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
+* `bucket` - (Required, Forces new resource) The name of the bucket.[AWS s3_bucket id attributes](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#id)
 * `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
 * `rule` - (Required) Set of server-side encryption configuration rules. [documented below](#rule). Currently, only a single rule is supported.
 
