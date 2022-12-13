@@ -109,11 +109,11 @@ func ResourceBucketObject() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"kms_key_id"},
 			},
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+			//"force_destroy": {
+			//	Type:     schema.TypeBool,
+			//	Optional: true,
+			//	Default:  false,
+			//},
 			"key": {
 				Deprecated:   "Use the aws_s3_object resource instead",
 				Type:         schema.TypeString,
@@ -391,9 +391,9 @@ func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error 
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(conn, bucket, key, false)
 	} else {
-		err = deleteObjectVersion(conn, bucket, key, "", false)
+		err = deleteObjectVersion(conn, bucket, key, "")
 	}
 
 	if err != nil {

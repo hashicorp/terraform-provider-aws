@@ -54,8 +54,15 @@ func ResourceObject() *schema.Resource {
 				Type:         schema.TypeString,
 				Default:      s3.ObjectCannedACLPrivate,
 				Optional:     true,
+				Computed:     false,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
+			//"force_destroy": {
+			//	Type:     schema.TypeBool,
+			//	Optional: true,
+			//	Default:  false,
+			//	Computed: false,
+			//},
 			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -106,11 +113,6 @@ func ResourceObject() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"kms_key_id"},
-			},
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"key": {
 				Type:         schema.TypeString,
@@ -392,9 +394,9 @@ func resourceObjectDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(conn, bucket, key, false)
 	} else {
-		err = deleteObjectVersion(conn, bucket, key, "", false)
+		err = deleteObjectVersion(conn, bucket, key, "")
 	}
 
 	if err != nil {
@@ -620,7 +622,7 @@ func hasObjectContentChanges(d verify.ResourceDiffer) bool {
 // If key is empty then all versions of all objects are deleted.
 // Set force to true to override any S3 object lock protections on object lock enabled buckets.
 // Returns the number of objects deleted.
-func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreObjectErrors bool) (int64, error) {
+func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, ignoreObjectErrors bool) (int64, error) {
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
@@ -644,13 +646,13 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 				continue
 			}
 
-			err := deleteObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
+			err := deleteObjectVersion(conn, bucketName, objectKey, objectVersionID)
 
 			if err == nil {
 				nObjects++
 			}
 
-			if tfawserr.ErrCodeEquals(err, "AccessDenied") && force {
+			if tfawserr.ErrCodeEquals(err, "AccessDenied") {
 				// Remove any legal hold.
 				resp, err := conn.HeadObject(&s3.HeadObjectInput{
 					Bucket:    aws.String(bucketName),
@@ -681,7 +683,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 					}
 
 					// Attempt to delete again.
-					err = deleteObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
+					err = deleteObjectVersion(conn, bucketName, objectKey, objectVersionID)
 
 					if err != nil {
 						lastErr = err
@@ -735,7 +737,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 			}
 
 			// Delete markers have no object lock protections.
-			err := deleteObjectVersion(conn, bucketName, deleteMarkerKey, deleteMarkerVersionID, false)
+			err := deleteObjectVersion(conn, bucketName, deleteMarkerKey, deleteMarkerVersionID)
 
 			if err != nil {
 				lastErr = err
@@ -768,7 +770,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 
 // deleteObjectVersion deletes a specific object version.
 // Set force to true to override any S3 object lock protections.
-func deleteObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
+func deleteObjectVersion(conn *s3.S3, b, k, v string) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(b),
 		Key:    aws.String(k),
@@ -776,10 +778,6 @@ func deleteObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 
 	if v != "" {
 		input.VersionId = aws.String(v)
-	}
-
-	if force {
-		input.BypassGovernanceRetention = aws.Bool(true)
 	}
 
 	log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", b, k, v)
