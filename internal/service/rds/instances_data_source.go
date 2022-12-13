@@ -19,12 +19,12 @@ func DataSourceInstances() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"instance_arns": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"instance_identifiers": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -46,7 +46,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
-	var instanceArns []string
+	var instanceARNS []string
 	var instanceIdentifiers []string
 
 	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
@@ -59,7 +59,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 				continue
 			}
 
-			instanceArns = append(instanceArns, aws.StringValue(dbInstance.DBInstanceArn))
+			instanceARNS = append(instanceARNS, aws.StringValue(dbInstance.DBInstanceArn))
 			instanceIdentifiers = append(instanceIdentifiers, aws.StringValue(dbInstance.DBInstanceIdentifier))
 		}
 
@@ -71,7 +71,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("instance_arns", instanceArns)
+	d.Set("instance_arns", instanceARNS)
 	d.Set("instance_identifiers", instanceIdentifiers)
 
 	return nil
