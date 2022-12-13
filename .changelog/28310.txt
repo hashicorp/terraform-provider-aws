@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_cloudwatch_metric_stream: Fix reconciliation of changes to the tags.
+resource/aws_cloudwatch_metric_stream: Correctly update `tags`
 ```
