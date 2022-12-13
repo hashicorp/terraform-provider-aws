@@ -759,6 +759,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lambda_code_signing_config": lambda.DataSourceCodeSigningConfig(),
 			"aws_lambda_function_url":        lambda.DataSourceFunctionURL(),
 			"aws_lambda_function":            lambda.DataSourceFunction(),
+			"aws_lambda_functions":           lambda.DataSourceFunctions(),
 			"aws_lambda_invocation":          lambda.DataSourceInvocation(),
 			"aws_lambda_layer_version":       lambda.DataSourceLayerVersion(),
 
