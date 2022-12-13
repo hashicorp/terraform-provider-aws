@@ -3,12 +3,12 @@ subcategory: "SSO Admin"
 layout: "aws"
 page_title: "AWS: aws_ssoadmin_permissions_boundary_attachment"
 description: |-
-  Attaches a permissions boundary policy to a Single Sign-On (SSO) Permission Set resource
+  Attaches a permissions boundary policy to a Single Sign-On (SSO) Permission Set resource.
 ---
 
 # Resource: aws_ssoadmin_permissions_boundary_attachment
 
-Attaches a permissions boundary policy to a Single Sign-On (SSO) Permission Set resource
+Attaches a permissions boundary policy to a Single Sign-On (SSO) Permission Set resource.
 
 ~> **NOTE:** A permission set can have at most one permissions boundary attached; using more than one `aws_ssoadmin_permissions_boundary_attachment` references the same permission set will show a permanent difference.
 
@@ -51,7 +51,6 @@ resource "aws_ssoadmin_permissions_boundary_attachment" "example" {
     }
   }
 }
-
 ```
 
 ### Attaching an AWS-managed policy
@@ -72,16 +71,21 @@ The following arguments are required:
 
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
-* `permissions_boundary` - (Required, Forces new resource) The permissions boundary policy
+* `permissions_boundary` - (Required, Forces new resource) The permissions boundary policy. See below.
 
-### permissions_boundary Configuration Block
+### Permissions Boundary
 
-The `permissions_boundary` config block describes the permissions boundary policy to attach. You can reference either an AWS-managed policy, or a customer-managed policy.
+The `permissions_boundary` config block describes the permissions boundary policy to attach. You can reference either an AWS-managed policy, or a customer managed policy, but only one may be set.
 
-Only one of `managed_policy_arn` and `customer_managed_policy_reference` may be set on a given `permissions_boundary` resource.
+* `managed_policy_arn` - (Optional) AWS-managed IAM policy ARN to use as the permissions boundary.
+* `customer_managed_policy_reference` - (Optional) Specifies the name and path of a customer managed policy. See below.
 
-* `managed_policy_arn` - (Optional) the ARN of an AWS-managed IAM policy to use as the permissions boundary
-* `customer_managed_policy_reference` - (Optional) a reference to a customer-managed IAM policy to use as the permissions boundary.  Same as the [`customer_managed_policy_reference`](ssoadmin_customer_managed_policy_attachment.html#customer-managed-policy-reference) argument of the [`aws_ssoadmin_customer_managed_policy_attachment`](ssoadmin_customer_managed_policy_attachment.html) resource.  You must have an IAM policy that matches the name and path in each AWS account where you want to deploy your specified permission set.
+### Customer Managed Policy Reference
+
+The `customer_managed_policy_reference` config block describes a customer managed IAM policy. You must have an IAM policy that matches the name and path in each AWS account where you want to deploy your specified permission set.
+
+* `name` - (Required, Forces new resource) Name of the customer managed IAM Policy to be attached.
+* `path` - (Optional, Forces new resource) The path to the IAM policy to be attached. The default is `/`. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) for more information.
 
 ## Attributes Reference
 
