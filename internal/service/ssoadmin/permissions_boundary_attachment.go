@@ -31,6 +31,18 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"instance_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"permission_set_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"permissions_boundary": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -70,18 +82,6 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 						},
 					},
 				},
-			},
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"permission_set_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
