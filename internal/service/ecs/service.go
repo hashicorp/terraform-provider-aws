@@ -1287,7 +1287,9 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 
 func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
 	if len(sc) == 0 {
-		return &ecs.ServiceConnectConfiguration{}
+		return &ecs.ServiceConnectConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 	raw := sc[0].(map[string]interface{})
 
