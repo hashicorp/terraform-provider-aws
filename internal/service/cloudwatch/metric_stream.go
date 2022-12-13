@@ -262,7 +262,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.PutMetricStreamWithContext(ctx, &params)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updatingCloudWatch Metric Stream (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("failed updating CloudWatch Metric Stream (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -273,6 +273,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 			log.Printf("[WARN] failed updating tags for CloudWatch Metric Stream (%s): %s", d.Id(), err)
 		}
 	}
+
 	return resourceMetricStreamRead(ctx, d, meta)
 }
 
