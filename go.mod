@@ -4,12 +4,12 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.156
+	github.com/aws/aws-sdk-go v1.44.157
 	github.com/aws/aws-sdk-go-v2 v1.17.2
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.20
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.10.20
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.75.0
@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.3

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -51,6 +52,153 @@ func ResourceDomain() *schema.Resource {
 				ForceNew:     true,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.AuthMode_Values(), false),
+			},
+			"default_space_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_role": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"jupyter_server_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+						},
+						"kernel_gateway_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 30,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"security_groups": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 5,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"default_user_settings": {
 				Type:     schema.TypeList,
@@ -97,6 +245,20 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -444,6 +606,10 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		input.DomainSettings = expandDomainSettings(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("default_space_settings"); ok && len(v.([]interface{})) > 0 {
+		input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
@@ -480,12 +646,12 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	domain, err := FindDomainByName(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker domain (%s), removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker Domain (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("reading SageMaker domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Domain (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(domain.DomainArn)
@@ -507,6 +673,10 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("default_user_settings", flattenDomainDefaultUserSettings(domain.DefaultUserSettings)); err != nil {
 		return fmt.Errorf("setting default_user_settings for SageMaker Domain (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("default_space_settings", flattenDefaultSpaceSettings(domain.DefaultSpaceSettings)); err != nil {
+		return fmt.Errorf("setting default_space_settings for SageMaker Domain (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("domain_settings", flattenDomainSettings(domain.DomainSettings)); err != nil {
@@ -538,12 +708,19 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDomainInput{
-			DomainId:            aws.String(d.Id()),
-			DefaultUserSettings: expandDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+			DomainId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("default_user_settings"); ok && len(v.([]interface{})) > 0 {
+			input.DefaultUserSettings = expandDomainDefaultUserSettings(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_settings"); ok && len(v.([]interface{})) > 0 {
 			input.DomainSettingsForUpdate = expandDomainSettingsUpdate(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("default_space_settings"); ok && len(v.([]interface{})) > 0 {
+			input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
 		}
 
 		log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
@@ -698,6 +875,10 @@ func expandDomainJupyterServerAppSettings(l []interface{}) *sagemaker.JupyterSer
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.JupyterServerAppSettings{}
+
+	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
+		config.CodeRepositories = expandCodeRepositories(v.List())
+	}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
@@ -964,6 +1145,10 @@ func flattenDomainJupyterServerAppSettings(config *sagemaker.JupyterServerAppSet
 
 	m := map[string]interface{}{}
 
+	if config.CodeRepositories != nil {
+		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
+	}
+
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
@@ -1100,4 +1285,128 @@ func DecodeDomainID(id string) (string, error) {
 
 	domainName := strings.TrimPrefix(domainArn.Resource, "domain/")
 	return domainName, nil
+}
+
+func expanDefaultSpaceSettings(l []interface{}) *sagemaker.DefaultSpaceSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.DefaultSpaceSettings{}
+
+	if v, ok := m["execution_role"].(string); ok && v != "" {
+		config.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.JupyterServerAppSettings = expandDomainJupyterServerAppSettings(v)
+	}
+
+	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
+	}
+
+	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+		config.SecurityGroups = flex.ExpandStringSet(v)
+	}
+
+	return config
+}
+
+func flattenDefaultSpaceSettings(config *sagemaker.DefaultSpaceSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.ExecutionRole != nil {
+		m["execution_role"] = aws.StringValue(config.ExecutionRole)
+	}
+
+	if config.JupyterServerAppSettings != nil {
+		m["jupyter_server_app_settings"] = flattenDomainJupyterServerAppSettings(config.JupyterServerAppSettings)
+	}
+
+	if config.KernelGatewayAppSettings != nil {
+		m["kernel_gateway_app_settings"] = flattenDomainKernelGatewayAppSettings(config.KernelGatewayAppSettings)
+	}
+
+	if config.SecurityGroups != nil {
+		m["security_groups"] = flex.FlattenStringSet(config.SecurityGroups)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandCodeRepository(tfMap map[string]interface{}) *sagemaker.CodeRepository {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &sagemaker.CodeRepository{
+		RepositoryUrl: aws.String(tfMap["repository_url"].(string)),
+	}
+
+	return apiObject
+}
+
+func expandCodeRepositories(tfList []interface{}) []*sagemaker.CodeRepository {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*sagemaker.CodeRepository
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandCodeRepository(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenCodeRepository(apiObject *sagemaker.CodeRepository) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.RepositoryUrl != nil {
+		tfMap["repository_url"] = aws.StringValue(apiObject.RepositoryUrl)
+	}
+
+	return tfMap
+}
+
+func flattenCodeRepositories(apiObjects []*sagemaker.CodeRepository) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenCodeRepository(apiObject))
+	}
+
+	return tfList
 }

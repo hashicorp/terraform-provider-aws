@@ -490,8 +490,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
-			"aws_cloudwatch_log_group":  logs.DataSourceGroup(),
-			"aws_cloudwatch_log_groups": logs.DataSourceGroups(),
+			"aws_cloudwatch_log_data_protection_policy_document": logs.DataSourceDataProtectionPolicyDocument(),
+			"aws_cloudwatch_log_group":                           logs.DataSourceGroup(),
+			"aws_cloudwatch_log_groups":                          logs.DataSourceGroups(),
 
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
@@ -2053,6 +2054,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_notebook_instance":                         sagemaker.ResourceNotebookInstance(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": sagemaker.ResourceNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_project":                                   sagemaker.ResourceProject(),
+			"aws_sagemaker_space":                                     sagemaker.ResourceSpace(),
 			"aws_sagemaker_servicecatalog_portfolio_status":           sagemaker.ResourceServicecatalogPortfolioStatus(),
 			"aws_sagemaker_studio_lifecycle_config":                   sagemaker.ResourceStudioLifecycleConfig(),
 			"aws_sagemaker_user_profile":                              sagemaker.ResourceUserProfile(),
