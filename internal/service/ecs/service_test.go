@@ -1729,7 +1729,7 @@ func testAccServiceConfig_updateCapacityProviderStrategy(rName string, weight in
 	return acctest.ConfigCompose(
 		testAccCapacityProviderConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1754,16 +1754,19 @@ resource "aws_ecs_task_definition" "test" {
 DEFINITION
 }
 
-resource "aws_security_group" "allow_all" {
-  name        = %[1]q
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
     from_port   = 80
     to_port     = 8000
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1786,13 +1789,13 @@ resource "aws_vpc" "test" {
 
 resource "aws_ecs_service" "test" {
   name                 = %[1]q
-  cluster              = aws_ecs_cluster.default.id
+  cluster              = aws_ecs_cluster.test.id
   task_definition      = aws_ecs_task_definition.test.arn
   desired_count        = 1
   force_new_deployment = true
 
   network_configuration {
-    security_groups  = [aws_security_group.allow_all.id]
+    security_groups  = [aws_security_group.test.id]
     subnets          = [aws_subnet.test.id]
     assign_public_ip = false
   }
@@ -1809,7 +1812,7 @@ func testAccServiceConfig_updateCapacityProviderStrategyRemove(rName string) str
 	return acctest.ConfigCompose(
 		testAccCapacityProviderConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1831,7 +1834,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name                 = %[1]q
-  cluster              = aws_ecs_cluster.default.id
+  cluster              = aws_ecs_cluster.test.id
   task_definition      = aws_ecs_task_definition.test2.arn
   desired_count        = 1
   force_new_deployment = true
