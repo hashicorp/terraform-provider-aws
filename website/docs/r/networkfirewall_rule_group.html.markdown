@@ -277,7 +277,7 @@ The following arguments are supported:
 
 The `rule_group` block supports the following argument:
 
-* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [IPSet References](#ip-set-references) below for details.
+* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details.
 
 * `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 
@@ -285,11 +285,9 @@ The `rule_group` block supports the following argument:
 
 * `stateful_rule_options` - (Optional) A configuration block that defines stateful rule options for the rule group. See [Stateful Rule Options](#stateful-rule-options) below for details.
 
-### IPSet References
+### Reference Sets
 
-The `ip_set_references` block supports the following arguments:
-
-* `key` - (Required) A unique alphanumeric string to identify the `ip_set`.
+The `reference_sets` block supports the following arguments:
 
 * `ip_set_reference` - (Optional) Set of configuration blocks that define the IP Reference information. See [IP Set Reference](#ip-set-reference) below for details.
 
@@ -318,6 +316,8 @@ The `ip_set` configuration block supports the following argument:
 ### IP Set Reference
 
 The `ip_set_reference` configuration block supports the following argument:
+
+* `key` - (Required) A unique alphanumeric string to identify the `ip_set`.
 
 * `reference_arn` - (Required) Set of Managed Prefix IP ARN(s)
 
