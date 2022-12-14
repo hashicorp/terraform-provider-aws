@@ -931,7 +931,7 @@ func sweepInstances(region string) error {
 				r := ResourceInstance()
 				d := r.Data(nil)
 				d.SetId(id)
-				d.Set("disable_api_termination", false)
+				d.Set("disable_api_stop", false)
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
