@@ -77,10 +77,6 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 		TargetArn:       aws.String(d.Get("target_arn").(string)),
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.PutDestinationWithContext(ctx, input)
 	}, cloudwatchlogs.ErrCodeInvalidParameterException)
@@ -89,7 +85,16 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("creating CloudWatch Logs Destination (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination.DestinationName))
+	destination := outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination
+	d.SetId(aws.StringValue(destination.DestinationName))
+
+	// Although PutDestinationInput has a Tags field, specifying tags there results in
+	// "InvalidParameterException: Could not deliver test message to specified destination. Check if the destination is valid."
+	if len(tags) > 0 {
+		if err := UpdateTagsWithContext(ctx, conn, aws.StringValue(destination.Arn), nil, tags); err != nil {
+			return diag.Errorf("adding CloudWatch Logs Destination (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceDestinationRead(ctx, d, meta)
 }
