@@ -324,6 +324,11 @@ func sweepSubnetGroups(region string) error {
 		for _, subnetGroup := range page.CacheSubnetGroups {
 			name := aws.StringValue(subnetGroup.CacheSubnetGroupName)
 
+			if name == "default" {
+				log.Printf("[INFO] Skipping ElastiCache Subnet Group: %s", name)
+				continue
+			}
+
 			log.Printf("[INFO] Deleting ElastiCache Subnet Group: %s", name)
 			_, err := conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
 				CacheSubnetGroupName: aws.String(name),
