@@ -236,20 +236,7 @@ resource "aws_devicefarm_test_grid_project" "test" {
 }
 
 func testAccTestGridProjectConfig_projectVPC(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count = 2
 

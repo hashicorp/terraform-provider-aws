@@ -39,6 +39,7 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`project:.+`)),
 				),
@@ -55,6 +56,40 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`project:.+`)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDeviceFarmProject_vpc(t *testing.T) {
+	var proj devicefarm.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_devicefarm_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			// Currently, DeviceFarm is only supported in us-west-2
+			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_vpc(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -239,6 +274,34 @@ resource "aws_devicefarm_project" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccProjectConfig_vpc(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = 2
+
+  name        = "%[1]s-${count.index}"
+  description = "Allow all inbound traffic"
+  vpc_id      = aws_vpc.test.id
+  ingress {
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+}
+
+resource "aws_devicefarm_project" "test" {
+  name = %[1]q
+
+  vpc_config {
+    vpc_id             = aws_vpc.test.id
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
+  }  
+}
+`, rName))
 }
 
 func testAccProjectConfig_defaultJobTimeout(rName string, timeout int) string {

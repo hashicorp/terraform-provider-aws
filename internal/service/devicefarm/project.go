@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,6 +43,31 @@ func ResourceProject() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							MinItems: 1,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Required: true,
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							MinItems: 1,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Required: true,
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -59,6 +85,10 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("default_job_timeout_minutes"); ok {
 		input.DefaultJobTimeoutMinutes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("vpc_config"); ok {
+		input.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating DeviceFarm Project: %s", name)
@@ -102,6 +132,10 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("default_job_timeout_minutes", project.DefaultJobTimeoutMinutes)
 
+	if err := d.Set("vpc_config", flattenVPCConfig(project.VpcConfig)); err != nil {
+		return fmt.Errorf("error setting vpc_config: %w", err)
+	}
+
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
@@ -136,6 +170,10 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("default_job_timeout_minutes") {
 			input.DefaultJobTimeoutMinutes = aws.Int64(int64(d.Get("default_job_timeout_minutes").(int)))
+		}
+
+		if d.HasChange("vpc_config") {
+			input.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating DeviceFarm Project: %s", d.Id())
@@ -173,4 +211,34 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandVPCConfig(l []interface{}) *devicefarm.VpcConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &devicefarm.VpcConfig{
+		VpcId:            aws.String(m["vpc_id"].(string)),
+		SubnetIds:        flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+	}
+
+	return config
+}
+
+func flattenVPCConfig(conf *devicefarm.VpcConfig) []interface{} {
+	if conf == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"vpc_id":             aws.StringValue(conf.VpcId),
+		"subnet_ids":         flex.FlattenStringSet(conf.SubnetIds),
+		"security_group_ids": flex.FlattenStringSet(conf.SecurityGroupIds),
+	}
+
+	return []interface{}{m}
 }

@@ -27,7 +27,14 @@ resource "aws_devicefarm_project" "awesome_devices" {
 
 * `name` - (Required) The name of the project
 * `default_job_timeout_minutes` - (Optional) Sets the execution timeout value (in minutes) for a project. All test runs in this project use the specified execution timeout value unless overridden when scheduling a run.
+* `vpc_config` - (Required) The VPC security groups and subnets that are attached to a project. See [VPC Config](#vpc-config) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### VPC Config
+
+* `security_group_ids` - (Required) A list of VPC security group IDs in your Amazon VPC.
+* `subnet_ids` - (Required) A list of VPC subnet IDs in your Amazon VPC.
+* `vpc_id` - (Required) The ID of the Amazon VPC.
 
 ## Attributes Reference
 
