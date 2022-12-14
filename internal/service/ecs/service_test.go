@@ -1482,38 +1482,14 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceConfig_launchTypeFargateNoWait(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccServiceConfig_launchTypeFargateBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -1522,6 +1498,10 @@ resource "aws_route_table" "test" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1532,8 +1512,10 @@ resource "aws_route_table_association" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow traffic"
+  count = 2
+
+  name        = "%[1]s-${count.index}"
+  description = "Allow all traffic"
   vpc_id      = aws_vpc.test.id
 
   ingress {
@@ -1551,6 +1533,10 @@ resource "aws_security_group" "test" {
     cidr_blocks = [
       "0.0.0.0/0",
     ]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1578,7 +1564,11 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 }
+`, rName))
+}
 
+func testAccServiceConfig_launchTypeFargate(rName string, assignPublicIP bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
@@ -1587,128 +1577,70 @@ resource "aws_ecs_service" "test" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.test.id]
+    security_groups  = aws_security_group.test[*].id
     subnets          = aws_subnet.test[*].id
-    assign_public_ip = true
+    assign_public_ip = %[2]t
   }
 }
-`, rName)
+`, rName, assignPublicIP))
 }
 
-func testAccServiceConfig_launchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name             = %[1]q
+  cluster          = aws_ecs_cluster.test.id
+  task_definition  = aws_ecs_task_definition.test.arn
+  desired_count    = 1
+  launch_type      = "FARGATE"
+  platform_version = %[2]q
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  network_configuration {
+    security_groups  = aws_security_group.test[*].id
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = false
   }
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
+`, rName, platformVersion))
 }
 
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count          = 2
-  subnet_id      = element(aws_subnet.test[*].id, count.index)
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-
-  egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-
-    cidr_blocks = [
-      "0.0.0.0/0",
-    ]
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
+func testAccServiceConfig_launchTypeFargateNoWait(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = %d
+  desired_count   = 1
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.test.id]
+    security_groups  = [aws_security_group.test[0].id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+}
+`, rName))
+}
+
+func testAccServiceConfig_launchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = %[2]d
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    security_groups  = [aws_security_group.test[0].id]
     subnets          = aws_subnet.test[*].id
     assign_public_ip = true
   }
 
-  wait_for_steady_state = %t
+  wait_for_steady_state = %[3]t
 }
 
-`, rName, desiredCount, waitForSteadyState)
+`, rName, desiredCount, waitForSteadyState))
 }
 
 func testAccServiceConfig_interchangeablePlacementStrategy(rName string) string {
@@ -2287,201 +2219,6 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName)
-}
-
-func testAccServiceConfig_launchTypeFargate(rName string, assignPublicIP bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "allow_all_a" {
-  name        = "%[1]s-1"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_security_group" "allow_all_b" {
-  name        = "%[1]s-2"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-
-  network_configuration {
-    security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = aws_subnet.test[*].id
-    assign_public_ip = %t
-  }
-}
-`, rName, assignPublicIP)
-}
-
-func testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "allow_all_a" {
-  name        = "%[1]s-1"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_security_group" "allow_all_b" {
-  name        = "%[1]s-2"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name             = %[1]q
-  cluster          = aws_ecs_cluster.test.id
-  task_definition  = aws_ecs_task_definition.test.arn
-  desired_count    = 1
-  launch_type      = "FARGATE"
-  platform_version = %[2]q
-
-  network_configuration {
-    security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = aws_subnet.test[*].id
-    assign_public_ip = false
-  }
-}
-`, rName, platformVersion)
 }
 
 func testAccServiceConfig_healthCheckGracePeriodSeconds(rName string, healthCheckGracePeriodSeconds int) string {
