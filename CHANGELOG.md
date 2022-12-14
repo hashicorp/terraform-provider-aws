@@ -11,6 +11,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_appsync_function: Add `runtime` and `code` arguments ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
+* resource/aws_appsync_function: Make `request_mapping_template` and `response_mapping_template` Optional ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
 * resource/aws_grafana_workspace: Add `vpc_configuration` argument. ([#28308](https://github.com/hashicorp/terraform-provider-aws/issues/28308))
 * resource/aws_sagemaker_app: Add `space_name` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_app: Make `user_profile_name` optional ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
