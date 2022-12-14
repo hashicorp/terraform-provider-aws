@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -302,7 +302,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "creating RDS Cluster (%s) Instance (%s): %s", clusterID, identifier, err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s) Instance (%s): %s", clusterID, identifier, err)
 	}
 
 	output := outputRaw.(*rds.CreateDBInstanceOutput)
@@ -310,7 +310,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.StringValue(output.DBInstance.DBInstanceIdentifier))
 
 	if _, err := waitDBClusterInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return errs.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("ca_cert_identifier"); ok && v.(string) != aws.StringValue(output.DBInstance.CACertificateIdentifier) {
@@ -321,22 +321,22 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if _, err := conn.ModifyDBInstanceWithContext(ctx, input); err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 
 		_, err = conn.RebootDBInstanceWithContext(ctx, &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(d.Id()),
 		})
 		if err != nil {
-			return errs.AppendErrorf(diags, "rebooting RDS Cluster Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "rebooting RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -356,19 +356,19 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return nil
 	}
 	if err != nil {
-		return errs.AppendErrorf(diags, "reading RDS Cluster Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	dbClusterID := aws.StringValue(db.DBClusterIdentifier)
 
 	if dbClusterID == "" {
-		return errs.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
+		return sdkdiag.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
 	for _, m := range dbc.DBClusterMembers {
@@ -420,18 +420,18 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	tags, err := ListTagsWithContext(ctx, conn, aws.StringValue(db.DBInstanceArn))
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return nil
@@ -510,11 +510,11 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBClusterInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -522,7 +522,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -549,11 +549,11 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return errs.AppendErrorf(diags, "deleting RDS Cluster Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDBClusterInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return errs.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

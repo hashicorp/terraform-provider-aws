@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -374,7 +375,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.DeleteDBParameterGroup(ctx, &deleteOpts)
 	}
 	if err != nil {
-		return errs.AppendErrorf(diags, "deleting RDS DB Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 	return nil
 }
