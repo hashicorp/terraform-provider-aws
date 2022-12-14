@@ -11,11 +11,13 @@ import (
 )
 
 type Generator struct {
-	ui cli.Ui
+	append bool
+	ui     cli.Ui
 }
 
-func NewGenerator() *Generator {
+func NewGenerator(append bool) *Generator {
 	return &Generator{
+		append: append,
 		ui: &cli.BasicUi{
 			Reader:      os.Stdin,
 			Writer:      os.Stdout,
@@ -51,7 +53,13 @@ func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody s
 		generatedFileContents = buffer.Bytes()
 	}
 
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644) //nolint:gomnd
+	var flags int
+	if g.append {
+		flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	} else {
+		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
+	}
+	f, err := os.OpenFile(filename, flags, 0644) //nolint:gomnd
 
 	if err != nil {
 		return fmt.Errorf("opening file (%s): %w", filename, err)

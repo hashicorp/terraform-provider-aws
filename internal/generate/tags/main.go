@@ -4,16 +4,13 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"go/format"
-	"log"
 	"os"
 	"regexp"
 	"strings"
-	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
 	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -168,7 +165,6 @@ type TemplateData struct {
 }
 
 func main() {
-	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
 
@@ -177,15 +173,17 @@ func main() {
 		filename = args[0]
 	}
 
+	g := common.NewGenerator(true)
+
 	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
-		log.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
+		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
 	awsPkg, err := names.AWSGoPackage(servicePackage, *sdkVersion)
 
 	if err != nil {
-		log.Fatalf("encountered: %s", err)
+		g.Fatalf("encountered: %s", err)
 	}
 
 	var awsIntfPkg string
@@ -196,7 +194,7 @@ func main() {
 	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
 
 	if err != nil {
-		log.Fatalf("encountered: %s", err)
+		g.Fatalf("encountered: %s", err)
 	}
 
 	var clientType string
@@ -249,7 +247,7 @@ func main() {
 		TagType:                 *tagType,
 		TagType2:                *tagType2,
 		TagTypeAddBoolElem:      *tagTypeAddBoolElem,
-		TagTypeAddBoolElemSnake: ToSnakeCase(*tagTypeAddBoolElem),
+		TagTypeAddBoolElemSnake: toSnakeCase(*tagTypeAddBoolElem),
 		TagTypeIDElem:           *tagTypeIDElem,
 		TagTypeKeyElem:          *tagTypeKeyElem,
 		TagTypeValElem:          *tagTypeValElem,
@@ -270,64 +268,44 @@ func main() {
 			templateData.AWSService = ""
 			templateData.TagPackage = ""
 		}
-		writeTemplate(filename, templateBody.header, "header", templateData)
+
+		if err := g.ApplyAndWriteGoTemplate(filename, "header", templateBody.header, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *getTag {
-		writeTemplate(filename, templateBody.getTag, "gettag", templateData)
+		if err := g.ApplyAndWriteGoTemplate(filename, "gettag", templateBody.getTag, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *listTags {
-		writeTemplate(filename, templateBody.listTags, "listtags", templateData)
+		if err := g.ApplyAndWriteGoTemplate(filename, "listtags", templateBody.listTags, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *serviceTagsMap {
-		writeTemplate(filename, templateBody.serviceTagsMap, "servicetagsmap", templateData)
+		if err := g.ApplyAndWriteGoTemplate(filename, "servicetagsmap", templateBody.serviceTagsMap, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *serviceTagsSlice {
-		writeTemplate(filename, templateBody.serviceTagsSlice, "servicetagsslice", templateData)
+		if err := g.ApplyAndWriteGoTemplate(filename, "servicetagsslice", templateBody.serviceTagsSlice, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *updateTags {
-		writeTemplate(filename, templateBody.updateTags, "updatetags", templateData)
+		if err := g.ApplyAndWriteGoTemplate(filename, "updatetags", templateBody.updateTags, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 }
 
-func writeTemplate(filename, body, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	contents, err := format.Source(buffer.Bytes())
-	if err != nil {
-		log.Fatalf("error formatting generated file: %s", err)
-	}
-
-	if _, err := f.Write(contents); err != nil {
-		f.Close() // ignore error; Write error takes precedence
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func ToSnakeCase(str string) string {
+func toSnakeCase(str string) string {
 	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
 	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)

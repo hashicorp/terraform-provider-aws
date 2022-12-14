@@ -32,7 +32,7 @@ type TemplateData struct {
 }
 
 func main() {
-	g := common.NewGenerator()
+	g := common.NewGenerator(false)
 
 	g.Infof("Generating internal/conns/%s", filename)
 

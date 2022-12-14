@@ -28,7 +28,7 @@ func main() {
 		filename = args[0]
 	}
 
-	g := common.NewGenerator()
+	g := common.NewGenerator(false)
 	templateData := &TemplateData{
 		PackageName: os.Getenv("GOPACKAGE"),
 	}

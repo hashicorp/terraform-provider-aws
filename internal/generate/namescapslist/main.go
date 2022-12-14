@@ -35,7 +35,7 @@ type TemplateData struct {
 }
 
 func main() {
-	g := common.NewGenerator()
+	g := common.NewGenerator(false)
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
