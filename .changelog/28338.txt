@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_ecs_service: Fix ECS Service Connect `ingress_port_override` being set to 0 when not given
+resource/aws_ecs_service: Fix error when removing `service_connect_configuration` argument: missing required field `UpdateServiceInput.ServiceConnectConfiguration.Enabled`
+```
