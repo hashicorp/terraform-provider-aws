@@ -277,7 +277,7 @@ The following arguments are supported:
 
 The `rule_group` block supports the following argument:
 
-* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [IPSet References](#ip_set_references) below for details.
+* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [IPSet References](#ip-set-references) below for details.
 
 * `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 

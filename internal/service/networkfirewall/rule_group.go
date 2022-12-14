@@ -87,7 +87,7 @@ func ResourceRuleGroup() *schema.Resource {
 															"reference_arn": {
 																Type:     schema.TypeString,
 																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
+																//Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 														},
 													},
