@@ -2,7 +2,6 @@ package auditmanager
 
 import (
 	"context"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -59,9 +58,8 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 
 func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AuditManagerClient
-	accountID := r.Meta().AccountID
-	region := r.Meta().Region
-	id := strings.Join([]string{accountID, region}, ",")
+	// Registration is applied per region, so use this as the ID
+	id := r.Meta().Region
 
 	var plan resourceAccountRegistrationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)

@@ -38,7 +38,7 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Unique identifier for the account registration. This is a comma-separated concatenation of AWS account ID and region.
+* `id` - Unique identifier for the account registration. Since registration is applied per AWS region, this will be the active region name (ex. `us-east-1`).
 * `status` - Status of the account registration request.
 
 ## Import
@@ -46,5 +46,5 @@ In addition to all arguments above, the following attributes are exported:
 Audit Manager Account Registration resources can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_auditmanager_account_registration.example 012345678901,us-east-1
+$ terraform import aws_auditmanager_account_registration.example us-east-1
 ```
