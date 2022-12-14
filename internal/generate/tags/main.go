@@ -80,7 +80,7 @@ type TemplateBody struct {
 	updateTags       string
 }
 
-func NewTemplateBody(version int, kvtValues bool) *TemplateBody {
+func newTemplateBody(version int, kvtValues bool) *TemplateBody {
 	switch version {
 	case sdkV1:
 		return &TemplateBody{
@@ -173,7 +173,7 @@ func main() {
 		filename = args[0]
 	}
 
-	g := common.NewGenerator(true)
+	g := common.NewGenerator()
 
 	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
 		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
@@ -259,7 +259,8 @@ func main() {
 		UpdateTagsFunc:          *updateTagsFunc,
 	}
 
-	templateBody := NewTemplateBody(*sdkVersion, *kvtValues)
+	templateBody := newTemplateBody(*sdkVersion, *kvtValues)
+	d := g.NewGoFileAppenderDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,
@@ -269,37 +270,37 @@ func main() {
 			templateData.TagPackage = ""
 		}
 
-		if err := g.ApplyAndWriteGoTemplate(filename, "header", templateBody.header, templateData); err != nil {
+		if err := d.WriteTemplate("header", templateBody.header, templateData); err != nil {
 			g.Fatalf("error: %s", err.Error())
 		}
 	}
 
 	if *getTag {
-		if err := g.ApplyAndWriteGoTemplate(filename, "gettag", templateBody.getTag, templateData); err != nil {
+		if err := d.WriteTemplate("gettag", templateBody.getTag, templateData); err != nil {
 			g.Fatalf("error: %s", err.Error())
 		}
 	}
 
 	if *listTags {
-		if err := g.ApplyAndWriteGoTemplate(filename, "listtags", templateBody.listTags, templateData); err != nil {
+		if err := d.WriteTemplate("listtags", templateBody.listTags, templateData); err != nil {
 			g.Fatalf("error: %s", err.Error())
 		}
 	}
 
 	if *serviceTagsMap {
-		if err := g.ApplyAndWriteGoTemplate(filename, "servicetagsmap", templateBody.serviceTagsMap, templateData); err != nil {
+		if err := d.WriteTemplate("servicetagsmap", templateBody.serviceTagsMap, templateData); err != nil {
 			g.Fatalf("error: %s", err.Error())
 		}
 	}
 
 	if *serviceTagsSlice {
-		if err := g.ApplyAndWriteGoTemplate(filename, "servicetagsslice", templateBody.serviceTagsSlice, templateData); err != nil {
+		if err := d.WriteTemplate("servicetagsslice", templateBody.serviceTagsSlice, templateData); err != nil {
 			g.Fatalf("error: %s", err.Error())
 		}
 	}
 
 	if *updateTags {
-		if err := g.ApplyAndWriteGoTemplate(filename, "updatetags", templateBody.updateTags, templateData); err != nil {
+		if err := d.WriteTemplate("updatetags", templateBody.updateTags, templateData); err != nil {
 			g.Fatalf("error: %s", err.Error())
 		}
 	}

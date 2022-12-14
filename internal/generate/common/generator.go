@@ -11,13 +11,15 @@ import (
 )
 
 type Generator struct {
-	append bool
-	ui     cli.Ui
+	ui cli.Ui
 }
 
-func NewGenerator(append bool) *Generator {
+type Destination interface {
+	WriteTemplate(templateName, templateBody string, templateData any) error
+}
+
+func NewGenerator() *Generator {
 	return &Generator{
-		append: append,
 		ui: &cli.BasicUi{
 			Reader:      os.Stdin,
 			Writer:      os.Stdout,
@@ -26,58 +28,89 @@ func NewGenerator(append bool) *Generator {
 	}
 }
 
-func (g *Generator) ApplyAndWriteTemplate(filename, templateName, templateBody string, templateData any, formatter func([]byte) ([]byte, error)) error {
+func (g *Generator) NewGoFileDestination(filename string) Destination {
+	return &fileDestination{
+		filename:  filename,
+		formatter: format.Source,
+	}
+}
+
+func (g *Generator) NewGoFileAppenderDestination(filename string) Destination {
+	return &fileDestination{
+		append:    true,
+		filename:  filename,
+		formatter: format.Source,
+	}
+}
+
+func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
+	return &fileDestination{
+		filename:  filename,
+		formatter: func(b []byte) ([]byte, error) { return b, nil },
+	}
+}
+
+type fileDestination struct {
+	append    bool
+	filename  string
+	formatter func([]byte) ([]byte, error)
+}
+
+func (d *fileDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
+	body, err := parseTemplate(templateName, templateBody, templateData)
+
+	if err != nil {
+		return err
+	}
+
+	body, err = d.formatter(body)
+
+	if err != nil {
+		return fmt.Errorf("formatting parsed template: %w", err)
+	}
+
+	return d.write(body)
+}
+
+func (d *fileDestination) write(body []byte) error {
+	var flags int
+	if d.append {
+		flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	} else {
+		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
+	}
+	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:gomnd
+
+	if err != nil {
+		return fmt.Errorf("opening file (%s): %w", d.filename, err)
+	}
+
+	defer f.Close()
+
+	_, err = f.Write(body)
+
+	if err != nil {
+		return fmt.Errorf("writing to file (%s): %w", d.filename, err)
+	}
+
+	return nil
+}
+
+func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
 	tmpl, err := template.New(templateName).Parse(templateBody)
 
 	if err != nil {
-		return fmt.Errorf("parsing function template: %w", err)
+		return nil, fmt.Errorf("parsing function template: %w", err)
 	}
 
 	var buffer bytes.Buffer
 	err = tmpl.Execute(&buffer, templateData)
 
 	if err != nil {
-		return fmt.Errorf("executing template: %w", err)
+		return nil, fmt.Errorf("executing template: %w", err)
 	}
 
-	var generatedFileContents []byte
-
-	if formatter != nil {
-		generatedFileContents, err = formatter(buffer.Bytes())
-
-		if err != nil {
-			g.Infof("%s", buffer.String())
-			return fmt.Errorf("formatting generated source code: %w", err)
-		}
-	} else {
-		generatedFileContents = buffer.Bytes()
-	}
-
-	var flags int
-	if g.append {
-		flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
-	} else {
-		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
-	}
-	f, err := os.OpenFile(filename, flags, 0644) //nolint:gomnd
-
-	if err != nil {
-		return fmt.Errorf("opening file (%s): %w", filename, err)
-	}
-
-	defer f.Close()
-
-	_, err = f.Write(generatedFileContents)
-
-	if err != nil {
-		return fmt.Errorf("writing to file (%s): %w", filename, err)
-	}
-
-	return nil
-}
-
-func (g *Generator) ApplyAndWriteGoTemplate(filename, templateName, templateBody string, templateData any) error {
-	return g.ApplyAndWriteTemplate(filename, templateName, templateBody, templateData, format.Source)
+	return buffer.Bytes(), nil
 }
 
 func (g *Generator) Errorf(format string, a ...interface{}) {
