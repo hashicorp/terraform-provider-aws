@@ -2788,37 +2788,8 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceLBChangesBaseConfig(rName, image, containerName string, containerPort, hostPort int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccServiceLBChangesConfig_base(rName, image, containerName string, containerPort, hostPort int) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -2926,15 +2897,15 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_iam_role_policy.ecs_service]
 }
-`, rName, image, containerName, containerPort, hostPort)
+`, rName, image, containerName, containerPort, hostPort))
 }
 
 func testAccServiceConfig_lbChanges(rName string) string {
-	return testAccServiceLBChangesBaseConfig(rName, "ghost:latest", "ghost", 2368, 8080)
+	return testAccServiceLBChangesConfig_base(rName, "ghost:latest", "ghost", 2368, 8080)
 }
 
 func testAccServiceConfig_lbChangesModified(rName string) string {
-	return testAccServiceLBChangesBaseConfig(rName, "nginx:latest", "nginx", 80, 8080)
+	return testAccServiceLBChangesConfig_base(rName, "nginx:latest", "nginx", 80, 8080)
 }
 
 func testAccServiceConfig_familyAndRevision(rName string) string {
