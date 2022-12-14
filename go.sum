@@ -80,8 +80,8 @@ github.com/aws/aws-sdk-go-v2/service/medialive v1.26.0 h1:efAz2VZcBg1YG5evAq1vzS
 github.com/aws/aws-sdk-go-v2/service/medialive v1.26.0/go.mod h1:3wXEWmABxeDt9FqiMCjGqr+/eNjhbRqTLO3LHg+Z814=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.0.1 h1:fnoi3/dnqmgq4NEG6h8OZf6gPE0QVsNAMyDrdNHvuT4=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.0.1/go.mod h1:v7oTSuRooh6pHa3YitvBTCzwCch8cfdKI0sg/FVKwyo=
-github.com/aws/aws-sdk-go-v2/service/rds v1.34.0 h1:7GOGxSHfNymxt/lP1B/bGr/CF4teQa2QYzb1Q5hEsG8=
-github.com/aws/aws-sdk-go-v2/service/rds v1.34.0/go.mod h1:5jVelkTas49nnuhUjA09TV5OAECLeXl8UvkGA24gOmU=
+github.com/aws/aws-sdk-go-v2/service/rds v1.35.0 h1:S583sAvE4bAtZYJyDWwSmcx2TG093Kreum+uIQ7V8ic=
+github.com/aws/aws-sdk-go-v2/service/rds v1.35.0/go.mod h1:5jVelkTas49nnuhUjA09TV5OAECLeXl8UvkGA24gOmU=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.3 h1:h4As2+XJkFOIRuqy/dNrO4Zh6HP0A8xE9lNToJD18Ps=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.0.3/go.mod h1:hvvS7Pxy1KcToufjF9im0KU4mmxLeYnMxe8pctWIAzw=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.13 h1:HOUg3T63JrBEdogwSnOrQXIaO+Vk7P5Mrxo4MuH6RyI=
