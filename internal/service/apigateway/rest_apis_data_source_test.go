@@ -23,7 +23,7 @@ func TestAccRestAPIsDataSource_filter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApiGatewaysDataSourceConfig_filter(rName),
+				Config: testRestAPIsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckItemInList(dataSourceName, "names", rName),
 				),
@@ -52,7 +52,7 @@ func testCheckItemInList(resource, attr, value string) error {
 	}
 }
 
-func testAccApiGatewaysDataSourceConfig_filter(rName string) string {
+func testRestAPIsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
