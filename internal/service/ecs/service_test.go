@@ -1748,7 +1748,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_capacityProviderStrategy(rName string, weight, base int, forceNewDeployment bool) string {
-	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -1795,7 +1795,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_updateCapacityProviderStrategy(rName string, weight int, capacityProvider string) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1875,7 +1875,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_updateCapacityProviderStrategyRemove(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q

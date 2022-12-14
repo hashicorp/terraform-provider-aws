@@ -483,7 +483,7 @@ resource "aws_ecs_cluster" "test" {
 }
 
 func testAccClusterCapacityProviderConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
