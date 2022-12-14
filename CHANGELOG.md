@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_cloudwatch_log_data_protection_policy_document` ([#28272](https://github.com/hashicorp/terraform-provider-aws/issues/28272))
 * **New Data Source:** `aws_db_instances` ([#28303](https://github.com/hashicorp/terraform-provider-aws/issues/28303))
+* **New Resource:** `aws_auditmanager_account_registration` ([#28314](https://github.com/hashicorp/terraform-provider-aws/issues/28314))
 * **New Resource:** `aws_auditmanager_framework` ([#28257](https://github.com/hashicorp/terraform-provider-aws/issues/28257))
 * **New Resource:** `aws_lambda_functions` ([#28254](https://github.com/hashicorp/terraform-provider-aws/issues/28254))
 * **New Resource:** `aws_sagemaker_space` ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
