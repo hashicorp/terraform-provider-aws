@@ -2,6 +2,7 @@ package directconnect_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -68,6 +69,43 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
+	dxKey := "DX_CONNECTION_ID"
+	connectionId := os.Getenv(dxKey)
+	if connectionId == "" {
+		t.Skipf("Environment variable %s is not set", dxKey)
+	}
+
+	dxName := "DX_CONNECTION_NAME"
+	connectionName := os.Getenv(dxName)
+	if connectionName == "" {
+		t.Skipf("Environment variable %s is not set", connectionName)
+	}
+
+	resourceName := "aws_dx_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccConnectionConfig_encryptionMode(connectionName),
+				ResourceName:       resourceName,
+				ImportState:        true,
+				ImportStateId:      connectionId,
+				ImportStatePersist: true,
+			},
+			{
+				Config: testAccConnectionConfig_encryptionModeMustEncrypt(resourceName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "must_encrypt"),
+				),
 			},
 		},
 	})
@@ -255,6 +293,28 @@ resource "aws_dx_connection" "test" {
   bandwidth = "1Gbps"
   location  = local.location_codes[local.idx]
 }
+`, rName)
+}
+
+func testAccConnectionConfig_encryptionModeMustEncrypt(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_connection" "test" {
+  name = %[1]q
+  location = "CSOW"
+  bandwidth = "100Gbps"
+  encryption_mode = "must_encrypt"
+}
+`, rName)
+}
+
+func testAccConnectionConfig_encryptionMode(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_connection" "test" {
+  name = %[1]q
+  location = "CSOW"
+  bandwidth = "100Gbps"
+  encryption_mode = "should_encrypt"
+  }
 `, rName)
 }
 

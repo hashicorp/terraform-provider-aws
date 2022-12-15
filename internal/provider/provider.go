@@ -1304,7 +1304,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_dx_hosted_transit_virtual_interface":          directconnect.ResourceHostedTransitVirtualInterface(),
 			"aws_dx_hosted_transit_virtual_interface_accepter": directconnect.ResourceHostedTransitVirtualInterfaceAccepter(),
 			"aws_dx_lag":                       directconnect.ResourceLag(),
-			"aws_dx_macsec_key_association":                directconnect.ResourceMacSecKeyAssociation(),
+			"aws_dx_macsec_key_association":    directconnect.ResourceMacSecKeyAssociation(),
 			"aws_dx_private_virtual_interface": directconnect.ResourcePrivateVirtualInterface(),
 			"aws_dx_public_virtual_interface":  directconnect.ResourcePublicVirtualInterface(),
 			"aws_dx_transit_virtual_interface": directconnect.ResourceTransitVirtualInterface(),
