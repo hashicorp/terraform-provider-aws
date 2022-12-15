@@ -3,5 +3,5 @@ resource/aws_ecs_service: Fix `service_connect_configuration.service.ingress_por
 ```
 
 ```release-note:bug
-resource/aws_ecs_service: Fix `missing required field UpdateServiceInput.ServiceConnectConfiguration.Enabled` error when removing `service_connect_configuration` argument 
+resource/aws_ecs_service: Fix `missing required field, UpdateServiceInput.ServiceConnectConfiguration.Enabled` error when removing `service_connect_configuration` configuration block 
 ```
