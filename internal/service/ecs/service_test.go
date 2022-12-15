@@ -3141,35 +3141,7 @@ func testAccServiceConfig_networkConfigurationModified(rName string) string {
 }
 
 func testAccServiceConfig_registries(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.test.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -3179,6 +3151,10 @@ resource "aws_security_group" "test" {
     from_port   = 0
     to_port     = 0
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3238,39 +3214,11 @@ resource "aws_ecs_service" "test" {
     subnets         = aws_subnet.test[*].id
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_registriesContainer(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.test.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -3280,6 +3228,10 @@ resource "aws_security_group" "test" {
     from_port   = 0
     to_port     = 0
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3342,39 +3294,11 @@ resource "aws_ecs_service" "test" {
     registry_arn   = aws_service_discovery_service.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_registriesChanges(rName, discoveryName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.test.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -3384,6 +3308,10 @@ resource "aws_security_group" "test" {
     from_port   = 0
     to_port     = 0
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3443,7 +3371,7 @@ resource "aws_ecs_service" "test" {
     subnets         = aws_subnet.test[*].id
   }
 }
-`, rName, discoveryName)
+`, rName, discoveryName))
 }
 
 func testAccServiceConfig_daemonSchedulingStrategy(rName string) string {
