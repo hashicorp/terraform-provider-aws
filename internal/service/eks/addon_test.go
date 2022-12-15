@@ -33,12 +33,13 @@ func TestAccEKSAddon_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_basic(rName, addonName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAddonExists(ctx, addonResourceName, &addon),
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
 					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
 					acctest.MatchResourceAttrRegionalARN(addonResourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 					resource.TestCheckResourceAttrPair(addonResourceName, "cluster_name", clusterResourceName, "name"),
+					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
 					resource.TestCheckNoResourceAttr(addonResourceName, "preserve"),
 					resource.TestCheckResourceAttr(addonResourceName, "tags.%", "0"),
 				),
@@ -807,7 +808,7 @@ func testAccCheckAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[string]s
 	}
 }
 
-func testAccAddonBaseConfig(rName string) string {
+func testAccAddonConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -871,7 +872,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAddonConfig_basic(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -880,7 +881,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_version(rName, addonName, addonVersion string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name      = aws_eks_cluster.test.name
   addon_name        = %[2]q
@@ -891,7 +892,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_preserve(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -901,7 +902,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_resolveConflicts(rName, addonName, resolveConflicts string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name      = aws_eks_cluster.test.name
   addon_name        = %[2]q
@@ -911,7 +912,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_serviceAccountRoleARN(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test-service-role" {
   name               = "test-service-role"
   assume_role_policy = <<EOF
@@ -940,7 +941,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_tags1(rName, addonName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -953,7 +954,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_tags2(rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -967,7 +968,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues, resolveConflicts string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name         = aws_eks_cluster.test.name
   addon_name           = %[2]q
