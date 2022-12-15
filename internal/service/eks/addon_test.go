@@ -251,6 +251,9 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
+	updateConfigurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"},\"requests\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"}}}"
+	emptyConfigurationValues := "{}"
+	invalidConfigurationValues := "{\"env\": {\"INVALID_FIELD\":\"2\"}}"
 	addonName := "vpc-cni"
 	addonVersion := "v1.10.4-eksbuild.1"
 	ctx := context.Background()
@@ -262,7 +265,7 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues),
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues, eks.ResolveConflictsOverwrite),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "configuration_values", configurationValues),
@@ -273,6 +276,24 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"resolve_conflicts"},
+			},
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, updateConfigurationValues, eks.ResolveConflictsOverwrite),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", updateConfigurationValues),
+				),
+			},
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, emptyConfigurationValues, eks.ResolveConflictsOverwrite),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", emptyConfigurationValues),
+				),
+			},
+			{
+				Config:      testAccAddonConfig_configurationValues(rName, addonName, addonVersion, invalidConfigurationValues, eks.ResolveConflictsOverwrite),
+				ExpectError: regexp.MustCompile(`InvalidParameterException: ConfigurationValue provided in request is not supported`),
 			},
 		},
 	})
@@ -945,14 +966,14 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues string) string {
+func testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues, resolveConflicts string) string {
 	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
-  cluster_name 			= aws_eks_cluster.test.name
-  addon_name   			= %[2]q
-  addon_version     	= %[3]q
-  configuration_values  = %[4]q
-  resolve_conflicts     = "OVERWRITE"
+  cluster_name         = aws_eks_cluster.test.name
+  addon_name           = %[2]q
+  addon_version        = %[3]q
+  configuration_values = %[4]q
+  resolve_conflicts    = %[5]q
 }
-`, rName, addonName, addonVersion, configurationValues))
+`, rName, addonName, addonVersion, configurationValues, resolveConflicts))
 }
