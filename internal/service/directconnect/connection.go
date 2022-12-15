@@ -67,7 +67,7 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			// Enable or disable MAC Security (MACsec) on this connection.
-			"macsec_requested": {
+			"request_macsec": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -111,7 +111,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
-		RequestMACSec:  aws.Bool(d.Get("macsec_requested").(bool)),
+		RequestMACSec:  aws.Bool(d.Get("request_macsec").(bool)),
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
@@ -130,7 +130,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(output.ConnectionId))
-	d.Set("macsec_requested", d.Get("macsec_requested").(bool))
+	d.Set("request_macsec", d.Get("request_macsec").(bool))
 
 	return resourceConnectionRead(d, meta)
 }

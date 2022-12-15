@@ -29,7 +29,7 @@ resource "aws_dx_connection" "example" {
   name             = "tf-dx-connection"
   bandwidth        = "10Gbps"
   location         = "EqDA2"
-  macsec_requested = true
+  request_macsec = true
 }
 ```
 
@@ -41,7 +41,7 @@ resource "aws_dx_connection" "example" {
   name             = "tf-dx-connection"
   bandwidth        = "10Gbps"
   location         = "EqDC2"
-  macsec_requested = true
+  request_macsec = true
   encryption_mode  = "must_encrypt"
 }
 ```
@@ -53,7 +53,7 @@ The following arguments are supported:
 * `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
 * `encryption_mode` - (Optional) The connection MAC Security (MACsec) encryption mode. MAC Security (MACsec) is only available on dedicated connections. Valid values are `no_encrypt`, `should_encrypt`, and `must_encrypt`.
 * `location` - (Required) The AWS Direct Connect location where the connection is located. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
-* `macsec_requested` - (Optional) Boolean value indicating whether you want the connection to support MAC Security (MACsec). MAC Security (MACsec) is only available on dedicated connections. See [MACsec prerequisites](https://docs.aws.amazon.com/directconnect/latest/UserGuide/direct-connect-mac-sec-getting-started.html#mac-sec-prerequisites) for more information about MAC Security (MACsec) prerequisites. Default value: `false`.
+* `request_macsec` - (Optional) Boolean value indicating whether you want the connection to support MAC Security (MACsec). MAC Security (MACsec) is only available on dedicated connections. See [MACsec prerequisites](https://docs.aws.amazon.com/directconnect/latest/UserGuide/direct-connect-mac-sec-getting-started.html#mac-sec-prerequisites) for more information about MAC Security (MACsec) prerequisites. Default value: `false`.
 
 ~> **NOTE:** Changing the value of `macsec_requested` will cause the resource to be destroyed and re-created.
 

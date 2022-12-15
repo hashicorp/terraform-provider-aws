@@ -92,7 +92,7 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					// macsec_capable will not return "true" while connection is in "Requesting" state
 					resource.TestCheckResourceAttr(resourceName, "macsec_capable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "macsec_requested", "true"),
+					resource.TestCheckResourceAttr(resourceName, "request_macsec", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
@@ -276,7 +276,7 @@ resource "aws_dx_connection" "test" {
   name             = %[1]q
   bandwidth        = "100Gbps"
   location         = data.aws_dx_location.test.location_code
-  macsec_requested = true
+  request_macsec = true
 
   provider_name = data.aws_dx_location.test.available_providers[0]
 }
