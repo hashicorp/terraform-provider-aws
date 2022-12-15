@@ -19,8 +19,8 @@ import (
 func TestAccLogsDestination_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
-	streamResourceName := "aws_kinesis_stream.test"
-	roleResourceName := "aws_iam_role.test"
+	streamResourceName := "aws_kinesis_stream.test.0"
+	roleResourceName := "aws_iam_role.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,11 +31,12 @@ func TestAccLogsDestination_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexp.MustCompile(`destination:.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
 				),
 			},
 			{
@@ -65,6 +66,123 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccLogsDestination_tags(t *testing.T) {
+	var destination cloudwatchlogs.Destination
+	resourceName := "aws_cloudwatch_log_destination.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDestinationConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDestinationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDestinationConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsDestination_update(t *testing.T) {
+	var destination cloudwatchlogs.Destination
+	resourceName := "aws_cloudwatch_log_destination.test"
+	streamResource1Name := "aws_kinesis_stream.test.0"
+	roleResource1Name := "aws_iam_role.test.0"
+	streamResource2Name := "aws_kinesis_stream.test.1"
+	roleResource2Name := "aws_iam_role.test.1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDestinationConfig_update(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource1Name, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource1Name, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDestinationConfig_update(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource2Name, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource2Name, "arn"),
+				),
+			},
+			{
+				Config: testAccDestinationConfig_updateWithTag(rName, 0, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource1Name, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource1Name, "arn"),
+				),
+			},
+			{
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource2Name, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource2Name, "arn"),
+				),
+			},
+			{
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource2Name, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource2Name, "arn"),
+				),
 			},
 		},
 	})
@@ -118,10 +236,12 @@ func testAccCheckDestinationExists(n string, v *cloudwatchlogs.Destination) reso
 	}
 }
 
-func testAccDestinationConfig_basic(rName string) string {
+func testAccDestinationConfig_base(rName string, n int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name        = %[1]q
+  count = %[2]d
+
+  name        = "%[1]s-${count.index}"
   shard_count = 1
 }
 
@@ -146,11 +266,15 @@ data "aws_iam_policy_document" "role" {
 }
 
 resource "aws_iam_role" "test" {
-  name               = %[1]q
+  count = %[2]d
+
+  name               = "%[1]s-${count.index}"
   assume_role_policy = data.aws_iam_policy_document.role.json
 }
 
 data "aws_iam_policy_document" "policy" {
+  count = %[2]d
+
   statement {
     effect = "Allow"
 
@@ -159,7 +283,7 @@ data "aws_iam_policy_document" "policy" {
     ]
 
     resources = [
-      aws_kinesis_stream.test.arn,
+      aws_kinesis_stream.test[count.index].arn,
     ]
   }
 
@@ -171,50 +295,90 @@ data "aws_iam_policy_document" "policy" {
     ]
 
     resources = [
-      aws_iam_role.test.arn,
+      aws_iam_role.test[count.index].arn,
     ]
   }
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
-  role   = aws_iam_role.test.id
-  policy = data.aws_iam_policy_document.policy.json
+  count = %[2]d
+
+  name   = "%[1]s-${count.index}"
+  role   = aws_iam_role.test[count.index].id
+  policy = data.aws_iam_policy_document.policy[count.index].json
+}
+`, rName, n)
 }
 
+func testAccDestinationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 1), fmt.Sprintf(`
 resource "aws_cloudwatch_log_destination" "test" {
   name       = %[1]q
-  target_arn = aws_kinesis_stream.test.arn
-  role_arn   = aws_iam_role.test.arn
+  target_arn = aws_kinesis_stream.test[0].arn
+  role_arn   = aws_iam_role.test[0].arn
 
-  depends_on = [aws_iam_role_policy.test]
+  depends_on = [aws_iam_role_policy.test[0]]
+}
+`, rName))
 }
 
-data "aws_iam_policy_document" "access" {
-  statement {
-    effect = "Allow"
+func testAccDestinationConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_cloudwatch_log_destination" "test" {
+  name       = %[1]q
+  target_arn = aws_kinesis_stream.test[0].arn
+  role_arn   = aws_iam_role.test[0].arn
 
-    principals {
-      type = "AWS"
-
-      identifiers = [
-        "000000000000",
-      ]
-    }
-
-    actions = [
-      "logs:PutSubscriptionFilter",
-    ]
-
-    resources = [
-      aws_cloudwatch_log_destination.test.arn,
-    ]
+  tags = {
+    %[2]q = %[3]q
   }
+
+  depends_on = [aws_iam_role_policy.test[0]]
+}
+`, rName, tag1Key, tag1Value))
 }
 
-resource "aws_cloudwatch_log_destination_policy" "test" {
-  destination_name = aws_cloudwatch_log_destination.test.name
-  access_policy    = data.aws_iam_policy_document.access.json
+func testAccDestinationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_cloudwatch_log_destination" "test" {
+  name       = %[1]q
+  target_arn = aws_kinesis_stream.test[0].arn
+  role_arn   = aws_iam_role.test[0].arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [aws_iam_role_policy.test[0]]
 }
-`, rName)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccDestinationConfig_update(rName string, idx int) string {
+	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_cloudwatch_log_destination" "test" {
+  name       = %[1]q
+  target_arn = aws_kinesis_stream.test[%[2]d].arn
+  role_arn   = aws_iam_role.test[%[2]d].arn
+
+  depends_on = [aws_iam_role_policy.test[%[2]d]]
+}
+`, rName, idx))
+}
+
+func testAccDestinationConfig_updateWithTag(rName string, idx int, tagKey, tagValue string) string {
+	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_cloudwatch_log_destination" "test" {
+  name       = %[1]q
+  target_arn = aws_kinesis_stream.test[%[2]d].arn
+  role_arn   = aws_iam_role.test[%[2]d].arn
+
+  tags = {
+    %[3]q = %[4]q
+  }
+
+  depends_on = [aws_iam_role_policy.test[%[2]d]]
+}
+`, rName, idx, tagKey, tagValue))
 }

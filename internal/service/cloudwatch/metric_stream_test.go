@@ -206,11 +206,12 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamConfig_updateARN(rName),
+				Config: testAccMetricStreamConfig_arns(rName, "S1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S1$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S1$`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -219,11 +220,42 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricStreamConfig_basic(rName),
+				Config: testAccMetricStreamConfig_arns(rName, "S2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S2$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S2$`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccMetricStreamConfig_arnsWithTag(rName, "S3", "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S3$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S3$`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccMetricStreamConfig_arnsWithTag(rName, "S4", "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S4$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S4$`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccMetricStreamConfig_arnsWithTag(rName, "S4", "key1", "value1updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S4$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S4$`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 				),
 			},
 		},
@@ -531,7 +563,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, namePrefix))
 }
 
-func testAccMetricStreamConfig_updateARN(rName string) string {
+func testAccMetricStreamConfig_arns(rName, arnSuffix string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -539,11 +571,30 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
-  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyOtherRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyOtherFirehose"
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[2]s"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
   output_format = "json"
 }
-`, rName)
+`, rName, arnSuffix)
+}
+
+func testAccMetricStreamConfig_arnsWithTag(rName, arnSuffix, tagKey, tagValue string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudwatch_metric_stream" "test" {
+  name          = %[1]q
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[2]s"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
+  output_format = "json"
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, arnSuffix, tagKey, tagValue)
 }
 
 func testAccMetricStreamConfig_includeFilters(rName string) string {

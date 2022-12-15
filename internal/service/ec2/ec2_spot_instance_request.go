@@ -413,9 +413,8 @@ func resourceSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
-		log.Printf("[INFO] Terminating instance: %s", instanceId)
 		if err := terminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("Error terminating spot instance: %s", err)
+			return err
 		}
 	}
 

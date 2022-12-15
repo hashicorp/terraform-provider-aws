@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_cloudwatch_log_data_protection_policy_document` ([#28272](https://github.com/hashicorp/terraform-provider-aws/issues/28272))
 * **New Data Source:** `aws_db_instances` ([#28303](https://github.com/hashicorp/terraform-provider-aws/issues/28303))
+* **New Resource:** `aws_auditmanager_account_registration` ([#28314](https://github.com/hashicorp/terraform-provider-aws/issues/28314))
 * **New Resource:** `aws_auditmanager_framework` ([#28257](https://github.com/hashicorp/terraform-provider-aws/issues/28257))
 * **New Resource:** `aws_lambda_functions` ([#28254](https://github.com/hashicorp/terraform-provider-aws/issues/28254))
 * **New Resource:** `aws_sagemaker_space` ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
@@ -11,6 +12,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
+* resource/aws_appsync_function: Add `runtime` and `code` arguments ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
+* resource/aws_appsync_function: Make `request_mapping_template` and `response_mapping_template` Optional ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
+* resource/aws_cloudwatch_log_destination: Add `tags` argument and `tags_all` attribute to support resource tagging ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
+* resource/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
 * resource/aws_grafana_workspace: Add `vpc_configuration` argument. ([#28308](https://github.com/hashicorp/terraform-provider-aws/issues/28308))
 * resource/aws_sagemaker_app: Add `space_name` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_app: Make `user_profile_name` optional ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
