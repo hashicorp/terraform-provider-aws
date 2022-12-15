@@ -31,7 +31,7 @@ func ResourceMacSecKey() *schema.Resource {
 				// CAK requires CKN
 				RequiredWith: []string{"ckn"},
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-fA-F0-9]{64}$`), "Must be 64-character hex code string"),
-				ForceNew: true,
+				ForceNew:     true,
 			},
 			"ckn": {
 				Type:         schema.TypeString,
@@ -39,18 +39,19 @@ func ResourceMacSecKey() *schema.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{"ckn", "secret_arn"},
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-fA-F0-9]{64}$`), "Must be 64-character hex code string"),
-				ForceNew: true,
+				ForceNew:     true,
 			},
 			"connection_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"secret_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				AtLeastOneOf: []string{"ckn", "secret_arn"},
-				ForceNew: true,
+				ForceNew:     true,
 			},
 			"start_on": {
 				Type:     schema.TypeString,

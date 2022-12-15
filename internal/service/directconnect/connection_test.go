@@ -91,8 +91,6 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Gbps"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
-					// macsec_capable will not return "true" while connection is in "Requesting" state
-					resource.TestCheckResourceAttr(resourceName, "macsec_capable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "request_macsec", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -105,7 +103,7 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// Ignore the "macsec_requested" attribute as isn't returned by the API during read/refresh
-				ImportStateVerifyIgnore: []string{"macsec_requested"},
+				ImportStateVerifyIgnore: []string{"request_macsec"},
 			},
 		},
 	})
