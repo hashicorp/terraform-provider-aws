@@ -19,10 +19,6 @@ func ResourceMacSecKey() *schema.Resource {
 		// MacSecKey resource only supports create (Associate), read (Describe) and delete (Disassociate)
 		Create: resourceMacSecKeyCreate,
 		Read:   resourceMacSecKeyRead,
-		// You cannot modify a MACsec secret key after you associate it with a connection.
-		// To modify the key, disassociate the key from the connection, and then associate
-		// a new key with the connection
-		Update: schema.Noop,
 		Delete: resourceMacSecKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -35,6 +31,7 @@ func ResourceMacSecKey() *schema.Resource {
 				// CAK requires CKN
 				RequiredWith: []string{"ckn"},
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-fA-F0-9]{64}$`), "Must be 64-character hex code string"),
+				ForceNew: true,
 			},
 			"ckn": {
 				Type:         schema.TypeString,
@@ -42,6 +39,7 @@ func ResourceMacSecKey() *schema.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{"ckn", "secret_arn"},
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-fA-F0-9]{64}$`), "Must be 64-character hex code string"),
+				ForceNew: true,
 			},
 			"connection_id": {
 				Type:     schema.TypeString,
@@ -52,6 +50,7 @@ func ResourceMacSecKey() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				AtLeastOneOf: []string{"ckn", "secret_arn"},
+				ForceNew: true,
 			},
 			"start_on": {
 				Type:     schema.TypeString,
