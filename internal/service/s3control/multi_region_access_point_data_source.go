@@ -114,9 +114,6 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	d.Set("created_at", aws.TimeValue(output.AccessPoint.CreatedAt).Format(time.RFC3339))
 	d.Set("name", output.AccessPoint.Name)
 	d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(output.AccessPoint.PublicAccessBlock)})
-	if err := d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(output.AccessPoint.PublicAccessBlock)}); err != nil {
-		return diag.Errorf("error setting PublicAccessBlock: %s", err)
-	}
 	d.Set("regions", flattenRegionReports(output.AccessPoint.Regions))
 	d.Set("status", output.AccessPoint.Status)
 
