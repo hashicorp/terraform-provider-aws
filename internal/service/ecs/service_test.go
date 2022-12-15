@@ -3043,40 +3043,13 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceNetworkConfigurationBaseConfig(rName, securityGroups string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccServiceNetworkConfigurationConfig_base(rName, securityGroups string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = 2
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "allow_all_a" {
-  name        = "%[1]s-1"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "6"
@@ -3084,18 +3057,9 @@ resource "aws_security_group" "allow_all_a" {
     to_port     = 8000
     cidr_blocks = [aws_vpc.test.cidr_block]
   }
-}
 
-resource "aws_security_group" "allow_all_b" {
-  name        = "%[1]s-2"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3129,15 +3093,15 @@ resource "aws_ecs_service" "test" {
     subnets         = aws_subnet.test[*].id
   }
 }
-`, rName, securityGroups)
+`, rName, securityGroups))
 }
 
 func testAccServiceConfig_networkConfiguration(rName string) string {
-	return testAccServiceNetworkConfigurationBaseConfig(rName, "aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id")
+	return testAccServiceNetworkConfigurationConfig_base(rName, "aws_security_group.test[0].id, aws_security_group.test[1].id")
 }
 
 func testAccServiceConfig_networkConfigurationModified(rName string) string {
-	return testAccServiceNetworkConfigurationBaseConfig(rName, "aws_security_group.allow_all_a.id")
+	return testAccServiceNetworkConfigurationConfig_base(rName, "aws_security_group.test[0].id")
 }
 
 func testAccServiceConfig_registries(rName string) string {
