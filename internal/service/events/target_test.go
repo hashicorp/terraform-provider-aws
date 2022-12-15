@@ -1871,7 +1871,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 resource "aws_ecs_cluster_capacity_providers" "test" {
   cluster_name = aws_ecs_cluster.test.name
-  capacity_providers = [  %[1]q ]
+  capacity_providers = [ "%[1]s" ]
 
   default_capacity_provider_strategy {
 	capacity_provider =  %[1]q
