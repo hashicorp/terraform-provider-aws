@@ -1402,7 +1402,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
-	log.Printf("[DEBUG] Deleting EMR Cluster: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting EMR Cluster: %s", d.Id())
 	_, err := conn.TerminateJobFlows(&emr.TerminateJobFlowsInput{
 		JobFlowIds: []*string{
 			aws.String(d.Id()),

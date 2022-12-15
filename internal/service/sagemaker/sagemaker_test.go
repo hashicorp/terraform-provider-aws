@@ -30,6 +30,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
+			"space":                 testAccApp_space,
 		},
 		"Domain": {
 			"basic":                                    testAccDomain_basic,
@@ -49,6 +50,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"canvas":                                                 testAccDomain_canvasAppSettings,
 			"domainSettings":                                         testAccDomain_domainSettings,
 			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
+			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
+			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
@@ -56,6 +59,15 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 			"Tags":                           testAccFlowDefinition_tags,
+		},
+		"Space": {
+			"basic":                    testAccSpace_basic,
+			"disappears":               testAccSpace_tags,
+			"tags":                     testAccSpace_disappears,
+			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
+			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
+			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
+			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
 		},
 		"UserProfile": {
 			"basic":                           testAccUserProfile_basic,

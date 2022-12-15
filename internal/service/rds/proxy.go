@@ -271,17 +271,17 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RDS DB Proxy: %s", d.Id())
 	_, err := conn.DeleteDBProxy(&rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return fmt.Errorf("deleting RDS DB Proxy (%s): %w", d.Id(), err)
-	}
-
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting RDS DB Proxy (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitDBProxyDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {

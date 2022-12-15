@@ -13,15 +13,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDestination() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceDestinationPut,
+		CreateWithoutTimeout: resourceDestinationCreate,
 		ReadWithoutTimeout:   resourceDestinationRead,
-		UpdateWithoutTimeout: resourceDestinationPut,
+		UpdateWithoutTimeout: resourceDestinationUpdate,
 		DeleteWithoutTimeout: resourceDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -47,17 +48,27 @@ func ResourceDestination() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+const (
+	propagationTimeout = 2 * time.Minute
+)
+
+func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.PutDestinationInput{
@@ -65,16 +76,24 @@ func resourceDestinationPut(ctx context.Context, d *schema.ResourceData, meta in
 		RoleArn:         aws.String(d.Get("role_arn").(string)),
 		TargetArn:       aws.String(d.Get("target_arn").(string)),
 	}
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 3*time.Minute, func() (interface{}, error) {
+
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.PutDestinationWithContext(ctx, input)
 	}, cloudwatchlogs.ErrCodeInvalidParameterException)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Destination (%s): %s", name, err)
+		return diag.Errorf("creating CloudWatch Logs Destination (%s): %s", name, err)
 	}
 
-	if d.IsNewResource() {
-		d.SetId(aws.StringValue(outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination.DestinationName))
+	destination := outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination
+	d.SetId(aws.StringValue(destination.DestinationName))
+
+	// Although PutDestinationInput has a Tags field, specifying tags there results in
+	// "InvalidParameterException: Could not deliver test message to specified destination. Check if the destination is valid."
+	if len(tags) > 0 {
+		if err := UpdateTagsWithContext(ctx, conn, aws.StringValue(destination.Arn), nil, tags); err != nil {
+			return diag.Errorf("adding CloudWatch Logs Destination (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceDestinationRead(ctx, d, meta)
@@ -82,6 +101,8 @@ func resourceDestinationPut(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LogsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	destination, err := FindDestinationByName(ctx, conn, d.Id())
 
@@ -100,7 +121,54 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("role_arn", destination.RoleArn)
 	d.Set("target_arn", destination.TargetArn)
 
+	tags, err := ListTagsWithContext(ctx, conn, d.Get("arn").(string))
+
+	if err != nil {
+		return diag.Errorf("listing tags for CloudWatch Logs Destination (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
+	}
+
 	return nil
+}
+
+func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).LogsConn
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &cloudwatchlogs.PutDestinationInput{
+			DestinationName: aws.String(d.Id()),
+			RoleArn:         aws.String(d.Get("role_arn").(string)),
+			TargetArn:       aws.String(d.Get("target_arn").(string)),
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.PutDestinationWithContext(ctx, input)
+		}, cloudwatchlogs.ErrCodeInvalidParameterException)
+
+		if err != nil {
+			return diag.Errorf("updating CloudWatch Logs Destination (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			log.Printf("[WARN] failed updating tags for CloudWatch Logs Destination (%s): %s", d.Id(), err)
+		}
+	}
+
+	return resourceDestinationRead(ctx, d, meta)
 }
 
 func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
