@@ -272,9 +272,9 @@ data "aws_dx_location" "test" {
 }
 
 resource "aws_dx_connection" "test" {
-  name             = %[1]q
-  bandwidth        = "100Gbps"
-  location         = data.aws_dx_location.test.location_code
+  name           = %[1]q
+  bandwidth      = "100Gbps"
+  location       = data.aws_dx_location.test.location_code
   request_macsec = true
 
   provider_name = data.aws_dx_location.test.available_providers[0]

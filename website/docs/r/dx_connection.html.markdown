@@ -26,9 +26,9 @@ resource "aws_dx_connection" "hoge" {
 
 ```terraform
 resource "aws_dx_connection" "example" {
-  name             = "tf-dx-connection"
-  bandwidth        = "10Gbps"
-  location         = "EqDA2"
+  name           = "tf-dx-connection"
+  bandwidth      = "10Gbps"
+  location       = "EqDA2"
   request_macsec = true
 }
 ```
@@ -38,11 +38,11 @@ resource "aws_dx_connection" "example" {
 
 ```terraform
 resource "aws_dx_connection" "example" {
-  name             = "tf-dx-connection"
-  bandwidth        = "10Gbps"
-  location         = "EqDC2"
-  request_macsec = true
-  encryption_mode  = "must_encrypt"
+  name            = "tf-dx-connection"
+  bandwidth       = "10Gbps"
+  location        = "EqDC2"
+  request_macsec  = true
+  encryption_mode = "must_encrypt"
 }
 ```
 
