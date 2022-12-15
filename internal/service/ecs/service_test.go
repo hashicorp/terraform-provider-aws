@@ -3510,36 +3510,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_deploymentControllerTypeCodeDeploy(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
@@ -3606,42 +3577,17 @@ resource "aws_ecs_service" "test" {
     target_group_arn = aws_lb_target_group.test.id
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_deploymentControllerTypeCodeDeployUpdate(rName string, desiredReplicas, healthCheckGracePeriodSeconds int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -3651,12 +3597,15 @@ resource "aws_route_table" "test" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow traffic"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "6"
@@ -3673,6 +3622,10 @@ resource "aws_security_group" "test" {
     cidr_blocks = [
       "0.0.0.0/0",
     ]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3764,7 +3717,7 @@ resource "aws_ecs_service" "test" {
     assign_public_ip = true
   }
 }
-`, rName, desiredReplicas, healthCheckGracePeriodSeconds)
+`, rName, desiredReplicas, healthCheckGracePeriodSeconds))
 }
 
 func testAccServiceConfig_deploymentControllerTypeExternal(rName string) string {
