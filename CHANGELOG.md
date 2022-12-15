@@ -1,4 +1,5 @@
-## 3.76.0 (Unreleased)
+## 3.77.0 (Unreleased)
+## 3.76.0 (December 15, 2022)
 
 NOTES:
 
