@@ -36,8 +36,28 @@ func DataSourceMultiRegionAccessPoint() *schema.Resource {
 				Computed: true,
 			},
 			"public_access_block": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"block_public_acls": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"block_public_policy": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"ignore_public_acls": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"restrict_public_buckets": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"regions": {
 				Type:     schema.TypeList,
