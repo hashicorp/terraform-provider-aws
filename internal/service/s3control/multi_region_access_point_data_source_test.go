@@ -32,8 +32,7 @@ func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
 				Config: testAccMultiRegionAccessPointDataSourceConfig_basic(bucket1Name, bucket2Name, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile(`^[a-z][a-z0-9]*[.]mrap$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.block_public_acls", dataSourceName, "public_access_block.0.block_public_acls"),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.block_public_policy", dataSourceName, "public_access_block.0.block_public_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.ignore_public_acls", dataSourceName, "public_access_block.0.ignore_public_acls"),
