@@ -74,13 +74,17 @@ func main() {
 	cd := CAEData{}
 	cd.BadCaps = badCaps
 
-	if err := g.ApplyAndWriteTemplateNoFormat(filenameCAE, "caps-aws-ec2", tmplCAE, cd); err != nil {
+	d := g.NewUnformattedFileDestination(filenameCAE)
+
+	if err := d.WriteTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
 		g.Fatalf("error: %s", err.Error())
 	}
 
 	g.Infof("Generating %s", strings.TrimPrefix(filenameConfigs, "../../../"))
 
-	if err := g.WriteFile(filenameConfigs, []byte(configs)); err != nil {
+	d = g.NewUnformattedFileDestination(filenameConfigs)
+
+	if err := d.Write([]byte(configs)); err != nil {
 		g.Fatalf("error: %s", err.Error())
 	}
 
@@ -165,7 +169,9 @@ func main() {
 		return td.Services[i].LowerAlias < td.Services[j].LowerAlias
 	})
 
-	if err := g.ApplyAndWriteTemplateNoFormat(filename, "servicesemgrep", tmpl, td); err != nil {
+	d = g.NewUnformattedFileDestination(filename)
+
+	if err := d.WriteTemplate("servicesemgrep", tmpl, td); err != nil {
 		g.Fatalf("error: %s", err.Error())
 	}
 

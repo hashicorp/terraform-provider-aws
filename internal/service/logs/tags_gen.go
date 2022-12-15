@@ -19,11 +19,11 @@ func ListTags(conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tf
 }
 
 func ListTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &cloudwatchlogs.ListTagsLogGroupInput{
-		LogGroupName: aws.String(identifier),
+	input := &cloudwatchlogs.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsLogGroupWithContext(ctx, input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -55,12 +55,12 @@ func UpdateTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWa
 	newTags := tftags.New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &cloudwatchlogs.UntagLogGroupInput{
-			LogGroupName: aws.String(identifier),
-			Tags:         aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+		input := &cloudwatchlogs.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagLogGroupWithContext(ctx, input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -68,12 +68,12 @@ func UpdateTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWa
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &cloudwatchlogs.TagLogGroupInput{
-			LogGroupName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+		input := &cloudwatchlogs.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagLogGroupWithContext(ctx, input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

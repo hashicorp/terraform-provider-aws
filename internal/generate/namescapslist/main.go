@@ -50,7 +50,9 @@ func main() {
 	td := TemplateData{}
 	td.BadCaps = badCaps
 
-	if err := g.ApplyAndWriteTemplateNoFormat(filename, "namescapslist", header+"\n"+tmpl+"\n", td); err != nil {
+	d := g.NewUnformattedFileDestination(filename)
+
+	if err := d.WriteTemplate("namescapslist", header+"\n"+tmpl+"\n", td); err != nil {
 		g.Fatalf("error: %s", err.Error())
 	}
 }

@@ -3,15 +3,36 @@
 FEATURES:
 
 * **New Data Source:** `aws_cloudwatch_log_data_protection_policy_document` ([#28272](https://github.com/hashicorp/terraform-provider-aws/issues/28272))
+* **New Data Source:** `aws_db_instances` ([#28303](https://github.com/hashicorp/terraform-provider-aws/issues/28303))
+* **New Resource:** `aws_auditmanager_account_registration` ([#28314](https://github.com/hashicorp/terraform-provider-aws/issues/28314))
 * **New Resource:** `aws_auditmanager_framework` ([#28257](https://github.com/hashicorp/terraform-provider-aws/issues/28257))
+* **New Resource:** `aws_lambda_functions` ([#28254](https://github.com/hashicorp/terraform-provider-aws/issues/28254))
+* **New Resource:** `aws_sagemaker_space` ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
+* **New Resource:** `aws_ssoadmin_permissions_boundary_attachment` ([#28241](https://github.com/hashicorp/terraform-provider-aws/issues/28241))
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
+* data-source/aws_eks_addon: Add `configuration_values` attribute ([#28295](https://github.com/hashicorp/terraform-provider-aws/issues/28295))
+* resource/aws_appsync_function: Add `runtime` and `code` arguments ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
+* resource/aws_appsync_function: Make `request_mapping_template` and `response_mapping_template` Optional ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
+* resource/aws_cloudwatch_log_destination: Add `tags` argument and `tags_all` attribute to support resource tagging ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
+* resource/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
+* resource/aws_eks_addon: Add `configuration_values` argument ([#28295](https://github.com/hashicorp/terraform-provider-aws/issues/28295))
+* resource/aws_grafana_workspace: Add `vpc_configuration` argument. ([#28308](https://github.com/hashicorp/terraform-provider-aws/issues/28308))
+* resource/aws_networkmanager_core_network: Increase Create, Update, and Delete timeouts to 30 minutes ([#28363](https://github.com/hashicorp/terraform-provider-aws/issues/28363))
+* resource/aws_sagemaker_app: Add `space_name` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
+* resource/aws_sagemaker_app: Make `user_profile_name` optional ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
+* resource/aws_sagemaker_domain: Add `default_space_settings` and `default_user_settings.jupyter_server_app_settings.code_repository` arguments ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_endpoint_configuration: Add `shadow_production_variants`, `production_variants.container_startup_health_check_timeout_in_seconds`, `production_variants.core_dump_config`, `production_variants.model_data_download_timeout_in_seconds`, and `production_variants.volume_size_in_gb` arguments ([#28159](https://github.com/hashicorp/terraform-provider-aws/issues/28159))
+* resource/aws_sagemaker_user_profile: Add `user_settings.jupyter_server_app_settings.code_repository` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_metric_stream: Correctly update `tags` ([#28310](https://github.com/hashicorp/terraform-provider-aws/issues/28310))
 * resource/aws_db_instance: Ensure that `apply_immediately` default value is applied ([#25768](https://github.com/hashicorp/terraform-provider-aws/issues/25768))
+* resource/aws_ecs_service: Fix `missing required field, UpdateServiceInput.ServiceConnectConfiguration.Enabled` error when removing `service_connect_configuration` configuration block ([#28338](https://github.com/hashicorp/terraform-provider-aws/issues/28338))
+* resource/aws_ecs_service: Fix `service_connect_configuration.service.ingress_port_override` being set to 0 (`InvalidParameterException: IngressPortOverride cannot use ports <= 1024` error) when not configured ([#28338](https://github.com/hashicorp/terraform-provider-aws/issues/28338))
 
 ## 4.46.0 (December  8, 2022)
 
@@ -2091,6 +2112,28 @@ BUG FIXES:
 * resource/aws_vpc_ipam: Correct update of `description` ([#22863](https://github.com/hashicorp/terraform-provider-aws/issues/22863))
 * resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 * resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
+
+## 3.76.0 (December 15, 2022)
+
+NOTES:
+
+* provider: Add OpenBSD to list of OSes which the provider is built on ([#28300](https://github.com/hashicorp/terraform-provider-aws/issues/28300))
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute will always have the value `"DEFAULT"` ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
+* resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
+* resource/aws_security_group: Do not pass `from_port` or `to_port` values to the AWS API if a `rule`'s `protocol` value is `-1` or `all` ([#27685](https://github.com/hashicorp/terraform-provider-aws/issues/27685))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_stage: Fixed issue with providing `cache_cluster_size` without `cache_cluster_enabled` resulted in waiter error ([#27541](https://github.com/hashicorp/terraform-provider-aws/issues/27541))
+* resource/aws_db_instance: Ensure that `apply_immediately` default value is applied ([#28298](https://github.com/hashicorp/terraform-provider-aws/issues/28298))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Retry on `ServerSideEncryptionConfigurationNotFoundError` errors due to eventual consistency ([#26091](https://github.com/hashicorp/terraform-provider-aws/issues/26091))
+* resource/aws_security_group: Return an error if a `rule`'s `protocol` value is `all` and `from_port` or `to_port` are not `0` ([#27685](https://github.com/hashicorp/terraform-provider-aws/issues/27685))
+* resource/aws_sqs_queue: Change `sqs_managed_sse_enabled` to `Computed` as newly created SQS queues use [SSE-SQS encryption by default](https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-sqs-announces-server-side-encryption-ssq-managed-sse-sqs-default/). This means that Terraform will only perform drift detection of the attribute's value when present in a configuration ([#27313](https://github.com/hashicorp/terraform-provider-aws/issues/27313))
+* resource/aws_sqs_queue: Respect configured `sqs_managed_sse_enabled` value on resource Create. In particular a configured `false` value is sent to the AWS API, which overrides the [new service default value of `true`](https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-sqs-announces-server-side-encryption-ssq-managed-sse-sqs-default/) ([#27338](https://github.com/hashicorp/terraform-provider-aws/issues/27338))
 
 ## 3.75.2 (May 20, 2022)
 

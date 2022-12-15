@@ -2794,7 +2794,7 @@ func StopInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 
 // terminateInstance shuts down an EC2 instance and waits for the instance to be deleted.
 func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
-	log.Printf("[INFO] Terminating EC2 Instance: %s", id)
+	log.Printf("[DEBUG] Terminating EC2 Instance: %s", id)
 	_, err := conn.TerminateInstances(&ec2.TerminateInstancesInput{
 		InstanceIds: aws.StringSlice([]string{id}),
 	})

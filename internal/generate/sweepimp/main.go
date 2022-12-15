@@ -79,7 +79,9 @@ func main() {
 		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
 	})
 
-	if err := g.ApplyAndWriteTemplateGoFormat(filename, "sweepimport", tmpl, td); err != nil {
+	d := g.NewGoFileDestination(filename)
+
+	if err := d.WriteTemplate("sweepimport", tmpl, td); err != nil {
 		g.Fatalf("error: %s", err.Error())
 	}
 }

@@ -61,6 +61,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"Function": {
 			"basic":                   testAccFunction_basic,
+			"code":                    testAccFunction_code,
 			"disappears":              testAccFunction_disappears,
 			"description":             testAccFunction_description,
 			"responseMappingTemplate": testAccFunction_responseMappingTemplate,

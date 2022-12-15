@@ -14,6 +14,11 @@ type Generator struct {
 	ui cli.Ui
 }
 
+type Destination interface {
+	Write(body []byte) error
+	WriteTemplate(templateName, templateBody string, templateData any) error
+}
+
 func NewGenerator() *Generator {
 	return &Generator{
 		ui: &cli.BasicUi{
@@ -24,12 +29,89 @@ func NewGenerator() *Generator {
 	}
 }
 
-func (g *Generator) ApplyAndWriteTemplateGoFormat(filename, templateName, templateBody string, templateData any) error {
-	return g.applyAndWriteTemplate(filename, templateName, templateBody, templateData, format.Source)
+func (g *Generator) NewGoFileDestination(filename string) Destination {
+	return &fileDestination{
+		filename:  filename,
+		formatter: format.Source,
+	}
 }
 
-func (g *Generator) ApplyAndWriteTemplateNoFormat(filename, templateName, templateBody string, templateData any) error {
-	return g.applyAndWriteTemplate(filename, templateName, templateBody, templateData, nil)
+func (g *Generator) NewGoFileAppenderDestination(filename string) Destination {
+	return &fileDestination{
+		append:    true,
+		filename:  filename,
+		formatter: format.Source,
+	}
+}
+
+func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
+	return &fileDestination{
+		filename:  filename,
+		formatter: func(b []byte) ([]byte, error) { return b, nil },
+	}
+}
+
+type fileDestination struct {
+	append    bool
+	filename  string
+	formatter func([]byte) ([]byte, error)
+}
+
+func (d *fileDestination) Write(body []byte) error {
+	var flags int
+	if d.append {
+		flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	} else {
+		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
+	}
+	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:gomnd
+
+	if err != nil {
+		return fmt.Errorf("opening file (%s): %w", d.filename, err)
+	}
+
+	defer f.Close()
+
+	_, err = f.Write(body)
+
+	if err != nil {
+		return fmt.Errorf("writing to file (%s): %w", d.filename, err)
+	}
+
+	return nil
+}
+
+func (d *fileDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
+	body, err := parseTemplate(templateName, templateBody, templateData)
+
+	if err != nil {
+		return err
+	}
+
+	body, err = d.formatter(body)
+
+	if err != nil {
+		return fmt.Errorf("formatting parsed template: %w", err)
+	}
+
+	return d.Write(body)
+}
+
+func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
+	tmpl, err := template.New(templateName).Parse(templateBody)
+
+	if err != nil {
+		return nil, fmt.Errorf("parsing function template: %w", err)
+	}
+
+	var buffer bytes.Buffer
+	err = tmpl.Execute(&buffer, templateData)
+
+	if err != nil {
+		return nil, fmt.Errorf("executing template: %w", err)
+	}
+
+	return buffer.Bytes(), nil
 }
 
 func (g *Generator) Errorf(format string, a ...interface{}) {
@@ -43,52 +125,4 @@ func (g *Generator) Fatalf(format string, a ...interface{}) {
 
 func (g *Generator) Infof(format string, a ...interface{}) {
 	g.ui.Info(fmt.Sprintf(format, a...))
-}
-
-func (g *Generator) WriteFile(filename string, body []byte) error {
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644) //nolint:gomnd
-
-	if err != nil {
-		return fmt.Errorf("opening file (%s): %w", filename, err)
-	}
-
-	defer f.Close()
-
-	_, err = f.Write(body)
-
-	if err != nil {
-		return fmt.Errorf("writing to file (%s): %w", filename, err)
-	}
-
-	return nil
-}
-
-func (g *Generator) applyAndWriteTemplate(filename, templateName, templateBody string, templateData any, formatter func([]byte) ([]byte, error)) error {
-	tmpl, err := template.New(templateName).Parse(templateBody)
-
-	if err != nil {
-		return fmt.Errorf("parsing function template: %w", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tmpl.Execute(&buffer, templateData)
-
-	if err != nil {
-		return fmt.Errorf("executing template: %w", err)
-	}
-
-	var generatedFileContents []byte
-
-	if formatter != nil {
-		generatedFileContents, err = formatter(buffer.Bytes())
-
-		if err != nil {
-			g.Infof("%s", buffer.String())
-			return fmt.Errorf("formatting generated source code: %w", err)
-		}
-	} else {
-		generatedFileContents = buffer.Bytes()
-	}
-
-	return g.WriteFile(filename, generatedFileContents)
 }

@@ -14,13 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	spFile        = `service_package_gen.go`
-	spsFile       = `../../provider/service_packages_gen.go`
-	namesDataFile = `../../../names/names_data.csv`
-)
-
 func main() {
+	const (
+		spFile        = `service_package_gen.go`
+		spsFile       = `../../provider/service_packages_gen.go`
+		namesDataFile = `../../../names/names_data.csv`
+	)
 	g := common.NewGenerator()
 
 	data, err := common.ReadAllCSVData(namesDataFile)
@@ -61,8 +60,9 @@ func main() {
 		s := ServiceDatum{
 			ProviderPackage: p,
 		}
+		d := g.NewGoFileDestination(fmt.Sprintf("../../service/%s/%s", p, spFile))
 
-		if err := g.ApplyAndWriteTemplateGoFormat(fmt.Sprintf("../../service/%s/%s", p, spFile), "servicepackagedata", spdTmpl, s); err != nil {
+		if err := d.WriteTemplate("servicepackagedata", spdTmpl, s); err != nil {
 			g.Fatalf("error generating %s service package data: %s", p, err.Error())
 		}
 
@@ -75,7 +75,9 @@ func main() {
 
 	g.Infof("Generating %s", filepath.Base(spsFile))
 
-	if err := g.ApplyAndWriteTemplateGoFormat(spsFile, "servicepackages", spsTmpl, td); err != nil {
+	d := g.NewGoFileDestination(spsFile)
+
+	if err := d.WriteTemplate("servicepackages", spsTmpl, td); err != nil {
 		g.Fatalf("error generating service packages list: %s", err.Error())
 	}
 }

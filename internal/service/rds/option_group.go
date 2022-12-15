@@ -322,7 +322,7 @@ func resourceOptionGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		OptionGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Delete DB Option Group: %#v", deleteOpts)
+	log.Printf("[DEBUG] Deleting RDS Option Group: %s", d.Id())
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteOptionGroup(deleteOpts)
 		if err != nil {
