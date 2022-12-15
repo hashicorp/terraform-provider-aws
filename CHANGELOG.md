@@ -13,11 +13,14 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
+* data-source/aws_eks_addon: Add `configuration_values` attribute ([#28295](https://github.com/hashicorp/terraform-provider-aws/issues/28295))
 * resource/aws_appsync_function: Add `runtime` and `code` arguments ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
 * resource/aws_appsync_function: Make `request_mapping_template` and `response_mapping_template` Optional ([#28057](https://github.com/hashicorp/terraform-provider-aws/issues/28057))
 * resource/aws_cloudwatch_log_destination: Add `tags` argument and `tags_all` attribute to support resource tagging ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
 * resource/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation ([#28359](https://github.com/hashicorp/terraform-provider-aws/issues/28359))
+* resource/aws_eks_addon: Add `configuration_values` argument ([#28295](https://github.com/hashicorp/terraform-provider-aws/issues/28295))
 * resource/aws_grafana_workspace: Add `vpc_configuration` argument. ([#28308](https://github.com/hashicorp/terraform-provider-aws/issues/28308))
+* resource/aws_networkmanager_core_network: Increase Create, Update, and Delete timeouts to 30 minutes ([#28363](https://github.com/hashicorp/terraform-provider-aws/issues/28363))
 * resource/aws_sagemaker_app: Add `space_name` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_app: Make `user_profile_name` optional ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_domain: Add `default_space_settings` and `default_user_settings.jupyter_server_app_settings.code_repository` arguments ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
@@ -28,6 +31,8 @@ BUG FIXES:
 
 * resource/aws_cloudwatch_metric_stream: Correctly update `tags` ([#28310](https://github.com/hashicorp/terraform-provider-aws/issues/28310))
 * resource/aws_db_instance: Ensure that `apply_immediately` default value is applied ([#25768](https://github.com/hashicorp/terraform-provider-aws/issues/25768))
+* resource/aws_ecs_service: Fix `missing required field, UpdateServiceInput.ServiceConnectConfiguration.Enabled` error when removing `service_connect_configuration` configuration block ([#28338](https://github.com/hashicorp/terraform-provider-aws/issues/28338))
+* resource/aws_ecs_service: Fix `service_connect_configuration.service.ingress_port_override` being set to 0 (`InvalidParameterException: IngressPortOverride cannot use ports <= 1024` error) when not configured ([#28338](https://github.com/hashicorp/terraform-provider-aws/issues/28338))
 
 ## 4.46.0 (December  8, 2022)
 
