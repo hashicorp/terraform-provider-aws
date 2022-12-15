@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccRestAPIsDataSource_filter(t *testing.T) {
+func TestAccAPIGatewayRestAPIsDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_api_gateway_rest_apis.test"
 	resourceName := "aws_api_gateway_rest_api.test"
