@@ -27,7 +27,6 @@ The following arguments are supported:
 * `account_id` - (Optional) The AWS account ID of the S3 multi region access point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `name` - (Required) The name of the Multi-Region Access Point.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
