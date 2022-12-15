@@ -20,7 +20,7 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 	if connectionId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	resourceName := "aws_dx_macsec_key.test"
+	resourceName := "aws_dx_macsec_key_association.test"
 	ckn := testAccDirecConnectMacSecGenerateHex()
 	cak := testAccDirecConnectMacSecGenerateHex()
 
@@ -62,7 +62,7 @@ func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", secretKey)
 	}
 
-	resourceName := "aws_dx_macsec_key.test"
+	resourceName := "aws_dx_macsec_key_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -98,7 +98,7 @@ func testAccDirecConnectMacSecGenerateHex() string {
 
 func testAccMacSecConfig_withCkn(ckn, cak, connectionId string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_macsec_key" "test" {
+resource "aws_dx_macsec_key_association" "test" {
   connection_id = %[3]q
   ckn           = %[1]q
   cak           = %[2]q
@@ -115,7 +115,7 @@ data "aws_secretsmanager_secret" "test" {
   arn = %[1]q
 }
 
-resource "aws_dx_macsec_key" "test" {
+resource "aws_dx_macsec_key_association" "test" {
   connection_id = %[2]q
   secret_arn    = data.aws_secretsmanager_secret.test.arn
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func ResourceMacSecKey() *schema.Resource {
+func ResourceMacSecKeyAssociation() *schema.Resource {
 	return &schema.Resource{
 		// MacSecKey resource only supports create (Associate), read (Describe) and delete (Disassociate)
 		Create: resourceMacSecKeyCreate,

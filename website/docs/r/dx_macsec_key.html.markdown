@@ -1,12 +1,12 @@
 ---
 subcategory: "Direct Connect"
 layout: "aws"
-page_title: "AWS: aws_dx_macsec_key"
+page_title: "AWS: aws_dx_macsec_key_association"
 description: |-
   Provides a MAC Security (MACSec) secret key resource for use with Direct Connect.
 ---
 
-# Resource: aws_dx_macsec_key
+# Resource: aws_dx_macsec_key_association
 
 Provides a MAC Security (MACSec) secret key resource for use with Direct Connect. See [MACsec prerequisites](https://docs.aws.amazon.com/directconnect/latest/UserGuide/direct-connect-mac-sec-getting-started.html#mac-sec-prerequisites) for information about MAC Security (MACsec) prerequisites.
 
@@ -26,7 +26,7 @@ data "aws_dx_connection" "example" {
   name = "tf-dx-connection"
 }
 
-resource "aws_dx_macsec_key" "test" {
+resource "aws_dx_macsec_key_association" "test" {
   connection_id = data.aws_dx_connection.example.id
   ckn           = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
   cak           = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
@@ -44,7 +44,7 @@ data "aws_secretsmanager_secret" "example" {
   name = "directconnect!prod/us-east-1/directconnect/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 }
 
-resource "aws_dx_macsec_key" "test" {
+resource "aws_dx_macsec_key_association" "test" {
   connection_id = data.aws_dx_connection.example.id
   secret_arn    = data.aws_secretsmanager_secret.example.arn
 }
