@@ -37,7 +37,6 @@ func DataSourceAddon() *schema.Resource {
 			},
 			"configuration_values": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"created_at": {
@@ -74,8 +73,8 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(id)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("arn", addon.AddonArn)
-	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("configuration_values", addon.ConfigurationValues)
+	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
