@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_eks_addon: Add `configuration_values` attribute
+resource/aws_eks_addon: Add `configuration_values` argument
 ```
 
 ```release-note:enhancement
