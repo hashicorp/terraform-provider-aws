@@ -85,9 +85,9 @@ func ResourceRuleGroup() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"reference_arn": {
-																Type:     schema.TypeString,
-																Required: true,
-																//Elem:     &schema.Schema{Type: schema.TypeString},
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: verify.ValidARN,
 															},
 														},
 													},
