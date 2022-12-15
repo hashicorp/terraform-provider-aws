@@ -1,4 +1,4 @@
-## 3.75.3 (Unreleased)
+## 3.76.0 (Unreleased)
 
 NOTES:
 
