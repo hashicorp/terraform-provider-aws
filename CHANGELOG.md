@@ -2108,6 +2108,28 @@ BUG FIXES:
 * resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 * resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 
+## 3.76.0 (December 15, 2022)
+
+NOTES:
+
+* provider: Add OpenBSD to list of OSes which the provider is built on ([#28300](https://github.com/hashicorp/terraform-provider-aws/issues/28300))
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute will always have the value `"DEFAULT"` ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
+* resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
+* resource/aws_security_group: Do not pass `from_port` or `to_port` values to the AWS API if a `rule`'s `protocol` value is `-1` or `all` ([#27685](https://github.com/hashicorp/terraform-provider-aws/issues/27685))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_stage: Fixed issue with providing `cache_cluster_size` without `cache_cluster_enabled` resulted in waiter error ([#27541](https://github.com/hashicorp/terraform-provider-aws/issues/27541))
+* resource/aws_db_instance: Ensure that `apply_immediately` default value is applied ([#28298](https://github.com/hashicorp/terraform-provider-aws/issues/28298))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Retry on `ServerSideEncryptionConfigurationNotFoundError` errors due to eventual consistency ([#26091](https://github.com/hashicorp/terraform-provider-aws/issues/26091))
+* resource/aws_security_group: Return an error if a `rule`'s `protocol` value is `all` and `from_port` or `to_port` are not `0` ([#27685](https://github.com/hashicorp/terraform-provider-aws/issues/27685))
+* resource/aws_sqs_queue: Change `sqs_managed_sse_enabled` to `Computed` as newly created SQS queues use [SSE-SQS encryption by default](https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-sqs-announces-server-side-encryption-ssq-managed-sse-sqs-default/). This means that Terraform will only perform drift detection of the attribute's value when present in a configuration ([#27313](https://github.com/hashicorp/terraform-provider-aws/issues/27313))
+* resource/aws_sqs_queue: Respect configured `sqs_managed_sse_enabled` value on resource Create. In particular a configured `false` value is sent to the AWS API, which overrides the [new service default value of `true`](https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-sqs-announces-server-side-encryption-ssq-managed-sse-sqs-default/) ([#27338](https://github.com/hashicorp/terraform-provider-aws/issues/27338))
+
 ## 3.75.2 (May 20, 2022)
 
 ENHANCEMENTS:
