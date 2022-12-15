@@ -46,6 +46,11 @@ func ResourceInstancePublicPorts() *schema.Resource {
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
+						"cidr_list_aliases": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+						},
 						"from_port": {
 							Type:         schema.TypeInt,
 							Required:     true,
@@ -185,6 +190,10 @@ func expandPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 		apiObject.Cidrs = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["cidr_list_aliases"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.CidrListAliases = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["ipv6_cidrs"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Ipv6Cidrs = flex.ExpandStringSet(v)
 	}
@@ -231,6 +240,10 @@ func flattenInstancePortState(apiObject *lightsail.InstancePortState) map[string
 
 	if v := apiObject.Cidrs; v != nil {
 		tfMap["cidrs"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.CidrListAliases; v != nil {
+		tfMap["cidr_list_aliases"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.Ipv6Cidrs; v != nil {
