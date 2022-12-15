@@ -1239,6 +1239,36 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 	})
 }
 
+func TestAccECSService_ServiceConnect_remove(t *testing.T) {
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", "true"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_Tags_basic(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4120,4 +4150,51 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName))
+}
+
+func testAccServiceConfig_serviceConnectRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+
+  service_connect_defaults {
+    namespace = aws_service_discovery_http_namespace.test.arn
+  }
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "bridge"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "portMappings": [
+    {
+      "hostPort": 0,
+      "protocol": "tcp",
+      "containerPort": 27017
+    }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+}
+`, rName)
 }
