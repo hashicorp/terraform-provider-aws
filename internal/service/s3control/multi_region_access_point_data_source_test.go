@@ -83,7 +83,7 @@ resource "aws_s3control_multi_region_access_point" "test" {
       bucket = aws_s3_bucket.test2.id
     }
 
-    public_access_block = {
+    public_access_block {
       block_public_acls       = false
       block_public_policy     = false
       ignore_public_acls      = false
