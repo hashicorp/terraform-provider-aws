@@ -62,8 +62,17 @@ func DataSourceMultiRegionAccessPoint() *schema.Resource {
 			"regions": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
 				},
 			},
 			"status": {
@@ -104,10 +113,11 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	d.SetId(MultiRegionAccessPointCreateResourceID(accountID, name))
 	d.Set("created_at", aws.TimeValue(output.AccessPoint.CreatedAt).Format(time.RFC3339))
 	d.Set("name", output.AccessPoint.Name)
-	if err := d.Set("public_access_block", flattenPublicAccessBlockConfiguration(output.AccessPoint.PublicAccessBlock)); err != nil {
+	d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(output.AccessPoint.PublicAccessBlock)})
+	if err := d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(output.AccessPoint.PublicAccessBlock)}); err != nil {
 		return diag.Errorf("error setting PublicAccessBlock: %s", err)
 	}
-	d.Set("regions", output.AccessPoint.Regions)
+	d.Set("regions", flattenRegionReports(output.AccessPoint.Regions))
 	d.Set("status", output.AccessPoint.Status)
 
 	return nil
