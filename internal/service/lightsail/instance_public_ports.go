@@ -50,6 +50,9 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"from_port": {
 							Type:         schema.TypeInt,
