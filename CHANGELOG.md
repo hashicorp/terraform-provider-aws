@@ -3,9 +3,12 @@
 NOTES:
 
 * provider: Add OpenBSD to list of OSes which the provider is built on ([#28300](https://github.com/hashicorp/terraform-provider-aws/issues/28300))
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute will always have the value `"DEFAULT"` ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
 
 ENHANCEMENTS:
 
+* resource/aws_lambda_function: Add support for `nodejs18.x` `runtime` value ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
+* resource/aws_lambda_layer_version: Add support for `nodejs18.x` `compatible_runtimes` value ([#28082](https://github.com/hashicorp/terraform-provider-aws/issues/28082))
 * resource/aws_security_group: Do not pass `from_port` or `to_port` values to the AWS API if a `rule`'s `protocol` value is `-1` or `all` ([#27685](https://github.com/hashicorp/terraform-provider-aws/issues/27685))
 
 BUG FIXES:
