@@ -1217,6 +1217,58 @@ func TestAccECSService_ServiceConnect_full(t *testing.T) {
 	})
 }
 
+func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectIngressPortOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_ServiceConnect_remove(t *testing.T) {
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", "true"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_Tags_basic(t *testing.T) {
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1482,38 +1534,14 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceConfig_launchTypeFargateNoWait(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccServiceConfig_launchTypeFargateBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -1522,6 +1550,10 @@ resource "aws_route_table" "test" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1532,8 +1564,10 @@ resource "aws_route_table_association" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow traffic"
+  count = 2
+
+  name        = "%[1]s-${count.index}"
+  description = "Allow all traffic"
   vpc_id      = aws_vpc.test.id
 
   ingress {
@@ -1551,6 +1585,10 @@ resource "aws_security_group" "test" {
     cidr_blocks = [
       "0.0.0.0/0",
     ]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1578,7 +1616,11 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 }
+`, rName))
+}
 
+func testAccServiceConfig_launchTypeFargate(rName string, assignPublicIP bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
@@ -1587,128 +1629,70 @@ resource "aws_ecs_service" "test" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.test.id]
+    security_groups  = aws_security_group.test[*].id
     subnets          = aws_subnet.test[*].id
-    assign_public_ip = true
+    assign_public_ip = %[2]t
   }
 }
-`, rName)
+`, rName, assignPublicIP))
 }
 
-func testAccServiceConfig_launchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name             = %[1]q
+  cluster          = aws_ecs_cluster.test.id
+  task_definition  = aws_ecs_task_definition.test.arn
+  desired_count    = 1
+  launch_type      = "FARGATE"
+  platform_version = %[2]q
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  network_configuration {
+    security_groups  = aws_security_group.test[*].id
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = false
   }
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
+`, rName, platformVersion))
 }
 
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count          = 2
-  subnet_id      = element(aws_subnet.test[*].id, count.index)
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-
-  egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-
-    cidr_blocks = [
-      "0.0.0.0/0",
-    ]
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
+func testAccServiceConfig_launchTypeFargateNoWait(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = %d
+  desired_count   = 1
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.test.id]
+    security_groups  = [aws_security_group.test[0].id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+}
+`, rName))
+}
+
+func testAccServiceConfig_launchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_launchTypeFargateBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = %[2]d
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    security_groups  = [aws_security_group.test[0].id]
     subnets          = aws_subnet.test[*].id
     assign_public_ip = true
   }
 
-  wait_for_steady_state = %t
+  wait_for_steady_state = %[3]t
 }
 
-`, rName, desiredCount, waitForSteadyState)
+`, rName, desiredCount, waitForSteadyState))
 }
 
 func testAccServiceConfig_interchangeablePlacementStrategy(rName string) string {
@@ -1748,7 +1732,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_capacityProviderStrategy(rName string, weight, base int, forceNewDeployment bool) string {
-	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -1795,9 +1779,9 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_updateCapacityProviderStrategy(rName string, weight int, capacityProvider string) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1822,16 +1806,19 @@ resource "aws_ecs_task_definition" "test" {
 DEFINITION
 }
 
-resource "aws_security_group" "allow_all" {
-  name        = %[1]q
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
     from_port   = 80
     to_port     = 8000
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1854,13 +1841,13 @@ resource "aws_vpc" "test" {
 
 resource "aws_ecs_service" "test" {
   name                 = %[1]q
-  cluster              = aws_ecs_cluster.default.id
+  cluster              = aws_ecs_cluster.test.id
   task_definition      = aws_ecs_task_definition.test.arn
   desired_count        = 1
   force_new_deployment = true
 
   network_configuration {
-    security_groups  = [aws_security_group.allow_all.id]
+    security_groups  = [aws_security_group.test.id]
     subnets          = [aws_subnet.test.id]
     assign_public_ip = false
   }
@@ -1875,9 +1862,9 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_updateCapacityProviderStrategyRemove(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1899,7 +1886,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name                 = %[1]q
-  cluster              = aws_ecs_cluster.default.id
+  cluster              = aws_ecs_cluster.test.id
   task_definition      = aws_ecs_task_definition.test2.arn
   desired_count        = 1
   force_new_deployment = true
@@ -2289,201 +2276,6 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceConfig_launchTypeFargate(rName string, assignPublicIP bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "allow_all_a" {
-  name        = "%[1]s-1"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_security_group" "allow_all_b" {
-  name        = "%[1]s-2"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-
-  network_configuration {
-    security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = aws_subnet.test[*].id
-    assign_public_ip = %t
-  }
-}
-`, rName, assignPublicIP)
-}
-
-func testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "allow_all_a" {
-  name        = "%[1]s-1"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_security_group" "allow_all_b" {
-  name        = "%[1]s-2"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name             = %[1]q
-  cluster          = aws_ecs_cluster.test.id
-  task_definition  = aws_ecs_task_definition.test.arn
-  desired_count    = 1
-  launch_type      = "FARGATE"
-  platform_version = %[2]q
-
-  network_configuration {
-    security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = aws_subnet.test[*].id
-    assign_public_ip = false
-  }
-}
-`, rName, platformVersion)
-}
-
 func testAccServiceConfig_healthCheckGracePeriodSeconds(rName string, healthCheckGracePeriodSeconds int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -2788,37 +2580,8 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceLBChangesBaseConfig(rName, image, containerName string, containerPort, hostPort int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccServiceLBChangesConfig_base(rName, image, containerName string, containerPort, hostPort int) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -2926,15 +2689,15 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_iam_role_policy.ecs_service]
 }
-`, rName, image, containerName, containerPort, hostPort)
+`, rName, image, containerName, containerPort, hostPort))
 }
 
 func testAccServiceConfig_lbChanges(rName string) string {
-	return testAccServiceLBChangesBaseConfig(rName, "ghost:latest", "ghost", 2368, 8080)
+	return testAccServiceLBChangesConfig_base(rName, "ghost:latest", "ghost", 2368, 8080)
 }
 
 func testAccServiceConfig_lbChangesModified(rName string) string {
-	return testAccServiceLBChangesBaseConfig(rName, "nginx:latest", "nginx", 80, 8080)
+	return testAccServiceLBChangesConfig_base(rName, "nginx:latest", "nginx", 80, 8080)
 }
 
 func testAccServiceConfig_familyAndRevision(rName string) string {
@@ -3062,35 +2825,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_alb(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -3201,39 +2936,11 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_iam_role_policy.ecs_service]
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_multipleTargetGroups(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -3329,43 +3036,16 @@ resource "aws_ecs_service" "test" {
     container_port   = "4501"
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccServiceNetworkConfigurationBaseConfig(rName, securityGroups string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccServiceNetworkConfigurationConfig_base(rName, securityGroups string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = 2
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "allow_all_a" {
-  name        = "%[1]s-1"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "6"
@@ -3373,18 +3053,9 @@ resource "aws_security_group" "allow_all_a" {
     to_port     = 8000
     cidr_blocks = [aws_vpc.test.cidr_block]
   }
-}
 
-resource "aws_security_group" "allow_all_b" {
-  name        = "%[1]s-2"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "6"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3418,47 +3089,19 @@ resource "aws_ecs_service" "test" {
     subnets         = aws_subnet.test[*].id
   }
 }
-`, rName, securityGroups)
+`, rName, securityGroups))
 }
 
 func testAccServiceConfig_networkConfiguration(rName string) string {
-	return testAccServiceNetworkConfigurationBaseConfig(rName, "aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id")
+	return testAccServiceNetworkConfigurationConfig_base(rName, "aws_security_group.test[0].id, aws_security_group.test[1].id")
 }
 
 func testAccServiceConfig_networkConfigurationModified(rName string) string {
-	return testAccServiceNetworkConfigurationBaseConfig(rName, "aws_security_group.allow_all_a.id")
+	return testAccServiceNetworkConfigurationConfig_base(rName, "aws_security_group.test[0].id")
 }
 
 func testAccServiceConfig_registries(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.test.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -3468,6 +3111,10 @@ resource "aws_security_group" "test" {
     from_port   = 0
     to_port     = 0
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3527,39 +3174,11 @@ resource "aws_ecs_service" "test" {
     subnets         = aws_subnet.test[*].id
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_registriesContainer(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.test.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -3569,6 +3188,10 @@ resource "aws_security_group" "test" {
     from_port   = 0
     to_port     = 0
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3631,39 +3254,11 @@ resource "aws_ecs_service" "test" {
     registry_arn   = aws_service_discovery_service.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_registriesChanges(rName, discoveryName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.test.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -3673,6 +3268,10 @@ resource "aws_security_group" "test" {
     from_port   = 0
     to_port     = 0
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -3732,7 +3331,7 @@ resource "aws_ecs_service" "test" {
     subnets         = aws_subnet.test[*].id
   }
 }
-`, rName, discoveryName)
+`, rName, discoveryName))
 }
 
 func testAccServiceConfig_daemonSchedulingStrategy(rName string) string {
@@ -3799,36 +3398,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_deploymentControllerTypeCodeDeploy(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
@@ -3895,42 +3465,17 @@ resource "aws_ecs_service" "test" {
     target_group_arn = aws_lb_target_group.test.id
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_deploymentControllerTypeCodeDeployUpdate(rName string, desiredReplicas, healthCheckGracePeriodSeconds int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -3940,12 +3485,15 @@ resource "aws_route_table" "test" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow traffic"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "6"
@@ -3962,6 +3510,10 @@ resource "aws_security_group" "test" {
     cidr_blocks = [
       "0.0.0.0/0",
     ]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -4053,7 +3605,7 @@ resource "aws_ecs_service" "test" {
     assign_public_ip = true
   }
 }
-`, rName, desiredReplicas, healthCheckGracePeriodSeconds)
+`, rName, desiredReplicas, healthCheckGracePeriodSeconds))
 }
 
 func testAccServiceConfig_deploymentControllerTypeExternal(rName string) string {
@@ -4513,6 +4065,136 @@ resource "aws_ecs_service" "test" {
       port_name             = "tf-test"
     }
   }
+}
+`, rName)
+}
+
+func testAccServiceConfig_serviceConnectIngressPortOverride(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "awsvpc"
+
+  container_definitions = jsonencode([{
+    name      = "test-nginx"
+    image     = "nginx"
+    cpu       = 10
+    memory    = 512
+    essential = true
+    portMappings = [{
+      name          = "nginx-http"
+      containerPort = 8080
+      protocol      = "tcp"
+      appProtocol   = "http"
+    }]
+  }])
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = false
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    service {
+      client_alias {
+        port = 8080
+      }
+
+      port_name = "nginx-http"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccServiceConfig_serviceConnectRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+
+  service_connect_defaults {
+    namespace = aws_service_discovery_http_namespace.test.arn
+  }
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "bridge"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "portMappings": [
+    {
+      "hostPort": 0,
+      "protocol": "tcp",
+      "containerPort": 27017
+    }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
 }
 `, rName)
 }

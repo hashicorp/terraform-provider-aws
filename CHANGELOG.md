@@ -3,11 +3,15 @@
 FEATURES:
 
 * **New Data Source:** `aws_cloudwatch_log_data_protection_policy_document` ([#28272](https://github.com/hashicorp/terraform-provider-aws/issues/28272))
+* **New Data Source:** `aws_db_instances` ([#28303](https://github.com/hashicorp/terraform-provider-aws/issues/28303))
 * **New Resource:** `aws_auditmanager_framework` ([#28257](https://github.com/hashicorp/terraform-provider-aws/issues/28257))
+* **New Resource:** `aws_lambda_functions` ([#28254](https://github.com/hashicorp/terraform-provider-aws/issues/28254))
 * **New Resource:** `aws_sagemaker_space` ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
+* **New Resource:** `aws_ssoadmin_permissions_boundary_attachment` ([#28241](https://github.com/hashicorp/terraform-provider-aws/issues/28241))
 
 ENHANCEMENTS:
 
+* resource/aws_grafana_workspace: Add `vpc_configuration` argument. ([#28308](https://github.com/hashicorp/terraform-provider-aws/issues/28308))
 * resource/aws_sagemaker_app: Add `space_name` argument ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_app: Make `user_profile_name` optional ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
 * resource/aws_sagemaker_domain: Add `default_space_settings` and `default_user_settings.jupyter_server_app_settings.code_repository` arguments ([#28154](https://github.com/hashicorp/terraform-provider-aws/issues/28154))
@@ -16,6 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_metric_stream: Correctly update `tags` ([#28310](https://github.com/hashicorp/terraform-provider-aws/issues/28310))
 * resource/aws_db_instance: Ensure that `apply_immediately` default value is applied ([#25768](https://github.com/hashicorp/terraform-provider-aws/issues/25768))
 
 ## 4.46.0 (December  8, 2022)
