@@ -18,6 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	ResNameCustomKeyStore = "Custom Key Store"
+)
+
 func ResourceCustomKeyStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomKeyStoreCreate,
@@ -38,38 +42,105 @@ func ResourceCustomKeyStore() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cloud_hsm_cluster_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Optional: true,
 			},
 			"custom_key_store_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"custom_key_store_type": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(kms.CustomKeyStoreType_Values(), false),
+			},
 			"key_store_password": {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(7, 32)),
 			},
 			"trust_anchor_certificate": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			"xks_proxy_authentication_credential": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"raw_secret_access_key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"xks_proxy_connectivity": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"xks_proxy_uri_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"xks_proxy_uri_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"xks_proxy_vpc_endpoint_service_name": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
 }
 
-const (
-	ResNameCustomKeyStore = "Custom Key Store"
-)
-
 func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	in := &kms.CreateCustomKeyStoreInput{
-		CloudHsmClusterId:      aws.String(d.Get("cloud_hsm_cluster_id").(string)),
-		CustomKeyStoreName:     aws.String(d.Get("custom_key_store_name").(string)),
-		KeyStorePassword:       aws.String(d.Get("key_store_password").(string)),
-		TrustAnchorCertificate: aws.String(d.Get("trust_anchor_certificate").(string)),
+		CustomKeyStoreName: aws.String(d.Get("custom_key_store_name").(string)),
+	}
+
+	if v, ok := d.GetOk("custom_key_store_type"); ok {
+		in.CustomKeyStoreType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("cloud_hsm_cluster_id"); ok {
+		in.CloudHsmClusterId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_store_password"); ok {
+		in.KeyStorePassword = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("trust_anchor_certificate"); ok {
+		in.TrustAnchorCertificate = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("xks_proxy_authentication_credential"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.XksProxyAuthenticationCredential = expandXksProxyAuthenticationCredential(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("xks_proxy_connectivity"); ok {
+		in.XksProxyConnectivity = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("xks_proxy_uri_endpoint"); ok {
+		in.XksProxyUriEndpoint = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("xks_proxy_uri_path"); ok {
+		in.XksProxyUriPath = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("xks_proxy_vpc_endpoint_service_name"); ok {
+		in.XksProxyVpcEndpointServiceName = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateCustomKeyStoreWithContext(ctx, in)
@@ -104,9 +175,11 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.KMS, create.ErrActionReading, ResNameCustomKeyStore, d.Id(), err)
 	}
 
-	d.Set("cloud_hsm_cluster_id", out.CloudHsmClusterId)
 	d.Set("custom_key_store_name", out.CustomKeyStoreName)
+	d.Set("custom_key_store_type", out.CustomKeyStoreType)
+	d.Set("cloud_hsm_cluster_id", out.CloudHsmClusterId)
 	d.Set("trust_anchor_certificate", out.TrustAnchorCertificate)
+	//TODO: Continue here
 
 	return nil
 }
@@ -157,4 +230,41 @@ func resourceCustomKeyStoreDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return nil
+}
+
+func expandXksProxyAuthenticationCredential(l []interface{}) *kms.XksProxyAuthenticationCredentialType {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &kms.XksProxyAuthenticationCredentialType{}
+
+	if v, ok := tfMap["access_key_id"].(string); ok {
+		result.AccessKeyId = aws.String(v)
+	}
+
+	if v, ok := tfMap["raw_secret_access_key"].(string); ok {
+		result.RawSecretAccessKey = aws.String(v)
+	}
+
+	return result
+}
+
+func flattenXksProxyAuthenticationCredential(config *kms.XksProxyAuthenticationCredentialType) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"access_key_id":         aws.StringValue(config.AccessKeyId),
+		"raw_secret_access_key": aws.StringValue(config.RawSecretAccessKey),
+	}
+
+	return []interface{}{m}
 }
