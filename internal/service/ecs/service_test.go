@@ -1230,9 +1230,19 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_serviceConnectIngressPortOverride(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.log_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_connect_configuration.0.namespace"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.dns_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.discovery_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.ingress_port_override", "0"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.port_name", "nginx-http"),
 				),
 			},
 		},
