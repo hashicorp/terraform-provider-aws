@@ -116,19 +116,6 @@ func ResourceUserPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"custom_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"estimated_number_of_users": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"auto_verified_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -140,6 +127,16 @@ func ResourceUserPool() *schema.Resource {
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"custom_domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deletion_protection": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cognitoidentityprovider.DeletionProtectionTypeInactive,
+				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.DeletionProtectionType_Values(), false),
 			},
 			"device_configuration": {
 				Type:     schema.TypeList,
@@ -157,6 +154,10 @@ func ResourceUserPool() *schema.Resource {
 						},
 					},
 				},
+			},
+			"domain": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"email_configuration": {
 				Type:             schema.TypeList,
@@ -209,6 +210,10 @@ func ResourceUserPool() *schema.Resource {
 				Computed:      true,
 				ValidateFunc:  validUserPoolEmailVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.email_message"},
+			},
+			"estimated_number_of_users": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
@@ -463,6 +468,12 @@ func ResourceUserPool() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"sns_region": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidRegionName,
+						},
 					},
 				},
 			},
@@ -489,6 +500,23 @@ func ResourceUserPool() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"user_attribute_update_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attributes_require_verification_before_update": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
+							},
+						},
+					},
+				},
+			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -627,6 +655,10 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("deletion_protection"); ok {
+		params.DeletionProtection = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("device_configuration"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -684,6 +716,15 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		params.UsernameAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+		}
+	}
+
 	if v, ok := d.GetOk("username_configuration"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -723,7 +764,6 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(tags) > 0 {
 		params.UserPoolTags = Tags(tags.IgnoreAWS())
 	}
-	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
 	// IAM roles & policies can take some time to propagate and be attached
 	// to the User Pool
@@ -854,6 +894,10 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("sms_authentication_message", userPool.SmsAuthenticationMessage)
 	}
 
+	if userPool.DeletionProtection != nil {
+		d.Set("deletion_protection", userPool.DeletionProtection)
+	}
+
 	if err := d.Set("device_configuration", flattenUserPoolDeviceConfiguration(userPool.DeviceConfiguration)); err != nil {
 		return fmt.Errorf("failed setting device_configuration: %w", err)
 	}
@@ -884,6 +928,10 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("sms_configuration", flattenSMSConfiguration(userPool.SmsConfiguration)); err != nil {
 		return fmt.Errorf("failed setting sms_configuration: %w", err)
+	}
+
+	if err := d.Set("user_attribute_update_settings", flattenUserPoolUserAttributeUpdateSettings(userPool.UserAttributeUpdateSettings)); err != nil {
+		return fmt.Errorf("failed setting user_attribute_update_settings: %w", err)
 	}
 
 	if userPool.UsernameAttributes != nil {
@@ -1019,9 +1067,11 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		"sms_verification_message",
 		"tags",
 		"tags_all",
+		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
 		"account_recovery_setting",
+		"deletion_protection",
 	) {
 		params := &cognitoidentityprovider.UpdateUserPoolInput{
 			UserPoolId: aws.String(d.Id()),
@@ -1044,6 +1094,10 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 				params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 			}
+		}
+
+		if v, ok := d.GetOk("deletion_protection"); ok {
+			params.DeletionProtection = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("device_configuration"); ok {
@@ -1099,6 +1153,22 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			params.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
 		}
 
+		if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+			}
+		}
+		if d.HasChange("user_attribute_update_settings") && params.UserAttributeUpdateSettings == nil {
+			// An empty array must be sent to disable this setting if previously enabled. A nil
+			// UserAttibutesUpdateSetting param will result in no modifications.
+			params.UserAttributeUpdateSettings = &cognitoidentityprovider.UserAttributeUpdateSettingsType{
+				AttributesRequireVerificationBeforeUpdate: []*string{},
+			}
+		}
+
 		if v, ok := d.GetOk("user_pool_add_ons"); ok {
 			configs := v.([]interface{})
 			config, ok := configs[0].(map[string]interface{})
@@ -1139,8 +1209,6 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(tags) > 0 {
 			params.UserPoolTags = Tags(tags.IgnoreAWS())
 		}
-
-		log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.
@@ -1230,6 +1298,10 @@ func expandSMSConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsCo
 		apiObject.SnsCallerArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["sns_region"].(string); ok && v != "" {
+		apiObject.SnsRegion = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1262,6 +1334,10 @@ func flattenSMSConfiguration(apiObject *cognitoidentityprovider.SmsConfiguration
 
 	if v := apiObject.SnsCallerArn; v != nil {
 		tfMap["sns_caller_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SnsRegion; v != nil {
+		tfMap["sns_region"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -2224,4 +2300,28 @@ func expandUserPoolEmailConfig(emailConfig []interface{}) *cognitoidentityprovid
 	}
 
 	return emailConfigurationType
+}
+
+func expandUserPoolUserAttributeUpdateSettings(config map[string]interface{}) *cognitoidentityprovider.UserAttributeUpdateSettingsType {
+	userAttributeUpdateSettings := &cognitoidentityprovider.UserAttributeUpdateSettingsType{}
+	if v, ok := config["attributes_require_verification_before_update"]; ok {
+		userAttributeUpdateSettings.AttributesRequireVerificationBeforeUpdate = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	return userAttributeUpdateSettings
+}
+
+func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserAttributeUpdateSettingsType) []map[string]interface{} {
+	if u == nil {
+		return nil
+	}
+	// If this setting is enabled then disabled, the API returns a nested empty slice instead of nil
+	if u != nil && len(u.AttributesRequireVerificationBeforeUpdate) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	m["attributes_require_verification_before_update"] = flex.FlattenStringSet(u.AttributesRequireVerificationBeforeUpdate)
+
+	return []map[string]interface{}{m}
 }

@@ -9,6 +9,58 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+func encryptionConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"key_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(networkfirewall.EncryptionType_Values(), false),
+				},
+			},
+		},
+	}
+}
+
+func expandEncryptionConfiguration(tfList []interface{}) *networkfirewall.EncryptionConfiguration {
+	ec := &networkfirewall.EncryptionConfiguration{Type: aws.String(networkfirewall.EncryptionTypeAwsOwnedKmsKey)}
+	if len(tfList) == 1 && tfList[0] != nil {
+		tfMap := tfList[0].(map[string]interface{})
+		if v, ok := tfMap["key_id"].(string); ok {
+			ec.KeyId = aws.String(v)
+		}
+		if v, ok := tfMap["type"].(string); ok {
+			ec.Type = aws.String(v)
+		}
+	}
+
+	return ec
+}
+
+func flattenEncryptionConfiguration(apiObject *networkfirewall.EncryptionConfiguration) []interface{} {
+	if apiObject == nil || apiObject.Type == nil {
+		return nil
+	}
+	if aws.StringValue(apiObject.Type) == networkfirewall.EncryptionTypeAwsOwnedKmsKey {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"key_id": aws.StringValue(apiObject.KeyId),
+		"type":   aws.StringValue(apiObject.Type),
+	}
+
+	return []interface{}{m}
+}
+
 func customActionSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,

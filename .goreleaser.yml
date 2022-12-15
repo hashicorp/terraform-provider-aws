@@ -19,6 +19,7 @@ builds:
       - darwin
       - freebsd
       - linux
+      - openbsd
       - windows
     goarch:
       - '386'
@@ -32,8 +33,10 @@ builds:
         goos: freebsd
       - goarch: arm64
         goos: windows
+      - goarch: arm64
+        goos: openbsd
     ldflags:
-      - -s -w -X version.ProviderVersion={{.Version}}
+      - -s -w -X 'github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}'
     mod_timestamp: '{{ .CommitTimestamp }}'
 checksum:
   algorithm: sha256

@@ -1000,7 +1000,7 @@ func testAccPreCheckPricing(t *testing.T) {
     if diags != nil && diags.HasError() {
       for _, d := range diags {
         if d.Severity == diag.Error {
-          t.Fatalf("error configuring Pricing provider: %s", d.Summary)
+          t.Fatalf("configuring Pricing provider: %s", d.Summary)
         }
       }
     }
@@ -1179,12 +1179,21 @@ To run sweepers with an assumed role, use the following additional environment v
 
 ### Sweeper Checklists
 
-- __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be swept, at `internal/sweep/sweep_test.go`.
 - __Add Resource Sweeper Implementation__: See [Writing Test Sweepers](#writing-test-sweepers).
+- __Add Service To Sweeper List__: Once a `sweep.go` file is present in the service subdirectory, run `make gen` to regenerate the list of imports in `internal/sweep/sweep_test.go`.
 
 ### Writing Test Sweepers
 
-The first step is to initialize the resource into the test sweeper framework:
+Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
+
+```go
+//go:build sweep
+// +build sweep
+
+package example
+```
+
+Next, initialize the resource into the test sweeper framework:
 
 ```go
 func init() {
@@ -1206,7 +1215,7 @@ func sweepThings(region string) error {
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
-    return fmt.Errorf("error getting client: %w", err)
+    return fmt.Errorf("getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
@@ -1236,7 +1245,7 @@ func sweepThings(region string) error {
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
-        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
@@ -1249,11 +1258,11 @@ func sweepThings(region string) error {
   })
 
   if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("listing Example Thing for %s: %w", region, err))
   }
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
   }
 
   if sweep.SkipSweepError(err) {
@@ -1272,7 +1281,7 @@ func sweepThings(region string) error {
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
-    return fmt.Errorf("error getting client: %w", err)
+    return fmt.Errorf("getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
@@ -1300,7 +1309,7 @@ func sweepThings(region string) error {
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
-        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
@@ -1317,7 +1326,7 @@ func sweepThings(region string) error {
   }
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
   }
 
   if sweep.SkipSweepError(err) {
@@ -1569,7 +1578,6 @@ POLICY
     - `acctest.CheckResourceAttrRegionalARNAccountID()` verifies than an ARN matches a specific account ID and the current region of the test execution with an exact resource value
     - `acctest.CheckResourceAttrGlobalARNAccountID()` verifies than an ARN matches a specific account ID with an exact resource value
 
-
 Here's an example of using `aws_partition` and `data.aws_partition.current.partition`:
 
 ```terraform
@@ -1633,7 +1641,7 @@ func TestAccKeyPair_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := acctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
-		t.Fatalf("error generating random SSH key: %s", err)
+		t.Fatalf("generating random SSH key: %s", err)
 	}
 
   resource.ParallelTest(t, resource.TestCase{

@@ -476,7 +476,7 @@ resource "aws_config_config_rule" "test" {
 		  resourceType == "AWS::DynamoDB::Table" {
 		  configuration.tableStatus == ['ACTIVE']
 	  }
-	  
+
 	  rule checkcompliance when
 		  resourceType == "AWS::DynamoDB::Table"
 		  tableisactive {
@@ -524,7 +524,7 @@ resource "aws_lambda_function" "f" {
   function_name = "tf_acc_lambda_awsconfig_%[1]d"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 data "aws_partition" "current" {}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -84,12 +85,19 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
+			"space_name": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"space_name", "user_profile_name"},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"user_profile_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"space_name", "user_profile_name"},
 			},
 		},
 
@@ -103,10 +111,17 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateAppInput{
-		AppName:         aws.String(d.Get("app_name").(string)),
-		AppType:         aws.String(d.Get("app_type").(string)),
-		DomainId:        aws.String(d.Get("domain_id").(string)),
-		UserProfileName: aws.String(d.Get("user_profile_name").(string)),
+		AppName:  aws.String(d.Get("app_name").(string)),
+		AppType:  aws.String(d.Get("app_type").(string)),
+		DomainId: aws.String(d.Get("domain_id").(string)),
+	}
+
+	if v, ok := d.GetOk("user_profile_name"); ok {
+		input.UserProfileName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("space_name"); ok {
+		input.SpaceName = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -124,14 +139,14 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	appArn := aws.StringValue(output.AppArn)
-	domainID, userProfileName, appType, appName, err := decodeAppID(appArn)
+	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(appArn)
 	if err != nil {
 		return err
 	}
 
 	d.SetId(appArn)
 
-	if _, err := WaitAppInService(conn, domainID, userProfileName, appType, appName); err != nil {
+	if _, err := WaitAppInService(conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
 		return fmt.Errorf("waiting for SageMaker App (%s) to create: %w", d.Id(), err)
 	}
 
@@ -143,25 +158,19 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domainID, userProfileName, appType, appName, err := decodeAppID(d.Id())
+	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	app, err := FindAppByName(conn, domainID, userProfileName, appType, appName)
+	app, err := FindAppByName(conn, domainID, userProfileOrSpaceName, appType, appName)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker App (%s); removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker App (%s): %w", d.Id(), err)
-	}
-
-	if aws.StringValue(app.Status) == sagemaker.AppStatusDeleted {
-		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
-		return nil
 	}
 
 	arn := aws.StringValue(app.AppArn)
@@ -170,6 +179,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("domain_id", app.DomainId)
 	d.Set("user_profile_name", app.UserProfileName)
+	d.Set("space_name", app.SpaceName)
 
 	if err := d.Set("resource_spec", flattenDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
 		return fmt.Errorf("setting resource_spec for SageMaker App (%s): %w", d.Id(), err)
@@ -215,17 +225,25 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	appName := d.Get("app_name").(string)
 	appType := d.Get("app_type").(string)
 	domainID := d.Get("domain_id").(string)
-	userProfileName := d.Get("user_profile_name").(string)
+	userProfileOrSpaceName := ""
 
 	input := &sagemaker.DeleteAppInput{
-		AppName:         aws.String(appName),
-		AppType:         aws.String(appType),
-		DomainId:        aws.String(domainID),
-		UserProfileName: aws.String(userProfileName),
+		AppName:  aws.String(appName),
+		AppType:  aws.String(appType),
+		DomainId: aws.String(domainID),
+	}
+
+	if v, ok := d.GetOk("user_profile_name"); ok {
+		input.UserProfileName = aws.String(v.(string))
+		userProfileOrSpaceName = v.(string)
+	}
+
+	if v, ok := d.GetOk("space_name"); ok {
+		input.SpaceName = aws.String(v.(string))
+		userProfileOrSpaceName = v.(string)
 	}
 
 	if _, err := conn.DeleteApp(input); err != nil {
-
 		if tfawserr.ErrMessageContains(err, "ValidationException", "has already been deleted") ||
 			tfawserr.ErrMessageContains(err, "ValidationException", "previously failed and was automatically deleted") {
 			return nil
@@ -236,7 +254,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, err := WaitAppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
+	if _, err := WaitAppDeleted(conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
 		}
@@ -255,11 +273,11 @@ func decodeAppID(id string) (string, string, string, string, error) {
 	parts := strings.Split(appResourceName, "/")
 
 	if len(parts) != 4 {
-		return "", "", "", "", fmt.Errorf("Unexpected format of ID (%q), expected DOMAIN-ID/USER-PROFILE-NAME/APP-TYPE/APP-NAME", appResourceName)
+		return "", "", "", "", fmt.Errorf("unexpected format of ID (%q), expected DOMAIN-ID/USER-PROFILE-NAME OR PROFILE-NAME/APP-TYPE/APP-NAME", appResourceName)
 	}
 
 	domainID := parts[0]
-	userProfileName := parts[1]
+	userProfileOrSpaceName := parts[1]
 	appType := parts[2]
 
 	if appType == "jupyterserver" {
@@ -268,9 +286,13 @@ func decodeAppID(id string) (string, string, string, string, error) {
 		appType = sagemaker.AppTypeKernelGateway
 	} else if appType == "tensorboard" {
 		appType = sagemaker.AppTypeTensorBoard
+	} else if appType == "rstudioserverpro" {
+		appType = sagemaker.AppTypeRstudioServerPro
+	} else if appType == "rsessiongateway" {
+		appType = sagemaker.AppTypeRsessionGateway
 	}
 
 	appName := parts[3]
 
-	return domainID, userProfileName, appType, appName, nil
+	return domainID, userProfileOrSpaceName, appType, appName, nil
 }

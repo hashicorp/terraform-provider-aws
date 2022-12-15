@@ -2,7 +2,6 @@ package secretsmanager
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -104,7 +103,6 @@ func dataSourceRandomPasswordRead(d *schema.ResourceData, meta interface{}) erro
 		RequireEachIncludedType: aws.Bool(requireEachIncludedType),
 	}
 
-	log.Printf("[DEBUG] Reading Secrets Manager Get Random Password: %s", input)
 	output, err := conn.GetRandomPassword(input)
 	if err != nil {
 		return fmt.Errorf("error reading Secrets Manager Get Random Password: %w", err)

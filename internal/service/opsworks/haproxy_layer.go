@@ -45,5 +45,5 @@ func ResourceHAProxyLayer() *schema.Resource {
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

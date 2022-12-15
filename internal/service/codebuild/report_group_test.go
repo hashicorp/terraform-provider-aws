@@ -224,7 +224,6 @@ func testAccCheckReportGroupDestroy(s *terraform.State) error {
 		if resp != nil {
 			return fmt.Errorf("Found Report Group %s", rs.Primary.ID)
 		}
-
 	}
 	return nil
 }

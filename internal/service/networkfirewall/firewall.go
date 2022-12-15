@@ -50,6 +50,7 @@ func ResourceFirewall() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"encryption_configuration": encryptionConfigurationSchema(),
 			"firewall_policy_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -151,6 +152,10 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("encryption_configuration"); ok {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("firewall_policy_change_protection"); ok {
 		input.FirewallPolicyChangeProtection = aws.Bool(v.(bool))
 	}
@@ -208,6 +213,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set("description", firewall.Description)
+	d.Set("encryption_configuration", flattenEncryptionConfiguration(firewall.EncryptionConfiguration))
 	d.Set("name", firewall.FirewallName)
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
@@ -251,6 +257,22 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		if resp == nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) description: empty update_token", arn))
+		}
+		updateToken = resp.UpdateToken
+	}
+
+	if d.HasChange("encryption_configuration") {
+		input := &networkfirewall.UpdateFirewallEncryptionConfigurationInput{
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			FirewallArn:             aws.String(arn),
+			UpdateToken:             updateToken,
+		}
+		resp, err := conn.UpdateFirewallEncryptionConfigurationWithContext(ctx, input)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) encryption configuration: %w", d.Id(), err))
+		}
+		if resp == nil {
+			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) encryption configuration: empty update_token", arn))
 		}
 		updateToken = resp.UpdateToken
 	}
@@ -341,7 +363,6 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			respToken, err := waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
-
 			}
 			if respToken == nil {
 				return diag.FromErr(fmt.Errorf("error associating NetworkFirewall Firewall (%s) subnet: empty update_token", arn))
@@ -364,7 +385,6 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err = waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
-
 			}
 		}
 	}

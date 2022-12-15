@@ -26,9 +26,11 @@ const (
 )
 
 var (
-	listOps   = flag.String("ListOps", "", "ListOps")
-	paginator = flag.String("Paginator", "NextToken", "name of the pagination token field")
-	export    = flag.Bool("Export", false, "whether to export the list functions")
+	inputPaginator  = flag.String("InputPaginator", "", "name of the input pagination token field")
+	listOps         = flag.String("ListOps", "", "ListOps")
+	outputPaginator = flag.String("OutputPaginator", "", "name of the output pagination token field")
+	paginator       = flag.String("Paginator", "NextToken", "name of the pagination token field")
+	export          = flag.Bool("Export", false, "whether to export the list functions")
 )
 
 func usage() {
@@ -38,18 +40,22 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-type TemplateData struct {
-	AWSService     string
-	ServicePackage string
-
-	ListOps   string
-	Paginator string
-}
-
 func main() {
+	log.SetPrefix("generate/listpage: ")
 	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
+
+	if (*inputPaginator != "" && *outputPaginator == "") || (*inputPaginator == "" && *outputPaginator != "") {
+		log.Fatal("both InputPaginator and OutputPaginator must be specified if one is")
+	}
+
+	if *inputPaginator == "" {
+		*inputPaginator = *paginator
+	}
+	if *outputPaginator == "" {
+		*outputPaginator = *paginator
+	}
 
 	filename := defaultFilename
 	if args := flag.Args(); len(args) > 0 {
@@ -63,33 +69,29 @@ func main() {
 	}
 
 	servicePackage := filepath.Base(wd)
+	log.SetPrefix(fmt.Sprintf("generate/listpage: %s: ", servicePackage))
+
 	awsService, err := names.AWSGoV1Package(servicePackage)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
-	templateData := TemplateData{
-		AWSService:     awsService,
-		ServicePackage: servicePackage,
-		ListOps:        *listOps,
-		Paginator:      *paginator,
-	}
-
-	functions := strings.Split(templateData.ListOps, ",")
+	functions := strings.Split(*listOps, ",")
 	sort.Strings(functions)
 
 	g := Generator{
-		paginator: templateData.Paginator,
-		tmpl:      template.Must(template.New("function").Parse(functionTemplate)),
+		tmpl:            template.Must(template.New("function").Parse(functionTemplate)),
+		inputPaginator:  *inputPaginator,
+		outputPaginator: *outputPaginator,
 	}
 
-	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%s", templateData.AWSService)
+	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%s", awsService)
 	g.parsePackage(sourcePackage)
 
 	g.printHeader(HeaderInfo{
 		Parameters:         strings.Join(os.Args[1:], " "),
-		DestinationPackage: templateData.ServicePackage,
+		DestinationPackage: servicePackage,
 		SourcePackage:      sourcePackage,
 	})
 
@@ -118,10 +120,11 @@ type HeaderInfo struct {
 }
 
 type Generator struct {
-	buf       bytes.Buffer
-	pkg       *Package
-	tmpl      *template.Template
-	paginator string
+	buf             bytes.Buffer
+	pkg             *Package
+	tmpl            *template.Template
+	inputPaginator  string
+	outputPaginator string
 }
 
 func (g *Generator) Printf(format string, args ...interface{}) {
@@ -147,7 +150,7 @@ func (g *Generator) printHeader(headerInfo HeaderInfo) {
 
 func (g *Generator) parsePackage(sourcePackage string) {
 	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedSyntax,
+		Mode: packages.NeedName | packages.NeedTypes | packages.NeedSyntax,
 	}
 	pkgs, err := packages.Load(cfg, sourcePackage)
 	if err != nil {
@@ -173,12 +176,13 @@ func (g *Generator) addPackage(pkg *packages.Package) {
 }
 
 type FuncSpec struct {
-	Name       string
-	AWSName    string
-	RecvType   string
-	ParamType  string
-	ResultType string
-	Paginator  string
+	Name            string
+	AWSName         string
+	RecvType        string
+	ParamType       string
+	ResultType      string
+	InputPaginator  string
+	OutputPaginator string
 }
 
 func (g *Generator) generateFunction(functionName, awsService string, export bool) {
@@ -212,12 +216,13 @@ func (g *Generator) generateFunction(functionName, awsService string, export boo
 	}
 
 	funcSpec := FuncSpec{
-		Name:       fixUpFuncName(funcName, awsService),
-		AWSName:    function.Name.Name,
-		RecvType:   g.expandTypeField(function.Recv),
-		ParamType:  g.expandTypeField(function.Type.Params),  // Assumes there is a single input parameter
-		ResultType: g.expandTypeField(function.Type.Results), // Assumes we can take the first return parameter
-		Paginator:  g.paginator,
+		Name:            fixUpFuncName(funcName, awsService),
+		AWSName:         function.Name.Name,
+		RecvType:        g.expandTypeField(function.Recv),
+		ParamType:       g.expandTypeField(function.Type.Params),  // Assumes there is a single input parameter
+		ResultType:      g.expandTypeField(function.Type.Results), // Assumes we can take the first return parameter
+		InputPaginator:  g.inputPaginator,
+		OutputPaginator: g.outputPaginator,
 	}
 
 	err := g.tmpl.Execute(&g.buf, funcSpec)

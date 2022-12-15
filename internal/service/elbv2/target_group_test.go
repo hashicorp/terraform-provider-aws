@@ -222,38 +222,6 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcUpdate(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_HealthCheck_tcp(t *testing.T) {
-	var targetGroup1, targetGroup2 elbv2.TargetGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTargetGroupConfig_typeTCPIntervalUpdated(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
-				),
-			},
-			{
-				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/", 5),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup2),
-					testAccCheckTargetGroupRecreated(&targetGroup1, &targetGroup2),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -272,6 +240,17 @@ func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_type", "ip"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
 			},
 		},
 	})
@@ -636,16 +615,11 @@ port     = 8081
 protocol = "TCP"
 matcher  = "200"
     `
-	healthCheckInvalid3 := `
-interval = 10
-port     = 8081
-protocol = "TCP"
-timeout  = 4
-    `
 	healthCheckValid := `
 interval = 10
 port     = 8081
 protocol = "TCP"
+timeout  = 4
     `
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -663,10 +637,6 @@ protocol = "TCP"
 				ExpectError: regexp.MustCompile("health_check.matcher is not supported for target_groups with TCP protocol"),
 			},
 			{
-				Config:      testAccTargetGroupConfig_nlbDefaults(rName, healthCheckInvalid3),
-				ExpectError: regexp.MustCompile("health_check.timeout is not supported for target_groups with TCP protocol"),
-			},
-			{
 				Config: testAccTargetGroupConfig_nlbDefaults(rName, healthCheckValid),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &conf),
@@ -681,7 +651,7 @@ protocol = "TCP"
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -770,8 +740,8 @@ func TestAccELBV2TargetGroup_Name_prefix(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
-	var targetGroup1, targetGroup2, targetGroup3 elbv2.TargetGroup
+func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
+	var targetGroup1, targetGroup2 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
@@ -806,11 +776,7 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccTargetGroupConfig_typeTCPInvalidThreshold(rName),
-				ExpectError: regexp.MustCompile(`health_check\.healthy_threshold [0-9]+ and health_check\.unhealthy_threshold [0-9]+ must be the same for target_groups with TCP protocol`),
-			},
-			{
-				Config: testAccTargetGroupConfig_typeTCPThresholdUpdated(rName),
+				Config: testAccTargetGroupConfig_typeTCPHealthCheckUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &targetGroup2),
 					testAccCheckTargetGroupNotRecreated(&targetGroup1, &targetGroup2),
@@ -822,21 +788,14 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "20"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "15"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccTargetGroupConfig_typeTCPIntervalUpdated(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup3),
-					testAccCheckTargetGroupRecreated(&targetGroup2, &targetGroup3),
 				),
 			},
 		},
@@ -1000,6 +959,100 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip_proto"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip_proto"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "rebalance"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "rebalance"),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "rebalance"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "no_rebalance"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "no_rebalance"),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "no_rebalance"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
 			},
 		},
 	})
@@ -2196,6 +2249,58 @@ resource "aws_lb_target_group" "test" {
 `, rName)
 }
 
+func testAccTargetGroupConfig_protocolGeneveSticky(rName, stickinessType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+  stickiness {
+    enabled = true
+    type    = %[2]q
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, stickinessType)
+}
+
+func testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, failoverType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+  target_failover {
+    on_deregistration = %[2]q
+    on_unhealthy      = %[2]q
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, failoverType)
+}
+
 func testAccTargetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
@@ -2756,7 +2861,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccTargetGroupConfig_typeTCPIntervalUpdated(rName string) string {
+func testAccTargetGroupConfig_typeTCPHealthCheckUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
@@ -2767,76 +2872,11 @@ resource "aws_lb_target_group" "test" {
   deregistration_delay = 200
 
   health_check {
-    interval            = 30
-    port                = "traffic-port"
+    interval            = 20
+    port                = "8081"
     protocol            = "TCP"
-    healthy_threshold   = 5
-    unhealthy_threshold = 5
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccTargetGroupConfig_typeTCPInvalidThreshold(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 8082
-  protocol = "TCP"
-  vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-
-  health_check {
-    interval            = 10
-    port                = "traffic-port"
-    protocol            = "TCP"
-    healthy_threshold   = 3
-    unhealthy_threshold = 4
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccTargetGroupConfig_typeTCPThresholdUpdated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 8082
-  protocol = "TCP"
-  vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-
-  health_check {
-    interval            = 10
-    port                = "traffic-port"
-    protocol            = "TCP"
-    healthy_threshold   = 5
+    timeout             = 15
+    healthy_threshold   = 4
     unhealthy_threshold = 5
   }
 
@@ -3223,16 +3263,6 @@ func testAccCheckTargetGroupNotRecreated(i, j *elbv2.TargetGroup) resource.TestC
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.TargetGroupArn) != aws.StringValue(j.TargetGroupArn) {
 			return fmt.Errorf("ELBv2 Target Group (%s) unexpectedly recreated (%s)", aws.StringValue(i.TargetGroupArn), aws.StringValue(j.TargetGroupArn))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.TargetGroupArn) == aws.StringValue(j.TargetGroupArn) {
-			return fmt.Errorf("ELBv2 Target Group (%s) not recreated", aws.StringValue(i.TargetGroupArn))
 		}
 
 		return nil

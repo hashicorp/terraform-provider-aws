@@ -1,10 +1,10 @@
 package rum_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -31,11 +31,12 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
-					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -49,12 +50,13 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
-					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
+					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -139,7 +141,8 @@ func testAccCheckAppMonitorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		appMon, err := tfcloudwatchrum.FindAppMonitorByName(conn, rs.Primary.ID)
+		_, err := tfcloudwatchrum.FindAppMonitorByName(context.Background(), conn, rs.Primary.ID)
+
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -148,32 +151,31 @@ func testAccCheckAppMonitorDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if aws.StringValue(appMon.Name) == rs.Primary.ID {
-			return fmt.Errorf("cloudwatchrum App Monitor %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("CloudWatch RUM App Monitor %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAppMonitorExists(n string, appMon *cloudwatchrum.AppMonitor) resource.TestCheckFunc {
+func testAccCheckAppMonitorExists(n string, v *cloudwatchrum.AppMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No cloudwatchrum App Monitor ID is set")
+			return fmt.Errorf("No CloudWatch RUM App Monitor ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
-		resp, err := tfcloudwatchrum.FindAppMonitorByName(conn, rs.Primary.ID)
+
+		output, err := tfcloudwatchrum.FindAppMonitorByName(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*appMon = *resp
+		*v = *output
 
 		return nil
 	}

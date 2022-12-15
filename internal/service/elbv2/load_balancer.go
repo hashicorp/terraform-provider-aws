@@ -581,7 +581,6 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		if err != nil {
 			return fmt.Errorf("failure Setting LB Security Groups: %w", err)
 		}
-
 	}
 
 	// subnets are assigned at Create; the 'change' here is an empty map for old
@@ -603,7 +602,6 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if d.HasChange("ip_address_type") {
-
 		params := &elbv2.SetIpAddressTypeInput{
 			LoadBalancerArn: aws.String(d.Id()),
 			IpAddressType:   aws.String(d.Get("ip_address_type").(string)),

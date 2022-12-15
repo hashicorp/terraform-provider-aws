@@ -24,6 +24,46 @@ resource "aws_eks_addon" "example" {
 }
 ```
 
+## Example Update add-on usage with resolve_conflicts and PRESERVE
+`resolve_conflicts` with `PRESERVE` can be used to retain the config changes applied to the add-on with kubectl while upgrading to a newer version of the add-on.
+
+~> **Note:** `resolve_conflicts` with `PRESERVE` can only be used for upgrading the add-ons but not during the creation of add-on.
+
+```terraform
+resource "aws_eks_addon" "example" {
+  cluster_name      = aws_eks_cluster.example.name
+  addon_name        = "coredns"
+  addon_version     = "v1.8.7-eksbuild.3" #e.g., previous version v1.8.7-eksbuild.2 and the new version is v1.8.7-eksbuild.3
+  resolve_conflicts = "PRESERVE"
+}
+```
+
+## Example add-on usage with custom configuration_values
+Custom add-on configuration can be passed using `configuration_values` as a single JSON string while creating or updating the add-on.
+
+~> **Note:** `configuration_values` is a single JSON string should match the valid JSON schema for each add-on with specific version.
+
+To find the correct JSON schema for each add-on can be extracted using [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) call.
+This below is an example for extracting the `configuration_values` schema for `coredns`.
+
+```bash
+ aws eks describe-addon-configuration \
+ --addon-name coredns \
+ --addon-version v1.8.7-eksbuild.2
+```
+
+Example to create a `coredns` managed addon with custom `configuration_values`.
+
+```terraform
+resource "aws_eks_addon" "example" {
+  cluster_name         = "mycluster"
+  addon_name           = "coredns"
+  addon_version        = "v1.8.7-eksbuild.3"
+  resolve_conflicts    = "OVERWRITE"
+  configuration_values = "{\"replicaCount\":4,\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"150Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"150Mi\"}}}"
+}
+```
+
 ### Example IAM Role for EKS Addon "vpc-cni" with AWS managed policy
 
 ```terraform
@@ -82,9 +122,10 @@ The following arguments are optional:
 
 * `addon_version` – (Optional) The version of the EKS add-on. The version must
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
+* `configuration_values` - (Optional) custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html).
 * `resolve_conflicts` - (Optional) Define how to resolve parameter value conflicts
   when migrating an existing add-on to an Amazon EKS add-on or when applying
-  version updates to the add-on. Valid values are `NONE` and `OVERWRITE`.
+  version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `preserve` - (Optional) Indicates if you want to preserve the created resources when deleting the EKS add-on.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
@@ -112,7 +153,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `20m`)
 * `update` - (Default `20m`)

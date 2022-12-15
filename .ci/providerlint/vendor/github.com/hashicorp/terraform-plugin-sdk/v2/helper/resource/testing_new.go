@@ -89,7 +89,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 	}()
 
 	if c.hasProviders(ctx) {
-		err := wd.SetConfig(ctx, c.providerConfig(ctx))
+		err := wd.SetConfig(ctx, c.providerConfig(ctx, false))
 
 		if err != nil {
 			logging.HelperResourceError(ctx,
@@ -114,7 +114,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 
 	logging.HelperResourceDebug(ctx, "Starting TestSteps")
 
-	// use this to track last step succesfully applied
+	// use this to track last step successfully applied
 	// acts as default for import tests
 	var appliedCfg string
 
@@ -170,7 +170,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 				protov6: protov6ProviderFactories(c.ProtoV6ProviderFactories).merge(step.ProtoV6ProviderFactories),
 			}
 
-			providerCfg := step.providerConfig(ctx)
+			providerCfg := step.providerConfig(ctx, step.configHasProviderBlock(ctx))
 
 			err := wd.SetConfig(ctx, providerCfg)
 
@@ -241,6 +241,45 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 			continue
 		}
 
+		if step.RefreshState {
+			logging.HelperResourceTrace(ctx, "TestStep is RefreshState mode")
+
+			err := testStepNewRefreshState(ctx, t, wd, step, providers)
+			if step.ExpectError != nil {
+				logging.HelperResourceDebug(ctx, "Checking TestStep ExpectError")
+				if err == nil {
+					logging.HelperResourceError(ctx,
+						"Error running refresh: expected an error but got none",
+					)
+					t.Fatalf("Step %d/%d error running refresh: expected an error but got none", stepNumber, len(c.Steps))
+				}
+				if !step.ExpectError.MatchString(err.Error()) {
+					logging.HelperResourceError(ctx,
+						fmt.Sprintf("Error running refresh: expected an error with pattern (%s)", step.ExpectError.String()),
+						map[string]interface{}{logging.KeyError: err},
+					)
+					t.Fatalf("Step %d/%d error running refresh, expected an error with pattern (%s), no match on: %s", stepNumber, len(c.Steps), step.ExpectError.String(), err)
+				}
+			} else {
+				if err != nil && c.ErrorCheck != nil {
+					logging.HelperResourceDebug(ctx, "Calling TestCase ErrorCheck")
+					err = c.ErrorCheck(err)
+					logging.HelperResourceDebug(ctx, "Called TestCase ErrorCheck")
+				}
+				if err != nil {
+					logging.HelperResourceError(ctx,
+						"Error running refresh",
+						map[string]interface{}{logging.KeyError: err},
+					)
+					t.Fatalf("Step %d/%d error running refresh: %s", stepNumber, len(c.Steps), err)
+				}
+			}
+
+			logging.HelperResourceDebug(ctx, "Finished TestStep")
+
+			continue
+		}
+
 		if step.Config != "" {
 			logging.HelperResourceTrace(ctx, "TestStep is Config mode")
 
@@ -278,7 +317,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 				}
 			}
 
-			appliedCfg = step.Config
+			appliedCfg = step.mergedConfig(ctx, c)
 
 			logging.HelperResourceDebug(ctx, "Finished TestStep")
 
@@ -332,7 +371,7 @@ func testIDRefresh(ctx context.Context, t testing.T, c TestCase, wd *plugintest.
 
 	// Temporarily set the config to a minimal provider config for the refresh
 	// test. After the refresh we can reset it.
-	err := wd.SetConfig(ctx, c.providerConfig(ctx))
+	err := wd.SetConfig(ctx, c.providerConfig(ctx, step.configHasProviderBlock(ctx)))
 	if err != nil {
 		t.Fatalf("Error setting import test config: %s", err)
 	}

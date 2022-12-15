@@ -229,7 +229,7 @@ func ResourceTargetGroup() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 604800),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls, elbv2.ProtocolEnumGeneve:
 									return true
 								}
 								return false
@@ -248,9 +248,11 @@ func ResourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"lb_cookie",  // Only for ALBs
-								"app_cookie", // Only for ALBs
-								"source_ip",  // Only for NLBs
+								"lb_cookie",               // Only for ALBs
+								"app_cookie",              // Only for ALBs
+								"source_ip",               // Only for NLBs
+								"source_ip_dest_ip",       // Only for GWLBs
+								"source_ip_dest_ip_proto", // Only for GWLBs
 							}, false),
 						},
 					},
@@ -262,6 +264,31 @@ func ResourceTargetGroup() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
+			},
+			"target_failover": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_deregistration": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"rebalance",
+								"no_rebalance",
+							}, false),
+						},
+						"on_unhealthy": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"rebalance",
+								"no_rebalance",
+							}, false),
+						},
+					},
+				},
 			},
 			"target_type": {
 				Type:         schema.TypeString,
@@ -475,43 +502,59 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
-			if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
-				stickinessBlocks := v.([]interface{})
-				stickiness := stickinessBlocks[0].(map[string]interface{})
-
+		// Only supported for GWLB
+		if v, ok := d.Get("protocol").(string); ok && v == elbv2.ProtocolEnumGeneve {
+			if v, ok := d.GetOk("target_failover"); ok {
+				failoverBlock := v.([]interface{})
+				failover := failoverBlock[0].(map[string]interface{})
 				attrs = append(attrs,
 					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.enabled"),
-						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+						Key:   aws.String("target_failover.on_deregistration"),
+						Value: aws.String(failover["on_deregistration"].(string)),
 					},
 					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.type"),
-						Value: aws.String(stickiness["type"].(string)),
-					})
+						Key:   aws.String("target_failover.on_unhealthy"),
+						Value: aws.String(failover["on_unhealthy"].(string)),
+					},
+				)
+			}
+		}
 
-				switch d.Get("protocol").(string) {
-				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-					switch stickiness["type"].(string) {
-					case "lb_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							})
-					case "app_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							},
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.cookie_name"),
-								Value: aws.String(stickiness["cookie_name"].(string)),
-							})
-					default:
-						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-					}
+		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
+			stickinessBlocks := v.([]interface{})
+			stickiness := stickinessBlocks[0].(map[string]interface{})
+
+			attrs = append(attrs,
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.enabled"),
+					Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+				},
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.type"),
+					Value: aws.String(stickiness["type"].(string)),
+				})
+
+			switch d.Get("protocol").(string) {
+			case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+				switch stickiness["type"].(string) {
+				case "lb_cookie":
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+							Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+						})
+				case "app_cookie":
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+							Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+						},
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.app_cookie.cookie_name"),
+							Value: aws.String(stickiness["cookie_name"].(string)),
+						})
+				default:
+					log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
 				}
 			}
 		}
@@ -619,10 +662,11 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			healthCheck := healthChecks[0].(map[string]interface{})
 
 			params = &elbv2.ModifyTargetGroupInput{
-				TargetGroupArn:          aws.String(d.Id()),
-				HealthCheckEnabled:      aws.Bool(healthCheck["enabled"].(bool)),
-				HealthyThresholdCount:   aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
-				UnhealthyThresholdCount: aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
+				TargetGroupArn:             aws.String(d.Id()),
+				HealthCheckEnabled:         aws.Bool(healthCheck["enabled"].(bool)),
+				HealthCheckIntervalSeconds: aws.Int64(int64(healthCheck["interval"].(int))),
+				HealthyThresholdCount:      aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
+				UnhealthyThresholdCount:    aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
 			}
 
 			t := healthCheck["timeout"].(int)
@@ -643,7 +687,6 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
-				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
 			}
 			if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
 				params.HealthCheckPort = aws.String(healthCheck["port"].(string))
@@ -700,52 +743,48 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
-
-			if d.HasChange("stickiness") {
-				stickinessBlocks := d.Get("stickiness").([]interface{})
-				if len(stickinessBlocks) == 1 {
-					stickiness := stickinessBlocks[0].(map[string]interface{})
-
-					attrs = append(attrs,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.enabled"),
-							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-						},
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.type"),
-							Value: aws.String(stickiness["type"].(string)),
-						})
-
-					switch d.Get("protocol").(string) {
-					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-						switch stickiness["type"].(string) {
-						case "lb_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								})
-						case "app_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								},
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.cookie_name"),
-									Value: aws.String(stickiness["cookie_name"].(string)),
-								})
-						default:
-							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-						}
-					}
-				} else if len(stickinessBlocks) == 0 {
-					attrs = append(attrs, &elbv2.TargetGroupAttribute{
+		if d.HasChange("stickiness") {
+			stickinessBlocks := d.Get("stickiness").([]interface{})
+			if len(stickinessBlocks) == 1 {
+				stickiness := stickinessBlocks[0].(map[string]interface{})
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
 						Key:   aws.String("stickiness.enabled"),
-						Value: aws.String("false"),
+						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.type"),
+						Value: aws.String(stickiness["type"].(string)),
 					})
+
+				switch d.Get("protocol").(string) {
+				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+					switch stickiness["type"].(string) {
+					case "lb_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							})
+					case "app_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							},
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.cookie_name"),
+								Value: aws.String(stickiness["cookie_name"].(string)),
+							})
+					default:
+						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
+					}
 				}
+			} else if len(stickinessBlocks) == 0 {
+				attrs = append(attrs, &elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.enabled"),
+					Value: aws.String("false"),
+				})
 			}
 		}
 
@@ -755,6 +794,24 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				Value: aws.String(d.Get("load_balancing_algorithm_type").(string)),
 			})
 		}
+
+		if d.HasChange("target_failover") {
+			failoverBlock := d.Get("target_failover").([]interface{})
+			if len(failoverBlock) == 1 {
+				failover := failoverBlock[0].(map[string]interface{})
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("target_failover.on_deregistration"),
+						Value: aws.String(failover["on_deregistration"].(string)),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("target_failover.on_unhealthy"),
+						Value: aws.String(failover["on_unhealthy"].(string)),
+					},
+				)
+			}
+		}
+
 	case elbv2.TargetTypeEnumLambda:
 		if d.HasChange("lambda_multi_value_headers_enabled") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
@@ -914,6 +971,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
+	d.Set("ip_address_type", targetGroup.IpAddressType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)
@@ -986,6 +1044,16 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		return fmt.Errorf("setting stickiness: %w", err)
 	}
 
+	// Set target failover attributes for GWLB
+	targetFailoverAttr := flattenTargetGroupFailover(attrResp.Attributes)
+	if err != nil {
+		return fmt.Errorf("flattening target failover: %w", err)
+	}
+
+	if err := d.Set("target_failover", targetFailoverAttr); err != nil {
+		return fmt.Errorf("setting target failover: %w", err)
+	}
+
 	tags, err := ListTags(conn, d.Id())
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -1009,6 +1077,25 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	}
 
 	return nil
+}
+
+func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) []interface{} {
+	if len(attributes) == 0 {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	for _, attr := range attributes {
+		switch aws.StringValue(attr.Key) {
+		case "target_failover.on_deregistration":
+			m["on_deregistration"] = aws.StringValue(attr.Value)
+		case "target_failover.on_unhealthy":
+			m["on_unhealthy"] = aws.StringValue(attr.Value)
+		}
+	}
+
+	return []interface{}{m}
 }
 
 func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
@@ -1070,15 +1157,6 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 			if m := healthCheck["path"].(string); m != "" {
 				return fmt.Errorf("%s: health_check.path is not supported for target_groups with TCP protocol", diff.Id())
 			}
-			// Cannot set custom timeout on TCP health checks
-			if t := healthCheck["timeout"].(int); t != 0 && diff.Id() == "" {
-				// timeout has a default value, so only check this if this is a network
-				// LB and is a first run
-				return fmt.Errorf("%s: health_check.timeout is not supported for target_groups with TCP protocol", diff.Id())
-			}
-			if healthCheck["healthy_threshold"].(int) != healthCheck["unhealthy_threshold"].(int) {
-				return fmt.Errorf("%s: health_check.healthy_threshold %d and health_check.unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
-			}
 		}
 	}
 
@@ -1096,28 +1174,6 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		return nil
 	}
 
-	if protocol == elbv2.ProtocolEnumTcp {
-		if diff.HasChange("health_check.0.interval") {
-			if err := diff.ForceNew("health_check.0.interval"); err != nil {
-				return err
-			}
-		}
-		// The health_check configuration block protocol argument has Default: HTTP, however the block
-		// itself is Computed: true. When not configured, a TLS (Network LB) Target Group will default
-		// to health check protocol TLS. We do not want to trigger recreation in this scenario.
-		// ResourceDiff will show 0 changed keys for the configuration block, which we can use to ensure
-		// there was an actual change to trigger the ForceNew.
-		if diff.HasChange("health_check.0.protocol") && len(diff.GetChangedKeysPrefix("health_check.0")) != 0 {
-			if err := diff.ForceNew("health_check.0.protocol"); err != nil {
-				return err
-			}
-		}
-		if diff.HasChange("health_check.0.timeout") {
-			if err := diff.ForceNew("health_check.0.timeout"); err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 

@@ -217,7 +217,7 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 	newEngineVersion := aws.StringValue(globalCluster.EngineVersion)
 
 	// For example a configured engine_version of "5.6.10a" and a returned engine_version of "5.6.global_10a".
-	if oldParts, newParts := strings.Split(oldEngineVersion, "."), strings.Split(newEngineVersion, "."); len(oldParts) == 3 &&
+	if oldParts, newParts := strings.Split(oldEngineVersion, "."), strings.Split(newEngineVersion, "."); len(oldParts) == 3 && //nolint:gocritic // Ignore 'badCond'
 		len(oldParts) == len(newParts) &&
 		oldParts[0] == newParts[0] &&
 		oldParts[1] == newParts[1] &&
@@ -306,7 +306,7 @@ func resourceGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error
 		GlobalClusterIdentifier: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting RDS Global Cluster (%s): %s", d.Id(), input)
+	log.Printf("[DEBUG] Deleting RDS Global Cluster: %s", d.Id())
 
 	// Allow for eventual consistency
 	// InvalidGlobalClusterStateFault: Global Cluster arn:aws:rds::123456789012:global-cluster:tf-acc-test-5618525093076697001-0 is not empty
@@ -369,7 +369,6 @@ func DescribeGlobalCluster(conn *rds.RDS, globalClusterID string) (*rds.GlobalCl
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	log.Printf("[DEBUG] Reading RDS Global Cluster (%s): %s", globalClusterID, input)
 	err := conn.DescribeGlobalClustersPages(input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -404,7 +403,6 @@ func DescribeGlobalClusterFromClusterARN(conn *rds.RDS, dbClusterARN string) (*r
 		},
 	}
 
-	log.Printf("[DEBUG] Reading RDS Global Clusters: %s", input)
 	err := conn.DescribeGlobalClustersPages(input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -490,7 +488,6 @@ func WaitForGlobalClusterDeletion(conn *rds.RDS, globalClusterID string, timeout
 		NotFoundChecks: 1,
 	}
 
-	log.Printf("[DEBUG] Waiting for RDS Global Cluster (%s) deletion", globalClusterID)
 	_, err := stateConf.WaitForState()
 
 	if tfresource.NotFound(err) {

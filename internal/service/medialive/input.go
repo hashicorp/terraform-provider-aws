@@ -180,7 +180,7 @@ const (
 )
 
 func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(resource.UniqueId()),
@@ -255,7 +255,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	out, err := FindInputByID(ctx, conn, d.Id())
 
@@ -303,7 +303,7 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputInput{
@@ -334,7 +334,6 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.Sources = expandSources(d.Get("sources").(*schema.Set).List())
 		}
 
-		log.Printf("[DEBUG] Updating MediaLive Input (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateInput(ctx, in)
 		if err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
@@ -357,7 +356,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient
 
 	log.Printf("[INFO] Deleting MediaLive Input %s", d.Id())
 

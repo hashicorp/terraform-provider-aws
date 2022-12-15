@@ -9,7 +9,6 @@ import (
 )
 
 func FindDevicePoolByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.DevicePool, error) {
-
 	input := &devicefarm.GetDevicePoolInput{
 		Arn: aws.String(arn),
 	}
@@ -34,7 +33,6 @@ func FindDevicePoolByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.D
 }
 
 func FindProjectByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Project, error) {
-
 	input := &devicefarm.GetProjectInput{
 		Arn: aws.String(arn),
 	}
@@ -59,7 +57,6 @@ func FindProjectByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Proj
 }
 
 func FindUploadByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Upload, error) {
-
 	input := &devicefarm.GetUploadInput{
 		Arn: aws.String(arn),
 	}
@@ -84,7 +81,6 @@ func FindUploadByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Uploa
 }
 
 func FindNetworkProfileByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.NetworkProfile, error) {
-
 	input := &devicefarm.GetNetworkProfileInput{
 		Arn: aws.String(arn),
 	}
@@ -109,7 +105,6 @@ func FindNetworkProfileByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefa
 }
 
 func FindInstanceProfileByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.InstanceProfile, error) {
-
 	input := &devicefarm.GetInstanceProfileInput{
 		Arn: aws.String(arn),
 	}
@@ -134,7 +129,6 @@ func FindInstanceProfileByARN(conn *devicefarm.DeviceFarm, arn string) (*devicef
 }
 
 func FindTestGridProjectByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.TestGridProject, error) {
-
 	input := &devicefarm.GetTestGridProjectInput{
 		ProjectArn: aws.String(arn),
 	}

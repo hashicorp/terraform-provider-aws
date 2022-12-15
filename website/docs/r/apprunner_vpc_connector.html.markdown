@@ -33,9 +33,10 @@ The following arguments supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `vpc_connector_arn` - ARN of VPC connector.
+* `arn` - ARN of VPC connector.
 * `status` - Current state of the VPC connector. If the status of a connector revision is INACTIVE, it was deleted and can't be used. Inactive connector revisions are permanently removed some time after they are deleted.
 * `vpc_connector_revision` - The revision of VPC connector. It's unique among all the active connectors ("Status": "ACTIVE") that share the same Name.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

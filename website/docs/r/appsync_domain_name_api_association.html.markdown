@@ -32,7 +32,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Appsync domain name.
 
-
 ## Import
 
 `aws_appsync_domain_name_api_association` can be imported using the AppSync domain name, e.g.,

@@ -30,5 +30,5 @@ func ResourceGangliaLayer() *schema.Resource {
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

@@ -76,12 +76,12 @@ func FindRuleGroupNamespaceByARN(ctx context.Context, conn *prometheusservice.Pr
 	return output.RuleGroupsNamespace, nil
 }
 
-func FindWorkspaceByID(conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
+func FindWorkspaceByID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
 	input := &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeWorkspace(input)
+	output, err := conn.DescribeWorkspaceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -94,9 +94,34 @@ func FindWorkspaceByID(conn *prometheusservice.PrometheusService, id string) (*p
 		return nil, err
 	}
 
-	if output == nil || output.Workspace == nil {
+	if output == nil || output.Workspace == nil || output.Workspace.Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Workspace, nil
+}
+
+func FindLoggingConfigurationByWorkspaceID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.LoggingConfigurationMetadata, error) {
+	input := &prometheusservice.DescribeLoggingConfigurationInput{
+		WorkspaceId: aws.String(id),
+	}
+
+	output, err := conn.DescribeLoggingConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.LoggingConfiguration == nil || output.LoggingConfiguration.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.LoggingConfiguration, nil
 }

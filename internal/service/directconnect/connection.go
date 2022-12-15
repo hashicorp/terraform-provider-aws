@@ -95,6 +95,10 @@ func ResourceConnection() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vlan_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -171,6 +175,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set("provider_name", connection.ProviderName)
+	d.Set("vlan_id", connection.Vlan)
 
 	tags, err := ListTags(conn, arn)
 

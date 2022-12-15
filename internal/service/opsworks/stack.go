@@ -260,7 +260,6 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VpcId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating OpsWorks Stack: %s", input)
 	outputRaw, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateStack(input)
@@ -331,7 +330,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	stack, err := FindStackByID(conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		// If it's not found in the the default region we're in, we check us-east-1
+		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
 		conn, err = regionalConn(meta.(*conns.AWSClient), endpoints.UsEast1RegionID)
@@ -529,7 +528,6 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.UseOpsworksSecurityGroups = aws.Bool(d.Get("use_opsworks_security_groups").(bool))
 		}
 
-		log.Printf("[DEBUG] Updating OpsWorks Stack: %s", input)
 		_, err = conn.UpdateStack(input)
 
 		if err != nil {

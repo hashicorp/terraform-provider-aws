@@ -55,7 +55,6 @@ resource "aws_glue_crawler" "example" {
 }
 ```
 
-
 ### Catalog Target Example
 
 ```terraform
@@ -129,7 +128,7 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ## Argument Reference
 
-~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target` or `catalog_target`.
+~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
 The following arguments are supported:
 
@@ -145,6 +144,7 @@ The following arguments are supported:
 * `mongodb_target` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
+* `lake_formation_configuration` (Optional) Specifies Lake Formation configuration settings for the crawler. See [Lake Formation Configuration](#lake-formation-configuration) below.
 * `lineage_configuration` (Optional) Specifies data lineage configuration settings for the crawler. See [Lineage Configuration](#lineage-configuration) below.
 * `recrawl_policy` (Optional)  A policy that specifies whether to crawl the entire dataset again, or to crawl only folders that were added since the last crawler run.. See [Recrawl Policy](#recrawl-policy) below.
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
@@ -162,6 +162,7 @@ The following arguments are supported:
 * `connection_name` - (Required) The name of the connection to use to connect to the JDBC target.
 * `path` - (Required) The path of the JDBC target.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `enable_additional_metadata` - (Optional) Specify a value of `RAWTYPES` or `COMMENTS` to enable additional metadata intable responses. `RAWTYPES` provides the native-level datatype. `COMMENTS` provides comments associated with a column or table in the database.
 
 ### S3 Target
 
@@ -174,13 +175,15 @@ The following arguments are supported:
 
 ### Catalog Target
 
+* `connection_name` - (Optional) The name of the connection for an Amazon S3-backed Data Catalog table to be a target of the crawl when using a Catalog connection type paired with a `NETWORK` Connection type.
 * `database_name` - (Required) The name of the Glue database to be synchronized.
 * `tables` - (Required) A list of catalog tables to be synchronized.
+* `event_queue_arn` - (Optional)  A valid Amazon SQS ARN.
+* `dlq_event_queue_arn` - (Optional)  A valid Amazon SQS ARN.
 
 ~> **Note:** `deletion_behavior` of catalog target doesn't support `DEPRECATE_IN_DATABASE`.
 
 -> **Note:** `configuration` for catalog target crawlers will have `{ ... "Grouping": { "TableGroupingPolicy": "CombineCompatibleSchemas"} }` by default.
-
 
 ### MongoDB Target
 
@@ -190,7 +193,7 @@ The following arguments are supported:
 
 ### Delta Target
 
-* `connection_name` - (Required) The name of the connection to use to connect to the Delta table target.
+* `connection_name` - (Optional) The name of the connection to use to connect to the Delta table target.
 * `delta_tables` - (Required) A list of the Amazon S3 paths to the Delta tables.
 * `write_manifest` - (Required) Specifies whether to write the manifest files to the Delta table path.
 
@@ -198,6 +201,11 @@ The following arguments are supported:
 
 * `delete_behavior` - (Optional) The deletion behavior when the crawler finds a deleted object. Valid values: `LOG`, `DELETE_FROM_DATABASE`, or `DEPRECATE_IN_DATABASE`. Defaults to `DEPRECATE_IN_DATABASE`.
 * `update_behavior` - (Optional) The update behavior when the crawler finds a changed schema. Valid values: `LOG` or `UPDATE_IN_DATABASE`. Defaults to `UPDATE_IN_DATABASE`.
+
+### Lake Formation Configuration
+
+* `account_id` - (Optional) Required for cross account crawls. For same account crawls as the target data, this can omitted.
+* `use_lake_formation_credentials` - (Optional) Specifies whether to use Lake Formation credentials for the crawler instead of the IAM role credentials.
 
 ### Lineage Configuration
 

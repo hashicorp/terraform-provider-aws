@@ -128,9 +128,9 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed: true,
 			},
 			"transit_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpn_gateway_id"},
 			},
 			"transport_transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
@@ -608,9 +608,9 @@ func ResourceVPNConnection() *schema.Resource {
 				},
 			},
 			"vpn_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"transit_gateway_id"},
 			},
 		},
 

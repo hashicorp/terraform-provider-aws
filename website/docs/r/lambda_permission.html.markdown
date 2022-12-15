@@ -34,7 +34,7 @@ resource "aws_lambda_function" "test_lambda" {
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -179,15 +179,42 @@ EOF
 }
 ```
 
+## Example function URL cross-account invoke policy
+
+```terraform
+resource "aws_lambda_function_url" "url" {
+  function_name      = aws_lambda_function.example.function_name
+  authorization_type = "AWS_IAM"
+}
+
+resource "aws_lambda_permission" "url" {
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = aws_lambda_function.example.function_name
+  principal     = "arn:aws:iam::444455556666:role/example"
+
+  source_account         = "444455556666"
+  function_url_auth_type = "AWS_IAM"
+
+  # Adds the following condition keys
+  # "Condition": {
+  #      "StringEquals": {
+  #        "AWS:SourceAccount": "444455556666",
+  #        "lambda:FunctionUrlAuthType": "AWS_IAM"
+  #      }
+  #    }
+
+}
+```
+
 ## Argument Reference
 
 * `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g., `lambda:InvokeFunction`)
 * `event_source_token` - (Optional) The Event Source Token to validate.  Used with [Alexa Skills][1].
 * `function_name` - (Required) Name of the Lambda function whose resource policy you are updating
-* `function_url_auth_type` - (Optional) Lambda Function URLs [authentication type][3]. Valid values are: `AWS_IAM` or `NONE`.
-* `principal` - (Required) The principal who is getting this permission e.g., `s3.amazonaws.com`, an AWS account ID, or any valid AWS service principal such as `events.amazonaws.com` or `sns.amazonaws.com`.
+* `function_url_auth_type` - (Optional) Lambda Function URLs [authentication type][3]. Valid values are: `AWS_IAM` or `NONE`. Only supported for `lambda:InvokeFunctionUrl` action.
+* `principal` - (Required) The principal who is getting this permission e.g., `s3.amazonaws.com`, an AWS account ID, or AWS IAM principal, or AWS service principal such as `events.amazonaws.com` or `sns.amazonaws.com`.
 * `qualifier` - (Optional) Query parameter to specify function version or alias name. The permission will then apply to the specific qualified ARN e.g., `arn:aws:lambda:aws-region:acct-id:function:function-name:2`
-* `source_account` - (Optional) This parameter is used for S3 and SES. The AWS account ID (without a hyphen) of the source owner.
+* `source_account` - (Optional) This parameter is used when allowing cross-account access, or for S3 and SES. The AWS account ID (without a hyphen) of the source owner.
 * `source_arn` - (Optional) When the principal is an AWS service, the ARN of the specific resource within that service to grant permission to.
   Without this, any resource from `principal` will be granted permission – even if that resource is from another account.
   For S3, this should be the ARN of the S3 Bucket.

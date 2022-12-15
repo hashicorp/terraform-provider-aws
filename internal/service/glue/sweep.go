@@ -151,7 +151,11 @@ func sweepClassifiers(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting Glue Classifier: %s", name)
-			err := DeleteClassifier(conn, name)
+			r := ResourceClassifier()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			err := r.Delete(d, client)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Glue Classifier %s: %s", name, err)
 			}

@@ -4,24 +4,19 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"go/format"
-	"log"
 	"os"
 	"regexp"
 	"strings"
-	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
 	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	filename = `tags_gen.go`
-
 	sdkV1 = 1
 	sdkV2 = 2
 )
@@ -34,6 +29,8 @@ var (
 	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
 
+	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
@@ -49,7 +46,7 @@ var (
 	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
 	tagType               = flag.String("TagType", "Tag", "tagType")
 	tagType2              = flag.String("TagType2", "", "tagType")
-	TagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
+	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
 	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
 	tagTypeKeyElem        = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
 	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
@@ -57,6 +54,7 @@ var (
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
+	updateTagsFunc        = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
@@ -82,7 +80,7 @@ type TemplateBody struct {
 	updateTags       string
 }
 
-func NewTemplateBody(version int, kvtValues bool) *TemplateBody {
+func newTemplateBody(version int, kvtValues bool) *TemplateBody {
 	switch version {
 	case sdkV1:
 		return &TemplateBody{
@@ -123,6 +121,8 @@ type TemplateData struct {
 	ClientType             string
 	ServicePackage         string
 
+	GetTagFunc              string
+	ListTagsFunc            string
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
 	ListTagsInIDNeedSlice   string
@@ -152,6 +152,7 @@ type TemplateData struct {
 	UntagInNeedTagType      bool
 	UntagInTagsElem         string
 	UntagOp                 string
+	UpdateTagsFunc          string
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
@@ -164,19 +165,25 @@ type TemplateData struct {
 }
 
 func main() {
-	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
 
+	filename := `tags_gen.go`
+	if args := flag.Args(); len(args) > 0 {
+		filename = args[0]
+	}
+
+	g := common.NewGenerator()
+
 	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
-		log.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
+		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
 	awsPkg, err := names.AWSGoPackage(servicePackage, *sdkVersion)
 
 	if err != nil {
-		log.Fatalf("encountered: %s", err)
+		g.Fatalf("encountered: %s", err)
 	}
 
 	var awsIntfPkg string
@@ -187,7 +194,7 @@ func main() {
 	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
 
 	if err != nil {
-		log.Fatalf("encountered: %s", err)
+		g.Fatalf("encountered: %s", err)
 	}
 
 	var clientType string
@@ -219,6 +226,8 @@ func main() {
 		StrConvPkg:      awsPkg == "autoscaling",
 		TfResourcePkg:   *getTag,
 
+		GetTagFunc:              *getTagFunc,
+		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
 		ListTagsInIDElem:        *listTagsInIDElem,
 		ListTagsInIDNeedSlice:   *listTagsInIDNeedSlice,
@@ -237,8 +246,8 @@ func main() {
 		TagResTypeElem:          *tagResTypeElem,
 		TagType:                 *tagType,
 		TagType2:                *tagType2,
-		TagTypeAddBoolElem:      *TagTypeAddBoolElem,
-		TagTypeAddBoolElemSnake: ToSnakeCase(*TagTypeAddBoolElem),
+		TagTypeAddBoolElem:      *tagTypeAddBoolElem,
+		TagTypeAddBoolElemSnake: toSnakeCase(*tagTypeAddBoolElem),
 		TagTypeIDElem:           *tagTypeIDElem,
 		TagTypeKeyElem:          *tagTypeKeyElem,
 		TagTypeValElem:          *tagTypeValElem,
@@ -247,9 +256,11 @@ func main() {
 		UntagInNeedTagType:      *untagInNeedTagType,
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
+		UpdateTagsFunc:          *updateTagsFunc,
 	}
 
-	templateBody := NewTemplateBody(*sdkVersion, *kvtValues)
+	templateBody := newTemplateBody(*sdkVersion, *kvtValues)
+	d := g.NewGoFileAppenderDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,
@@ -258,64 +269,44 @@ func main() {
 			templateData.AWSService = ""
 			templateData.TagPackage = ""
 		}
-		writeTemplate(templateBody.header, "header", templateData)
+
+		if err := d.WriteTemplate("header", templateBody.header, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *getTag {
-		writeTemplate(templateBody.getTag, "gettag", templateData)
+		if err := d.WriteTemplate("gettag", templateBody.getTag, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *listTags {
-		writeTemplate(templateBody.listTags, "listtags", templateData)
+		if err := d.WriteTemplate("listtags", templateBody.listTags, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *serviceTagsMap {
-		writeTemplate(templateBody.serviceTagsMap, "servicetagsmap", templateData)
+		if err := d.WriteTemplate("servicetagsmap", templateBody.serviceTagsMap, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *serviceTagsSlice {
-		writeTemplate(templateBody.serviceTagsSlice, "servicetagsslice", templateData)
+		if err := d.WriteTemplate("servicetagsslice", templateBody.serviceTagsSlice, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 
 	if *updateTags {
-		writeTemplate(templateBody.updateTags, "updatetags", templateData)
+		if err := d.WriteTemplate("updatetags", templateBody.updateTags, templateData); err != nil {
+			g.Fatalf("error: %s", err.Error())
+		}
 	}
 }
 
-func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	contents, err := format.Source(buffer.Bytes())
-	if err != nil {
-		log.Fatalf("error formatting generated file: %s", err)
-	}
-
-	if _, err := f.Write(contents); err != nil {
-		f.Close() // ignore error; Write error takes precedence
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func ToSnakeCase(str string) string {
+func toSnakeCase(str string) string {
 	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
 	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)

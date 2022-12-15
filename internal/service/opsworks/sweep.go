@@ -52,6 +52,9 @@ func init() {
 	resource.AddTestSweepers("aws_opsworks_rds_db_instance", &resource.Sweeper{
 		Name: "aws_opsworks_rds_db_instance",
 		F:    sweepRDSDBInstance,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
 	})
 
 	resource.AddTestSweepers("aws_opsworks_user_profile", &resource.Sweeper{
@@ -298,7 +301,7 @@ func sweepLayers(region string) error {
 			}
 
 			l := &opsworksLayerType{}
-			r := l.SchemaResource()
+			r := l.resourceSchema()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(layer.LayerId))
 
