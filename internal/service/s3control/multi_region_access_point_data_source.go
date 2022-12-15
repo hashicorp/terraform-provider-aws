@@ -81,7 +81,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("error reading S3 Multi Region Access Point (%s): missing access point", accountID)
 	}
 
-	d.SetId(accountID)
+	d.SetId(MultiRegionAccessPointCreateResourceID(accountID, name))
 	d.Set("created_at", aws.TimeValue(output.AccessPoint.CreatedAt).Format(time.RFC3339))
 	d.Set("name", output.AccessPoint.Name)
 	d.Set("public_access_block", output.AccessPoint.PublicAccessBlock)
