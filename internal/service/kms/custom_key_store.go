@@ -179,7 +179,11 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("custom_key_store_type", out.CustomKeyStoreType)
 	d.Set("cloud_hsm_cluster_id", out.CloudHsmClusterId)
 	d.Set("trust_anchor_certificate", out.TrustAnchorCertificate)
-	//TODO: Continue here
+
+	d.Set("xks_proxy_connectivity", out.XksProxyConfiguration.Connectivity)
+	d.Set("xks_proxy_uri_endpoint", out.XksProxyConfiguration.UriEndpoint)
+	d.Set("xks_proxy_uri_path", out.XksProxyConfiguration.UriPath)
+	d.Set("xks_proxy_vpc_endpoint_service_name", out.XksProxyConfiguration.VpcEndpointServiceName)
 
 	return nil
 }
