@@ -208,6 +208,31 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		update = true
 	}
 
+	if d.HasChange("xks_proxy_authentication_credential") {
+		in.XksProxyAuthenticationCredential = expandXksProxyAuthenticationCredential(d.Get("xks_proxy_authentication_credential").(*schema.Set).List())
+		update = true
+	}
+
+	if d.HasChange("xks_proxy_connectivity") {
+		in.XksProxyConnectivity = aws.String(d.Get("xks_proxy_connectivity").(string))
+		update = true
+	}
+
+	if d.HasChange("xks_proxy_uri_endpoint") {
+		in.XksProxyUriEndpoint = aws.String(d.Get("xks_proxy_uri_endpoint").(string))
+		update = true
+	}
+
+	if d.HasChange("xks_proxy_uri_path") {
+		in.XksProxyUriPath = aws.String(d.Get("xks_proxy_uri_path").(string))
+		update = true
+	}
+
+	if d.HasChange("xks_proxy_vpc_endpoint_service_name") {
+		in.XksProxyVpcEndpointServiceName = aws.String(d.Get("xks_proxy_vpc_endpoint_service_name").(string))
+		update = true
+	}
+
 	if !update {
 		return nil
 	}
