@@ -261,18 +261,6 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 	})
 }
 
-// func testAccComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
-// 	return func(s []*terraform.InstanceState) error {
-// 		for i, f := range fs {
-// 			if err := f(s); err != nil {
-// 				return fmt.Errorf("check %d/%d error: %s", i+1, len(fs), err)
-// 			}
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccCheckConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
