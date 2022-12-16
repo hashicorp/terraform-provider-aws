@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccRDSSnapshot_basic(t *testing.T) {
@@ -38,6 +39,38 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSSnapshot_share(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBSnapshot
+	resourceName := "aws_db_snapshot.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotConfig_share(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
 				),
 			},
 			{
@@ -119,7 +152,7 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
-					testAccCheckDBSnapshotDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,20 +219,6 @@ func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *rds.DBSnapsh
 			}
 		}
 		return fmt.Errorf("Error finding RDS DB Snapshot %s", rs.Primary.ID)
-	}
-}
-
-func testAccCheckDBSnapshotDisappears(ctx context.Context, snapshot *rds.DBSnapshot) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
-
-		if _, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{
-			DBSnapshotIdentifier: snapshot.DBSnapshotIdentifier,
-		}); err != nil {
-			return err
-		}
-
-		return nil
 	}
 }
 
@@ -271,4 +290,18 @@ resource "aws_db_snapshot" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccSnapshotConfig_share(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSnapshotBaseConfig(rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.test.id
+  db_snapshot_identifier = %[1]q
+  shared_accounts        = ["all"]
+}
+`, rName))
 }

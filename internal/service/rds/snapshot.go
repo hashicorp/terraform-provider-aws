@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -33,17 +34,6 @@ func ResourceSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"db_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -51,6 +41,16 @@ func ResourceSnapshot() *schema.Resource {
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"db_instance_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"db_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"db_snapshot_arn": {
 				Type:     schema.TypeString,
@@ -88,6 +88,11 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"shared_accounts": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"source_db_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -108,12 +113,12 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -151,6 +156,19 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AWS DB Snapshot (%s): waiting for completion: %s", dBInstanceIdentifier, err)
+	}
+
+	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
+		attrInput := &rds.ModifyDBSnapshotAttributeInput{
+			DBSnapshotIdentifier: aws.String(dBInstanceIdentifier),
+			AttributeName:        aws.String("restore"),
+			ValuesToAdd:          flex.ExpandStringSet(v.(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBSnapshotAttribute(attrInput)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "error modifying AWS DB Snapshot Attribute %s: %s", dBInstanceIdentifier, err)
+		}
 	}
 
 	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
@@ -216,6 +234,19 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
+	attrInput := &rds.DescribeDBSnapshotAttributesInput{
+		DBSnapshotIdentifier: aws.String(d.Id()),
+	}
+
+	attrResp, err := conn.DescribeDBSnapshotAttributes(attrInput)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "error describing AWS DB Snapshot Attribute %s: %s", d.Id(), err)
+	}
+
+	attr := attrResp.DBSnapshotAttributesResult.DBSnapshotAttributes[0]
+
+	d.Set("shared_accounts", flex.FlattenStringSet(attr.AttributeValues))
+
 	return diags
 }
 
@@ -242,6 +273,27 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
+
+	if d.HasChange("shared_accounts") {
+		o, n := d.GetChange("shared_accounts")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		additionList := ns.Difference(os)
+		removalList := os.Difference(ns)
+
+		attrInput := &rds.ModifyDBSnapshotAttributeInput{
+			DBSnapshotIdentifier: aws.String(d.Id()),
+			AttributeName:        aws.String("restore"),
+			ValuesToAdd:          flex.ExpandStringSet(additionList),
+			ValuesToRemove:       flex.ExpandStringSet(removalList),
+		}
+
+		_, err := conn.ModifyDBSnapshotAttribute(attrInput)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "error modifying AWS DB Snapshot Attribute %s: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
