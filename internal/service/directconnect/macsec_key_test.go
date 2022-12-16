@@ -88,7 +88,6 @@ func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
 
 // testAccDirecConnectMacSecGenerateKey generates a 64-character hex string to be used as CKN or CAK
 func testAccDirecConnectMacSecGenerateHex() string {
-
 	s := make([]byte, 32)
 	if _, err := rand.Read(s); err != nil {
 		return ""
