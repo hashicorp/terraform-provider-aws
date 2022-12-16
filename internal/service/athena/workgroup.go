@@ -69,6 +69,11 @@ func ResourceWorkGroup() *schema.Resource {
 								},
 							},
 						},
+						"execution_role": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -350,6 +355,10 @@ func expandWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguratio
 		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
+	if v, ok := m["execution_role"]; ok {
+		configuration.ExecutionRole = aws.String(v.(string))
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
 		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
 	}
@@ -402,6 +411,10 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGroupConfi
 
 	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
+	}
+
+	if v, ok := m["execution_role"]; ok {
+		configurationUpdates.ExecutionRole = aws.String(v.(string))
 	}
 
 	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
@@ -512,6 +525,7 @@ func flattenWorkGroupConfiguration(configuration *athena.WorkGroupConfiguration)
 		"bytes_scanned_cutoff_per_query":     aws.Int64Value(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
 		"engine_version":                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                     aws.StringValue(configuration.ExecutionRole),
 		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.BoolValue(configuration.RequesterPaysEnabled),
