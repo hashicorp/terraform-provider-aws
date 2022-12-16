@@ -173,7 +173,7 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(out.DBSnapshot.DBSnapshotIdentifier))
 
-	err = waitSnapshotCopyAvailable(ctx, d, meta)
+	err = waitSnapshotAvailable(ctx, d, meta)
 	if err != nil {
 		return diag.FromErr(err)
 	}

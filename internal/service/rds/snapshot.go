@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -180,22 +181,16 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := &rds.DescribeDBSnapshotsInput{
-		DBSnapshotIdentifier: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeDBSnapshotsWithContext(ctx, params)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		log.Printf("[WARN] AWS DB Snapshot (%s) is already gone", d.Id())
+	snapshot, err := FindDBSnapshotByID(ctx, conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing AWS DB Snapshot %s: %s", d.Id(), err)
+		return diag.Errorf("reading RDS DB snapshot (%s): %s", d.Id(), err)
 	}
-
-	snapshot := resp.DBSnapshots[0]
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
