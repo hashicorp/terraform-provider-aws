@@ -289,8 +289,6 @@ func testAccSnapshotConfig_share(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotBaseConfig(rName),
 		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
