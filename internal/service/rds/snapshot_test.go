@@ -3,18 +3,18 @@ package rds_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSSnapshot_basic(t *testing.T) {
@@ -71,6 +71,7 @@ func TestAccRDSSnapshot_share(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
 				),
 			},
 			{
@@ -169,28 +170,17 @@ func testAccCheckDBSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			request := &rds.DescribeDBSnapshotsInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.ID),
-			}
+			log.Printf("[DEBUG] Checking if RDS DB Snapshot %s exists", rs.Primary.ID)
 
-			resp, err := conn.DescribeDBSnapshotsWithContext(ctx, request)
+			_, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
+			// verify error is what we want
+			if tfresource.NotFound(err) {
 				continue
-			}
-
-			if err == nil {
-				for _, dbSnapshot := range resp.DBSnapshots {
-					if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) == rs.Primary.ID {
-						return fmt.Errorf("AWS DB Snapshot is still exist: %s", rs.Primary.ID)
-					}
-				}
 			}
 
 			return err
 		}
-
-		return nil
 	}
 }
 
@@ -207,18 +197,14 @@ func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *rds.DBSnapsh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		request := &rds.DescribeDBSnapshotsInput{
-			DBSnapshotIdentifier: aws.String(rs.Primary.ID),
+		out, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
-		response, err := conn.DescribeDBSnapshotsWithContext(ctx, request)
-		if err == nil {
-			if response.DBSnapshots != nil && len(response.DBSnapshots) > 0 {
-				*v = *response.DBSnapshots[0]
-				return nil
-			}
-		}
-		return fmt.Errorf("Error finding RDS DB Snapshot %s", rs.Primary.ID)
+		ci = out
+
+		return nil
 	}
 }
 

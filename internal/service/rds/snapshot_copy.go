@@ -199,10 +199,9 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
-
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	d.Set("availability_zone", snapshot.AvailabilityZone)
-	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
+	d.Set("db_snapshot_arn", arn)
 	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
 	d.Set("engine_version", snapshot.EngineVersion)
