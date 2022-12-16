@@ -1,7 +1,8 @@
 ```release-note:new-resource
-aws_dx_macsec_key
+aws_dx_macsec_key_association
 ```
 
 ```release-note:enhancement
 resource/aws_dx_connection: Add arguments to enable MACsec support
+resource/aws_dx_connection: Add `skip_destroy` argument
 ```

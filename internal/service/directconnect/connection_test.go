@@ -181,6 +181,28 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 	})
 }
 
+func TestAccDirectConnectConnection_skipDestroy(t *testing.T) {
+	var connection directconnect.Connection
+	resourceName := "aws_dx_connection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionNoDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_skipDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectConnection_tags(t *testing.T) {
 	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
@@ -279,6 +301,22 @@ func testAccCheckConnectionExists(name string, v *directconnect.Connection) reso
 	}
 }
 
+func testAccCheckConnectionNoDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_dx_connection" {
+			continue
+		}
+
+		_, err := tfdirectconnect.FindConnectionByID(conn, rs.Primary.ID)
+
+		return err
+	}
+
+	return nil
+}
+
 func testAccConnectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
@@ -299,10 +337,11 @@ resource "aws_dx_connection" "test" {
 func testAccConnectionConfig_encryptionModeMustEncrypt(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test" {
-  name = %[1]q
-  location = "CSOW"
-  bandwidth = "100Gbps"
+  name            = %[1]q
+  location        = "CSOW"
+  bandwidth       = "100Gbps"
   encryption_mode = "must_encrypt"
+  skip_destroy    = true
 }
 `, rName)
 }
@@ -310,11 +349,12 @@ resource "aws_dx_connection" "test" {
 func testAccConnectionConfig_encryptionMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test" {
-  name = %[1]q
-  location = "CSOW"
-  bandwidth = "100Gbps"
+  name            = %[1]q
+  location        = "CSOW"
+  bandwidth       = "100Gbps"
   encryption_mode = "should_encrypt"
-  }
+  skip_destroy    = true
+}
 `, rName)
 }
 
@@ -363,6 +403,24 @@ resource "aws_dx_connection" "test" {
   provider_name = data.aws_dx_location.test.available_providers[0]
 }
 `, rName)
+}
+
+func testAccConnectionConfig_skipDestroy(rName string) string {
+	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+  idx            = min(2, length(local.location_codes) - 1)
+}
+
+resource "aws_dx_connection" "test" {
+  name         = %[1]q
+  bandwidth    = "1Gbps"
+  location     = local.location_codes[local.idx]
+  skip_destroy = true
+}
+	`, rName)
 }
 
 func testAccConnectionConfig_tags1(rName, tagKey1, tagValue1 string) string {

@@ -93,6 +93,11 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vlan_id": {
@@ -226,6 +231,11 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Direct Connect Connection: %s", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	return deleteConnection(conn, d.Id(), waitConnectionDeleted)
