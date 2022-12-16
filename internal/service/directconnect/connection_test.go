@@ -43,9 +43,10 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 			},
 			// Test import.
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
 			},
 		},
 	})
@@ -84,15 +85,17 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 	dxName := "DX_CONNECTION_NAME"
 	connectionName := os.Getenv(dxName)
 	if connectionName == "" {
-		t.Skipf("Environment variable %s is not set", connectionName)
+		t.Skipf("Environment variable %s is not set", dxName)
 	}
 
+	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config:             testAccConnectionConfig_encryptionMode(connectionName),
@@ -102,9 +105,14 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 				ImportStatePersist: true,
 			},
 			{
-				Config: testAccConnectionConfig_encryptionModeMustEncrypt(resourceName),
+				Config: testAccConnectionConfig_encryptionModeMustEncrypt(connectionName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(resourceName, &connection),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(connectionId)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "must_encrypt"),
+					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
 				),
 			},
 		},
@@ -137,11 +145,10 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// Ignore the "macsec_requested" attribute as isn't returned by the API during read/refresh
-				ImportStateVerifyIgnore: []string{"request_macsec"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
 			},
 		},
 	})
@@ -173,9 +180,10 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 			},
 			// Test import.
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
 			},
 		},
 	})
@@ -225,9 +233,10 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 			},
 			// Test import.
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
 			},
 			{
 				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -251,6 +260,18 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 		},
 	})
 }
+
+// func testAccComposeImportStateCheck(fs ...resource.ImportStateCheckFunc) resource.ImportStateCheckFunc {
+// 	return func(s []*terraform.InstanceState) error {
+// 		for i, f := range fs {
+// 			if err := f(s); err != nil {
+// 				return fmt.Errorf("check %d/%d error: %s", i+1, len(fs), err)
+// 			}
+// 		}
+
+// 		return nil
+// 	}
+// }
 
 func testAccCheckConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
