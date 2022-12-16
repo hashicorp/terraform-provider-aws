@@ -81,7 +81,6 @@ func ResourceRuleGroup() *schema.Resource {
 												"ip_set_reference": {
 													Type:     schema.TypeList,
 													Required: true,
-													MaxItems: 5,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"reference_arn": {

@@ -77,8 +77,10 @@ func TestAccNetworkFirewallRuleGroup_Basic_referenceSets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", "1"),
 				),
 			},
 			{
@@ -111,8 +113,10 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", "1"),
 				),
 			},
 			{
@@ -130,8 +134,10 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", "1"),
 				),
 			},
 		},
@@ -1016,8 +1022,18 @@ resource "aws_networkfirewall_rule_group" "test" {
 
 func testAccRuleGroupConfig_referenceSets(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "this" {
+resource "aws_ec2_managed_prefix_list" "example1" {
   name           = "All VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example2" {
+  name           = "SOME VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example3" {
+  name           = "FEW VPC CIDR-s"
   address_family = "IPv4"
   max_entries    = 5
 }
@@ -1028,9 +1044,21 @@ resource "aws_networkfirewall_rule_group" "test" {
   rule_group {
     reference_sets {
       ip_set_references {
-        key = "example"
+        key = "example1"
         ip_set_reference {
-          reference_arn = aws_ec2_managed_prefix_list.this.arn
+          reference_arn = aws_ec2_managed_prefix_list.example1.arn
+        }
+      }
+      ip_set_references {
+        key = "example2"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example2.arn
+        }
+      }
+      ip_set_references {
+        key = "example3"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example3.arn
         }
       }
     }
@@ -1048,8 +1076,18 @@ resource "aws_networkfirewall_rule_group" "test" {
 
 func testAccRuleGroupConfig_referenceSets1(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "this" {
+resource "aws_ec2_managed_prefix_list" "example1" {
   name           = "All VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example2" {
+  name           = "SOME VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example3" {
+  name           = "FEW VPC CIDR-s"
   address_family = "IPv4"
   max_entries    = 5
 }
@@ -1060,9 +1098,21 @@ resource "aws_networkfirewall_rule_group" "test" {
   rule_group {
     reference_sets {
       ip_set_references {
-        key = "example1"
+        key = "example11"
         ip_set_reference {
-          reference_arn = aws_ec2_managed_prefix_list.this.arn
+          reference_arn = aws_ec2_managed_prefix_list.example1.arn
+        }
+      }
+      ip_set_references {
+        key = "example21"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example2.arn
+        }
+      }
+      ip_set_references {
+        key = "example31"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example3.arn
         }
       }
     }
