@@ -77,6 +77,6 @@ func (p *servicePackage) registerSDKResourceFactory(typeName string, factory fun
 }
 
 var (
-	sp_                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = sp_
+	_sp                                = &servicePackage{}
+	ServicePackage intf.ServicePackage = _sp
 )
