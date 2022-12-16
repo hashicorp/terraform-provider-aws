@@ -36,6 +36,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", networkfirewall.GeneratedRulesTypeAllowlist),
@@ -43,6 +44,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -56,6 +58,93 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallRuleGroup_Basic_referenceSets(t *testing.T) {
+	var ruleGroup networkfirewall.DescribeRuleGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_referenceSets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &ruleGroup),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
+	var ruleGroup networkfirewall.DescribeRuleGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_referenceSets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &ruleGroup),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleGroupConfig_referenceSets1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &ruleGroup),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", "1"),
+				),
+			},
+		},
+	})
+}
 func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -964,6 +1053,114 @@ resource "aws_networkfirewall_rule_group" "test" {
   name     = %q
   type     = "STATEFUL"
   rule_group {
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "ALLOWLIST"
+        target_types         = ["HTTP_HOST"]
+        targets              = ["test.example.com"]
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_referenceSets(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "example1" {
+  name           = "All VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example2" {
+  name           = "SOME VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example3" {
+  name           = "FEW VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity = 100
+  name     = %q
+  type     = "STATEFUL"
+  rule_group {
+    reference_sets {
+      ip_set_references {
+        key = "example1"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example1.arn
+        }
+      }
+      ip_set_references {
+        key = "example2"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example2.arn
+        }
+      }
+      ip_set_references {
+        key = "example3"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example3.arn
+        }
+      }
+    }
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "ALLOWLIST"
+        target_types         = ["HTTP_HOST"]
+        targets              = ["test.example.com"]
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_referenceSets1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "example1" {
+  name           = "All VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example2" {
+  name           = "SOME VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_ec2_managed_prefix_list" "example3" {
+  name           = "FEW VPC CIDR-s"
+  address_family = "IPv4"
+  max_entries    = 5
+}
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity = 100
+  name     = %q
+  type     = "STATEFUL"
+  rule_group {
+    reference_sets {
+      ip_set_references {
+        key = "example11"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example1.arn
+        }
+      }
+      ip_set_references {
+        key = "example21"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example2.arn
+        }
+      }
+      ip_set_references {
+        key = "example31"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.example3.arn
+        }
+      }
+    }
     rules_source {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
