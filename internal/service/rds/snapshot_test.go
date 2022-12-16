@@ -79,6 +79,13 @@ func TestAccRDSSnapshot_share(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+				),
+			},
 		},
 	})
 }
