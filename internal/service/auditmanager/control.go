@@ -28,7 +28,7 @@ import (
 )
 
 func init() {
-	sp_.registerFrameworkResourceFactory(newResourceControl)
+	_sp.registerFrameworkResourceFactory(newResourceControl)
 }
 
 func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {

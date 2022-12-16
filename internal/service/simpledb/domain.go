@@ -22,7 +22,7 @@ import (
 )
 
 func init() {
-	sp_.registerFrameworkResourceFactory(newResourceDomain)
+	_sp.registerFrameworkResourceFactory(newResourceDomain)
 }
 
 // newResourceDomain instantiates a new Resource for the aws_simpledb_domain resource.

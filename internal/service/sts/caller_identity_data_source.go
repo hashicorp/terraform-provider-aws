@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	sp_.registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
 }
 
 // newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.

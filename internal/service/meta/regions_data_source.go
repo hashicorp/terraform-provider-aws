@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	sp_.registerFrameworkDataSourceFactory(newDataSourceRegions)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceRegions)
 }
 
 // newDataSourceRegions instantiates a new DataSource for the aws_regions data source.

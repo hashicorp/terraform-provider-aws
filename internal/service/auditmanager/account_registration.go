@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	sp_.registerFrameworkResourceFactory(newResourceAccountRegistration)
+	_sp.registerFrameworkResourceFactory(newResourceAccountRegistration)
 }
 
 func newResourceAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {

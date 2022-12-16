@@ -29,7 +29,7 @@ import (
 )
 
 func init() {
-	sp_.registerFrameworkResourceFactory(newResourceMultiplexProgram)
+	_sp.registerFrameworkResourceFactory(newResourceMultiplexProgram)
 }
 
 func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {

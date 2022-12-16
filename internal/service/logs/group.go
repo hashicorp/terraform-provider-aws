@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	sp_.registerSDKResourceFactory("aws_cloudwatch_log_group", resourceGroup)
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_group", resourceGroup)
 }
 
 func resourceGroup() *schema.Resource {

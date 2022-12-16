@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	sp_.registerFrameworkDataSourceFactory(newDataSourceService)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceService)
 }
 
 // newDataSourceService instantiates a new DataSource for the aws_service data source.
