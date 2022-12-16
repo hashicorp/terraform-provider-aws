@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -283,7 +284,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssmcontacts"
-	"github.com/aws/aws-sdk-go/service/ssmincidents"
 	"github.com/aws/aws-sdk-go/service/sso"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssooidc"
@@ -552,7 +552,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.SQSConn = sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SQS])}))
 	client.SSMConn = ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSM])}))
 	client.SSMContactsConn = ssmcontacts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSMContacts])}))
-	client.SSMIncidentsConn = ssmincidents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSMIncidents])}))
 	client.SSOConn = sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSO])}))
 	client.SSOAdminConn = ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOAdmin])}))
 	client.SSOOIDCConn = ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOOIDC])}))
@@ -669,6 +668,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.SESV2Client = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
 		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
 			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.SSMIncidentsClient = ssmincidents.NewFromConfig(cfg, func(o *ssmincidents.Options) {
+		if endpoint := c.Endpoints[names.SSMIncidents]; endpoint != "" {
+			o.EndpointResolver = ssmincidents.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.SchedulerClient = scheduler.NewFromConfig(cfg, func(o *scheduler.Options) {

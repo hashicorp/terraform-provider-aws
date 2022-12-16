@@ -327,7 +327,7 @@ sns,sns,sns,sns,,sns,,,SNS,SNS,,1,,,aws_sns_,,sns_,SNS (Simple Notification),Ama
 sqs,sqs,sqs,sqs,,sqs,,,SQS,SQS,,1,,,aws_sqs_,,sqs_,SQS (Simple Queue),Amazon,,,,,
 ssm,ssm,ssm,ssm,,ssm,,,SSM,SSM,,1,2,,aws_ssm_,,ssm_,SSM (Systems Manager),AWS,,,,,
 ssm-contacts,ssmcontacts,ssmcontacts,ssmcontacts,,ssmcontacts,,,SSMContacts,SSMContacts,,1,,,aws_ssmcontacts_,,ssmcontacts_,SSM Incident Manager Contacts,AWS,,,,,
-ssm-incidents,ssmincidents,ssmincidents,ssmincidents,,ssmincidents,,,SSMIncidents,SSMIncidents,,1,,,aws_ssmincidents_,,ssmincidents_,SSM Incident Manager Incidents,AWS,,,,,
+ssm-incidents,ssmincidents,ssmincidents,ssmincidents,,ssmincidents,,,SSMIncidents,SSMIncidents,,,2,,aws_ssmincidents_,,ssmincidents_,SSM Incident Manager Incidents,AWS,,,,,
 sso,sso,sso,sso,,sso,,,SSO,SSO,,1,,,aws_sso_,,sso_,SSO (Single Sign-On),AWS,,,,,
 sso-admin,ssoadmin,ssoadmin,ssoadmin,,ssoadmin,,,SSOAdmin,SSOAdmin,,1,,,aws_ssoadmin_,,ssoadmin_,SSO Admin,AWS,,,,,
 identitystore,identitystore,identitystore,identitystore,,identitystore,,,IdentityStore,IdentityStore,,,2,,aws_identitystore_,,identitystore_,SSO Identity Store,AWS,,,,,

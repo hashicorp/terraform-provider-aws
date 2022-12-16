@@ -482,7 +482,7 @@ resource "aws_ecs_task_set" "test" {
 
 func testAccTaskSetConfig_capacityProviderStrategy(rName string, weight, base int) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		testAccTaskSetBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
