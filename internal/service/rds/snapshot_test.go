@@ -209,7 +209,7 @@ func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *rds.DBSnapsh
 			return err
 		}
 
-		ci = out
+		v = out
 
 		return nil
 	}
