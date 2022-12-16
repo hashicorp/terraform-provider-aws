@@ -44,7 +44,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

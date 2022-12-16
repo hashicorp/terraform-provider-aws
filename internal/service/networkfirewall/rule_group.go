@@ -97,77 +97,6 @@ func ResourceRuleGroup() *schema.Resource {
 								},
 							},
 						},
-						"rule_variables": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ip_sets": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"key": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
-													),
-												},
-												"ip_set": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"definition": {
-																Type:     schema.TypeSet,
-																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"port_sets": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"key": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
-													),
-												},
-												"port_set": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"definition": {
-																Type:     schema.TypeSet,
-																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
 						"rules_source": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -395,6 +324,77 @@ func ResourceRuleGroup() *schema.Resource {
 																		},
 																	},
 																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"rule_variables": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip_sets": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
+												},
+												"ip_set": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"definition": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"port_sets": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
+												},
+												"port_set": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"definition": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 														},
 													},
