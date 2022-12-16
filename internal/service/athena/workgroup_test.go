@@ -238,6 +238,36 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 	})
 }
 
+func TestAccAthenaWorkGroup_configurationExecutionRole(t *testing.T) {
+	var workgroup1 athena.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+	iamRoleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_configurationExecutionRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execution_role", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -753,6 +783,51 @@ resource "aws_athena_workgroup" "test" {
   }
 }
 `, rName, engineVersion)
+}
+
+func testAccWorkGroupConfig_configurationExecutionRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = <<EOF
+{
+ "Version": "2012-10-17",
+ "Statement": [
+  {
+   "Action": "sts:AssumeRole",
+   "Principal": {
+     "Service": "athena.amazonaws.com"
+   },
+   "Effect": "Allow",
+   "Sid": ""
+  }
+ ]
+}
+EOF
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    execution_role                     = aws_iam_role.test.arn
+    enforce_workgroup_configuration    = false
+    publish_cloudwatch_metrics_enabled = false
+
+	engine_version {
+	  selected_engine_version = "PySpark engine version 3"
+	}
+
+	result_configuration {
+	  output_location = "s3://${aws_s3_bucket.test.id}/logs/athena_spark/"
+	}
+  }
+}
+`, rName)
 }
 
 func testAccWorkGroupConfig_configurationPublishCloudWatchMetricsEnabled(rName string, publishCloudwatchMetricsEnabled bool) string {
