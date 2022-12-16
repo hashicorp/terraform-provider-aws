@@ -1813,18 +1813,18 @@ resource "aws_cloudwatch_event_target" "test" {
 
   ecs_target {
     task_definition_arn = aws_ecs_task_definition.task.arn
-    launch_type = "EC2"
-	
-	ordered_placement_strategy {
-	  type = "spread"
-	  field = "attribute:ecs.availability-zone"
-	}
-	   
-	ordered_placement_strategy {
-	  type = "spread"
-	  field = "instanceId"
-	}
-	
+    launch_type         = "EC2"
+
+    ordered_placement_strategy {
+      type  = "spread"
+      field = "attribute:ecs.availability-zone"
+    }
+
+    ordered_placement_strategy {
+      type  = "spread"
+      field = "instanceId"
+    }
+
   }
 }
 
@@ -1855,7 +1855,7 @@ resource "aws_autoscaling_group" "test" {
 
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
-  
+
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
     managed_termination_protection = "DISABLED"
@@ -1870,15 +1870,16 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "test" {
-  cluster_name = aws_ecs_cluster.test.name
-  capacity_providers = [ "%[1]s" ]
+  cluster_name       = aws_ecs_cluster.test.name
+  capacity_providers = ["%[1]s"]
 
   default_capacity_provider_strategy {
-	capacity_provider =  %[1]q
-	base              = 1
-	weight            = 100
+    capacity_provider = %[1]q
+    base              = 1
+    weight            = 100
   }
 }
+
 
 `, rName))
 }

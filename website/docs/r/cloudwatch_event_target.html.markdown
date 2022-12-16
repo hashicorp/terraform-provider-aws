@@ -482,6 +482,7 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to ecs resources.
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation.
 * `placement_constraint` - (Optional) An array of placement constraint objects to use for the task. You can specify up to 10 constraints per task (including constraints in the task definition and those specified at runtime). See Below.
+* `ordered_placement_strategy` - (Optional) An array of placement strategy objects to use for the task. You can specify a maximum of five strategy rules per task.
 * `enable_execute_command` - (Optional) Whether or not to enable the execute command functionality for the containers in this task. If true, this enables execute command functionality on all containers in the task.
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task.
 
@@ -505,6 +506,11 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `type` - (Required) Type of constraint. The only valid values at this time are `memberOf` and `distinctInstance`.
 * `expression` -  (Optional) Cluster Query Language expression to apply to the constraint. Does not need to be specified for the `distinctInstance` type. For more information, see [Cluster Query Language in the Amazon EC2 Container Service Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html).
+
+#### ordered_placement_strategy
+
+* `type` - (Required) Type of placement strategy. The only valid values at this time are `binpack`, `random` and `spread`.
+* `field` - (Optional) The field to apply the placement strategy against. For the `spread` placement strategy, valid values are `instanceId` (or `host`, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as `attribute:ecs.availability-zone`. For the `binpack` placement strategy, valid values are `cpu` and `memory`. For the `random` placement strategy, this field is not used. For more information, see [Amazon ECS task placement strategies](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html).
 
 ### batch_target
 

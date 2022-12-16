@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/events: Add `ordered_placement_strategy` argument in `aws_cloudwatch_event_target` with `ecs_target`
+```
