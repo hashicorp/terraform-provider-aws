@@ -139,7 +139,6 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(output.ConnectionId))
-	d.Set("request_macsec", d.Get("request_macsec").(bool))
 
 	return resourceConnectionRead(d, meta)
 }
@@ -218,9 +217,9 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+		arn := d.Get("arn").(string)
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Direct Connect Connection (%s) tags: %w", arn, err)
