@@ -83,6 +83,10 @@ func TestAccAppSync_serial(t *testing.T) {
 			"basic":      testAccAPICache_basic,
 			"disappears": testAccAPICache_disappears,
 		},
+		"Type": {
+			"basic":      testAccType_basic,
+			"disappears": testAccType_disappears,
+		},
 		"DomainName": {
 			"basic":       testAccDomainName_basic,
 			"disappears":  testAccDomainName_disappears,
