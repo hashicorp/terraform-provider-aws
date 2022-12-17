@@ -28,6 +28,7 @@ func ResourceType() *schema.Resource {
 			"api_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
