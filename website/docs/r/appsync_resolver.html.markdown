@@ -105,11 +105,11 @@ resource "aws_appsync_resolver" "Mutation_pipelineTest" {
 
 ```terraform
 resource "aws_appsync_resolver" "example" {
-  type              = "Query"
-  api_id            = aws_appsync_graphql_api.test.id
-  field             = "pipelineTest"
-  kind              = "PIPELINE"
-  code              = file("%[2]s")
+  type   = "Query"
+  api_id = aws_appsync_graphql_api.test.id
+  field  = "pipelineTest"
+  kind   = "PIPELINE"
+  code   = file("some-code-dir")
 
   runtime {
     name            = "APPSYNC_JS"
