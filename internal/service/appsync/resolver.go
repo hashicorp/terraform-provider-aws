@@ -52,8 +52,9 @@ func ResourceResolver() *schema.Resource {
 							},
 						},
 						"ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 3600),
 						},
 					},
 				},
