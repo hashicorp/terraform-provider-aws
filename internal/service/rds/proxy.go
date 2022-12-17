@@ -48,6 +48,11 @@ func ResourceProxy() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(rds.AuthScheme_Values(), false),
 						},
+						"client_password_auth_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(rds.ClientPasswordAuthType_Values(), false),
+						},
 						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -311,6 +316,10 @@ func expandProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 			userAuthConfig.AuthScheme = aws.String(v)
 		}
 
+		if v, ok := m["client_password_auth_type"].(string); ok && v != "" {
+			userAuthConfig.ClientPasswordAuthType = aws.String(v)
+		}
+
 		if v, ok := m["description"].(string); ok && v != "" {
 			userAuthConfig.Description = aws.String(v)
 		}
@@ -337,6 +346,7 @@ func flattenProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interfa
 	m := make(map[string]interface{})
 
 	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
+	m["client_password_auth_type"] = aws.StringValue(userAuthConfig.ClientPasswordAuthType)
 	m["description"] = aws.StringValue(userAuthConfig.Description)
 	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
 	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)
