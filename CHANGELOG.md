@@ -1,4 +1,9 @@
 ## 4.48.0 (Unreleased)
+
+FEATURES:
+
+* resource/aws_networkfirewall_rule_group: Add `reference_sets` configuration block ([#27421](https://github.com/hashicorp/terraform-provider-aws/issues/27421))
+
 ## 4.47.0 (December 15, 2022)
 
 FEATURES:
