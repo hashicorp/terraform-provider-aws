@@ -10,7 +10,7 @@ description: |-
 
 Provides an AppSync Resolver.
 
-## Example Usage VTL
+## Example Usage
 
 ```terraform
 resource "aws_appsync_graphql_api" "test" {
