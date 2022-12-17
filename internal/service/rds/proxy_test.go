@@ -40,9 +40,10 @@ func TestAccRDSProxy_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db-proxy:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
-						"auth_scheme": "SECRETS",
-						"description": "test",
-						"iam_auth":    "DISABLED",
+						"auth_scheme":               "SECRETS",
+						"description":               "test",
+						"iam_auth":                  "DISABLED",
+						"client_password_auth_type": "MYSQL_NATIVE_PASSWORD",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),

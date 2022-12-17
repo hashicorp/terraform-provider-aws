@@ -51,6 +51,7 @@ func ResourceProxy() *schema.Resource {
 						"client_password_auth_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(rds.ClientPasswordAuthType_Values(), false),
 						},
 						"description": {
