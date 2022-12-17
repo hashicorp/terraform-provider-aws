@@ -38,6 +38,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 				),
 			},
 			{
@@ -58,6 +59,51 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
 					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRUMAppMonitor_customEvents(t *testing.T) {
+	var appMon cloudwatchrum.AppMonitor
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rum_app_monitor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppMonitorConfig_customEvents(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
 				),
 			},
 		},
@@ -225,4 +271,17 @@ resource "aws_rum_app_monitor" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAppMonitorConfig_customEvents(rName, enabled string) string {
+	return fmt.Sprintf(`
+resource "aws_rum_app_monitor" "test" {
+  name   = %[1]q
+  domain = "localhost"
+
+  custom_events {
+    status = %[2]q
+  }
+}
+`, rName, enabled)
 }

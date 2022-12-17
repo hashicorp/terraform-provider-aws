@@ -99,6 +99,22 @@ func ResourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"custom_events": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cloudwatchrum.CustomEventsStatusDisabled,
+							ValidateFunc: validation.StringInSlice(cloudwatchrum.CustomEventsStatus_Values(), false),
+						},
+					},
+				},
+			},
 			"cw_log_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -142,6 +158,10 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.AppMonitorConfiguration = expandAppMonitorConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("custom_events"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CustomEvents = expandCustomEvents(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -177,6 +197,11 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("app_monitor_configuration", []interface{}{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
 		return diag.Errorf("setting app_monitor_configuration: %s", err)
 	}
+
+	if err := d.Set("custom_events", []interface{}{flattenCustomEvents(appMon.CustomEvents)}); err != nil {
+		return diag.Errorf("setting custom_events: %s", err)
+	}
+
 	d.Set("app_monitor_id", appMon.Id)
 	arn := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -215,6 +240,10 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if d.HasChange("app_monitor_configuration") {
 			input.AppMonitorConfiguration = expandAppMonitorConfiguration(d.Get("app_monitor_configuration").([]interface{})[0].(map[string]interface{}))
+		}
+
+		if d.HasChange("custom_events") {
+			input.CustomEvents = expandCustomEvents(d.Get("custom_events").([]interface{})[0].(map[string]interface{}))
 		}
 
 		if d.HasChange("cw_log_enabled") {
@@ -374,6 +403,34 @@ func flattenAppMonitorConfiguration(apiObject *cloudwatchrum.AppMonitorConfigura
 
 	if v := apiObject.ExcludedPages; v != nil {
 		tfMap["excluded_pages"] = flex.FlattenStringSet(v)
+	}
+
+	return tfMap
+}
+
+func expandCustomEvents(tfMap map[string]interface{}) *cloudwatchrum.CustomEvents {
+	if tfMap == nil {
+		return nil
+	}
+
+	config := &cloudwatchrum.CustomEvents{}
+
+	if v, ok := tfMap["status"].(string); ok && v != "" {
+		config.Status = aws.String(v)
+	}
+
+	return config
+}
+
+func flattenCustomEvents(apiObject *cloudwatchrum.CustomEvents) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["status"] = aws.StringValue(v)
 	}
 
 	return tfMap
