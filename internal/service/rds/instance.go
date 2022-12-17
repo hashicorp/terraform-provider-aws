@@ -294,7 +294,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"listener_endpoint": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
