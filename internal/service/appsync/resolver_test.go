@@ -899,15 +899,15 @@ resource "aws_appsync_function" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id      = aws_appsync_graphql_api.test.id
-  field       = "singlePost"
-  type        = "Query"
-  code        = file("%[2]s")
-  kind        = "PIPELINE"
+  api_id = aws_appsync_graphql_api.test.id
+  field  = "singlePost"
+  type   = "Query"
+  code   = file("%[2]s")
+  kind   = "PIPELINE"
 
   pipeline_config {
     functions = [aws_appsync_function.test.function_id]
-  }  
+  }
 
   runtime {
     name            = "APPSYNC_JS"
