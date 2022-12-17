@@ -39,7 +39,7 @@ func ResourceProxy() *schema.Resource {
 				Computed: true,
 			},
 			"auth": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -136,7 +136,7 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := rds.CreateDBProxyInput{
-		Auth:         expandProxyAuth(d.Get("auth").(*schema.Set).List()),
+		Auth:         expandProxyAuth(d.Get("auth").([]interface{})),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
@@ -231,7 +231,7 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
 		input := &rds.ModifyDBProxyInput{
-			Auth:           expandProxyAuth(d.Get("auth").(*schema.Set).List()),
+			Auth:           expandProxyAuth(d.Get("auth").([]interface{})),
 			DBProxyName:    aws.String(oName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
 			NewDBProxyName: aws.String(nName.(string)),
