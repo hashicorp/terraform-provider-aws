@@ -90,6 +90,8 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 
 	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
+	ckn := testAccDirecConnectMacSecGenerateHex()
+	cak := testAccDirecConnectMacSecGenerateHex()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -98,18 +100,29 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config:             testAccConnectionConfig_encryptionMode(connectionName),
+				Config:             testAccConnectionConfig_encryptionModeShouldEncrypt(connectionName, ckn, cak),
 				ResourceName:       resourceName,
 				ImportState:        true,
 				ImportStateId:      connectionId,
 				ImportStatePersist: true,
 			},
 			{
-				Config: testAccConnectionConfig_encryptionModeMustEncrypt(connectionName),
+				Config: testAccConnectionConfig_encryptionModeNoEncrypt(connectionName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &connection),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(connectionId)),
-					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "must_encrypt"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "no_encrypt"),
+					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+			{
+				Config: testAccConnectionConfig_encryptionModeShouldEncrypt(connectionName, ckn, cak),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(resourceName, &connection),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "should_encrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
@@ -343,19 +356,19 @@ resource "aws_dx_connection" "test" {
 `, rName)
 }
 
-func testAccConnectionConfig_encryptionModeMustEncrypt(rName string) string {
+func testAccConnectionConfig_encryptionModeNoEncrypt(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test" {
   name            = %[1]q
   location        = "CSOW"
   bandwidth       = "100Gbps"
-  encryption_mode = "must_encrypt"
+  encryption_mode = "no_encrypt"
   skip_destroy    = true
 }
 `, rName)
 }
 
-func testAccConnectionConfig_encryptionMode(rName string) string {
+func testAccConnectionConfig_encryptionModeShouldEncrypt(rName, ckn, cak string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test" {
   name            = %[1]q
@@ -364,7 +377,13 @@ resource "aws_dx_connection" "test" {
   encryption_mode = "should_encrypt"
   skip_destroy    = true
 }
-`, rName)
+
+resource "aws_dx_macsec_key_association" "test" {
+  connection_id = aws_dx_connection.test.id
+  ckn           = %[2]q
+  cak           = %[3]q
+}
+`, rName, ckn, cak)
 }
 
 func testAccConnectionConfig_macsecEnabled(rName string) string {

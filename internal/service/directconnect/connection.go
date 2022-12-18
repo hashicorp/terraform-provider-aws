@@ -181,6 +181,12 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("provider_name", connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
+	// d.Set("request_macsec", d.Get("request_macsec").(bool))
+
+	if !d.IsNewResource() && !d.Get("request_macsec").(bool) {
+		d.Set("request_macsec", aws.Bool(false))
+	}
+
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
@@ -214,6 +220,10 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateConnection(input)
 		if err != nil {
 			return fmt.Errorf("error modifying Direct Connect connection (%s) attributes: %s", d.Id(), err)
+		}
+
+		if _, err := waitConnectionConfirmed(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Direct Connect connection (%s) to become available: %w", d.Id(), err)
 		}
 	}
 
