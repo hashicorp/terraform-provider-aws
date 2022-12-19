@@ -449,6 +449,8 @@ service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
+service/opensearchserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearchserverless_'
 service/opsworks:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opsworks_'
 service/opsworkscm:
