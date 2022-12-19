@@ -1,4 +1,5 @@
-## 4.48.0 (Unreleased)
+## 4.49.0 (Unreleased)
+## 4.48.0 (December 19, 2022)
 
 FEATURES:
 
