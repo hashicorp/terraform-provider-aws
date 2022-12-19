@@ -71,9 +71,13 @@ func ResourceVPCAttachment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"appliance_mode_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"ipv6_support": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
@@ -407,6 +411,10 @@ func expandVpcOptions(tfMap map[string]interface{}) *networkmanager.VpcOptions {
 
 	apiObject := &networkmanager.VpcOptions{}
 
+	if v, ok := tfMap["appliance_mode_support"].(bool); ok {
+		apiObject.ApplianceModeSupport = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["ipv6_support"].(bool); ok {
 		apiObject.Ipv6Support = aws.Bool(v)
 	}
@@ -420,6 +428,10 @@ func flattenVpcOptions(apiObject *networkmanager.VpcOptions) map[string]interfac
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ApplianceModeSupport; v != nil {
+		tfMap["appliance_mode_support"] = aws.BoolValue(v)
+	}
 
 	if v := apiObject.Ipv6Support; v != nil {
 		tfMap["ipv6_support"] = aws.BoolValue(v)
