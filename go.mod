@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.76.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.76.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.8
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.1
@@ -79,7 +79,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.20 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
