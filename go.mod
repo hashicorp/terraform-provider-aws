@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.76.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.8
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.1
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.26.0
