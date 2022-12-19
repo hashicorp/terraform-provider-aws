@@ -199,7 +199,7 @@ func ResourcePolicy() *schema.Resource {
 										},
 									},
 									"target_value": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeFloat,
 										Required: true,
 									},
 								},
@@ -766,7 +766,7 @@ func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []int
 		PredefinedLoadMetricSpecification:     expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
 		PredefinedMetricPairSpecification:     expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
 		PredefinedScalingMetricSpecification:  expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
-		TargetValue:                           aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
+		TargetValue:                           aws.Float64(float64(metricSpecificationsFlat["target_value"].(float64))),
 	}
 	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
 }

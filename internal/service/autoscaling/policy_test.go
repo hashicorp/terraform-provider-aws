@@ -308,6 +308,36 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
+	var v autoscaling.ScalingPolicy
+	resourceSimpleName := "aws_autoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_predictiveScalingFloatTargetValue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(resourceSimpleName, &v),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "0.2"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_metric_pair_specification.0.predefined_metric_type", "ASGCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_metric_pair_specification.0.resource_label", "testLabel"),
+				),
+			},
+			{
+				ResourceName:      resourceSimpleName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
@@ -686,6 +716,25 @@ resource "aws_autoscaling_policy" "test" {
     }
     mode                         = "ForecastOnly"
     max_capacity_breach_behavior = "HonorMaxCapacity"
+  }
+}
+`, rName))
+}
+
+func testAccPolicyConfig_predictiveScalingFloatTargetValue(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-predictive"
+  policy_type            = "PredictiveScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+  predictive_scaling_configuration {
+    metric_specification {
+      target_value = 0.2
+      predefined_metric_pair_specification {
+        predefined_metric_type = "ASGCPUUtilization"
+        resource_label         = "testLabel"
+      }
+    }
   }
 }
 `, rName))
