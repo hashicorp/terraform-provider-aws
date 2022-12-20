@@ -73,7 +73,7 @@ func ResourceDevice() *schema.Resource {
 }
 
 func resourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.RegisterDevicesInput{
@@ -92,7 +92,7 @@ func resourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
@@ -122,7 +122,7 @@ func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deviceFleetName, _, err := DecodeDeviceId(d.Id())
 	if err != nil {
@@ -144,7 +144,7 @@ func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {

@@ -100,7 +100,7 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -135,7 +135,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -180,7 +180,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &sagemaker.UpdateProjectInput{
@@ -218,7 +218,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteProjectInput{
 		ProjectName: aws.String(d.Id()),

@@ -189,7 +189,7 @@ func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 }
 
 func testAccCheckCodeRepositoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_code_repository" {
@@ -225,7 +225,7 @@ func testAccCheckCodeRepositoryExists(n string, codeRepo *sagemaker.DescribeCode
 			return fmt.Errorf("No sagmaker Code Repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		resp, err := tfsagemaker.FindCodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

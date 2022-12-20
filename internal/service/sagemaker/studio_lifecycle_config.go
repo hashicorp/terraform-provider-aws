@@ -61,7 +61,7 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 }
 
 func resourceStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -89,7 +89,7 @@ func resourceStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -132,7 +132,7 @@ func resourceStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceStudioLifecycleConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -146,7 +146,7 @@ func resourceStudioLifecycleConfigUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceStudioLifecycleConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteStudioLifecycleConfigInput{
 		StudioLifecycleConfigName: aws.String(d.Id()),

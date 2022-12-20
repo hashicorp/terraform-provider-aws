@@ -163,7 +163,7 @@ func sweepAppImagesConfig(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	input := &sagemaker.ListAppImageConfigsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -208,7 +208,7 @@ func sweepSpaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListSpacesPages(&sagemaker.ListSpacesInput{}, func(page *sagemaker.ListSpacesOutput, lastPage bool) bool {
@@ -247,7 +247,7 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListAppsPages(&sagemaker.ListAppsInput{}, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
@@ -293,7 +293,7 @@ func sweepCodeRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListCodeRepositoriesPages(&sagemaker.ListCodeRepositoriesInput{}, func(page *sagemaker.ListCodeRepositoriesOutput, lastPage bool) bool {
@@ -329,7 +329,7 @@ func sweepDeviceFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListDeviceFleetsPages(&sagemaker.ListDeviceFleetsInput{}, func(page *sagemaker.ListDeviceFleetsOutput, lastPage bool) bool {
@@ -367,7 +367,7 @@ func sweepDeviceFleets(region string) error {
 // 	if err != nil {
 // 		return fmt.Errorf("getting client: %s", err)
 // 	}
-// 	conn := client.(*conns.AWSClient).SageMakerConn
+// 	conn := client.(*conns.AWSClient).SageMakerConn()
 // 	var sweeperErrs *multierror.Error
 
 // 	err = conn.ListDevicesPages(&sagemaker.ListDevicesInput{}, func(page *sagemaker.ListDevicesOutput, lastPage bool) bool {
@@ -405,7 +405,7 @@ func sweepDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListDomainsPages(&sagemaker.ListDomainsInput{}, func(page *sagemaker.ListDomainsOutput, lastPage bool) bool {
@@ -443,7 +443,7 @@ func sweepEndpointConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	req := &sagemaker.ListEndpointConfigsInput{
@@ -482,7 +482,7 @@ func sweepEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 
 	req := &sagemaker.ListEndpointsInput{
 		NameContains: aws.String(sweep.ResourcePrefix),
@@ -514,7 +514,7 @@ func sweepFeatureGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListFeatureGroupsPages(&sagemaker.ListFeatureGroupsInput{}, func(page *sagemaker.ListFeatureGroupsOutput, lastPage bool) bool {
@@ -550,7 +550,7 @@ func sweepFlowDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListFlowDefinitionsPages(&sagemaker.ListFlowDefinitionsInput{}, func(page *sagemaker.ListFlowDefinitionsOutput, lastPage bool) bool {
@@ -587,7 +587,7 @@ func sweepHumanTaskUIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListHumanTaskUisPages(&sagemaker.ListHumanTaskUisInput{}, func(page *sagemaker.ListHumanTaskUisOutput, lastPage bool) bool {
@@ -624,7 +624,7 @@ func sweepImages(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListImagesPages(&sagemaker.ListImagesInput{}, func(page *sagemaker.ListImagesOutput, lastPage bool) bool {
@@ -660,7 +660,7 @@ func sweepModelPackageGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListModelPackageGroupsPages(&sagemaker.ListModelPackageGroupsInput{}, func(page *sagemaker.ListModelPackageGroupsOutput, lastPage bool) bool {
@@ -696,7 +696,7 @@ func sweepModels(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListModelsPages(&sagemaker.ListModelsInput{}, func(page *sagemaker.ListModelsOutput, lastPage bool) bool {
@@ -732,7 +732,7 @@ func sweepNotebookInstanceLifecycleConfiguration(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	input := &sagemaker.ListNotebookInstanceLifecycleConfigsInput{}
@@ -772,7 +772,7 @@ func sweepNotebookInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListNotebookInstancesPages(&sagemaker.ListNotebookInstancesInput{}, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
@@ -810,7 +810,7 @@ func sweepStudioLifecyclesConfig(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListStudioLifecycleConfigsPages(&sagemaker.ListStudioLifecycleConfigsInput{}, func(page *sagemaker.ListStudioLifecycleConfigsOutput, lastPage bool) bool {
@@ -847,7 +847,7 @@ func sweepUserProfiles(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListUserProfilesPages(&sagemaker.ListUserProfilesInput{}, func(page *sagemaker.ListUserProfilesOutput, lastPage bool) bool {
@@ -886,7 +886,7 @@ func sweepWorkforces(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListWorkforcesPages(&sagemaker.ListWorkforcesInput{}, func(page *sagemaker.ListWorkforcesOutput, lastPage bool) bool {
@@ -923,7 +923,7 @@ func sweepWorkteams(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListWorkteamsPages(&sagemaker.ListWorkteamsInput{}, func(page *sagemaker.ListWorkteamsOutput, lastPage bool) bool {
@@ -960,7 +960,7 @@ func sweepProjects(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListProjectsPages(&sagemaker.ListProjectsInput{}, func(page *sagemaker.ListProjectsOutput, lastPage bool) bool {

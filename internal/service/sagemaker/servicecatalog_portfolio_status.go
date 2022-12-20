@@ -30,7 +30,7 @@ func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 }
 
 func resourceServicecatalogPortfolioStatusPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	status := d.Get("status").(string)
 	var err error
@@ -50,7 +50,7 @@ func resourceServicecatalogPortfolioStatusPut(d *schema.ResourceData, meta inter
 }
 
 func resourceServicecatalogPortfolioStatusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	resp, err := conn.GetSagemakerServicecatalogPortfolioStatus(&sagemaker.GetSagemakerServicecatalogPortfolioStatusInput{})
 	if err != nil {
