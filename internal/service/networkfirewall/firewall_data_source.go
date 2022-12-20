@@ -181,7 +181,7 @@ func DataSourceFirewall() *schema.Resource {
 }
 
 func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &networkfirewall.DescribeFirewallInput{}
