@@ -55,7 +55,7 @@ func ResourceVPCLink() *schema.Resource {
 }
 
 func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -83,7 +83,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -127,7 +127,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -172,7 +172,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := &apigateway.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),

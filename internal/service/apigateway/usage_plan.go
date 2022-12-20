@@ -144,7 +144,7 @@ func ResourceUsagePlan() *schema.Resource {
 }
 
 func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating API Gateway Usage Plan")
@@ -215,7 +215,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -278,7 +278,7 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Print("[DEBUG] Updating API Gateway Usage Plan")
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -486,7 +486,7 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	// Removing existing api stages associated
 	if apistages, ok := d.GetOk("api_stages"); ok {

@@ -58,7 +58,7 @@ func ResourceResource() *schema.Resource {
 }
 
 func resourceResourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Creating API Gateway Resource for API %s", d.Get("rest_api_id").(string))
 
 	var err error
@@ -78,7 +78,7 @@ func resourceResourceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Resource %s", d.Id())
 	resource, err := conn.GetResource(&apigateway.GetResourceInput{
@@ -123,7 +123,7 @@ func resourceResourceUpdateOperations(d *schema.ResourceData) []*apigateway.Patc
 }
 
 func resourceResourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Updating API Gateway Resource %s", d.Id())
 	_, err := conn.UpdateResource(&apigateway.UpdateResourceInput{
@@ -140,7 +140,7 @@ func resourceResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Resource: %s", d.Id())
 
 	log.Printf("[DEBUG] schema is %#v", d)
