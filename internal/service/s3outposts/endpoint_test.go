@@ -70,7 +70,7 @@ func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 }
 
 func testAccCheckEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3outposts_endpoint" {
@@ -102,7 +102,7 @@ func testAccCheckEndpointExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn()
 
 		endpoint, err := tfs3outposts.FindEndpoint(conn, rs.Primary.ID)
 
