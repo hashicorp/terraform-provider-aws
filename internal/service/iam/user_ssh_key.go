@@ -72,7 +72,7 @@ func ResourceUserSSHKey() *schema.Resource {
 }
 
 func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("username").(string)
 	publicKey := d.Get("public_key").(string)
 
@@ -93,7 +93,7 @@ func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("username").(string)
 	encoding := d.Get("encoding").(string)
 	request := &iam.GetSSHPublicKeyInput{
@@ -152,7 +152,7 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("status") {
-		conn := meta.(*conns.AWSClient).IAMConn
+		conn := meta.(*conns.AWSClient).IAMConn()
 
 		request := &iam.UpdateSSHPublicKeyInput{
 			UserName:       aws.String(d.Get("username").(string)),
@@ -169,7 +169,7 @@ func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteSSHPublicKeyInput{
 		UserName:       aws.String(d.Get("username").(string)),

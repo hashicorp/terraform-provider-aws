@@ -39,7 +39,7 @@ func ResourceRolePolicyAttachment() *schema.Resource {
 }
 
 func resourceRolePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
@@ -56,7 +56,7 @@ func resourceRolePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	role := d.Get("role").(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -113,7 +113,7 @@ func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 

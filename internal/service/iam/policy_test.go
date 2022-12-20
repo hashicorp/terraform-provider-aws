@@ -250,7 +250,7 @@ func testAccCheckPolicyExists(resource string, res *iam.GetPolicyOutput) resourc
 			return fmt.Errorf("No Policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		resp, err := conn.GetPolicy(&iam.GetPolicyInput{
 			PolicyArn: aws.String(rs.Primary.Attributes["arn"]),
@@ -266,7 +266,7 @@ func testAccCheckPolicyExists(resource string, res *iam.GetPolicyOutput) resourc
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_policy" {
