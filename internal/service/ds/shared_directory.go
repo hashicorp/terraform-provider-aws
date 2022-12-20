@@ -24,9 +24,9 @@ const (
 
 func ResourceSharedDirectory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSharedDirectoryCreate,
-		ReadContext:   resourceSharedDirectoryRead,
-		DeleteContext: resourceSharedDirectoryDelete,
+		CreateWithoutTimeout: resourceSharedDirectoryCreate,
+		ReadWithoutTimeout:   resourceSharedDirectoryRead,
+		DeleteWithoutTimeout: resourceSharedDirectoryDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
