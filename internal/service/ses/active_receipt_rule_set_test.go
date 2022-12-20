@@ -93,7 +93,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 }
 
 func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_active_receipt_rule_set" {
@@ -124,7 +124,7 @@ func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Active Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		response, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 		if err != nil {
