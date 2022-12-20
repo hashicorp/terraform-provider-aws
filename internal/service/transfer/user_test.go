@@ -238,7 +238,7 @@ func testAccCheckUserExists(n string, res *transfer.DescribedUser) resource.Test
 			return fmt.Errorf("No Transfer User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
@@ -256,7 +256,7 @@ func testAccCheckUserExists(n string, res *transfer.DescribedUser) resource.Test
 }
 
 func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_user" {
