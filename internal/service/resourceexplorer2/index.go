@@ -89,7 +89,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 	createTimeout := timeouts.Create(ctx, data.Timeouts, r.defaultCreateTimeout)
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
@@ -157,7 +157,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
@@ -206,7 +206,7 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 	updateTimeout := timeouts.Update(ctx, new.Timeouts, r.defaultUpdateTimeout)
 
 	if !new.Type.Equal(old.Type) {
@@ -250,7 +250,7 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 	deleteTimeout := timeouts.Delete(ctx, data.Timeouts, r.defaultDeleteTimeout)
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
