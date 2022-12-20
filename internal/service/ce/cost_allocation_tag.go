@@ -43,7 +43,7 @@ func ResourceCostAllocationTag() *schema.Resource {
 }
 
 func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	costAllocTag, err := FindCostAllocationTagByKey(ctx, conn, d.Id())
 
@@ -79,7 +79,7 @@ func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface{}, delete bool) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	key := d.Get("tag_key").(string)
 	tagStatus := &costexplorer.CostAllocationTagStatusEntry{
