@@ -56,7 +56,7 @@ func ResourceSecretRotation() *schema.Resource {
 }
 
 func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
@@ -97,7 +97,7 @@ func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.DescribeSecretInput{
 		SecretId: aws.String(d.Id()),
@@ -156,7 +156,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSecretRotationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
@@ -204,7 +204,7 @@ func resourceSecretRotationUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceSecretRotationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.CancelRotateSecretInput{
