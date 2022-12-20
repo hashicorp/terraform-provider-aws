@@ -247,18 +247,18 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
-	name := d.Id()
 
-	input := cloudwatch.DeleteAlarmsInput{
-		AlarmNames: aws.StringSlice([]string{name}),
+	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
+	_, err := conn.DeleteAlarmsWithContext(ctx, &cloudwatch.DeleteAlarmsInput{
+		AlarmNames: aws.StringSlice([]string{d.Id()}),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
+		return nil
 	}
 
-	_, err := conn.DeleteAlarmsWithContext(ctx, &input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
-			return nil
-		}
-		return diag.Errorf("error deleting CloudWatch Composite Alarm (%s): %s", name, err)
+		return diag.Errorf("deleting CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 	}
 
 	return nil
