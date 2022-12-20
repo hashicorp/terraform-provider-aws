@@ -493,7 +493,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 }
 
 func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DLMConn
+	conn := meta.(*conns.AWSClient).DLMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -523,7 +523,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DLMConn
+	conn := meta.(*conns.AWSClient).DLMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -565,7 +565,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DLMConn
+	conn := meta.(*conns.AWSClient).DLMConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := dlm.UpdateLifecyclePolicyInput{
@@ -603,7 +603,7 @@ func resourceLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DLMConn
+	conn := meta.(*conns.AWSClient).DLMConn()
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
 	_, err := conn.DeleteLifecyclePolicy(&dlm.DeleteLifecyclePolicyInput{
