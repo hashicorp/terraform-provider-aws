@@ -117,7 +117,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 }
 
 func testAccCheckBucketDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_bucket" {
@@ -162,7 +162,7 @@ func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 

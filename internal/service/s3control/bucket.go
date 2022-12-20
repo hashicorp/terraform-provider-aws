@@ -75,7 +75,7 @@ func ResourceBucket() *schema.Resource {
 }
 
 func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -108,7 +108,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -183,7 +183,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -197,7 +197,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 
