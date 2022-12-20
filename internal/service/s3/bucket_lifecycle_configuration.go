@@ -24,10 +24,10 @@ import (
 
 func ResourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketLifecycleConfigurationCreate,
-		ReadContext:   resourceBucketLifecycleConfigurationRead,
-		UpdateContext: resourceBucketLifecycleConfigurationUpdate,
-		DeleteContext: resourceBucketLifecycleConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketLifecycleConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketLifecycleConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
