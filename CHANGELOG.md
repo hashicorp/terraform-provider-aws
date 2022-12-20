@@ -4,6 +4,9 @@ FEATURES:
 
 * resource/aws_networkfirewall_rule_group: Add `reference_sets` configuration block ([#27421](https://github.com/hashicorp/terraform-provider-aws/issues/27421))
 
+BUG FIXES:
+* resource/aws_key_pair: `key_pair_type` attribute no longer works.
+
 ## 4.47.0 (December 15, 2022)
 
 FEATURES:
