@@ -1,4 +1,10 @@
 ## 4.49.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup` API ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
+* resource/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup`, `TagLogGroup` and `UntagLogGroup` APIs ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
+
 ## 4.48.0 (December 19, 2022)
 
 FEATURES:
