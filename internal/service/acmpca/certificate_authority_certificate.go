@@ -47,7 +47,7 @@ func ResourceCertificateAuthorityCertificate() *schema.Resource {
 }
 
 func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 
@@ -70,7 +70,7 @@ func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta 
 }
 
 func resourceCertificateAuthorityCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	output, err := FindCertificateAuthorityCertificateByARN(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
