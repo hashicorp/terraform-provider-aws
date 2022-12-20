@@ -120,7 +120,7 @@ func sweepBuckets(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).S3Conn
+	conn := client.(*conns.AWSClient).S3Conn()
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBuckets(input)

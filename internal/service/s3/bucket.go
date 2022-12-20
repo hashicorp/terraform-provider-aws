@@ -711,7 +711,7 @@ func ResourceBucket() *schema.Resource {
 }
 
 func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	// Get the bucket and acl
 	var bucket string
@@ -806,7 +806,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -916,7 +916,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1437,7 +1437,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	log.Printf("[INFO] Deleting S3 Bucket: %s", d.Id())
 	_, err := conn.DeleteBucketWithContext(ctx, &s3.DeleteBucketInput{
@@ -1531,7 +1531,7 @@ func websiteEndpoint(client *conns.AWSClient, d *schema.ResourceData) (*S3Websit
 	// Lookup the region for this bucket
 
 	locationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
-		return client.S3Conn.GetBucketLocation(
+		return client.S3Conn().GetBucketLocation(
 			&s3.GetBucketLocationInput{
 				Bucket: aws.String(bucket),
 			},
