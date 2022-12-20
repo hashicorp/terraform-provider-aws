@@ -75,7 +75,7 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 
 	clusterId := d.Get("cluster_id").(string)
 	filters := []*string{&clusterId}
