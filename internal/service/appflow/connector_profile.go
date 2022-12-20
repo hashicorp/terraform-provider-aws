@@ -1394,7 +1394,7 @@ func ResourceConnectorProfile() *schema.Resource {
 }
 
 func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 	name := d.Get("name").(string)
 
 	createConnectorProfileInput := appflow.CreateConnectorProfileInput{
@@ -1428,7 +1428,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	connectorProfile, err := FindConnectorProfileByARN(context.Background(), conn, d.Id())
 
@@ -1462,7 +1462,7 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 	name := d.Get("name").(string)
 
 	updateConnectorProfileInput := appflow.UpdateConnectorProfileInput{
@@ -1481,7 +1481,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	out, _ := FindConnectorProfileByARN(ctx, conn, d.Id())
 
