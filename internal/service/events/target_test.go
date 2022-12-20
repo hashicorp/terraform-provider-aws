@@ -891,7 +891,7 @@ func testAccCheckTargetExists(n string, v *eventbridge.Target) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 		output, err := tfevents.FindTargetByThreePartKey(context.Background(), conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 
@@ -906,7 +906,7 @@ func testAccCheckTargetExists(n string, v *eventbridge.Target) resource.TestChec
 }
 
 func testAccCheckTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_target" {
