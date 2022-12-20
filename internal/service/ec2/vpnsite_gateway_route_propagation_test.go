@@ -73,7 +73,7 @@ func testAccCheckVPNGatewayRoutePropagationExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		return tfec2.FindVPNGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
 	}
@@ -91,7 +91,7 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		err = tfec2.FindVPNGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
 

@@ -99,7 +99,7 @@ func ResourceIPAM() *schema.Resource {
 }
 
 func resourceIPAMCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -129,7 +129,7 @@ func resourceIPAMCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPAMRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -167,7 +167,7 @@ func resourceIPAMRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPAMUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyIpamInput{
@@ -224,7 +224,7 @@ func resourceIPAMUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPAMDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DeleteIpamInput{
 		IpamId: aws.String(d.Id()),

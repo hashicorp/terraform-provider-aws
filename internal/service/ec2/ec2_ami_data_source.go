@@ -225,7 +225,7 @@ func DataSourceAMI() *schema.Resource {
 
 // dataSourceAwsAmiDescriptionRead performs the AMI lookup.
 func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	params := &ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),

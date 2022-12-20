@@ -180,7 +180,7 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 }
 
 func testAccCheckNATGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_nat_gateway" {
@@ -214,7 +214,7 @@ func testAccCheckNATGatewayExists(n string, v *ec2.NatGateway) resource.TestChec
 			return fmt.Errorf("No EC2 NAT Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindNATGatewayByID(context.Background(), conn, rs.Primary.ID)
 

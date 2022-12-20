@@ -49,7 +49,7 @@ func ResourceCarrierGateway() *schema.Resource {
 }
 
 func resourceCarrierGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -76,7 +76,7 @@ func resourceCarrierGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceCarrierGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -119,7 +119,7 @@ func resourceCarrierGatewayRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceCarrierGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -133,7 +133,7 @@ func resourceCarrierGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceCarrierGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())
 	_, err := conn.DeleteCarrierGateway(&ec2.DeleteCarrierGatewayInput{

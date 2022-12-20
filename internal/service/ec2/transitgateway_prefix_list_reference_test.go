@@ -145,7 +145,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 }
 
 func testAccCheckTransitGatewayPrefixListReferenceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_prefix_list_reference" {
@@ -191,7 +191,7 @@ func testAccTransitGatewayPrefixListReferenceExists(n string) resource.TestCheck
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
 

@@ -2937,7 +2937,7 @@ func testAccCheckLaunchTemplateExists(n string, v *ec2.LaunchTemplate) resource.
 			return fmt.Errorf("No EC2 Launch Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindLaunchTemplateByID(conn, rs.Primary.ID)
 
@@ -2952,7 +2952,7 @@ func testAccCheckLaunchTemplateExists(n string, v *ec2.LaunchTemplate) resource.
 }
 
 func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_launch_template" {

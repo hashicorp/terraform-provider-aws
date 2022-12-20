@@ -45,7 +45,7 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 }
 
 func testAccCheckSerialConsoleAccessDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	response, err := conn.GetSerialConsoleAccessStatus(&ec2.GetSerialConsoleAccessStatusInput{})
 	if err != nil {
@@ -70,7 +70,7 @@ func testAccCheckSerialConsoleAccess(n string, enabled bool) resource.TestCheckF
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		response, err := conn.GetSerialConsoleAccessStatus(&ec2.GetSerialConsoleAccessStatusInput{})
 		if err != nil {

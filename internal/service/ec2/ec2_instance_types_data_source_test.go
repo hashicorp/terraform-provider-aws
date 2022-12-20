@@ -48,7 +48,7 @@ func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
 }
 
 func testAccPreCheckInstanceTypes(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeInstanceTypesInput{}
 
