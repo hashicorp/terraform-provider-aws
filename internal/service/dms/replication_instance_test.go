@@ -493,7 +493,7 @@ func testAccCheckReplicationInstanceExists(n string) resource.TestCheckFunc {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
 				{
@@ -520,7 +520,7 @@ func testAccCheckReplicationInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
@@ -556,7 +556,7 @@ func testAccCheckReplicationInstanceDestroy(s *terraform.State) error {
 
 // Ensure at least two engine versions of the replication instance class are available
 func testAccReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 	// Gather all orderable DMS replication instances of the instance class
 	// used in the acceptance testing. Not currently available as an input
