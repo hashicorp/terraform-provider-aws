@@ -998,10 +998,19 @@ func TestAccLambdaFunction_imageNullImageConfig(t *testing.T) {
 				ExpectNonEmptyPlan: false,
 				PlanOnly:           true,
 			},
+			{
+				// Make sure that we don't erroneously suppress a valid diff
+				Config:       testAccFunctionConfig_image(rName, imageLatestID),
+				ResourceName: resourceName,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
+				),
+			},
 		},
 	},
 	)
-
 }
 
 func TestAccLambdaFunction_architectures(t *testing.T) {
