@@ -45,7 +45,7 @@ func ResourceDomain() *schema.Resource {
 				newVersion := d.Get("engine_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*conns.AWSClient).OpenSearchConn
+				conn := meta.(*conns.AWSClient).OpenSearchConn()
 				resp, err := conn.GetCompatibleVersions(&opensearchservice.GetCompatibleVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -546,7 +546,7 @@ func resourceDomainImport(
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -743,7 +743,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -891,7 +891,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := opensearchservice.UpdateDomainConfigInput{
@@ -1046,7 +1046,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 	domainName := d.Get("domain_name").(string)
 
 	log.Printf("[DEBUG] Deleting OpenSearch domain: %q", domainName)
