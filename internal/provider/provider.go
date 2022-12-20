@@ -126,7 +126,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -1154,15 +1153,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_permission":      events.ResourcePermission(),
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
-
-			"aws_cloudwatch_log_data_protection_policy": logs.ResourceDataProtectionPolicy(),
-			"aws_cloudwatch_log_destination":            logs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":     logs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_metric_filter":          logs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":        logs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":                 logs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter":    logs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":           logs.ResourceQueryDefinition(),
 
 			"aws_rum_app_monitor":         rum.ResourceAppMonitor(),
 			"aws_rum_metrics_destination": rum.ResourceMetricsDestination(),
