@@ -610,7 +610,7 @@ func testAccCheckPipelineExists(n string, v *codepipeline.PipelineDeclaration) r
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
 
 		output, err := tfcodepipeline.FindPipelineByName(context.Background(), conn, rs.Primary.ID)
 
@@ -625,7 +625,7 @@ func testAccCheckPipelineExists(n string, v *codepipeline.PipelineDeclaration) r
 }
 
 func testAccCheckPipelineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codepipeline" {

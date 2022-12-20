@@ -306,7 +306,7 @@ func testAccCheckWebhookExists(n string, webhook *codepipeline.ListWebhookItem) 
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
 
 		resp, err := tfcodepipeline.GetWebhook(conn, rs.Primary.ID)
 
