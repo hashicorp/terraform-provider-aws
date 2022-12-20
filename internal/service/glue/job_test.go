@@ -749,7 +749,7 @@ func testAccCheckJobExists(n string, v *glue.Job) resource.TestCheckFunc {
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := tfglue.FindJobByName(conn, rs.Primary.ID)
 
@@ -769,7 +769,7 @@ func testAccCheckJobDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		_, err := tfglue.FindJobByName(conn, rs.Primary.ID)
 

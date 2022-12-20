@@ -1108,7 +1108,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 func testAccCheckTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_catalog_table" {
@@ -1149,7 +1149,7 @@ func testAccCheckCatalogTableExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		out, err := tfglue.FindTableByName(conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err

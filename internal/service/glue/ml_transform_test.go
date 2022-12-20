@@ -423,7 +423,7 @@ func testAccCheckMLTransformExists(resourceName string, mlTransform *glue.GetMLT
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
@@ -451,7 +451,7 @@ func testAccCheckMLTransformDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
