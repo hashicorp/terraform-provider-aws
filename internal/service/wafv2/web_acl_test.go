@@ -1814,7 +1814,7 @@ func testAccCheckWebACLDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		_, err := tfwafv2.FindWebACLByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
@@ -1843,7 +1843,7 @@ func testAccCheckWebACLExists(n string, v *wafv2.WebACL) resource.TestCheckFunc 
 			return fmt.Errorf("No WAFv2 WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		output, err := tfwafv2.FindWebACLByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
