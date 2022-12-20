@@ -32,7 +32,7 @@ func sweepDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CodeArtifactConn
+	conn := client.(*conns.AWSClient).CodeArtifactConn()
 	input := &codeartifact.ListDomainsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -78,7 +78,7 @@ func sweepRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CodeArtifactConn
+	conn := client.(*conns.AWSClient).CodeArtifactConn()
 	input := &codeartifact.ListRepositoriesInput{}
 	var sweeperErrs *multierror.Error
 
