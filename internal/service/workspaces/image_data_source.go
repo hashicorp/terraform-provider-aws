@@ -43,7 +43,7 @@ func DataSourceImage() *schema.Resource {
 }
 
 func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	imageID := d.Get("image_id").(string)
 	input := &workspaces.DescribeWorkspaceImagesInput{
