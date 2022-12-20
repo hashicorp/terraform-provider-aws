@@ -53,7 +53,7 @@ func DataSourceSecrets() *schema.Resource {
 }
 
 func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	secrets := d.Get("secret").(*schema.Set)
 	plaintext := make(map[string]string, len(secrets.List()))
