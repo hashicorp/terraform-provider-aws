@@ -59,7 +59,7 @@ func ResourceGlobalTable() *schema.Resource {
 }
 
 func resourceGlobalTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	globalTableName := d.Get("name").(string)
 
@@ -114,7 +114,7 @@ func resourceGlobalTableRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGlobalTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -168,7 +168,7 @@ func resourceGlobalTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
 func resourceGlobalTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	input := &dynamodb.UpdateGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
@@ -197,7 +197,7 @@ func resourceGlobalTableDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGlobalTableRetrieve(d *schema.ResourceData, meta interface{}) (*dynamodb.GlobalTableDescription, error) {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	input := &dynamodb.DescribeGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
