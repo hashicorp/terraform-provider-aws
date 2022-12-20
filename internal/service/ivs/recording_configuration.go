@@ -120,7 +120,7 @@ const (
 )
 
 func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	in := &ivs.CreateRecordingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
@@ -168,7 +168,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	out, err := FindRecordingConfigurationByID(ctx, conn, d.Id())
 
@@ -217,7 +217,7 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	log.Printf("[INFO] Deleting IVS RecordingConfiguration %s", d.Id())
 
