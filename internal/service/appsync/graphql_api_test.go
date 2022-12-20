@@ -1141,7 +1141,7 @@ func testAccGraphQLAPI_xrayEnabled(t *testing.T) {
 }
 
 func testAccCheckGraphQLAPIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_graphql_api" {
 			continue
@@ -1169,7 +1169,7 @@ func testAccCheckGraphQLAPIExists(name string, api *appsync.GraphqlApi) resource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
 		input := &appsync.GetGraphqlApiInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -1194,7 +1194,7 @@ func testAccCheckTypeExists(name, typeName string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
 		input := &appsync.GetTypeInput{
 			ApiId:    aws.String(rs.Primary.ID),

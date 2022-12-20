@@ -56,7 +56,7 @@ func ResourceAPIKey() *schema.Resource {
 }
 
 func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
 
@@ -78,7 +78,7 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
@@ -103,7 +103,7 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
@@ -131,7 +131,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {

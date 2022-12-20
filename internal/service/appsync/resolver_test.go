@@ -318,7 +318,7 @@ func testAccResolver_caching(t *testing.T) {
 }
 
 func testAccCheckResolverDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_resolver" {
 			continue
@@ -365,7 +365,7 @@ func testAccCheckResolverExists(name string, resolver *appsync.Resolver) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
 		input := &appsync.GetResolverInput{
 			ApiId:     aws.String(apiID),
