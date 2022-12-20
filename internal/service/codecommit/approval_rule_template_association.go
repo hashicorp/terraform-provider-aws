@@ -45,7 +45,7 @@ func ResourceApprovalRuleTemplateAssociation() *schema.Resource {
 }
 
 func resourceApprovalRuleTemplateAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	approvalRuleTemplateName := d.Get("approval_rule_template_name").(string)
 	repositoryName := d.Get("repository_name").(string)
@@ -67,7 +67,7 @@ func resourceApprovalRuleTemplateAssociationCreate(d *schema.ResourceData, meta 
 }
 
 func resourceApprovalRuleTemplateAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 
@@ -94,7 +94,7 @@ func resourceApprovalRuleTemplateAssociationRead(d *schema.ResourceData, meta in
 }
 
 func resourceApprovalRuleTemplateAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 
