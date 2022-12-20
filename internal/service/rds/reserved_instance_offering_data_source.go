@@ -20,7 +20,7 @@ const (
 
 func DataSourceReservedOffering() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceReservedOfferingRead,
+		ReadWithoutTimeout: dataSourceReservedOfferingRead,
 		Schema: map[string]*schema.Schema{
 			"currency_code": {
 				Type:     schema.TypeString,
