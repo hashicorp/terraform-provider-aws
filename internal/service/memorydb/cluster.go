@@ -24,10 +24,10 @@ import (
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCreate,
-		ReadContext:   resourceClusterRead,
-		UpdateContext: resourceClusterUpdate,
-		DeleteContext: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
