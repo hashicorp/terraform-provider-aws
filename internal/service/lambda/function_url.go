@@ -239,9 +239,10 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("cors") {
-		input.Cors = &lambda.Cors{}
 		if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.Cors = &lambda.Cors{}
 		}
 	}
 
