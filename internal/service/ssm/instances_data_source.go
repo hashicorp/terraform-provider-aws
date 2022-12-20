@@ -42,7 +42,7 @@ func DataSourceInstances() *schema.Resource {
 }
 
 func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	input := &ssm.DescribeInstanceInformationInput{}
 

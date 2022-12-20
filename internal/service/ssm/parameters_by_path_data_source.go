@@ -54,7 +54,7 @@ func DataSourceParametersByPath() *schema.Resource {
 }
 
 func dataSourceParametersReadByPath(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	path := d.Get("path").(string)
 	input := &ssm.GetParametersByPathInput{

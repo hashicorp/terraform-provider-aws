@@ -255,7 +255,7 @@ func testAccCheckMaintenanceWindowTargetExists(n string, mWindTarget *ssm.Mainte
 			return fmt.Errorf("No SSM Maintenance Window Target Window ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		resp, err := conn.DescribeMaintenanceWindowTargets(&ssm.DescribeMaintenanceWindowTargetsInput{
 			WindowId: aws.String(rs.Primary.Attributes["window_id"]),
@@ -282,7 +282,7 @@ func testAccCheckMaintenanceWindowTargetExists(n string, mWindTarget *ssm.Mainte
 }
 
 func testAccCheckMaintenanceWindowTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_maintenance_window_target" {
