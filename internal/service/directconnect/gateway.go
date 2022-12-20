@@ -52,7 +52,7 @@ func ResourceGateway() *schema.Resource {
 }
 
 func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
@@ -82,7 +82,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	output, err := FindGatewayByID(conn, d.Id())
 
@@ -104,7 +104,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGateway(&directconnect.DeleteDirectConnectGatewayInput{

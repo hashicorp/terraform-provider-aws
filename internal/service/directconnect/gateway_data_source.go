@@ -32,7 +32,7 @@ func DataSourceGateway() *schema.Resource {
 }
 
 func dataSourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	name := d.Get("name").(string)
 
 	gateways := make([]*directconnect.Gateway, 0)

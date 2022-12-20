@@ -111,7 +111,7 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -144,7 +144,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -208,7 +208,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	// Update encryption mode
 	if d.HasChange("encryption_mode") {
@@ -245,7 +245,7 @@ func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	return deleteConnection(conn, d.Id(), waitConnectionDeleted)
 }

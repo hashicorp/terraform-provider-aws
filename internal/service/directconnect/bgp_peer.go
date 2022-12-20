@@ -77,7 +77,7 @@ func ResourceBGPPeer() *schema.Resource {
 }
 
 func resourceBGPPeerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -130,7 +130,7 @@ func resourceBGPPeerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBGPPeerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -158,7 +158,7 @@ func resourceBGPPeerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBGPPeerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)

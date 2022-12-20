@@ -112,7 +112,7 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 }
 
 func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	req := &directconnect.AllocateTransitVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -151,7 +151,7 @@ func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta in
 }
 
 func resourceHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -193,7 +193,7 @@ func resourceHostedTransitVirtualInterfaceDelete(d *schema.ResourceData, meta in
 }
 
 func resourceHostedTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
