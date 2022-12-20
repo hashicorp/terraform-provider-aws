@@ -19,10 +19,10 @@ import (
 
 func ResourceCompositeAlarm() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCompositeAlarmCreate,
-		ReadContext:   resourceCompositeAlarmRead,
-		UpdateContext: resourceCompositeAlarmUpdate,
-		DeleteContext: resourceCompositeAlarmDelete,
+		CreateWithoutTimeout: resourceCompositeAlarmCreate,
+		ReadWithoutTimeout:   resourceCompositeAlarmRead,
+		UpdateWithoutTimeout: resourceCompositeAlarmUpdate,
+		DeleteWithoutTimeout: resourceCompositeAlarmDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
