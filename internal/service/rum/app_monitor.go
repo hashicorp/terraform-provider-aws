@@ -127,7 +127,7 @@ func ResourceAppMonitor() *schema.Resource {
 }
 
 func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -158,7 +158,7 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -206,7 +206,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatchrum.UpdateAppMonitorInput{
@@ -244,7 +244,7 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceAppMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	log.Printf("[DEBUG] Deleting CloudWatch RUM App Monitor: %s", d.Id())
 	_, err := conn.DeleteAppMonitorWithContext(ctx, &cloudwatchrum.DeleteAppMonitorInput{
