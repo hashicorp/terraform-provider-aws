@@ -76,7 +76,7 @@ func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
 }
 
 func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 
