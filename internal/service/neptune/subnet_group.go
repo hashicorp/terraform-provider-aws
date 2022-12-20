@@ -70,7 +70,7 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -108,7 +108,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -177,7 +177,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
@@ -213,7 +213,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := neptune.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),

@@ -175,7 +175,7 @@ func testAccCheckEventSubscriptionExists(n string, v *neptune.EventSubscription)
 			return fmt.Errorf("No Neptune Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 		opts := neptune.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
@@ -198,7 +198,7 @@ func testAccCheckEventSubscriptionExists(n string, v *neptune.EventSubscription)
 }
 
 func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_event_subscription" {

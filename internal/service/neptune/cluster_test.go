@@ -724,7 +724,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster" {
@@ -774,7 +774,7 @@ func testAccCheckClusterExistsWithProvider(n string, v *neptune.DBCluster, provi
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
 		resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
