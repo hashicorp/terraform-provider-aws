@@ -56,7 +56,7 @@ func DataSourceRules() *schema.Resource {
 }
 
 func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	input := &route53resolver.ListResolverRulesInput{}
 	var ruleIDs []*string
