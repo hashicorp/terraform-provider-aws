@@ -89,7 +89,7 @@ func ResourcePortfolioShare() *schema.Resource {
 }
 
 func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreatePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
@@ -170,7 +170,7 @@ func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	portfolioID, shareType, principalID, err := PortfolioShareParseResourceID(d.Id())
 
@@ -210,7 +210,7 @@ func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourcePortfolioShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	if d.HasChanges("accept_language", "share_tag_options") {
 		input := &servicecatalog.UpdatePortfolioShareInput{
@@ -252,7 +252,7 @@ func resourcePortfolioShareUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourcePortfolioShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeletePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),

@@ -79,7 +79,7 @@ func ResourceConstraint() *schema.Resource {
 }
 
 func resourceConstraintCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreateConstraintInput{
 		IdempotencyToken: aws.String(resource.UniqueId()),
@@ -136,7 +136,7 @@ func resourceConstraintCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	output, err := WaitConstraintReady(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -177,7 +177,7 @@ func resourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConstraintUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdateConstraintInput{
 		Id: aws.String(d.Id()),
@@ -221,7 +221,7 @@ func resourceConstraintUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConstraintDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeleteConstraintInput{
 		Id: aws.String(d.Id()),
