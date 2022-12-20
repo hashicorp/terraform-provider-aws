@@ -66,7 +66,7 @@ func DataSourceReportDefinition() *schema.Resource {
 }
 
 func dataSourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CURConn
+	conn := meta.(*conns.AWSClient).CURConn()
 
 	reportName := d.Get("report_name").(string)
 
