@@ -277,6 +277,7 @@ provider "aws" {
   <li><code>networkmanager</code></li>
   <li><code>nimble</code> (or <code>nimblestudio</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
+  <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>opsworkscm</code></li>
   <li><code>organizations</code></li>
