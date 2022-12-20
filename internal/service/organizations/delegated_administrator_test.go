@@ -74,7 +74,7 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 }
 
 func testAccCheckDelegatedAdministratorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_delegated_administrator" {
@@ -127,7 +127,7 @@ func testAccCheckDelegatedAdministratorExists(n string, org *organizations.Deleg
 		if err != nil {
 			return err
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 		input := &organizations.ListDelegatedAdministratorsInput{
 			ServicePrincipal: aws.String(servicePrincipal),
 		}
