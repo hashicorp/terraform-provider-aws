@@ -402,8 +402,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
-	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall %s", d.Id())
-
+	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall: %s", d.Id())
 	input := &networkfirewall.DeleteFirewallInput{
 		FirewallArn: aws.String(d.Id()),
 	}
