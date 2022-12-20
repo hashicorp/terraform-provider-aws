@@ -972,18 +972,6 @@ func TestAccLambdaFunction_imageNullImageConfig(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	key = "AWS_LAMBDA_IMAGE_V1_ID"
-	imageV1ID := os.Getenv(key)
-	if imageV1ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
-	key = "AWS_LAMBDA_IMAGE_V2_ID"
-	imageV2ID := os.Getenv(key)
-	if imageV2ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
@@ -995,7 +983,7 @@ func TestAccLambdaFunction_imageNullImageConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_emptyImageConfig(rName, imageLatestID),
+				Config: testAccFunctionConfig_nullImageConfig(rName, imageLatestID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeImage),
@@ -1005,7 +993,7 @@ func TestAccLambdaFunction_imageNullImageConfig(t *testing.T) {
 			},
 			{
 				// Test that there are no planned changes when re-planning the same config with an empty `image_config` block
-				Config:             testAccFunctionConfig_emptyImageConfig(rName, imageLatestID),
+				Config:             testAccFunctionConfig_nullImageConfig(rName, imageLatestID),
 				ResourceName:       resourceName,
 				ExpectNonEmptyPlan: false,
 				PlanOnly:           true,
@@ -3344,7 +3332,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_emptyImageConfig(rName, imageID string) string {
+func testAccFunctionConfig_nullImageConfig(rName, imageID string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
