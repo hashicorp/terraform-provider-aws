@@ -315,7 +315,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 }
 
 func testAccCheckConfigurationProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_configuration_profile" {
@@ -368,7 +368,7 @@ func testAccCheckConfigurationProfileExists(resourceName string) resource.TestCh
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		output, err := conn.GetConfigurationProfile(&appconfig.GetConfigurationProfileInput{
 			ApplicationId:          aws.String(appID),
