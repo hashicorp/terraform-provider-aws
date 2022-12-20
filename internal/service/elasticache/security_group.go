@@ -54,7 +54,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	req := &elasticache.DescribeCacheSecurityGroupsInput{
 		CacheSecurityGroupName: aws.String(d.Id()),
 	}
@@ -91,7 +91,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	log.Printf("[DEBUG] Cache security group delete: %s", d.Id())
 
