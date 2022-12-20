@@ -125,7 +125,7 @@ func TestAccRedshiftUsageLimit_disappears(t *testing.T) {
 }
 
 func testAccCheckUsageLimitDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_usage_limit" {
@@ -158,7 +158,7 @@ func testAccCheckUsageLimitExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Snapshot Copy Grant ID (UsageLimitName) is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		_, err := tfredshift.FindUsageLimitByID(conn, rs.Primary.ID)
 

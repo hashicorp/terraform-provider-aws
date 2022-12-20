@@ -179,7 +179,7 @@ func TestAccRedshiftSubnetGroup_tags(t *testing.T) {
 }
 
 func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_subnet_group" {
@@ -213,7 +213,7 @@ func testAccCheckSubnetGroupExists(n string, v *redshift.ClusterSubnetGroup) res
 			return fmt.Errorf("No Redshift Subnet Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		output, err := tfredshift.FindSubnetGroupByName(conn, rs.Primary.ID)
 

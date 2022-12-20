@@ -75,7 +75,7 @@ func ResourceUsageLimit() *schema.Resource {
 }
 
 func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -110,7 +110,7 @@ func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -156,7 +156,7 @@ func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyUsageLimitInput{
@@ -189,7 +189,7 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	deleteInput := redshift.DeleteUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),

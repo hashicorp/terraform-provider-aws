@@ -143,7 +143,7 @@ func ResourceScheduledAction() *schema.Resource {
 }
 
 func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	name := d.Get("name").(string)
 	input := &redshift.CreateScheduledActionInput{
@@ -195,7 +195,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	scheduledAction, err := FindScheduledActionByName(conn, d.Id())
 
@@ -241,7 +241,7 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	input := &redshift.ModifyScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -290,7 +290,7 @@ func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledAction(&redshift.DeleteScheduledActionInput{

@@ -111,7 +111,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("ingress") {
 		o, n := d.GetChange("ingress")
@@ -153,7 +153,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Redshift Security Group destroy: %v", d.Id())
 	opts := redshift.DeleteClusterSecurityGroupInput{
@@ -175,7 +175,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*redshift.ClusterSecurityGroup, error) {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	opts := redshift.DescribeClusterSecurityGroupsInput{
 		ClusterSecurityGroupName: aws.String(d.Id()),
