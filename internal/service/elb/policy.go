@@ -68,7 +68,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbspOpts := &elb.CreateLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(d.Get("load_balancer_name").(string)),
@@ -91,7 +91,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, policyName := PolicyParseID(d.Id())
 
@@ -136,7 +136,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	reassignments := Reassignment{}
 
 	loadBalancerName, policyName := PolicyParseID(d.Id())
@@ -183,7 +183,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, policyName := PolicyParseID(d.Id())
 

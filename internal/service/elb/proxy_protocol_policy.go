@@ -37,7 +37,7 @@ func ResourceProxyProtocolPolicy() *schema.Resource {
 }
 
 func resourceProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	input := &elb.CreateLoadBalancerPolicyInput{
@@ -67,7 +67,7 @@ func resourceProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := d.Get("load_balancer").(string)
 
 	// Retrieve the current ELB policies for updating the state
@@ -97,7 +97,7 @@ func resourceProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state
@@ -145,7 +145,7 @@ func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state
