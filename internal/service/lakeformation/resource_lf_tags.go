@@ -222,7 +222,7 @@ func ResourceResourceLFTags() *schema.Resource {
 }
 
 func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.AddLFTagsToResourceInput{
 		Resource: &lakeformation.Resource{},
@@ -307,7 +307,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GetResourceLFTagsInput{
 		Resource:           &lakeformation.Resource{},
@@ -364,7 +364,7 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.RemoveLFTagsFromResourceInput{
 		Resource: &lakeformation.Resource{},
