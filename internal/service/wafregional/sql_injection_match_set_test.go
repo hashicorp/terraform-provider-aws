@@ -198,7 +198,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_noTuples(t *testing.T) {
 
 func testAccCheckSQLInjectionMatchSetDisappears(v *waf.SqlInjectionMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := tfwafregional.NewRetryer(conn, region)
@@ -249,7 +249,7 @@ func testAccCheckSQLInjectionMatchSetExists(n string, v *waf.SqlInjectionMatchSe
 			return fmt.Errorf("No WAF SqlInjectionMatchSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetSqlInjectionMatchSet(&waf.GetSqlInjectionMatchSetInput{
 			SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -272,7 +272,7 @@ func testAccCheckSQLInjectionMatchSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetSqlInjectionMatchSet(
 			&waf.GetSqlInjectionMatchSetInput{
 				SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
