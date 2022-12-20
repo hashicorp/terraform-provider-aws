@@ -20,9 +20,9 @@ import (
 
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContainerServiceDeploymentVersionCreate,
-		ReadContext:   resourceContainerServiceDeploymentVersionRead,
-		DeleteContext: resourceContainerServiceDeploymentVersionDelete,
+		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,
+		ReadWithoutTimeout:   resourceContainerServiceDeploymentVersionRead,
+		DeleteWithoutTimeout: resourceContainerServiceDeploymentVersionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
