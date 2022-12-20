@@ -74,7 +74,7 @@ func ResourceTestGridProject() *schema.Resource {
 }
 
 func resourceTestGridProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -111,7 +111,7 @@ func resourceTestGridProjectCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceTestGridProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -156,7 +156,7 @@ func resourceTestGridProjectRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceTestGridProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateTestGridProjectInput{
@@ -190,7 +190,7 @@ func resourceTestGridProjectUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceTestGridProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteTestGridProjectInput{
 		ProjectArn: aws.String(d.Id()),
