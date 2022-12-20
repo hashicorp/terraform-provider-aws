@@ -683,7 +683,7 @@ func testAccCheckPermissionExists(n string, v *tflambda.PolicyStatement) resourc
 			return fmt.Errorf("No Lambda Permission ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		output, err := tflambda.FindPolicyStatementByTwoPartKey(conn, rs.Primary.Attributes["function_name"], rs.Primary.ID, rs.Primary.Attributes["qualifier"])
 
@@ -698,7 +698,7 @@ func testAccCheckPermissionExists(n string, v *tflambda.PolicyStatement) resourc
 }
 
 func testAccCheckPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_permission" {
