@@ -20,10 +20,10 @@ import (
 
 func ResourceFirewall() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFirewallCreate,
-		ReadContext:   resourceFirewallRead,
-		UpdateContext: resourceFirewallUpdate,
-		DeleteContext: resourceFirewallDelete,
+		CreateWithoutTimeout: resourceFirewallCreate,
+		ReadWithoutTimeout:   resourceFirewallRead,
+		UpdateWithoutTimeout: resourceFirewallUpdate,
+		DeleteWithoutTimeout: resourceFirewallDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

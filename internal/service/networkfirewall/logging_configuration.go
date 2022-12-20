@@ -17,10 +17,10 @@ import (
 
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceLoggingConfigurationCreate,
-		ReadContext:   resourceLoggingConfigurationRead,
-		UpdateContext: resourceLoggingConfigurationUpdate,
-		DeleteContext: resourceLoggingConfigurationDelete,
+		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
+		ReadWithoutTimeout:   resourceLoggingConfigurationRead,
+		UpdateWithoutTimeout: resourceLoggingConfigurationUpdate,
+		DeleteWithoutTimeout: resourceLoggingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
