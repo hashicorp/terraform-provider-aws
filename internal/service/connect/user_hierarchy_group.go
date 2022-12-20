@@ -19,10 +19,10 @@ import (
 
 func ResourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserHierarchyGroupCreate,
-		ReadContext:   resourceUserHierarchyGroupRead,
-		UpdateContext: resourceUserHierarchyGroupUpdate,
-		DeleteContext: resourceUserHierarchyGroupDelete,
+		CreateWithoutTimeout: resourceUserHierarchyGroupCreate,
+		ReadWithoutTimeout:   resourceUserHierarchyGroupRead,
+		UpdateWithoutTimeout: resourceUserHierarchyGroupUpdate,
+		DeleteWithoutTimeout: resourceUserHierarchyGroupDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
