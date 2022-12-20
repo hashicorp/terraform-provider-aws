@@ -85,7 +85,7 @@ func testAccCheckBotAssociationExists(resourceName string) resource.TestCheckFun
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(context.Background(), conn, instanceID, name, region)
 
@@ -116,7 +116,7 @@ func testAccCheckBotAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		lexBot, err := tfconnect.FindBotAssociationV1ByNameAndRegionWithContext(context.Background(), conn, instanceID, name, region)
 

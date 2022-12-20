@@ -114,7 +114,7 @@ func userHierarchyPathLevelSchema() *schema.Schema {
 }
 
 func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -151,7 +151,7 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -205,7 +205,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -235,7 +235,7 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 

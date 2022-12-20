@@ -156,7 +156,7 @@ func testAccCheckContactFlowExists(resourceName string, function *connect.Descri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeContactFlowInput{
 			ContactFlowId: aws.String(contactFlowID),
@@ -180,7 +180,7 @@ func testAccCheckContactFlowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, contactFlowID, err := tfconnect.ContactFlowParseID(rs.Primary.ID)
 
