@@ -135,6 +135,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
@@ -326,6 +327,7 @@ func servicePackages(context.Context) []intf.ServicePackage {
 		networkfirewall.ServicePackage,
 		networkmanager.ServicePackage,
 		opensearch.ServicePackage,
+		opensearchserverless.ServicePackage,
 		opsworks.ServicePackage,
 		organizations.ServicePackage,
 		outposts.ServicePackage,
