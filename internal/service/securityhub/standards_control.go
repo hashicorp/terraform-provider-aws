@@ -17,10 +17,10 @@ import (
 
 func ResourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceStandardsControlPut,
-		ReadContext:   resourceStandardsControlRead,
-		UpdateContext: resourceStandardsControlPut,
-		DeleteContext: resourceStandardsControlDelete,
+		CreateWithoutTimeout: resourceStandardsControlPut,
+		ReadWithoutTimeout:   resourceStandardsControlRead,
+		UpdateWithoutTimeout: resourceStandardsControlPut,
+		DeleteWithoutTimeout: resourceStandardsControlDelete,
 
 		Schema: map[string]*schema.Schema{
 			"control_id": {
