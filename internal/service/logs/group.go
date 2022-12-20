@@ -135,7 +135,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("arn").(string))
+	tags, err := ListLogGroupTagsWithContext(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", d.Id(), err)
@@ -203,7 +203,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateLogGroupTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating CloudWatch Logs Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}
