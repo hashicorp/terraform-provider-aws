@@ -844,3 +844,13 @@ rules:
     patterns:
       - pattern: context.TODO
     severity: ERROR
+
+  - id: avoid-context-CRUD-handlers
+    languages: [go]
+    message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
+    paths:
+      include:
+        - internal/service
+    patterns:
+        - pattern-regex: '(Create|Read|Update|Delete)Context:'
+    severity: ERROR
