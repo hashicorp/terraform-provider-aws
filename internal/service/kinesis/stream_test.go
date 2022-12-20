@@ -585,7 +585,7 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 
 func testAccCheckStreamExists(n string, v *kinesis.StreamDescriptionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -609,7 +609,7 @@ func testAccCheckStreamExists(n string, v *kinesis.StreamDescriptionSummary) res
 }
 
 func testAccCheckStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_stream" {
@@ -634,7 +634,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 
 func testAccStreamRegisterStreamConsumer(stream *kinesis.StreamDescriptionSummary, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
 
 		if _, err := conn.RegisterStreamConsumer(&kinesis.RegisterStreamConsumerInput{
 			ConsumerName: aws.String(rName),

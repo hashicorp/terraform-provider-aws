@@ -50,7 +50,7 @@ func ResourceStreamConsumer() *schema.Resource {
 }
 
 func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	name := d.Get("name").(string)
 	input := &kinesis.RegisterStreamConsumerInput{
@@ -75,7 +75,7 @@ func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	consumer, err := FindStreamConsumerByARN(conn, d.Id())
 
@@ -98,7 +98,7 @@ func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceStreamConsumerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	log.Printf("[DEBUG] Deregistering Kinesis Stream Consumer: (%s)", d.Id())
 	_, err := conn.DeregisterStreamConsumer(&kinesis.DeregisterStreamConsumerInput{
