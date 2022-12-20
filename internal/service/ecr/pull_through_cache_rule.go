@@ -17,9 +17,9 @@ import (
 
 func ResourcePullThroughCacheRule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePullThroughCacheRuleCreate,
-		ReadContext:   resourcePullThroughCacheRuleRead,
-		DeleteContext: resourcePullThroughCacheRuleDelete,
+		CreateWithoutTimeout: resourcePullThroughCacheRuleCreate,
+		ReadWithoutTimeout:   resourcePullThroughCacheRuleRead,
+		DeleteWithoutTimeout: resourcePullThroughCacheRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
