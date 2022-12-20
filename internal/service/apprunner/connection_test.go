@@ -125,7 +125,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		connection, err := tfapprunner.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
@@ -156,7 +156,7 @@ func testAccCheckConnectionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		connection, err := tfapprunner.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
