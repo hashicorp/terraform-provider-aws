@@ -49,7 +49,7 @@ func sweepControls(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).AuditManagerClient
+	conn := client.(*conns.AWSClient).AuditManagerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListControlsInput{ControlType: types.ControlTypeCustom}
 	var errs *multierror.Error
@@ -92,7 +92,7 @@ func sweepFrameworks(region string) error {
 	}
 
 	ctx := context.Background()
-	conn := client.(*conns.AWSClient).AuditManagerClient
+	conn := client.(*conns.AWSClient).AuditManagerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentFrameworksInput{FrameworkType: types.FrameworkTypeCustom}
 	var errs *multierror.Error

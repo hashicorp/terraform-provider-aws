@@ -138,7 +138,7 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 // registration is inactive, simply that the status check returns a valid response.
 func testAccCheckAccountRegistrationDestroy(s *terraform.State) error {
 	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_auditmanager_account_registration" {
@@ -167,7 +167,7 @@ func testAccCheckAccountRegisterationIsActive(name string) resource.TestCheckFun
 		}
 
 		ctx := context.Background()
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 		out, err := conn.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{})
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAccountRegistration, rs.Primary.ID, err)
