@@ -39,7 +39,7 @@ resource "aws_inspector2_enabler" "test" {
 The following arguments are required:
 
 * `account_ids` - (Required) Set of account IDs.
-* `resource_types` - (Required) Type of resources to scan. Valid values are `EC2` and `ECR`. If you only use one type, Terraform will ignore the status of the other type.
+* `resource_types` - (Required) Type of resources to scan. Valid values are `EC2`, `ECR`, and `LAMBDA`. If you only use one type, Terraform will ignore the status of the other type.
 
 ## Attributes Reference
 
