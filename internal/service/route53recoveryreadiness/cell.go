@@ -64,7 +64,7 @@ func ResourceCell() *schema.Resource {
 }
 
 func resourceCellCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -91,7 +91,7 @@ func resourceCellCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -137,7 +137,7 @@ func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCellUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.UpdateCellInput{
 		CellName: aws.String(d.Id()),
@@ -161,7 +161,7 @@ func resourceCellUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCellDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.DeleteCellInput{
 		CellName: aws.String(d.Id()),
