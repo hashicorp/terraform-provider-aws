@@ -39,7 +39,7 @@ func sweepGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).StorageGatewayConn
+	conn := client.(*conns.AWSClient).StorageGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListGatewaysPages(&storagegateway.ListGatewaysInput{}, func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
@@ -82,7 +82,7 @@ func sweepTapePools(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).StorageGatewayConn
+	conn := client.(*conns.AWSClient).StorageGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListTapePoolsPages(&storagegateway.ListTapePoolsInput{}, func(page *storagegateway.ListTapePoolsOutput, lastPage bool) bool {
@@ -125,7 +125,7 @@ func sweepFileSystemAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).StorageGatewayConn
+	conn := client.(*conns.AWSClient).StorageGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListFileSystemAssociationsPages(&storagegateway.ListFileSystemAssociationsInput{}, func(page *storagegateway.ListFileSystemAssociationsOutput, lastPage bool) bool {
