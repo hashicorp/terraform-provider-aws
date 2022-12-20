@@ -150,7 +150,7 @@ func testAccCheckSiteToSiteVPNAttachmentExists(n string, v *networkmanager.SiteT
 			return fmt.Errorf("No Network Manager Site To Site VPN Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		output, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(context.Background(), conn, rs.Primary.ID)
 
@@ -165,7 +165,7 @@ func testAccCheckSiteToSiteVPNAttachmentExists(n string, v *networkmanager.SiteT
 }
 
 func testAccCheckSiteToSiteVPNAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_site_to_site_vpn_attachment" {

@@ -139,7 +139,7 @@ func TestAccNetworkManagerGlobalNetwork_description(t *testing.T) {
 }
 
 func testAccCheckGlobalNetworkDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_global_network" {
@@ -173,7 +173,7 @@ func testAccCheckGlobalNetworkExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Network Manager Global Network ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.Background(), conn, rs.Primary.ID)
 

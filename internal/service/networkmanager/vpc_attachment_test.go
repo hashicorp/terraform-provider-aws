@@ -193,7 +193,7 @@ func testAccCheckVPCAttachmentExists(n string, v *networkmanager.VpcAttachment) 
 			return fmt.Errorf("No Network Manager VPC Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		output, err := tfnetworkmanager.FindVPCAttachmentByID(context.Background(), conn, rs.Primary.ID)
 
@@ -208,7 +208,7 @@ func testAccCheckVPCAttachmentExists(n string, v *networkmanager.VpcAttachment) 
 }
 
 func testAccCheckVPCAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_vpc_attachment" {
