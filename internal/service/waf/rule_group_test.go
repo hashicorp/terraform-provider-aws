@@ -296,7 +296,7 @@ func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 
 func testAccCheckRuleGroupDisappears(group *waf.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
@@ -346,7 +346,7 @@ func testAccCheckRuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetRuleGroup(&waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})
@@ -378,7 +378,7 @@ func testAccCheckRuleGroupExists(n string, group *waf.RuleGroup) resource.TestCh
 			return fmt.Errorf("No WAF Rule Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetRuleGroup(&waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})

@@ -34,7 +34,7 @@ func DataSourceSubscribedRuleGroup() *schema.Resource {
 }
 
 func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	name, nameOk := d.Get("name").(string)
 	metricName, metricNameOk := d.Get("metric_name").(string)
 
