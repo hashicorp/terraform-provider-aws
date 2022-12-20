@@ -15,7 +15,7 @@ import (
 
 func DataSourceTrackerAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTrackerAssociationRead,
+		ReadWithoutTimeout: dataSourceTrackerAssociationRead,
 
 		Schema: map[string]*schema.Schema{
 			"consumer_arn": {
