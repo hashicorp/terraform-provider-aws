@@ -48,7 +48,7 @@ func ResourcePrincipalAssociation() *schema.Resource {
 }
 
 func resourcePrincipalAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareArn := d.Get("resource_share_arn").(string)
 	principal := d.Get("principal").(string)
@@ -80,7 +80,7 @@ func resourcePrincipalAssociationCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {
@@ -123,7 +123,7 @@ func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {
