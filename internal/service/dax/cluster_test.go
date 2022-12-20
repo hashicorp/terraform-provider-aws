@@ -253,7 +253,7 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_cluster" {
@@ -287,7 +287,7 @@ func testAccCheckClusterExists(n string, v *dax.Cluster) resource.TestCheckFunc 
 			return fmt.Errorf("No DAX cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 		resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -306,7 +306,7 @@ func testAccCheckClusterExists(n string, v *dax.Cluster) resource.TestCheckFunc 
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 	input := &dax.DescribeClustersInput{}
 

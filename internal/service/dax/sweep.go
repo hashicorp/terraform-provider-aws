@@ -26,7 +26,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DAXConn
+	conn := client.(*conns.AWSClient).DAXConn()
 
 	resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{})
 	if err != nil {
