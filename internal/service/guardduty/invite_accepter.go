@@ -45,7 +45,7 @@ func ResourceInviteAccepter() *schema.Resource {
 }
 
 func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorID := d.Get("detector_id").(string)
 	invitationID := ""
@@ -111,7 +111,7 @@ func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	input := &guardduty.GetMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
@@ -141,7 +141,7 @@ func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	input := &guardduty.DisassociateFromMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
