@@ -173,7 +173,7 @@ func testAccCheckInstancePublicPortsExists(resourceName string) resource.TestChe
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		input := &lightsail.GetInstancePortStatesInput{
 			InstanceName: aws.String(rs.Primary.Attributes["instance_name"]),
@@ -190,7 +190,7 @@ func testAccCheckInstancePublicPortsExists(resourceName string) resource.TestChe
 }
 
 func testAccCheckInstancePublicPortsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_instance_public_ports" {
