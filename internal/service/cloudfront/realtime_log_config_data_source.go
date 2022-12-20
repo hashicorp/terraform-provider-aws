@@ -63,7 +63,7 @@ func DataSourceRealtimeLogConfig() *schema.Resource {
 }
 
 func dataSourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	logConfig, err := FindRealtimeLogConfigByName(conn, name)

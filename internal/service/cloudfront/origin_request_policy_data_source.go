@@ -112,7 +112,7 @@ func DataSourceOriginRequestPolicy() *schema.Resource {
 }
 
 func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	var originRequestPolicyID string
 
