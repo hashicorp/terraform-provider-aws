@@ -15,7 +15,7 @@ import (
 
 func DataSourceCustomKeyStore() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCustomKeyStoreRead,
+		ReadWithoutTimeout: dataSourceCustomKeyStoreRead,
 		Schema: map[string]*schema.Schema{
 			"custom_key_store_id": {
 				Type:          schema.TypeString,
