@@ -702,7 +702,7 @@ func RouteHTTPRouteSchema() *schema.Schema {
 }
 
 func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -729,7 +729,7 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -823,7 +823,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -857,7 +857,7 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh route: %s", d.Id())
 	_, err := conn.DeleteRoute(&appmesh.DeleteRouteInput{
@@ -886,7 +886,7 @@ func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.Re
 	name := parts[2]
 	log.Printf("[DEBUG] Importing App Mesh route %s from mesh %s/virtual router %s ", name, mesh, vrName)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
 		MeshName:          aws.String(mesh),
