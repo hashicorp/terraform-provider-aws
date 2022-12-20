@@ -211,7 +211,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 }
 
 func testAccCheckVaultDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault" {
 			continue
@@ -244,7 +244,7 @@ func testAccCheckVaultExists(name string, v *backup.DescribeBackupVaultOutput) r
 			return fmt.Errorf("No Backup Vault ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 		output, err := tfbackup.FindVaultByName(conn, rs.Primary.ID)
 
@@ -299,7 +299,7 @@ func testAccCheckRunDynamoDBTableBackupJob(rName string) resource.TestCheckFunc 
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 	input := &backup.ListBackupVaultsInput{}
 

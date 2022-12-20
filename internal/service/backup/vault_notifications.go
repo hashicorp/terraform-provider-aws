@@ -55,7 +55,7 @@ func ResourceVaultNotifications() *schema.Resource {
 }
 
 func resourceVaultNotificationsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.PutBackupVaultNotificationsInput{
 		BackupVaultName:   aws.String(d.Get("backup_vault_name").(string)),
@@ -74,7 +74,7 @@ func resourceVaultNotificationsCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceVaultNotificationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.GetBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
@@ -101,7 +101,7 @@ func resourceVaultNotificationsRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVaultNotificationsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.DeleteBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
