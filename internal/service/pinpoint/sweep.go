@@ -26,7 +26,7 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).PinpointConn
+	conn := client.(*conns.AWSClient).PinpointConn()
 
 	input := &pinpoint.GetAppsInput{}
 

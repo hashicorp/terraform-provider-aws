@@ -84,7 +84,7 @@ func resourceAPNSSandboxChannelUpsert(d *schema.ResourceData, meta interface{}) 
 		return errors.New("At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
 	}
 
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -117,7 +117,7 @@ func resourceAPNSSandboxChannelUpsert(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAPNSSandboxChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
 
@@ -143,7 +143,7 @@ func resourceAPNSSandboxChannelRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAPNSSandboxChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Sandbox Channel: %s", d.Id())
 	_, err := conn.DeleteApnsSandboxChannel(&pinpoint.DeleteApnsSandboxChannelInput{
