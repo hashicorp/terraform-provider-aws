@@ -163,8 +163,14 @@ func TestAccSSMDocument_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "2.0"),
+					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckOutput("default_version", "1"),
+					resource.TestCheckOutput("document_version", "1"),
+					resource.TestCheckOutput("hash", "1a200df3fefa0e7f8814829781d6295e616474945a239a956561876b4c820cde"),
+					resource.TestCheckOutput("latest_version", "1"),
+					resource.TestCheckOutput("parameter_len", "0"),
 				),
 			},
 			{
@@ -175,9 +181,15 @@ func TestAccSSMDocument_update(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_20Updated(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "document_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
+					resource.TestCheckOutput("default_version", "2"),
+					resource.TestCheckOutput("document_version", "2"),
+					resource.TestCheckOutput("hash", "214c51d87f98ae07b868a63cd866955578c1ef41c3ab8c36f80039dfd9565f53"),
+					resource.TestCheckOutput("latest_version", "2"),
+					resource.TestCheckOutput("parameter_len", "1"),
 				),
 			},
 		},
@@ -805,6 +817,22 @@ resource "aws_ssm_document" "test" {
 DOC
 
 }
+
+output "default_version" {
+  value = aws_ssm_document.test.default_version
+}
+output "document_version" {
+  value = aws_ssm_document.test.document_version
+}
+output "hash" {
+  value = aws_ssm_document.test.hash
+}
+output "latest_version" {
+  value = aws_ssm_document.test.latest_version
+}
+output "parameter_len" {
+  value = length(aws_ssm_document.test.parameter)
+}
 `, rName)
 }
 
@@ -818,14 +846,20 @@ resource "aws_ssm_document" "test" {
 {
   "schemaVersion": "2.0",
   "description": "Sample version 2.0 document v2",
-  "parameters": {},
+  "parameters": {
+    "processOptions": {
+      "type": "String",
+      "default": "-Verbose",
+      "description": "(Optional) Get-Process command options."
+    }
+  },
   "mainSteps": [
     {
       "action": "aws:runPowerShellScript",
       "name": "runPowerShellScript",
       "inputs": {
         "runCommand": [
-          "Get-Process -Verbose"
+          "Get-Process {{processOptions}}"
         ]
       }
     }
@@ -833,6 +867,22 @@ resource "aws_ssm_document" "test" {
 }
 DOC
 
+}
+
+output "default_version" {
+  value = aws_ssm_document.test.default_version
+}
+output "document_version" {
+  value = aws_ssm_document.test.document_version
+}
+output "hash" {
+  value = aws_ssm_document.test.hash
+}
+output "latest_version" {
+  value = aws_ssm_document.test.latest_version
+}
+output "parameter_len" {
+  value = length(aws_ssm_document.test.parameter)
 }
 `, rName)
 }

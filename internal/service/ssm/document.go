@@ -3,6 +3,7 @@ package ssm
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"log"
 	"regexp"
 	"strings"
@@ -192,7 +193,24 @@ func ResourceDocument() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("default_version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("content")
+			}),
+			customdiff.ComputedIf("document_version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("content")
+			}),
+			customdiff.ComputedIf("hash", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("content")
+			}),
+			customdiff.ComputedIf("latest_version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("content")
+			}),
+			customdiff.ComputedIf("parameter", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("content")
+			}),
+			verify.SetTagsDiff,
+		),
 	}
 }
 
