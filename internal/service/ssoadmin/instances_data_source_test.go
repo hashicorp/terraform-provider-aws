@@ -11,7 +11,7 @@ import (
 )
 
 func testAccPreCheckInstances(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	var instances []*ssoadmin.InstanceMetadata
 	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {

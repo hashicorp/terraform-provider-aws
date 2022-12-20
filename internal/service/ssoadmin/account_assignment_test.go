@@ -110,7 +110,7 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 }
 
 func testAccCheckAccountAssignmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_account_assignment" {
@@ -158,7 +158,7 @@ func testAccCheckAccountAssignmentExists(resourceName string) resource.TestCheck
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
 

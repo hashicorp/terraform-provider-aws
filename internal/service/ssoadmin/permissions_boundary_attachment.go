@@ -88,7 +88,7 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 }
 
 func resourcePermissionsBoundaryAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	tfMap := d.Get("permissions_boundary").([]interface{})[0].(map[string]interface{})
 	instanceARN := d.Get("instance_arn").(string)
@@ -120,7 +120,7 @@ func resourcePermissionsBoundaryAttachmentCreate(d *schema.ResourceData, meta in
 }
 
 func resourcePermissionsBoundaryAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
 
@@ -150,7 +150,7 @@ func resourcePermissionsBoundaryAttachmentRead(d *schema.ResourceData, meta inte
 }
 
 func resourcePermissionsBoundaryAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
 
