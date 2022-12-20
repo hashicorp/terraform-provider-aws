@@ -464,7 +464,7 @@ func testAccCheckPlatformApplicationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SNS Platform Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
 		_, err := tfsns.FindPlatformApplicationAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -473,7 +473,7 @@ func testAccCheckPlatformApplicationExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckPlatformApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_platform_application" {
