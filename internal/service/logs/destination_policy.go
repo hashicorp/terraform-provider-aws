@@ -15,7 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceDestinationPolicy() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_destination_policy", resourceDestinationPolicy)
+}
+
+func resourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationPolicyPut,
 		ReadWithoutTimeout:   resourceDestinationPolicyRead,
