@@ -121,7 +121,7 @@ func testAccCheckConfigurationRecorderExists(n string, obj *configservice.Config
 			return fmt.Errorf("No configuration recorder ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 		out, err := conn.DescribeConfigurationRecorders(&configservice.DescribeConfigurationRecordersInput{
 			ConfigurationRecorderNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -140,7 +140,7 @@ func testAccCheckConfigurationRecorderExists(n string, obj *configservice.Config
 }
 
 func testAccCheckConfigurationRecorderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_recorder_status" {

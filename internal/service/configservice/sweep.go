@@ -46,7 +46,7 @@ func sweepAggregateAuthorizations(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(conn)
 	if err != nil {
@@ -83,7 +83,7 @@ func sweepConfigurationAggregators(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
 	resp, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
@@ -121,7 +121,7 @@ func sweepConfigurationRecorder(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecorders(req)
@@ -164,7 +164,7 @@ func sweepDeliveryChannels(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
 	req := &configservice.DescribeDeliveryChannelsInput{}
 	var resp *configservice.DescribeDeliveryChannelsOutput

@@ -114,7 +114,7 @@ func ResourceOrganizationManagedRule() *schema.Resource {
 }
 
 func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -172,7 +172,7 @@ func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	rule, err := DescribeOrganizationConfigRule(conn, d.Id())
 
@@ -228,7 +228,7 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -283,7 +283,7 @@ func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceOrganizationManagedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
