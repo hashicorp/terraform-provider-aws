@@ -110,7 +110,7 @@ func ResourceEndpointAccess() *schema.Resource {
 }
 
 func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := redshiftserverless.CreateEndpointAccessInput{
 		WorkgroupName: aws.String(d.Get("workgroup_name").(string)),
@@ -141,7 +141,7 @@ func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	out, err := FindEndpointAccessByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -176,7 +176,7 @@ func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := &redshiftserverless.UpdateEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
@@ -199,7 +199,7 @@ func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	deleteInput := redshiftserverless.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
