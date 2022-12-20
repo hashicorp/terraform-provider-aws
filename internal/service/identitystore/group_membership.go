@@ -26,9 +26,9 @@ const (
 
 func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceGroupMembershipCreate,
-		ReadContext:   resourceGroupMembershipRead,
-		DeleteContext: resourceGroupMembershipDelete,
+		CreateWithoutTimeout: resourceGroupMembershipCreate,
+		ReadWithoutTimeout:   resourceGroupMembershipRead,
+		DeleteWithoutTimeout: resourceGroupMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

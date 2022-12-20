@@ -18,10 +18,10 @@ import (
 
 func ResourceClusterCapacityProviders() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCapacityProvidersPut,
-		ReadContext:   resourceClusterCapacityProvidersRead,
-		UpdateContext: resourceClusterCapacityProvidersPut,
-		DeleteContext: resourceClusterCapacityProvidersDelete,
+		CreateWithoutTimeout: resourceClusterCapacityProvidersPut,
+		ReadWithoutTimeout:   resourceClusterCapacityProvidersRead,
+		UpdateWithoutTimeout: resourceClusterCapacityProvidersPut,
+		DeleteWithoutTimeout: resourceClusterCapacityProvidersDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

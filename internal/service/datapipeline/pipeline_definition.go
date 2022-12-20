@@ -20,10 +20,10 @@ import (
 
 func ResourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePipelineDefinitionPut,
-		ReadContext:   resourcePipelineDefinitionRead,
-		UpdateContext: resourcePipelineDefinitionPut,
-		DeleteContext: schema.NoopContext,
+		CreateWithoutTimeout: resourcePipelineDefinitionPut,
+		ReadWithoutTimeout:   resourcePipelineDefinitionRead,
+		UpdateWithoutTimeout: resourcePipelineDefinitionPut,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

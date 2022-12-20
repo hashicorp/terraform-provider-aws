@@ -14,7 +14,7 @@ import (
 
 func DataSourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserHierarchyStructureRead,
+		ReadWithoutTimeout: dataSourceUserHierarchyStructureRead,
 		Schema: map[string]*schema.Schema{
 			"hierarchy_structure": {
 				Type:     schema.TypeList,

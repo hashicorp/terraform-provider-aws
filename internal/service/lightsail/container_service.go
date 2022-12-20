@@ -21,10 +21,10 @@ import (
 
 func ResourceContainerService() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContainerServiceCreate,
-		ReadContext:   resourceContainerServiceRead,
-		UpdateContext: resourceContainerServiceUpdate,
-		DeleteContext: resourceContainerServiceDelete,
+		CreateWithoutTimeout: resourceContainerServiceCreate,
+		ReadWithoutTimeout:   resourceContainerServiceRead,
+		UpdateWithoutTimeout: resourceContainerServiceUpdate,
+		DeleteWithoutTimeout: resourceContainerServiceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

@@ -23,10 +23,10 @@ import (
 
 func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRuleGroupCreate,
-		ReadContext:   resourceRuleGroupRead,
-		UpdateContext: resourceRuleGroupUpdate,
-		DeleteContext: resourceRuleGroupDelete,
+		CreateWithoutTimeout: resourceRuleGroupCreate,
+		ReadWithoutTimeout:   resourceRuleGroupRead,
+		UpdateWithoutTimeout: resourceRuleGroupUpdate,
+		DeleteWithoutTimeout: resourceRuleGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -613,8 +613,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
-	log.Printf("[DEBUG] Deleting NetworkFirewall Rule Group %s", d.Id())
-
+	log.Printf("[DEBUG] Deleting NetworkFirewall Rule Group: %s", d.Id())
 	input := &networkfirewall.DeleteRuleGroupInput{
 		RuleGroupArn: aws.String(d.Id()),
 	}

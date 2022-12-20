@@ -19,10 +19,10 @@ import (
 
 func ResourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceQuickConnectCreate,
-		ReadContext:   resourceQuickConnectRead,
-		UpdateContext: resourceQuickConnectUpdate,
-		DeleteContext: resourceQuickConnectDelete,
+		CreateWithoutTimeout: resourceQuickConnectCreate,
+		ReadWithoutTimeout:   resourceQuickConnectRead,
+		UpdateWithoutTimeout: resourceQuickConnectUpdate,
+		DeleteWithoutTimeout: resourceQuickConnectDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

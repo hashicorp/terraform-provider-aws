@@ -11,7 +11,7 @@ import (
 
 func DataSourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePipelineRead,
+		ReadWithoutTimeout: dataSourcePipelineRead,
 
 		Schema: map[string]*schema.Schema{
 			"pipeline_id": {

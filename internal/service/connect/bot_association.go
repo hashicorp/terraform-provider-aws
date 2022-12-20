@@ -17,9 +17,9 @@ import (
 
 func ResourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBotAssociationCreate,
-		ReadContext:   resourceBotAssociationRead,
-		DeleteContext: resourceBotAssociationDelete,
+		CreateWithoutTimeout: resourceBotAssociationCreate,
+		ReadWithoutTimeout:   resourceBotAssociationRead,
+		DeleteWithoutTimeout: resourceBotAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

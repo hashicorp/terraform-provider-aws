@@ -21,10 +21,10 @@ import (
 
 func ResourceCostCategory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCostCategoryCreate,
-		ReadContext:   resourceCostCategoryRead,
-		UpdateContext: resourceCostCategoryUpdate,
-		DeleteContext: resourceCostCategoryDelete,
+		CreateWithoutTimeout: resourceCostCategoryCreate,
+		ReadWithoutTimeout:   resourceCostCategoryRead,
+		UpdateWithoutTimeout: resourceCostCategoryUpdate,
+		DeleteWithoutTimeout: resourceCostCategoryDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

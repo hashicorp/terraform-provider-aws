@@ -17,9 +17,9 @@ import (
 
 func ResourceInboundConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceInboundConnectionAccepterCreate,
-		ReadContext:   resourceInboundConnectionRead,
-		DeleteContext: resourceInboundConnectionDelete,
+		CreateWithoutTimeout: resourceInboundConnectionAccepterCreate,
+		ReadWithoutTimeout:   resourceInboundConnectionRead,
+		DeleteWithoutTimeout: resourceInboundConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
 				d.Set("connection_id", d.Id())

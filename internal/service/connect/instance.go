@@ -20,10 +20,10 @@ import (
 
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceInstanceCreate,
-		ReadContext:   resourceInstanceRead,
-		UpdateContext: resourceInstanceUpdate,
-		DeleteContext: resourceInstanceDelete,
+		CreateWithoutTimeout: resourceInstanceCreate,
+		ReadWithoutTimeout:   resourceInstanceRead,
+		UpdateWithoutTimeout: resourceInstanceUpdate,
+		DeleteWithoutTimeout: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

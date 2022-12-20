@@ -16,7 +16,7 @@ import (
 
 func DataSourceTags() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTagsRead,
+		ReadWithoutTimeout: dataSourceTagsRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

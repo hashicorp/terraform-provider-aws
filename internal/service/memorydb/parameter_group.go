@@ -23,10 +23,10 @@ import (
 
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceParameterGroupCreate,
-		ReadContext:   resourceParameterGroupRead,
-		UpdateContext: resourceParameterGroupUpdate,
-		DeleteContext: resourceParameterGroupDelete,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

@@ -18,10 +18,10 @@ import (
 
 func ResourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePhoneNumberCreate,
-		ReadContext:   resourcePhoneNumberRead,
-		UpdateContext: resourcePhoneNumberUpdate,
-		DeleteContext: resourcePhoneNumberDelete,
+		CreateWithoutTimeout: resourcePhoneNumberCreate,
+		ReadWithoutTimeout:   resourcePhoneNumberRead,
+		UpdateWithoutTimeout: resourcePhoneNumberUpdate,
+		DeleteWithoutTimeout: resourcePhoneNumberDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

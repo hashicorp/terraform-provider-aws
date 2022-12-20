@@ -19,10 +19,10 @@ import (
 
 func ResourceBucketLogging() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketLoggingCreate,
-		ReadContext:   resourceBucketLoggingRead,
-		UpdateContext: resourceBucketLoggingUpdate,
-		DeleteContext: resourceBucketLoggingDelete,
+		CreateWithoutTimeout: resourceBucketLoggingCreate,
+		ReadWithoutTimeout:   resourceBucketLoggingRead,
+		UpdateWithoutTimeout: resourceBucketLoggingUpdate,
+		DeleteWithoutTimeout: resourceBucketLoggingDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

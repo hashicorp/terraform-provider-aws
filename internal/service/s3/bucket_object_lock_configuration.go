@@ -19,10 +19,10 @@ import (
 
 func ResourceBucketObjectLockConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketObjectLockConfigurationCreate,
-		ReadContext:   resourceBucketObjectLockConfigurationRead,
-		UpdateContext: resourceBucketObjectLockConfigurationUpdate,
-		DeleteContext: resourceBucketObjectLockConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketObjectLockConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketObjectLockConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketObjectLockConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketObjectLockConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

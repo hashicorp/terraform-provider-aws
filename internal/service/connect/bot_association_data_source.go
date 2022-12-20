@@ -13,7 +13,7 @@ import (
 
 func DataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceBotAssociationRead,
+		ReadWithoutTimeout: dataSourceBotAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"instance_id": {
 				Type:     schema.TypeString,

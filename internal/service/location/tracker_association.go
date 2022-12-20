@@ -24,9 +24,9 @@ import (
 
 func ResourceTrackerAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceTrackerAssociationCreate,
-		ReadContext:   resourceTrackerAssociationRead,
-		DeleteContext: resourceTrackerAssociationDelete,
+		CreateWithoutTimeout: resourceTrackerAssociationCreate,
+		ReadWithoutTimeout:   resourceTrackerAssociationRead,
+		DeleteWithoutTimeout: resourceTrackerAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

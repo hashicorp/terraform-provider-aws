@@ -16,7 +16,7 @@ import (
 
 func DataSourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceGeofenceCollectionRead,
+		ReadWithoutTimeout: dataSourceGeofenceCollectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"collection_arn": {
