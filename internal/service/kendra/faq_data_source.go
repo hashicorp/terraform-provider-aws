@@ -17,7 +17,7 @@ import (
 
 func DataSourceFaq() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFaqRead,
+		ReadWithoutTimeout: dataSourceFaqRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

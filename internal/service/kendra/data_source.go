@@ -35,10 +35,10 @@ const (
 
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDataSourceCreate,
-		ReadContext:   resourceDataSourceRead,
-		UpdateContext: resourceDataSourceUpdate,
-		DeleteContext: resourceDataSourceDelete,
+		CreateWithoutTimeout: resourceDataSourceCreate,
+		ReadWithoutTimeout:   resourceDataSourceRead,
+		UpdateWithoutTimeout: resourceDataSourceUpdate,
+		DeleteWithoutTimeout: resourceDataSourceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

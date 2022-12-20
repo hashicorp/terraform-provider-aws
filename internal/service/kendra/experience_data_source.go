@@ -16,7 +16,7 @@ import (
 
 func DataSourceExperience() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceExperienceRead,
+		ReadWithoutTimeout: dataSourceExperienceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
