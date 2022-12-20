@@ -595,7 +595,7 @@ func testAccCheckSTSRegion(t *testing.T, p **schema.Provider, expectedRegion str
 			return fmt.Errorf("provider not initialized")
 		}
 
-		stsRegion := aws.StringValue((*p).Meta().(*conns.AWSClient).STSConn.Config.Region)
+		stsRegion := aws.StringValue((*p).Meta().(*conns.AWSClient).STSConn().Config.Region)
 
 		if stsRegion != expectedRegion {
 			return fmt.Errorf("expected STS Region (%s), got: %s", expectedRegion, stsRegion)
