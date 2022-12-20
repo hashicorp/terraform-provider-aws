@@ -95,7 +95,7 @@ func testAccCheckRDSDBInstanceExists(n string, v *opsworks.RdsDbInstance) resour
 			return fmt.Errorf("No OpsWorks RDS DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 		output, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
 
@@ -110,7 +110,7 @@ func testAccCheckRDSDBInstanceExists(n string, v *opsworks.RdsDbInstance) resour
 }
 
 func testAccCheckRDSDBInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_rds_db_instance" {
