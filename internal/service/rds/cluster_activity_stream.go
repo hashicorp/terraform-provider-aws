@@ -57,7 +57,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 }
 
 func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	resourceArn := d.Get("resource_arn").(string)
 
@@ -89,7 +89,7 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[DEBUG] Finding DB Cluster (%s)", d.Id())
 	resp, err := FindDBClusterWithActivityStream(ctx, conn, d.Id())
@@ -113,7 +113,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	stopActivityStreamInput := &rds.StopActivityStreamInput{
 		ApplyImmediately: aws.Bool(true),

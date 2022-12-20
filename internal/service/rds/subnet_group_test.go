@@ -270,7 +270,7 @@ func TestAccRDSSubnetGroup_updateSubnets(t *testing.T) {
 }
 
 func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_subnet_group" {
@@ -304,7 +304,7 @@ func testAccCheckSubnetGroupExists(n string, v *rds.DBSubnetGroup) resource.Test
 			return fmt.Errorf("No RDS DB Subnet Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBSubnetGroupByName(conn, rs.Primary.ID)
 

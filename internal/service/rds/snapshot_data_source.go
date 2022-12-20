@@ -124,7 +124,7 @@ func DataSourceSnapshot() *schema.Resource {
 }
 
 func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	instanceIdentifier, instanceIdentifierOk := d.GetOk("db_instance_identifier")
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_snapshot_identifier")

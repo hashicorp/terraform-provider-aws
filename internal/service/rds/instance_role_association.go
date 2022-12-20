@@ -60,7 +60,7 @@ func ResourceInstanceRoleAssociation() *schema.Resource {
 }
 
 func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -99,7 +99,7 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
@@ -127,7 +127,7 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
