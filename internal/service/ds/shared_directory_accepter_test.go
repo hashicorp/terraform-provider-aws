@@ -64,7 +64,7 @@ func testAccCheckSharedDirectoryAccepterExists(n string) resource.TestCheckFunc 
 			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, n, errors.New("no ID is set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 		_, err := tfds.FindSharedDirectory(context.Background(), conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
