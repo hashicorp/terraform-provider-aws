@@ -852,5 +852,5 @@ rules:
       include:
         - internal/service
     patterns:
-        - pattern-regex: '(Create|Read|Update|Delete)Context:'
+      - pattern-regex: '(Create|Read|Update|Delete)Context:'
     severity: ERROR
