@@ -96,7 +96,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 }
 
 func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -131,7 +131,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -194,7 +194,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -245,7 +245,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	deleteOpts := &docdb.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),

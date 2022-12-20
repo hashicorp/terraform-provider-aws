@@ -73,7 +73,7 @@ func DataSourceEngineVersion() *schema.Resource {
 }
 
 func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	input := &docdb.DescribeDBEngineVersionsInput{}
 

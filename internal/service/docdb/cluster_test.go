@@ -818,7 +818,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterDestroyProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).DocDBConn
+	conn := provider.Meta().(*conns.AWSClient).DocDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_cluster" {
@@ -865,7 +865,7 @@ func testAccCheckClusterExistsProvider(n string, v *docdb.DBCluster, providerF f
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := provider.Meta().(*conns.AWSClient).DocDBConn()
 		resp, err := conn.DescribeDBClusters(&docdb.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
