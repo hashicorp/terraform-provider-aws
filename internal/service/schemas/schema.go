@@ -91,7 +91,7 @@ func ResourceSchema() *schema.Resource {
 }
 
 func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -127,7 +127,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -187,7 +187,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	if d.HasChanges("content", "description", "type") {
 		name, registryName, err := SchemaParseResourceID(d.Id())
@@ -229,7 +229,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 
