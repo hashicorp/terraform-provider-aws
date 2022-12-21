@@ -99,8 +99,7 @@ func ResourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"alarm_names": {
 							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
+							Required: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -490,9 +489,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.TaskDefinition = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("alarms"); ok && v.(*schema.Set).Len() > 0 {
-		input.DeploymentConfiguration.Alarms = expandAlarms(v.(*schema.Set).List())
-	}
+	input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
@@ -508,8 +505,11 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
 		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("alarms"); ok {
+		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -1121,23 +1121,28 @@ func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func expandAlarms(l []interface{}) *ecs.DeploymentAlarms {
-	if len(l) == 0 || l[0] == nil {
+func expandAlarms(tfList []interface{}) *ecs.DeploymentAlarms {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	deploymentAlarms := &ecs.DeploymentAlarms{
-		Enable:   aws.Bool(m["enable"].(bool)),
-		Rollback: aws.Bool(m["rollback"].(bool)),
+	apiObject := &ecs.DeploymentAlarms{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
 	}
 
-	if v, ok := m["alarm_names"].(*schema.Set); ok && v.Len() > 0 {
-		deploymentAlarms.AlarmNames = flex.ExpandStringSet(v)
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Rollback = aws.Bool(v)
 	}
 
-	return deploymentAlarms
+	if v, ok := tfMap["alarm_names"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AlarmNames = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
 }
 
 func flattenAlarms(apiObject *ecs.DeploymentAlarms) []interface{} {
