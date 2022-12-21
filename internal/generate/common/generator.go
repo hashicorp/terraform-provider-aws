@@ -15,6 +15,7 @@ type Generator struct {
 }
 
 type Destination interface {
+	Write(body []byte) error
 	WriteTemplate(templateName, templateBody string, templateData any) error
 }
 
@@ -56,23 +57,7 @@ type fileDestination struct {
 	formatter func([]byte) ([]byte, error)
 }
 
-func (d *fileDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
-	body, err := parseTemplate(templateName, templateBody, templateData)
-
-	if err != nil {
-		return err
-	}
-
-	body, err = d.formatter(body)
-
-	if err != nil {
-		return fmt.Errorf("formatting parsed template: %w", err)
-	}
-
-	return d.write(body)
-}
-
-func (d *fileDestination) write(body []byte) error {
+func (d *fileDestination) Write(body []byte) error {
 	var flags int
 	if d.append {
 		flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
@@ -94,6 +79,22 @@ func (d *fileDestination) write(body []byte) error {
 	}
 
 	return nil
+}
+
+func (d *fileDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
+	body, err := parseTemplate(templateName, templateBody, templateData)
+
+	if err != nil {
+		return err
+	}
+
+	body, err = d.formatter(body)
+
+	if err != nil {
+		return fmt.Errorf("formatting parsed template: %w", err)
+	}
+
+	return d.Write(body)
 }
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {

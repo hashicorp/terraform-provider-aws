@@ -20,10 +20,10 @@ import (
 
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSubnetGroupCreate,
-		ReadContext:   resourceSubnetGroupRead,
-		UpdateContext: resourceSubnetGroupUpdate,
-		DeleteContext: resourceSubnetGroupDelete,
+		CreateWithoutTimeout: resourceSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceSubnetGroupRead,
+		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

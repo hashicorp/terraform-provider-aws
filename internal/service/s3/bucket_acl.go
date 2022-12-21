@@ -23,10 +23,10 @@ const BucketACLSeparator = ","
 
 func ResourceBucketACL() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketACLCreate,
-		ReadContext:   resourceBucketACLRead,
-		UpdateContext: resourceBucketACLUpdate,
-		DeleteContext: resourceBucketACLDelete,
+		CreateWithoutTimeout: resourceBucketACLCreate,
+		ReadWithoutTimeout:   resourceBucketACLRead,
+		UpdateWithoutTimeout: resourceBucketACLUpdate,
+		DeleteWithoutTimeout: resourceBucketACLDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

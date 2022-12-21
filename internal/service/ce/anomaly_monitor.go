@@ -22,10 +22,10 @@ import (
 
 func ResourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAnomalyMonitorCreate,
-		ReadContext:   resourceAnomalyMonitorRead,
-		UpdateContext: resourceAnomalyMonitorUpdate,
-		DeleteContext: resourceAnomalyMonitorDelete,
+		CreateWithoutTimeout: resourceAnomalyMonitorCreate,
+		ReadWithoutTimeout:   resourceAnomalyMonitorRead,
+		UpdateWithoutTimeout: resourceAnomalyMonitorUpdate,
+		DeleteWithoutTimeout: resourceAnomalyMonitorDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

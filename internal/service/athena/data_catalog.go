@@ -22,10 +22,10 @@ import (
 
 func ResourceDataCatalog() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDataCatalogCreate,
-		ReadContext:   resourceDataCatalogRead,
-		UpdateContext: resourceDataCatalogUpdate,
-		DeleteContext: resourceDataCatalogDelete,
+		CreateWithoutTimeout: resourceDataCatalogCreate,
+		ReadWithoutTimeout:   resourceDataCatalogRead,
+		UpdateWithoutTimeout: resourceDataCatalogUpdate,
+		DeleteWithoutTimeout: resourceDataCatalogDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

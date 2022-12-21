@@ -19,12 +19,12 @@ import (
 
 func ResourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRoutingProfileCreate,
-		ReadContext:   resourceRoutingProfileRead,
-		UpdateContext: resourceRoutingProfileUpdate,
+		CreateWithoutTimeout: resourceRoutingProfileCreate,
+		ReadWithoutTimeout:   resourceRoutingProfileRead,
+		UpdateWithoutTimeout: resourceRoutingProfileUpdate,
 		// Routing profiles do not support deletion today. NoOp the Delete method.
 		// Users can rename their routing profiles manually if they want.
-		DeleteContext: schema.NoopContext,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

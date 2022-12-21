@@ -17,7 +17,7 @@ import (
 
 func DataSourceIndex() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceIndexRead,
+		ReadWithoutTimeout: dataSourceIndexRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

@@ -15,7 +15,7 @@ import (
 
 func DataSourceCostCategory() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCostCategoryRead,
+		ReadWithoutTimeout: dataSourceCostCategoryRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

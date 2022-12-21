@@ -68,7 +68,7 @@ func sweepGroups(region string) error {
 		}
 
 		for _, v := range page.LogGroups {
-			r := ResourceGroup()
+			r := resourceGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.LogGroupName))
 
@@ -111,7 +111,7 @@ func sweeplogQueryDefinitions(region string) error {
 		}
 
 		for _, v := range page.QueryDefinitions {
-			r := ResourceQueryDefinition()
+			r := resourceQueryDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.QueryDefinitionId))
 
@@ -154,7 +154,7 @@ func sweepResourcePolicies(region string) error {
 		}
 
 		for _, v := range page.ResourcePolicies {
-			r := ResourceResourcePolicy()
+			r := resourceResourcePolicy()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.PolicyName))
 

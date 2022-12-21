@@ -13,7 +13,7 @@ import (
 
 func DataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNodeGroupRead,
+		ReadWithoutTimeout: dataSourceNodeGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"ami_type": {

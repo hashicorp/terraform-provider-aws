@@ -13,7 +13,7 @@ import (
 
 func DataSourceTrafficPolicyDocument() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTrafficPolicyDocumentRead,
+		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
 			"endpoint": {

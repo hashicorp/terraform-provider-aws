@@ -18,10 +18,10 @@ import (
 
 func ResourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketServerSideEncryptionConfigurationCreate,
-		ReadContext:   resourceBucketServerSideEncryptionConfigurationRead,
-		UpdateContext: resourceBucketServerSideEncryptionConfigurationUpdate,
-		DeleteContext: resourceBucketServerSideEncryptionConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketServerSideEncryptionConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketServerSideEncryptionConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

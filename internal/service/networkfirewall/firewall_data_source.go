@@ -19,7 +19,7 @@ import (
 
 func DataSourceFirewall() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFirewallResourceRead,
+		ReadWithoutTimeout: dataSourceFirewallResourceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,

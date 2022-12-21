@@ -254,29 +254,13 @@ func testAccCheckCapacityProviderExists(resourceName string, provider *ecs.Capac
 	}
 }
 
-func testAccCapacityProviderBaseConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccCapacityProviderConfig_base(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
   name          = %[1]q
 }
@@ -292,31 +276,29 @@ resource "aws_autoscaling_group" "test" {
     id = aws_launch_template.test.id
   }
 
-  tags = [
-    {
-      key                 = "foo"
-      value               = "bar"
-      propagate_at_launch = true
-    },
-  ]
+  tags = [{
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }]
 }
-`, rName)
+`, rName))
 }
 
 func testAccCapacityProviderConfig_basic(rName string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name = %q
+  name = %[1]q
 
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCapacityProviderConfig_managedScaling(rName, status string, warmup, max, min, cap int) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -332,11 +314,11 @@ resource "aws_ecs_capacity_provider" "test" {
     }
   }
 }
-`, rName, warmup, max, min, status, cap)
+`, rName, warmup, max, min, status, cap))
 }
 
 func testAccCapacityProviderConfig_managedScalingPartial(rName string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -349,11 +331,11 @@ resource "aws_ecs_capacity_provider" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCapacityProviderConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -365,11 +347,11 @@ resource "aws_ecs_capacity_provider" "test" {
     auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
-`, rName, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value))
 }
 
 func testAccCapacityProviderConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -382,5 +364,5 @@ resource "aws_ecs_capacity_provider" "test" {
     auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }

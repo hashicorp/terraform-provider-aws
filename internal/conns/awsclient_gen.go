@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -23,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -288,7 +290,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssmcontacts"
-	"github.com/aws/aws-sdk-go/service/ssmincidents"
 	"github.com/aws/aws-sdk-go/service/sso"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssooidc"
@@ -329,7 +330,7 @@ type AWSClient struct {
 	Region                    string
 	ReverseDNSPrefix          string
 	S3ConnURICleaningDisabled *s3.S3
-	ServicePackages           []intf.ServicePackageData
+	ServicePackages           []intf.ServicePackage
 	Session                   *session.Session
 	TerraformVersion          string
 
@@ -546,6 +547,7 @@ type AWSClient struct {
 	NetworkManagerConn               *networkmanager.NetworkManager
 	NimbleConn                       *nimblestudio.NimbleStudio
 	OpenSearchConn                   *opensearchservice.OpenSearchService
+	OpenSearchServerlessClient       *opensearchserverless.Client
 	OpsWorksConn                     *opsworks.OpsWorks
 	OpsWorksCMConn                   *opsworkscm.OpsWorksCM
 	OrganizationsConn                *organizations.Organizations
@@ -597,7 +599,7 @@ type AWSClient struct {
 	SQSConn                          *sqs.SQS
 	SSMConn                          *ssm.SSM
 	SSMContactsConn                  *ssmcontacts.SSMContacts
-	SSMIncidentsConn                 *ssmincidents.SSMIncidents
+	SSMIncidentsClient               *ssmincidents.Client
 	SSOConn                          *sso.SSO
 	SSOAdminConn                     *ssoadmin.SSOAdmin
 	SSOOIDCConn                      *ssooidc.SSOOIDC

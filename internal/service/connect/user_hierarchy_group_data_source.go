@@ -15,7 +15,7 @@ import (
 
 func DataSourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserHierarchyGroupRead,
+		ReadWithoutTimeout: dataSourceUserHierarchyGroupRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

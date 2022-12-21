@@ -13,7 +13,7 @@ import (
 
 func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceDataCatalogEncryptionSettingsRead,
+		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,

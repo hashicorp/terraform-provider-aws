@@ -16,7 +16,7 @@ import (
 
 func DataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSchedulingPolicyRead,
+		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

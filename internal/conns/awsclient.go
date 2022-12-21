@@ -1,8 +1,14 @@
 package conns
 
 import (
+	"context"
 	"fmt"
 )
+
+// InitContext creates context.
+func (client *AWSClient) InitContext(ctx context.Context) context.Context {
+	return ctx
+}
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com

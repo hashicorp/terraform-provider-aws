@@ -736,6 +736,9 @@ service/nimble:
 service/opensearch:
   - 'internal/service/opensearch/**/*'
   - 'website/**/opensearch_*'
+service/opensearchserverless:
+  - 'internal/service/opensearchserverless/**/*'
+  - 'website/**/opensearchserverless_*'
 service/opsworks:
   - 'internal/service/opsworks/**/*'
   - 'website/**/opsworks_*'
