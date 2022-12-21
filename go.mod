@@ -49,7 +49,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.7.0
 	github.com/hashicorp/terraform-plugin-go v0.14.2
 	github.com/hashicorp/terraform-plugin-log v0.7.0
-	github.com/hashicorp/terraform-plugin-mux v0.7.0
+	github.com/hashicorp/terraform-plugin-mux v0.8.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/cli v1.1.5
