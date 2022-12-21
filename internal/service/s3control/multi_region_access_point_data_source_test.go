@@ -2,7 +2,6 @@ package s3control_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -31,8 +30,11 @@ func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
 			{
 				Config: testAccMultiRegionAccessPointDataSourceConfig_basic(bucket1Name, bucket2Name, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile(`^[a-z][a-z0-9]*[.]mrap$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceName, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", dataSourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "details.0.name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.block_public_acls", dataSourceName, "public_access_block.0.block_public_acls"),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.block_public_policy", dataSourceName, "public_access_block.0.block_public_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.ignore_public_acls", dataSourceName, "public_access_block.0.ignore_public_acls"),
@@ -43,7 +45,7 @@ func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
 						"bucket": bucket2Name,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "status", s3control.MultiRegionAccessPointStatusReady),
+					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 				),
 			},
 		},

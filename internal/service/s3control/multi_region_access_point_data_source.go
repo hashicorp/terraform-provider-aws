@@ -2,11 +2,11 @@ package s3control
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,19 +21,28 @@ func DataSourceMultiRegionAccessPoint() *schema.Resource {
 			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"public_access_block": {
 				Type:     schema.TypeList,
@@ -84,38 +93,43 @@ func DataSourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
-
 	name := d.Get("name").(string)
 
-	input := &s3control.GetMultiRegionAccessPointInput{
-		AccountId: aws.String(accountID),
-		Name:      aws.String(name),
-	}
-
-	log.Printf("[DEBUG] Reading S3 Multi Region Access Point: %s", input)
-
-	output, err := conn.GetMultiRegionAccessPoint(input)
+	accessPoint, err := FindMultiRegionAccessPointByAccountIDAndName(conn, accountID, name)
 
 	if err != nil {
-		return diag.Errorf("error reading S3 Multi Region Access Point: %s", err)
-	}
-
-	if output == nil || output.AccessPoint == nil {
-		return diag.Errorf("error reading S3 Multi Region Access Point (%s): missing access point", accountID)
+		return diag.Errorf("reading S3 Multi Region Access Point (%s): %s", name, err)
 	}
 
 	d.SetId(MultiRegionAccessPointCreateResourceID(accountID, name))
-	d.Set("created_at", aws.TimeValue(output.AccessPoint.CreatedAt).Format(time.RFC3339))
-	d.Set("name", output.AccessPoint.Name)
-	d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(output.AccessPoint.PublicAccessBlock)})
-	d.Set("regions", flattenRegionReports(output.AccessPoint.Regions))
-	d.Set("status", output.AccessPoint.Status)
+
+	alias := aws.StringValue(accessPoint.Alias)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "s3",
+		AccountID: accountID,
+		Resource:  fmt.Sprintf("accesspoint/%s", alias),
+	}.String()
+	d.Set("account_id", accountID)
+	d.Set("alias", alias)
+	d.Set("arn", arn)
+	d.Set("created_at", aws.TimeValue(accessPoint.CreatedAt).Format(time.RFC3339))
+	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
+	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.accesspoint.s3-global", alias)))
+	d.Set("name", accessPoint.Name)
+	d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(accessPoint.PublicAccessBlock)})
+	d.Set("regions", flattenRegionReports(accessPoint.Regions))
+	d.Set("status", accessPoint.Status)
 
 	return nil
 }
