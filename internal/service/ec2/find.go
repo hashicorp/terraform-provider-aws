@@ -869,8 +869,22 @@ func FindHost(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	return host, nil
 }
 
-func FindImage(conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error) {
-	output, err := conn.DescribeImages(input)
+func FindImages(conn *ec2.EC2, input *ec2.DescribeImagesInput) ([]*ec2.Image, error) {
+	var output []*ec2.Image
+
+	err := conn.DescribeImagesPages(input, func(page *ec2.DescribeImagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Images {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound) {
 		return nil, &resource.NotFoundError{
@@ -883,15 +897,25 @@ func FindImage(conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error
 		return nil, err
 	}
 
-	if output == nil || len(output.Images) == 0 || output.Images[0] == nil {
+	return output, nil
+}
+
+func FindImage(conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error) {
+	output, err := FindImages(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.Images); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.Images[0], nil
+	return output[0], nil
 }
 
 func FindImageByID(conn *ec2.EC2, id string) (*ec2.Image, error) {
