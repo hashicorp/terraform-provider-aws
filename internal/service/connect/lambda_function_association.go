@@ -17,9 +17,9 @@ import (
 
 func ResourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceLambdaFunctionAssociationCreate,
-		ReadContext:   resourceLambdaFunctionAssociationRead,
-		DeleteContext: resourceLambdaFunctionAssociationDelete,
+		CreateWithoutTimeout: resourceLambdaFunctionAssociationCreate,
+		ReadWithoutTimeout:   resourceLambdaFunctionAssociationRead,
+		DeleteWithoutTimeout: resourceLambdaFunctionAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

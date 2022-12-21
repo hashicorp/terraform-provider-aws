@@ -13,7 +13,7 @@ import (
 
 func DataSourceConnector() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceConnectorRead,
+		ReadWithoutTimeout: dataSourceConnectorRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

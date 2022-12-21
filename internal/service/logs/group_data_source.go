@@ -10,7 +10,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceGroup() *schema.Resource {
+func init() {
+	_sp.registerSDKDataSourceFactory("aws_cloudwatch_log_group", dataSourceGroup)
+}
+
+func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
@@ -57,7 +61,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kms_key_id", logGroup.KmsKeyId)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("arn").(string))
+	tags, err := ListLogGroupTagsWithContext(ctx, conn, name)
 
 	if err != nil {
 		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", name, err)

@@ -17,7 +17,7 @@ import (
 
 func DataSourceThesaurus() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceThesaurusRead,
+		ReadWithoutTimeout: dataSourceThesaurusRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

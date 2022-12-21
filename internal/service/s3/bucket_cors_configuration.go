@@ -20,10 +20,10 @@ import (
 
 func ResourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketCorsConfigurationCreate,
-		ReadContext:   resourceBucketCorsConfigurationRead,
-		UpdateContext: resourceBucketCorsConfigurationUpdate,
-		DeleteContext: resourceBucketCorsConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketCorsConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketCorsConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketCorsConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

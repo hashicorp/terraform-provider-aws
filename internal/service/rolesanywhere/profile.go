@@ -18,10 +18,10 @@ import (
 
 func ResourceProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceProfileCreate,
-		ReadContext:   resourceProfileRead,
-		UpdateContext: resourceProfileUpdate,
-		DeleteContext: resourceProfileDelete,
+		CreateWithoutTimeout: resourceProfileCreate,
+		ReadWithoutTimeout:   resourceProfileRead,
+		UpdateWithoutTimeout: resourceProfileUpdate,
+		DeleteWithoutTimeout: resourceProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

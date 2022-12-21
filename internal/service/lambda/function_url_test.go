@@ -116,6 +116,14 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors.0.max_age", "72000"),
 				),
 			},
+			{
+				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionURLExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -271,7 +279,7 @@ func testAccFunctionURLConfig_base(policyName, roleName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "%s"
+  name = %[1]q
   role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
@@ -322,7 +330,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[2]q
 
   assume_role_policy = <<EOF
 {

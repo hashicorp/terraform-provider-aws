@@ -19,10 +19,10 @@ import (
 
 func ResourceTrustAnchor() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceTrustAnchorCreate,
-		ReadContext:   resourceTrustAnchorRead,
-		UpdateContext: resourceTrustAnchorUpdate,
-		DeleteContext: resourceTrustAnchorDelete,
+		CreateWithoutTimeout: resourceTrustAnchorCreate,
+		ReadWithoutTimeout:   resourceTrustAnchorRead,
+		UpdateWithoutTimeout: resourceTrustAnchorUpdate,
+		DeleteWithoutTimeout: resourceTrustAnchorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

@@ -19,10 +19,10 @@ import (
 
 func ResourceBucketAccelerateConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketAccelerateConfigurationCreate,
-		ReadContext:   resourceBucketAccelerateConfigurationRead,
-		UpdateContext: resourceBucketAccelerateConfigurationUpdate,
-		DeleteContext: resourceBucketAccelerateConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketAccelerateConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketAccelerateConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketAccelerateConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketAccelerateConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

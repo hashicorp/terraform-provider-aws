@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -648,6 +649,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.MediaLiveClient = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
 		if endpoint := c.Endpoints[names.MediaLive]; endpoint != "" {
 			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.OpenSearchServerlessClient = opensearchserverless.NewFromConfig(cfg, func(o *opensearchserverless.Options) {
+		if endpoint := c.Endpoints[names.OpenSearchServerless]; endpoint != "" {
+			o.EndpointResolver = opensearchserverless.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.PipesClient = pipes.NewFromConfig(cfg, func(o *pipes.Options) {

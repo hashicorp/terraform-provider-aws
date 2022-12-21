@@ -19,7 +19,7 @@ import (
 
 func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"alternate_identifier": {

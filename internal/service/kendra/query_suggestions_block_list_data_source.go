@@ -17,7 +17,7 @@ import (
 
 func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceQuerySuggestionsBlockListRead,
+		ReadWithoutTimeout: dataSourceQuerySuggestionsBlockListRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

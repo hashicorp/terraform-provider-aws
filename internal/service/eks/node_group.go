@@ -23,10 +23,10 @@ import (
 
 func ResourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNodeGroupCreate,
-		ReadContext:   resourceNodeGroupRead,
-		UpdateContext: resourceNodeGroupUpdate,
-		DeleteContext: resourceNodeGroupDelete,
+		CreateWithoutTimeout: resourceNodeGroupCreate,
+		ReadWithoutTimeout:   resourceNodeGroupRead,
+		UpdateWithoutTimeout: resourceNodeGroupUpdate,
+		DeleteWithoutTimeout: resourceNodeGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

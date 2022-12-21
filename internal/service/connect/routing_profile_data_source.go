@@ -15,7 +15,7 @@ import (
 
 func DataSourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceRoutingProfileRead,
+		ReadWithoutTimeout: dataSourceRoutingProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

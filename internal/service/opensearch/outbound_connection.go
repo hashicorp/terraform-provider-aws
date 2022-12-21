@@ -18,9 +18,9 @@ import (
 
 func ResourceOutboundConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceOutboundConnectionCreate,
-		ReadContext:   resourceOutboundConnectionRead,
-		DeleteContext: resourceOutboundConnectionDelete,
+		CreateWithoutTimeout: resourceOutboundConnectionCreate,
+		ReadWithoutTimeout:   resourceOutboundConnectionRead,
+		DeleteWithoutTimeout: resourceOutboundConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

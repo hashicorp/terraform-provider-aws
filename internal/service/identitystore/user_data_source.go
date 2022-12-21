@@ -19,7 +19,7 @@ import (
 
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {

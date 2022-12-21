@@ -14,7 +14,7 @@ import (
 
 func DataSourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceRouteCalculatorRead,
+		ReadWithoutTimeout: dataSourceRouteCalculatorRead,
 
 		Schema: map[string]*schema.Schema{
 			"calculator_arn": {

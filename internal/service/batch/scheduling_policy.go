@@ -18,10 +18,10 @@ import (
 
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSchedulingPolicyCreate,
-		ReadContext:   resourceSchedulingPolicyRead,
-		UpdateContext: resourceSchedulingPolicyUpdate,
-		DeleteContext: resourceSchedulingPolicyDelete,
+		CreateWithoutTimeout: resourceSchedulingPolicyCreate,
+		ReadWithoutTimeout:   resourceSchedulingPolicyRead,
+		UpdateWithoutTimeout: resourceSchedulingPolicyUpdate,
+		DeleteWithoutTimeout: resourceSchedulingPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

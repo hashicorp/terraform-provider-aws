@@ -21,10 +21,10 @@ import (
 
 func ResourceACL() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceACLCreate,
-		ReadContext:   resourceACLRead,
-		UpdateContext: resourceACLUpdate,
-		DeleteContext: resourceACLDelete,
+		CreateWithoutTimeout: resourceACLCreate,
+		ReadWithoutTimeout:   resourceACLRead,
+		UpdateWithoutTimeout: resourceACLUpdate,
+		DeleteWithoutTimeout: resourceACLDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

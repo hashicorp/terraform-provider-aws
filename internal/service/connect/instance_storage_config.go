@@ -18,10 +18,10 @@ import (
 
 func ResourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceInstanceStorageConfigCreate,
-		ReadContext:   resourceInstanceStorageConfigRead,
-		UpdateContext: resourceInstanceStorageConfigUpdate,
-		DeleteContext: resourceInstanceStorageConfigDelete,
+		CreateWithoutTimeout: resourceInstanceStorageConfigCreate,
+		ReadWithoutTimeout:   resourceInstanceStorageConfigRead,
+		UpdateWithoutTimeout: resourceInstanceStorageConfigUpdate,
+		DeleteWithoutTimeout: resourceInstanceStorageConfigDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

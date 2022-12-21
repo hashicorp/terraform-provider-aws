@@ -16,10 +16,10 @@ import (
 
 func ResourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserHierarchyStructureCreate,
-		ReadContext:   resourceUserHierarchyStructureRead,
-		UpdateContext: resourceUserHierarchyStructureUpdate,
-		DeleteContext: resourceUserHierarchyStructureDelete,
+		CreateWithoutTimeout: resourceUserHierarchyStructureCreate,
+		ReadWithoutTimeout:   resourceUserHierarchyStructureRead,
+		UpdateWithoutTimeout: resourceUserHierarchyStructureUpdate,
+		DeleteWithoutTimeout: resourceUserHierarchyStructureDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
