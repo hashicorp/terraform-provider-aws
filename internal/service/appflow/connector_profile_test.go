@@ -220,7 +220,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 data "aws_iam_policy" "test" {
-  name = "AmazonRedshiftAllCommandsFullAccess"
+  name = "AmazonRedshiftFullAccess"
 }
 
 resource "aws_iam_role" "test" {
@@ -236,7 +236,7 @@ resource "aws_iam_role" "test" {
         Effect = "Allow"
         Sid    = ""
         Principal = {
-          Service = "ec2.amazonaws.com"
+          Service = "appflow.amazonaws.com"
         }
       },
     ]
@@ -301,9 +301,12 @@ resource "aws_appflow_connector_profile" "test" {
 
     connector_profile_properties {
       redshift {
-        bucket_name  = %[1]q
-        database_url = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
-        role_arn     = aws_iam_role.test.arn
+        bucket_name        = %[1]q
+        cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+        database_name      = "dev"
+        database_url       = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        data_api_role_arn  = aws_iam_role.test.arn
+        role_arn           = aws_iam_role.test.arn
       }
     }
   }
@@ -340,10 +343,13 @@ resource "aws_appflow_connector_profile" "test" {
 
     connector_profile_properties {
       redshift {
-        bucket_name   = %[1]q
-        bucket_prefix = %[4]q
-        database_url  = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
-        role_arn      = aws_iam_role.test.arn
+        bucket_name        = %[1]q
+        bucket_prefix      = %[4]q
+        cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+        database_name      = "dev"
+        database_url       = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        data_api_role_arn  = aws_iam_role.test.arn
+        role_arn           = aws_iam_role.test.arn
       }
     }
   }
