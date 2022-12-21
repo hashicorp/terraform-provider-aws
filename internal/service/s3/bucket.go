@@ -1453,7 +1453,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_object resources cannot create these object
 			// keys, other AWS services and applications using the S3 Bucket can.
-			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled
+			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled()
 
 			// bucket may have things delete them
 			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %s", err)

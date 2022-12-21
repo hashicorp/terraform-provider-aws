@@ -26,10 +26,11 @@ type AWSClient struct {
 	Partition                 string
 	Region                    string
 	ReverseDNSPrefix          string
-	S3ConnURICleaningDisabled *s3.S3
 	ServicePackages           []intf.ServicePackage
 	Session                   *session.Session
 	TerraformVersion          string
+
+    s3ConnURICleaningDisabled *s3.S3
 
 {{ range .Services }}
 	{{- if ne .SDKVersion "1,2" }}{{continue}}{{- end }}

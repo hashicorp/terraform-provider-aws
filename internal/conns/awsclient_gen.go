@@ -321,18 +321,19 @@ import (
 )
 
 type AWSClient struct {
-	AccountID                 string
-	DefaultTagsConfig         *tftags.DefaultConfig
-	DNSSuffix                 string
-	IgnoreTagsConfig          *tftags.IgnoreConfig
-	MediaConvertAccountConn   *mediaconvert.MediaConvert
-	Partition                 string
-	Region                    string
-	ReverseDNSPrefix          string
-	S3ConnURICleaningDisabled *s3.S3
-	ServicePackages           []intf.ServicePackage
-	Session                   *session.Session
-	TerraformVersion          string
+	AccountID               string
+	DefaultTagsConfig       *tftags.DefaultConfig
+	DNSSuffix               string
+	IgnoreTagsConfig        *tftags.IgnoreConfig
+	MediaConvertAccountConn *mediaconvert.MediaConvert
+	Partition               string
+	Region                  string
+	ReverseDNSPrefix        string
+	ServicePackages         []intf.ServicePackage
+	Session                 *session.Session
+	TerraformVersion        string
+
+	s3ConnURICleaningDisabled *s3.S3
 
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
