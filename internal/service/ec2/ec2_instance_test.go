@@ -4790,8 +4790,7 @@ func testAccCheckStopInstance(v *ec2.Instance) resource.TestCheckFunc {
 
 func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := client.EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		for _, v := range instance.BlockDeviceMappings {
 			if v.Ebs != nil && v.Ebs.VolumeId != nil {
@@ -4810,7 +4809,7 @@ func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 				d.Set("instance_id", instanceID)
 				d.Set("volume_id", volumeID)
 
-				if err := r.Delete(d, client); err != nil {
+				if err := acctest.DeleteResource(r, d, acctest.Provider.Meta()); err != nil {
 					return err
 				}
 			}

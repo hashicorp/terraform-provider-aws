@@ -906,7 +906,7 @@ func testAccCheckClusterSnapshot(rInt int) resource.TestCheckFunc {
 			snapshot_identifier := fmt.Sprintf("tf-acctest-docdbcluster-snapshot-%d", rInt)
 
 			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.DocDBConn
+			conn := awsClient.DocDBConn()
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(

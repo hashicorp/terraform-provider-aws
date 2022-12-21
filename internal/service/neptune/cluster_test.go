@@ -801,8 +801,7 @@ func testAccCheckClusterSnapshot(rName string) resource.TestCheckFunc {
 				continue
 			}
 
-			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.NeptuneConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 			log.Printf("[INFO] Deleting the Snapshot %s", rName)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(

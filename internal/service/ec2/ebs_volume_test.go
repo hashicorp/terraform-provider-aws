@@ -930,8 +930,7 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 
 func testAccCheckVolumeFinalSnapshotExists(v *ec2.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := client.EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		input := &ec2.DescribeSnapshotsInput{
 			Filters: tfec2.BuildAttributeFilterList(map[string]string{
@@ -950,11 +949,9 @@ func testAccCheckVolumeFinalSnapshotExists(v *ec2.Volume) resource.TestCheckFunc
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(output.SnapshotId))
 
-		if err := r.Delete(d, client); err != nil {
-			return err
-		}
+		err = acctest.DeleteResource(r, d, acctest.Provider.Meta())
 
-		return nil
+		return err
 	}
 }
 

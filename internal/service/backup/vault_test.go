@@ -261,7 +261,7 @@ func testAccCheckVaultExists(name string, v *backup.DescribeBackupVaultOutput) r
 func testAccCheckRunDynamoDBTableBackupJob(rName string) resource.TestCheckFunc { // nosemgrep:ci.backup-in-func-name
 	return func(s *terraform.State) error {
 		client := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := client.BackupConn
+		conn := client.BackupConn()
 
 		iamRoleARN := arn.ARN{
 			Partition: client.Partition,

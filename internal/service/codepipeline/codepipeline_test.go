@@ -659,7 +659,7 @@ func testAccPreCheckSupported(t *testing.T, regions ...string) {
 		if diags.HasError() {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
-		conn := client.CodePipelineConn
+		conn := client.CodePipelineConn()
 
 		input := &codepipeline.ListPipelinesInput{}
 		_, err := conn.ListPipelines(input)
