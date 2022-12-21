@@ -2273,6 +2273,9 @@ func flattenRedshiftConnectorProfileProperties(properties *appflow.RedshiftConne
 	}
 
 	m["role_arn"] = aws.StringValue(properties.RoleArn)
+	m["cluster_identifier"] = aws.StringValue(properties.ClusterIdentifier)
+	m["data_api_role_arn"] = aws.StringValue(properties.DataApiRoleArn)
+	m["database_name"] = aws.StringValue(properties.DatabaseName)
 
 	return []interface{}{m}
 }
