@@ -34,7 +34,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_ec2_carrier_gateway", &resource.Sweeper{
 		Name: "aws_ec2_carrier_gateway",
-		F:    sweepCarrierGateway,
+		F:    sweepCarrierGateways,
 	})
 
 	resource.AddTestSweepers("aws_ec2_client_vpn_endpoint", &resource.Sweeper{
@@ -52,7 +52,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_ec2_fleet", &resource.Sweeper{
 		Name: "aws_ec2_fleet",
-		F:    sweepFleet,
+		F:    sweepFleets,
 	})
 
 	resource.AddTestSweepers("aws_ebs_volume", &resource.Sweeper{
@@ -415,7 +415,7 @@ func sweepCapacityReservations(region string) error {
 	return nil
 }
 
-func sweepCarrierGateway(region string) error {
+func sweepCarrierGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -568,7 +568,7 @@ func sweepClientVPNNetworkAssociations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepFleet(region string) error {
+func sweepFleets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -2424,7 +2424,21 @@ func sweepAMIs(region string) error {
 	conn := client.(*conns.AWSClient).EC2Conn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeImages(input)
+	err = conn.DescribeImagesPages(input, func(page *ec2.DescribeImagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Images {
+			r := ResourceAMI()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.ImageId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AMI sweep for %s: %s", region, err)
@@ -2433,14 +2447,6 @@ func sweepAMIs(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error listing AMIs (%s): %w", region, err)
-	}
-
-	for _, v := range output.Images {
-		r := ResourceAMI()
-		d := r.Data(nil)
-		d.SetId(aws.StringValue(v.ImageId))
-
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
 	err = sweep.SweepOrchestrator(sweepResources)
