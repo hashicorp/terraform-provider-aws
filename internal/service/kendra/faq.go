@@ -26,10 +26,10 @@ import (
 
 func ResourceFaq() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFaqCreate,
-		ReadContext:   resourceFaqRead,
-		UpdateContext: resourceFaqUpdate,
-		DeleteContext: resourceFaqDelete,
+		CreateWithoutTimeout: resourceFaqCreate,
+		ReadWithoutTimeout:   resourceFaqRead,
+		UpdateWithoutTimeout: resourceFaqUpdate,
+		DeleteWithoutTimeout: resourceFaqDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

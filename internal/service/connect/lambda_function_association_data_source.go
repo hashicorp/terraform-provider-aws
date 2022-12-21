@@ -12,7 +12,7 @@ import (
 
 func DataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceLambdaFunctionAssociationRead,
+		ReadWithoutTimeout: dataSourceLambdaFunctionAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"function_arn": {
 				Type:         schema.TypeString,

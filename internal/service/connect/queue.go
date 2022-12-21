@@ -20,12 +20,12 @@ import (
 
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceQueueCreate,
-		ReadContext:   resourceQueueRead,
-		UpdateContext: resourceQueueUpdate,
+		CreateWithoutTimeout: resourceQueueCreate,
+		ReadWithoutTimeout:   resourceQueueRead,
+		UpdateWithoutTimeout: resourceQueueUpdate,
 		// Queues do not support deletion today. NoOp the Delete method.
 		// Users can rename their queues manually if they want.
-		DeleteContext: schema.NoopContext,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

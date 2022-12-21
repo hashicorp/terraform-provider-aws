@@ -14,7 +14,7 @@ import (
 
 func DataSourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceInstanceStorageConfigRead,
+		ReadWithoutTimeout: dataSourceInstanceStorageConfigRead,
 		Schema: map[string]*schema.Schema{
 			"association_id": {
 				Type:         schema.TypeString,

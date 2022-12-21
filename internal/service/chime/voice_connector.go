@@ -15,10 +15,10 @@ import (
 
 func ResourceVoiceConnector() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceVoiceConnectorCreate,
-		ReadContext:   resourceVoiceConnectorRead,
-		UpdateContext: resourceVoiceConnectorUpdate,
-		DeleteContext: resourceVoiceConnectorDelete,
+		CreateWithoutTimeout: resourceVoiceConnectorCreate,
+		ReadWithoutTimeout:   resourceVoiceConnectorRead,
+		UpdateWithoutTimeout: resourceVoiceConnectorUpdate,
+		DeleteWithoutTimeout: resourceVoiceConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

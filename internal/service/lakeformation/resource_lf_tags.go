@@ -29,9 +29,9 @@ const (
 
 func ResourceResourceLFTags() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourceLFTagsCreate,
-		ReadContext:   resourceResourceLFTagsRead,
-		DeleteContext: resourceResourceLFTagsDelete,
+		CreateWithoutTimeout: resourceResourceLFTagsCreate,
+		ReadWithoutTimeout:   resourceResourceLFTagsRead,
+		DeleteWithoutTimeout: resourceResourceLFTagsDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),

@@ -25,10 +25,10 @@ import (
 
 func ResourceFeature() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFeatureCreate,
-		ReadContext:   resourceFeatureRead,
-		UpdateContext: resourceFeatureUpdate,
-		DeleteContext: resourceFeatureDelete,
+		CreateWithoutTimeout: resourceFeatureCreate,
+		ReadWithoutTimeout:   resourceFeatureRead,
+		UpdateWithoutTimeout: resourceFeatureUpdate,
+		DeleteWithoutTimeout: resourceFeatureDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

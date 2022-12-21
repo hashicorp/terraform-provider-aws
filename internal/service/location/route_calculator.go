@@ -20,10 +20,10 @@ import (
 
 func ResourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRouteCalculatorCreate,
-		ReadContext:   resourceRouteCalculatorRead,
-		UpdateContext: resourceRouteCalculatorUpdate,
-		DeleteContext: resourceRouteCalculatorDelete,
+		CreateWithoutTimeout: resourceRouteCalculatorCreate,
+		ReadWithoutTimeout:   resourceRouteCalculatorRead,
+		UpdateWithoutTimeout: resourceRouteCalculatorUpdate,
+		DeleteWithoutTimeout: resourceRouteCalculatorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

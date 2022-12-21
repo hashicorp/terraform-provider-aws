@@ -15,7 +15,7 @@ import (
 
 func DataSourceQueue() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceQueueRead,
+		ReadWithoutTimeout: dataSourceQueueRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

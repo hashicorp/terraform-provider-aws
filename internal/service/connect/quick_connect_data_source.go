@@ -15,7 +15,7 @@ import (
 
 func DataSourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceQuickConnectRead,
+		ReadWithoutTimeout: dataSourceQuickConnectRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

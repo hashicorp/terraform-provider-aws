@@ -13,7 +13,7 @@ import (
 
 func DataSourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePipelineDefinitionRead,
+		ReadWithoutTimeout: dataSourcePipelineDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"parameter_object": {

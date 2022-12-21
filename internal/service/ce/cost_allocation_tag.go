@@ -16,10 +16,10 @@ import (
 
 func ResourceCostAllocationTag() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCostAllocationTagUpdate,
-		ReadContext:   resourceCostAllocationTagRead,
-		UpdateContext: resourceCostAllocationTagUpdate,
-		DeleteContext: resourceCostAllocationTagDelete,
+		CreateWithoutTimeout: resourceCostAllocationTagUpdate,
+		ReadWithoutTimeout:   resourceCostAllocationTagRead,
+		UpdateWithoutTimeout: resourceCostAllocationTagUpdate,
+		DeleteWithoutTimeout: resourceCostAllocationTagDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

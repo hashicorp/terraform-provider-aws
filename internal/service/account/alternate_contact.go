@@ -20,10 +20,10 @@ import (
 
 func ResourceAlternateContact() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAlternateContactCreate,
-		ReadContext:   resourceAlternateContactRead,
-		UpdateContext: resourceAlternateContactUpdate,
-		DeleteContext: resourceAlternateContactDelete,
+		CreateWithoutTimeout: resourceAlternateContactCreate,
+		ReadWithoutTimeout:   resourceAlternateContactRead,
+		UpdateWithoutTimeout: resourceAlternateContactUpdate,
+		DeleteWithoutTimeout: resourceAlternateContactDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

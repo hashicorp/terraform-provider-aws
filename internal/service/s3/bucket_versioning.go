@@ -20,10 +20,10 @@ import (
 
 func ResourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketVersioningCreate,
-		ReadContext:   resourceBucketVersioningRead,
-		UpdateContext: resourceBucketVersioningUpdate,
-		DeleteContext: resourceBucketVersioningDelete,
+		CreateWithoutTimeout: resourceBucketVersioningCreate,
+		ReadWithoutTimeout:   resourceBucketVersioningRead,
+		UpdateWithoutTimeout: resourceBucketVersioningUpdate,
+		DeleteWithoutTimeout: resourceBucketVersioningDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

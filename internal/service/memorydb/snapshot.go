@@ -19,10 +19,10 @@ import (
 
 func ResourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSnapshotCreate,
-		ReadContext:   resourceSnapshotRead,
-		UpdateContext: resourceSnapshotUpdate,
-		DeleteContext: resourceSnapshotDelete,
+		CreateWithoutTimeout: resourceSnapshotCreate,
+		ReadWithoutTimeout:   resourceSnapshotRead,
+		UpdateWithoutTimeout: resourceSnapshotUpdate,
+		DeleteWithoutTimeout: resourceSnapshotDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

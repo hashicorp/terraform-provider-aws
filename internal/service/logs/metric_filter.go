@@ -20,7 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceMetricFilter() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_metric_filter", resourceMetricFilter)
+}
+
+func resourceMetricFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricFilterPut,
 		ReadWithoutTimeout:   resourceMetricFilterRead,

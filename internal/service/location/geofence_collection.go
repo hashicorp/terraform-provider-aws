@@ -23,10 +23,10 @@ import (
 
 func ResourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceGeofenceCollectionCreate,
-		ReadContext:   resourceGeofenceCollectionRead,
-		UpdateContext: resourceGeofenceCollectionUpdate,
-		DeleteContext: resourceGeofenceCollectionDelete,
+		CreateWithoutTimeout: resourceGeofenceCollectionCreate,
+		ReadWithoutTimeout:   resourceGeofenceCollectionRead,
+		UpdateWithoutTimeout: resourceGeofenceCollectionUpdate,
+		DeleteWithoutTimeout: resourceGeofenceCollectionDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

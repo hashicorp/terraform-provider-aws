@@ -20,10 +20,10 @@ import (
 
 func ResourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSecurityProfileCreate,
-		ReadContext:   resourceSecurityProfileRead,
-		UpdateContext: resourceSecurityProfileUpdate,
-		DeleteContext: resourceSecurityProfileDelete,
+		CreateWithoutTimeout: resourceSecurityProfileCreate,
+		ReadWithoutTimeout:   resourceSecurityProfileRead,
+		UpdateWithoutTimeout: resourceSecurityProfileUpdate,
+		DeleteWithoutTimeout: resourceSecurityProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

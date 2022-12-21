@@ -22,10 +22,10 @@ import (
 
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceVocabularyCreate,
-		ReadContext:   resourceVocabularyRead,
-		UpdateContext: resourceVocabularyUpdate,
-		DeleteContext: resourceVocabularyDelete,
+		CreateWithoutTimeout: resourceVocabularyCreate,
+		ReadWithoutTimeout:   resourceVocabularyRead,
+		UpdateWithoutTimeout: resourceVocabularyUpdate,
+		DeleteWithoutTimeout: resourceVocabularyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
