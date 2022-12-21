@@ -301,7 +301,7 @@ resource "aws_appflow_connector_profile" "test" {
 
     connector_profile_properties {
       redshift {
-        bucket_name  = %[1]q
+        bucket_name        = %[1]q
         cluster_identifier = aws_redshift_cluster.test.cluster_identifier
         database_name      = "dev"
         database_url       = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
