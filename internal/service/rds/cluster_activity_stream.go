@@ -17,9 +17,9 @@ import (
 
 func ResourceClusterActivityStream() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterActivityStreamCreate,
-		ReadContext:   resourceClusterActivityStreamRead,
-		DeleteContext: resourceClusterActivityStreamDelete,
+		CreateWithoutTimeout: resourceClusterActivityStreamCreate,
+		ReadWithoutTimeout:   resourceClusterActivityStreamRead,
+		DeleteWithoutTimeout: resourceClusterActivityStreamDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

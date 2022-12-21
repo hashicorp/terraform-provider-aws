@@ -18,7 +18,7 @@ import (
 
 func DataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCatalogTableRead,
+		ReadWithoutTimeout: dataSourceCatalogTableRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

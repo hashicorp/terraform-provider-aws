@@ -20,10 +20,10 @@ import (
 
 func ResourceFirewall() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFirewallCreate,
-		ReadContext:   resourceFirewallRead,
-		UpdateContext: resourceFirewallUpdate,
-		DeleteContext: resourceFirewallDelete,
+		CreateWithoutTimeout: resourceFirewallCreate,
+		ReadWithoutTimeout:   resourceFirewallRead,
+		UpdateWithoutTimeout: resourceFirewallUpdate,
+		DeleteWithoutTimeout: resourceFirewallDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -402,8 +402,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
-	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall %s", d.Id())
-
+	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall: %s", d.Id())
 	input := &networkfirewall.DeleteFirewallInput{
 		FirewallArn: aws.String(d.Id()),
 	}

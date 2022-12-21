@@ -35,10 +35,10 @@ const (
 
 func ResourceIndex() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceIndexCreate,
-		ReadContext:   resourceIndexRead,
-		UpdateContext: resourceIndexUpdate,
-		DeleteContext: resourceIndexDelete,
+		CreateWithoutTimeout: resourceIndexCreate,
+		ReadWithoutTimeout:   resourceIndexRead,
+		UpdateWithoutTimeout: resourceIndexUpdate,
+		DeleteWithoutTimeout: resourceIndexDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

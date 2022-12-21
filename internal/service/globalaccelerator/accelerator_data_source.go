@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceAccelerator)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceAccelerator)
 }
 
 // newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.

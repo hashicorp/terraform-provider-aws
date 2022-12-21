@@ -24,10 +24,10 @@ const contactFlowModuleMutexKey = `aws_connect_contact_flow_module`
 
 func ResourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContactFlowModuleCreate,
-		ReadContext:   resourceContactFlowModuleRead,
-		UpdateContext: resourceContactFlowModuleUpdate,
-		DeleteContext: resourceContactFlowModuleDelete,
+		CreateWithoutTimeout: resourceContactFlowModuleCreate,
+		ReadWithoutTimeout:   resourceContactFlowModuleRead,
+		UpdateWithoutTimeout: resourceContactFlowModuleUpdate,
+		DeleteWithoutTimeout: resourceContactFlowModuleDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

@@ -20,10 +20,10 @@ import (
 
 func ResourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAnomalySubscriptionCreate,
-		ReadContext:   resourceAnomalySubscriptionRead,
-		UpdateContext: resourceAnomalySubscriptionUpdate,
-		DeleteContext: resourceAnomalySubscriptionDelete,
+		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
+		ReadWithoutTimeout:   resourceAnomalySubscriptionRead,
+		UpdateWithoutTimeout: resourceAnomalySubscriptionUpdate,
+		DeleteWithoutTimeout: resourceAnomalySubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

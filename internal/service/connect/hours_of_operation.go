@@ -21,10 +21,10 @@ import (
 
 func ResourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceHoursOfOperationCreate,
-		ReadContext:   resourceHoursOfOperationRead,
-		UpdateContext: resourceHoursOfOperationUpdate,
-		DeleteContext: resourceHoursOfOperationDelete,
+		CreateWithoutTimeout: resourceHoursOfOperationCreate,
+		ReadWithoutTimeout:   resourceHoursOfOperationRead,
+		UpdateWithoutTimeout: resourceHoursOfOperationUpdate,
+		DeleteWithoutTimeout: resourceHoursOfOperationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

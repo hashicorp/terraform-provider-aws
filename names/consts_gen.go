@@ -209,6 +209,7 @@ const (
 	NetworkManager               = "networkmanager"
 	Nimble                       = "nimble"
 	OpenSearch                   = "opensearch"
+	OpenSearchServerless         = "opensearchserverless"
 	OpsWorks                     = "opsworks"
 	OpsWorksCM                   = "opsworkscm"
 	Organizations                = "organizations"
