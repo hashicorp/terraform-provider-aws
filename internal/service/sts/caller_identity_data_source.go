@@ -62,7 +62,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	conn := d.Meta().STSConn
+	conn := d.Meta().STSConn()
 
 	output, err := FindCallerIdentity(ctx, conn)
 

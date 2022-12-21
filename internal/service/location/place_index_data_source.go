@@ -59,7 +59,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 }
 
 func dataSourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	input := &locationservice.DescribePlaceIndexInput{}
 

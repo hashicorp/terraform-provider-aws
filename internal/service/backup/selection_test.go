@@ -240,7 +240,7 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 }
 
 func testAccCheckSelectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_selection" {
 			continue
@@ -270,7 +270,7 @@ func testAccCheckSelectionExists(name string, selection *backup.GetBackupSelecti
 			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 		input := &backup.GetBackupSelectionInput{
 			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),

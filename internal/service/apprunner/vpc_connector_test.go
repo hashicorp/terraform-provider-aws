@@ -118,7 +118,7 @@ func testAccCheckVPCConnectorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		_, err := tfapprunner.FindVPCConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -147,7 +147,7 @@ func testAccCheckVPCConnectorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner VPC Connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		_, err := tfapprunner.FindVPCConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -208,7 +208,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 }
 
 func testAccPreCheckVPCConnector(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 	ctx := context.Background()
 
 	input := &apprunner.ListVpcConnectorsInput{}

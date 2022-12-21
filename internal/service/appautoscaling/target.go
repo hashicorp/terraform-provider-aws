@@ -59,7 +59,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	var targetOpts applicationautoscaling.RegisterScalableTargetInput
 
@@ -104,7 +104,7 @@ func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(2*time.Minute,
 		func() (interface{}, error) {
@@ -136,7 +136,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Id()),

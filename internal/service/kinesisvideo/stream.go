@@ -93,7 +93,7 @@ func ResourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
+	conn := meta.(*conns.AWSClient).KinesisVideoConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -143,7 +143,7 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
+	conn := meta.(*conns.AWSClient).KinesisVideoConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -193,7 +193,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
+	conn := meta.(*conns.AWSClient).KinesisVideoConn()
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
@@ -237,7 +237,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
+	conn := meta.(*conns.AWSClient).KinesisVideoConn()
 
 	if _, err := conn.DeleteStream(&kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),

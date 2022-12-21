@@ -74,7 +74,7 @@ func ResourceIPSet() *schema.Resource {
 }
 
 func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -114,7 +114,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -167,7 +167,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
@@ -208,7 +208,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {

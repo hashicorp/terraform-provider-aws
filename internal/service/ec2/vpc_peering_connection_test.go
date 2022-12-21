@@ -125,7 +125,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
 		_, err := conn.ModifyVpcPeeringConnectionOptions(
@@ -416,7 +416,7 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 }
 
 func testAccCheckVPCPeeringConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_peering_connection" {
@@ -454,7 +454,7 @@ func testAccCheckVPCPeeringConnectionExistsWithProvider(n string, v *ec2.VpcPeer
 			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPCPeeringConnectionByID(conn, rs.Primary.ID)
 

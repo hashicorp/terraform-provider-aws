@@ -205,7 +205,7 @@ func testAccCheckConfigurationAggregatorExists(n string, obj *configservice.Conf
 			return fmt.Errorf("No config configuration aggregator ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 		out, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{
 			ConfigurationAggregatorNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -224,7 +224,7 @@ func testAccCheckConfigurationAggregatorExists(n string, obj *configservice.Conf
 }
 
 func testAccCheckConfigurationAggregatorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_configuration_aggregator" {

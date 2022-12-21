@@ -134,7 +134,7 @@ func hasSlotTypeConfigChanges(d verify.ResourceDiffer) bool {
 }
 
 func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	name := d.Get("name").(string)
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
@@ -170,7 +170,7 @@ func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	output, err := FindSlotTypeVersionByName(conn, d.Id(), SlotTypeVersionLatest)
 
@@ -207,7 +207,7 @@ func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
 		Checksum:               aws.String(d.Get("checksum").(string)),
@@ -233,7 +233,7 @@ func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	input := &lexmodelbuildingservice.DeleteSlotTypeInput{
 		Name: aws.String(d.Id()),

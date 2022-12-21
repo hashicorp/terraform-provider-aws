@@ -212,7 +212,7 @@ func ResourceInstanceFleet() *schema.Resource {
 }
 
 func resourceInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	addInstanceFleetInput := &emr.AddInstanceFleetInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
@@ -243,7 +243,7 @@ func resourceInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	instanceFleets, err := FetchAllInstanceFleets(conn, d.Get("cluster_id").(string))
 
 	if err != nil {
@@ -286,7 +286,7 @@ func FindInstanceFleetByID(instanceFleets []*emr.InstanceFleet, fleetId string) 
 }
 
 func resourceInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	log.Printf("[DEBUG] Modify EMR task fleet")
 
@@ -346,7 +346,7 @@ func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.S
 
 func resourceInstanceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] AWS EMR Instance Fleet does not support DELETE; resizing cluster to zero before removing from state")
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	clusterId := d.Get("cluster_id").(string)
 

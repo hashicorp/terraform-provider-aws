@@ -230,7 +230,7 @@ func testAccCheckResourceGroupExists(n string, v *resourcegroups.Group) resource
 			return fmt.Errorf("No Resource Groups Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn()
 
 		output, err := tfresourcegroups.FindGroupByName(context.Background(), conn, rs.Primary.ID)
 
@@ -245,7 +245,7 @@ func testAccCheckResourceGroupExists(n string, v *resourcegroups.Group) resource
 }
 
 func testAccCheckResourceGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_resourcegroups_group" {

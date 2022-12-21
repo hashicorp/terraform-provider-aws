@@ -128,7 +128,7 @@ func testAccCheckPoolProviderPrincipalTagsExists(n string) resource.TestCheckFun
 			return errors.New("No Cognito Identity Princpal Tags is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
 		_, err := conn.GetPrincipalTagAttributeMap(&cognitoidentity.GetPrincipalTagAttributeMapInput{
 			IdentityPoolId:       aws.String(rs.Primary.Attributes["identity_pool_id"]),
@@ -140,7 +140,7 @@ func testAccCheckPoolProviderPrincipalTagsExists(n string) resource.TestCheckFun
 }
 
 func testAccCheckPoolProviderPrincipalTagsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_pool_provider_principal_tag" {

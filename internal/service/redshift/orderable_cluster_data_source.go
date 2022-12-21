@@ -43,7 +43,7 @@ func DataSourceOrderableCluster() *schema.Resource {
 }
 
 func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{}
 

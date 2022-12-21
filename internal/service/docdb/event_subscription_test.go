@@ -232,7 +232,7 @@ func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
 
 		_, err := tfdocdb.FindEventSubscriptionByID(context.Background(), conn, rs.Primary.ID)
 
@@ -261,7 +261,7 @@ func testAccCheckEventSubscriptionExists(n string, eventSubscription *docdb.Even
 			return fmt.Errorf("No DocDB Event Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
 
 		res, err := tfdocdb.FindEventSubscriptionByID(context.Background(), conn, rs.Primary.ID)
 

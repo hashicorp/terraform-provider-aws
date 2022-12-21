@@ -26,7 +26,7 @@ func DataSourceEBSDefaultKMSKey() *schema.Resource {
 	}
 }
 func dataSourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	res, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {

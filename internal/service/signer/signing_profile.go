@@ -124,7 +124,7 @@ func ResourceSigningProfile() *schema.Resource {
 }
 
 func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -161,7 +161,7 @@ func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -235,7 +235,7 @@ func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSigningProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -250,7 +250,7 @@ func resourceSigningProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceSigningProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 
 	_, err := conn.CancelSigningProfile(&signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),

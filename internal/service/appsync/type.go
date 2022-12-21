@@ -56,7 +56,7 @@ func ResourceType() *schema.Resource {
 }
 
 func resourceTypeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
 
@@ -77,7 +77,7 @@ func resourceTypeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, format, name, err := DecodeTypeID(d.Id())
 	if err != nil {
@@ -106,7 +106,7 @@ func resourceTypeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTypeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.UpdateTypeInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -124,7 +124,7 @@ func resourceTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTypeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.DeleteTypeInput{
 		ApiId:    aws.String(d.Get("api_id").(string)),

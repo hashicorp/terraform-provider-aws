@@ -27,7 +27,7 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AmplifyConn
+	conn := client.(*conns.AWSClient).AmplifyConn()
 	input := &amplify.ListAppsInput{}
 	var sweeperErrs *multierror.Error
 

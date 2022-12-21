@@ -118,7 +118,7 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 }
 
 func testAccCheckConnectorProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appflow_connector_profile" {
@@ -143,7 +143,7 @@ func testAccCheckConnectorProfileDestroy(s *terraform.State) error {
 
 func testAccCheckConnectorProfileExists(n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

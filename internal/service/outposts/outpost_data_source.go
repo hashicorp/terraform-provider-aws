@@ -57,7 +57,7 @@ func DataSourceOutpost() *schema.Resource {
 }
 
 func dataSourceOutpostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListOutpostsInput{}
 

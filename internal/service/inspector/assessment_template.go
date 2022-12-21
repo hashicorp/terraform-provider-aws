@@ -85,7 +85,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 }
 
 func resourceAssessmentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -124,7 +124,7 @@ func resourceAssessmentTemplateCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAssessmentTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -184,7 +184,7 @@ func resourceAssessmentTemplateRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAssessmentTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -220,7 +220,7 @@ func resourceAssessmentTemplateUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAssessmentTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
 		AssessmentTemplateArn: aws.String(d.Id()),

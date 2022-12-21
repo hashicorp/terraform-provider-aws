@@ -97,7 +97,7 @@ func testAccCheckSchedulingPolicyExists(n string, sp *batch.SchedulingPolicyDeta
 			return fmt.Errorf("No Batch Scheduling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 		schedulingPolicy, err := GetSchedulingPolicyNoContext(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -116,7 +116,7 @@ func testAccCheckSchedulingPolicyDestroy(s *terraform.State) error {
 		if rs.Type != "aws_batch_scheduling_policy" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 		sp, err := GetSchedulingPolicyNoContext(conn, rs.Primary.ID)
 		if err == nil {
 			if sp != nil {

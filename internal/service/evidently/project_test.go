@@ -351,7 +351,7 @@ func TestAccEvidentlyProject_disappears(t *testing.T) {
 }
 
 func testAccCheckProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_evidently_project" {
 			continue
@@ -385,7 +385,7 @@ func testAccCheckProjectExists(n string, v *cloudwatchevidently.Project) resourc
 			return fmt.Errorf("No CloudWatch Evidently Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
 
 		output, err := tfcloudwatchevidently.FindProjectByNameOrARN(context.Background(), conn, rs.Primary.ID)
 

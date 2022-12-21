@@ -66,7 +66,7 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 
 func testAccCheckPrincipalAssociationExists(resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -111,7 +111,7 @@ func testAccCheckPrincipalAssociationExists(resourceName string, resourceShare *
 }
 
 func testAccCheckPrincipalAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_principal_association" {

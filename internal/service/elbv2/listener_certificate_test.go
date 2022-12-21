@@ -176,7 +176,7 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 }
 
 func testAccCheckListenerCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_listener_certificate" {

@@ -834,7 +834,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	createInput := &autoscaling.CreateAutoScalingGroupInput{
@@ -1006,7 +1006,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				return nil
 			}
 
-			if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn, meta.(*conns.AWSClient).ELBV2Conn, d.Id(), f, v); err != nil {
+			if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, v); err != nil {
 				return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
 			}
 		}
@@ -1051,7 +1051,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	g, err := FindGroupByName(conn, d.Id())
@@ -1160,7 +1160,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	var shouldWaitForCapacity bool
 	var shouldRefreshInstances bool
@@ -1506,7 +1506,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return nil
 				}
 
-				if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn, meta.(*conns.AWSClient).ELBV2Conn, d.Id(), f, v); err != nil {
+				if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, v); err != nil {
 					return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
 				}
 			}
@@ -1594,7 +1594,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	forceDeleteGroup := d.Get("force_delete").(bool)
 	forceDeleteWarmPool := forceDeleteGroup || d.Get("force_delete_warm_pool").(bool)

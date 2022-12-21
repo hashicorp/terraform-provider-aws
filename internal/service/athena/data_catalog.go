@@ -72,7 +72,7 @@ func ResourceDataCatalog() *schema.Resource {
 }
 
 func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -104,7 +104,7 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -176,7 +176,7 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateDataCatalogInput{
@@ -211,7 +211,7 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
 	_, err := conn.DeleteDataCatalogWithContext(ctx, &athena.DeleteDataCatalogInput{

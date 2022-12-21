@@ -42,7 +42,7 @@ func ResourceGraph() *schema.Resource {
 }
 
 func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -82,7 +82,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -120,7 +120,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
@@ -133,7 +133,7 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	input := &detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),

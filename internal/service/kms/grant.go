@@ -125,7 +125,7 @@ func ResourceGrant() *schema.Resource {
 }
 
 func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	keyId := d.Get("key_id").(string)
 
 	input := kms.CreateGrantInput{
@@ -187,7 +187,7 @@ func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGrantRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	keyId, grantId, err := decodeGrantID(d.Id())
 	if err != nil {
@@ -247,7 +247,7 @@ func resourceGrantRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	keyId, grantId, decodeErr := decodeGrantID(d.Id())
 	if decodeErr != nil {

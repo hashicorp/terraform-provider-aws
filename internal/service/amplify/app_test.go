@@ -588,7 +588,7 @@ func testAccCheckAppExists(n string, v *amplify.App) resource.TestCheckFunc {
 			return fmt.Errorf("No Amplify App ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
 		output, err := tfamplify.FindAppByID(conn, rs.Primary.ID)
 
@@ -603,7 +603,7 @@ func testAccCheckAppExists(n string, v *amplify.App) resource.TestCheckFunc {
 }
 
 func testAccCheckAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_app" {

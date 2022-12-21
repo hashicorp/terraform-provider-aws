@@ -175,7 +175,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 }
 
 func testAccCheckDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_catalog_database" {
@@ -295,7 +295,7 @@ func testAccCheckCatalogDatabaseExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		out, err := conn.GetDatabase(&glue.GetDatabaseInput{
 			CatalogId: aws.String(catalogId),
 			Name:      aws.String(dbName),

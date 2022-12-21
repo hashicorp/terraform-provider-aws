@@ -53,7 +53,7 @@ func ResourceReadinessCheck() *schema.Resource {
 }
 
 func resourceReadinessCheckCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -80,7 +80,7 @@ func resourceReadinessCheckCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceReadinessCheckRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -125,7 +125,7 @@ func resourceReadinessCheckRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceReadinessCheckUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.UpdateReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Get("readiness_check_name").(string)),
@@ -149,7 +149,7 @@ func resourceReadinessCheckUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceReadinessCheckDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.DeleteReadinessCheckInput{
 		ReadinessCheckName: aws.String(d.Id()),

@@ -238,7 +238,7 @@ func testAccCheckSigningProfilePermissionExists(res, profileName string, spp *si
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 		params := &signer.ListProfilePermissionsInput{
 			ProfileName: aws.String(profileName),

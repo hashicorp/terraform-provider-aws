@@ -160,7 +160,7 @@ func TestMountTarget_hasEmptyMountTargets(t *testing.T) {
 }
 
 func testAccCheckMountTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_mount_target" {
 			continue
@@ -200,7 +200,7 @@ func testAccCheckMountTarget(resourceID string, mount *efs.MountTargetDescriptio
 			return fmt.Errorf("Not found: %s", resourceID)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 		mt, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 			MountTargetId: aws.String(fs.Primary.ID),
 		})
@@ -409,7 +409,7 @@ resource "aws_efs_mount_target" "test" {
 }
 
 func testAccCheckVPNGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway" {

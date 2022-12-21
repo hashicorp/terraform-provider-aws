@@ -155,7 +155,7 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 }
 
 func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic_policy" {

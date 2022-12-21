@@ -201,7 +201,7 @@ func testAccCheckStorediSCSIVolumeExists(resourceName string, storedIscsiVolume 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 		input := &storagegateway.DescribeStorediSCSIVolumesInput{
 			VolumeARNs: []*string{aws.String(rs.Primary.ID)},
@@ -224,7 +224,7 @@ func testAccCheckStorediSCSIVolumeExists(resourceName string, storedIscsiVolume 
 }
 
 func testAccCheckStorediSCSIVolumeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_stored_iscsi_volume" {

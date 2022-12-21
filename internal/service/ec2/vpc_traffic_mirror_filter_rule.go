@@ -111,7 +111,7 @@ func ResourceTrafficMirrorFilterRule() *schema.Resource {
 }
 
 func resourceTrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.CreateTrafficMirrorFilterRuleInput{
 		DestinationCidrBlock:  aws.String(d.Get("destination_cidr_block").(string)),
@@ -150,7 +150,7 @@ func resourceTrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	rule, err := FindTrafficMirrorFilterRuleByTwoPartKey(conn, d.Get("traffic_mirror_filter_id").(string), d.Id())
 
@@ -199,7 +199,7 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.ModifyTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterRuleId: aws.String(d.Id()),
@@ -277,7 +277,7 @@ func resourceTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceTrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Filter Rule: %s", d.Id())
 	_, err := conn.DeleteTrafficMirrorFilterRule(&ec2.DeleteTrafficMirrorFilterRuleInput{

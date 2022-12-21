@@ -275,7 +275,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 }
 
 func testAccCheckConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_connection" {
@@ -300,7 +300,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 
 func testAccCheckConnectionExists(name string, v *directconnect.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -324,7 +324,7 @@ func testAccCheckConnectionExists(name string, v *directconnect.Connection) reso
 }
 
 func testAccCheckConnectionNoDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_connection" {

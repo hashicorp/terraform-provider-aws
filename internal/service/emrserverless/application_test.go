@@ -275,7 +275,7 @@ func testAccCheckApplicationExists(resourceName string, application *emrserverle
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn()
 
 		output, err := tfemrserverless.FindApplicationByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -293,7 +293,7 @@ func testAccCheckApplicationExists(resourceName string, application *emrserverle
 }
 
 func testAccCheckApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emrserverless_application" {

@@ -26,7 +26,7 @@ func sweepCompositeAlarms(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CloudWatchConn
+	conn := client.(*conns.AWSClient).CloudWatchConn()
 	input := &cloudwatch.DescribeAlarmsInput{
 		AlarmTypes: aws.StringSlice([]string{cloudwatch.AlarmTypeCompositeAlarm}),
 	}

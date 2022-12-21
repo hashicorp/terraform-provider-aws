@@ -193,7 +193,7 @@ func testAccCheckConfigurationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MQ Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
 
 		_, err := tfmq.FindConfigurationByID(context.Background(), conn, rs.Primary.ID)
 

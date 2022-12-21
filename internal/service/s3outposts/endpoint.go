@@ -72,7 +72,7 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
@@ -100,7 +100,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	endpoint, err := FindEndpoint(conn, d.Id())
 
@@ -135,7 +135,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 

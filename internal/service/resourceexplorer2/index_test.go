@@ -138,7 +138,7 @@ func testAccIndex_type(t *testing.T) {
 }
 
 func testAccCheckIndexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_resourceexplorer2_index" {
@@ -171,7 +171,7 @@ func testAccCheckIndexExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Resource Explorer Index ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
 
 		_, err := tfresourceexplorer2.FindIndex(context.Background(), conn)
 

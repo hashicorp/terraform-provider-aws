@@ -441,7 +441,7 @@ func testAccCheckScalingPolicyExists(n string, v *autoscaling.ScalingPolicy) res
 			return fmt.Errorf("No Auto Scaling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		output, err := tfautoscaling.FindScalingPolicy(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
@@ -456,7 +456,7 @@ func testAccCheckScalingPolicyExists(n string, v *autoscaling.ScalingPolicy) res
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_policy" {

@@ -305,7 +305,7 @@ func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Flee
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 		resp, err := conn.DescribeFleets(&appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
@@ -323,7 +323,7 @@ func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Flee
 }
 
 func testAccCheckFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_fleet" {

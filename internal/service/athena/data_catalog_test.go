@@ -254,7 +254,7 @@ func testAccCheckDataCatalogExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Athena Data Catalog name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.GetDataCatalogInput{
 			Name: aws.String(rs.Primary.ID),
@@ -267,7 +267,7 @@ func testAccCheckDataCatalogExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckDataCatalogDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_data_catalog" {

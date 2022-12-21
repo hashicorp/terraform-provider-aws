@@ -131,7 +131,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 }
 
 func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -257,7 +257,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 
 // Update spot state, etc
 func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -315,7 +315,7 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func readInstance(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	instance, err := FindInstanceByID(conn, d.Get("spot_instance_id").(string))
 
@@ -387,7 +387,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -401,7 +401,7 @@ func resourceSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Cancelling spot request: %s", d.Id())
 	_, err := conn.CancelSpotInstanceRequests(&ec2.CancelSpotInstanceRequestsInput{

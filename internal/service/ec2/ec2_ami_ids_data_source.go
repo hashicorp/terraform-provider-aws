@@ -60,7 +60,7 @@ func DataSourceAMIIDs() *schema.Resource {
 }
 
 func dataSourceAMIIDsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	params := &ec2.DescribeImagesInput{
 		Owners: flex.ExpandStringList(d.Get("owners").([]interface{})),

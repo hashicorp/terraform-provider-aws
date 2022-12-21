@@ -168,7 +168,7 @@ func ResourceOrganization() *schema.Resource {
 }
 
 func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
@@ -228,7 +228,7 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
@@ -325,7 +325,7 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	if d.HasChange("aws_service_access_principals") {
 		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
@@ -412,7 +412,7 @@ func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 

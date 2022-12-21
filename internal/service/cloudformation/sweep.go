@@ -43,7 +43,7 @@ func sweepStackSetInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFormationConn
+	conn := client.(*conns.AWSClient).CloudFormationConn()
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
@@ -116,7 +116,7 @@ func sweepStackSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFormationConn
+	conn := client.(*conns.AWSClient).CloudFormationConn()
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
@@ -163,7 +163,7 @@ func sweepStacks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).CloudFormationConn
+	conn := client.(*conns.AWSClient).CloudFormationConn()
 	input := &cloudformation.ListStacksInput{
 		StackStatusFilter: aws.StringSlice([]string{
 			cloudformation.StackStatusCreateComplete,

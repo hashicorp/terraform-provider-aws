@@ -51,7 +51,7 @@ const (
 )
 
 func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName := d.Get("table_name").(string)
 	key, err := ExpandTableItemAttributes(d.Get("key").(string))

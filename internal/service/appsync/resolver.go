@@ -173,7 +173,7 @@ func ResourceResolver() *schema.Resource {
 }
 
 func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -236,7 +236,7 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
@@ -294,7 +294,7 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.UpdateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -358,7 +358,7 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 

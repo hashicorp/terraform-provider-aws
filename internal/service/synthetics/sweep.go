@@ -32,7 +32,7 @@ func sweepCanaries(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SyntheticsConn
+	conn := client.(*conns.AWSClient).SyntheticsConn()
 	input := &synthetics.DescribeCanariesInput{}
 	var sweeperErrs *multierror.Error
 

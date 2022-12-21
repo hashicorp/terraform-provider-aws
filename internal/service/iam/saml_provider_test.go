@@ -124,7 +124,7 @@ func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 }
 
 func testAccCheckSAMLProviderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_saml_provider" {
@@ -158,7 +158,7 @@ func testAccCheckSAMLProviderExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No IAM SAML Provider ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		_, err := tfiam.FindSAMLProviderByARN(context.Background(), conn, rs.Primary.ID)
 

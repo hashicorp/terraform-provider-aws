@@ -105,7 +105,7 @@ func testAccCheckIPAMPoolCIDRExists(n string, v *ec2.IpamPoolCidr) resource.Test
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(conn, cidrBlock, poolID)
 
@@ -120,7 +120,7 @@ func testAccCheckIPAMPoolCIDRExists(n string, v *ec2.IpamPoolCidr) resource.Test
 }
 
 func testAccCheckIPAMPoolCIDRDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_ipam_pool_cidr" {

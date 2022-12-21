@@ -52,7 +52,7 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 }
 
 func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	keyName := d.Get("key_name").(string)
 	workspaceID := d.Get("workspace_id").(string)
@@ -78,7 +78,7 @@ func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	workspaceID, keyName, error := WorkspaceAPIKeyParseResourceID(d.Id())
 

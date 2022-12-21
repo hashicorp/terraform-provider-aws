@@ -56,7 +56,7 @@ func getIdentityVerificationAttributes(conn *ses.SES, domainName string) (*ses.I
 }
 
 func resourceDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 	domainName := d.Get("domain").(string)
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		att, err := getIdentityVerificationAttributes(conn, domainName)
@@ -92,7 +92,7 @@ func resourceDomainIdentityVerificationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceDomainIdentityVerificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 	d.Set("domain", domainName)

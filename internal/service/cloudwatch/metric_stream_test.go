@@ -387,7 +387,7 @@ func testAccCheckMetricStreamExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No CloudWatch Metric Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 		_, err := tfcloudwatch.FindMetricStreamByName(context.Background(), conn, rs.Primary.ID)
 
@@ -396,7 +396,7 @@ func testAccCheckMetricStreamExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckMetricStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_metric_stream" {

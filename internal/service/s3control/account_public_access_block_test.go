@@ -293,7 +293,7 @@ func testAccCheckAccountPublicAccessBlockExists(resourceName string, configurati
 			return fmt.Errorf("No S3 Account Public Access Block ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 		input := &s3control.GetPublicAccessBlockInput{
 			AccountId: aws.String(rs.Primary.ID),
@@ -331,7 +331,7 @@ func testAccCheckAccountPublicAccessBlockExists(resourceName string, configurati
 }
 
 func testAccCheckAccountPublicAccessBlockDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_account_public_access_block" {
@@ -367,7 +367,7 @@ func testAccCheckAccountPublicAccessBlockDestroy(s *terraform.State) error {
 
 func testAccCheckAccountPublicAccessBlockDisappears() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 		accountID := acctest.Provider.Meta().(*conns.AWSClient).AccountID
 
 		deleteInput := &s3control.DeletePublicAccessBlockInput{

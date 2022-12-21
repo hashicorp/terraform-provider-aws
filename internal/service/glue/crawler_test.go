@@ -1581,7 +1581,7 @@ func testAccCheckCrawlerExists(resourceName string, crawler *glue.Crawler) resou
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		output, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
 
 		if err != nil {
@@ -1600,7 +1600,7 @@ func testAccCheckCrawlerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		_, err := tfglue.FindCrawlerByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {

@@ -45,7 +45,7 @@ func ResourceRDSDBInstance() *schema.Resource {
 }
 
 func resourceRDSDBInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	dbInstanceARN := d.Get("rds_db_instance_arn").(string)
 	stackID := d.Get("stack_id").(string)
@@ -69,7 +69,7 @@ func resourceRDSDBInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	dbInstance, err := FindRDSDBInstanceByTwoPartKey(conn, d.Get("rds_db_instance_arn").(string), d.Get("stack_id").(string))
 
@@ -91,7 +91,7 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	input := &opsworks.UpdateRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
@@ -115,7 +115,7 @@ func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRDSDBInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	log.Printf("[DEBUG] Deregistering OpsWorks RDS DB Instance: %s", d.Id())
 	_, err := client.DeregisterRdsDbInstance(&opsworks.DeregisterRdsDbInstanceInput{

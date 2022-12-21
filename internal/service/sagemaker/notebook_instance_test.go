@@ -653,7 +653,7 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 }
 
 func testAccCheckNotebookInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_notebook_instance" {
@@ -687,7 +687,7 @@ func testAccCheckNotebookInstanceExists(n string, v *sagemaker.DescribeNotebookI
 			return fmt.Errorf("No SageMaker Notebook Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		output, err := tfsagemaker.FindNotebookInstanceByName(conn, rs.Primary.ID)
 

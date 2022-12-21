@@ -47,7 +47,7 @@ func DataSourceConnection() *schema.Resource {
 }
 
 func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var connection *codestarconnections.Connection

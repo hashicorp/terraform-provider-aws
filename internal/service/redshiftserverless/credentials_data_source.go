@@ -48,7 +48,7 @@ func DataSourceCredentials() *schema.Resource {
 }
 
 func dataSourceCredentialsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	workgroupName := d.Get("workgroup_name").(string)
 	input := &redshiftserverless.GetCredentialsInput{

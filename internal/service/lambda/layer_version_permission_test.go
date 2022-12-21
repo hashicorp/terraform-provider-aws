@@ -243,7 +243,7 @@ func testAccCheckLayerVersionPermissionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("error parsing lambda layer ID: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		_, err = conn.GetLayerVersionPolicy(&lambda.GetLayerVersionPolicyInput{
 			LayerName:     aws.String(layerName),
@@ -255,7 +255,7 @@ func testAccCheckLayerVersionPermissionExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckLayerVersionPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_layer_version_permission" {

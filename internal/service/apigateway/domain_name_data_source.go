@@ -87,7 +87,7 @@ func DataSourceDomainName() *schema.Resource {
 }
 
 func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &apigateway.GetDomainNameInput{}

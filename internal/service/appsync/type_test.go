@@ -69,7 +69,8 @@ func testAccType_disappears(t *testing.T) {
 }
 
 func testAccCheckTypeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_type" {
 			continue
@@ -105,7 +106,7 @@ func testAccCheckTypeResourceExists(resourceName string, typ *appsync.Type) reso
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 		out, err := tfappsync.FindTypeByID(conn, apiID, format, name)
 		if err != nil {
 			return err

@@ -311,7 +311,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 }
 
 func testAccCheckVPCEndpointServiceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_service" {
@@ -345,7 +345,7 @@ func testAccCheckVPCEndpointServiceExists(n string, v *ec2.ServiceConfiguration)
 			return fmt.Errorf("No EC2 VPC Endpoint Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPCEndpointServiceConfigurationByID(conn, rs.Primary.ID)
 

@@ -662,7 +662,7 @@ func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 }
 
 func testAccCheckNFSFileShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_nfs_file_share" {
@@ -692,7 +692,7 @@ func testAccCheckNFSFileShareExists(resourceName string, nfsFileShare *storagega
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 		output, err := tfstoragegateway.FindNFSFileShareByARN(conn, rs.Primary.ID)
 

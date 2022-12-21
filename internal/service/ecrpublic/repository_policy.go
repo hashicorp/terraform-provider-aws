@@ -52,7 +52,7 @@ const (
 )
 
 func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -92,7 +92,7 @@ func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 
 	output, err := FindRepositoryPolicyByName(conn, d.Id())
 
@@ -126,7 +126,7 @@ func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 
 	_, err := conn.DeleteRepositoryPolicy(&ecrpublic.DeleteRepositoryPolicyInput{
 		RegistryId:     aws.String(d.Get("registry_id").(string)),

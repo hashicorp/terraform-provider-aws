@@ -48,7 +48,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 }
 
 func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	// Create the Inbound Connection
 	acceptOpts := &opensearchservice.AcceptInboundConnectionInput{
@@ -75,7 +75,7 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	ccscRaw, statusCode, err := inboundConnectionRefreshState(ctx, conn, d.Id())()
 
@@ -92,7 +92,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	req := &opensearchservice.DeleteInboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),

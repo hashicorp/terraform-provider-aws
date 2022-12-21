@@ -521,7 +521,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn()
 					udi := firehose.UpdateDestinationInput{
 						DeliveryStreamName:             aws.String(rName),
 						DestinationId:                  aws.String("destinationId-000000000001"),
@@ -1645,7 +1645,7 @@ func testAccCheckDeliveryStreamExists(n string, v *firehose.DeliveryStreamDescri
 			return fmt.Errorf("No Kinesis Firehose Delivery Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn()
 
 		sn := rs.Primary.Attributes["name"]
 		output, err := tffirehose.FindDeliveryStreamByName(conn, sn)
@@ -1848,7 +1848,7 @@ func testAccCheckDeliveryStreamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseConn()
 
 		sn := rs.Primary.Attributes["name"]
 		_, err := tffirehose.FindDeliveryStreamByName(conn, sn)
@@ -1868,7 +1868,7 @@ func testAccCheckDeliveryStreamDestroy(s *terraform.State) error {
 }
 
 func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function" {
@@ -3952,7 +3952,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 func testAccPreCheckIAMServiceLinkedRoleEs(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 	dnsSuffix := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
 
 	input := &iam.ListRolesInput{

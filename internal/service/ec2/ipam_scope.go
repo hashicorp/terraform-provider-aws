@@ -72,7 +72,7 @@ func ResourceIPAMScope() *schema.Resource {
 }
 
 func ResourceIPAMScopeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -102,7 +102,7 @@ func ResourceIPAMScopeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ResourceIPAMScopeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -142,7 +142,7 @@ func ResourceIPAMScopeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ResourceIPAMScopeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("description") {
 		input := &ec2.ModifyIpamScopeInput{
@@ -176,7 +176,7 @@ func ResourceIPAMScopeUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ResourceIPAMScopeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
 	_, err := conn.DeleteIpamScope(&ec2.DeleteIpamScopeInput{

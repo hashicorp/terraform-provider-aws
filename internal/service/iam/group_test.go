@@ -84,7 +84,7 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 }
 
 func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group" {
@@ -123,7 +123,7 @@ func testAccCheckGroupExists(n string, res *iam.GetGroupOutput) resource.TestChe
 			return errors.New("No Group name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		resp, err := conn.GetGroup(&iam.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),

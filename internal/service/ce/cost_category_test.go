@@ -228,7 +228,7 @@ func testAccCheckCostCategoryExists(n string, v *costexplorer.CostCategory) reso
 			return fmt.Errorf("No CE Cost Category ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
 
 		output, err := tfce.FindCostCategoryByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -243,7 +243,7 @@ func testAccCheckCostCategoryExists(n string, v *costexplorer.CostCategory) reso
 }
 
 func testAccCheckCostCategoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ce_cost_category" {

@@ -88,7 +88,7 @@ func testAccCheckDiskAttachmentExists(n string, disk lightsail.Disk) resource.Te
 			return errors.New("No LightsailDiskAttachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		out, err := tflightsail.FindDiskAttachmentById(context.Background(), conn, rs.Primary.ID)
 
@@ -112,7 +112,7 @@ func testAccCheckDiskAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindDiskAttachmentById(context.Background(), conn, rs.Primary.ID)
 

@@ -79,7 +79,7 @@ func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 }
 
 func testAccCheckDataLakeSettingsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_data_lake_settings" {
@@ -117,7 +117,7 @@ func testAccCheckDataLakeSettingsExists(resourceName string) resource.TestCheckF
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 

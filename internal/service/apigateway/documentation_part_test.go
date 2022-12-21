@@ -201,7 +201,7 @@ func testAccCheckDocumentationPartExists(n string, res *apigateway.Documentation
 			return fmt.Errorf("No API Gateway Documentation Part ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		apiId, id, err := tfapigateway.DecodeDocumentationPartID(rs.Primary.ID)
 		if err != nil {
@@ -224,7 +224,7 @@ func testAccCheckDocumentationPartExists(n string, res *apigateway.Documentation
 }
 
 func testAccCheckDocumentationPartDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_documentation_part" {

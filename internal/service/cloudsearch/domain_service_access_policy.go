@@ -52,7 +52,7 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 }
 
 func resourceDomainServiceAccessPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	domainName := d.Get("domain_name").(string)
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
@@ -87,7 +87,7 @@ func resourceDomainServiceAccessPolicyPut(d *schema.ResourceData, meta interface
 }
 
 func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	accessPolicy, err := FindAccessPolicyByName(conn, d.Id())
 
@@ -114,7 +114,7 @@ func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceDomainServiceAccessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(""),

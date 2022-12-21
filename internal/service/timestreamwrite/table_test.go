@@ -297,7 +297,7 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 }
 
 func testAccCheckTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -351,7 +351,7 @@ func testAccCheckTableExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn()
 
 		input := &timestreamwrite.DescribeTableInput{
 			DatabaseName: aws.String(dbName),

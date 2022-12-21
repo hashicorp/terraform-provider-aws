@@ -64,7 +64,7 @@ func DataSourceIntent() *schema.Resource {
 }
 
 func dataSourceIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	intentName := d.Get("name").(string)
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{

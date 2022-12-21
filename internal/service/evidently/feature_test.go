@@ -604,7 +604,7 @@ func TestAccEvidentlyFeature_disappears(t *testing.T) {
 }
 
 func testAccCheckFeatureDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_evidently_feature" {
 			continue
@@ -650,7 +650,7 @@ func testAccCheckFeatureExists(n string, v *cloudwatchevidently.Feature) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
 
 		output, err := tfcloudwatchevidently.FindFeatureWithProjectNameorARN(context.Background(), conn, featureName, projectNameOrARN)
 

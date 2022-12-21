@@ -188,7 +188,7 @@ func testAccCheckSamplingRuleExists(n string, samplingRule *xray.SamplingRule) r
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
 		rule, err := tfxray.GetSamplingRule(conn, rs.Primary.ID)
 
@@ -208,7 +208,7 @@ func testAccCheckSamplingRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
 		rule, err := tfxray.GetSamplingRule(conn, rs.Primary.ID)
 
@@ -225,7 +225,7 @@ func testAccCheckSamplingRuleDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
 	input := &xray.GetSamplingRulesInput{}
 

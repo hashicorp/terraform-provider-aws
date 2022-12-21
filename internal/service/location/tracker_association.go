@@ -59,7 +59,7 @@ const (
 )
 
 func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	consumerArn := d.Get("consumer_arn").(string)
 	trackerName := d.Get("tracker_name").(string)
@@ -84,7 +84,7 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
@@ -110,7 +110,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	log.Printf("[INFO] Deleting Location TrackerAssociation %s", d.Id())
 

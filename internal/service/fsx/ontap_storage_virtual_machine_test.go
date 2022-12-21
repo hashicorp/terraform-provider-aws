@@ -286,7 +286,7 @@ func testAccCheckOntapStorageVirtualMachineExists(resourceName string, svm *fsx.
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 		storageVirtualMachine, err := tffsx.FindStorageVirtualMachineByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -304,7 +304,7 @@ func testAccCheckOntapStorageVirtualMachineExists(resourceName string, svm *fsx.
 }
 
 func testAccCheckOntapStorageVirtualMachineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storage_virtual_machine" {

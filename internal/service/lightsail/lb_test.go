@@ -198,7 +198,7 @@ func testAccCheckLoadBalancerExists(n string, lb *lightsail.LoadBalancer) resour
 			return errors.New("No LightsailLoadBalancer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		resp, err := tflightsail.FindLoadBalancerByName(context.Background(), conn, rs.Primary.ID)
 
@@ -223,7 +223,7 @@ func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the LoadBalancer
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 		_, err := conn.DeleteLoadBalancer(&lightsail.DeleteLoadBalancerInput{
 			LoadBalancerName: aws.String(rName),
 		})
@@ -266,7 +266,7 @@ func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindLoadBalancerByName(context.Background(), conn, rs.Primary.ID)
 

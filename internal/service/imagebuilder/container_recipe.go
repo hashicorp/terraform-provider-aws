@@ -277,7 +277,7 @@ func ResourceContainerRecipe() *schema.Resource {
 }
 
 func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -353,7 +353,7 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -417,7 +417,7 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceContainerRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -431,7 +431,7 @@ func resourceContainerRecipeUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceContainerRecipeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteContainerRecipeInput{
 		ContainerRecipeArn: aws.String(d.Id()),

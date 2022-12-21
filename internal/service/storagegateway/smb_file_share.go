@@ -201,7 +201,7 @@ func ResourceSMBFileShare() *schema.Resource {
 }
 
 func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -299,7 +299,7 @@ func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -366,7 +366,7 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &storagegateway.UpdateSMBFileShareInput{
@@ -451,7 +451,7 @@ func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", d.Id())
 	_, err := conn.DeleteFileShare(&storagegateway.DeleteFileShareInput{

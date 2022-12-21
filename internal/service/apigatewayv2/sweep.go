@@ -51,7 +51,7 @@ func sweepAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
 	input := &apigatewayv2.GetApisInput{}
 	var sweeperErrs *multierror.Error
 
@@ -95,7 +95,7 @@ func sweepDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
 	input := &apigatewayv2.GetDomainNamesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -137,7 +137,7 @@ func sweepVPCLinks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
 	input := &apigatewayv2.GetVpcLinksInput{}
 	var sweeperErrs *multierror.Error
 
@@ -192,7 +192,7 @@ func sweepAPIMappings(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
 	var sweeperErrs *multierror.Error
 	log.Printf("[INFO] API Gateway v2 API Mapping")
 
@@ -233,7 +233,7 @@ func sweepStages(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
 	var sweeperErrs *multierror.Error
 	log.Printf("[INFO] API Gateway v2 Stages")
 

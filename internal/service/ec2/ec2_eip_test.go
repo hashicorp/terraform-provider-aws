@@ -632,7 +632,7 @@ func testAccCheckEIPExists(n string, v *ec2.Address) resource.TestCheckFunc {
 			return fmt.Errorf("No EC2 EIP ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var err error
 		var output *ec2.Address
@@ -654,7 +654,7 @@ func testAccCheckEIPExists(n string, v *ec2.Address) resource.TestCheckFunc {
 }
 
 func testAccCheckEIPDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eip" {

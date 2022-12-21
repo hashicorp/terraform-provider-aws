@@ -602,7 +602,7 @@ func TestAccAPIGatewayMethodSettings_disappears(t *testing.T) {
 }
 
 func testAccCheckMethodSettingsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_method_settings" {

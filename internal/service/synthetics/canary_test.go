@@ -546,7 +546,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 }
 
 func testAccCheckCanaryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_synthetics_canary" {
@@ -580,7 +580,7 @@ func testAccCheckCanaryExists(n string, canary *synthetics.Canary) resource.Test
 			return fmt.Errorf("No Synthetics Canary ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
 
 		output, err := tfsynthetics.FindCanaryByName(conn, rs.Primary.ID)
 

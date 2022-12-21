@@ -255,7 +255,7 @@ func resourceMultiRegionAccessPointDelete(d *schema.ResourceData, meta interface
 }
 
 func ConnForMRAP(client *conns.AWSClient) (*s3control.S3Control, error) {
-	originalConn := client.S3ControlConn
+	originalConn := client.S3ControlConn()
 	// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
 	region := endpoints.UsWest2RegionID
 

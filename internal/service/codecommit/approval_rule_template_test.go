@@ -158,7 +158,7 @@ func testAccCheckApprovalRuleTemplateExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
 
 		_, err := conn.GetApprovalRuleTemplate(&codecommit.GetApprovalRuleTemplateInput{
 			ApprovalRuleTemplateName: aws.String(rs.Primary.ID),
@@ -169,7 +169,7 @@ func testAccCheckApprovalRuleTemplateExists(name string) resource.TestCheckFunc 
 }
 
 func testAccCheckApprovalRuleTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codecommit_approval_rule_template" {

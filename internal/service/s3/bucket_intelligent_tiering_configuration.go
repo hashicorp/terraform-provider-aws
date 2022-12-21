@@ -86,7 +86,7 @@ func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
 }
 
 func resourceBucketIntelligentTieringConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucketName := d.Get("bucket").(string)
 	configurationName := d.Get("name").(string)
@@ -125,7 +125,7 @@ func resourceBucketIntelligentTieringConfigurationPut(d *schema.ResourceData, me
 }
 
 func resourceBucketIntelligentTieringConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
@@ -163,7 +163,7 @@ func resourceBucketIntelligentTieringConfigurationRead(d *schema.ResourceData, m
 }
 
 func resourceBucketIntelligentTieringConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 

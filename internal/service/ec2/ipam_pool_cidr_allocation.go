@@ -90,7 +90,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 }
 
 func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	ipamPoolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.AllocateIpamPoolCidrInput{
@@ -125,7 +125,7 @@ func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceIPAMPoolCIDRAllocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
 
@@ -162,7 +162,7 @@ func resourceIPAMPoolCIDRAllocationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
 
