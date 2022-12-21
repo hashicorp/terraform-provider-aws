@@ -90,6 +90,32 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
+			"alarms": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarm_names": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"rollback": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"deployment_controller": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -464,6 +490,10 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.TaskDefinition = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("alarms"); ok && v.(*schema.Set).Len() > 0 {
+		input.DeploymentConfiguration.Alarms = expandAlarms(v.(*schema.Set).List())
+	}
+
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
 			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
@@ -707,6 +737,10 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
 
+		if err := d.Set("alarms", flattenAlarms(service.DeploymentConfiguration.Alarms)); err != nil {
+			return fmt.Errorf("error setting alarms: %w", err)
+		}
+
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
 			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
 				return fmt.Errorf("error setting deployment_circuit_break: %w", err)
@@ -774,13 +808,14 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		schedulingStrategy := d.Get("scheduling_strategy").(string)
 
-		if schedulingStrategy == ecs.SchedulingStrategyDaemon {
+		switch schedulingStrategy {
+		case ecs.SchedulingStrategyDaemon:
 			if d.HasChange("deployment_minimum_healthy_percent") {
 				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
 					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
 				}
 			}
-		} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
+		case ecs.SchedulingStrategyReplica:
 			if d.HasChange("desired_count") {
 				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
 			}
@@ -836,6 +871,10 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				input.PlacementConstraints = pc
 			}
+		}
+
+		if d.HasChange("alarms") {
+			input.DeploymentConfiguration.Alarms = expandAlarms(d.Get("alarms").([]interface{}))
 		}
 
 		if d.HasChange("platform_version") {
@@ -1080,6 +1119,42 @@ func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
 		}
 	}
 	return nil
+}
+
+func expandAlarms(l []interface{}) *ecs.DeploymentAlarms {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	deploymentAlarms := &ecs.DeploymentAlarms{
+		Enable:   aws.Bool(m["enable"].(bool)),
+		Rollback: aws.Bool(m["rollback"].(bool)),
+	}
+
+	if v, ok := m["alarm_names"].(*schema.Set); ok && v.Len() > 0 {
+		deploymentAlarms.AlarmNames = flex.ExpandStringSet(v)
+	}
+
+	return deploymentAlarms
+}
+
+func flattenAlarms(apiObject *ecs.DeploymentAlarms) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AlarmNames; v != nil {
+		tfMap["alarm_names"] = aws.StringValueSlice(v)
+	}
+
+	tfMap["enable"] = aws.BoolValue(apiObject.Enable)
+	tfMap["rollback"] = aws.BoolValue(apiObject.Rollback)
+
+	return []interface{}{tfMap}
 }
 
 func expandDeploymentController(l []interface{}) *ecs.DeploymentController {
