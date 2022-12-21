@@ -528,7 +528,7 @@ resource "aws_appstream_stack" "test" {
   name = %[1]q
 
   streaming_experience_settings {
-    preferred_protocol  = %[2]q
+    preferred_protocol = %[2]q
   }
 }
 `, name, preferredProtocol)
