@@ -841,8 +841,9 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"rule_action_override": ruleActionOverrideSchema(),
-				"scope_down_statement": scopeDownStatementSchema(level - 1),
+				"rule_action_override":      ruleActionOverrideSchema(),
+				"managed_rule_group_config": managedRuleGroupConfigSchema(),
+				"scope_down_statement":      scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -936,6 +937,56 @@ func ruleActionOverrideSchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			},
+		},
+	}
+}
+
+func managedRuleGroupConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"login_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+					),
+				},
+				"password_field": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 512),
+						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+					),
+				},
+				"payload_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexp.MustCompile(`(JSON|FORM_ENCODED)`), "valid values are JSON | FORM_ENCODED"),
+					),
+				},
+				"username_field": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 512),
+						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+					),
+				},
+				"inspection_level": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexp.MustCompile(`(COMMON|TARGETED)`), "valid values are COMMON | TARGETED"),
+					),
 				},
 			},
 		},
