@@ -107,8 +107,8 @@ github.com/aws/aws-sdk-go-v2/service/sso v1.11.27/go.mod h1:wo/B7uUm/7zw/dWhBJ4F
 github.com/aws/aws-sdk-go-v2/service/sts v1.16.4/go.mod h1:lfSYenAXtavyX2A1LsViglqlG9eEFYxNryTZS5rn3QE=
 github.com/aws/aws-sdk-go-v2/service/sts v1.17.7 h1:9Mtq1KM6nD8/+HStvWcvYnixJ5N85DX+P+OY3kI3W2k=
 github.com/aws/aws-sdk-go-v2/service/sts v1.17.7/go.mod h1:+lGbb3+1ugwKrNTWcf2RT05Xmp543B06zDFTwiTLp7I=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.23.1 h1:60k44xRkZ7SCleDQbe0fUHB4y+/IKJ5mI2ZjFxUkBak=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.23.1/go.mod h1:oeI59utlQft5YCg385wnce1SXs3MBsN+4QRYNcNQ/q8=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.24.0 h1:TwdloCK4UtAndX6HLC/iFzuLeerhoziB3Z94L3oeH4U=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.24.0/go.mod h1:oeI59utlQft5YCg385wnce1SXs3MBsN+4QRYNcNQ/q8=
 github.com/aws/smithy-go v1.11.2/go.mod h1:3xHYmszWVx2c0kIwQeEVf9uSm4fYZt67FBJnwub1bgM=
 github.com/aws/smithy-go v1.13.5 h1:hgz0X/DX0dGqTYpGALqXJoRKRj5oQ7150i5FdTePzO8=
 github.com/aws/smithy-go v1.13.5/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
