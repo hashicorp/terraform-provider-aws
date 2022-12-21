@@ -266,7 +266,7 @@ func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn()
 
-	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition: %s", d.Id())
 	_, err := conn.DeleteReportDefinition(&cur.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
 	})
