@@ -162,6 +162,21 @@ func ResourceStack() *schema.Resource {
 				},
 				Set: storageConnectorsHash,
 			},
+			"streaming_experience_settings": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"preferred_protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appstream.PreferredProtocol_Values(), false),
+						},
+					},
+				},
+			},
 			"user_settings": {
 				Type:             schema.TypeSet,
 				Optional:         true,
@@ -278,6 +293,10 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.StorageConnectors = expandStorageConnectors(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("streaming_experience_settings"); ok {
+		input.StreamingExperienceSettings = expandStreamingExperienceSettings(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("user_settings"); ok {
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
@@ -353,6 +372,9 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if err = d.Set("user_settings", flattenUserSettings(v.UserSettings)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
+		if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(v.StreamingExperienceSettings)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "streaming_experience_settings", d.Id(), err))
+		}
 
 		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
 			ResourceArn: v.Arn,
@@ -407,6 +429,9 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("user_settings") {
 		input.UserSettings = expandUserSettings(d.Get("user_settings").([]interface{}))
+	}
+	if d.HasChange("streaming_experience_settings") {
+		input.StreamingExperienceSettings = expandStreamingExperienceSettings(d.Get("streaming_experience_settings").([]interface{}))
 	}
 
 	resp, err := conn.UpdateStack(input)
@@ -563,6 +588,42 @@ func flattenApplicationSettings(apiObject *appstream.ApplicationSettingsResponse
 	var tfList []interface{}
 
 	tfList = append(tfList, flattenApplicationSetting(apiObject))
+
+	return tfList
+}
+
+func expandStreamingExperienceSettings(tfList []interface{}) *appstream.StreamingExperienceSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &appstream.StreamingExperienceSettings{
+		PreferredProtocol: aws.String(tfMap["preferred_protocol"].(string)),
+	}
+
+	return apiObject
+}
+
+func flattenStreaminExperienceSetting(apiObject *appstream.StreamingExperienceSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	return map[string]interface{}{
+		"preferred_protocol": aws.StringValue(apiObject.PreferredProtocol),
+	}
+}
+
+func flattenStreaminExperienceSettings(apiObject *appstream.StreamingExperienceSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	tfList = append(tfList, flattenStreaminExperienceSetting(apiObject))
 
 	return tfList
 }

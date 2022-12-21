@@ -306,6 +306,39 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 	})
 }
 
+func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
+	var stackOutput appstream.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	preferredProtocol := "TCP"
+	newPreferredProtocol := "UDP"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_streamingExperienceSettings(rName, preferredProtocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "TCP"),
+				),
+			},
+			{
+				Config: testAccStackConfig_streamingExperienceSettings(rName, newPreferredProtocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "UDP"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -487,4 +520,16 @@ resource "aws_appstream_stack" "test" {
   }
 }
 `, name, description)
+}
+
+func testAccStackConfig_streamingExperienceSettings(name, preferredProtocol string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+
+  streaming_experience_settings {
+    preferred_protocol  = %[2]q
+  }
+}
+`, name, preferredProtocol)
 }
