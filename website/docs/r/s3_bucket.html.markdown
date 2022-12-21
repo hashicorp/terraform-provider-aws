@@ -722,7 +722,11 @@ In addition to all arguments above, the following attributes are exported:
 * `region` - The AWS region this bucket resides in.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
+  -> **NOTE:** The attribute `website_endpoint` is deprecated.
+  Use the same on attribute on the [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) resource instead.
 * `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
+  -> **NOTE:** The attribute `website_domain` is deprecated.
+  Use the same on attribute on the [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) resource instead.
 
 ## Timeouts
 
