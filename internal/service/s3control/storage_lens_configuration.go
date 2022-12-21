@@ -24,7 +24,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceStorageLensConfiguration() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_s3control_storage_lens_configuration", resourceStorageLensConfiguration)
+}
+
+func resourceStorageLensConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStorageLensConfigurationCreate,
 		ReadWithoutTimeout:   resourceStorageLensConfigurationRead,

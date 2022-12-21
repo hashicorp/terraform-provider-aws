@@ -214,7 +214,7 @@ func sweepStorageLensConfigurations(region string) error {
 				continue
 			}
 
-			r := ResourceStorageLensConfiguration()
+			r := resourceStorageLensConfiguration()
 			d := r.Data(nil)
 			d.SetId(StorageLensConfigurationCreateResourceID(accountID, configID))
 
