@@ -1094,6 +1094,19 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
+												"cluster_identifier": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"data_api_role_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"database_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"database_url": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -2017,8 +2030,11 @@ func expandMarketoConnectorProfileProperties(m map[string]interface{}) *appflow.
 
 func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *appflow.RedshiftConnectorProfileProperties {
 	properties := appflow.RedshiftConnectorProfileProperties{
-		BucketName: aws.String(m["bucket_name"].(string)),
-		RoleArn:    aws.String(m["role_arn"].(string)),
+		BucketName:        aws.String(m["bucket_name"].(string)),
+		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
+		RoleArn:           aws.String(m["role_arn"].(string)),
+		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
+		DatabaseName:      aws.String(m["database_name"].(string)),
 	}
 
 	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
