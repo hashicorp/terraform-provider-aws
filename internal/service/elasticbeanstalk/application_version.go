@@ -166,7 +166,6 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceApplicationVersionRead(d, meta)
-
 }
 
 func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) error {

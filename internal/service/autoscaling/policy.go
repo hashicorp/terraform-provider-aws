@@ -847,7 +847,6 @@ func expandMetricDataQueries(metricDataQuerySlices []interface{}) []*autoscaling
 	metricDataQueries := make([]*autoscaling.MetricDataQuery, len(metricDataQuerySlices))
 
 	for i := range metricDataQueries {
-
 		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
 		metricDataQuery := &autoscaling.MetricDataQuery{
 			Id: aws.String(metricDataQueryFlat["id"].(string)),

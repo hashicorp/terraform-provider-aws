@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -173,7 +174,8 @@ func InstanceRoleAssociationDecodeID(id string) (string, string, error) {
 }
 
 func DescribeDBInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
-	dbInstance, err := FindDBInstanceByID(conn, dbInstanceIdentifier)
+	ctx := context.TODO()
+	dbInstance, err := findDBInstanceByIDSDKv1(ctx, conn, dbInstanceIdentifier)
 	if err != nil {
 		return nil, err
 	}

@@ -20,10 +20,10 @@ import (
 
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceInstanceCreate,
-		ReadContext:   resourceInstanceRead,
-		UpdateContext: resourceInstanceUpdate,
-		DeleteContext: resourceInstanceDelete,
+		CreateWithoutTimeout: resourceInstanceCreate,
+		ReadWithoutTimeout:   resourceInstanceRead,
+		UpdateWithoutTimeout: resourceInstanceUpdate,
+		DeleteWithoutTimeout: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -87,6 +87,11 @@ func ResourceInstance() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric or hyphen characters"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
 				),
+			},
+			"multi_party_conference_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false, //verified default result from ListInstanceAttributes()
 			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,

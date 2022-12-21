@@ -114,7 +114,6 @@ func testAccCheckPermissionDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckPermissionExists(n string, v *acmpca.Permission) resource.TestCheckFunc {

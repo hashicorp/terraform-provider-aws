@@ -21,37 +21,24 @@ func DataSourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"zone_id": {
+			"caller_reference": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"private_zone": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"comment": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"caller_reference": {
+			"linked_service_description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			"linked_service_principal": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"resource_record_set_count": {
-				Type:     schema.TypeInt,
+			"name": {
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -60,12 +47,29 @@ func DataSourceZone() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"linked_service_principal": {
+			"primary_name_server": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"linked_service_description": {
+			"private_zone": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"resource_record_set_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"zone_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 		},
@@ -180,6 +184,10 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("getting Route 53 Hosted Zone (%s) name servers: %w", idHostedZone, err)
+	}
+
+	if err := d.Set("primary_name_server", nameServers[0]); err != nil {
+		return fmt.Errorf("setting primary_name_server: %w", err)
 	}
 
 	if err := d.Set("name_servers", nameServers); err != nil {

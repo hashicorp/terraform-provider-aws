@@ -118,7 +118,7 @@ func sweepClusters(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, lastPage bool) bool {
@@ -164,7 +164,7 @@ func sweepEventSubscriptions(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -206,7 +206,7 @@ func sweepScheduledActions(region string) error {
 	}
 	conn := client.(*conns.AWSClient).RedshiftConn
 	input := &redshift.DescribeScheduledActionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeScheduledActionsPages(input, func(page *redshift.DescribeScheduledActionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -250,7 +250,7 @@ func sweepSnapshotSchedules(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &redshift.DescribeSnapshotSchedulesInput{}
@@ -304,7 +304,7 @@ func sweepSubnetGroups(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &redshift.DescribeClusterSubnetGroupsInput{}
@@ -359,7 +359,7 @@ func sweepHSMClientCertificates(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeHsmClientCertificatesPages(&redshift.DescribeHsmClientCertificatesInput{}, func(resp *redshift.DescribeHsmClientCertificatesOutput, lastPage bool) bool {
@@ -404,7 +404,7 @@ func sweepHSMConfigurations(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeHsmConfigurationsPages(&redshift.DescribeHsmConfigurationsInput{}, func(resp *redshift.DescribeHsmConfigurationsOutput, lastPage bool) bool {
@@ -449,7 +449,7 @@ func sweepAuthenticationProfiles(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RedshiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &redshift.DescribeAuthenticationProfilesInput{}

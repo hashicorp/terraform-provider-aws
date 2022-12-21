@@ -1032,7 +1032,6 @@ func testAccCheckParameterGroupDestroy(s *terraform.State) error {
 
 func testAccCheckParameterGroupAttributes(v *rds.DBParameterGroup, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.DBParameterGroupName != name {
 			return fmt.Errorf("Bad Parameter Group name, expected (%s), got (%s)", name, *v.DBParameterGroupName)
 		}

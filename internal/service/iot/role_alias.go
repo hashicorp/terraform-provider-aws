@@ -66,7 +66,6 @@ func resourceRoleAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func GetRoleAliasDescription(conn *iot.IoT, alias string) (*iot.RoleAliasDescription, error) {
-
 	roleAliasDescriptionOutput, err := conn.DescribeRoleAlias(&iot.DescribeRoleAliasInput{
 		RoleAlias: aws.String(alias),
 	})

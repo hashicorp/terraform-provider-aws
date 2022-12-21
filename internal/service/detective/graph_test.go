@@ -143,7 +143,6 @@ func testAccCheckGraphDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckGraphExists(resourceName string, graph *detective.Graph) resource.TestCheckFunc {

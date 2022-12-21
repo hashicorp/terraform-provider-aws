@@ -106,7 +106,7 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -148,7 +148,7 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Format(time.RFC3339)
 
@@ -191,7 +191,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Unix()
 
@@ -516,5 +516,4 @@ func TestExpandValidityValue(t *testing.T) {
 			t.Errorf("%s, %q: expected %d, got %d", testcase.Type, testcase.Value, testcase.Expected, i)
 		}
 	}
-
 }

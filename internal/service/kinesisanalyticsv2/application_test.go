@@ -4283,7 +4283,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s_${count.index}"
   handler       = "exports.example"
   role          = aws_iam_role.test[0].arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -5751,8 +5751,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
     }
 
     vpc_configuration {
-      security_group_ids = aws_security_group.test.*.id
-      subnet_ids         = aws_subnet.test.*.id
+      security_group_ids = aws_security_group.test[*].id
+      subnet_ids         = aws_subnet.test[*].id
     }
   }
 }

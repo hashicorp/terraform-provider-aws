@@ -34,6 +34,7 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_association_id", vpcResourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_cidr_block", vpcResourceName, "ipv6_cidr_block"),

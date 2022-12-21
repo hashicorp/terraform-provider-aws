@@ -76,7 +76,6 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckRoleAliasDestroy(s *terraform.State) error {

@@ -22,7 +22,7 @@ data "aws_rds_cluster" "clusterName" {
 
 The following arguments are supported:
 
-* `cluster_identifier` - (Required) The cluster identifier of the RDS cluster.
+* `cluster_identifier` - (Required) Cluster identifier of the RDS cluster.
 
 ## Attributes Reference
 

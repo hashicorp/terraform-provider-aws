@@ -14,7 +14,6 @@ import (
 )
 
 func ResourceAPICache() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceAPICacheCreate,
 		Read:   resourceAPICacheRead,
@@ -144,7 +143,6 @@ func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceAPICacheRead(d, meta)
-
 }
 
 func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {

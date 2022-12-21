@@ -32,7 +32,7 @@ func sweepInstance(region string) error {
 	conn := client.(*conns.AWSClient).ConnectConn
 	ctx := context.Background()
 	var errs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	// MaxResults:  Maximum value of 10. https://docs.aws.amazon.com/connect/latest/APIReference/API_ListInstances.html
 	input := &connect.ListInstancesInput{MaxResults: aws.Int64(ListInstancesMaxResults)}

@@ -33,7 +33,7 @@ data "aws_elb" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The unique name of the load balancer.
+* `name` - (Required) Unique name of the load balancer.
 
 ## Attributes Reference
 

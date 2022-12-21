@@ -126,7 +126,6 @@ func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta int
 		input.Domain = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Fsx Windows File System: %#v", input)
 	output, err := conn.CreateLocationFsxWindows(input)
 	if err != nil {
 		return fmt.Errorf("error creating DataSync Location Fsx Windows File System: %w", err)

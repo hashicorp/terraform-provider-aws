@@ -2146,7 +2146,6 @@ func expandTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 					}
 
 					iotErrorAction = &iot.Action{CloudwatchAlarm: action}
-
 				}
 			case "cloudwatch_logs":
 				for _, tfMapRaw := range v.([]interface{}) {

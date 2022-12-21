@@ -278,7 +278,6 @@ func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([
 }
 
 func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {
-
 	b := make([]*ses.CloudWatchDimensionConfiguration, len(v))
 
 	for i, vI := range v {

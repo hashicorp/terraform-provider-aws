@@ -23,7 +23,8 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 			"disappears": testAccActiveReceiptRuleSet_disappears,
 		},
 		"DataSource": {
-			"basic": testAccActiveReceiptRuleSetDataSource_basic,
+			"basic":           testAccActiveReceiptRuleSetDataSource_basic,
+			"noActiveRuleSet": testAccActiveReceiptRuleSetDataSource_noActiveRuleSet,
 		},
 	}
 
@@ -107,11 +108,9 @@ func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
 		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) == rs.Primary.ID) {
 			return fmt.Errorf("Active receipt rule set still exists")
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {

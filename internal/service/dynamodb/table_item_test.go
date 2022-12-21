@@ -2,6 +2,7 @@ package dynamodb_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -105,6 +106,82 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 	"two": {"S": "two"},
 	"three": {"S": "three"},
 	"four": {"S": "four"}
+}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableItemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, secondItem),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemExists("aws_dynamodb_table_item.test2", &conf2),
+					testAccCheckTableItemCount(tableName, 2),
+
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "table_name", tableName),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "item", firstItem+"\n"),
+
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "hash_key", hashKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "range_key", rangeKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "table_name", tableName),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "item", secondItem+"\n"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableItem_withDuplicateItemsSameRangeKey(t *testing.T) {
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	hashKey := "hashKey"
+	rangeKey := "rangeKey"
+	firstItem := `{
+	"hashKey": {"S": "something"},
+	"rangeKey": {"S": "first"},
+	"one": {"N": "11111"},
+	"two": {"N": "22222"},
+	"three": {"N": "33333"}
+}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableItemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, firstItem),
+				ExpectError: regexp.MustCompile(`ConditionalCheckFailedException: The conditional request failed`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableItem_withDuplicateItemsDifferentRangeKey(t *testing.T) {
+	var conf1 dynamodb.GetItemOutput
+	var conf2 dynamodb.GetItemOutput
+
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	hashKey := "hashKey"
+	rangeKey := "rangeKey"
+	firstItem := `{
+	"hashKey": {"S": "something"},
+	"rangeKey": {"S": "first"},
+	"one": {"N": "11111"},
+	"two": {"N": "22222"},
+	"three": {"N": "33333"}
+}`
+	secondItem := `{
+	"hashKey": {"S": "something"},
+	"rangeKey": {"S": "second"},
+	"one": {"N": "11111"},
+	"two": {"N": "22222"},
+	"three": {"N": "33333"}
 }`
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -229,7 +229,6 @@ func testAccCheckLicenseConfigurationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccLicenseConfigurationConfig_basic(rName string) string {

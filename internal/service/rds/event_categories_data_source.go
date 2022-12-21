@@ -54,7 +54,6 @@ func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("event_categories", eventCategories)
 
 	return nil
-
 }
 
 func findEventCategoriesMaps(conn *rds.RDS, input *rds.DescribeEventCategoriesInput) ([]*rds.EventCategoriesMap, error) {

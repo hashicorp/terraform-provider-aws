@@ -1102,7 +1102,6 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		latestVersion = aws.Int64Value(output.LaunchTemplateVersion.VersionNumber)
-
 	}
 
 	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {

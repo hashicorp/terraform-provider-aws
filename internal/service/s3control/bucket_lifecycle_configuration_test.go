@@ -575,7 +575,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "test" {
 `, rName, days)
 }
 
-func testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredObjectDeleteMarker(rName string, expiredObjectDeleteMarker bool) string {
+func testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredObjectDeleteMarker(rName string, expiredObjectDeleteMarker bool) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

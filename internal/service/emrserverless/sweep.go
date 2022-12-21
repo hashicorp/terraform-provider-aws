@@ -28,7 +28,7 @@ func sweepApplications(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EMRServerlessConn
 	input := &emrserverless.ListApplicationsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListApplicationsPages(input, func(page *emrserverless.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {

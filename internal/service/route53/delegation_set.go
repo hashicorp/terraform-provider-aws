@@ -83,7 +83,6 @@ func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
 			d.SetId("")
 			return nil
-
 		}
 		return err
 	}

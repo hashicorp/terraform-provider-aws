@@ -237,7 +237,6 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *tes
 }
 
 func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *testing.T) {
-
 	t.Skip("A bug in the service API has been reported. Deleting the FSx file system before the association prevents association from being deleted.")
 
 	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
@@ -286,7 +285,6 @@ func testAccCheckFileSystemAssociationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckFileSystemAssociationExists(resourceName string, v *storagegateway.FileSystemAssociationInfo) resource.TestCheckFunc {

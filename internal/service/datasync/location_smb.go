@@ -124,7 +124,6 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Domain = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location SMB: %s", input)
 	output, err := conn.CreateLocationSmb(input)
 	if err != nil {
 		return fmt.Errorf("error creating DataSync Location SMB: %w", err)

@@ -145,7 +145,6 @@ func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error 
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker App Image Config (%s): %w", d.Id(), err)
-
 	}
 
 	arn := aws.StringValue(image.AppImageConfigArn)
@@ -188,7 +187,6 @@ func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if d.HasChange("kernel_gateway_image_config") {
-
 		input := &sagemaker.UpdateAppImageConfigInput{
 			AppImageConfigName: aws.String(d.Id()),
 		}
@@ -202,7 +200,6 @@ func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return fmt.Errorf("updating SageMaker App Image Config: %w", err)
 		}
-
 	}
 
 	return resourceAppImageConfigRead(d, meta)

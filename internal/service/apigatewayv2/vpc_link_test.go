@@ -241,7 +241,7 @@ func testAccVPCLinkConfig_basic(rName string) string {
 resource "aws_apigatewayv2_vpc_link" "test" {
   name               = %[1]q
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test.*.id
+  subnet_ids         = aws_subnet.test[*].id
 }
 `, rName)
 }
@@ -251,7 +251,7 @@ func testAccVPCLinkConfig_tags(rName string) string {
 resource "aws_apigatewayv2_vpc_link" "test" {
   name               = %[1]q
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test.*.id
+  subnet_ids         = aws_subnet.test[*].id
 
   tags = {
     Key1 = "Value1"

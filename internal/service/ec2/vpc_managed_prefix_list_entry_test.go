@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -205,13 +206,13 @@ func testAccCheckManagedPrefixListEntryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(rs.Primary.ID)
+		plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		_, err = tfec2.FindManagedPrefixListEntryByIDAndCIDR(conn, plID, cidr)
+		_, err = tfec2.FindManagedPrefixListEntryByIDAndCIDR(context.Background(), conn, plID, cidr)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -240,13 +241,13 @@ func testAccCheckManagedPrefixListEntryExists(n string, v *ec2.PrefixListEntry) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(rs.Primary.ID)
+		plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		output, err := tfec2.FindManagedPrefixListEntryByIDAndCIDR(conn, plID, cidr)
+		output, err := tfec2.FindManagedPrefixListEntryByIDAndCIDR(context.Background(), conn, plID, cidr)
 
 		if err != nil {
 			return err
@@ -268,7 +269,7 @@ func testAccManagedPrefixListEntryImportStateIdFunc(resourceName string) resourc
 		plID := rs.Primary.Attributes["prefix_list_id"]
 		cidr := rs.Primary.Attributes["cidr"]
 
-		return tfec2.ManagedPrefixListEntryCreateID(plID, cidr), nil
+		return tfec2.ManagedPrefixListEntryCreateResourceID(plID, cidr), nil
 	}
 }
 

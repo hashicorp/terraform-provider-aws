@@ -42,6 +42,7 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "image_location", regexp.MustCompile("^amazon/")),
 					resource.TestCheckResourceAttr(resourceName, "image_owner_alias", "amazon"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
+					resource.TestCheckResourceAttr(resourceName, "imds_support", ""),
 					resource.TestCheckResourceAttr(resourceName, "most_recent", "true"),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^amzn-ami-vpc-nat")),
 					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),

@@ -74,7 +74,7 @@ func resourceServiceSettingRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
 
-	output, err := FindServiceSettingByARN(conn, d.Id())
+	output, err := FindServiceSettingByID(conn, d.Id())
 	if err != nil {
 		return create.Error(names.SSM, create.ErrActionReading, ResNameServiceSetting, d.Id(), err)
 	}

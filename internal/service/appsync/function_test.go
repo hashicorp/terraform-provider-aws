@@ -37,6 +37,7 @@ func testAccFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_source", "aws_appsync_datasource.test", "name"),
@@ -53,6 +54,49 @@ func testAccFunction_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFunction_code(t *testing.T) {
+	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	resourceName := "aws_appsync_function.test"
+	var config appsync.FunctionConfiguration
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_code(rName1, rName2, "test-fixtures/test-code.js"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttrSet(resourceName, "code"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFunctionConfig_code(rName1, rName2, "test-fixtures/test-code-updated.js"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttrSet(resourceName, "code"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
+				),
 			},
 		},
 	})
@@ -233,13 +277,11 @@ func testAccCheckFunctionExists(name string, config *appsync.FunctionConfigurati
 }
 
 func testAccFunctionConfig_basic(r1, r2, region string) string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return acctest.ConfigCompose(testAccDataSourceConfig_dynamoDBRegion(r1, region), fmt.Sprintf(`
 resource "aws_appsync_function" "test" {
   api_id                   = aws_appsync_graphql_api.test.id
   data_source              = aws_appsync_datasource.test.name
-  name                     = "%[2]s"
+  name                     = %[1]q
   request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
@@ -259,11 +301,27 @@ EOF
 #end
 EOF
 }
-`, testAccDataSourceConfig_dynamoDBRegion(r1, region), r2)
+`, r2))
+}
+
+func testAccFunctionConfig_code(r1, r2, code string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_typeHTTP(r1), fmt.Sprintf(`
+resource "aws_appsync_function" "test" {
+  api_id      = aws_appsync_graphql_api.test.id
+  data_source = aws_appsync_datasource.test.name
+  name        = %[1]q
+  code        = file("%[2]s")
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+}
+`, r2, code))
 }
 
 func testAccFunctionConfig_sync(rName, region string) string {
-	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDatasourceConfig_dynamoDBBase(rName), fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %[1]q
@@ -316,18 +374,16 @@ EOF
     conflict_handler   = "OPTIMISTIC_CONCURRENCY"
   }
 }
-`, rName, region)
+`, rName, region))
 }
 
 func testAccFunctionConfig_description(r1, r2, region, description string) string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return acctest.ConfigCompose(testAccDataSourceConfig_dynamoDBRegion(r1, region), fmt.Sprintf(`
 resource "aws_appsync_function" "test" {
   api_id                   = aws_appsync_graphql_api.test.id
   data_source              = aws_appsync_datasource.test.name
-  name                     = "%[2]s"
-  description              = "%[3]s"
+  name                     = %[1]q
+  description              = %[2]q
   request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
@@ -347,17 +403,15 @@ EOF
 #end
 EOF
 }
-`, testAccDataSourceConfig_dynamoDBRegion(r1, region), r2, description)
+`, r2, description))
 }
 
 func testAccFunctionConfig_responseMappingTemplate(r1, r2, region string) string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return acctest.ConfigCompose(testAccDataSourceConfig_dynamoDBRegion(r1, region), fmt.Sprintf(`
 resource "aws_appsync_function" "test" {
   api_id                   = aws_appsync_graphql_api.test.id
   data_source              = aws_appsync_datasource.test.name
-  name                     = "%[2]s"
+  name                     = %[1]q
   request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
@@ -377,5 +431,5 @@ EOF
 #end
 EOF
 }
-`, testAccDataSourceConfig_dynamoDBRegion(r1, region), r2)
+`, r2))
 }

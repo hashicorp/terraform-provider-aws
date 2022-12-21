@@ -98,7 +98,6 @@ resource "aws_lightsail_database" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -119,7 +118,6 @@ The following arguments are supported:
 * `final_snapshot_name` - (Required unless `skip_final_snapshot = true`) The name of the database snapshot created if skip final snapshot is false, which is the default value for that parameter.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value.
 
-
 ## Blueprint Ids
 
 A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command.
@@ -136,7 +134,6 @@ A Blueprint ID starts with a prefix of the engine type.
 ### Suffix
 
 A Blueprint ID has a sufix of the engine version.
-
 
 ## Bundles
 

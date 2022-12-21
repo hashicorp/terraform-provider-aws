@@ -66,7 +66,6 @@ func ResourceSnapshotSchedule() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
-
 }
 
 func resourceSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) error {
@@ -202,7 +201,6 @@ func resourceSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift, scheduleIdentifier string) error {
-
 	resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(scheduleIdentifier),
 	})

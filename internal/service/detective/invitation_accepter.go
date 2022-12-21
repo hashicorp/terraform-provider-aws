@@ -15,9 +15,9 @@ import (
 
 func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceInvitationAccepterCreate,
-		ReadContext:   resourceInvitationAccepterRead,
-		DeleteContext: resourceInvitationAccepterDelete,
+		CreateWithoutTimeout: resourceInvitationAccepterCreate,
+		ReadWithoutTimeout:   resourceInvitationAccepterRead,
+		DeleteWithoutTimeout: resourceInvitationAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,10 +65,6 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 
 	if err != nil {
 		return diag.Errorf("error listing Detective InvitationAccepter (%s): %s", d.Id(), err)
-	}
-
-	if err != nil {
-		return diag.Errorf("error reading Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("graph_arn", graphArn)

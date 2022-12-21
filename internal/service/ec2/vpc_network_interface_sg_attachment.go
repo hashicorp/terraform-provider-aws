@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -17,6 +18,9 @@ func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 		Create: resourceNetworkInterfaceSGAttachmentCreate,
 		Read:   resourceNetworkInterfaceSGAttachmentRead,
 		Delete: resourceNetworkInterfaceSGAttachmentDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceNetworkInterfaceSGAttachmentImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"network_interface_id": {
@@ -160,4 +164,44 @@ func resourceNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta int
 	}
 
 	return nil
+}
+
+func resourceNetworkInterfaceSGAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), "_")
+	if len(parts) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Please use '<NetworkInterfaceId>_<SecurityGroupID>", d.Id())
+	}
+
+	networkInterfaceID := parts[0]
+	securityGroupID := parts[1]
+
+	log.Printf("[DEBUG] Importing network interface security group association, Interface: %s, Security Group: %s", networkInterfaceID, securityGroupID)
+
+	conn := meta.(*conns.AWSClient).EC2Conn
+
+	networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var associationID string
+
+	for _, attachedSecurityGroup := range networkInterface.Groups {
+		if aws.StringValue(attachedSecurityGroup.GroupId) == securityGroupID {
+			d.Set("security_group_id", securityGroupID)
+			associationID = securityGroupID + "_" + networkInterfaceID
+
+			break
+		}
+	}
+
+	if associationID == "" {
+		return nil, fmt.Errorf("Security Group %s is not attached to Network Interface %s", securityGroupID, networkInterfaceID)
+	}
+
+	d.SetId(associationID)
+	d.Set("network_interface_id", networkInterfaceID)
+
+	return []*schema.ResourceData{d}, nil
 }

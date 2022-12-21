@@ -90,7 +90,7 @@ func sweepBudgetResourceAssociations(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
@@ -201,7 +201,7 @@ func sweepConstraints(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	// no paginator or list operation for constraints directly, have to list portfolios and constraints of portfolios
@@ -270,7 +270,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
@@ -342,7 +342,7 @@ func sweepProductPortfolioAssociations(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	// no paginator or list operation for associations directly, have to list products and associations of products
@@ -434,7 +434,7 @@ func sweepProducts(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
@@ -485,7 +485,7 @@ func sweepProvisionedProducts(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProvisionedProductsInput{
@@ -539,7 +539,7 @@ func sweepProvisioningArtifacts(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
@@ -620,7 +620,7 @@ func sweepServiceActions(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListServiceActionsInput{}
@@ -671,7 +671,7 @@ func sweepTagOptionResourceAssociations(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListTagOptionsInput{}
@@ -742,7 +742,7 @@ func sweepTagOptions(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListTagOptionsInput{}

@@ -37,6 +37,7 @@ func ResourceFunction() *schema.Resource {
 		Read:   resourceFunctionRead,
 		Update: resourceFunctionUpdate,
 		Delete: resourceFunctionDelete,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -59,77 +60,14 @@ func ResourceFunction() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
 				},
 			},
-			"filename": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version", "image_uri"},
-			},
-			"s3_bucket": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
-			},
-			"s3_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
-			},
-			"s3_object_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
-			},
-			"image_uri": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "s3_bucket", "s3_key", "s3_object_version"},
-			},
-			"package_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      lambda.PackageTypeZip,
-				ValidateFunc: validation.StringInSlice(lambda.PackageType_Values(), false),
-			},
-			"image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"entry_point": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"command": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"working_directory": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"code_signing_config_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"dead_letter_config": {
 				Type:     schema.TypeList,
@@ -142,6 +80,24 @@ func ResourceFunction() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"environment": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"variables": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -185,15 +141,62 @@ func ResourceFunction() *schema.Resource {
 					},
 				},
 			},
+			"filename": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version", "image_uri"},
+			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validFunctionName(),
 			},
 			"handler": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
+			"image_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"command": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"entry_point": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"working_directory": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"image_uri": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "s3_bucket", "s3_key", "s3_object_version"},
+			},
+			"invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"last_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"layers": {
 				Type:     schema.TypeList,
@@ -208,6 +211,26 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  128,
+			},
+			"package_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      lambda.PackageTypeZip,
+				ValidateFunc: validation.StringInSlice(lambda.PackageType_Values(), false),
+			},
+			"publish": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"qualified_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"qualified_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"reserved_concurrent_executions": {
 				Type:         schema.TypeInt,
@@ -224,15 +247,77 @@ func ResourceFunction() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
+			"s3_bucket": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "image_uri"},
+			},
+			"s3_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "image_uri"},
+			},
+			"s3_object_version": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "image_uri"},
+			},
+			"signing_job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"signing_profile_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"snap_start": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apply_on": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(lambda.SnapStartApplyOn_Values(), true),
+						},
+						"optimization_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"source_code_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"source_code_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  3,
 			},
-			"publish": {
-				Type:     schema.TypeBool,
+			"tracing_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				Default:  false,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(lambda.TracingMode_Values(), true),
+						},
+					},
+				},
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -244,17 +329,15 @@ func ResourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"vpc_id": {
 							Type:     schema.TypeString,
@@ -281,70 +364,6 @@ func ResourceFunction() *schema.Resource {
 					return true
 				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualified_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"source_code_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"environment": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"tracing_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mode": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								lambda.TracingModeActive,
-								lambda.TracingModePassThrough},
-								true),
-						},
-					},
-				},
-			},
-			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -383,6 +402,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 	if publish && (configChanged || functionCodeUpdated || publishChanged) {
 		d.SetNewComputed("version")
 		d.SetNewComputed("qualified_arn")
+		d.SetNewComputed("qualified_invoke_arn")
 	}
 	return nil
 }
@@ -398,6 +418,7 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("kms_key_arn") ||
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
+		d.HasChange("snap_start") ||
 		d.HasChange("tracing_config") ||
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
@@ -528,6 +549,10 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("snap_start"); ok {
+		params.SnapStart = expandSnapStart(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("tracing_config"); ok {
 		tracingConfig := v.([]interface{})
 		tracing := tracingConfig[0].(map[string]interface{})
@@ -635,7 +660,6 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if reservedConcurrentExecutions >= 0 {
-
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
 
 		concurrencyParams := &lambda.PutFunctionConcurrencyInput{
@@ -843,6 +867,11 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("dead_letter_config", []interface{}{})
 	}
 
+	snapStart := flattenSnapStart(function.SnapStart)
+	if err := d.Set("snap_start", snapStart); err != nil {
+		return fmt.Errorf("error setting snap_start for Lambda Function (%s): %w", d.Id(), err)
+	}
+
 	// Assume `PassThrough` on partitions that don't support tracing config
 	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
@@ -856,14 +885,16 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Get latest version and ARN unless qualifier is specified via data source
 	if qualifierExistance {
+		functionARN := aws.StringValue(function.FunctionArn)
 		d.Set("version", function.Version)
-		d.Set("qualified_arn", function.FunctionArn)
+		d.Set("qualified_arn", functionARN)
+		qualifiedInvokeArn := functionInvokeARN(functionARN, meta)
+		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
 	} else {
-
 		// List is sorted from oldest to latest
 		// so this may get costly over time :'(
 		var lastVersion, lastQualifiedArn string
-		err = listVersionsByFunctionPages(conn, &lambda.ListVersionsByFunctionInput{
+		err = conn.ListVersionsByFunctionPages(&lambda.ListVersionsByFunctionInput{
 			FunctionName: function.FunctionName,
 			MaxItems:     aws.Int64(10000),
 		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
@@ -881,6 +912,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("version", lastVersion)
 		d.Set("qualified_arn", lastQualifiedArn)
+		qualifiedInvokeArn := functionInvokeARN(lastQualifiedArn, meta)
+		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
 	}
 
 	invokeArn := functionInvokeARN(*function.FunctionArn, meta)
@@ -893,12 +926,9 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) and ap-southeast-3 (Jakarta) region
-	// and returns ambiguous error codes (e.g. AccessDeniedException)
-	// so we cannot just ignore the error as would typically.
-	// We are hardcoding the region here, because go aws sdk endpoints
-	// package does not support Signer service
-	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.ApSoutheast3RegionID {
+	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
+	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
+	if !SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
 		return nil
 	}
 
@@ -921,24 +951,6 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("code_signing_config_arn", codeSigningConfigArn)
 
-	return nil
-}
-
-func listVersionsByFunctionPages(c *lambda.Lambda, input *lambda.ListVersionsByFunctionInput,
-	fn func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool) error {
-	for {
-		page, err := c.ListVersionsByFunction(input)
-		if err != nil {
-			return err
-		}
-		lastPage := page.NextMarker == nil
-
-		shouldContinue := fn(page, lastPage)
-		if !shouldContinue || lastPage {
-			break
-		}
-		input.Marker = page.NextMarker
-	}
 	return nil
 }
 
@@ -1074,6 +1086,10 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
 		}
 	}
+	if d.HasChange("snap_start") {
+		snapStart := d.Get("snap_start").([]interface{})
+		configReq.SnapStart = expandSnapStart(snapStart)
+	}
 	if d.HasChange("tracing_config") {
 		tracingConfig := d.Get("tracing_config").([]interface{})
 		if len(tracingConfig) == 1 { // Schema guarantees either 0 or 1
@@ -1098,7 +1114,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("runtime") {
 		configReq.Runtime = aws.String(d.Get("runtime").(string))
 	}
-	if d.HasChange("environment") {
+
+	if d.HasChanges("environment", "kms_key_arn") {
 		if v, ok := d.GetOk("environment"); ok {
 			environments := v.([]interface{})
 			environment, ok := environments[0].(map[string]interface{})
@@ -1319,6 +1336,35 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceFunctionRead(d, meta)
 }
 
+func FindFunctionByName(conn *lambda.Lambda, name string) (*lambda.GetFunctionOutput, error) {
+	input := &lambda.GetFunctionInput{
+		FunctionName: aws.String(name),
+	}
+
+	return findFunction(conn, input)
+}
+
+func findFunction(conn *lambda.Lambda, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
+	output, err := conn.GetFunction(input)
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Code == nil || output.Configuration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // loadFileContent returns contents of a file in a given path
 func loadFileContent(v string) ([]byte, error) {
 	filename, err := homedir.Expand(v)
@@ -1431,6 +1477,36 @@ func waitForFunctionUpdate(conn *lambda.Lambda, functionName string, timeout tim
 	return err
 }
 
+// SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
+// The AWS SDK endpoints package does not support Signer.
+// See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.
+func SignerServiceIsAvailable(region string) bool {
+	availableRegions := map[string]struct{}{
+		endpoints.UsEast2RegionID:      {},
+		endpoints.UsEast1RegionID:      {},
+		endpoints.UsWest1RegionID:      {},
+		endpoints.UsWest2RegionID:      {},
+		endpoints.AfSouth1RegionID:     {},
+		endpoints.ApSouth1RegionID:     {},
+		endpoints.ApNortheast2RegionID: {},
+		endpoints.ApSoutheast1RegionID: {},
+		endpoints.ApSoutheast2RegionID: {},
+		endpoints.ApNortheast1RegionID: {},
+		endpoints.CaCentral1RegionID:   {},
+		endpoints.EuCentral1RegionID:   {},
+		endpoints.EuWest1RegionID:      {},
+		endpoints.EuWest2RegionID:      {},
+		endpoints.EuSouth1RegionID:     {},
+		endpoints.EuWest3RegionID:      {},
+		endpoints.EuNorth1RegionID:     {},
+		endpoints.MeSouth1RegionID:     {},
+		endpoints.SaEast1RegionID:      {},
+	}
+	_, ok := availableRegions[region]
+
+	return ok
+}
+
 func flattenEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1508,4 +1584,28 @@ func flattenEphemeralStorage(response *lambda.EphemeralStorage) []map[string]int
 	m["size"] = aws.Int64Value(response.Size)
 
 	return []map[string]interface{}{m}
+}
+
+func expandSnapStart(tfList []interface{}) *lambda.SnapStart {
+	snapStart := &lambda.SnapStart{ApplyOn: aws.String(lambda.SnapStartApplyOnNone)}
+	if len(tfList) == 1 && tfList[0] != nil {
+		item := tfList[0].(map[string]interface{})
+		snapStart.ApplyOn = aws.String(item["apply_on"].(string))
+	}
+	return snapStart
+}
+
+func flattenSnapStart(apiObject *lambda.SnapStartResponse) []interface{} {
+	if apiObject == nil || apiObject.ApplyOn == nil {
+		return nil
+	}
+	if aws.StringValue(apiObject.ApplyOn) == lambda.SnapStartApplyOnNone {
+		return nil
+	}
+	m := map[string]interface{}{
+		"apply_on":            aws.StringValue(apiObject.ApplyOn),
+		"optimization_status": aws.StringValue(apiObject.OptimizationStatus),
+	}
+
+	return []interface{}{m}
 }

@@ -1,6 +1,7 @@
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -74,7 +75,7 @@ func testAccCheckFirewallConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		config, err := tfroute53resolver.FindFirewallConfigByID(conn, rs.Primary.ID)
+		config, err := tfroute53resolver.FindFirewallConfigByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -88,7 +89,7 @@ func testAccCheckFirewallConfigDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		return fmt.Errorf("Route 53 Resolver DNS Firewall config still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("Route53 Resolver Firewall Config still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
@@ -102,36 +103,28 @@ func testAccCheckFirewallConfigExists(n string, v *route53resolver.FirewallConfi
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver DNS Firewall config ID is set")
+			return fmt.Errorf("No Route53 Resolver Firewall Config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		out, err := tfroute53resolver.FindFirewallConfigByID(conn, rs.Primary.ID)
+		output, err := tfroute53resolver.FindFirewallConfigByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccFirewallConfigConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), `
 resource "aws_route53_resolver_firewall_config" "test" {
   resource_id        = aws_vpc.test.id
   firewall_fail_open = "ENABLED"
 }
-`, rName)
+`)
 }

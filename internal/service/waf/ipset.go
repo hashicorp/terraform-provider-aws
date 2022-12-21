@@ -79,7 +79,6 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.IPSet.IPSetId))
 
 	if v, ok := d.GetOk("ip_set_descriptors"); ok && v.(*schema.Set).Len() > 0 {
-
 		err := updateIPSetDescriptors(d.Id(), nil, v.(*schema.Set).List(), conn)
 		if err != nil {
 			return fmt.Errorf("Error Setting IP Descriptors: %s", err)

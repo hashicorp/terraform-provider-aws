@@ -325,7 +325,6 @@ func resourceInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error
 
 func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		instanceFleets, err := FetchAllInstanceFleets(conn, clusterID)
 		if err != nil {
 			return nil, "Not Found", err

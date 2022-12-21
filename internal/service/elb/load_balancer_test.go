@@ -324,8 +324,8 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 
 func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := fmt.Sprintf("tf-acctest-%s", sdkacctest.RandString(10))
 	resourceName := "aws_elb.test"
 
@@ -838,7 +838,6 @@ func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
 	}
-
 }
 
 func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {

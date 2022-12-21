@@ -1,0 +1,11 @@
+```release-note:enhancement
+data-source/aws_instance: Add `host_resource_group_arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_instance: Add `host_resource_group_arn` attribute; improve compatibility with launching instances in a host resource group using an AMI registered with License Manager. NOTE: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing.
+```
+
+```release-note:note
+resource/aws_instance: With the retirement of EC2-Classic, `aws_instance` has been updated to remove support for EC2-Classic
+```

@@ -14,7 +14,6 @@ import (
 )
 
 func ResourceSnapshotScheduleAssociation() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceSnapshotScheduleAssociationCreate,
 		Read:   resourceSnapshotScheduleAssociationRead,

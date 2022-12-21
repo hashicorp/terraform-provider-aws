@@ -202,7 +202,6 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func expandResultConfiguration(d *schema.ResourceData) *athena.ResultConfiguration {
-
 	resultConfig := &athena.ResultConfiguration{
 		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
 		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),

@@ -14,7 +14,7 @@ import (
 
 func DataSourceContactFlow() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceContactFlowRead,
+		ReadWithoutTimeout: dataSourceContactFlowRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

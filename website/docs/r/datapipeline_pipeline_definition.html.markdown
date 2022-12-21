@@ -115,7 +115,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Unique ID of the datapipeline definition.
 
-
 ## Import
 
 `aws_datapipeline_pipeline_definition` can be imported using the id, e.g.

@@ -30,6 +30,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
+			"space":                 testAccApp_space,
 		},
 		"Domain": {
 			"basic":                                    testAccDomain_basic,
@@ -46,6 +47,11 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
 			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
+			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"domainSettings":                                         testAccDomain_domainSettings,
+			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
+			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
+			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
@@ -53,6 +59,15 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 			"Tags":                           testAccFlowDefinition_tags,
+		},
+		"Space": {
+			"basic":                    testAccSpace_basic,
+			"disappears":               testAccSpace_tags,
+			"tags":                     testAccSpace_disappears,
+			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
+			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
+			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
+			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
 		},
 		"UserProfile": {
 			"basic":                           testAccUserProfile_basic,
@@ -70,6 +85,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"CognitoConfig":  testAccWorkforce_cognitoConfig,
 			"OidcConfig":     testAccWorkforce_oidcConfig,
 			"SourceIpConfig": testAccWorkforce_sourceIPConfig,
+			"VPC":            testAccWorkforce_vpc,
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
@@ -77,6 +93,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,
 			"Tags":               testAccWorkteam_tags,
+		},
+		"Servicecatalog": {
+			"basic": testAccServicecatalogPortfolioStatus_basic,
 		},
 	}
 

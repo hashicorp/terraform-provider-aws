@@ -39,7 +39,6 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccSigningJobConfig_basic(rName string) string {

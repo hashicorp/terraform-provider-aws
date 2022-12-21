@@ -127,14 +127,12 @@ func testAccCheckDomainNameDestroy(s *terraform.State) error {
 		}
 
 		return nil
-
 	}
 	return nil
 }
 
 func testAccCheckDomainNameExists(resourceName string, domainName *appsync.DomainNameConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Domain Name Not found in state: %s", resourceName)

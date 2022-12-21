@@ -297,7 +297,6 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
 			response, err = client.Do(request)
 
 			if err != nil {
@@ -684,7 +683,6 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := expandGatewayDomain(d.Get("smb_active_directory_settings").([]interface{}), d.Id())
 		domainName := aws.StringValue(input.DomainName)
 
-		log.Printf("[DEBUG] Joining Storage Gateway to Active Directory domain: %s", input)
 		_, err := conn.JoinDomain(input)
 
 		if err != nil {
@@ -702,7 +700,6 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			Password:   aws.String(d.Get("smb_guest_password").(string)),
 		}
 
-		log.Printf("[DEBUG] Setting Storage Gateway SMB guest password: %s", input)
 		_, err := conn.SetSMBGuestPassword(input)
 
 		if err != nil {

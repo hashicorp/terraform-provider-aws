@@ -22,11 +22,11 @@ data "aws_sns_topic" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the topic to match.
+* `name` - (Required) Friendly name of the topic to match.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the found topic, suitable for referencing in other resources that support SNS topics.
-* `id` - Amazon Resource Name (ARN) of the found topic, suitable for referencing in other resources that support SNS topics.
+* `arn` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
+* `id` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.

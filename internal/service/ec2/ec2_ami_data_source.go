@@ -108,6 +108,10 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"imds_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"include_deprecated": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -302,6 +306,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	d.Set("image_location", image.ImageLocation)
 	d.Set("image_owner_alias", image.ImageOwnerAlias)
 	d.Set("image_type", image.ImageType)
+	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
 	d.Set("name", image.Name)
 	d.Set("owner_id", image.OwnerId)

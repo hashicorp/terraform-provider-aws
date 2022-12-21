@@ -71,7 +71,7 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateEventBus(input)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] EventBridge Bus (%s) create failed (%s) with tags. Trying create without tags.", eventBusName, err)
 		input.Tags = nil
 		output, err = conn.CreateEventBus(input)
@@ -89,7 +89,7 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, aws.StringValue(output.EventBusArn), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for EventBridge Bus (%s): %s", d.Id(), err)
 			return resourceBusRead(d, meta)
 		}
@@ -127,7 +127,7 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, aws.StringValue(output.Arn))
 
 	// ISO partitions may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for EventBridge Bus %s: %s", d.Id(), err)
 		return nil
 	}
@@ -159,7 +159,7 @@ func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := UpdateTags(conn, arn, o, n)
 
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for EventBridge Bus %s: %s", d.Id(), err)
 			return resourceBusRead(d, meta)
 		}

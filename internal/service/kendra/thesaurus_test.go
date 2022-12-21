@@ -315,7 +315,7 @@ func TestAccKendraThesaurus_sourceS3Path(t *testing.T) {
 }
 
 func testAccCheckThesaurusDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kendra_thesaurus" {
@@ -357,7 +357,7 @@ func testAccCheckThesaurusExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 		_, err = tfkendra.FindThesaurusByID(context.Background(), conn, id, indexId)
 

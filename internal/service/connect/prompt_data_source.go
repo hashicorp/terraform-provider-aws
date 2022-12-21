@@ -13,7 +13,7 @@ import (
 
 func DataSourcePrompt() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePromptRead,
+		ReadWithoutTimeout: dataSourcePromptRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

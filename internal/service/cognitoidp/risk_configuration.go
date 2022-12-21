@@ -694,6 +694,5 @@ func RiskConfigurationParseID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	} else {
 		return parts[0], "", nil
-
 	}
 }

@@ -30,7 +30,7 @@ func sweepApplications(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ApplicationInsightsConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.ListApplicationsPages(&applicationinsights.ListApplicationsInput{}, func(resp *applicationinsights.ListApplicationsOutput, lastPage bool) bool {

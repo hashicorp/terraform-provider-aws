@@ -332,7 +332,6 @@ This configuration block supports the following attributes:
 * `type` - (Required) Resource type in which you want to log data events. You can specify only the following value: "AWS::S3::Object", "AWS::Lambda::Function" and "AWS::DynamoDB::Table".
 * `values` - (Required) List of ARN strings or partial ARN strings to specify selectors for data audit events over data resources. ARN list is specific to single-valued `type`. For example, `arn:aws:s3:::<bucket name>/` for all objects in a bucket, `arn:aws:s3:::<bucket name>/key` for specific objects, `arn:aws:lambda` for all lambda events within an account, `arn:aws:lambda:<region>:<account number>:function:<function name>` for a specific Lambda function, `arn:aws:dynamodb` for all DDB events for all tables within an account, or `arn:aws:dynamodb:<region>:<account number>:table/<table name>` for a specific DynamoDB table.
 
-
 ### insight_selector
 
 This configuration block supports the following attributes:
@@ -342,13 +341,13 @@ This configuration block supports the following attributes:
 ### Advanced Event Selector Arguments
 For **advanced_event_selector** the following attributes are supported.
 
-* `name` (Optional) - Specifies the name of the advanced event selector.
+* `name` (Optional) - Name of the advanced event selector.
 * `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
 
 #### Field Selector Arguments
 For **field_selector** the following attributes are supported.
 
-* `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
+* `field` (Required) - Field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
 * `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
 * `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.

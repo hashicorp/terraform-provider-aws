@@ -209,7 +209,7 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 }
 
 func testAccCheckVocabularyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transcribe_vocabulary" {
@@ -243,7 +243,7 @@ func testAccCheckVocabularyExists(name string, vocabulary *transcribe.GetVocabul
 			return create.Error(names.Transcribe, create.ErrActionCheckingExistence, tftranscribe.ResNameVocabulary, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 		resp, err := tftranscribe.FindVocabularyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
@@ -257,7 +257,7 @@ func testAccCheckVocabularyExists(name string, vocabulary *transcribe.GetVocabul
 }
 
 func testAccVocabulariesPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	input := &transcribe.ListVocabulariesInput{}
 

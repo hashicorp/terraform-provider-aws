@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -84,6 +85,10 @@ func resourceVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if peeringConnectionOptionsAllowsClassicLink(d) {
+		return errors.New(`with the retirement of EC2-Classic no VPC Peering Connections can be accepted with ClassicLink options enabled`)
+	}
 
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)

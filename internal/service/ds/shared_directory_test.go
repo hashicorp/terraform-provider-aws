@@ -71,7 +71,6 @@ func testAccCheckSharedDirectoryExists(n string, v *directoryservice.SharedDirec
 
 		return nil
 	}
-
 }
 
 func testAccCheckSharedDirectoryDestroy(s *terraform.State) error {

@@ -57,7 +57,6 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 }
 
 func testAccCheckClassificationExportConfigurationDestroy(s *terraform.State) error {
-
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -79,11 +78,9 @@ func testAccCheckClassificationExportConfigurationDestroy(s *terraform.State) er
 		if (macie2.GetClassificationExportConfigurationOutput{}) != *resp || resp != nil { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
 			return fmt.Errorf("macie classification export configuration %q still configured", rs.Primary.ID)
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckClassificationExportConfigurationExists(resourceName string, macie2CEConfig *macie2.GetClassificationExportConfigurationOutput) resource.TestCheckFunc {

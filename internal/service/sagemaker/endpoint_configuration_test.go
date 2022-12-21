@@ -36,8 +36,50 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_shadowProductionVariants(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.variant_name", "variant-2"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_variant_weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.serverless_config.#", "0"),
 				),
 			},
 			{
@@ -427,7 +469,7 @@ func testAccCheckEndpointConfigurationExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccEndpointConfigurationConfig_Base(rName string) string {
+func testAccEndpointConfigurationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
   repository_name = "kmeans"
@@ -462,9 +504,9 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 func testAccEndpointConfigurationConfig_basic(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
-  name = %q
+  name = %[1]q
 
   production_variants {
     variant_name           = "variant-1"
@@ -474,13 +516,37 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     initial_variant_weight = 1
   }
 }
-`, rName)
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_shadowProductionVariants(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  shadow_production_variants {
+    variant_name           = "variant-2"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+}
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_productionVariantsInitialVariantWeight(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
-  name = %q
+  name = %[1]q
 
   production_variants {
     variant_name           = "variant-1"
@@ -497,13 +563,13 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     initial_variant_weight = 0.5
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_productionVariantAcceleratorType(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
-  name = %q
+  name = %[1]q
 
   production_variants {
     variant_name           = "variant-1"
@@ -514,11 +580,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     initial_variant_weight = 1
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_kmsKeyID(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name        = %[1]q
   kms_key_arn = aws_kms_key.test.arn
@@ -536,11 +602,11 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
@@ -556,11 +622,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccEndpointConfigurationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
@@ -577,11 +643,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccEndpointConfigurationConfig_dataCapture(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -621,11 +687,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_asyncKMS(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -659,11 +725,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_async(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   acl           = "private"
@@ -687,11 +753,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_asyncNotif(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -734,11 +800,11 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_asyncClient(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -776,13 +842,13 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfigurationConfig_serverless(rName string) string {
-	return testAccEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
-  name = %q
+  name = %[1]q
 
   production_variants {
     variant_name = "variant-1"
@@ -794,5 +860,5 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }

@@ -122,10 +122,11 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the cluster_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -388,6 +389,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	if v, ok := d.GetOk("cluster_security_groups"); ok && v.(*schema.Set).Len() > 0 {
+		return errors.New(`with the retirement of EC2-Classic no new Redshift Clusters can be created referencing Redshift Security Groups`)
+	}
+
 	clusterID := d.Get("cluster_identifier").(string)
 	backupInput := &redshift.RestoreFromClusterSnapshotInput{
 		AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
@@ -430,11 +435,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
 		backupInput.ClusterParameterGroupName = aws.String(v.(string))
 		input.ClusterParameterGroupName = aws.String(v.(string))
-	}
-
-	if v := d.Get("cluster_security_groups").(*schema.Set); v.Len() > 0 {
-		backupInput.ClusterSecurityGroups = flex.ExpandStringSet(v)
-		input.ClusterSecurityGroups = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
@@ -531,7 +531,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			input.ClusterType = aws.String(clusterTypeSingleNode)
 		}
 
-		log.Printf("[DEBUG] Creating Redshift Cluster: %s", input)
 		output, err := conn.CreateCluster(input)
 
 		if err != nil {
@@ -778,7 +777,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Modifying Redshift Cluster: %s", input)
 		_, err := conn.ModifyCluster(input)
 
 		if err != nil {

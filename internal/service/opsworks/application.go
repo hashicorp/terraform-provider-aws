@@ -606,5 +606,4 @@ func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]*stri
 		}
 		return
 	}
-
 }

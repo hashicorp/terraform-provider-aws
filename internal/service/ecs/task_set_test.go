@@ -482,7 +482,7 @@ resource "aws_ecs_task_set" "test" {
 
 func testAccTaskSetConfig_capacityProviderStrategy(rName string, weight, base int) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		testAccTaskSetBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
@@ -657,7 +657,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "test" {
   name     = %[1]q
   internal = true
-  subnets  = aws_subnet.test.*.id
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_lb_listener" "test" {
@@ -811,7 +811,7 @@ resource "aws_ecs_task_set" "test" {
   }
   network_configuration {
     security_groups = [aws_security_group.test.id]
-    subnets         = aws_subnet.test.*.id
+    subnets         = aws_subnet.test[*].id
   }
 }
 `, rName))
@@ -891,8 +891,8 @@ resource "aws_ecs_task_set" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   launch_type     = "FARGATE"
   network_configuration {
-    security_groups  = aws_security_group.test.*.id
-    subnets          = aws_subnet.test.*.id
+    security_groups  = aws_security_group.test[*].id
+    subnets          = aws_subnet.test[*].id
     assign_public_ip = false
   }
 }
@@ -974,8 +974,8 @@ resource "aws_ecs_task_set" "test" {
   launch_type      = "FARGATE"
   platform_version = %[2]q
   network_configuration {
-    security_groups  = aws_security_group.test.*.id
-    subnets          = aws_subnet.test.*.id
+    security_groups  = aws_security_group.test[*].id
+    subnets          = aws_subnet.test[*].id
     assign_public_ip = false
   }
 }

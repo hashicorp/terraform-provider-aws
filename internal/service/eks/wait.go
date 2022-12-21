@@ -11,19 +11,15 @@ import (
 )
 
 const (
-	addonCreatedTimeout = 20 * time.Minute
-	addonUpdatedTimeout = 20 * time.Minute
-	addonDeletedTimeout = 40 * time.Minute
-
 	clusterDeleteRetryTimeout = 60 * time.Minute
 )
 
-func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
+func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{eks.AddonStatusCreating, eks.AddonStatusDegraded},
 		Target:  []string{eks.AddonStatusActive},
 		Refresh: statusAddon(ctx, conn, clusterName, addonName),
-		Timeout: addonCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -39,12 +35,12 @@ func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName
 	return nil, err
 }
 
-func waitAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
+func waitAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.AddonStatusActive, eks.AddonStatusDeleting},
 		Target:  []string{},
 		Refresh: statusAddon(ctx, conn, clusterName, addonName),
-		Timeout: addonDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -60,70 +56,15 @@ func waitAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName
 	return nil, err
 }
 
-func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) (*eks.Update, error) {
+func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string, timeout time.Duration) (*eks.Update, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
 		Refresh: statusAddonUpdate(ctx, conn, clusterName, addonName, id),
-		Timeout: addonUpdatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*eks.Update); ok {
-		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			tfresource.SetLastError(err, ErrorDetailsError(output.Errors))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitClusterCreated(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.ClusterStatusCreating},
-		Target:  []string{eks.ClusterStatusActive},
-		Refresh: statusCluster(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*eks.Cluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.ClusterStatusActive, eks.ClusterStatusDeleting},
-		Target:  []string{},
-		Refresh: statusCluster(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*eks.Cluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitClusterUpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.UpdateStatusInProgress},
-		Target:  []string{eks.UpdateStatusSuccessful},
-		Refresh: statusClusterUpdate(conn, name, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*eks.Update); ok {
 		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {

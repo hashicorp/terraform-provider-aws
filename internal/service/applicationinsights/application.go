@@ -185,7 +185,6 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			} else {
 				input.RemoveSNSTopic = aws.Bool(true)
 			}
-
 		}
 
 		log.Printf("[DEBUG] Updating ApplicationInsights Application: %s", d.Id())

@@ -19,10 +19,10 @@ import (
 
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserCreate,
-		ReadContext:   resourceUserRead,
-		UpdateContext: resourceUserUpdate,
-		DeleteContext: resourceUserDelete,
+		CreateWithoutTimeout: resourceUserCreate,
+		ReadWithoutTimeout:   resourceUserRead,
+		UpdateWithoutTimeout: resourceUserUpdate,
+		DeleteWithoutTimeout: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -102,7 +102,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB User: %s", input)
 	_, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {

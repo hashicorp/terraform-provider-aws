@@ -9,41 +9,68 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func ExpandClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &rds.ScalingConfiguration{}
 
-	scalingConfiguration := &rds.ScalingConfiguration{
-		AutoPause:             aws.Bool(m["auto_pause"].(bool)),
-		MaxCapacity:           aws.Int64(int64(m["max_capacity"].(int))),
-		MinCapacity:           aws.Int64(int64(m["min_capacity"].(int))),
-		SecondsUntilAutoPause: aws.Int64(int64(m["seconds_until_auto_pause"].(int))),
+	if v, ok := tfMap["auto_pause"].(bool); ok {
+		apiObject.AutoPause = aws.Bool(v)
 	}
 
-	if vTimeoutAction, ok := m["timeout_action"].(string); ok && vTimeoutAction != "" {
-		scalingConfiguration.TimeoutAction = aws.String(vTimeoutAction)
+	if v, ok := tfMap["max_capacity"].(int); ok {
+		apiObject.MaxCapacity = aws.Int64(int64(v))
 	}
 
-	return scalingConfiguration
+	if v, ok := tfMap["min_capacity"].(int); ok {
+		apiObject.MinCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+		apiObject.SecondsUntilAutoPause = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["timeout_action"].(string); ok && v != "" {
+		apiObject.TimeoutAction = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func flattenScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingConfigurationInfo) []interface{} {
-	if scalingConfigurationInfo == nil {
-		return []interface{}{}
+func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"auto_pause":               aws.BoolValue(scalingConfigurationInfo.AutoPause),
-		"max_capacity":             aws.Int64Value(scalingConfigurationInfo.MaxCapacity),
-		"min_capacity":             aws.Int64Value(scalingConfigurationInfo.MinCapacity),
-		"seconds_until_auto_pause": aws.Int64Value(scalingConfigurationInfo.SecondsUntilAutoPause),
-		"timeout_action":           aws.StringValue(scalingConfigurationInfo.TimeoutAction),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoPause; v != nil {
+		tfMap["auto_pause"] = aws.BoolValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap["max_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap["max_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsUntilAutoPause; v != nil {
+		tfMap["seconds_until_auto_pause"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TimeoutAction; v != nil {
+		tfMap["timeout_action"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.ServerlessV2ScalingConfiguration {
@@ -240,7 +267,7 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func ExpandParameters(configured []interface{}) []*rds.Parameter {
+func expandParameters(configured []interface{}) []*rds.Parameter {
 	var parameters []*rds.Parameter
 
 	// Loop over our configured parameters and create
@@ -268,7 +295,7 @@ func ExpandParameters(configured []interface{}) []*rds.Parameter {
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func FlattenParameters(list []*rds.Parameter) []map[string]interface{} {
+func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterName != nil {

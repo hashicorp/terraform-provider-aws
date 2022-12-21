@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -152,16 +151,8 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		op = resp.Operation
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
+	err := waitOperation(conn, op.Id)
 
-	_, err := stateConf.WaitForState()
 	if err != nil {
 		// We don't return an error here because the Create call succeeded
 		log.Printf("[ERR] Error waiting for KeyPair (%s) to become ready: %s", d.Id(), err)
@@ -208,16 +199,9 @@ func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	op := resp.Operation
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
 
-	_, err = stateConf.WaitForState()
+	err = waitOperation(conn, op.Id)
+
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for KeyPair (%s) to become destroyed: %s",

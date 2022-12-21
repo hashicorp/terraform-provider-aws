@@ -175,7 +175,7 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 }
 
 func testAccCheckMedicalVocabularyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transcribe_medical_vocabulary" {
@@ -209,7 +209,7 @@ func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcr
 			return fmt.Errorf("No Transcribe MedicalVocabulary is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 		resp, err := tftranscribe.FindMedicalVocabularyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
@@ -223,7 +223,7 @@ func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcr
 }
 
 func testAccMedicalVocabularyPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient
 
 	input := &transcribe.ListMedicalVocabulariesInput{}
 

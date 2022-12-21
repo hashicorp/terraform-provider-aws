@@ -461,7 +461,6 @@ func testAccCheckMLTransformDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		if output != nil && aws.StringValue(output.TransformId) == rs.Primary.ID {

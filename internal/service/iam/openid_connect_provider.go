@@ -80,7 +80,7 @@ func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{
 	out, err := conn.CreateOpenIDConnectProvider(input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM OIDC Provider with tags: %s. Trying create without tags.", err)
 		input.Tags = nil
 
@@ -98,7 +98,7 @@ func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{
 		err := openIDConnectProviderUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM OIDC Provider (%s): %s", d.Id(), err)
 			return resourceOpenIDConnectProviderRead(d, meta)
 		}
@@ -169,7 +169,7 @@ func resourceOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{
 		err := openIDConnectProviderUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM OIDC Provider (%s): %s", d.Id(), err)
 			return resourceOpenIDConnectProviderRead(d, meta)
 		}

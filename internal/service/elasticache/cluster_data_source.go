@@ -18,6 +18,46 @@ func DataSourceCluster() *schema.Resource {
 		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cache_nodes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"outpost_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -26,66 +66,32 @@ func DataSourceCluster() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-
-			"node_type": {
+			"configuration_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"num_cache_nodes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"engine": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"parameter_group_name": {
+			"ip_discovery": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"replication_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"security_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_type": {
+						"destination": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"destination": {
+						"destination_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -104,72 +110,60 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"snapshot_window": {
+			"network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"snapshot_retention_limit": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"availability_zone": {
+			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"notification_topic_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"num_cache_nodes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"parameter_group_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
-			"configuration_endpoint": {
+			"preferred_outpost_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cluster_address": {
+			"replication_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"arn": {
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"security_group_names": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"snapshot_retention_limit": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"snapshot_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cache_nodes": {
-				Type:     schema.TypeList,
+			"subnet_group_name": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"availability_zone": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
-
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -196,6 +190,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subnet_group_name", cluster.CacheSubnetGroupName)
 	d.Set("engine", cluster.Engine)
 	d.Set("engine_version", cluster.EngineVersion)
+	d.Set("ip_discovery", cluster.IpDiscovery)
+	d.Set("network_type", cluster.NetworkType)
+	d.Set("preferred_outpost_arn", cluster.PreferredOutpostArn)
 	d.Set("security_group_names", flattenSecurityGroupNames(cluster.CacheSecurityGroups))
 	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
 
@@ -233,12 +230,12 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(cluster.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %w", d.Id(), err)
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
 	}
 
 	if err != nil {
-		log.Printf("[WARN] error listing tags for Elasticache Cluster (%s): %s", d.Id(), err)
+		log.Printf("[WARN] error listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)
 	}
 
 	if tags != nil {

@@ -442,7 +442,6 @@ func testAccCheckFindingsFilterDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccFindingsFilterConfig_nameGenerated() string {

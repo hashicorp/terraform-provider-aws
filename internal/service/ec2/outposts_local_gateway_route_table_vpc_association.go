@@ -13,11 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	// Missing constant in AWS Go SDK
-	resourceTypeLocalGatewayRouteTableVPCAssociation = "local-gateway-route-table-vpc-association"
-)
-
 func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceLocalGatewayRouteTableVPCAssociationCreate,
@@ -58,7 +53,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(d *schema.ResourceData, 
 
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableId: aws.String(d.Get("local_gateway_route_table_id").(string)),
-		TagSpecifications:        tagSpecificationsFromKeyValueTags(tags, resourceTypeLocalGatewayRouteTableVPCAssociation),
+		TagSpecifications:        tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLocalGatewayRouteTableVpcAssociation),
 		VpcId:                    aws.String(d.Get("vpc_id").(string)),
 	}
 

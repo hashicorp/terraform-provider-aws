@@ -36,7 +36,7 @@ func sweepServers(region string) error {
 	}
 	conn := client.(*conns.AWSClient).TransferConn
 	input := &transfer.ListServersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListServersPages(input, func(page *transfer.ListServersOutput, lastPage bool) bool {
 		if page == nil {
@@ -81,7 +81,7 @@ func sweepWorkflows(region string) error {
 	}
 	conn := client.(*conns.AWSClient).TransferConn
 	input := &transfer.ListWorkflowsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListWorkflowsPages(input, func(page *transfer.ListWorkflowsOutput, lastPage bool) bool {
 		if page == nil {

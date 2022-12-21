@@ -328,7 +328,6 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Macie Member (%s): %w", d.Id(), err))
 		}
-
 	}
 
 	return resourceMemberRead(ctx, d, meta)

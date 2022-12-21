@@ -573,7 +573,6 @@ func expandAliasValues(aliases []*fsx.Alias) []*string {
 func updateAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set, timeout time.Duration) error {
 	if newSet.Len() > 0 {
 		if newAliases := newSet.Difference(oldSet); newAliases.Len() > 0 {
-
 			input := &fsx.AssociateFileSystemAliasesInput{
 				FileSystemId: aws.String(identifier),
 				Aliases:      flex.ExpandStringSet(newAliases),

@@ -39,6 +39,21 @@ func statusBackup(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
+func statusFileCache(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := findFileCacheByID(conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, aws.StringValue(out.Lifecycle), nil
+	}
+}
+
 func statusFileSystem(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFileSystemByID(conn, id)

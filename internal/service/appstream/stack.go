@@ -3,6 +3,7 @@ package appstream
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -10,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (
@@ -66,11 +70,12 @@ func ResourceStack() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Required: true,
 						},
 						"settings_group": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 100),
 						},
 					},
 				},
@@ -124,7 +129,7 @@ func ResourceStack() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
+				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
 			"storage_connectors": {
 				Type:     schema.TypeSet,
@@ -182,6 +187,53 @@ func ResourceStack() *schema.Resource {
 			"tags":     tftags.TagsSchemaForceNew(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				rawConfig := d.GetRawConfig()
+				configApplicationSettings := rawConfig.GetAttr("application_settings")
+				if configApplicationSettings.IsKnown() && !configApplicationSettings.IsNull() && configApplicationSettings.LengthInt() > 0 {
+					return nil
+				}
+
+				rawState := d.GetRawState()
+				stateApplicationSettings := rawState.GetAttr("application_settings")
+				if stateApplicationSettings.IsKnown() && !stateApplicationSettings.IsNull() && stateApplicationSettings.LengthInt() > 0 {
+					setting := stateApplicationSettings.Index(cty.NumberIntVal(0))
+					if setting.IsKnown() && !setting.IsNull() {
+						enabled := setting.GetAttr("enabled")
+						if enabled.IsKnown() && !enabled.IsNull() && enabled.True() {
+							// Trigger a diff
+							return d.SetNew("application_settings", []map[string]any{
+								{
+									"enabled":        false,
+									"settings_group": "",
+								},
+							})
+						}
+					}
+				}
+
+				return nil
+			},
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				_, enabled := d.GetOk("application_settings.0.enabled")
+				v, sg := d.GetOk("application_settings.0.settings_group")
+				log.Print(v)
+
+				if enabled && !sg {
+					return errors.New("application_settings.settings_group must be set when application_settings.enabled is true")
+				} else if !enabled && sg {
+					return errors.New("application_settings.settings_group must not be set when application_settings.enabled is false")
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -279,19 +331,18 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
 	}
 	for _, v := range resp.Stacks {
-
 		if err = d.Set("access_endpoints", flattenAccessEndpoints(v.AccessEndpoints)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "access_endpoints", d.Id(), err))
 		}
 		if err = d.Set("application_settings", flattenApplicationSettings(v.ApplicationSettings)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "application_settings", d.Id(), err))
 		}
 		d.Set("arn", v.Arn)
 		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 		d.Set("description", v.Description)
 		d.Set("display_name", v.DisplayName)
 		if err = d.Set("embed_host_domains", flex.FlattenStringList(v.EmbedHostDomains)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "embed_host_domains", d.Id(), err))
 		}
 		d.Set("feedback_url", v.FeedbackURL)
 		d.Set("name", v.Name)
@@ -335,7 +386,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("application_settings") {
-		input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").(*schema.Set).List())
+		input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
 	}
 
 	if d.HasChange("description") {
@@ -474,38 +525,20 @@ func flattenAccessEndpoints(apiObjects []*appstream.AccessEndpoint) []map[string
 	return tfList
 }
 
-func expandApplicationSetting(tfMap map[string]interface{}) *appstream.ApplicationSettings {
-	if tfMap == nil {
-		return nil
+func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSettings {
+	if len(tfList) == 0 {
+		return &appstream.ApplicationSettings{
+			Enabled: aws.Bool(false),
+		}
 	}
 
-	apiObject := &appstream.ApplicationSettings{}
+	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["enabled"]; ok {
-		apiObject.Enabled = aws.Bool(v.(bool))
+	apiObject := &appstream.ApplicationSettings{
+		Enabled: aws.Bool(tfMap["enabled"].(bool)),
 	}
 	if v, ok := tfMap["settings_group"]; ok {
 		apiObject.SettingsGroup = aws.String(v.(string))
-	}
-
-	return apiObject
-}
-
-func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSettings {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObject *appstream.ApplicationSettings
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject = expandApplicationSetting(tfMap)
 	}
 
 	return apiObject
@@ -516,11 +549,10 @@ func flattenApplicationSetting(apiObject *appstream.ApplicationSettingsResponse)
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	tfMap["enabled"] = aws.BoolValue(apiObject.Enabled)
-	tfMap["settings_group"] = aws.StringValue(apiObject.SettingsGroup)
-
-	return tfMap
+	return map[string]interface{}{
+		"enabled":        aws.BoolValue(apiObject.Enabled),
+		"settings_group": aws.StringValue(apiObject.SettingsGroup),
+	}
 }
 
 func flattenApplicationSettings(apiObject *appstream.ApplicationSettingsResponse) []interface{} {

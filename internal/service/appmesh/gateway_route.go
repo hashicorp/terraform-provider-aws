@@ -934,7 +934,6 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 	}
 
 	if hostnameMatch := routeMatch.Hostname; hostnameMatch != nil {
-
 		mHostnameMatch := map[string]interface{}{}
 		if hostnameMatch.Exact != nil {
 			mHostnameMatch["exact"] = aws.StringValue(hostnameMatch.Exact)
@@ -944,7 +943,6 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 		}
 
 		mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
-
 	}
 	return []interface{}{mRouteMatch}
 }

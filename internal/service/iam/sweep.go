@@ -67,6 +67,7 @@ func init() {
 			"aws_glue_crawler",
 			"aws_glue_job",
 			"aws_instance",
+			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_launch_configuration",
 			"aws_redshift_cluster",
@@ -839,10 +840,18 @@ func roleNameFilter(name string) bool {
 		return true
 	}
 
+	randTF := regexp.MustCompile(`^tf-[0-9]{16}`)
+	if randTF.MatchString(name) {
+		return true
+	}
+
 	// We have a lot of role name prefixes for role names that don't match the standard pattern. This is not an
 	// exhaustive list.
 	prefixes := []string{
 		"another_rds",
+		"aws_batch_service_role",
+		"aws_elastictranscoder_pipeline_tf_test",
+		"batch_tf_batch_target-",
 		"codepipeline-",
 		"cognito_authenticated_",
 		"cognito_unauthenticated_",
@@ -853,13 +862,24 @@ func roleNameFilter(name string) bool {
 		"foobar",
 		"iam_emr",
 		"iam_for_sfn",
+		"KinesisFirehoseServiceRole-test",
 		"rds",
+		"resource-test-terraform-",
 		"role",
 		"sns-delivery-status",
 		"ssm_role",
 		"ssm-role",
+		"terraform-2021",
+		"terraform-2022",
 		"test",
+		"tf_ecs_target",
+		"tf_ecs",
+		"tf_test",
 		"tf-acc",
+		"tf-iam-role-replication",
+		"tf-opsworks-acc",
+		"tf-test-iam",
+		"tf-test",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {

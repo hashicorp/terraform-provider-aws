@@ -442,7 +442,6 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckPolicyExists(resourceName string, policy *organizations.Policy) resource.TestCheckFunc {

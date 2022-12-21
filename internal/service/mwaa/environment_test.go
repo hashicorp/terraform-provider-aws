@@ -1,23 +1,22 @@
 package mwaa_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccMWAAEnvironment_basic(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -79,8 +78,7 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_disappears(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -103,8 +101,7 @@ func TestAccMWAAEnvironment_disappears(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -149,8 +146,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_log(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -234,8 +230,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_full(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -309,8 +304,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 	s3ObjectResourceName := "aws_s3_object.plugins"
@@ -349,11 +343,11 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentExists(resourceName string, environment *mwaa.GetEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(n string, v *mwaa.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -361,15 +355,14 @@ func testAccCheckEnvironmentExists(resourceName string, environment *mwaa.GetEnv
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn
-		resp, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfmwaa.FindEnvironmentByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error getting MWAA Environment: %s", err.Error())
+			return err
 		}
 
-		*environment = *resp
+		*v = *output
 
 		return nil
 	}
@@ -383,34 +376,24 @@ func testAccCheckEnvironmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		_, err := tfmwaa.FindEnvironmentByName(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
-				continue
-			}
 			return err
 		}
 
-		return fmt.Errorf("Expected MWAA Environment to be destroyed, %s found", rs.Primary.ID)
+		return fmt.Errorf("MWAA Environment %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccEnvironmentBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEnvironmentConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
@@ -425,6 +408,10 @@ resource "aws_vpc" "test" {
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "public" {
@@ -433,6 +420,10 @@ resource "aws_route_table" "public" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -449,7 +440,7 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-private-${count.index}"
+    Name = %[1]q
   }
 }
 
@@ -457,6 +448,10 @@ resource "aws_eip" "private" {
   count = 2
 
   vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_nat_gateway" "private" {
@@ -464,6 +459,10 @@ resource "aws_nat_gateway" "private" {
 
   allocation_id = aws_eip.private[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "private" {
@@ -474,6 +473,10 @@ resource "aws_route_table" "private" {
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.private[count.index].id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -492,12 +495,13 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-public-${count.index}"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
+  name   = %[1]q
 
   egress {
     from_port   = 0
@@ -590,13 +594,11 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
-
-
-`, rName)
+`, rName))
 }
 
 func testAccEnvironmentConfig_basic(rName string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -609,11 +611,11 @@ resource "aws_mwaa_environment" "test" {
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccEnvironmentConfig_airflowOptions(rName, retries, parallelism string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
     "core.default_task_retries" = %[2]q
@@ -631,11 +633,11 @@ resource "aws_mwaa_environment" "test" {
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
-`, rName, retries, parallelism)
+`, rName, retries, parallelism))
 }
 
 func testAccEnvironmentConfig_logging(rName, logEnabled, logLevel string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -676,11 +678,11 @@ resource "aws_mwaa_environment" "test" {
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
-`, rName, logEnabled, logLevel)
+`, rName, logEnabled, logLevel))
 }
 
 func testAccEnvironmentConfig_full(rName string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
     "core.default_task_retries" = 1
@@ -787,11 +789,11 @@ resource "aws_s3_object" "requirements" {
   content = ""
 }
 
-`, rName)
+`, rName))
 }
 
 func testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, content string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -817,5 +819,5 @@ resource "aws_s3_object" "plugins" {
   key     = "plugins.zip"
   content = %q
 }
-`, rName, content)
+`, rName, content))
 }

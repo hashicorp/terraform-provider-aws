@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
+-> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
+
 ## Example Usage
 
 ```terraform

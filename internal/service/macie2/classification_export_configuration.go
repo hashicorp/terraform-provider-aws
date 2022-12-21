@@ -52,7 +52,6 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 }
 
 func resourceClassificationExportConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	if d.IsNewResource() {

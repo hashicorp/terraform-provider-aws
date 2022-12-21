@@ -127,7 +127,7 @@ func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustAnchorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustAnchorConfig_certificateBundle(rName),
+				Config: testAccTrustAnchorConfig_certificateBundle(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "enabled"),
@@ -146,8 +146,48 @@ func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
 	})
 }
 
+func TestAccRolesAnywhereTrustAnchor_enabled(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_trust_anchor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustAnchorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustAnchorConfig_enabled(t, rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTrustAnchorConfig_enabled(t, rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				Config: testAccTrustAnchorConfig_enabled(t, rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTrustAnchorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rolesanywhere_trust_anchor" {
@@ -182,7 +222,7 @@ func testAccCheckTrustAnchorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No RolesAnywhere Trust Anchor ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 		_, err := tfrolesanywhere.FindTrustAnchorByID(context.Background(), conn, rs.Primary.ID)
 
@@ -285,9 +325,9 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 `, rName, tag1, value1, tag2, value2))
 }
 
-func testAccTrustAnchorConfig_certificateBundle(rName string) string {
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(caKey)
+func testAccTrustAnchorConfig_certificateBundle(t *testing.T, rName string) string {
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t, caKey)
 
 	return fmt.Sprintf(`
 resource "aws_rolesanywhere_trust_anchor" "test" {
@@ -302,10 +342,29 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(caCertificate))
 }
 
+func testAccTrustAnchorConfig_enabled(t *testing.T, rName string, enabled bool) string {
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t, caKey)
+
+	return fmt.Sprintf(`
+resource "aws_rolesanywhere_trust_anchor" "test" {
+  name = %[1]q
+  source {
+    source_data {
+      x509_certificate_data = "%[2]s"
+    }
+    source_type = "CERTIFICATE_BUNDLE"
+  }
+
+  enabled = %[3]t
+}
+`, rName, acctest.TLSPEMEscapeNewlines(caCertificate), enabled)
+}
+
 func testAccPreCheck(t *testing.T) {
 	acctest.PreCheckPartitionHasService(names.RolesAnywhereEndpointID, t)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 	input := &rolesanywhere.ListTrustAnchorsInput{}
 

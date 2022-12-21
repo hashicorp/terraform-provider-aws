@@ -310,7 +310,6 @@ func testAccCheckSigningProfileDestroy(s *terraform.State) error {
 		if *out.Status != signer.SigningProfileStatusCanceled && err == nil {
 			return fmt.Errorf("Signing Profile not cancelled%s", *out.ProfileName)
 		}
-
 	}
 
 	return nil

@@ -99,7 +99,6 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker Model Package Group (%s): %w", d.Id(), err)
-
 	}
 
 	arn := aws.StringValue(mpg.ModelPackageGroupArn)

@@ -31,7 +31,7 @@ func sweepsDataSource(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).QuickSightConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	ctx := context.Background()

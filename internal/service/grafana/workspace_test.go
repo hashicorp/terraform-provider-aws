@@ -26,6 +26,7 @@ func TestAccGrafana_serial(t *testing.T) {
 			"permissionType":           testAccWorkspace_permissionType,
 			"notificationDestinations": testAccWorkspace_notificationDestinations,
 			"tags":                     testAccWorkspace_tags,
+			"vpc":                      testAccWorkspace_vpc,
 		},
 		"ApiKey": {
 			"basic": testAccWorkspaceAPIKey_basic,
@@ -96,6 +97,35 @@ func testAccWorkspace_saml(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", managedgrafana.SamlConfigurationStatusNotConfigured),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccWorkspace_vpc(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_vpc(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", "2"),
 				),
 			},
 			{
@@ -371,132 +401,6 @@ func testAccWorkspace_notificationDestinations(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceRole(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "grafana.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-`, rName)
-}
-
-func testAccWorkspaceConfig_authenticationProvider(rName, authenticationProvider string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type      = "CURRENT_ACCOUNT"
-  authentication_providers = [%[1]q]
-  permission_type          = "SERVICE_MANAGED"
-  role_arn                 = aws_iam_role.test.arn
-}
-`, authenticationProvider))
-}
-
-func testAccWorkspaceConfig_organization(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type      = "ORGANIZATION"
-  authentication_providers = ["SAML"]
-  permission_type          = "SERVICE_MANAGED"
-  role_arn                 = aws_iam_role.test.arn
-  organizational_units     = [aws_organizations_organizational_unit.test.id]
-}
-
-data "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_organizational_unit" "test" {
-  name      = %[1]q
-  parent_id = data.aws_organizations_organization.test.roots[0].id
-}
-`, rName))
-}
-
-func testAccWorkspaceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type      = "CURRENT_ACCOUNT"
-  authentication_providers = ["SAML"]
-  permission_type          = "SERVICE_MANAGED"
-  name                     = %[1]q
-  role_arn                 = aws_iam_role.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-}
-  `, rName, tagKey1, tagValue1))
-}
-
-func testAccWorkspaceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type      = "CURRENT_ACCOUNT"
-  authentication_providers = ["SAML"]
-  permission_type          = "SERVICE_MANAGED"
-  name                     = %[1]q
-  role_arn                 = aws_iam_role.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-}
-  `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccWorkspaceConfig_dataSources(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type      = "CURRENT_ACCOUNT"
-  authentication_providers = ["SAML"]
-  permission_type          = "SERVICE_MANAGED"
-  name                     = %[1]q
-  description              = %[1]q
-  data_sources             = ["CLOUDWATCH", "PROMETHEUS", "XRAY"]
-  role_arn                 = aws_iam_role.test.arn
-}
-`, rName))
-}
-
-func testAccWorkspaceConfig_permissionType(rName, permissionType string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type      = "CURRENT_ACCOUNT"
-  authentication_providers = ["SAML"]
-  permission_type          = %[1]q
-  role_arn                 = aws_iam_role.test.arn
-}
-`, permissionType))
-}
-
-func testAccWorkspaceConfig_notificationDestinations(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
-resource "aws_grafana_workspace" "test" {
-  account_access_type       = "CURRENT_ACCOUNT"
-  authentication_providers  = ["SAML"]
-  permission_type           = "SERVICE_MANAGED"
-  name                      = %[1]q
-  description               = %[1]q
-  notification_destinations = ["SNS"]
-  role_arn                  = aws_iam_role.test.arn
-}
-`, rName))
-}
-
 func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -537,4 +441,151 @@ func testAccCheckWorkspaceDestroy(s *terraform.State) error {
 		return fmt.Errorf("Grafana Workspace %s still exists", rs.Primary.ID)
 	}
 	return nil
+}
+
+func testAccWorkspaceConfig_base(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "grafana.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccWorkspaceConfig_authenticationProvider(rName, authenticationProvider string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = [%[1]q]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+}
+`, authenticationProvider))
+}
+
+func testAccWorkspaceConfig_organization(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "ORGANIZATION"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+  organizational_units     = [aws_organizations_organizational_unit.test.id]
+}
+
+data "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.test.roots[0].id
+}
+`, rName))
+}
+
+func testAccWorkspaceConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+}
+  `, rName, tagKey1, tagValue1))
+}
+
+func testAccWorkspaceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+}
+  `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccWorkspaceConfig_dataSources(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  description              = %[1]q
+  data_sources             = ["CLOUDWATCH", "PROMETHEUS", "XRAY"]
+  role_arn                 = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccWorkspaceConfig_permissionType(rName, permissionType string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = %[1]q
+  role_arn                 = aws_iam_role.test.arn
+}
+`, permissionType))
+}
+
+func testAccWorkspaceConfig_notificationDestinations(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type       = "CURRENT_ACCOUNT"
+  authentication_providers  = ["SAML"]
+  permission_type           = "SERVICE_MANAGED"
+  name                      = %[1]q
+  description               = %[1]q
+  notification_destinations = ["SNS"]
+  role_arn                  = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccWorkspaceConfig_vpc(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+}
+
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+
+  vpc_configuration {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+}
+`, rName))
 }

@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
@@ -150,9 +151,9 @@ func WaitCacheClusterDeleted(conn *elasticache.ElastiCache, cacheClusterID strin
 }
 
 const (
-	GlobalReplicationGroupDefaultCreatedTimeout = 25 * time.Minute
-	GlobalReplicationGroupDefaultUpdatedTimeout = 40 * time.Minute
-	GlobalReplicationGroupDefaultDeletedTimeout = 20 * time.Minute
+	globalReplicationGroupDefaultCreatedTimeout = 60 * time.Minute
+	globalReplicationGroupDefaultUpdatedTimeout = 60 * time.Minute
+	globalReplicationGroupDefaultDeletedTimeout = 20 * time.Minute
 
 	globalReplicationGroupAvailableMinTimeout = 10 * time.Second
 	globalReplicationGroupAvailableDelay      = 30 * time.Second
@@ -161,27 +162,27 @@ const (
 	globalReplicationGroupDeletedDelay      = 30 * time.Second
 )
 
-// WaitGlobalReplicationGroupAvailable waits for a Global Replication Group to be available,
+// waitGlobalReplicationGroupAvailable waits for a Global Replication Group to be available,
 // with status either "available" or "primary-only"
-func WaitGlobalReplicationGroupAvailable(conn *elasticache.ElastiCache, globalReplicationGroupID string, timeout time.Duration) (*elasticache.GlobalReplicationGroup, error) {
+func waitGlobalReplicationGroupAvailable(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, timeout time.Duration) (*elasticache.GlobalReplicationGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{GlobalReplicationGroupStatusCreating, GlobalReplicationGroupStatusModifying},
 		Target:     []string{GlobalReplicationGroupStatusAvailable, GlobalReplicationGroupStatusPrimaryOnly},
-		Refresh:    StatusGlobalReplicationGroup(conn, globalReplicationGroupID),
+		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: globalReplicationGroupAvailableMinTimeout,
 		Delay:      globalReplicationGroupAvailableDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if v, ok := outputRaw.(*elasticache.GlobalReplicationGroup); ok {
 		return v, err
 	}
 	return nil, err
 }
 
-// WaitGlobalReplicationGroupDeleted waits for a Global Replication Group to be deleted
-func WaitGlobalReplicationGroupDeleted(conn *elasticache.ElastiCache, globalReplicationGroupID string) (*elasticache.GlobalReplicationGroup, error) {
+// waitGlobalReplicationGroupDeleted waits for a Global Replication Group to be deleted
+func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, timeout time.Duration) (*elasticache.GlobalReplicationGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			GlobalReplicationGroupStatusAvailable,
@@ -190,13 +191,13 @@ func WaitGlobalReplicationGroupDeleted(conn *elasticache.ElastiCache, globalRepl
 			GlobalReplicationGroupStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    StatusGlobalReplicationGroup(conn, globalReplicationGroupID),
-		Timeout:    GlobalReplicationGroupDefaultDeletedTimeout,
+		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
+		Timeout:    timeout,
 		MinTimeout: globalReplicationGroupDeletedMinTimeout,
 		Delay:      globalReplicationGroupDeletedDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if v, ok := outputRaw.(*elasticache.GlobalReplicationGroup); ok {
 		return v, err
 	}
@@ -215,13 +216,13 @@ const (
 	globalReplicationGroupDisassociationDelay      = 30 * time.Second
 )
 
-func WaitGlobalReplicationGroupMemberDetached(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) (*elasticache.GlobalReplicationGroupMember, error) {
+func waitGlobalReplicationGroupMemberDetached(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) (*elasticache.GlobalReplicationGroupMember, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			GlobalReplicationGroupMemberStatusAssociated,
 		},
 		Target:     []string{},
-		Refresh:    StatusGlobalReplicationGroupMember(conn, globalReplicationGroupID, id),
+		Refresh:    statusGlobalReplicationGroupMember(conn, globalReplicationGroupID, id),
 		Timeout:    globalReplicationGroupDisassociationTimeout,
 		MinTimeout: globalReplicationGroupDisassociationMinTimeout,
 		Delay:      globalReplicationGroupDisassociationDelay,

@@ -18,10 +18,10 @@ import (
 
 func ResourceGraph() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceGraphCreate,
-		ReadContext:   resourceGraphRead,
-		UpdateContext: resourceGraphUpdate,
-		DeleteContext: resourceGraphDelete,
+		CreateWithoutTimeout: resourceGraphCreate,
+		ReadWithoutTimeout:   resourceGraphRead,
+		UpdateWithoutTimeout: resourceGraphUpdate,
+		DeleteWithoutTimeout: resourceGraphDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

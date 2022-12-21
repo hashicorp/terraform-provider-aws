@@ -308,7 +308,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = conn.PutMetricAlarm(&params)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating CloudWatch Metric Alarm (%s) with tags: %s. Trying create without tags.", d.Get("alarm_name").(string), err)
 		params.Tags = nil
 
@@ -336,7 +336,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 		err = UpdateTags(conn, aws.StringValue(resp.AlarmArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 			return resourceMetricAlarmRead(d, meta)
 		}
@@ -431,7 +431,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed listing tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 		return nil
 	}
@@ -466,7 +466,7 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, arn, o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 			return resourceMetricAlarmRead(d, meta)
 		}

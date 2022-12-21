@@ -20,7 +20,6 @@ import (
 const clusterParameterGroupMaxParamsBulkEdit = 20
 
 func ResourceClusterParameterGroup() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceClusterParameterGroupCreate,
 		Read:   resourceClusterParameterGroupRead,
@@ -94,7 +93,6 @@ func ResourceClusterParameterGroup() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
-
 }
 
 func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {

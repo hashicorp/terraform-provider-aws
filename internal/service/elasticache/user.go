@@ -100,7 +100,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := conn.CreateUser(input)
 
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache User with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil
@@ -118,7 +118,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, aws.StringValue(out.ARN), nil, tags)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed adding tags after create for ElastiCache User (%s): %w", d.Id(), err)
 			}
@@ -154,13 +154,13 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(resp.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		return fmt.Errorf("listing tags for ElastiCache User (%s): %w", aws.StringValue(resp.ARN), err)
 	}
 
 	// tags not supported in all partitions
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache User (%s): %s", aws.StringValue(resp.ARN), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache User (%s): %s", aws.StringValue(resp.ARN), err)
 	}
 
 	if tags != nil {
@@ -213,7 +213,6 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error waiting for ElastiCache User (%s) to be modified: %w", d.Id(), err)
 			}
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
@@ -222,7 +221,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed updating ElastiCache User (%s) tags: %w", d.Get("arn").(string), err)
 			}

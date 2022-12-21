@@ -12,11 +12,11 @@ import (
 
 // Custom Kinesis Firehose service lister functions using the same format as generated code.
 
-func listDeliveryStreamsPages(conn *firehose.Firehose, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error { //nolint:deadcode // This function is called from a sweeper.
+func listDeliveryStreamsPages(conn *firehose.Firehose, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error { //nolint:unused // This function is called from a sweeper.
 	return listDeliveryStreamsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func listDeliveryStreamsPagesWithContext(ctx context.Context, conn *firehose.Firehose, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error {
+func listDeliveryStreamsPagesWithContext(ctx context.Context, conn *firehose.Firehose, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error { //nolint:unused // This function is called from a sweeper.
 	for {
 		output, err := conn.ListDeliveryStreamsWithContext(ctx, input)
 		if err != nil {

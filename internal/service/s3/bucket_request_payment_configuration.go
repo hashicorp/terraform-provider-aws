@@ -19,10 +19,10 @@ import (
 
 func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketRequestPaymentConfigurationCreate,
-		ReadContext:   resourceBucketRequestPaymentConfigurationRead,
-		UpdateContext: resourceBucketRequestPaymentConfigurationUpdate,
-		DeleteContext: resourceBucketRequestPaymentConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketRequestPaymentConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketRequestPaymentConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketRequestPaymentConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketRequestPaymentConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

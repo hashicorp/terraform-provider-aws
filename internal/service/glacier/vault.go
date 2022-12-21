@@ -251,7 +251,6 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
-
 	if v, ok := d.GetOk("notification"); ok {
 		settings := v.([]interface{})
 
@@ -276,7 +275,6 @@ func resourceVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceDa
 		if err != nil {
 			return fmt.Errorf("Error Removing Glacier Vault Notifications: %w", err)
 		}
-
 	}
 
 	return nil

@@ -32,18 +32,19 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -126,6 +127,42 @@ func TestAccNeptuneCluster_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"skip_final_snapshot",
+					"allow_major_version_upgrade",
+				},
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
+	var v neptune.DBCluster
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_neptune_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_serverlessConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "4.5"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "12.5"),
 				),
 			},
 			{
@@ -579,6 +616,38 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 	})
 }
 
+func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *testing.T) {
+	var providers []*schema.Provider
+	var primaryDbCluster, secondaryDbCluster neptune.DBCluster
+
+	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
+	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
+	rNameSecondary := sdkacctest.RandomWithPrefix("tf-acc-test-secondary")
+
+	resourceNamePrimary := "aws_neptune_cluster.primary"
+	resourceNameSecondary := "aws_neptune_cluster.secondary"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalCluster(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
+		CheckDestroy:      testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	var dbCluster neptune.DBCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -825,6 +894,22 @@ resource "aws_neptune_cluster" "test" {
   engine                               = "neptune"
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot                  = true
+}
+`, rName)
+}
+
+func testAccClusterConfig_serverlessConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier_prefix            = %q
+  engine                               = "neptune"
+  engine_version                       = "1.2.0.1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  skip_final_snapshot                  = true
+  serverless_v2_scaling_configuration {
+    min_capacity = 4.5
+    max_capacity = 12.5
+  }
 }
 `, rName)
 }
@@ -1240,4 +1325,96 @@ resource "aws_neptune_cluster" "test" {
   allow_major_version_upgrade          = true
 }
 `, rName, engineVersion))
+}
+
+func testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+data "aws_availability_zones" "alternate" {
+  provider = "awsalternate"
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_neptune_global_cluster" "test" {
+  global_cluster_identifier = "%[1]s"
+  engine                    = "neptune"
+  engine_version            = "1.2.0.0"
+}
+
+resource "aws_neptune_cluster" "primary" {
+  cluster_identifier                   = "%[2]s"
+  skip_final_snapshot                  = true
+  global_cluster_identifier            = aws_neptune_global_cluster.test.id
+  engine                               = aws_neptune_global_cluster.test.engine
+  engine_version                       = aws_neptune_global_cluster.test.engine_version
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+
+}
+
+resource "aws_neptune_cluster_instance" "primary" {
+  identifier                   = "%[2]s"
+  cluster_identifier           = aws_neptune_cluster.primary.id
+  instance_class               = "db.r5.large"
+  neptune_parameter_group_name = "default.neptune1.2"
+  engine_version               = aws_neptune_global_cluster.test.engine_version
+}
+
+resource "aws_vpc" "alternate" {
+  provider   = "awsalternate"
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "%[3]s"
+  }
+}
+
+resource "aws_subnet" "alternate" {
+  provider          = "awsalternate"
+  count             = 3
+  vpc_id            = aws_vpc.alternate.id
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+
+  tags = {
+    Name = "%[3]s"
+  }
+}
+
+resource "aws_neptune_subnet_group" "alternate" {
+  provider   = "awsalternate"
+  name       = "%[3]s"
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+
+resource "aws_neptune_cluster" "secondary" {
+  provider                             = "awsalternate"
+  cluster_identifier                   = "%[3]s"
+  skip_final_snapshot                  = true
+  neptune_subnet_group_name            = aws_neptune_subnet_group.alternate.name
+  global_cluster_identifier            = aws_neptune_global_cluster.test.id
+  engine                               = aws_neptune_global_cluster.test.engine
+  engine_version                       = aws_neptune_global_cluster.test.engine_version
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  depends_on                           = [aws_neptune_cluster_instance.primary]
+  lifecycle {
+    ignore_changes = [replication_source_identifier]
+  }
+}
+
+resource "aws_neptune_cluster_instance" "secondary" {
+  provider                     = "awsalternate"
+  identifier                   = "%[3]s"
+  cluster_identifier           = aws_neptune_cluster.secondary.id
+  neptune_parameter_group_name = "default.neptune1.2"
+  engine_version               = aws_neptune_global_cluster.test.engine_version
+  instance_class               = "db.r5.large"
+}
+`, rNameGlobal, rNamePrimary, rNameSecondary))
 }

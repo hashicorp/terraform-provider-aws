@@ -152,7 +152,6 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 
 	var scopeIdentifiers []string
 	for _, elem := range scopes {
-
 		scopeIdentifier := fmt.Sprintf("%s/%s", aws.StringValue(resp.ResourceServer.Identifier), elem["scope_name"].(string))
 		scopeIdentifiers = append(scopeIdentifiers, scopeIdentifier)
 	}

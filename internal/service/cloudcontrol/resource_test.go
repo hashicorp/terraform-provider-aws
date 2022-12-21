@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -468,15 +469,44 @@ func TestAccCloudControlResource_resourceSchema(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/26351.
+func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudcontrolapi_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_lambdaFunctionRole(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// CloudControl API does not do any eventual consistency handling, so hard wait here for the IAM role.
+					acctest.CheckSleep(t, 1*time.Minute),
+				),
+			},
+			{
+				Config: testAccResourceConfig_lambdaFunction(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr(resourceName, "properties", regexp.MustCompile(`^\{.*\}$`)),
+					resource.TestMatchResourceAttr(resourceName, "schema", regexp.MustCompile(`^\{.*`)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudControlClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudcontrolapi_resource" {
 			continue
 		}
 
-		_, err := tfcloudcontrol.FindResourceByID(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
+		_, err := tfcloudcontrol.FindResource(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
 
 		if tfresource.NotFound(err) {
 			continue
@@ -663,4 +693,45 @@ resource "aws_cloudcontrolapi_resource" "test" {
   })
 }
 `, rName)
+}
+
+func testAccResourceConfig_lambdaFunctionRole(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name                = %[1]q
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = "AllowLambda"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccResourceConfig_lambdaFunction(rName string) string {
+	return acctest.ConfigCompose(testAccResourceConfig_lambdaFunctionRole(rName), `
+resource "aws_cloudcontrolapi_resource" "test" {
+  type_name = "AWS::Lambda::Function"
+  desired_state = jsonencode({
+    Role    = aws_iam_role.test.arn
+    Handler = "index.main"
+    Runtime = "python3.7"
+    Timeout = 300
+    Code    = { ZipFile = "def main(event, context): pass" }
+  })
+}
+`)
 }

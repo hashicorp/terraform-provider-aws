@@ -4,6 +4,7 @@
 package cloudfront
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -58,6 +59,14 @@ func init() {
 		F:    sweepMonitoringSubscriptions,
 	})
 
+	resource.AddTestSweepers("aws_cloudfront_origin_access_control", &resource.Sweeper{
+		Name: "aws_cloudfront_origin_access_control",
+		F:    sweepOriginAccessControls,
+		Dependencies: []string{
+			"aws_cloudfront_distribution",
+		},
+	})
+
 	resource.AddTestSweepers("aws_cloudfront_origin_request_policy", &resource.Sweeper{
 		Name: "aws_cloudfront_origin_request_policy",
 		F:    sweepOriginRequestPolicies,
@@ -89,7 +98,7 @@ func sweepCachePolicies(region string) error {
 	input := &cloudfront.ListCachePoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListCachePoliciesPages(conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -146,7 +155,7 @@ func sweepDistributions(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListDistributionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListDistributionsPages(input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -416,7 +425,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListFieldLevelEncryptionConfigsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListFieldLevelEncryptionConfigsPages(conn, input, func(page *cloudfront.ListFieldLevelEncryptionConfigsOutput, lastPage bool) bool {
 		if page == nil {
@@ -473,7 +482,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListFieldLevelEncryptionProfilesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListFieldLevelEncryptionProfilesPages(conn, input, func(page *cloudfront.ListFieldLevelEncryptionProfilesOutput, lastPage bool) bool {
 		if page == nil {
@@ -532,7 +541,7 @@ func sweepOriginRequestPolicies(region string) error {
 	input := &cloudfront.ListOriginRequestPoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListOriginRequestPoliciesPages(conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -591,7 +600,7 @@ func sweepResponseHeadersPolicies(region string) error {
 	input := &cloudfront.ListResponseHeadersPoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListResponseHeadersPoliciesPages(conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -636,6 +645,63 @@ func sweepResponseHeadersPolicies(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Response Headers Policies (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepOriginAccessControls(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).CloudFrontConn
+	input := &cloudfront.ListOriginAccessControlsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = ListOriginAccessControlsPages(conn, input, func(page *cloudfront.ListOriginAccessControlsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.OriginAccessControlList.Items {
+			id := aws.StringValue(v.Id)
+
+			output, err := findOriginAccessControlByID(context.Background(), conn, id)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[WARN] %s", err)
+				continue
+			}
+
+			r := ResourceOriginAccessControl()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("etag", output.ETag)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Origin Access Control sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Origin Access Controls (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront Origin Access Controls (%s): %w", region, err)
 	}
 
 	return nil

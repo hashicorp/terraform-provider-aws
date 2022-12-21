@@ -51,7 +51,6 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckSharedDirectoryAccepterExists(n string) resource.TestCheckFunc {

@@ -85,7 +85,6 @@ func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker Image Version (%s): %w", d.Id(), err)
-
 	}
 
 	d.Set("arn", image.ImageVersionArn)

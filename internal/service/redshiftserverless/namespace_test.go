@@ -59,6 +59,38 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessNamespace_user(t *testing.T) {
+	resourceName := "aws_redshiftserverless_namespace.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNamespaceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNamespaceConfig_user(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "Password123"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRedshiftServerlessNamespace_tags(t *testing.T) {
 	resourceName := "aws_redshiftserverless_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -170,6 +202,15 @@ func testAccNamespaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
+}
+`, rName)
+}
+
+func testAccNamespaceConfig_user(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name      = %[1]q
+  admin_user_password = "Password123"
 }
 `, rName)
 }

@@ -194,7 +194,6 @@ func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 }
 
 func testAccCheckSubnetGroupDisappears(group *docdb.DBSubnetGroup) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 

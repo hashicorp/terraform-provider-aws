@@ -73,12 +73,9 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = conn.PutItem(&dynamodb.PutItemInput{
 		Item: attributes,
 		// Explode if item exists. We didn't create it.
-		Expected: map[string]*dynamodb.ExpectedAttributeValue{
-			hashKey: {
-				Exists: aws.Bool(false),
-			},
-		},
-		TableName: aws.String(tableName),
+		ConditionExpression:      aws.String("attribute_not_exists(#hk)"),
+		ExpressionAttributeNames: aws.StringMap(map[string]string{"#hk": hashKey}),
+		TableName:                aws.String(tableName),
 	})
 	if err != nil {
 		return err

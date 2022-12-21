@@ -32,9 +32,35 @@ func ResourceFunction() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"code": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"runtime"},
+				ValidateFunc: validation.StringLenBetween(1, 32768),
+			},
 			"data_source": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"function_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"function_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"2018-05-29",
+				}, true),
 			},
 			"max_batch_size": {
 				Type:         schema.TypeInt,
@@ -48,27 +74,30 @@ func ResourceFunction() *schema.Resource {
 			},
 			"request_mapping_template": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"response_mapping_template": {
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"function_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2018-05-29",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2018-05-29",
-				}, true),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"runtime": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"code"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(appsync.RuntimeName_Values(), false),
+						},
+						"runtime_version": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 			"sync_config": {
 				Type:     schema.TypeList,
@@ -103,10 +132,6 @@ func ResourceFunction() *schema.Resource {
 					},
 				},
 			},
-			"function_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -117,15 +142,23 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	apiID := d.Get("api_id").(string)
 
 	input := &appsync.CreateFunctionInput{
-		ApiId:                  aws.String(apiID),
-		DataSourceName:         aws.String(d.Get("data_source").(string)),
-		FunctionVersion:        aws.String(d.Get("function_version").(string)),
-		Name:                   aws.String(d.Get("name").(string)),
-		RequestMappingTemplate: aws.String(d.Get("request_mapping_template").(string)),
+		ApiId:           aws.String(apiID),
+		DataSourceName:  aws.String(d.Get("data_source").(string)),
+		FunctionVersion: aws.String(d.Get("function_version").(string)),
+		Name:            aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("code"); ok {
+		input.Code = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("request_mapping_template"); ok {
+		input.RequestMappingTemplate = aws.String(v.(string))
+		input.FunctionVersion = aws.String("2018-05-29")
 	}
 
 	if v, ok := d.GetOk("response_mapping_template"); ok {
@@ -140,9 +173,13 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
+		input.Runtime = expandRuntime(v.([]interface{}))
+	}
+
 	resp, err := conn.CreateFunction(input)
 	if err != nil {
-		return fmt.Errorf("Error creating AppSync Function: %w", err)
+		return fmt.Errorf("error creating AppSync Function: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s", apiID, aws.StringValue(resp.FunctionConfiguration.FunctionId)))
@@ -170,7 +207,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting AppSync Function %s: %w", d.Id(), err)
+		return fmt.Errorf("error getting AppSync Function %s: %w", d.Id(), err)
 	}
 
 	function := resp.FunctionConfiguration
@@ -184,9 +221,14 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("request_mapping_template", function.RequestMappingTemplate)
 	d.Set("response_mapping_template", function.ResponseMappingTemplate)
 	d.Set("max_batch_size", function.MaxBatchSize)
+	d.Set("code", function.Code)
 
 	if err := d.Set("sync_config", flattenSyncConfig(function.SyncConfig)); err != nil {
 		return fmt.Errorf("error setting sync_config: %w", err)
+	}
+
+	if err := d.Set("runtime", flattenRuntime(function.Runtime)); err != nil {
+		return fmt.Errorf("error setting runtime: %w", err)
 	}
 
 	return nil
@@ -201,16 +243,23 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input := &appsync.UpdateFunctionInput{
-		ApiId:                  aws.String(apiID),
-		DataSourceName:         aws.String(d.Get("data_source").(string)),
-		FunctionId:             aws.String(functionID),
-		FunctionVersion:        aws.String(d.Get("function_version").(string)),
-		Name:                   aws.String(d.Get("name").(string)),
-		RequestMappingTemplate: aws.String(d.Get("request_mapping_template").(string)),
+		ApiId:           aws.String(apiID),
+		DataSourceName:  aws.String(d.Get("data_source").(string)),
+		FunctionId:      aws.String(functionID),
+		FunctionVersion: aws.String(d.Get("function_version").(string)),
+		Name:            aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("code"); ok {
+		input.Code = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("request_mapping_template"); ok {
+		input.RequestMappingTemplate = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("response_mapping_template"); ok {
@@ -225,9 +274,13 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
+		input.Runtime = expandRuntime(v.([]interface{}))
+	}
+
 	_, err = conn.UpdateFunction(input)
 	if err != nil {
-		return fmt.Errorf("Error updating AppSync Function %s: %w", d.Id(), err)
+		return fmt.Errorf("error updating AppSync Function %s: %w", d.Id(), err)
 	}
 
 	return resourceFunctionRead(d, meta)
@@ -251,7 +304,7 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting AppSync Function %s: %w", d.Id(), err)
+		return fmt.Errorf("error deleting AppSync Function %s: %w", d.Id(), err)
 	}
 
 	return nil
@@ -263,6 +316,39 @@ func DecodeFunctionID(id string) (string, string, error) {
 		return "", "", fmt.Errorf("expected ID in format ApiID-FunctionID, received: %s", id)
 	}
 	return idParts[0], idParts[1], nil
+}
+
+func expandRuntime(l []interface{}) *appsync.AppSyncRuntime {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.AppSyncRuntime{}
+
+	if v, ok := configured["name"].(string); ok {
+		result.Name = aws.String(v)
+	}
+
+	if v, ok := configured["runtime_version"].(string); ok {
+		result.RuntimeVersion = aws.String(v)
+	}
+
+	return result
+}
+
+func flattenRuntime(config *appsync.AppSyncRuntime) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"name":            aws.StringValue(config.Name),
+		"runtime_version": aws.StringValue(config.RuntimeVersion),
+	}
+
+	return []map[string]interface{}{result}
 }
 
 func expandSyncConfig(l []interface{}) *appsync.SyncConfig {

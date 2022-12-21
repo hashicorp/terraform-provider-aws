@@ -372,7 +372,6 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		if output != nil && aws.StringValue(output.SchemaArn) == rs.Primary.ID {

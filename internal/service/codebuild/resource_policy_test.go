@@ -110,7 +110,6 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 		if resp != nil {
 			return fmt.Errorf("Found Resource Policy %s", rs.Primary.ID)
 		}
-
 	}
 	return nil
 }

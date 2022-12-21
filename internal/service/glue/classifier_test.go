@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccGlueClassifier_csvClassifier(t *testing.T) {
@@ -96,6 +95,47 @@ func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.quote_symbol", "'"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueClassifier_CSVClassifier_custom(t *testing.T) {
+	var classifier glue.Classifier
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClassifierConfig_csvCustom(rName, "BINARY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassifierExists(resourceName, &classifier),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.0", "BINARY"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.1", "SHORT"),
+				),
+			},
+			{
+				Config: testAccClassifierConfig_csvCustom(rName, "BOOLEAN"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassifierExists(resourceName, &classifier),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.0", "BOOLEAN"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.1", "SHORT"),
 				),
 			},
 			{
@@ -403,18 +443,13 @@ func testAccCheckClassifierExists(resourceName string, classifier *glue.Classifi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
-		output, err := conn.GetClassifier(&glue.GetClassifierInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		output, err := tfglue.FindClassifierByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output.Classifier == nil {
-			return fmt.Errorf("Glue Classifier (%s) not found", rs.Primary.ID)
-		}
-
-		*classifier = *output.Classifier
+		*classifier = *output
 		return nil
 	}
 }
@@ -427,23 +462,17 @@ func testAccCheckClassifierDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
-		output, err := conn.GetClassifier(&glue.GetClassifierInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		_, err := tfglue.FindClassifierByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil
-			}
-
+			return err
 		}
 
-		classifier := output.Classifier
-		if classifier != nil {
-			return fmt.Errorf("Glue Classifier %s still exists", rs.Primary.ID)
-		}
-
-		return err
+		return fmt.Errorf("Glue Classifier %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -479,6 +508,23 @@ resource "aws_glue_classifier" "test" {
   }
 }
 `, rName, symbol)
+}
+
+func testAccClassifierConfig_csvCustom(rName, customType string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_classifier" "test" {
+  name = %[1]q
+
+  csv_classifier {
+    allow_single_column        = false
+    contains_header            = "PRESENT"
+    delimiter                  = ","
+    header                     = ["header_column1", "header_column2"]
+    custom_datatype_configured = true
+    custom_datatypes           = ["%[2]s", "SHORT"]
+  }
+}
+`, rName, customType)
 }
 
 func testAccClassifierConfig_grok(rName, classification, grokPattern string) string {

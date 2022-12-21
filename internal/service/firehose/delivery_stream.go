@@ -1600,7 +1600,6 @@ func ResourceDeliveryStream() *schema.Resource {
 }
 
 func createSourceConfig(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
-
 	configuration := &firehose.KinesisStreamSourceConfiguration{
 		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
 		RoleARN:          aws.String(source["role_arn"].(string)),
@@ -2089,7 +2088,6 @@ func extractCloudWatchLoggingConfiguration(s3 map[string]interface{}) *firehose.
 	}
 
 	return loggingOptions
-
 }
 
 func extractVPCConfiguration(es map[string]interface{}) *firehose.VpcConfiguration {
@@ -2681,7 +2679,6 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func validSchema(d *schema.ResourceData) error {
-
 	_, s3Exists := d.GetOk("s3_configuration")
 	_, extendedS3Exists := d.GetOk("extended_s3_configuration")
 
@@ -2721,92 +2718,95 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)
-	updateInput := &firehose.UpdateDestinationInput{
-		DeliveryStreamName:             aws.String(sn),
-		CurrentDeliveryStreamVersionId: aws.String(d.Get("version_id").(string)),
-		DestinationId:                  aws.String(d.Get("destination_id").(string)),
-	}
 
-	if d.Get("destination").(string) == destinationTypeExtendedS3 {
-		extendedS3Config := updateExtendedS3Config(d)
-		updateInput.ExtendedS3DestinationUpdate = extendedS3Config
-	} else {
-		s3Config := updateS3Config(d)
-
-		if d.Get("destination").(string) == destinationTypeS3 {
-			updateInput.S3DestinationUpdate = s3Config
-		} else if d.Get("destination").(string) == destinationTypeElasticsearch {
-			esUpdate, err := updateElasticsearchConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.ElasticsearchDestinationUpdate = esUpdate
-		} else if d.Get("destination").(string) == destinationTypeRedshift {
-			// Redshift does not currently support ErrorOutputPrefix,
-			// which is set to the empty string within "updateS3Config",
-			// thus we must remove it here to avoid an InvalidArgumentException.
-			if s3Config != nil {
-				s3Config.ErrorOutputPrefix = nil
-			}
-			rc, err := updateRedshiftConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.RedshiftDestinationUpdate = rc
-		} else if d.Get("destination").(string) == destinationTypeSplunk {
-			rc, err := updateSplunkConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.SplunkDestinationUpdate = rc
-		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
-			rc, err := updateHTTPEndpointConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.HttpEndpointDestinationUpdate = rc
+	if d.HasChangesExcept("tags", "tags_all") {
+		updateInput := &firehose.UpdateDestinationInput{
+			DeliveryStreamName:             aws.String(sn),
+			CurrentDeliveryStreamVersionId: aws.String(d.Get("version_id").(string)),
+			DestinationId:                  aws.String(d.Get("destination_id").(string)),
 		}
-	}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.UpdateDestination(updateInput)
+		if d.Get("destination").(string) == destinationTypeExtendedS3 {
+			extendedS3Config := updateExtendedS3Config(d)
+			updateInput.ExtendedS3DestinationUpdate = extendedS3Config
+		} else {
+			s3Config := updateS3Config(d)
+
+			if d.Get("destination").(string) == destinationTypeS3 {
+				updateInput.S3DestinationUpdate = s3Config
+			} else if d.Get("destination").(string) == destinationTypeElasticsearch {
+				esUpdate, err := updateElasticsearchConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.ElasticsearchDestinationUpdate = esUpdate
+			} else if d.Get("destination").(string) == destinationTypeRedshift {
+				// Redshift does not currently support ErrorOutputPrefix,
+				// which is set to the empty string within "updateS3Config",
+				// thus we must remove it here to avoid an InvalidArgumentException.
+				if s3Config != nil {
+					s3Config.ErrorOutputPrefix = nil
+				}
+				rc, err := updateRedshiftConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.RedshiftDestinationUpdate = rc
+			} else if d.Get("destination").(string) == destinationTypeSplunk {
+				rc, err := updateSplunkConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.SplunkDestinationUpdate = rc
+			} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
+				rc, err := updateHTTPEndpointConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.HttpEndpointDestinationUpdate = rc
+			}
+		}
+
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateDestination(updateInput)
+			if err != nil {
+				// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
+					return resource.RetryableError(err)
+				}
+
+				// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			_, err = conn.UpdateDestination(updateInput)
+		}
+
 		if err != nil {
-			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
-				return resource.RetryableError(err)
-			}
-
-			// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
+			return fmt.Errorf(
+				"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
+				sn, err)
 		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateDestination(updateInput)
-	}
-
-	if err != nil {
-		return fmt.Errorf(
-			"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
-			sn, err)
 	}
 
 	if d.HasChange("tags_all") {

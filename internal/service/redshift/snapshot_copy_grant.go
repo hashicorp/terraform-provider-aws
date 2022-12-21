@@ -218,7 +218,6 @@ func WaitForSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName stri
 }
 
 func findSnapshotCopyGrant(conn *redshift.Redshift, grantName string) (*redshift.SnapshotCopyGrant, error) {
-
 	input := redshift.DescribeSnapshotCopyGrantsInput{
 		SnapshotCopyGrantName: aws.String(grantName),
 	}

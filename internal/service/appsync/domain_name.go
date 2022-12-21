@@ -16,7 +16,6 @@ import (
 )
 
 func ResourceDomainName() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceDomainNameCreate,
 		Read:   resourceDomainNameRead,
@@ -113,7 +112,6 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceDomainNameRead(d, meta)
-
 }
 
 func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {

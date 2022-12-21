@@ -78,7 +78,6 @@ func dataSourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			results = append(results, consumer)
-
 		}
 
 		return !lastPage

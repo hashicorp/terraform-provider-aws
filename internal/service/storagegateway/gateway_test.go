@@ -857,7 +857,6 @@ func testAccCheckGatewayDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckGatewayExists(resourceName string, gateway *storagegateway.DescribeGatewayInformationOutput) resource.TestCheckFunc {

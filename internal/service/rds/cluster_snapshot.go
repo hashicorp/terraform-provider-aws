@@ -244,15 +244,17 @@ func resourcedbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	params := &rds.DeleteDBClusterSnapshotInput{
+	log.Printf("[DEBUG] Deleting RDS DB Cluster Snapshot: %s", d.Id())
+	_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		return nil
 	}
-	_, err := conn.DeleteDBClusterSnapshot(params)
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
-			return nil
-		}
-		return fmt.Errorf("error deleting RDS DB Cluster Snapshot %q: %s", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Cluster Snapshot (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -40,7 +40,6 @@
 1. In some cases, we might decide that a PR should be closed without merging.
    We'll make sure to provide clear reasoning when this happens.
 
-
 ### Go Coding Style
 
 All Go code is automatically checked for compliance with various linters, such as `gofmt`. These tools can be installed using the `GNUMakefile` in this repository.
@@ -147,7 +146,7 @@ This Contribution Guide also includes separate sections on topics such as [Error
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
-- __Implements arn Attribute__: APIs that return an Amazon Resource Name (ARN) should implement `arn` as an attribute. Alternatively, the ARN can be synthesized using the AWS Go SDK [`arn.ARN`](https://docs.aws.amazon.com/sdk-for-go/api/aws/arn/#ARN) structure. For example:
+- __Implements arn Attribute__: APIs that return an ARN should implement `arn` as an attribute. Alternatively, the ARN can be synthesized using the AWS Go SDK [`arn.ARN`](https://docs.aws.amazon.com/sdk-for-go/api/aws/arn/#ARN) structure. For example:
 
   ```go
   // Direct Connect Virtual Interface ARN.

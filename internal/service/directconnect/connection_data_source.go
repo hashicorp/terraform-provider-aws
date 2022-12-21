@@ -45,6 +45,10 @@ func DataSourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"vlan_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -96,6 +100,7 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("provider_name", connection.ProviderName)
+	d.Set("vlan_id", connection.Vlan)
 
 	tags, err := ListTags(conn, arn)
 

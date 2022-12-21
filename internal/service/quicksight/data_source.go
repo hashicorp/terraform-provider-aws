@@ -1326,7 +1326,6 @@ func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*q
 				found = true
 				break
 			}
-
 		}
 
 		if !found {

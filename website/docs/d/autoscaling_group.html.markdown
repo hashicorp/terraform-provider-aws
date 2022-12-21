@@ -27,22 +27,22 @@ data "aws_autoscaling_group" "foo" {
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
 
-* `arn` - The Amazon Resource Name (ARN) of the Auto Scaling group.
+* `arn` - ARN of the Auto Scaling group.
 * `availability_zones` - One or more Availability Zones for the group.
-* `default_cool_down` - The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
-* `desired_capacity` - The desired size of the group.
-* `enabled_metrics` - The list of metrics enabled for collection.
+* `default_cool_down` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
+* `desired_capacity` - Desired size of the group.
+* `enabled_metrics` - List of metrics enabled for collection.
 * `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
-* `health_check_type` - The service to use for the health checks. The valid values are EC2 and ELB.
+* `health_check_type` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
 * `launch_configuration` - The name of the associated launch configuration.
 * `load_balancers` - One or more load balancers associated with the group.
-* `max_size` - The maximum size of the group.
-* `min_size` - The minimum size of the group.
+* `max_size` - Maximum size of the group.
+* `min_size` - Minimum size of the group.
 * `name` - Name of the Auto Scaling Group.
-* `placement_group` - The name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
-* `service_linked_role_arn` - The Amazon Resource Name (ARN) of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
-* `status` - The current state of the group when DeleteAutoScalingGroup is in progress.
-* `target_group_arns` - The Amazon Resource Names (ARN) of the target groups for your load balancer.
+* `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
+* `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
+* `status` - Current state of the group when DeleteAutoScalingGroup is in progress.
+* `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
 * `vpc_zone_identifier` - VPC ID for the group.

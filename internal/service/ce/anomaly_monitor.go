@@ -22,10 +22,10 @@ import (
 
 func ResourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAnomalyMonitorCreate,
-		ReadContext:   resourceAnomalyMonitorRead,
-		UpdateContext: resourceAnomalyMonitorUpdate,
-		DeleteContext: resourceAnomalyMonitorDelete,
+		CreateWithoutTimeout: resourceAnomalyMonitorCreate,
+		ReadWithoutTimeout:   resourceAnomalyMonitorRead,
+		UpdateWithoutTimeout: resourceAnomalyMonitorUpdate,
+		DeleteWithoutTimeout: resourceAnomalyMonitorDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -96,7 +96,6 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			input.AnomalyMonitor.MonitorSpecification = &expression
-
 		} else {
 			return diag.Errorf("If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeCustom)
 		}

@@ -33,6 +33,12 @@ func ResourceAddon() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"addon_name": {
 				Type:         schema.TypeString,
@@ -58,6 +64,11 @@ func ResourceAddon() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
+			},
+			"configuration_values": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"created_at": {
 				Type:     schema.TypeString,
@@ -114,6 +125,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ServiceAccountRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("configuration_values"); ok {
+		input.ConfigurationValues = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -146,7 +161,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	_, err = waitAddonCreated(ctx, conn, clusterName, addonName)
+	_, err = waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
@@ -192,6 +207,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("arn", addon.AddonArn)
 	d.Set("cluster_name", addon.ClusterName)
+	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
@@ -219,7 +235,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	if d.HasChanges("addon_version", "service_account_role_arn") {
+	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
 			ClientRequestToken: aws.String(resource.UniqueId()),
@@ -228,6 +244,10 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("addon_version") {
 			input.AddonVersion = aws.String(d.Get("addon_version").(string))
+		}
+
+		if d.HasChange("configuration_values") {
+			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
 		}
 
 		if v, ok := d.GetOk("resolve_conflicts"); ok {
@@ -248,7 +268,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID)
+		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			if d.Get("resolve_conflicts") != eks.ResolveConflictsOverwrite {
@@ -298,7 +318,7 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error deleting EKS Add-On (%s): %w", d.Id(), err))
 	}
 
-	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName)
+	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) to delete: %w", d.Id(), err))

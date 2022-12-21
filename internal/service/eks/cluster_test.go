@@ -1,6 +1,7 @@
 package eks_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -16,6 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+const (
+	clusterVersionUpgradeInitial = "1.21"
+	clusterVersionUpgradeUpdated = "1.22"
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
@@ -36,6 +42,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
+					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
 					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity.0.oidc.#", "1"),
@@ -173,14 +180,14 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encryptionVersion(rName, "1.19"),
+				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -189,7 +196,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_encryptionVersion(rName, "1.20"),
+				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -197,7 +204,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},
@@ -216,10 +223,10 @@ func TestAccEKSCluster_version(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_version(rName, "1.19"),
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -228,11 +235,11 @@ func TestAccEKSCluster_version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_version(rName, "1.20"),
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},
@@ -599,20 +606,82 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_Outpost_create(t *testing.T) {
+	var cluster eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	controlPlaneInstanceType := "m5d.large"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_outpost(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_Outpost_placement(t *testing.T) {
+	var cluster eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	controlPlaneInstanceType := "m5d.large"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_outpostPlacement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_placement.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterExists(resourceName string, cluster *eks.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No EKS Cluster ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := tfeks.FindClusterByName(conn, rs.Primary.ID)
+		output, err := tfeks.FindClusterByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -632,7 +701,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		_, err := tfeks.FindClusterByName(conn, rs.Primary.ID)
+		_, err := tfeks.FindClusterByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1005,4 +1074,82 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, ipFamily))
+}
+
+func testAccClusterConfig_outpost(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+data "aws_iam_role" "test" {
+  name = "AmazonEKSLocalOutpostClusterRole"
+}
+
+data "aws_outposts_outpost" "test" {
+  id = "op-XXXXXXXX"
+}
+
+data "aws_subnets" test {
+  filter {
+    name   = "outpost-arn"
+    values = [data.aws_outposts_outpost.test.arn]
+  }
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = data.aws_iam_role.test.arn
+
+  outpost_config {
+    control_plane_instance_type = "m5d.large"
+    outpost_arns                = [data.aws_outposts_outpost.test.arn]
+  }
+
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = false
+    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+  }
+}
+`, rName))
+}
+
+func testAccClusterConfig_outpostPlacement(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+data "aws_iam_role" "test" {
+  name = "AmazonEKSLocalOutpostClusterRole"
+}
+
+data "aws_outposts_outpost" "test" {
+  id = "op-XXXXXXXX"
+}
+
+data "aws_subnets" test {
+  filter {
+    name   = "outpost-arn"
+    values = [data.aws_outposts_outpost.test.arn]
+  }
+}
+
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = data.aws_iam_role.test.arn
+
+  outpost_config {
+    control_plane_instance_type = "m5d.large"
+    control_plane_placement {
+      group_name = aws_placement_group.test.name
+    }
+    outpost_arns = [data.aws_outposts_outpost.test.arn]
+  }
+
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = false
+    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+  }
+}
+`, rName))
 }

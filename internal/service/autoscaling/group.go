@@ -1404,7 +1404,6 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 				}
 			}
-
 		}
 
 		if add := flex.ExpandStringSet(ns.Difference(os)); len(add) > 0 {

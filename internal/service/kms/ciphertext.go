@@ -13,7 +13,6 @@ import (
 )
 
 func ResourceCiphertext() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceCiphertextCreate,
 		Read:   schema.Noop,

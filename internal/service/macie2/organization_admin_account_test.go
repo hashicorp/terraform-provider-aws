@@ -121,7 +121,6 @@ func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccOrganizationAdminAccountConfig_basic() string {

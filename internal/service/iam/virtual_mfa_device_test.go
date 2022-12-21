@@ -135,7 +135,6 @@ func testAccCheckVirtualMFADeviceDestroy(s *terraform.State) error {
 		if output != nil {
 			return fmt.Errorf("IAM Virtual MFA Device (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 
 	return nil

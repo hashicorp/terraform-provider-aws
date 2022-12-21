@@ -39,7 +39,7 @@ func TestValidResolverName(t *testing.T) {
 	for _, tc := range cases {
 		_, errors := validResolverName(tc.Value, "aws_route53_resolver_endpoint")
 		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the AWS Route 53 Resolver Endpoint Name to not trigger a validation error for %q", tc.Value)
+			t.Fatalf("Expected the AWS Route53 Resolver Endpoint Name to not trigger a validation error for %q", tc.Value)
 		}
 	}
 }

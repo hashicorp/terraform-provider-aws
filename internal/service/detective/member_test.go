@@ -182,7 +182,6 @@ func testAccCheckMemberDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccMemberConfig_basic(email string) string {

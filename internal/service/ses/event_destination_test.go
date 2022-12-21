@@ -125,11 +125,9 @@ func testAccCheckEventDestinationDestroy(s *terraform.State) error {
 		if found {
 			return fmt.Errorf("The configuration set still exists")
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resource.TestCheckFunc {

@@ -219,7 +219,6 @@ func isResourceNotFoundErr(err error) bool {
 		err,
 		"EntityNotFoundException",
 		"Entity not found")
-
 }
 
 func testAccResourceConfig_basic(bucket, role string) string {

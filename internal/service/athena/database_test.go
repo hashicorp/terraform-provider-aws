@@ -335,7 +335,6 @@ func testAccCheckDatabaseDestroy(s *terraform.State) error {
 		if database != nil {
 			return fmt.Errorf("Athena database (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 	return nil
 }

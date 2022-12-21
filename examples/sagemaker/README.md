@@ -3,7 +3,6 @@
 This example takes the [example model provided by AWS](https://github.com/awslabs/amazon-sagemaker-examples/blob/master/advanced_functionality/scikit_bring_your_own/scikit_bring_your_own.ipynb)
 to show how to deploy your own machine learning algorithm into a SageMaker container using Terraform.
 
-
 ### Wrap model in Docker container and upload to [ECR](https://aws.amazon.com/ecr/)
 
 Get the SageMaker example model from AWS:

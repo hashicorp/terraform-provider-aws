@@ -33,6 +33,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexp.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
+					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.6.0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.0.enabled", "true"),
@@ -47,6 +48,40 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEMRServerlessApplication_arch(t *testing.T) {
+	var application emrserverless.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_arch(rName, "ARM64"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "architecture", "ARM64"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_arch(rName, "X86_64"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
+				),
 			},
 		},
 	})
@@ -388,4 +423,15 @@ resource "aws_emrserverless_application" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccApplicationConfig_arch(rName, arch string) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-6.6.0"
+  type          = "hive"
+  architecture  = %[2]q
+}
+`, rName, arch)
 }

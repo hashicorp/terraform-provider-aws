@@ -387,7 +387,6 @@ func resourceEventSubscriptionRefreshFunc(name string, conn *neptune.Neptune) re
 }
 
 func resourceEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
-
 	request := &neptune.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}

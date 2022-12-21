@@ -343,7 +343,7 @@ resource "aws_media_convert_queue" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccQueueConfig_reserved(rName, commitment, renewalType string, reservedSlots int) string {
+func testAccQueueConfig_reserved(rName, commitment, renewalType string, reservedSlots int) string { //nolint:unused // This function is used in a skipped accteptance test.
 	return fmt.Sprintf(`
 resource "aws_media_convert_queue" "test" {
   name         = %[1]q

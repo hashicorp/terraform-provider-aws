@@ -85,31 +85,6 @@ func statusFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFir
 	}
 }
 
-// statusFirewallPolicy fetches the Firewall Policy and its Status
-func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &networkfirewall.DescribeFirewallPolicyInput{
-			FirewallPolicyArn: aws.String(arn),
-		}
-
-		output, err := conn.DescribeFirewallPolicyWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return output, resourceStatusDeleted, nil
-		}
-
-		if err != nil {
-			return nil, resourceStatusUnknown, err
-		}
-
-		if output == nil || output.FirewallPolicyResponse == nil {
-			return nil, resourceStatusUnknown, nil
-		}
-
-		return output.FirewallPolicy, aws.StringValue(output.FirewallPolicyResponse.FirewallPolicyStatus), nil
-	}
-}
-
 // statusRuleGroup fetches the Rule Group and its Status
 func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

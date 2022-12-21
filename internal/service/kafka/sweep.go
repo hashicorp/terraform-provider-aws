@@ -40,7 +40,7 @@ func sweepClusters(region string) error {
 	}
 	conn := client.(*conns.AWSClient).KafkaConn
 	input := &kafka.ListClustersV2Input{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersV2Pages(input, func(page *kafka.ListClustersV2Output, lastPage bool) bool {
 		if page == nil {

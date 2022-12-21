@@ -218,16 +218,17 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	params := &rds.DeleteDBSnapshotInput{
+	log.Printf("[DEBUG] Deleting RDS DB Snapshot: %s", d.Id())
+	_, err := conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteDBSnapshot(params)
+	})
+
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting AWS DB Snapshot %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Snapshot (%s): %w", d.Id(), err)
 	}
 
 	return nil

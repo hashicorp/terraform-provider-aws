@@ -26,7 +26,6 @@ resource "aws_pinpoint_apns_channel" "apns" {
 resource "aws_pinpoint_app" "app" {}
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

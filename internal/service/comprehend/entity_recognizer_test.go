@@ -894,7 +894,7 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 }
 
 func testAccCheckEntityRecognizerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -942,7 +942,7 @@ func testAccCheckEntityRecognizerExists(name string, entityrecognizer *types.Ent
 			return fmt.Errorf("No Comprehend Entity Recognizer is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient
 		ctx := context.Background()
 
 		resp, err := tfcomprehend.FindEntityRecognizerByID(ctx, conn, rs.Primary.ID)
@@ -980,14 +980,6 @@ func entityRecognizerIdentity(before, after *types.EntityRecognizerProperties) b
 	return aws.ToTime(before.SubmitTime).Equal(aws.ToTime(after.SubmitTime))
 }
 
-func uniqueIDPattern() string {
-	return prefixedUniqueIDPattern(resource.UniqueIdPrefix)
-}
-
-func prefixedUniqueIDPattern(prefix string) string {
-	return fmt.Sprintf("%s[[:xdigit:]]{%d}", prefix, resource.UniqueIDSuffixLength)
-}
-
 func testAccCheckEntityRecognizerPublishedVersions(name string, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -999,7 +991,7 @@ func testAccCheckEntityRecognizerPublishedVersions(name string, expected int) re
 			return fmt.Errorf("No Comprehend Entity Recognizer is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient
 		ctx := context.Background()
 
 		name, err := tfcomprehend.EntityRecognizerParseARN(rs.Primary.ID)

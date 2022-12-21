@@ -2758,7 +2758,6 @@ func testAccCheckBucketExistsWithProvider(n string, providerF func() *schema.Pro
 			return err
 		}
 		return nil
-
 	}
 }
 

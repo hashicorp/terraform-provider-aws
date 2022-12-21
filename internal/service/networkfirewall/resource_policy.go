@@ -19,10 +19,10 @@ import (
 
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourcePolicyPut,
-		ReadContext:   resourceResourcePolicyRead,
-		UpdateContext: resourceResourcePolicyPut,
-		DeleteContext: resourceResourcePolicyDelete,
+		CreateWithoutTimeout: resourceResourcePolicyPut,
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut,
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

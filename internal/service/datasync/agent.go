@@ -119,7 +119,6 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 
 		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
 			response, err = client.Do(request)
 
 			if err, ok := err.(net.Error); ok {

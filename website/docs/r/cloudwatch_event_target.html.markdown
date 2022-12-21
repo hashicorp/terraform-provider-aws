@@ -472,6 +472,7 @@ The following arguments are supported:
 
 ### ecs_target
 
+* `capacity_provider_strategy` - (Optional) The capacity provider strategy to use for the task. If a `capacity_provider_strategy` specified, the `launch_type` parameter must be omitted. If no `capacity_provider_strategy` or `launch_type` is specified, the default capacity provider strategy for the cluster is used. Can be one or more. See below.
 * `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
 * `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `EC2`, `EXTERNAL`, or `FARGATE`.
 * `network_configuration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if launch_type is FARGATE because the awsvpc mode is required for Fargate tasks.
@@ -483,6 +484,14 @@ The following arguments are supported:
 * `placement_constraint` - (Optional) An array of placement constraint objects to use for the task. You can specify up to 10 constraints per task (including constraints in the task definition and those specified at runtime). See Below.
 * `enable_execute_command` - (Optional) Whether or not to enable the execute command functionality for the containers in this task. If true, this enables execute command functionality on all containers in the task.
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task.
+
+### capacity_provider_strategy
+
+The `capacity_provider_strategy` configuration block supports the following:
+
+* `base` - (Optional) The base value designates how many tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined. If no value is specified, the default value of 0 is used.
+* `capacity_provider` - (Required) Short name of the capacity provider.
+* `weight` - (Required) The weight value designates the relative percentage of the total number of tasks launched that should use the specified capacity provider. The weight value is taken into consideration after the base value, if defined, is satisfied.
 
 #### network_configuration
 

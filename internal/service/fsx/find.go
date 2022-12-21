@@ -54,6 +54,69 @@ func FindBackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return output.Backups[0], nil
 }
 
+func findFileCacheByID(conn *fsx.FSx, id string) (*fsx.FileCache, error) {
+	input := &fsx.DescribeFileCachesInput{
+		FileCacheIds: []*string{aws.String(id)},
+	}
+	var fileCaches []*fsx.FileCache
+
+	err := conn.DescribeFileCachesPages(input, func(page *fsx.DescribeFileCachesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+		fileCaches = append(fileCaches, page.FileCaches...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(fileCaches) == 0 || fileCaches[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+	if count := len(fileCaches); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+	return fileCaches[0], nil
+}
+
+func findDataRepositoryAssociationsByIDs(conn *fsx.FSx, ids []*string) ([]*fsx.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: ids,
+	}
+	var dataRepositoryAssociations []*fsx.DataRepositoryAssociation
+
+	err := conn.DescribeDataRepositoryAssociationsPages(input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+		dataRepositoryAssociations = append(dataRepositoryAssociations, page.Associations...)
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(dataRepositoryAssociations) == 0 || dataRepositoryAssociations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return dataRepositoryAssociations, nil
+}
+
 func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []*string{aws.String(id)},

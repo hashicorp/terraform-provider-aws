@@ -20,7 +20,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser release
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v4
         with:
           args: release --rm-dist --skip-sign --snapshot --timeout 2h
       - name: artifact naming
@@ -35,7 +35,7 @@ jobs:
           *)
             ARTIFACT="${GITHUB_REF}";;
           esac
-          echo "::set-output name=artifact::$ARTIFACT-$(date -u +'%Y-%m-%dT%H-%M')"
+          echo "artifact=$ARTIFACT-$(date -u +'%Y-%m-%dT%H-%M')" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v3
         with:
           name: ${{steps.naming.outputs.artifact}}

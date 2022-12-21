@@ -24,10 +24,10 @@ const contactFlowMutexKey = `aws_connect_contact_flow`
 
 func ResourceContactFlow() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContactFlowCreate,
-		ReadContext:   resourceContactFlowRead,
-		UpdateContext: resourceContactFlowUpdate,
-		DeleteContext: resourceContactFlowDelete,
+		CreateWithoutTimeout: resourceContactFlowCreate,
+		ReadWithoutTimeout:   resourceContactFlowRead,
+		UpdateWithoutTimeout: resourceContactFlowUpdate,
+		DeleteWithoutTimeout: resourceContactFlowDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -79,6 +79,7 @@ func ResourceContactFlow() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				Default:      connect.ContactFlowTypeContactFlow,
 				ValidateFunc: validation.StringInSlice(connect.ContactFlowType_Values(), false),
 			},

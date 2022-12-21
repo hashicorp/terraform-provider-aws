@@ -28,7 +28,7 @@ func sweepEnvironmentEC2s(region string) error {
 	}
 	conn := client.(*conns.AWSClient).Cloud9Conn
 	input := &cloud9.ListEnvironmentsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListEnvironmentsPages(input, func(page *cloud9.ListEnvironmentsOutput, lastPage bool) bool {
 		if page == nil {

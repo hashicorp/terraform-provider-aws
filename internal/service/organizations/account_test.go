@@ -247,7 +247,6 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAccountExists(n string, v *organizations.Account) resource.TestCheckFunc {

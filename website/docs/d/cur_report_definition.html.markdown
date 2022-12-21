@@ -26,11 +26,11 @@ data "aws_cur_report_definition" "report_definition" {
 
 The following arguments are supported:
 
-* `report_name` - (Required) The name of the report definition to match.
+* `report_name` - (Required) Name of the report definition to match.
 
 ## Attributes Reference
 
-* `time_unit` - The frequency on which report data are measured and displayed.
+* `time_unit` - Frequency on which report data are measured and displayed.
 * `format` - Preferred compression format for report.
 * `compression` - Preferred format for report.
 * `additional_schema_elements` - A list of schema elements.

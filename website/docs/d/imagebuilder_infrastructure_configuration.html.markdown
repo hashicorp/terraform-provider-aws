@@ -22,7 +22,7 @@ data "aws_imagebuilder_infrastructure_configuration" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the infrastructure configuration.
+* `arn` - (Required) ARN of the infrastructure configuration.
 
 ## Attributes Reference
 
@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - Name of the infrastructure configuration.
 * `resource_tags` - Key-value map of resource tags for the infrastructure created by the infrastructure configuration.
 * `security_group_ids` - Set of EC2 Security Group identifiers associated with the configuration.
-* `sns_topic_arn` - Amazon Resource Name (ARN) of the SNS Topic associated with the configuration.
+* `sns_topic_arn` - ARN of the SNS Topic associated with the configuration.
 * `subnet_id` - Identifier of the EC2 Subnet associated with the configuration.
 * `tags` - Key-value map of resource tags for the infrastructure configuration.
 * `terminate_instance_on_failure` - Whether instances are terminated on failure.

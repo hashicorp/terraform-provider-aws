@@ -8,19 +8,64 @@ on:
       - .github/workflows/examples.yml
       - .go-version
       - .ci/.tflint.hcl
+      - .ci/tools/go.mod
       - examples/**
-      - tools/go.mod
 
 env:
   AWS_DEFAULT_REGION: us-west-2
 
 jobs:
+  tflint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+
+      - name: install tflint
+        run: cd .ci/tools && go install github.com/terraform-linters/tflint
+
+      - uses: actions/cache@v3
+        name: Cache plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - name: tflint
+        run: |
+          exit_code=0
+          TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+          for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
+            pushd "$DIR"
+            tflint --config="$TFLINT_CONFIG" \
+              --enable-rule=terraform_comment_syntax \
+              --enable-rule=terraform_deprecated_index \
+              --enable-rule=terraform_deprecated_interpolation \
+              --enable-rule=terraform_required_version \
+              --disable-rule=terraform_required_providers \
+              --disable-rule=terraform_typed_variables \
+              || exit_code=1
+            popd
+          done
+          exit $exit_code
+
   validate-terraform:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         terraform_version: ["0.12.31", "1.0.6"]
+    env:
+      TF_IN_AUTOMATION: "1"
     steps:
       - uses: actions/checkout@v3
         with:
@@ -40,26 +85,16 @@ jobs:
           mkdir -p ~/.terraform.d/plugins
           cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins
           # For newer versions
-          mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/$(go env GOOS)_$(go env GOARCH)/
-          cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/$(go env GOOS)_$(go env GOARCH)/
+          mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
+          cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ matrix.terraform_version }}
           # Needed to use the output of `terraform validate -json`
           terraform_wrapper: false
 
-      - name: install tflint
-        run: cd .ci/tools && go install github.com/terraform-linters/tflint
-
-      - uses: actions/cache@v3
-        name: Cache plugin dir
-        with:
-          path: ~/.tflint.d/plugins
-          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
-
       - name: terraform
         run: |
-          TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
           for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
             pushd "$DIR"
             if [ -f terraform.template.tfvars ]; then
@@ -72,15 +107,5 @@ jobs:
             echo; echo -e "\e[1;35m===> Validating Example: $DIR <===\e[0m"; echo
             # Catch errors
             terraform validate
-            # Terraform syntax checks
-            # We don't want to exit on the first tflint error
-            set +e
-            tflint --config=$TFLINT_CONFIG \
-              --enable-rule=terraform_deprecated_interpolation \
-              --enable-rule=terraform_deprecated_index \
-              --enable-rule=terraform_unused_declarations \
-              --enable-rule=terraform_comment_syntax \
-              --enable-rule=terraform_required_version
-            set -e
             popd
           done

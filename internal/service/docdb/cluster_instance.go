@@ -42,46 +42,48 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"dbi_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"dbi_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enable_performance_insights": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -89,17 +91,10 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:      "docdb",
 				ValidateFunc: validEngine(),
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -108,7 +103,6 @@ func ResourceClusterInstance() *schema.Resource {
 				ConflictsWith: []string{"identifier_prefix"},
 				ValidateFunc:  validIdentifier,
 			},
-
 			"identifier_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -116,22 +110,27 @@ func ResourceClusterInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifierPrefix,
 			},
-
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"performance_insights_kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"preferred_backup_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -145,33 +144,22 @@ func ResourceClusterInstance() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-
 			"promotion_tier": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 15),
 			},
-
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"writer": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -200,6 +188,10 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		createOpts.AvailabilityZone = aws.String(attr.(string))
 	}
 
+	if attr, ok := d.GetOk("enable_performance_insights"); ok {
+		createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+	}
+
 	if v, ok := d.GetOk("identifier"); ok {
 		createOpts.DBInstanceIdentifier = aws.String(v.(string))
 	} else {
@@ -208,6 +200,10 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		} else {
 			createOpts.DBInstanceIdentifier = aws.String(resource.PrefixedUniqueId("tf-"))
 		}
+	}
+
+	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+		createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
@@ -311,11 +307,17 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("dbi_resource_id", db.DbiResourceId)
+	// The AWS API does not expose 'EnablePerformanceInsights' the line below should be uncommented
+	// as soon as it is available in the DescribeDBClusters output.
+	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
 	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
+	// The AWS API does not expose 'PerformanceInsightsKMSKeyId'  the line below should be uncommented
+	// as soon as it is available in the DescribeDBClusters output.
+	//d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
@@ -377,6 +379,16 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		requestUpdate = true
 	}
 
+	if d.HasChange("enable_performance_insights") {
+		req.EnablePerformanceInsights = aws.Bool(d.Get("enable_performance_insights").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("performance_insights_kms_key_id") {
+		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		requestUpdate = true
+	}
+
 	if requestUpdate {
 		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
@@ -410,7 +422,6 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("error waiting for DocDB Instance (%s) update: %w", d.Id(), err)
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
@@ -419,7 +430,6 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Cluster Instance (%s) tags: %w", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return resourceClusterInstanceRead(d, meta)
@@ -450,7 +460,6 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
-
 }
 
 func resourceInstanceStateRefreshFunc(conn *docdb.DocDB, id string) resource.StateRefreshFunc {

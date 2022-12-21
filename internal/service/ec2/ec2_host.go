@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -84,6 +85,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.AllocateHostsInput{
 		AutoPlacement:    aws.String(d.Get("auto_placement").(string)),
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		ClientToken:      aws.String(resource.UniqueId()),
 		HostRecovery:     aws.String(d.Get("host_recovery").(string)),
 		Quantity:         aws.Int64(1),
 	}
@@ -104,17 +106,16 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Host: %s", input)
 	output, err := conn.AllocateHosts(input)
 
 	if err != nil {
-		return fmt.Errorf("error allocating EC2 Host: %w", err)
+		return fmt.Errorf("allocating EC2 Host: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.HostIds[0]))
 
 	if _, err := WaitHostCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Host (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Host (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceHostRead(d, meta)
@@ -134,7 +135,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Host (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Host (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -157,11 +158,11 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -198,18 +199,18 @@ func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 Host (%s): %w", d.Id(), err)
+			return fmt.Errorf("modifying EC2 Host (%s): %w", d.Id(), err)
 		}
 
 		if _, err := WaitHostUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for EC2 Host (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for EC2 Host (%s) update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Host (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Host (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -233,11 +234,11 @@ func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error releasing EC2 Host (%s): %w", d.Id(), err)
+		return fmt.Errorf("releasing EC2 Host (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitHostDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Host (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Host (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

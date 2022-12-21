@@ -33,12 +33,13 @@ func TestAccEKSAddon_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonConfig_basic(rName, addonName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAddonExists(ctx, addonResourceName, &addon),
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
 					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
 					acctest.MatchResourceAttrRegionalARN(addonResourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 					resource.TestCheckResourceAttrPair(addonResourceName, "cluster_name", clusterResourceName, "name"),
+					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
 					resource.TestCheckNoResourceAttr(addonResourceName, "preserve"),
 					resource.TestCheckResourceAttr(addonResourceName, "tags.%", "0"),
 				),
@@ -173,7 +174,7 @@ func TestAccEKSAddon_preserve(t *testing.T) {
 }
 
 func TestAccEKSAddon_resolveConflicts(t *testing.T) {
-	var addon1, addon2 eks.Addon
+	var addon1, addon2, addon3 eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
@@ -205,6 +206,13 @@ func TestAccEKSAddon_resolveConflicts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", eks.ResolveConflictsOverwrite),
 				),
 			},
+			{
+				Config: testAccAddonConfig_resolveConflicts(rName, addonName, eks.ResolveConflictsPreserve),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon3),
+					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", eks.ResolveConflictsPreserve),
+				),
+			},
 		},
 	})
 }
@@ -234,6 +242,59 @@ func TestAccEKSAddon_serviceAccountRoleARN(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSAddon_configurationValues(t *testing.T) {
+	var addon eks.Addon
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_addon.test"
+	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
+	updateConfigurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"},\"requests\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"}}}"
+	emptyConfigurationValues := "{}"
+	invalidConfigurationValues := "{\"env\": {\"INVALID_FIELD\":\"2\"}}"
+	addonName := "vpc-cni"
+	addonVersion := "v1.10.4-eksbuild.1"
+	ctx := context.Background()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues, eks.ResolveConflictsOverwrite),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", configurationValues),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"resolve_conflicts"},
+			},
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, updateConfigurationValues, eks.ResolveConflictsOverwrite),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", updateConfigurationValues),
+				),
+			},
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, emptyConfigurationValues, eks.ResolveConflictsOverwrite),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", emptyConfigurationValues),
+				),
+			},
+			{
+				Config:      testAccAddonConfig_configurationValues(rName, addonName, addonVersion, invalidConfigurationValues, eks.ResolveConflictsOverwrite),
+				ExpectError: regexp.MustCompile(`InvalidParameterException: ConfigurationValue provided in request is not supported`),
 			},
 		},
 	})
@@ -747,7 +808,7 @@ func testAccCheckAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[string]s
 	}
 }
 
-func testAccAddonBaseConfig(rName string) string {
+func testAccAddonConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -811,7 +872,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAddonConfig_basic(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -820,7 +881,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_version(rName, addonName, addonVersion string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name      = aws_eks_cluster.test.name
   addon_name        = %[2]q
@@ -831,7 +892,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_preserve(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -841,7 +902,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_resolveConflicts(rName, addonName, resolveConflicts string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name      = aws_eks_cluster.test.name
   addon_name        = %[2]q
@@ -851,7 +912,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_serviceAccountRoleARN(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test-service-role" {
   name               = "test-service-role"
   assume_role_policy = <<EOF
@@ -880,7 +941,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_tags1(rName, addonName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -893,7 +954,7 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_tags2(rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
@@ -904,4 +965,16 @@ resource "aws_eks_addon" "test" {
   }
 }
 `, rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues, resolveConflicts string) string {
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_addon" "test" {
+  cluster_name         = aws_eks_cluster.test.name
+  addon_name           = %[2]q
+  addon_version        = %[3]q
+  configuration_values = %[4]q
+  resolve_conflicts    = %[5]q
+}
+`, rName, addonName, addonVersion, configurationValues, resolveConflicts))
 }

@@ -559,7 +559,7 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 }
 
 func testAccCheckExperienceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kendra_experience" {
@@ -595,7 +595,7 @@ func testAccCheckExperienceExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Kendra Experience is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 		id, indexId, err := tfkendra.ExperienceParseResourceID(rs.Primary.ID)
 		if err != nil {

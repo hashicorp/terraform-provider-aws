@@ -86,7 +86,6 @@ func testAccCheckReceiptFilterDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckReceiptFilterExists(n string) resource.TestCheckFunc {

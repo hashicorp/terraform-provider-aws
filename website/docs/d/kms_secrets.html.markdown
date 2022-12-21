@@ -10,7 +10,7 @@ description: |-
 
 Decrypt multiple secrets from data encrypted with the AWS KMS service.
 
-~> **NOTE**: Using this data provider will allow you to conceal secret data within your resource definitions but does not take care of protecting that data in all Terraform logging and state output. Please take care to secure your secret data beyond just the Terraform configuration.
+~> **NOTE:** Using this data provider will allow you to conceal secret data within your resource definitions but does not take care of protecting that data in all Terraform logging and state output. Please take care to secure your secret data beyond just the Terraform configuration.
 
 ## Example Usage
 
@@ -62,7 +62,7 @@ The following arguments are supported:
 
 Each `secret` supports the following arguments:
 
-* `name` - (Required) The name to export this secret under in the attributes.
+* `name` - (Required) Name to export this secret under in the attributes.
 * `payload` - (Required) Base64 encoded payload, as returned from a KMS encrypt operation.
 * `context` - (Optional) An optional mapping that makes up the Encryption Context for the secret.
 * `grant_tokens` (Optional) An optional list of Grant Tokens for the secret.

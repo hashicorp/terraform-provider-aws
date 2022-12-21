@@ -51,6 +51,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
+					resource.TestCheckResourceAttr(resourceName, "imds_support", ""),
 					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -549,6 +550,36 @@ func TestAccEC2AMI_tpmSupport(t *testing.T) {
 	})
 }
 
+func TestAccEC2AMI_imdsSupport(t *testing.T) {
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIConfig_imdsSupport(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMIExists(resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "imds_support", "v2.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAMIDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -840,6 +871,25 @@ resource "aws_ami" "test" {
   virtualization_type = "hvm"
   boot_mode           = "uefi"
   tpm_support         = "v2.0"
+
+  ebs_block_device {
+    device_name = "/dev/xvda"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName))
+}
+
+func testAccAMIConfig_imdsSupport(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAMIConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  name                = %[1]q
+  root_device_name    = "/dev/xvda"
+  virtualization_type = "hvm"
+  boot_mode           = "uefi"
+  imds_support        = "v2.0"
 
   ebs_block_device {
     device_name = "/dev/xvda"

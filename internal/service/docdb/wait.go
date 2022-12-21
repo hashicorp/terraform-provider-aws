@@ -2,6 +2,7 @@ package docdb
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -11,19 +12,157 @@ import (
 )
 
 const (
-	GlobalClusterCreateTimeout = 5 * time.Minute
-	GlobalClusterDeleteTimeout = 5 * time.Minute
-	GlobalClusterUpdateTimeout = 5 * time.Minute
+	DBClusterSnapshotDeleteTimeout = 5 * time.Minute
+	DBClusterDeleteTimeout         = 5 * time.Minute
+	DBInstanceDeleteTimeout        = 5 * time.Minute
+	DBSubnetGroupDeleteTimeout     = 5 * time.Minute
+	EventSubscriptionDeleteTimeout = 5 * time.Minute
+	GlobalClusterCreateTimeout     = 5 * time.Minute
+	GlobalClusterDeleteTimeout     = 5 * time.Minute
+	GlobalClusterUpdateTimeout     = 5 * time.Minute
 )
 
 const (
-	GlobalClusterStatusAvailable = "available"
-	GlobalClusterStatusCreating  = "creating"
-	GlobalClusterStatusDeleted   = "deleted"
-	GlobalClusterStatusDeleting  = "deleting"
-	GlobalClusterStatusModifying = "modifying"
-	GlobalClusterStatusUpgrading = "upgrading"
+	DBClusterStatusAvailable         = "available"
+	DBClusterStatusDeleted           = "deleted"
+	DBClusterStatusDeleting          = "deleting"
+	DBInstanceStatusAvailable        = "available"
+	DBInstanceStatusDeleted          = "deleted"
+	DBInstanceStatusDeleting         = "deleting"
+	DBClusterSnapshotStatusAvailable = "available"
+	DBClusterSnapshotStatusDeleted   = "deleted"
+	DBClusterSnapshotStatusDeleting  = "deleting"
+	DBSubnetGroupStatusAvailable     = "available"
+	DBSubnetGroupStatusDeleted       = "deleted"
+	DBSubnetGroupStatusDeleting      = "deleting"
+	GlobalClusterStatusAvailable     = "available"
+	GlobalClusterStatusCreating      = "creating"
+	GlobalClusterStatusDeleted       = "deleted"
+	GlobalClusterStatusDeleting      = "deleting"
+	GlobalClusterStatusModifying     = "modifying"
+	GlobalClusterStatusUpgrading     = "upgrading"
 )
+
+func waitForGlobalClusterCreation(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{GlobalClusterStatusCreating},
+		Target:  []string{GlobalClusterStatusAvailable},
+		Refresh: statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
+		Timeout: timeout,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocDB Global Cluster (%s) availability", globalClusterID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitForGlobalClusterUpdate(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{GlobalClusterStatusModifying, GlobalClusterStatusUpgrading},
+		Target:  []string{GlobalClusterStatusAvailable},
+		Refresh: statusGlobalClusterRefreshFunc(ctx, conn, globalClusterID),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocDB Global Cluster (%s) availability", globalClusterID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitForGlobalClusterRemoval(ctx context.Context, conn *docdb.DocDB, dbClusterIdentifier string, timeout time.Duration) error {
+	var globalCluster *docdb.GlobalCluster
+	stillExistsErr := fmt.Errorf("DocDB Cluster still exists in DocDB Global Cluster")
+
+	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+		var err error
+
+		globalCluster, err = findGlobalClusterByARN(ctx, conn, dbClusterIdentifier)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if globalCluster != nil {
+			return resource.RetryableError(stillExistsErr)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = findGlobalClusterByARN(ctx, conn, dbClusterIdentifier)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if globalCluster != nil {
+		return stillExistsErr
+	}
+
+	return nil
+}
+
+func WaitForDBClusterDeletion(ctx context.Context, conn *docdb.DocDB, dBClusterID string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{DBClusterStatusAvailable, DBClusterStatusDeleting},
+		Target:         []string{DBClusterStatusDeleted},
+		Refresh:        statusDBClusterRefreshFunc(ctx, conn, dBClusterID),
+		Timeout:        timeout,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocDB Cluster (%s) deletion", dBClusterID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	return err
+}
+
+func WaitForDBClusterSnapshotDeletion(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{DBClusterSnapshotStatusAvailable, DBClusterSnapshotStatusDeleting},
+		Target:         []string{DBClusterSnapshotStatusDeleted},
+		Refresh:        statusDBClusterSnapshotRefreshFunc(ctx, conn, dBClusterSnapshotID),
+		Timeout:        timeout,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocDB Cluster Snapshot (%s) deletion", dBClusterSnapshotID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	return err
+}
+
+func WaitForDBInstanceDeletion(ctx context.Context, conn *docdb.DocDB, dBInstanceID string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{DBInstanceStatusAvailable, DBInstanceStatusDeleting},
+		Target:         []string{DBInstanceStatusDeleted},
+		Refresh:        statusDBInstanceRefreshFunc(ctx, conn, dBInstanceID),
+		Timeout:        timeout,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocDB Instance (%s) deletion", dBInstanceID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	return err
+}
 
 func WaitForGlobalClusterDeletion(ctx context.Context, conn *docdb.DocDB, globalClusterID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
@@ -35,6 +174,25 @@ func WaitForGlobalClusterDeletion(ctx context.Context, conn *docdb.DocDB, global
 	}
 
 	log.Printf("[DEBUG] Waiting for DocDB Global Cluster (%s) deletion", globalClusterID)
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	return err
+}
+
+func WaitForDBSubnetGroupDeletion(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{DBSubnetGroupStatusAvailable, DBSubnetGroupStatusDeleting},
+		Target:         []string{DBSubnetGroupStatusDeleted},
+		Refresh:        statusDBSubnetGroupRefreshFunc(ctx, conn, dBSubnetGroupName),
+		Timeout:        timeout,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for DocDB Subnet Group (%s) deletion", dBSubnetGroupName)
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	if tfresource.NotFound(err) {

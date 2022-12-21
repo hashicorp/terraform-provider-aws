@@ -314,7 +314,7 @@ func TestAccKendraQuerySuggestionsBlockList_tags(t *testing.T) {
 }
 
 func testAccCheckQuerySuggestionsBlockListDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kendra_query_suggestions_block_list" {
@@ -358,7 +358,7 @@ func testAccCheckQuerySuggestionsBlockListExists(name string) resource.TestCheck
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient
 
 		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.Background(), conn, id, indexId)
 

@@ -1,6 +1,8 @@
 package kms
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -37,6 +39,26 @@ func FindAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
 	}
 
 	return output, nil
+}
+
+func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, in *kms.DescribeCustomKeyStoresInput) (*kms.CustomKeyStoresListEntry, error) {
+	out, err := conn.DescribeCustomKeyStoresWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeCustomKeyStoreNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.CustomKeyStores[0] == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.CustomKeyStores[0], nil
 }
 
 func FindKeyByID(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {

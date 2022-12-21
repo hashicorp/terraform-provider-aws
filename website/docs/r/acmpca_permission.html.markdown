@@ -36,13 +36,13 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 The following arguments are supported:
 
-* `certificate_authority_arn` - (Required) The Amazon Resource Name (ARN) of the CA that grants the permissions.
-* `actions` - (Required) The actions that the specified AWS service principal can use. These include `IssueCertificate`, `GetCertificate`, and `ListPermissions`. Note that in order for ACM to automatically rotate certificates issued by a PCA, it must be granted permission on all 3 actions, as per the example above.
-* `principal` - (Required) The AWS service or identity that receives the permission. At this time, the only valid principal is `acm.amazonaws.com`.
-* `source_account` - (Optional) The ID of the calling account
+* `certificate_authority_arn` - (Required) ARN of the CA that grants the permissions.
+* `actions` - (Required) Actions that the specified AWS service principal can use. These include `IssueCertificate`, `GetCertificate`, and `ListPermissions`. Note that in order for ACM to automatically rotate certificates issued by a PCA, it must be granted permission on all 3 actions, as per the example above.
+* `principal` - (Required) AWS service or identity that receives the permission. At this time, the only valid principal is `acm.amazonaws.com`.
+* `source_account` - (Optional) ID of the calling account
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `policy` - The IAM policy that is associated with the permission.
+* `policy` - IAM policy that is associated with the permission.

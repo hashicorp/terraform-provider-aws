@@ -142,6 +142,48 @@ func TestAccNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_encryptionConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_encryptionConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
@@ -553,6 +595,29 @@ resource "aws_networkfirewall_firewall" "test" {
 
   subnet_mapping {
     subnet_id = aws_subnet.example.id
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_encryptionConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallDependenciesConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  encryption_configuration {
+    key_id = aws_kms_key.test.arn
+    type   = "CUSTOMER_KMS"
+  }
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
   }
 }
 `, rName))

@@ -22,9 +22,9 @@ data "aws_wafregional_rate_based_rule" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAF Regional rate based rule.
+* `name` - (Required) Name of the WAF Regional rate based rule.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF Regional rate based rule.
+* `id` - ID of the WAF Regional rate based rule.

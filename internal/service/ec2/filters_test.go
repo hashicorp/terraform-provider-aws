@@ -101,7 +101,6 @@ func TestBuildTagFilterList(t *testing.T) {
 }
 
 func TestBuildCustomFilterList(t *testing.T) {
-
 	// We need to get a set with the appropriate hash function,
 	// so we'll use the schema to help us produce what would
 	// be produced in the normal case.

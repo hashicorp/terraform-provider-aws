@@ -19,7 +19,7 @@ import (
 
 func DataSourceFirewall() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFirewallResourceRead,
+		ReadWithoutTimeout: dataSourceFirewallResourceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,
@@ -195,7 +195,6 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if input.FirewallArn == nil && input.FirewallName == nil {
-
 		return diag.FromErr(fmt.Errorf("must specify either arn, name, or both"))
 	}
 

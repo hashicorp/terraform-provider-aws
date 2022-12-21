@@ -48,7 +48,7 @@ func sweepBotAliases(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LexModelsConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetBotsInput{}
@@ -121,7 +121,7 @@ func sweepBots(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LexModelsConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetBotsInput{}
@@ -167,7 +167,7 @@ func sweepIntents(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LexModelsConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetIntentsInput{}
@@ -213,7 +213,7 @@ func sweepSlotTypes(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LexModelsConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &lexmodelbuildingservice.GetSlotTypesInput{}

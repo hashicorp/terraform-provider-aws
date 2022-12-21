@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -167,25 +168,26 @@ func TestAccLogsQueryDefinition_logGroups(t *testing.T) {
 	})
 }
 
-func testAccCheckQueryDefinitionExists(rName string, v *cloudwatchlogs.QueryDefinition) resource.TestCheckFunc {
+func testAccCheckQueryDefinitionExists(n string, v *cloudwatchlogs.QueryDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[rName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", rName)
+			return fmt.Errorf("Not found: %s", n)
 		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudWatch Logs Query Definition ID is set")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
-		result, err := tflogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
+		output, err := tflogs.FindQueryDefinitionByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if result == nil {
-			return fmt.Errorf("CloudWatch query definition (%s) not found", rs.Primary.ID)
-		}
-
-		*v = *result
+		*v = *output
 
 		return nil
 	}
@@ -199,14 +201,17 @@ func testAccCheckQueryDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		result, err := tflogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("reading CloudWatch query definition (%s): %w", rs.Primary.ID, err)
+		_, err := tflogs.FindQueryDefinitionByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["name"], rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		if result != nil {
-			return fmt.Errorf("CloudWatch query definition (%s) still exists", rs.Primary.ID)
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("CloudWatch Logs Query Definition still exists: %s", rs.Primary.ID)
 	}
 
 	return nil

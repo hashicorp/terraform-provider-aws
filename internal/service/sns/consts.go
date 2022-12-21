@@ -7,6 +7,27 @@ const (
 )
 
 const (
+	PlatformApplicationAttributeNameAppleCertificateExpiryDate = "AppleCertificateExpiryDate"
+	PlatformApplicationAttributeNameApplePlatformBundleID      = "ApplePlatformBundleID"
+	PlatformApplicationAttributeNameApplePlatformTeamID        = "ApplePlatformTeamID"
+	PlatformApplicationAttributeNameEventDeliveryFailure       = "EventDeliveryFailure"
+	PlatformApplicationAttributeNameEventEndpointCreated       = "EventEndpointCreated"
+	PlatformApplicationAttributeNameEventEndpointDeleted       = "EventEndpointDeleted"
+	PlatformApplicationAttributeNameEventEndpointUpdated       = "EventEndpointUpdated"
+	PlatformApplicationAttributeNameFailureFeedbackRoleARN     = "FailureFeedbackRoleArn"
+	PlatformApplicationAttributeNamePlatformCredential         = "PlatformCredential"
+	PlatformApplicationAttributeNamePlatformPrincipal          = "PlatformPrincipal"
+	PlatformApplicationAttributeNameSuccessFeedbackRoleARN     = "SuccessFeedbackRoleArn"
+	PlatformApplicationAttributeNameSuccessFeedbackSampleRate  = "SuccessFeedbackSampleRate"
+)
+
+const (
+	PlatfomAPNS        = "APNS"
+	PlatfomAPNSSandbox = "APNS_SANDBOX"
+	PlatfomGCM         = "GCM"
+)
+
+const (
 	SubscriptionProtocolApplication = "application"
 	SubscriptionProtocolEmail       = "email"
 	SubscriptionProtocolEmailJSON   = "email-json"
@@ -37,6 +58,7 @@ const (
 	SubscriptionAttributeNameDeliveryPolicy               = "DeliveryPolicy"
 	SubscriptionAttributeNameEndpoint                     = "Endpoint"
 	SubscriptionAttributeNameFilterPolicy                 = "FilterPolicy"
+	SubscriptionAttributeNameFilterPolicyScope            = "FilterPolicyScope"
 	SubscriptionAttributeNameOwner                        = "Owner"
 	SubscriptionAttributeNamePendingConfirmation          = "PendingConfirmation"
 	SubscriptionAttributeNameProtocol                     = "Protocol"
@@ -76,3 +98,15 @@ const (
 const (
 	propagationTimeout = 2 * time.Minute
 )
+
+const (
+	SubscriptionFilterPolicyScopeMessageAttributes = "MessageAttributes"
+	SubscriptionFilterPolicyScopeMessageBody       = "MessageBody"
+)
+
+func SubscriptionFilterPolicyScope_Values() []string {
+	return []string{
+		SubscriptionFilterPolicyScopeMessageAttributes,
+		SubscriptionFilterPolicyScopeMessageBody,
+	}
+}

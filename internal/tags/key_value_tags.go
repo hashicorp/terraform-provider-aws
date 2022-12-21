@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -8,7 +9,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 const (
@@ -548,8 +551,8 @@ func (tags KeyValueTags) URLQueryString() string {
 
 // New creates KeyValueTags from common types or returns an empty KeyValueTags.
 //
-// Supports various Terraform Plugin SDK types including map[string]string,
-// map[string]*string, map[string]interface{}, and []interface{}.
+// Supports various Terraform Plugin SDK and Terraform Plugin Framework types including
+// map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
 func New(i interface{}) KeyValueTags {
@@ -562,8 +565,8 @@ func New(i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			str := v // Prevent referencing issues
-			kvtm[k] = &TagData{Value: &str}
+			v := v // Prevent referencing issues
+			kvtm[k] = &TagData{Value: &v}
 		}
 
 		return kvtm
@@ -571,14 +574,14 @@ func New(i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			strPtr := v
+			v := v
 
-			if strPtr == nil {
+			if v == nil {
 				kvtm[k] = nil
 				continue
 			}
 
-			kvtm[k] = &TagData{Value: strPtr}
+			kvtm[k] = &TagData{Value: v}
 		}
 
 		return kvtm
@@ -588,10 +591,10 @@ func New(i interface{}) KeyValueTags {
 		for k, v := range value {
 			kvtm[k] = &TagData{}
 
-			str, ok := v.(string)
+			v, ok := v.(string)
 
 			if ok {
-				kvtm[k].Value = &str
+				kvtm[k].Value = &v
 			}
 		}
 
@@ -612,6 +615,8 @@ func New(i interface{}) KeyValueTags {
 		}
 
 		return kvtm
+	case types.Map:
+		return New(flex.ExpandFrameworkStringValueMap(context.TODO(), value))
 	default:
 		return make(KeyValueTags)
 	}

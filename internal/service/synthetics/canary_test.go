@@ -598,7 +598,6 @@ func testAccCheckCanaryIsUpdated(first, second *synthetics.Canary) resource.Test
 	return func(s *terraform.State) error {
 		if !second.Timeline.LastModified.After(*first.Timeline.LastModified) {
 			return fmt.Errorf("synthetics Canary not updated")
-
 		}
 
 		return nil
@@ -609,7 +608,6 @@ func testAccCheckCanaryIsStartedAfter(first, second *synthetics.Canary) resource
 	return func(s *terraform.State) error {
 		if !second.Timeline.LastStarted.After(*first.Timeline.LastStarted) {
 			return fmt.Errorf("synthetics Canary not updated")
-
 		}
 
 		return nil

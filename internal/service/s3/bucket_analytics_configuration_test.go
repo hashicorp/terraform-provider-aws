@@ -469,7 +469,6 @@ func testAccCheckBucketAnalyticsConfigurationDestroy(s *terraform.State) error {
 		}
 
 		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
-
 	}
 	return nil
 }

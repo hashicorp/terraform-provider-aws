@@ -30,7 +30,7 @@ func sweepAppMonitors(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RUMConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.ListAppMonitorsPages(&cloudwatchrum.ListAppMonitorsInput{}, func(resp *cloudwatchrum.ListAppMonitorsOutput, lastPage bool) bool {

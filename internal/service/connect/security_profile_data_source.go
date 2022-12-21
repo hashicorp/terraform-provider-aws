@@ -16,7 +16,7 @@ import (
 
 func DataSourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSecurityProfileRead,
+		ReadWithoutTimeout: dataSourceSecurityProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

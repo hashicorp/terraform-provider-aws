@@ -10,7 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -19,7 +20,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_eks_addon", &resource.Sweeper{
 		Name: "aws_eks_addon",
-		F:    sweepAddon,
+		F:    sweepAddons,
 	})
 
 	resource.AddTestSweepers("aws_eks_cluster", &resource.Sweeper{
@@ -49,7 +50,7 @@ func init() {
 	})
 }
 
-func sweepAddon(region string) error {
+func sweepAddons(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -58,16 +59,17 @@ func sweepAddon(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, cluster := range page.Clusters {
+		for _, v := range page.Clusters {
+			clusterName := aws.StringValue(v)
 			input := &eks.ListAddonsInput{
-				ClusterName: cluster,
+				ClusterName: aws.String(clusterName),
 			}
 
 			err := conn.ListAddonsPagesWithContext(ctx, input, func(page *eks.ListAddonsOutput, lastPage bool) bool {
@@ -75,10 +77,10 @@ func sweepAddon(region string) error {
 					return !lastPage
 				}
 
-				for _, addon := range page.Addons {
+				for _, v := range page.Addons {
 					r := ResourceAddon()
 					d := r.Data(nil)
-					d.SetId(AddonCreateResourceID(aws.StringValue(cluster), aws.StringValue(addon)))
+					d.SetId(AddonCreateResourceID(clusterName, aws.StringValue(v)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -87,6 +89,12 @@ func sweepAddon(region string) error {
 			})
 
 			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+			// ¯\_(ツ)_/¯
+			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
@@ -123,7 +131,7 @@ func sweepClusters(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -167,7 +175,7 @@ func sweepFargateProfiles(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -196,6 +204,12 @@ func sweepFargateProfiles(region string) error {
 			})
 
 			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+			// ¯\_(ツ)_/¯
+			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
@@ -234,7 +248,7 @@ func sweepIdentityProvidersConfig(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -263,6 +277,12 @@ func sweepIdentityProvidersConfig(region string) error {
 			})
 
 			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+			// ¯\_(ツ)_/¯
+			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
@@ -300,7 +320,7 @@ func sweepNodeGroups(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -329,6 +349,12 @@ func sweepNodeGroups(region string) error {
 			})
 
 			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+			// ¯\_(ツ)_/¯
+			if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 				continue
 			}
 

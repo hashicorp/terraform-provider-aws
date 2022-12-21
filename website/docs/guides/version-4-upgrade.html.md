@@ -86,7 +86,6 @@ Additional Topics:
 
 <!-- /TOC -->
 
-
 ## Provider Version Configuration
 
 -> Before upgrading to version 4.0.0, upgrade to the most recent 3.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html). You should not see changes you don't expect or deprecation notices.
@@ -908,7 +907,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -2207,9 +2206,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.accesslogs_bucket,
-│   on main.tf line 1, in resource "aws_s3_bucket" "accesslogs_bucket":
-│    1: resource "aws_s3_bucket" "accesslogs_bucket" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2225,7 +2224,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -2304,9 +2303,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.source,
-│   on main.tf line 1, in resource "aws_s3_bucket" "source":
-│    1: resource "aws_s3_bucket" "source" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2323,7 +2322,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "example" {
-  bucket = aws_s3_bucket.source.id
+  bucket = aws_s3_bucket.example.id
   role   = aws_iam_role.replication.arn
 
   rule {
@@ -2945,7 +2944,7 @@ resource "aws_default_vpc" "default" {
 
 ## Plural Data Source Behavior
 
-The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
+The following plural data sources are now consistent with [Provider Design](https://hashicorp.github.io/terraform-provider-aws/provider-design/#plural-data-sources)
 such that they no longer return an error if zero results are found.
 
 * [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
@@ -3243,7 +3242,7 @@ Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is n
 
 ### Removal of arn Wildcard Suffix
 
-Previously, the data source returned the Amazon Resource Name (ARN) directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
+Previously, the data source returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
 
 Workarounds, such as using `replace()` as shown below, should be removed:
 
@@ -3484,7 +3483,6 @@ output "elasticache_global_replication_group_version_result" {
 We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that we previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
 
 ## Resource: aws_lb_target_group
-
 
 For `protocol = "TCP"`, you can no longer set `stickiness.type` to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
 

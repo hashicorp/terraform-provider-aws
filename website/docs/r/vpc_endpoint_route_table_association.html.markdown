@@ -32,7 +32,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - A hash of the EC2 Route Table and VPC Endpoint identifiers.
 
-
 ## Import
 
 VPC Endpoint Route Table Associations can be imported using `vpc_endpoint_id` together with `route_table_id`,

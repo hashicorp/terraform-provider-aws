@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ func ResourceFlowLog() *schema.Resource {
 		Read:   resourceLogFlowRead,
 		Update: resourceLogFlowUpdate,
 		Delete: resourceLogFlowDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -188,6 +190,7 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input := &ec2.CreateFlowLogsInput{
+		ClientToken:        aws.String(resource.UniqueId()),
 		LogDestinationType: aws.String(d.Get("log_destination_type").(string)),
 		ResourceIds:        aws.StringSlice([]string{resourceID}),
 		ResourceType:       aws.String(resourceType),
@@ -227,7 +230,6 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
 
-	log.Printf("[DEBUG] Creating Flow Log: %s", input)
 	output, err := conn.CreateFlowLogs(input)
 
 	if err == nil && output != nil {
@@ -235,7 +237,7 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Flow Log (%s): %w", resourceID, err)
+		return fmt.Errorf("creating Flow Log (%s): %w", resourceID, err)
 	}
 
 	d.SetId(aws.StringValue(output.FlowLogIds[0]))
@@ -257,7 +259,7 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Flow Log (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Flow Log (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -267,24 +269,20 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
-
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
-			return fmt.Errorf("error setting destination_options: %w", err)
+			return fmt.Errorf("setting destination_options: %w", err)
 		}
 	} else {
 		d.Set("destination_options", nil)
 	}
-
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 	d.Set("log_destination", fl.LogDestination)
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set("vpc_id", resourceID)
@@ -299,7 +297,6 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	case strings.HasPrefix(resourceID, "eni-"):
 		d.Set("eni_id", resourceID)
 	}
-
 	if !strings.HasPrefix(aws.StringValue(fl.ResourceId), "tgw-") {
 		d.Set("traffic_type", fl.TrafficType)
 	}
@@ -308,11 +305,11 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -324,7 +321,7 @@ func resourceLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Flow Log (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating Flow Log (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -348,7 +345,7 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Flow Log (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Flow Log (%s): %w", d.Id(), err)
 	}
 
 	return nil

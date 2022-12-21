@@ -217,7 +217,6 @@ func testAccCheckResourcePolicyExists(n string) resource.TestCheckFunc {
 		}
 
 		return nil
-
 	}
 }
 

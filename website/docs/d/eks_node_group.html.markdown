@@ -21,18 +21,19 @@ data "aws_eks_node_group" "example" {
 
 ## Argument Reference
 
-* `cluster_name` - (Required) The name of the cluster.
-* `node_group_name` - (Required) The name of the node group.
+* `cluster_name` - (Required) Name of the cluster.
+* `node_group_name` - (Required) Name of the node group.
 
 ## Attributes Reference
 
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `ami_type` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
-* `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
+* `arn` - ARN of the EKS Node Group.
+* `capacity_type` - Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`.
 * `disk_size` - Disk size in GiB for worker nodes.
 * `instance_types` - Set of instance types associated with the EKS Node Group.
 * `labels` - Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
-* `node_role_arn` – Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
+* `node_role_arn` – ARN of the IAM Role that provides permissions for the EKS Node Group.
 * `release_version` – AMI version of the EKS Node Group.
 * `remote_access` - Configuration block with remote access settings.
     * `ec2_ssh_key` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.

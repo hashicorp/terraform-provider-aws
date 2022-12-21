@@ -344,7 +344,6 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 				})
 				if t, ok := m["throttle"].(*schema.Set); ok && t.Len() > 0 {
 					for _, throttle := range t.List() {
-
 						th := throttle.(map[string]interface{})
 						operations = append(operations, &apigateway.PatchOperation{
 							Op:    aws.String(apigateway.OpReplace),
@@ -529,7 +528,6 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-
 }
 
 func expandAPIStages(s *schema.Set) []*apigateway.ApiStage {

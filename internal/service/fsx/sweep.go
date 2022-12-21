@@ -56,6 +56,9 @@ func init() {
 	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
 		Name: "aws_fsx_windows_file_system",
 		F:    sweepWindowsFileSystems,
+		Dependencies: []string{
+			"aws_storagegateway_file_system_association",
+		},
 	})
 }
 
@@ -67,7 +70,7 @@ func sweepBackups(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeBackupsInput{}
 
@@ -111,7 +114,7 @@ func sweepLustreFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 
@@ -159,7 +162,7 @@ func sweepOntapFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 
@@ -207,7 +210,7 @@ func sweepOntapStorageVirtualMachine(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
@@ -251,7 +254,7 @@ func sweepOntapVolume(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
 
@@ -302,7 +305,7 @@ func sweepOpenZFSFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 
@@ -350,7 +353,7 @@ func sweepOpenZFSVolume(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
 
@@ -401,7 +404,7 @@ func sweepWindowsFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 

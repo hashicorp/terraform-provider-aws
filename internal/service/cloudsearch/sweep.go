@@ -28,7 +28,7 @@ func sweepDomains(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudSearchConn
 	input := &cloudsearch.DescribeDomainsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	domains, err := conn.DescribeDomains(input)
 

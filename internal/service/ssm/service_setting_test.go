@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,37 +57,46 @@ func testAccServiceSettingDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := conn.GetServiceSetting(&ssm.GetServiceSettingInput{
-			SettingId: aws.String(rs.Primary.Attributes["setting_id"]),
-		})
-		_, ok := err.(awserr.Error)
-		if !ok {
+		output, err := tfssm.FindServiceSettingByID(conn, rs.Primary.Attributes["setting_id"])
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
 			return err
 		}
-		if output.ServiceSetting.Status != aws.String("default") {
-			return create.Error(names.SSM, create.ErrActionCheckingDestroyed, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
+
+		if aws.StringValue(output.Status) == "Default" {
+			continue
 		}
+
+		return create.Error(names.SSM, create.ErrActionCheckingDestroyed, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 	}
 
 	return nil
 }
 
-func testAccServiceSettingExists(n string, res *ssm.ServiceSetting) resource.TestCheckFunc {
+func testAccServiceSettingExists(n string, v *ssm.ServiceSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SSM Service Setting ID is set")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
-		output, err := tfssm.FindServiceSettingByARN(conn, rs.Primary.Attributes["setting_id"])
+		output, err := tfssm.FindServiceSettingByID(conn, rs.Primary.Attributes["setting_id"])
 
 		if err != nil {
 			return create.Error(names.SSM, create.ErrActionReading, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 		}
 
-		*res = *output
+		*v = *output
 
 		return nil
 	}

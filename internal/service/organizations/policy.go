@@ -21,10 +21,10 @@ import (
 
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePolicyCreate,
-		ReadContext:   resourcePolicyRead,
-		UpdateContext: resourcePolicyUpdate,
-		DeleteContext: resourcePolicyDelete,
+		CreateWithoutTimeout: resourcePolicyCreate,
+		ReadWithoutTimeout:   resourcePolicyRead,
+		UpdateWithoutTimeout: resourcePolicyUpdate,
+		DeleteWithoutTimeout: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePolicyImport,
 		},
@@ -37,7 +37,7 @@ func ResourcePolicy() *schema.Resource {
 			"content": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
 			"description": {

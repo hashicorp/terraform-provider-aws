@@ -167,7 +167,6 @@ func testAccAlternateContactDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAlternateContactExists(n string) resource.TestCheckFunc {

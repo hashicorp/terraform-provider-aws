@@ -117,7 +117,6 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker Image (%s): %w", d.Id(), err)
-
 	}
 
 	arn := aws.StringValue(image.ImageArn)

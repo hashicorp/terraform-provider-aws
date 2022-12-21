@@ -28,7 +28,7 @@ func sweepAnalyzers(region string) error {
 	}
 	conn := client.(*conns.AWSClient).AccessAnalyzerConn
 	input := &accessanalyzer.ListAnalyzersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListAnalyzersPages(input, func(page *accessanalyzer.ListAnalyzersOutput, lastPage bool) bool {
 		if page == nil {

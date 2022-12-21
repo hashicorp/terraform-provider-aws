@@ -11,7 +11,6 @@ description: |-
 Manages an RDS Aurora Cluster Endpoint.
 You can refer to the [User Guide][1].
 
-
 ## Example Usage
 
 ```terraform
@@ -97,7 +96,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The RDS Cluster Endpoint Identifier
 * `endpoint` - A custom endpoint for the Aurora cluster
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 
 ## Import
 

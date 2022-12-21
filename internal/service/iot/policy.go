@@ -53,7 +53,6 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -133,7 +132,6 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	out, err := conn.ListPolicyVersions(&iot.ListPolicyVersionsInput{

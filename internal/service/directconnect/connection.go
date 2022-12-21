@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,6 +41,13 @@ func ResourceConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validConnectionBandWidth(),
 			},
+			// The MAC Security (MACsec) connection encryption mode.
+			"encryption_mode": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+			},
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -53,6 +61,18 @@ func ResourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			// Indicates whether the connection supports MAC Security (MACsec).
+			"macsec_capable": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			// Enable or disable MAC Security (MACsec) on this connection.
+			"request_macsec": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -62,14 +82,28 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			// The MAC Security (MACsec) port link status of the connection.
+			"port_encryption_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"provider_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vlan_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -86,6 +120,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
+		RequestMACSec:  aws.Bool(d.Get("request_macsec").(bool)),
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
@@ -135,12 +170,22 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("aws_device", connection.AwsDeviceV2)
 	d.Set("bandwidth", connection.Bandwidth)
+	d.Set("encryption_mode", connection.EncryptionMode)
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("location", connection.Location)
+	d.Set("macsec_capable", connection.MacSecCapable)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set("provider_name", connection.ProviderName)
+	d.Set("vlan_id", connection.Vlan)
+
+	// d.Set("request_macsec", d.Get("request_macsec").(bool))
+
+	if !d.IsNewResource() && !d.Get("request_macsec").(bool) {
+		d.Set("request_macsec", aws.Bool(false))
+	}
 
 	tags, err := ListTags(conn, arn)
 
@@ -165,9 +210,26 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	arn := d.Get("arn").(string)
+	// Update encryption mode
+	if d.HasChange("encryption_mode") {
+		input := &directconnect.UpdateConnectionInput{
+			ConnectionId:   aws.String(d.Id()),
+			EncryptionMode: aws.String(d.Get("encryption_mode").(string)),
+		}
+		log.Printf("[DEBUG] Modifying Direct Connect connection attributes: %s", input)
+		_, err := conn.UpdateConnection(input)
+		if err != nil {
+			return fmt.Errorf("error modifying Direct Connect connection (%s) attributes: %s", d.Id(), err)
+		}
+
+		if _, err := waitConnectionConfirmed(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Direct Connect connection (%s) to become available: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+		arn := d.Get("arn").(string)
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Direct Connect Connection (%s) tags: %w", arn, err)
@@ -178,6 +240,11 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Direct Connect Connection: %s", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	return deleteConnection(conn, d.Id(), waitConnectionDeleted)

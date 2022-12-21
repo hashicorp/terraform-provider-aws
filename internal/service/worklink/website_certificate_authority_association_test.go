@@ -167,7 +167,6 @@ func testAccCheckWebsiteCertificateAuthorityAssociationDisappears(resourceName s
 
 		return err
 	}
-
 }
 
 func testAccCheckWebsiteCertificateAuthorityAssociationExists(n string) resource.TestCheckFunc {

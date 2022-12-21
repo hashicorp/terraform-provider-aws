@@ -188,7 +188,7 @@ Route53 Records can be imported using ID of the record, which is the zone identi
 $ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
 ```
 
-If the record also contains a delegated set identifier, it can be appended:
+If the record also contains a set identifier, it should be appended:
 
 ```
 $ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS_dev

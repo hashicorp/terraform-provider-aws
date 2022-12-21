@@ -298,7 +298,6 @@ func testAccCheckVaultNotificationsMissing(name string) resource.TestCheckFunc {
 
 		return nil
 	}
-
 }
 
 func testAccCheckVaultDestroy(s *terraform.State) error {

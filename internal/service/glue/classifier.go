@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceClassifier() *schema.Resource {
@@ -72,6 +73,30 @@ func ResourceClassifier() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(glue.CsvHeaderOption_Values(), false),
+						},
+						"custom_datatype_configured": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"custom_datatypes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"BINARY",
+									"BOOLEAN",
+									"DATE",
+									"DECIMAL",
+									"DOUBLE",
+									"FLOAT",
+									"INT",
+									"LONG",
+									"SHORT",
+									"STRING",
+									"TIMESTAMP",
+								}, false),
+							},
 						},
 						"delimiter": {
 							Type:     schema.TypeString,
@@ -200,34 +225,23 @@ func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceClassifierRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	input := &glue.GetClassifierInput{
-		Name: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Reading Glue Classifier: %s", input)
-	output, err := conn.GetClassifier(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Glue Classifier (%s): %s", d.Id(), err)
-	}
-
-	classifier := output.Classifier
-	if classifier == nil {
+	classifier, err := FindClassifierByName(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("error reading Glue Classifier (%s): %w", d.Id(), err)
+	}
+
 	if err := d.Set("csv_classifier", flattenCSVClassifier(classifier.CsvClassifier)); err != nil {
-		return fmt.Errorf("error setting match_criteria: %s", err)
+		return fmt.Errorf("error setting csv_classifier: %s", err)
 	}
 
 	if err := d.Set("grok_classifier", flattenGrokClassifier(classifier.GrokClassifier)); err != nil {
-		return fmt.Errorf("error setting match_criteria: %s", err)
+		return fmt.Errorf("error setting grok_classifier: %s", err)
 	}
 
 	if err := d.Set("json_classifier", flattenJSONClassifier(classifier.JsonClassifier)); err != nil {
@@ -322,6 +336,13 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 		csvClassifier.Header = flex.ExpandStringList(v)
 	}
 
+	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
+		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
+			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
+		}
+		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
+	}
+
 	return csvClassifier
 }
 
@@ -340,6 +361,13 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 
 	if v, ok := m["header"].([]interface{}); ok {
 		csvClassifier.Header = flex.ExpandStringList(v)
+	}
+
+	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
+		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
+			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
+		}
+		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
 	}
 
 	return csvClassifier
@@ -421,12 +449,14 @@ func flattenCSVClassifier(csvClassifier *glue.CsvClassifier) []map[string]interf
 	}
 
 	m := map[string]interface{}{
-		"allow_single_column":    aws.BoolValue(csvClassifier.AllowSingleColumn),
-		"contains_header":        aws.StringValue(csvClassifier.ContainsHeader),
-		"delimiter":              aws.StringValue(csvClassifier.Delimiter),
-		"disable_value_trimming": aws.BoolValue(csvClassifier.DisableValueTrimming),
-		"header":                 aws.StringValueSlice(csvClassifier.Header),
-		"quote_symbol":           aws.StringValue(csvClassifier.QuoteSymbol),
+		"allow_single_column":        aws.BoolValue(csvClassifier.AllowSingleColumn),
+		"contains_header":            aws.StringValue(csvClassifier.ContainsHeader),
+		"delimiter":                  aws.StringValue(csvClassifier.Delimiter),
+		"disable_value_trimming":     aws.BoolValue(csvClassifier.DisableValueTrimming),
+		"header":                     aws.StringValueSlice(csvClassifier.Header),
+		"quote_symbol":               aws.StringValue(csvClassifier.QuoteSymbol),
+		"custom_datatype_configured": aws.BoolValue(csvClassifier.CustomDatatypeConfigured),
+		"custom_datatypes":           aws.StringValueSlice(csvClassifier.CustomDatatypes),
 	}
 
 	return []map[string]interface{}{m}

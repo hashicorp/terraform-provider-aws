@@ -92,7 +92,6 @@ func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccInvitationAccepterConfig_basic(email string) string {

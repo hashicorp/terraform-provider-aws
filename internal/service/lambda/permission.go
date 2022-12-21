@@ -331,7 +331,6 @@ func FindPolicyStatementByTwoPartKey(conn *lambda.Lambda, functionName, statemen
 }
 
 func FindPolicyStatementByID(policy *Policy, id string) (*PolicyStatement, error) {
-
 	log.Printf("[DEBUG] Received %d statements in Lambda policy: %s", len(policy.Statement), policy.Statement)
 	for _, statement := range policy.Statement {
 		if statement.Sid == id {

@@ -47,7 +47,6 @@ func TestAccSESTemplate_basic(t *testing.T) {
 }
 
 func TestAccSESTemplate_update(t *testing.T) {
-	acctest.Skip(t, "Skip due to SES.UpdateTemplate eventual consistency issues")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_template.test"
 	var template ses.Template

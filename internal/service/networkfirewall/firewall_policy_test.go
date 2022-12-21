@@ -7,13 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
@@ -46,6 +46,49 @@ func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) {
+	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
 			},
 		},
 	})
@@ -317,6 +360,34 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupPriorityReference(t *
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupOverrideActionReference(t *testing.T) {
+	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	override_action := networkfirewall.OverrideActionDropToAlert
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceManagedOverrideAction(rName, override_action),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.override.0.action", override_action),
 				),
 			},
 			{
@@ -782,22 +853,24 @@ func testAccCheckFirewallPolicyDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := tfnetworkfirewall.FindFirewallPolicy(context.Background(), conn, rs.Primary.ID)
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+
+		_, err := tfnetworkfirewall.FindFirewallPolicyByARN(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
-		if output != nil {
-			return fmt.Errorf("NetworkFirewall Firewall Policy still exists: %s", rs.Primary.ID)
-		}
+
+		return fmt.Errorf("NetworkFirewall Firewall Policy %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckFirewallPolicyExists(n string, p *networkfirewall.DescribeFirewallPolicyOutput) resource.TestCheckFunc {
+func testAccCheckFirewallPolicyExists(n string, v *networkfirewall.DescribeFirewallPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -809,16 +882,14 @@ func testAccCheckFirewallPolicyExists(n string, p *networkfirewall.DescribeFirew
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := tfnetworkfirewall.FindFirewallPolicy(context.Background(), conn, rs.Primary.ID)
+
+		output, err := tfnetworkfirewall.FindFirewallPolicyByARN(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("NetworkFirewall Firewall Policy (%s) not found", rs.Primary.ID)
-		}
-
-		*p = *output
+		*v = *output
 
 		return nil
 	}
@@ -1088,6 +1159,31 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 `, rName, priority))
 }
 
+func testAccFirewallPolicyConfig_statefulRuleGroupReferenceManagedOverrideAction(rName, override_action string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 1),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+    stateful_rule_group_reference {
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      override {
+        action = %[2]q
+      }
+    }
+  }
+}
+`, rName, override_action))
+}
+
 func testAccFirewallPolicyConfig_singleStatefulRuleGroupReference(rName string) string {
 	return acctest.ConfigCompose(
 		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 2),
@@ -1264,4 +1360,43 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFirewallPolicyConfig_encryptionConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %q
+
+  encryption_configuration {
+    key_id = aws_kms_key.test.arn
+    type   = "CUSTOMER_KMS"
+  }
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+`, rName)
+}
+
+// The KMS key resource must stay in state while removing encryption configuration. If not
+// (ie. using the _basic config), the KMS key is deleted before the firewall policy is updated,
+// leaving the policy in a "misconfigured" state. This causes update to fail with:
+//
+// InvalidRequestException: firewall policy has KMS key misconfigured
+func testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %q
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+`, rName)
 }

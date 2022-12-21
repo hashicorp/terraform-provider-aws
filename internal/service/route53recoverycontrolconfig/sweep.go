@@ -51,7 +51,7 @@ func sweepClusters(region string) error {
 	}
 	conn := client.(*conns.AWSClient).Route53RecoveryControlConfigConn
 	input := &r53rcc.ListClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -95,7 +95,7 @@ func sweepControlPanels(region string) error {
 	conn := client.(*conns.AWSClient).Route53RecoveryControlConfigConn
 	input := &r53rcc.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -165,7 +165,7 @@ func sweepRoutingControls(region string) error {
 	conn := client.(*conns.AWSClient).Route53RecoveryControlConfigConn
 	input := &r53rcc.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -253,7 +253,7 @@ func sweepSafetyRules(region string) error {
 	conn := client.(*conns.AWSClient).Route53RecoveryControlConfigConn
 	input := &r53rcc.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *r53rcc.ListClustersOutput, lastPage bool) bool {
 		if page == nil {

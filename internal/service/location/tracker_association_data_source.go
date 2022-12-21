@@ -15,19 +15,17 @@ import (
 
 func DataSourceTrackerAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTrackerAssociationRead,
+		ReadWithoutTimeout: dataSourceTrackerAssociationRead,
 
 		Schema: map[string]*schema.Schema{
 			"consumer_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"tracker_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 		},

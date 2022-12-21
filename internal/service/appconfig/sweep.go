@@ -58,7 +58,7 @@ func sweepApplications(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppConfigConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
@@ -110,7 +110,7 @@ func sweepConfigurationProfiles(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppConfigConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
@@ -186,7 +186,7 @@ func sweepDeploymentStrategies(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppConfigConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListDeploymentStrategiesInput{}
@@ -244,7 +244,7 @@ func sweepEnvironments(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppConfigConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
@@ -320,7 +320,7 @@ func sweepHostedConfigurationVersions(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).AppConfigConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}

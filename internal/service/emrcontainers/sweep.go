@@ -28,7 +28,7 @@ func sweepVirtualClusters(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EMRContainersConn
 	input := &emrcontainers.ListVirtualClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListVirtualClustersPages(input, func(page *emrcontainers.ListVirtualClustersOutput, lastPage bool) bool {
 		if page == nil {

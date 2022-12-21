@@ -3,6 +3,7 @@ package servicediscovery
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -163,9 +164,11 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	log.Printf("[INFO] Deleting Service Discovery HTTP Namespace: %s", d.Id())
-	output, err := conn.DeleteNamespaceWithContext(ctx, &servicediscovery.DeleteNamespaceInput{
-		Id: aws.String(d.Id()),
-	})
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.DeleteNamespaceWithContext(ctx, &servicediscovery.DeleteNamespaceInput{
+			Id: aws.String(d.Id()),
+		})
+	}, servicediscovery.ErrCodeResourceInUse)
 
 	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
 		return nil
@@ -175,7 +178,7 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("deleting Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
 	}
 
-	if output != nil && output.OperationId != nil {
+	if output := outputRaw.(*servicediscovery.DeleteNamespaceOutput); output != nil && output.OperationId != nil {
 		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 			return diag.Errorf("waiting for Service Discovery HTTP Namespace (%s) delete: %s", d.Id(), err)
 		}

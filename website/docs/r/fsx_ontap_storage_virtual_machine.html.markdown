@@ -11,7 +11,6 @@ description: |-
 Manages a FSx Storage Virtual Machine.
 See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-svms.html) for more information.
 
-
 ## Example Usage
 
 ### Basic Usage
@@ -79,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name of the storage virtual machine.
 * `endpoints` - The endpoints that are used to access data or to manage the storage virtual machine using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
 * `id` - Identifier of the storage virtual machine, e.g., `svm-12345678`
-* `subtype` - Describes the SVM's subtype, e.g. `DEFAULT`
+* `subtype` (**Deprecated**) - Describes the SVM's subtype, e.g. `DEFAULT`
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The SVM's UUID (universally unique identifier).
 
@@ -97,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `delete` - (Default `30m`)

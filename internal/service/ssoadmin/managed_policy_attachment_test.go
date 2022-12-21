@@ -195,7 +195,6 @@ func testAccCheckManagedPolicyAttachmentDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("Managed Policy (%s) for SSO Permission Set (%s) still exists", managedPolicyArn, permissionSetArn)
-
 	}
 
 	return nil

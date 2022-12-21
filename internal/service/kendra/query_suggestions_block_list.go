@@ -96,7 +96,7 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 }
 
 func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -120,7 +120,6 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateQuerySuggestionsBlockList(ctx, in)
-
 		},
 		func(err error) (bool, error) {
 			var validationException *types.ValidationException
@@ -155,7 +154,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -216,7 +215,7 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
@@ -251,7 +250,6 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 			propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
-
 			},
 			func(err error) (bool, error) {
 				var validationException *types.ValidationException
@@ -285,7 +283,7 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient
 
 	log.Printf("[INFO] Deleting Kendra QuerySuggestionsBlockList %s", d.Id())
 
