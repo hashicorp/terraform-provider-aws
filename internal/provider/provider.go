@@ -1058,6 +1058,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_appsync_function":                    appsync.ResourceFunction(),
 			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
 			"aws_appsync_resolver":                    appsync.ResourceResolver(),
+			"aws_appsync_type":                        appsync.ResourceType(),
 
 			"aws_athena_database":     athena.ResourceDatabase(),
 			"aws_athena_data_catalog": athena.ResourceDataCatalog(),
