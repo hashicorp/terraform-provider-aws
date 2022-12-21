@@ -113,6 +113,38 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 	})
 }
 
+func TestAccLightsailInstancePublicPorts_cidrListAliases(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_instance_public_ports.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstancePublicPortsConfig_cidrListAliases(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstancePublicPortsExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
+						"protocol":            "tcp",
+						"from_port":           "22",
+						"to_port":             "22",
+						"cidr_list_aliases.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidr_list_aliases.*", "lightsail-connect"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLightsailInstancePublicPorts_disappears(t *testing.T) {
 	resourceName := "aws_lightsail_instance_public_ports.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -311,6 +343,37 @@ resource "aws_lightsail_instance_public_ports" "test" {
     from_port = 125
     to_port   = 125
     cidrs     = ["192.168.1.0/24", "1.1.1.1/32"]
+  }
+}
+`, rName)
+}
+
+func testAccInstancePublicPortsConfig_cidrListAliases(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lightsail_instance" "test" {
+  name              = %[1]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
+}
+
+resource "aws_lightsail_instance_public_ports" "test" {
+  instance_name = aws_lightsail_instance.test.name
+
+  port_info {
+    protocol          = "tcp"
+    from_port         = 22
+    to_port           = 22
+    cidr_list_aliases = ["lightsail-connect"]
   }
 }
 `, rName)
