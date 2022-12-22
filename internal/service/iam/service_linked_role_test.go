@@ -101,7 +101,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 					r := tfiam.ResourceServiceLinkedRole()
 					d := r.Data(nil)
 					d.SetId(arn)
-					err := r.Delete(d, client)
+					err := acctest.DeleteResource(r, d, client)
 
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
