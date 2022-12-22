@@ -210,7 +210,7 @@ func DataSourceFunction() *schema.Resource {
 }
 
 func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	functionName := d.Get("function_name").(string)

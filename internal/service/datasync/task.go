@@ -213,7 +213,7 @@ func ResourceTask() *schema.Resource {
 }
 
 func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -261,7 +261,7 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -316,7 +316,7 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateTaskInput{
@@ -365,7 +365,7 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),

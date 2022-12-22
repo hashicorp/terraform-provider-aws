@@ -66,7 +66,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -93,7 +93,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -142,7 +142,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
@@ -174,7 +174,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
 	_, err := conn.DeleteGroup(&xray.DeleteGroupInput{

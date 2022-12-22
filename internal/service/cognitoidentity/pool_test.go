@@ -430,7 +430,7 @@ func testAccCheckPoolExists(n string, identityPool *cognitoidentity.IdentityPool
 			return errors.New("No Cognito Identity Pool ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
 		result, err := conn.DescribeIdentityPool(&cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
@@ -450,7 +450,7 @@ func testAccCheckPoolExists(n string, identityPool *cognitoidentity.IdentityPool
 }
 
 func testAccCheckPoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_pool" {
@@ -474,7 +474,7 @@ func testAccCheckPoolDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
 	input := &cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int64(1),

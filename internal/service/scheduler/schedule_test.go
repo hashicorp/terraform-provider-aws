@@ -1556,7 +1556,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 }
 
 func testAccCheckScheduleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -1598,7 +1598,7 @@ func testAccCheckScheduleExists(name string, schedule *scheduler.GetScheduleOutp
 
 		parts := strings.Split(rs.Primary.ID, "/")
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
 		ctx := context.Background()
 		resp, err := conn.GetSchedule(ctx, &scheduler.GetScheduleInput{
 			Name:      aws.String(parts[1]),

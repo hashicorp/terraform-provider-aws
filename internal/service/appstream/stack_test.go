@@ -313,7 +313,7 @@ func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stac
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 		resp, err := conn.DescribeStacks(&appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
@@ -331,7 +331,7 @@ func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stac
 }
 
 func testAccCheckStackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_stack" {

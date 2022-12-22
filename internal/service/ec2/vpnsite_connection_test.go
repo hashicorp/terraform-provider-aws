@@ -1635,7 +1635,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 }
 
 func testAccVPNConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection" {
@@ -1669,7 +1669,7 @@ func testAccVPNConnectionExists(n string, v *ec2.VpnConnection) resource.TestChe
 			return fmt.Errorf("No EC2 VPN Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPNConnectionByID(conn, rs.Primary.ID)
 

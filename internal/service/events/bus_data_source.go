@@ -27,7 +27,7 @@ func DataSourceBus() *schema.Resource {
 }
 
 func dataSourceBusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	name := d.Get("name").(string)
 

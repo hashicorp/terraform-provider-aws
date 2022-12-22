@@ -50,7 +50,7 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	arn := d.Get("resource_arn").(string)
 
@@ -76,7 +76,7 @@ func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	out, err := FindResourcePolicyByARN(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -129,7 +129,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Resource Policy: %s", d.Id())
 	_, err := conn.DeleteResourcePolicy(&redshiftserverless.DeleteResourcePolicyInput{

@@ -106,7 +106,7 @@ func ResourceApp() *schema.Resource {
 }
 
 func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -154,7 +154,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -206,7 +206,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -220,7 +220,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	appName := d.Get("app_name").(string)
 	appType := d.Get("app_type").(string)

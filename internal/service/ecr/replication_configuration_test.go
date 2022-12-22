@@ -150,7 +150,7 @@ func testAccCheckReplicationConfigurationExists(name string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 		out, err := conn.DescribeRegistry(&ecr.DescribeRegistryInput{})
 		if err != nil {
 			return fmt.Errorf("ECR replication rules not found: %w", err)
@@ -165,7 +165,7 @@ func testAccCheckReplicationConfigurationExists(name string) resource.TestCheckF
 }
 
 func testAccCheckReplicationConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_replication_configuration" {

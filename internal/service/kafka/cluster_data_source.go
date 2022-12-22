@@ -75,7 +75,7 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)

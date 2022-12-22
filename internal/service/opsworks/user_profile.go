@@ -45,7 +45,7 @@ func ResourceUserProfile() *schema.Resource {
 }
 
 func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribeUserProfilesInput{
 		IamUserArns: []*string{
@@ -77,7 +77,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.CreateUserProfileInput{
 		AllowSelfManagement: aws.Bool(d.Get("allow_self_management").(bool)),
@@ -97,7 +97,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.UpdateUserProfileInput{
 		AllowSelfManagement: aws.Bool(d.Get("allow_self_management").(bool)),
@@ -117,7 +117,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DeleteUserProfileInput{
 		IamUserArn: aws.String(d.Id()),

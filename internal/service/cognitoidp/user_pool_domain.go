@@ -71,7 +71,7 @@ func ResourceUserPoolDomain() *schema.Resource {
 }
 
 func resourceUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	domain := d.Get("domain").(string)
 
@@ -107,7 +107,7 @@ func resourceUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Reading Cognito User Pool Domain: %s", d.Id())
 
 	domain, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
@@ -182,7 +182,7 @@ func resourceUserPoolDomainUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
 
 	_, err := conn.DeleteUserPoolDomain(&cognitoidentityprovider.DeleteUserPoolDomainInput{

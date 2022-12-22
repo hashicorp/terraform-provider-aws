@@ -37,7 +37,7 @@ func ResourceProductSubscription() *schema.Resource {
 }
 
 func resourceProductSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	productArn := d.Get("product_arn").(string)
 
 	log.Printf("[DEBUG] Enabling Security Hub product subscription for product %s", productArn)
@@ -56,7 +56,7 @@ func resourceProductSubscriptionCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceProductSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	productArn, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
 
@@ -116,7 +116,7 @@ func ProductSubscriptionParseID(id string) (string, string, error) {
 }
 
 func resourceProductSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Printf("[DEBUG] Disabling Security Hub product subscription %s", d.Id())
 
 	_, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())

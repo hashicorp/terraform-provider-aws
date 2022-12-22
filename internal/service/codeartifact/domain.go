@@ -70,7 +70,7 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Domain")
@@ -95,7 +95,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -150,7 +150,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -163,7 +163,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())

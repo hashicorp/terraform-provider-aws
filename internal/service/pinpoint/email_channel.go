@@ -60,7 +60,7 @@ func ResourceEmailChannel() *schema.Resource {
 }
 
 func resourceEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -94,7 +94,7 @@ func resourceEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint Email Channel for application %s", d.Id())
 
@@ -124,7 +124,7 @@ func resourceEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEmailChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint Email Channel for application %s", d.Id())
 	_, err := conn.DeleteEmailChannel(&pinpoint.DeleteEmailChannelInput{

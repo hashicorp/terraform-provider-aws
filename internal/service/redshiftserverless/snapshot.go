@@ -79,7 +79,7 @@ func ResourceSnapshot() *schema.Resource {
 }
 
 func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := redshiftserverless.CreateSnapshotInput{
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
@@ -106,7 +106,7 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	out, err := FindSnapshotByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -134,7 +134,7 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := &redshiftserverless.UpdateSnapshotInput{
 		SnapshotName:    aws.String(d.Id()),
@@ -150,7 +150,7 @@ func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Snapshot: %s", d.Id())
 	_, err := conn.DeleteSnapshot(&redshiftserverless.DeleteSnapshotInput{

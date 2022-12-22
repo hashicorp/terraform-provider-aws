@@ -183,7 +183,7 @@ func TestAccVPCNetworkACLAssociation_associateWithDefaultNACL(t *testing.T) {
 	})
 }
 func testAccCheckNetworkACLAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_acl_association" {
@@ -217,7 +217,7 @@ func testAccCheckNetworkACLAssociationExists(n string, v *ec2.NetworkAclAssociat
 			return fmt.Errorf("No EC2 Network ACL Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindNetworkACLAssociationByID(conn, rs.Primary.ID)
 

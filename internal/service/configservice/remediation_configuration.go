@@ -138,7 +138,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 }
 
 func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("config_rule_name").(string)
 	input := configservice.RemediationConfiguration{
@@ -191,7 +191,7 @@ func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{
 }
 
 func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
@@ -243,7 +243,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceRemediationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("config_rule_name").(string)
 

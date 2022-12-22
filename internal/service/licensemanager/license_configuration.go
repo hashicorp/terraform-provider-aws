@@ -80,7 +80,7 @@ func ResourceLicenseConfiguration() *schema.Resource {
 }
 
 func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -123,7 +123,7 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -163,7 +163,7 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &licensemanager.UpdateLicenseConfigurationInput{
@@ -197,7 +197,7 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn
+	conn := meta.(*conns.AWSClient).LicenseManagerConn()
 
 	log.Printf("[DEBUG] Deleting License Manager License Configuration: %s", d.Id())
 	_, err := conn.DeleteLicenseConfigurationWithContext(ctx, &licensemanager.DeleteLicenseConfigurationInput{

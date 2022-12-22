@@ -175,7 +175,7 @@ func ResourceCustomActionType() *schema.Resource {
 }
 
 func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -221,7 +221,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -303,7 +303,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -318,7 +318,7 @@ func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
 

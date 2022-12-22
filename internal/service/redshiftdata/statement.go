@@ -89,7 +89,7 @@ func ResourceStatement() *schema.Resource {
 }
 
 func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftDataConn
+	conn := meta.(*conns.AWSClient).RedshiftDataConn()
 
 	input := &redshiftdataapiservice.ExecuteStatementInput{
 		ClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
@@ -130,7 +130,7 @@ func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftDataConn
+	conn := meta.(*conns.AWSClient).RedshiftDataConn()
 
 	sub, err := FindStatementByID(conn, d.Id())
 

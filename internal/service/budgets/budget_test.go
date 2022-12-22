@@ -522,7 +522,7 @@ func testAccBudgetExists(resourceName string, v *budgets.Budget) resource.TestCh
 			return fmt.Errorf("No Budget ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn()
 
 		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
 
@@ -543,7 +543,7 @@ func testAccBudgetExists(resourceName string, v *budgets.Budget) resource.TestCh
 }
 
 func testAccBudgetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget" {

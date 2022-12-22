@@ -190,7 +190,7 @@ func TestAccVPCTrafficMirrorSession_updateTrafficMirrorTarget(t *testing.T) {
 }
 
 func testAccPreCheckTrafficMirrorSession(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	_, err := conn.DescribeTrafficMirrorSessions(&ec2.DescribeTrafficMirrorSessionsInput{})
 
@@ -214,7 +214,7 @@ func testAccCheckTrafficMirrorSessionNotRecreated(t *testing.T, before, after *e
 }
 
 func testAccCheckTrafficMirrorSessionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_traffic_mirror_session" {
@@ -248,7 +248,7 @@ func testAccCheckTrafficMirrorSessionExists(n string, v *ec2.TrafficMirrorSessio
 			return fmt.Errorf("No EC2 Traffic Mirror Session ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTrafficMirrorSessionByID(conn, rs.Primary.ID)
 

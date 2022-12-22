@@ -227,7 +227,7 @@ const (
 )
 
 func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -284,7 +284,7 @@ func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	params := &ssm.UpdatePatchBaselineInput{
 		BaselineId: aws.String(d.Id()),
@@ -349,7 +349,7 @@ func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -418,7 +418,7 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Deleting SSM Patch Baseline: %s", d.Id())
 

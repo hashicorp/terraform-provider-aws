@@ -101,7 +101,7 @@ func ResourceMesh() *schema.Resource {
 }
 
 func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -124,7 +124,7 @@ func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -214,7 +214,7 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -243,7 +243,7 @@ func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMeshDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh service mesh: %s", d.Id())
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{

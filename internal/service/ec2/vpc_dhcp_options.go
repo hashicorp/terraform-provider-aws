@@ -89,7 +89,7 @@ var (
 )
 
 func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -116,7 +116,7 @@ func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -168,7 +168,7 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -182,7 +182,7 @@ func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcs, err := FindVPCs(conn, &ec2.DescribeVpcsInput{
 		Filters: BuildAttributeFilterList(map[string]string{

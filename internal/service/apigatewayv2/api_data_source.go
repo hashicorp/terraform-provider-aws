@@ -105,7 +105,7 @@ func DataSourceAPI() *schema.Resource {
 }
 
 func dataSourceAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	apiID := d.Get("api_id").(string)
 

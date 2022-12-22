@@ -223,7 +223,7 @@ func ResourceClusterInstance() *schema.Resource {
 
 func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -345,7 +345,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -438,7 +438,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rds.ModifyDBInstanceInput{
@@ -531,7 +531,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),

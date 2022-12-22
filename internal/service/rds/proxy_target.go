@@ -86,7 +86,7 @@ func ResourceProxyTarget() *schema.Resource {
 }
 
 func resourceProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	targetGroupName := d.Get("target_group_name").(string)
@@ -129,7 +129,7 @@ func ProxyTargetParseID(id string) (string, string, string, string, error) {
 }
 
 func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbProxyName, targetGroupName, targetType, rdsResourceId, err := ProxyTargetParseID(d.Id())
 	if err != nil {
@@ -179,7 +179,7 @@ func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProxyTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	params := rds.DeregisterDBProxyTargetsInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),

@@ -102,7 +102,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 }
 
 func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -148,7 +148,7 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -221,7 +221,7 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		confProfID, appID, err := ConfigurationProfileParseID(d.Id())
@@ -269,7 +269,7 @@ func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConfigurationProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 

@@ -33,7 +33,7 @@ func DataSourceNetworkInterfaces() *schema.Resource {
 }
 
 func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 

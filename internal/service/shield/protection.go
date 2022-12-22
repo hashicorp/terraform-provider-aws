@@ -47,7 +47,7 @@ func ResourceProtection() *schema.Resource {
 }
 
 func resourceProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -60,7 +60,7 @@ func resourceProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProtectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -80,7 +80,7 @@ func resourceProtectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProtectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -126,7 +126,7 @@ func resourceProtectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProtectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	input := &shield.DeleteProtectionInput{
 		ProtectionId: aws.String(d.Id()),

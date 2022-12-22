@@ -65,7 +65,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	conn := d.Meta().EC2Conn
+	conn := d.Meta().EC2Conn()
 
 	input := &ec2.DescribeRegionsInput{
 		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),

@@ -72,7 +72,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 }
 
 func resourceHumanTaskUICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,7 +99,7 @@ func resourceHumanTaskUICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHumanTaskUIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -144,7 +144,7 @@ func resourceHumanTaskUIRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHumanTaskUIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -158,7 +158,7 @@ func resourceHumanTaskUIUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHumanTaskUIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	log.Printf("[DEBUG] Deleting SageMaker HumanTaskUi: %s", d.Id())
 	_, err := conn.DeleteHumanTaskUi(&sagemaker.DeleteHumanTaskUiInput{

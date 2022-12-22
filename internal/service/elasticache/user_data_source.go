@@ -47,7 +47,7 @@ func DataSourceUser() *schema.Resource {
 }
 
 func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	params := &elasticache.DescribeUsersInput{
 		UserId: aws.String(d.Get("user_id").(string)),

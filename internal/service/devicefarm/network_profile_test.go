@@ -191,7 +191,7 @@ func testAccCheckNetworkProfileExists(n string, v *devicefarm.NetworkProfile) re
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 		resp, err := tfdevicefarm.FindNetworkProfileByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -207,7 +207,7 @@ func testAccCheckNetworkProfileExists(n string, v *devicefarm.NetworkProfile) re
 }
 
 func testAccCheckNetworkProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_devicefarm_network_profile" {

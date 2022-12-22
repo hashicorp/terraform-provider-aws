@@ -266,7 +266,7 @@ func ResourceGateway() *schema.Resource {
 }
 
 func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
@@ -478,7 +478,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -647,7 +647,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
@@ -796,7 +796,7 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", d.Id())
 	_, err := conn.DeleteGateway(&storagegateway.DeleteGatewayInput{

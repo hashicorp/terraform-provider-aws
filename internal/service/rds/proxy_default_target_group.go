@@ -94,7 +94,7 @@ func ResourceProxyDefaultTargetGroup() *schema.Resource {
 }
 
 func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	tg, err := resourceProxyDefaultTargetGroupGet(conn, d.Id())
 
@@ -133,7 +133,7 @@ func resourceProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta interface{}, timeout string) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),

@@ -218,7 +218,7 @@ func testAccPolicy_tags(t *testing.T) {
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_policy" {
@@ -252,7 +252,7 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No FMS Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn()
 
 		_, err := tffms.FindPolicyByID(conn, rs.Primary.ID)
 

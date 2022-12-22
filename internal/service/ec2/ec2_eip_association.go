@@ -64,7 +64,7 @@ func ResourceEIPAssociation() *schema.Resource {
 }
 
 func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.AssociateAddressInput{}
 
@@ -138,7 +138,7 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	var err error
 	var address *ec2.Address
@@ -169,7 +169,7 @@ func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceEIPAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DisassociateAddressInput{}
 

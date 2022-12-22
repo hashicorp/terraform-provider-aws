@@ -1034,7 +1034,7 @@ func testAccCheckServerExists(n string, v *transfer.DescribedServer) resource.Te
 			return fmt.Errorf("No Transfer Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 		output, err := tftransfer.FindServerByID(conn, rs.Primary.ID)
 
@@ -1049,7 +1049,7 @@ func testAccCheckServerExists(n string, v *transfer.DescribedServer) resource.Te
 }
 
 func testAccCheckServerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_server" {
@@ -1073,7 +1073,7 @@ func testAccCheckServerDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 	input := &transfer.ListServersInput{}
 

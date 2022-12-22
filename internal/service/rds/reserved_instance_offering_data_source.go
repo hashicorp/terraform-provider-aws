@@ -64,7 +64,7 @@ func DataSourceReservedOffering() *schema.Resource {
 }
 
 func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeReservedDBInstancesOfferingsInput{
 		DBInstanceClass:    aws.String(d.Get("db_instance_class").(string)),

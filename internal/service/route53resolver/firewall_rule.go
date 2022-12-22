@@ -80,7 +80,7 @@ func ResourceFirewallRule() *schema.Resource {
 }
 
 func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
@@ -123,7 +123,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -157,7 +157,7 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -199,7 +199,7 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 

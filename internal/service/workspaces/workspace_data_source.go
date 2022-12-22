@@ -97,7 +97,7 @@ func DataSourceWorkspace() *schema.Resource {
 }
 
 func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var workspace *workspaces.Workspace

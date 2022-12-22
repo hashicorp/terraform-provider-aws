@@ -129,7 +129,7 @@ func DataSourceGroup() *schema.Resource {
 }
 
 func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	groupName := d.Get("name").(string)
 	group, err := FindGroupByName(conn, groupName)

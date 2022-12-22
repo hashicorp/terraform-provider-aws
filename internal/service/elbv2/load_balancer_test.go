@@ -1320,7 +1320,7 @@ func testAccCheckLoadBalancerExists(n string, res *elbv2.LoadBalancer) resource.
 			return errors.New("No LB ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		lb, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
 
@@ -1348,7 +1348,7 @@ func testAccCheckLoadBalancerAttribute(n, key, value string) resource.TestCheckF
 			return errors.New("No LB ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 		attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 			LoadBalancerArn: aws.String(rs.Primary.ID),
 		})
@@ -1369,7 +1369,7 @@ func testAccCheckLoadBalancerAttribute(n, key, value string) resource.TestCheckF
 }
 
 func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
@@ -1395,7 +1395,7 @@ func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckGatewayLoadBalancer(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	input := &elbv2.DescribeAccountLimitsInput{}
 

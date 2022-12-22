@@ -230,7 +230,7 @@ func testAccCheckFunctionURLExists(n string, v *lambda.GetFunctionUrlConfigOutpu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		output, err := tflambda.FindFunctionURLByNameAndQualifier(context.Background(), conn, name, qualifier)
 
@@ -245,7 +245,7 @@ func testAccCheckFunctionURLExists(n string, v *lambda.GetFunctionUrlConfigOutpu
 }
 
 func testAccCheckFunctionURLDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function_url" {

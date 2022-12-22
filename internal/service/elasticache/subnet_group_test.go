@@ -160,7 +160,7 @@ func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 }
 
 func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_subnet_group" {
@@ -194,7 +194,7 @@ func testAccCheckSubnetGroupExists(n string, v *elasticache.CacheSubnetGroup) re
 			return fmt.Errorf("No ElastiCache Subnet Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 		output, err := tfelasticache.FindCacheSubnetGroupByName(conn, rs.Primary.ID)
 

@@ -123,7 +123,7 @@ func DataSourceImage() *schema.Resource {
 }
 
 func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.GetImageInput{}
 

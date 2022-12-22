@@ -414,7 +414,7 @@ func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, acti
 
 func testAccCheckWebACLDisappears(v *waf.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := tfwafregional.NewRetryer(conn, region)
@@ -462,7 +462,7 @@ func testAccCheckWebACLDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetWebACL(
 			&waf.GetWebACLInput{
 				WebACLId: aws.String(rs.Primary.ID),
@@ -496,7 +496,7 @@ func testAccCheckWebACLExists(n string, v *waf.WebACL) resource.TestCheckFunc {
 			return fmt.Errorf("No WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetWebACL(&waf.GetWebACLInput{
 			WebACLId: aws.String(rs.Primary.ID),
 		})

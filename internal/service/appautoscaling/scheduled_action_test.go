@@ -551,7 +551,7 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 }
 
 func testAccCheckScheduledActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appautoscaling_scheduled_action" {
@@ -585,7 +585,7 @@ func testAccCheckScheduledActionExists(name string, obj *applicationautoscaling.
 			return fmt.Errorf("Application Autoscaling scheduled action (%s) ID not set", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
 
 		sa, err := tfappautoscaling.FindScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
 		if err != nil {

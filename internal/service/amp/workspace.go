@@ -69,7 +69,7 @@ func ResourceWorkspace() *schema.Resource {
 }
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
+	conn := meta.(*conns.AWSClient).AMPConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -117,7 +117,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
+	conn := meta.(*conns.AWSClient).AMPConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -170,7 +170,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
+	conn := meta.(*conns.AWSClient).AMPConn()
 
 	if d.HasChange("alias") {
 		input := &prometheusservice.UpdateWorkspaceAliasInput{
@@ -234,7 +234,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
+	conn := meta.(*conns.AWSClient).AMPConn()
 
 	log.Printf("[INFO] Deleting Prometheus Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &prometheusservice.DeleteWorkspaceInput{

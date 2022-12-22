@@ -61,7 +61,7 @@ func DataSourcePublicKey() *schema.Resource {
 }
 
 func dataSourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	keyId := d.Get("key_id").(string)
 
 	input := &kms.GetPublicKeyInput{

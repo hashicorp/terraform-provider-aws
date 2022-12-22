@@ -130,7 +130,7 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 }
 
 func testAccCheckAccessKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_access_key" {
@@ -161,7 +161,7 @@ func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.
 			return fmt.Errorf("No Access Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		accessKey, err := tfiam.FindAccessKey(context.Background(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if err != nil {

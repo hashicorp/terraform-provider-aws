@@ -184,7 +184,7 @@ func resourceClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.
 }
 
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -259,7 +259,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -343,7 +343,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	if d.HasChanges("setting", "configuration", "service_connect_defaults") {
 		input := &ecs.UpdateClusterInput{
@@ -411,7 +411,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	log.Printf("[DEBUG] Deleting ECS cluster %s", d.Id())
 	input := &ecs.DeleteClusterInput{

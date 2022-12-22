@@ -60,7 +60,7 @@ func DataSourceBrokerNodes() *schema.Resource {
 }
 
 func dataSourceBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	clusterARN := d.Get("cluster_arn").(string)
 	input := &kafka.ListNodesInput{

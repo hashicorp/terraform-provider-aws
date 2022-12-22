@@ -108,7 +108,7 @@ func testAccCheckRestAPIPolicyExists(n string, res *apigateway.RestApi) resource
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetRestApiInput{
 			RestApiId: aws.String(rs.Primary.ID),
@@ -139,7 +139,7 @@ func testAccCheckRestAPIPolicyExists(n string, res *apigateway.RestApi) resource
 }
 
 func testAccCheckRestAPIPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_rest_api_policy" {

@@ -85,7 +85,7 @@ func TestAccIAMGroupMembership_paginatedUserList(t *testing.T) {
 }
 
 func testAccCheckGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group_membership" {
@@ -123,7 +123,7 @@ func testAccCheckGroupMembershipExists(n string, g *iam.GetGroupOutput) resource
 			return fmt.Errorf("No User name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		gn := rs.Primary.Attributes["group"]
 
 		resp, err := conn.GetGroup(&iam.GetGroupInput{

@@ -48,7 +48,7 @@ func DataSourceAlias() *schema.Resource {
 }
 
 func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	name := d.Get("name").(string)

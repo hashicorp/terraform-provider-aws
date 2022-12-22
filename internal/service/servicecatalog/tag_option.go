@@ -54,7 +54,7 @@ func ResourceTagOption() *schema.Resource {
 }
 
 func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreateTagOptionInput{
 		Key:   aws.String(d.Get("key").(string)),
@@ -110,7 +110,7 @@ func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTagOptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	output, err := WaitTagOptionReady(conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -137,7 +137,7 @@ func resourceTagOptionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdateTagOptionInput{
 		Id: aws.String(d.Id()),
@@ -180,7 +180,7 @@ func resourceTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTagOptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeleteTagOptionInput{
 		Id: aws.String(d.Id()),

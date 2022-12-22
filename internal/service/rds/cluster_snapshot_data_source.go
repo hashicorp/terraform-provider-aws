@@ -113,7 +113,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 }
 
 func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterIdentifier, clusterIdentifierOk := d.GetOk("db_cluster_identifier")

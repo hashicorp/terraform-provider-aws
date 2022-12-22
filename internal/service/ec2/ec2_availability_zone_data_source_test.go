@@ -181,7 +181,7 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 }
 
 func testAccPreCheckLocalZoneAvailable(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.BuildAttributeFilterList(map[string]string{

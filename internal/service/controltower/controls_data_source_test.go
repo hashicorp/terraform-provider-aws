@@ -37,7 +37,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 func testAccPreCheck(t *testing.T) {
 	// leverage the control tower created "aws-controltower-BaselineCloudTrail" to confirm control tower is deployed
 	var trails []string
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 
 	input := &cloudtrail.ListTrailsInput{}
 	err := conn.ListTrailsPages(input, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {

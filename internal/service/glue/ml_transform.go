@@ -176,7 +176,7 @@ func ResourceMLTransform() *schema.Resource {
 }
 
 func resourceMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -225,7 +225,7 @@ func resourceMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -305,7 +305,7 @@ func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
 		"role_arn", "timeout", "worker_type", "parameters") {
@@ -361,7 +361,7 @@ func resourceMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue ML Trasform: %s", d.Id())
 

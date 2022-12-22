@@ -306,7 +306,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 
 func testAccCheckAnomalySubscriptionExists(n string, anomalySubscription *costexplorer.AnomalySubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -334,7 +334,7 @@ func testAccCheckAnomalySubscriptionExists(n string, anomalySubscription *costex
 }
 
 func testAccCheckAnomalySubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ce_anomaly_subscription" {

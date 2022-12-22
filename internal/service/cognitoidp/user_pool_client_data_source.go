@@ -175,7 +175,7 @@ func DataSourceUserPoolClient() *schema.Resource {
 }
 
 func dataSourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	clientId := d.Get("client_id").(string)
 	d.SetId(clientId)

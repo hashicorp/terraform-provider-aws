@@ -188,7 +188,7 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 }
 
 func testAccCheckDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_timestreamwrite_database" {
@@ -226,7 +226,7 @@ func testAccCheckDatabaseExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn()
 
 		output, err := conn.DescribeDatabase(&timestreamwrite.DescribeDatabaseInput{
 			DatabaseName: aws.String(rs.Primary.ID),
@@ -245,7 +245,7 @@ func testAccCheckDatabaseExists(n string) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn()
 
 	input := &timestreamwrite.ListDatabasesInput{}
 

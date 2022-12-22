@@ -66,7 +66,7 @@ func ResourceRolePolicy() *schema.Resource {
 }
 
 func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(d.Get("role").(string)),
@@ -92,7 +92,7 @@ func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
@@ -160,7 +160,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {

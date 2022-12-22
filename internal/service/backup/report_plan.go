@@ -114,7 +114,7 @@ func ResourceReportPlan() *schema.Resource {
 }
 
 func resourceReportPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -152,7 +152,7 @@ func resourceReportPlanCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -203,7 +203,7 @@ func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &backup.UpdateReportPlanInput{
@@ -238,7 +238,7 @@ func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	log.Printf("[DEBUG] Deleting Backup Report Plan: %s", d.Id())
 	_, err := conn.DeleteReportPlan(&backup.DeleteReportPlanInput{

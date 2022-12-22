@@ -74,7 +74,7 @@ func DataSourceMesh() *schema.Resource {
 }
 
 func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get("name").(string)

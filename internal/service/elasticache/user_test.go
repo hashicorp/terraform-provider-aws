@@ -165,7 +165,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 }
 
 func testAccCheckUserDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_user" {
@@ -206,7 +206,7 @@ func testAccCheckUserExistsWithProvider(n string, v *elasticache.User, providerF
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 		resp, err := tfelasticache.FindUserByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User (%s) not found: %w", rs.Primary.ID, err)

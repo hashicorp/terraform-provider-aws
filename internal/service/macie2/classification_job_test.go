@@ -385,7 +385,7 @@ func testAccCheckClassificationJobExists(resourceName string, macie2Session *mac
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.DescribeClassificationJobInput{JobId: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.DescribeClassificationJob(input)
@@ -405,7 +405,7 @@ func testAccCheckClassificationJobExists(resourceName string, macie2Session *mac
 }
 
 func testAccCheckClassificationJobDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_classification_job" {

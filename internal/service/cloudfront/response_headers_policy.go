@@ -295,7 +295,7 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 }
 
 func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.ResponseHeadersPolicyConfig{
@@ -339,7 +339,7 @@ func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	output, err := FindResponseHeadersPolicyByID(conn, d.Id())
 
@@ -391,7 +391,7 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateResponseHeadersPolicy.html:
@@ -438,7 +438,7 @@ func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceResponseHeadersPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Response Headers Policy: (%s)", d.Id())
 	_, err := conn.DeleteResponseHeadersPolicy(&cloudfront.DeleteResponseHeadersPolicyInput{

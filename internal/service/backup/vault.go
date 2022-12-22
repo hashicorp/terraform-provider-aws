@@ -72,7 +72,7 @@ func ResourceVault() *schema.Resource {
 }
 
 func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -98,7 +98,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -140,7 +140,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -153,7 +153,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	if d.Get("force_destroy").(bool) {
 		input := &backup.ListRecoveryPointsByBackupVaultInput{

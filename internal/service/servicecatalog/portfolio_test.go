@@ -119,7 +119,7 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 
 func testAccCheckPortfolio(pr string, dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -144,7 +144,7 @@ func testAccCheckPortfolio(pr string, dpo *servicecatalog.DescribePortfolioOutpu
 
 func testAccCheckServiceCatlaogPortfolioDisappears(dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		input := servicecatalog.DeletePortfolioInput{}
 		input.Id = dpo.PortfolioDetail.Id
@@ -155,7 +155,7 @@ func testAccCheckServiceCatlaogPortfolioDisappears(dpo *servicecatalog.DescribeP
 }
 
 func testAccCheckServiceCatlaogPortfolioDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_portfolio" {

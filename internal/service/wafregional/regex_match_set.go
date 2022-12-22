@@ -72,7 +72,7 @@ func ResourceRegexMatchSet() *schema.Resource {
 }
 
 func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating WAF Regional Regex Match Set: %s", d.Get("name").(string))
@@ -96,7 +96,7 @@ func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	set, err := FindRegexMatchSetByID(conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
@@ -115,7 +115,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("regex_match_tuple") {
@@ -131,7 +131,7 @@ func resourceRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	err := DeleteRegexMatchSetResource(conn, region, "global", d.Id(), getRegexMatchTuplesFromResourceData(d))

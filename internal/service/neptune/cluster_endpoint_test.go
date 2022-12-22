@@ -150,7 +150,7 @@ func testAccCheckClusterEndpointDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster_endpoint" {
@@ -187,7 +187,7 @@ func testAccCheckClusterEndpointExistsWithProvider(n string, v *neptune.DBCluste
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
 		resp, err := tfneptune.FindEndpointByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("Neptune Cluster Endpoint (%s) not found: %w", rs.Primary.ID, err)

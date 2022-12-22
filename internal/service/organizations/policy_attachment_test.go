@@ -137,7 +137,7 @@ func testAccPolicyAttachment_disappears(t *testing.T) {
 }
 
 func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_policy_attachment" {
@@ -181,7 +181,7 @@ func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Organizations Policy Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
 		targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
 

@@ -83,7 +83,7 @@ func ResourceThingType() *schema.Resource {
 }
 
 func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	params := &iot.CreateThingTypeInput{
@@ -129,7 +129,7 @@ func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -178,7 +178,7 @@ func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingTypeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChange("deprecated") {
 		params := &iot.DeprecateThingTypeInput{
@@ -206,7 +206,7 @@ func resourceThingTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	// In order to delete an IoT Thing Type, you must deprecate it first and wait
 	// at least 5 minutes.

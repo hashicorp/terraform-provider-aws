@@ -263,7 +263,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 }
 
 func testAccCheckParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_memorydb_parameter_group" {
@@ -297,7 +297,7 @@ func testAccCheckParameterGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MemoryDB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
 
 		_, err := tfmemorydb.FindParameterGroupByName(context.Background(), conn, rs.Primary.Attributes["name"])
 

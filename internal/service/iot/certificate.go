@@ -56,7 +56,7 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	_, okcert := d.GetOk("certificate_pem")
 	_, okCA := d.GetOk("ca_pem")
@@ -122,7 +122,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	out, err := conn.DescribeCertificate(&iot.DescribeCertificateInput{
 		CertificateId: aws.String(d.Id()),
@@ -139,7 +139,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChange("active") {
 		status := iot.CertificateStatusInactive
@@ -160,7 +160,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	_, err := conn.UpdateCertificate(&iot.UpdateCertificateInput{
 		CertificateId: aws.String(d.Id()),

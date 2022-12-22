@@ -585,7 +585,7 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -640,7 +640,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -704,7 +704,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDomainInput{
@@ -746,7 +746,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteDomainInput{
 		DomainId: aws.String(d.Id()),

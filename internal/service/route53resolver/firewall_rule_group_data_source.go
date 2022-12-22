@@ -63,7 +63,7 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 }
 
 func dataSourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	id := d.Get("firewall_rule_group_id").(string)
 	ruleGroup, err := FindFirewallRuleGroupByID(ctx, conn, id)

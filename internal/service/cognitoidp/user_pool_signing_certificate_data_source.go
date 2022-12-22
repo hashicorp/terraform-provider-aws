@@ -27,7 +27,7 @@ func DataSourceUserPoolSigningCertificate() *schema.Resource {
 }
 
 func dataSourceUserPoolSigningCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolID := d.Get("user_pool_id").(string)
 	input := &cognitoidentityprovider.GetSigningCertificateInput{

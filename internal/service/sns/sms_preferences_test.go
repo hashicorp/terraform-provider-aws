@@ -104,7 +104,7 @@ func testAccCheckSMSPreferencesDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
 		attrs, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
 

@@ -80,7 +80,7 @@ func ResourceChannel() *schema.Resource {
 }
 
 func resourceChannelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -104,7 +104,7 @@ func resourceChannelCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -138,7 +138,7 @@ func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceChannelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
@@ -163,7 +163,7 @@ func resourceChannelUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 
 	input := &mediapackage.DeleteChannelInput{
 		Id: aws.String(d.Id()),

@@ -301,7 +301,7 @@ func testAccCheckEventSubscriptionExists(n string, v *rds.EventSubscription) res
 			return fmt.Errorf("No RDS Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindEventSubscriptionByID(conn, rs.Primary.ID)
 
@@ -316,7 +316,7 @@ func testAccCheckEventSubscriptionExists(n string, v *rds.EventSubscription) res
 }
 
 func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_event_subscription" {

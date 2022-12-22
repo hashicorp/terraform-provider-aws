@@ -159,7 +159,7 @@ func ResourceWorkgroup() *schema.Resource {
 }
 
 func resourceWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -210,7 +210,7 @@ func resourceWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -268,7 +268,7 @@ func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
@@ -321,7 +321,7 @@ func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(10*time.Minute,
 		func() (interface{}, error) {

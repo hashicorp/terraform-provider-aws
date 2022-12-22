@@ -63,7 +63,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 }
 
 func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
@@ -98,7 +98,7 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 
@@ -129,7 +129,7 @@ func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 

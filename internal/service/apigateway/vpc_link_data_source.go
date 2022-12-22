@@ -49,7 +49,7 @@ func DataSourceVPCLink() *schema.Resource {
 }
 
 func dataSourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &apigateway.GetVpcLinksInput{}

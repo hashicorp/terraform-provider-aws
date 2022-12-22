@@ -185,7 +185,7 @@ func testAccCheckQuickConnectExists(resourceName string, function *connect.Descr
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeQuickConnectInput{
 			QuickConnectId: aws.String(quickConnectID),
@@ -209,7 +209,7 @@ func testAccCheckQuickConnectDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, quickConnectID, err := tfconnect.QuickConnectParseID(rs.Primary.ID)
 

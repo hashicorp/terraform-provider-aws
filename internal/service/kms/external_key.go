@@ -106,7 +106,7 @@ func ResourceExternalKey() *schema.Resource {
 }
 
 func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -190,7 +190,7 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -256,7 +256,7 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
 		// Enable before any attributes are modified.
@@ -316,7 +316,7 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

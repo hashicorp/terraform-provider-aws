@@ -74,7 +74,7 @@ func ResourceLedger() *schema.Resource {
 }
 
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -107,7 +107,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -154,7 +154,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	if d.HasChange("permissions_mode") {
 		input := &qldb.UpdateLedgerPermissionsModeInput{
@@ -196,7 +196,7 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	input := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),

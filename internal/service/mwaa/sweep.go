@@ -27,7 +27,7 @@ func sweepEnvironment(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).MWAAConn
+	conn := client.(*conns.AWSClient).MWAAConn()
 
 	listOutput, err := conn.ListEnvironments(&mwaa.ListEnvironmentsInput{})
 	if err != nil {

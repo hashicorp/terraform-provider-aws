@@ -74,7 +74,7 @@ func ResourceApplication() *schema.Resource {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -105,7 +105,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	if d.HasChange("description") {
 		if err := resourceApplicationDescriptionUpdate(conn, d); err != nil {
@@ -218,7 +218,7 @@ func resourceApplicationAppversionLifecycleUpdate(beanstalkConn *elasticbeanstal
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -281,7 +281,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	_, err := beanstalkConn.DeleteApplication(&elasticbeanstalk.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Id()),
@@ -292,7 +292,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err = resource.Retry(10*time.Second, func() *resource.RetryError {
-		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -304,7 +304,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
 	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Beanstalk application: %s", err)

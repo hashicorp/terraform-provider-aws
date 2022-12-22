@@ -116,7 +116,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 }
 
 func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -164,7 +164,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -228,7 +228,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcedbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -242,7 +242,7 @@ func resourcedbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[DEBUG] Deleting RDS DB Cluster Snapshot: %s", d.Id())
 	_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{

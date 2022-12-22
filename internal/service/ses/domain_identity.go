@@ -42,7 +42,7 @@ func ResourceDomainIdentity() *schema.Resource {
 }
 
 func resourceDomainIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Get("domain").(string)
 
@@ -61,7 +61,7 @@ func resourceDomainIdentityCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDomainIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
@@ -98,7 +98,7 @@ func resourceDomainIdentityRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDomainIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Get("domain").(string)
 

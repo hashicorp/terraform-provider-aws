@@ -44,7 +44,7 @@ func ResourceContainerPolicy() *schema.Resource {
 }
 
 func resourceContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -67,7 +67,7 @@ func resourceContainerPolicyPut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.GetContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
@@ -102,7 +102,7 @@ func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceContainerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.DeleteContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),

@@ -265,7 +265,7 @@ func testAccCheckVPCPeeringConnectionOptionsWithProvider(n, block string, option
 			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPCPeeringConnectionByID(conn, rs.Primary.ID)
 

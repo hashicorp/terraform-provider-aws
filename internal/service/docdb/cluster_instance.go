@@ -171,7 +171,7 @@ func ResourceClusterInstance() *schema.Resource {
 }
 
 func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -252,7 +252,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -346,7 +346,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	requestUpdate := false
 
 	req := &docdb.ModifyDBInstanceInput{
@@ -436,7 +436,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	opts := docdb.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 

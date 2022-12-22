@@ -91,7 +91,7 @@ func ResourceMaintenanceWindow() *schema.Resource {
 }
 
 func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -150,7 +150,7 @@ func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	// Replace must be set otherwise its not possible to remove optional attributes, e.g.
 	// ValidationException: 1 validation error detected: Value '' at 'startDate' failed to satisfy constraint: Member must have length greater than or equal to 1
@@ -202,7 +202,7 @@ func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -253,7 +253,7 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceMaintenanceWindowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Deleting SSM Maintenance Window: %s", d.Id())
 

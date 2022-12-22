@@ -79,7 +79,7 @@ func ResourceAutoScalingConfigurationVersion() *schema.Resource {
 }
 
 func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -125,7 +125,7 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -191,7 +191,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -205,7 +205,7 @@ func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	input := &apprunner.DeleteAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(d.Id()),

@@ -62,7 +62,7 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 }
 
 func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -102,7 +102,7 @@ func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -159,7 +159,7 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	// Updates to subnet groups are only valid when sending SubnetIds even if there are no
 	// changes to SubnetIds.
@@ -192,7 +192,7 @@ func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.DeleteReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),

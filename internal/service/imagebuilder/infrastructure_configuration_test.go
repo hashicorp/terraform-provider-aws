@@ -559,7 +559,7 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 }
 
 func testAccCheckInfrastructureConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_infrastructure_configuration" {
@@ -595,7 +595,7 @@ func testAccCheckInfrastructureConfigurationExists(resourceName string) resource
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 		input := &imagebuilder.GetInfrastructureConfigurationInput{
 			InfrastructureConfigurationArn: aws.String(rs.Primary.ID),

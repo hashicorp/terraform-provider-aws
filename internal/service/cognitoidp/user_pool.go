@@ -611,7 +611,7 @@ func ResourceUserPool() *schema.Resource {
 }
 
 func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -842,7 +842,7 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -990,7 +990,7 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1260,7 +1260,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserPoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.DeleteUserPoolInput{
 		UserPoolId: aws.String(d.Id()),

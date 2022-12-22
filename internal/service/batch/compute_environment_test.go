@@ -1406,7 +1406,7 @@ func TestAccBatchComputeEnvironment_createSpotWithoutIAMFleetRole(t *testing.T) 
 }
 
 func testAccCheckComputeEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_compute_environment" {
@@ -1439,7 +1439,7 @@ func testAccCheckComputeEnvironmentExists(n string, v *batch.ComputeEnvironmentD
 			return fmt.Errorf("No Batch Compute Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 
 		computeEnvironment, err := tfbatch.FindComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
@@ -1454,7 +1454,7 @@ func testAccCheckComputeEnvironmentExists(n string, v *batch.ComputeEnvironmentD
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 

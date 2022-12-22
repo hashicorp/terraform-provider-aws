@@ -109,7 +109,7 @@ func ResourceReportGroup() *schema.Resource {
 }
 
 func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	createOpts := &codebuild.CreateReportGroupInput{
@@ -130,7 +130,7 @@ func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -182,7 +182,7 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -207,7 +207,7 @@ func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	deleteOpts := &codebuild.DeleteReportGroupInput{
 		Arn:           aws.String(d.Id()),

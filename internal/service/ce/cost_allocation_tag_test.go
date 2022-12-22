@@ -70,7 +70,7 @@ func testAccCheckCostAllocationTagExists(resourceName string, output *costexplor
 		}
 
 		ctx := context.Background()
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
 		costAllocTag, err := tfce.FindCostAllocationTagByKey(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

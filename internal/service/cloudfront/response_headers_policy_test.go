@@ -303,7 +303,7 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckResponseHeadersPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_response_headers_policy" {
@@ -337,7 +337,7 @@ func testAccCheckResponseHeadersPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No CloudFront Response Headers Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		_, err := tfcloudfront.FindResponseHeadersPolicyByID(conn, rs.Primary.ID)
 

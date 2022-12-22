@@ -144,7 +144,7 @@ func ResourceTopicSubscription() *schema.Resource {
 }
 
 func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
@@ -198,7 +198,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
 		return FindSubscriptionAttributesByARN(ctx, conn, d.Id())
@@ -220,7 +220,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
@@ -238,7 +238,7 @@ func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	log.Printf("[DEBUG] Deleting SNS Topic Subscription: %s", d.Id())
 	_, err := conn.UnsubscribeWithContext(ctx, &sns.UnsubscribeInput{

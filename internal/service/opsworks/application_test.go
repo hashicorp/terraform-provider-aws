@@ -103,7 +103,7 @@ func testAccCheckApplicationExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 		params := &opsworks.DescribeAppsInput{
 			AppIds: []*string{&rs.Primary.ID},
@@ -234,7 +234,7 @@ func testAccCheckUpdateAppAttributes(
 }
 
 func testAccCheckApplicationDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_application" {

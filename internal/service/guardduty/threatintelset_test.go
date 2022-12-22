@@ -104,7 +104,7 @@ func testAccThreatintelset_tags(t *testing.T) {
 }
 
 func testAccCheckThreatintelsetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_threatintelset" {
@@ -155,7 +155,7 @@ func testAccCheckThreatintelsetExists(name string) resource.TestCheckFunc {
 			ThreatIntelSetId: aws.String(threatIntelSetId),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 		_, err = conn.GetThreatIntelSet(input)
 		return err
 	}

@@ -184,7 +184,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 }
 
 func testAccCheckLocationEFSDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_efs" {
@@ -216,7 +216,7 @@ func testAccCheckLocationEFSExists(resourceName string, locationEfs *datasync.De
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 		input := &datasync.DescribeLocationEfsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}

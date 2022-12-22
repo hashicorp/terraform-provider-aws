@@ -124,7 +124,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 }
 
 func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -165,7 +165,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -221,7 +221,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -254,7 +254,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 

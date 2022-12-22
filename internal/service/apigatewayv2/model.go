@@ -68,7 +68,7 @@ func ResourceModel() *schema.Resource {
 }
 
 func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
@@ -92,7 +92,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetModel(&apigatewayv2.GetModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -116,7 +116,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.UpdateModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -145,7 +145,7 @@ func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 model (%s)", d.Id())
 	_, err := conn.DeleteModel(&apigatewayv2.DeleteModelInput{

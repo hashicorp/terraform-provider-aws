@@ -48,7 +48,7 @@ func DataSourceInstanceProfile() *schema.Resource {
 }
 
 func dataSourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	name := d.Get("name").(string)
 

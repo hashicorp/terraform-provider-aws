@@ -72,7 +72,7 @@ func ResourceSecurityProfile() *schema.Resource {
 }
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -113,7 +113,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -175,7 +175,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -213,7 +213,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 

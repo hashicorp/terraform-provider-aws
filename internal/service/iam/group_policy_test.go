@@ -169,7 +169,7 @@ func TestAccIAMGroupPolicy_generatedName(t *testing.T) {
 }
 
 func testAccCheckGroupPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group_policy" {
@@ -205,7 +205,7 @@ func testAccCheckGroupPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckGroupPolicyDisappears(out *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		params := &iam.DeleteGroupPolicyInput{
 			PolicyName: out.PolicyName,
@@ -236,7 +236,7 @@ func testAccCheckGroupPolicyExists(
 			return fmt.Errorf("Not Found: %s", iamGroupPolicyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		group, name, err := tfiam.GroupPolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err

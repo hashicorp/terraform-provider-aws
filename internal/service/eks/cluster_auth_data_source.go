@@ -29,7 +29,7 @@ func DataSourceClusterAuth() *schema.Resource {
 }
 
 func dataSourceClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).STSConn
+	conn := meta.(*conns.AWSClient).STSConn()
 	name := d.Get("name").(string)
 	generator, err := NewGenerator(false, false)
 	if err != nil {

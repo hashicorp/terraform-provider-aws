@@ -300,7 +300,7 @@ func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 }
 
 func testAccCheckAccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_access_point" {
@@ -345,7 +345,7 @@ func testAccCheckAccessPointExists(n string, v *s3control.GetAccessPointOutput) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 		output, err := tfs3control.FindAccessPointByAccountIDAndName(conn, accountID, name)
 
@@ -376,7 +376,7 @@ func testAccCheckAccessPointHasPolicy(n string, fn func() string) resource.TestC
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
 

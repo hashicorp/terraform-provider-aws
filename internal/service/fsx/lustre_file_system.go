@@ -264,7 +264,7 @@ func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.Re
 }
 
 func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -399,7 +399,7 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -466,7 +466,7 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -554,7 +554,7 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),

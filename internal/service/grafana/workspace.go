@@ -145,7 +145,7 @@ func ResourceWorkspace() *schema.Resource {
 }
 
 func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -210,7 +210,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -269,7 +269,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
@@ -339,7 +339,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspace(&managedgrafana.DeleteWorkspaceInput{

@@ -53,7 +53,7 @@ func ResourceDataSet() *schema.Resource {
 }
 
 func resourceDataSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -78,7 +78,7 @@ func resourceDataSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDataSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -113,7 +113,7 @@ func resourceDataSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDataSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateDataSetInput{
@@ -147,7 +147,7 @@ func resourceDataSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDataSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 
 	input := &dataexchange.DeleteDataSetInput{
 		DataSetId: aws.String(d.Id()),

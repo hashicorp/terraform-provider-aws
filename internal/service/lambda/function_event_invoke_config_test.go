@@ -492,7 +492,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_latest(t *testing.T) {
 }
 
 func testAccCheckFunctionEventInvokeConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function_event_invoke_config" {
@@ -533,7 +533,7 @@ func testAccCheckFunctionEventInvokeConfigDestroy(s *terraform.State) error {
 
 func testAccCheckFunctionDisappears(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		input := &lambda.DeleteFunctionInput{
 			FunctionName: function.Configuration.FunctionName,
@@ -556,7 +556,7 @@ func testAccCheckFunctionEventInvokeDisappearsConfig(resourceName string) resour
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseID(rs.Primary.ID)
 
@@ -589,7 +589,7 @@ func testAccCheckFunctionEventInvokeExistsConfig(resourceName string) resource.T
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseID(rs.Primary.ID)
 

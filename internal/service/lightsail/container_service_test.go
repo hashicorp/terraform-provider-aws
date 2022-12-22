@@ -318,7 +318,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 }
 
 func testAccCheckContainerServiceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	for _, r := range s.RootModule().Resources {
 		if r.Type != "aws_lightsail_container_service" {
@@ -350,7 +350,7 @@ func testAccCheckContainerServiceExists(resourceName string) resource.TestCheckF
 			return fmt.Errorf("no Lightsail Container Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindContainerServiceByName(context.Background(), conn, rs.Primary.ID)
 

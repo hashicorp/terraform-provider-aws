@@ -122,7 +122,7 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 }
 
 func testAccCheckIdentityPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_identity_policy" {
@@ -164,7 +164,7 @@ func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("SES Identity Policy ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {

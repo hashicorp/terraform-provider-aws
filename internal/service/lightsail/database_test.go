@@ -640,7 +640,7 @@ func TestAccLightsailDatabase_disappears(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Database
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := conn.DeleteRelationalDatabase(&lightsail.DeleteRelationalDatabaseInput{
 			RelationalDatabaseName: aws.String(rName),
@@ -689,7 +689,7 @@ func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) res
 			return errors.New("No Lightsail Database ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		params := lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: aws.String(rs.Primary.ID),
@@ -710,7 +710,7 @@ func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) res
 }
 
 func testAccCheckDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_database" {
@@ -740,7 +740,7 @@ func testAccCheckDatabaseDestroy(s *terraform.State) error {
 }
 
 func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_database" {

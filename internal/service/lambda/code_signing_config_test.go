@@ -198,7 +198,7 @@ func testAccCheckCodeSigningExistsConfig(n string, mapping *lambda.GetCodeSignin
 			return fmt.Errorf("Code Signing Config ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		params := &lambda.GetCodeSigningConfigInput{
 			CodeSigningConfigArn: aws.String(rs.Primary.ID),
@@ -216,7 +216,7 @@ func testAccCheckCodeSigningExistsConfig(n string, mapping *lambda.GetCodeSignin
 }
 
 func testAccCheckCodeSigningConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_code_signing_config" {

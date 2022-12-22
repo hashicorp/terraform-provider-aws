@@ -72,7 +72,7 @@ func ResourceAlternateContact() *schema.Resource {
 }
 
 func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn
+	conn := meta.(*conns.AWSClient).AccountConn()
 
 	contactType := d.Get("alternate_contact_type").(string)
 	input := &account.PutAlternateContactInput{
@@ -106,7 +106,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn
+	conn := meta.(*conns.AWSClient).AccountConn()
 
 	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
 
@@ -137,7 +137,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn
+	conn := meta.(*conns.AWSClient).AccountConn()
 
 	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
 
@@ -177,7 +177,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn
+	conn := meta.(*conns.AWSClient).AccountConn()
 
 	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
 

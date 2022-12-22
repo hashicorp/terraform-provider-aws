@@ -77,7 +77,7 @@ func ResourceOrganizationalUnit() *schema.Resource {
 }
 
 func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -118,7 +118,7 @@ func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -202,7 +202,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	if d.HasChange("name") {
 		updateOpts := &organizations.UpdateOrganizationalUnitInput{
@@ -228,7 +228,7 @@ func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceOrganizationalUnitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),

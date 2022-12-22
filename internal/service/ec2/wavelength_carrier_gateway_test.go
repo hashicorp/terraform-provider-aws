@@ -115,7 +115,7 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 }
 
 func testAccCheckCarrierGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_carrier_gateway" {
@@ -149,7 +149,7 @@ func testAccCheckCarrierGatewayExists(n string, v *ec2.CarrierGateway) resource.
 			return fmt.Errorf("No EC2 Carrier Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindCarrierGatewayByID(conn, rs.Primary.ID)
 
@@ -164,7 +164,7 @@ func testAccCheckCarrierGatewayExists(n string, v *ec2.CarrierGateway) resource.
 }
 
 func testAccPreCheckWavelengthZoneAvailable(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.BuildAttributeFilterList(map[string]string{

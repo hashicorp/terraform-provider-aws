@@ -99,7 +99,7 @@ func ResourceRoute() *schema.Resource {
 }
 
 func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.CreateRouteInput{
 		ApiId:             aws.String(d.Get("api_id").(string)),
@@ -144,7 +144,7 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -183,7 +183,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	var requestParameters map[string]*apigatewayv2.ParameterConstraints
 
@@ -271,7 +271,7 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route (%s)", d.Id())
 	_, err := conn.DeleteRoute(&apigatewayv2.DeleteRouteInput{
@@ -299,7 +299,7 @@ func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.Re
 	apiId := parts[0]
 	routeId := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(apiId),

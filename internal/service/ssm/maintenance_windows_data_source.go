@@ -42,7 +42,7 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 }
 
 func dataMaintenanceWindowsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 

@@ -30,7 +30,7 @@ func DataSourceSecrets() *schema.Resource {
 }
 
 func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.ListSecretsInput{}
 

@@ -488,7 +488,7 @@ func ResourceGatewayRoute() *schema.Resource {
 }
 
 func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -516,7 +516,7 @@ func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -607,7 +607,7 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
@@ -641,7 +641,7 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh gateway route (%s)", d.Id())
 	_, err := conn.DeleteGatewayRoute(&appmesh.DeleteGatewayRouteInput{
@@ -672,7 +672,7 @@ func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	name := parts[2]
 	log.Printf("[DEBUG] Importing App Mesh gateway route %s from mesh %s/virtual gateway %s ", name, mesh, vgName)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	gatewayRoute, err := FindGatewayRoute(conn, mesh, vgName, name, "")
 

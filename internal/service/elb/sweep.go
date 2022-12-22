@@ -25,7 +25,7 @@ func sweepLoadBalancers(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ELBConn
+	conn := client.(*conns.AWSClient).ELBConn()
 
 	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, lastPage bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
@@ -43,7 +43,7 @@ func sweepLoadBalancers(region string) error {
 				log.Printf("[ERROR] Failed to delete ELB %s: %s", *lb.LoadBalancerName, err)
 				continue
 			}
-			err = CleanupNetworkInterfaces(client.(*conns.AWSClient).EC2Conn, *lb.LoadBalancerName)
+			err = CleanupNetworkInterfaces(client.(*conns.AWSClient).EC2Conn(), *lb.LoadBalancerName)
 			if err != nil {
 				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
 			}

@@ -133,7 +133,7 @@ func ResourceQuickConnect() *schema.Resource {
 }
 
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -173,7 +173,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -227,7 +227,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -284,7 +284,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 

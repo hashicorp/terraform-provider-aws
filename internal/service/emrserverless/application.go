@@ -199,7 +199,7 @@ func ResourceApplication() *schema.Resource {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRServerlessConn
+	conn := meta.(*conns.AWSClient).EMRServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -256,7 +256,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRServerlessConn
+	conn := meta.(*conns.AWSClient).EMRServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -313,7 +313,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRServerlessConn
+	conn := meta.(*conns.AWSClient).EMRServerlessConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emrserverless.UpdateApplicationInput{
@@ -365,7 +365,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRServerlessConn
+	conn := meta.(*conns.AWSClient).EMRServerlessConn()
 
 	log.Printf("[INFO] Deleting EMR Serverless Application: %s", d.Id())
 	_, err := conn.DeleteApplication(&emrserverless.DeleteApplicationInput{

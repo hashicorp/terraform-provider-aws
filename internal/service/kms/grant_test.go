@@ -231,7 +231,7 @@ func TestAccKMSGrant_disappears(t *testing.T) {
 }
 
 func testAccCheckGrantDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_grant" {
@@ -263,7 +263,7 @@ func testAccCheckGrantDisappears(name string) resource.TestCheckFunc {
 			return fmt.Errorf("not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 		revokeInput := kms.RevokeGrantInput{
 			GrantId: aws.String(rs.Primary.Attributes["grant_id"]),

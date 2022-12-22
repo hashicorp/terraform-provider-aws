@@ -117,7 +117,7 @@ func testAccCheckResourceServerExists(n string, resourceServer *cognitoidentityp
 			return errors.New("No Cognito Resource Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
 		if err != nil {
@@ -144,7 +144,7 @@ func testAccCheckResourceServerExists(n string, resourceServer *cognitoidentityp
 }
 
 func testAccCheckResourceServerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_resource_server" {

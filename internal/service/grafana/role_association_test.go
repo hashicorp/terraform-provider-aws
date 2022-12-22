@@ -289,7 +289,7 @@ func testAccCheckRoleAssociationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
 		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
 
@@ -298,7 +298,7 @@ func testAccCheckRoleAssociationExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckRoleAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_grafana_role_association" {

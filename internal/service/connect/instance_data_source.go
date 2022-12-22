@@ -87,7 +87,7 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	var matchedInstance *connect.Instance
 

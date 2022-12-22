@@ -63,7 +63,7 @@ func ResourceTapePool() *schema.Resource {
 }
 
 func resourceTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -87,7 +87,7 @@ func resourceTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTapePoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -100,7 +100,7 @@ func resourceTapePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -149,7 +149,7 @@ func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTapePoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.DeleteTapePoolInput{
 		PoolARN: aws.String(d.Id()),

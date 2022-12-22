@@ -50,7 +50,7 @@ func ResourceBasePathMapping() *schema.Resource {
 }
 
 func resourceBasePathMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	input := &apigateway.CreateBasePathMappingInput{
 		RestApiId:  aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -89,7 +89,7 @@ func resourceBasePathMappingCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -147,7 +147,7 @@ func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
@@ -183,7 +183,7 @@ func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
