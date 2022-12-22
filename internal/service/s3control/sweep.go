@@ -60,7 +60,7 @@ func sweepAccessPoints(region string) error {
 		}
 
 		for _, v := range page.AccessPointList {
-			r := ResourceAccessPoint()
+			r := resourceAccessPoint()
 			d := r.Data(nil)
 			if id, err := AccessPointCreateResourceID(aws.StringValue(v.AccessPointArn)); err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, err)

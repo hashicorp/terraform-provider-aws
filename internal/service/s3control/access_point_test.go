@@ -1,6 +1,7 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -313,7 +314,7 @@ func testAccCheckAccessPointDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfs3control.FindAccessPointByAccountIDAndName(conn, accountID, name)
+		_, err = tfs3control.FindAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -347,7 +348,7 @@ func testAccCheckAccessPointExists(n string, v *s3control.GetAccessPointOutput) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		output, err := tfs3control.FindAccessPointByAccountIDAndName(conn, accountID, name)
+		output, err := tfs3control.FindAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err
@@ -378,7 +379,7 @@ func testAccCheckAccessPointHasPolicy(n string, fn func() string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err
