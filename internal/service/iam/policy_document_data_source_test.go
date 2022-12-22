@@ -524,7 +524,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       "Resource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": "arn:%[1]s:s3:::foo",
@@ -542,7 +541,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
@@ -554,13 +552,11 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Deny",
       "NotAction": "s3:*",
       "NotResource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
       "Principal": {
@@ -568,7 +564,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "firehose:*",
       "Principal": "*"
@@ -604,7 +599,6 @@ const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Deny",
       "Action": "elasticfilesystem:*",
       "Resource": "*",
@@ -735,7 +729,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       "Resource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": "arn:%[1]s:s3:::foo",
@@ -752,7 +745,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
@@ -767,13 +759,11 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Deny",
       "NotAction": "s3:*",
       "NotResource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
       "Principal": {
@@ -781,7 +771,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "firehose:*",
       "Principal": "*"
