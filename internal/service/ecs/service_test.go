@@ -2610,8 +2610,8 @@ resource "aws_ecs_service" "test" {
   desired_count   = 1
 
   alarms {
-    enable       = true
-    rollback     = true
+    enable   = true
+    rollback = true
     alarm_names  = [
       aws_cloudwatch_metric_alarm.test.alarm_name
     ]
