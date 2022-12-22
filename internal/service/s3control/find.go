@@ -8,24 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findPublicAccessBlockConfiguration(conn *s3control.S3Control, accountID string) (*s3control.PublicAccessBlockConfiguration, error) {
-	input := &s3control.GetPublicAccessBlockInput{
-		AccountId: aws.String(accountID),
-	}
-
-	output, err := conn.GetPublicAccessBlock(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.PublicAccessBlockConfiguration, nil
-}
-
 func FindMultiRegionAccessPointByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (*s3control.MultiRegionAccessPointReport, error) {
 	input := &s3control.GetMultiRegionAccessPointInput{
 		AccountId: aws.String(accountID),

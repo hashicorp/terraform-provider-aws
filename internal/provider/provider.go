@@ -870,7 +870,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
 			"aws_s3_bucket_policy":  s3.DataSourceBucketPolicy(),
 
-			"aws_s3_account_public_access_block":      s3control.DataSourceAccountPublicAccessBlock(),
 			"aws_s3control_multi_region_access_point": s3control.DataSourceMultiRegionAccessPoint(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
@@ -2006,7 +2005,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_s3_object_copy":                                 s3.ResourceObjectCopy(),
 			"aws_s3_bucket_object":                               s3.ResourceBucketObject(), // DEPRECATED: use aws_s3_object instead
 
-			"aws_s3_account_public_access_block":              s3control.ResourceAccountPublicAccessBlock(),
 			"aws_s3control_bucket":                            s3control.ResourceBucket(),
 			"aws_s3control_bucket_lifecycle_configuration":    s3control.ResourceBucketLifecycleConfiguration(),
 			"aws_s3control_bucket_policy":                     s3control.ResourceBucketPolicy(),

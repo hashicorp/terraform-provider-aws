@@ -326,6 +326,7 @@ func testAccCheckAccessPointDestroy(s *terraform.State) error {
 
 		return fmt.Errorf("S3 Access Point %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 

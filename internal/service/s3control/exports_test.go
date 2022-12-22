@@ -4,5 +4,6 @@ package s3control
 var (
 	ResourceAccessPoint              = resourceAccessPoint
 	ResourceAccessPointPolicy        = resourceAccessPointPolicy
+	ResourceAccountPublicAccessBlock = resourceAccountPublicAccessBlock
 	ResourceStorageLensConfiguration = resourceStorageLensConfiguration
 )
