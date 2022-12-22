@@ -76,7 +76,7 @@ resource "aws_ecs_service" "bar" {
 
 ```terraform
 resource "aws_ecs_service" "example" {
-  name = "example"
+  name    = "example"
   cluster = aws_ecs_cluster.example.id
 
   alarms {
