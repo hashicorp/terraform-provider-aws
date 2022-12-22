@@ -166,6 +166,27 @@ resource "aws_cloudwatch_metric_alarm" "nlb_healthyhosts" {
 }
 ```
 
+## Example with AWS Metric Insights Alarm
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "this" {
+  alarm_name          = "alarmname"
+  alarm_description   = "Alarm if any of the EC2 instances go above 50% in CPU utilization."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 50
+  ok_actions          = [aws_sns_topic.sns.arn]
+  alarm_actions       = [aws_sns_topic.sns.arn]
+  metric_query {
+    id          = "m1"
+    return_data = true
+    period      = 60
+    expression  = "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId)"
+  }
+}
+```
+
 ~> **NOTE:**  You cannot create a metric alarm consisting of both `statistic` and `extended_statistic` parameters.
 You must choose one or the other
 
@@ -215,9 +236,10 @@ The following values are supported: `ignore`, and `evaluate`.
 
 * `id` - (Required) A short name used to tie this object to the results in the response. If you are performing math expressions on this set of data, this name represents that data and can serve as a variable in the mathematical expression. The valid characters are letters, numbers, and underscore. The first character must be a lowercase letter.
 * `account_id` - (Optional) The ID of the account where the metrics are located, if this is a cross-account alarm.
-* `expression` - (Optional) The math expression to be performed on the returned data, if this object is performing a math expression. This expression can use the id of the other metrics to refer to those metrics, and can also use the id of other expressions to use the result of those expressions. For more information about metric math expressions, see Metric Math Syntax and Functions in the [Amazon CloudWatch User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax).
+* `expression` - (Optional) The math expression or Metric Insights query to be performed on the returned data, if this object is performing a math expression. This expression can use the id of the other metrics to refer to those metrics, and can also use the id of other expressions to use the result of those expressions. For more information about metric math expressions, see Metric Math Syntax and Functions in the [Amazon CloudWatch User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax).
 * `label` - (Optional) A human-readable label for this metric or expression. This is especially useful if this is an expression, so that you know what the value represents.
 * `return_data` (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
+* `period` (Optional) The period in seconds over which the specified AWS Metric Insights query in `expression` is applied. Should only be used when `expression` is AWS Metric Insights query. For metrics with regular resolution, the value must be a multiple of 60. For high-resolution metrics that are collected at intervals of less than one minute, the period can be 1, 5, 10, 30, 60, or any multiple of 60.
 * `metric` (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.

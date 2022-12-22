@@ -460,6 +460,13 @@ func TestAccCloudWatchMetricAlarm_expression(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccMetricAlarmConfig_metricsInsightsQueryExpression(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.0.period", "300")),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -998,6 +1005,27 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   }
 }
 `, rName)
+}
+
+func testAccMetricAlarmConfig_metricsInsightsQueryExpression(rName string) string {
+	expression := "SELECT AVG(CPUUtilization) FROM SCHEMA(\\\"AWS/EC2\\\", InstanceId)"
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = "%s"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  metric_query {
+    id          = "e1"
+    expression  = "%s"
+    period      = 300
+    return_data = true
+  }
+}
+`, rName, expression)
 }
 
 // EC2 Automate requires a valid EC2 instance

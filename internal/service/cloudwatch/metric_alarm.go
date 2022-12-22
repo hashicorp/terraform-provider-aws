@@ -82,6 +82,13 @@ func ResourceMetricAlarm() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
+						"period": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.IntDivisibleBy(60),
+								validation.IntInSlice([]int{10, 30})),
+						},
 						"metric": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
@@ -598,6 +605,7 @@ func flattenMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuery) []map[stri
 			"id":          aws.StringValue(mq.Id),
 			"label":       aws.StringValue(mq.Label),
 			"return_data": aws.BoolValue(mq.ReturnData),
+			"period":      int(aws.Int64Value(mq.Period)),
 		}
 		if mq.MetricStat != nil {
 			metric := flattenMetricAlarmMetricsMetricStat(mq.MetricStat)
@@ -637,6 +645,9 @@ func expandMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
 		}
 		if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
 			metricQuery.Expression = aws.String(v.(string))
+		}
+		if v, ok := metricQueryResource["period"]; ok && v.(int) > 0 {
+			metricQuery.Period = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := metricQueryResource["label"]; ok && v.(string) != "" {
 			metricQuery.Label = aws.String(v.(string))
