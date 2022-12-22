@@ -81,6 +81,32 @@ func resourceStorageLensConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"advanced_cost_optimization_metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"advanced_data_protection_metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
 									"bucket_level": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -88,6 +114,45 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"activity_metrics": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"enabled": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"advanced_cost_optimization_metrics": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"enabled": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"advanced_data_protection_metrics": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"enabled": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"detailed_status_code_metrics": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -143,6 +208,19 @@ func resourceStorageLensConfiguration() *schema.Resource {
 															},
 														},
 													},
+												},
+											},
+										},
+									},
+									"detailed_status_code_metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
 												},
 											},
 										},
@@ -634,10 +712,22 @@ func expandAccountLevel(tfMap map[string]interface{}) *types.AccountLevel {
 		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["advanced_cost_optimization_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedCostOptimizationMetrics = expandAdvancedCostOptimizationMetrics(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["advanced_data_protection_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["bucket_level"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BucketLevel = expandBucketLevel(v[0].(map[string]interface{}))
 	} else {
 		apiObject.BucketLevel = &types.BucketLevel{}
+	}
+
+	if v, ok := tfMap["detailed_status_code_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -668,8 +758,62 @@ func expandBucketLevel(tfMap map[string]interface{}) *types.BucketLevel {
 		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["advanced_cost_optimization_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedCostOptimizationMetrics = expandAdvancedCostOptimizationMetrics(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["advanced_data_protection_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["detailed_status_code_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["prefix_level"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.PrefixLevel = expandPrefixLevel(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandAdvancedCostOptimizationMetrics(tfMap map[string]interface{}) *types.AdvancedCostOptimizationMetrics {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AdvancedCostOptimizationMetrics{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.IsEnabled = v
+	}
+
+	return apiObject
+}
+
+func expandAdvancedDataProtectionMetrics(tfMap map[string]interface{}) *types.AdvancedDataProtectionMetrics {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AdvancedDataProtectionMetrics{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.IsEnabled = v
+	}
+
+	return apiObject
+}
+
+func expandDetailedStatusCodesMetrics(tfMap map[string]interface{}) *types.DetailedStatusCodesMetrics {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DetailedStatusCodesMetrics{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.IsEnabled = v
 	}
 
 	return apiObject
@@ -920,8 +1064,20 @@ func flattenAccountLevel(apiObject *types.AccountLevel) map[string]interface{} {
 		tfMap["activity_metrics"] = []interface{}{flattenActivityMetrics(v)}
 	}
 
+	if v := apiObject.AdvancedCostOptimizationMetrics; v != nil {
+		tfMap["advanced_cost_optimization_metrics"] = []interface{}{flattenAdvancedCostOptimizationMetrics(v)}
+	}
+
+	if v := apiObject.AdvancedDataProtectionMetrics; v != nil {
+		tfMap["advanced_data_protection_metrics"] = []interface{}{flattenAdvancedDataProtectionMetrics(v)}
+	}
+
 	if v := apiObject.BucketLevel; v != nil {
 		tfMap["bucket_level"] = []interface{}{flattenBucketLevel(v)}
+	}
+
+	if v := apiObject.DetailedStatusCodesMetrics; v != nil {
+		tfMap["detailed_status_code_metrics"] = []interface{}{flattenDetailedStatusCodesMetrics(v)}
 	}
 
 	return tfMap
@@ -950,9 +1106,57 @@ func flattenBucketLevel(apiObject *types.BucketLevel) map[string]interface{} {
 		tfMap["activity_metrics"] = []interface{}{flattenActivityMetrics(v)}
 	}
 
+	if v := apiObject.AdvancedCostOptimizationMetrics; v != nil {
+		tfMap["advanced_cost_optimization_metrics"] = []interface{}{flattenAdvancedCostOptimizationMetrics(v)}
+	}
+
+	if v := apiObject.AdvancedDataProtectionMetrics; v != nil {
+		tfMap["advanced_data_protection_metrics"] = []interface{}{flattenAdvancedDataProtectionMetrics(v)}
+	}
+
+	if v := apiObject.DetailedStatusCodesMetrics; v != nil {
+		tfMap["detailed_status_code_metrics"] = []interface{}{flattenDetailedStatusCodesMetrics(v)}
+	}
+
 	if v := apiObject.PrefixLevel; v != nil {
 		tfMap["prefix_level"] = []interface{}{flattenPrefixLevel(v)}
 	}
+
+	return tfMap
+}
+
+func flattenAdvancedCostOptimizationMetrics(apiObject *types.AdvancedCostOptimizationMetrics) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["enabled"] = apiObject.IsEnabled
+
+	return tfMap
+}
+
+func flattenAdvancedDataProtectionMetrics(apiObject *types.AdvancedDataProtectionMetrics) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["enabled"] = apiObject.IsEnabled
+
+	return tfMap
+}
+
+func flattenDetailedStatusCodesMetrics(apiObject *types.DetailedStatusCodesMetrics) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["enabled"] = apiObject.IsEnabled
 
 	return tfMap
 }
