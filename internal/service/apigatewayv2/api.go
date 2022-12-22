@@ -405,7 +405,7 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
 	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
 	})
