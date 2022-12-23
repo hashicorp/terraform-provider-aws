@@ -12,7 +12,15 @@ Provides an Amazon Managed Prometheus workspace data source.
 
 ## Example Usage
 
-### Basic configuration
+### By Workspace Alias
+
+```terraform
+data "aws_prometheus_workspace" "example" {
+  alias = "example"
+}
+```
+
+### By Workspace ID
 
 ```terraform
 data "aws_prometheus_workspace" "example" {
@@ -20,11 +28,11 @@ data "aws_prometheus_workspace" "example" {
 }
 ```
 
+
 ## Argument Reference
 
-The following arguments are required:
-
-* `workspace_id` - (Required) Prometheus workspace ID.
+* `alias` - (Optional) Prometheus workspace alias. Conflicts with `workspace_id`.
+* `workspace_id` - (Optional) Prometheus workspace ID. Conflicts with `alias`.
 
 ## Attributes Reference
 
@@ -33,6 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the Prometheus workspace.
 * `created_date` - Creation date of the Prometheus workspace.
 * `prometheus_endpoint` - Endpoint of the Prometheus workspace.
-* `alias` - Prometheus workspace alias.
 * `status` - Status of the Prometheus workspace.
 * `tags` - Tags assigned to the resource.
