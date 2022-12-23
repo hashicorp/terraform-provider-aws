@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -52,6 +53,16 @@ func ResourceWorkspace() *schema.Resource {
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(managedgrafana.AuthenticationProviderTypes_Values(), false),
+				},
+			},
+			"configuration": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
 				},
 			},
 			"data_sources": {
@@ -189,6 +200,10 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkspaceRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("configuration"); ok {
+		input.Configuration = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("vpc_configuration"); ok {
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
@@ -265,13 +280,25 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
+	input := &managedgrafana.DescribeWorkspaceConfigurationInput{
+		WorkspaceId: aws.String(d.Id()),
+	}
+
+	output, err := conn.DescribeWorkspaceConfiguration(input)
+
+	if err != nil {
+		return fmt.Errorf("error describing Grafana Workspace Configuration: %w", err)
+	}
+
+	d.Set("configuration", output.Configuration)
+
 	return nil
 }
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("configuration", "tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
 			WorkspaceId: aws.String(d.Id()),
 		}
@@ -316,6 +343,10 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.StackSetName = aws.String(d.Get("stack_set_name").(string))
 		}
 
+		if d.HasChange("vpc_configuration") {
+			input.VpcConfiguration = expandVPCConfiguration(d.Get("vpc_configuration").([]interface{}))
+		}
+
 		_, err := conn.UpdateWorkspace(input)
 
 		if err != nil {
@@ -324,6 +355,19 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Grafana Workspace (%s) update: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("configuration") {
+		input := &managedgrafana.UpdateWorkspaceConfigurationInput{
+			WorkspaceId:   aws.String(d.Id()),
+			Configuration: aws.String(d.Get("configuration").(string)),
+		}
+
+		_, err := conn.UpdateWorkspaceConfiguration(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Grafana Workspace Configuration (%s): %w", d.Id(), err)
 		}
 	}
 
