@@ -208,9 +208,8 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(fsx.StorageVirtualMachineRootVolumeSecurityStyle_Values(), false),
 			},
 			"subtype": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: `this trait has been removed from the API`,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"svm_admin_password": {
 				Type:         schema.TypeString,
