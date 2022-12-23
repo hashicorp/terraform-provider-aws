@@ -116,7 +116,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		}
 
 		for _, v := range page.AccessPoints {
-			r := ResourceMultiRegionAccessPoint()
+			r := resourceMultiRegionAccessPoint()
 			d := r.Data(nil)
 			d.SetId(MultiRegionAccessPointCreateResourceID(accountID, aws.StringValue(v.Name)))
 

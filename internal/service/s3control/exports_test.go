@@ -8,5 +8,7 @@ var (
 	ResourceBucket                       = resourceBucket
 	ResourceBucketLifecycleConfiguration = resourceBucketLifecycleConfiguration
 	ResourceBucketPolicy                 = resourceBucketPolicy
+	ResourceMultiRegionAccessPoint       = resourceMultiRegionAccessPoint
+	ResourceMultiRegionAccessPointPolicy = resourceMultiRegionAccessPointPolicy
 	ResourceStorageLensConfiguration     = resourceStorageLensConfiguration
 )
