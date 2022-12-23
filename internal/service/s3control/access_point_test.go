@@ -38,6 +38,7 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile(`^.*-s3alias$`)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s", accessPointName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
+					acctest.CheckResourceAttrAccountID(resourceName, "bucket_account_id"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexp.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),

@@ -57,6 +57,13 @@ func resourceAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"bucket_account_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
+			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -160,6 +167,10 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(d.Get("bucket").(string)),
 		Name:      aws.String(name),
+	}
+
+	if v, ok := d.GetOk("bucket_account_id"); ok {
+		input.BucketAccountId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("public_access_block_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -275,6 +286,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("account_id", accountID)
 	d.Set("alias", output.Alias)
+	d.Set("bucket_account_id", output.BucketAccountId)
 	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountID)))
 	d.Set("endpoints", aws.StringValueMap(output.Endpoints))
 	d.Set("name", output.Name)
