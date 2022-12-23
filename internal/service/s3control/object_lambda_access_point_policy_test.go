@@ -1,6 +1,7 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -141,7 +142,7 @@ func testAccCheckObjectLambdaAccessPointPolicyDestroy(s *terraform.State) error 
 			return err
 		}
 
-		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -176,7 +177,7 @@ func testAccCheckObjectLambdaAccessPointPolicyExists(n string) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
 		return err
 	}

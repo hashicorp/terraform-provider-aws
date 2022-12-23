@@ -1,6 +1,7 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -37,6 +38,7 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile(`^.*-s3alias$`)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s", accessPointName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
+					acctest.CheckResourceAttrAccountID(resourceName, "bucket_account_id"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexp.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
@@ -313,7 +315,7 @@ func testAccCheckAccessPointDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfs3control.FindAccessPointByAccountIDAndName(conn, accountID, name)
+		_, err = tfs3control.FindAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -325,6 +327,7 @@ func testAccCheckAccessPointDestroy(s *terraform.State) error {
 
 		return fmt.Errorf("S3 Access Point %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
@@ -347,7 +350,7 @@ func testAccCheckAccessPointExists(n string, v *s3control.GetAccessPointOutput) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		output, err := tfs3control.FindAccessPointByAccountIDAndName(conn, accountID, name)
+		output, err := tfs3control.FindAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err
@@ -378,7 +381,7 @@ func testAccCheckAccessPointHasPolicy(n string, fn func() string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err
