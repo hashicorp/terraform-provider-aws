@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +18,10 @@ func DataSourceWorkspace() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"alias": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"workspace_id"},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -37,8 +41,10 @@ func DataSourceWorkspace() *schema.Resource {
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"alias"},
 			},
 		},
 	}
@@ -49,13 +55,26 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)
-	workspace, err := FindWorkspaceByID(ctx, conn, workspaceID)
+	workspaceAlias := d.Get("alias").(string)
 
-	if err != nil {
-		return diag.Errorf("reading AMP Workspace (%s): %s", workspaceID, err)
+	var workspace *prometheusservice.WorkspaceDescription
+	var err error
+
+	if workspaceID != "" {
+		workspace, err = FindWorkspaceByID(ctx, conn, workspaceID)
+	} else if workspaceAlias != "" {
+		workspace, err = FindWorkspaceByAlias(ctx, conn, workspaceAlias)
 	}
 
-	d.SetId(workspaceID)
+	if err != nil {
+		if workspaceID != "" {
+			return diag.Errorf("reading AMP Workspace by ID (%s): %s", workspaceID, err)
+		} else {
+			return diag.Errorf("reading AMP Workspace by alias (%s): %s", workspaceAlias, err)
+		}
+	}
+
+	d.SetId(aws.StringValue(workspace.WorkspaceId))
 
 	d.Set("alias", workspace.Alias)
 	d.Set("arn", workspace.Arn)
