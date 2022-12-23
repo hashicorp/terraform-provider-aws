@@ -10,7 +10,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
+func TestAccAMPWorkspaceDataSource_workspace_id(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_workspace.test"
+	dataSourceName := "data.aws_prometheus_workspace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceDataSourceConfig_workspace_id(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "prometheus_endpoint", dataSourceName, "prometheus_endpoint"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAMPWorkspaceDataSource_alias(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 	dataSourceName := "data.aws_prometheus_workspace.test"
@@ -36,14 +62,28 @@ func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceDataSourceConfig_alias(rName string) string {
+func testAccWorkspaceBaseDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = %[1]q
 }
+`, rName)
+}
 
+func testAccWorkspaceDataSourceConfig_workspace_id(rName string) string {
+	return acctest.ConfigCompose(
+		testAccWorkspaceBaseDataSourceConfig(rName), `
 data "aws_prometheus_workspace" "test" {
   workspace_id = aws_prometheus_workspace.test.id
 }
-`, rName)
+`)
+}
+
+func testAccWorkspaceDataSourceConfig_alias(rName string) string {
+	return acctest.ConfigCompose(
+		testAccWorkspaceBaseDataSourceConfig(rName), `
+data "aws_prometheus_workspace" "test" {
+  alias = aws_prometheus_workspace.test.alias
+}
+`)
 }
