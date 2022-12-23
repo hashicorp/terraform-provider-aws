@@ -307,7 +307,7 @@ func testAccCheckDefaultNetworkACLExists(n string, v *ec2.NetworkAcl) resource.T
 			return fmt.Errorf("No EC2 Default Network ACL ID is set: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindNetworkACLByID(conn, rs.Primary.ID)
 

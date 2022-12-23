@@ -67,7 +67,7 @@ func ResourceManagedScalingPolicy() *schema.Resource {
 }
 
 func resourceManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if l := d.Get("compute_limits").(*schema.Set).List(); len(l) > 0 && l[0] != nil {
 		cl := l[0].(map[string]interface{})
@@ -105,7 +105,7 @@ func resourceManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	input := &emr.GetManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Id()),
@@ -144,7 +144,7 @@ func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	input := &emr.RemoveManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),

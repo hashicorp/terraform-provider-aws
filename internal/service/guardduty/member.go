@@ -71,7 +71,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	accountID := d.Get("account_id").(string)
 	detectorID := d.Get("detector_id").(string)
 
@@ -117,7 +117,7 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -164,7 +164,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -212,7 +212,7 @@ func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {

@@ -92,7 +92,7 @@ func TestAccRUMMetricsDestination_disappears_appMonitor(t *testing.T) {
 }
 
 func testAccCheckMetricsDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rum_metrics_destination" {
@@ -125,7 +125,7 @@ func testAccCheckMetricsDestinationExists(n string, v *cloudwatchrum.MetricDesti
 			return fmt.Errorf("No CloudWatch RUM Metrics Destination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
 
 		output, err := tfcloudwatchrum.FindMetricsDestinationByName(context.Background(), conn, rs.Primary.ID)
 

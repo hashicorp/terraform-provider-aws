@@ -84,7 +84,7 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 }
 
 func testAccCheckObjectCopyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_object_copy" {
@@ -115,7 +115,7 @@ func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No S3 Object ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 		_, err := conn.GetObject(
 			&s3.GetObjectInput{
 				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),

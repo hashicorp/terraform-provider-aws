@@ -30,7 +30,7 @@ func DataSourceImagePipelines() *schema.Resource {
 }
 
 func dataSourceImagePipelinesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.ListImagePipelinesInput{}
 

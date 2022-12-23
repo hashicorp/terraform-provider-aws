@@ -225,7 +225,7 @@ func testAccCheckNetworkInsightsPathExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No EC2 Network Insights Path ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err := tfec2.FindNetworkInsightsPathByID(context.Background(), conn, rs.Primary.ID)
 
@@ -234,7 +234,7 @@ func testAccCheckNetworkInsightsPathExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckNetworkInsightsPathDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_network_insights_path" {

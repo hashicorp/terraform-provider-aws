@@ -53,7 +53,7 @@ func ResourceAccessPointPolicy() *schema.Resource {
 }
 
 func resourceAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	resourceID, err := AccessPointCreateResourceID(d.Get("access_point_arn").(string))
 
@@ -92,7 +92,7 @@ func resourceAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -130,7 +130,7 @@ func resourceAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -161,7 +161,7 @@ func resourceAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAccessPointPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 

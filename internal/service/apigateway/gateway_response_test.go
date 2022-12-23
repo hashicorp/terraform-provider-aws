@@ -93,7 +93,7 @@ func testAccCheckGatewayResponseExists(n string, res *apigateway.UpdateGatewayRe
 			return fmt.Errorf("No API Gateway Gateway Response ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetGatewayResponseInput{
 			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
@@ -111,7 +111,7 @@ func testAccCheckGatewayResponseExists(n string, res *apigateway.UpdateGatewayRe
 }
 
 func testAccCheckGatewayResponseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_gateway_response" {

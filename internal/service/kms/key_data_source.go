@@ -130,7 +130,7 @@ func DataSourceKey() *schema.Resource {
 }
 
 func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.DescribeKeyInput{

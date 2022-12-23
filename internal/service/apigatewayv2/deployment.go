@@ -49,7 +49,7 @@ func ResourceDeployment() *schema.Resource {
 }
 
 func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.CreateDeploymentInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
@@ -74,7 +74,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	outputRaw, _, err := StatusDeployment(conn, d.Get("api_id").(string), d.Id())()
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
@@ -94,7 +94,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.UpdateDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -118,7 +118,7 @@ func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 deployment (%s)", d.Id())
 	_, err := conn.DeleteDeployment(&apigatewayv2.DeleteDeploymentInput{

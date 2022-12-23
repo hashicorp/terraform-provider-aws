@@ -143,7 +143,7 @@ func testAccCheckScramSecretAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 		input := &kafka.ListScramSecretsInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		}
@@ -170,7 +170,7 @@ func testAccCheckScramSecretAssociationExists(resourceName string) resource.Test
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 		_, err := tfkafka.FindScramSecrets(conn, rs.Primary.ID)
 
 		return err

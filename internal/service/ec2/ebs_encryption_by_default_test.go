@@ -45,7 +45,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 }
 
 func testAccCheckEncryptionByDefaultDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	response, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
@@ -70,7 +70,7 @@ func testAccCheckEBSEncryptionByDefault(n string, enabled bool) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		response, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {

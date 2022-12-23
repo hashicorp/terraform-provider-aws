@@ -54,7 +54,7 @@ func ResourceParameterGroup() *schema.Resource {
 }
 
 func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.CreateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Get("name").(string)),
@@ -77,7 +77,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	resp, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []*string{aws.String(d.Id())},
@@ -123,7 +123,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.UpdateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -144,7 +144,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.DeleteParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),

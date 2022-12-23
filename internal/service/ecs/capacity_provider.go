@@ -107,7 +107,7 @@ func ResourceCapacityProvider() *schema.Resource {
 }
 
 func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -158,7 +158,7 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceCapacityProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -197,7 +197,7 @@ func resourceCapacityProviderRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateCapacityProviderInput{
@@ -253,7 +253,7 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider (%s)", d.Id())
 	_, err := conn.DeleteCapacityProvider(&ecs.DeleteCapacityProviderInput{

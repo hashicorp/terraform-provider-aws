@@ -141,7 +141,7 @@ func ResourceAccessPoint() *schema.Resource {
 }
 
 func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -209,7 +209,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -316,7 +316,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 
@@ -361,7 +361,7 @@ func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
 

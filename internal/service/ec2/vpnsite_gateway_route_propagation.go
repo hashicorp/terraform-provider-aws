@@ -38,7 +38,7 @@ func ResourceVPNGatewayRoutePropagation() *schema.Resource {
 }
 
 func resourceVPNGatewayRoutePropagationEnable(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -54,7 +54,7 @@ func resourceVPNGatewayRoutePropagationEnable(d *schema.ResourceData, meta inter
 }
 
 func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
@@ -72,7 +72,7 @@ func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta inte
 }
 
 func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 

@@ -282,7 +282,7 @@ func testAccCheckRemediationConfigurationExists(n string, obj *configservice.Rem
 			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("ID not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 		out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
 		})
@@ -301,7 +301,7 @@ func testAccCheckRemediationConfigurationExists(n string, obj *configservice.Rem
 }
 
 func testAccCheckRemediationConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_remediation_configuration" {

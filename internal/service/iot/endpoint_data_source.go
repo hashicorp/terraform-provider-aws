@@ -33,7 +33,7 @@ func DataSourceEndpoint() *schema.Resource {
 }
 
 func dataSourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	input := &iot.DescribeEndpointInput{}
 
 	if v, ok := d.GetOk("endpoint_type"); ok {

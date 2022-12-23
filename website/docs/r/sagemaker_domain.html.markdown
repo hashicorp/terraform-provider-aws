@@ -94,6 +94,7 @@ The following arguments are supported:
 * `auth_mode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
+* `default_space_settings` - (Required) The default space settings. See [Default Space Settings](#default-space-settings) below.
 * `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default-user-settings) below.
 * `domain_settings` - (Optional) The domain settings. See [Domain Settings](#domain-settings) below.
 * `retention_policy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [Retention Policy](#retention-policy) below.
@@ -101,6 +102,13 @@ The following arguments are supported:
 * `app_network_access_type` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
 * `app_security_group_management` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `VPCOnly` mode. Valid values are `Service` and `Customer`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Default Space Settings
+
+* `execution_role` - (Required) The execution role for the space.
+* `security_groups` - (Optional) The security groups for the Amazon Virtual Private Cloud that the space uses for communication.
+* `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
+* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
 
 ### Default User Settings
 
@@ -140,6 +148,7 @@ The following arguments are supported:
 
 #### Jupyter Server App Settings
 
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
@@ -147,6 +156,10 @@ The following arguments are supported:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
+
+##### Code Repository
+
+* `repository_url` - (Optional) The URL of the Git repository.
 
 ##### Default Resource Spec
 
@@ -184,7 +197,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Code Domains can be imported using the `id`, e.g.,
+SageMaker Domains can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8

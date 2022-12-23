@@ -608,7 +608,7 @@ func testAccCheckWebACLLoggingConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 		resp, err := conn.GetLoggingConfiguration(
 			&wafv2.GetLoggingConfigurationInput{
 				ResourceArn: aws.String(rs.Primary.ID),
@@ -644,7 +644,7 @@ func testAccCheckWebACLLoggingConfigurationExists(n string, v *wafv2.LoggingConf
 			return fmt.Errorf("No WAFv2 WebACL Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 		resp, err := conn.GetLoggingConfiguration(&wafv2.GetLoggingConfigurationInput{
 			ResourceArn: aws.String(rs.Primary.ID),
 		})

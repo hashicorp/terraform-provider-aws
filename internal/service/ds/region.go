@@ -84,7 +84,7 @@ func ResourceRegion() *schema.Resource {
 }
 
 func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -134,7 +134,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -257,7 +257,7 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func regionalConn(client *conns.AWSClient, regionName string) (*directoryservice.DirectoryService, error) {
-	sess, err := conns.NewSessionForRegion(&client.DSConn.Config, regionName, client.TerraformVersion)
+	sess, err := conns.NewSessionForRegion(&client.DSConn().Config, regionName, client.TerraformVersion)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating AWS session (%s): %w", regionName, err)

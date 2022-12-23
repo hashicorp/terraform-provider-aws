@@ -170,7 +170,7 @@ func testAccCheckReplicationTaskExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		_, err := tfdms.FindReplicationTaskByID(conn, rs.Primary.ID)
 
@@ -184,7 +184,7 @@ func testAccCheckReplicationTaskDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		_, err := tfdms.FindReplicationTaskByID(conn, rs.Primary.ID)
 

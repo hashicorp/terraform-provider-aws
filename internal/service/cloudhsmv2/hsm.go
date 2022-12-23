@@ -73,7 +73,7 @@ func ResourceHSM() *schema.Resource {
 }
 
 func resourceHSMCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 
 	input := &cloudhsmv2.CreateHsmInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
@@ -122,7 +122,7 @@ func resourceHSMCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHSMRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 
 	hsm, err := FindHSM(conn, d.Id(), d.Get("hsm_eni_id").(string))
 
@@ -159,7 +159,7 @@ func resourceHSMRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHSMDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	clusterId := d.Get("cluster_id").(string)
 
 	log.Printf("[DEBUG] CloudHSMv2 HSM delete %s %s", clusterId, d.Id())

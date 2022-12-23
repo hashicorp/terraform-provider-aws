@@ -44,7 +44,7 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 }
 
 func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{
@@ -64,7 +64,7 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.GetVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -88,7 +88,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	if d.HasChanges("enable_sip_logs", "enable_media_metric_logs") {
 		input := &chime.PutVoiceConnectorLoggingConfigurationInput{
@@ -108,7 +108,7 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),

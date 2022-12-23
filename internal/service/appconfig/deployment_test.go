@@ -152,7 +152,7 @@ func testAccCheckDeploymentExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),

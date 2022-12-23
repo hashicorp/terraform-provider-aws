@@ -1048,7 +1048,7 @@ func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestChec
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		routeTable, err := tfec2.FindRouteTableByID(conn, rs.Primary.ID)
 
@@ -1063,7 +1063,7 @@ func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestChec
 }
 
 func testAccCheckRouteTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route_table" {
@@ -1148,7 +1148,7 @@ func testAccCheckRouteTablePrefixListRoute(resourceName, prefixListResourceName,
 // a route to the specified VPC endpoint's prefix list to appear in the specified route table.
 func testAccCheckRouteTableWaitForVPCEndpointRoute(routeTable *ec2.RouteTable, vpce *ec2.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		resp, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
 			Filters: tfec2.BuildAttributeFilterList(map[string]string{

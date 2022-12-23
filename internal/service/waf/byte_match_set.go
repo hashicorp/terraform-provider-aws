@@ -71,7 +71,7 @@ func ResourceByteMatchSet() *schema.Resource {
 }
 
 func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -94,7 +94,7 @@ func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetByteMatchSetInput{
 		ByteMatchSetId: aws.String(d.Id()),
@@ -118,7 +118,7 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -135,7 +135,7 @@ func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldTuples := d.Get("byte_match_tuples").(*schema.Set).List()
 	if len(oldTuples) > 0 {

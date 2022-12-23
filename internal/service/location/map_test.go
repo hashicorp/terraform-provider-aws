@@ -148,7 +148,7 @@ func TestAccLocationMap_tags(t *testing.T) {
 }
 
 func testAccCheckMapDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_location_map" {
@@ -185,7 +185,7 @@ func testAccCheckMapExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 		input := &locationservice.DescribeMapInput{
 			MapName: aws.String(rs.Primary.ID),

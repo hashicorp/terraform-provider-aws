@@ -502,7 +502,7 @@ func testAccSpotInstanceRequestTime(t *testing.T, duration string) string {
 }
 
 func testAccCheckSpotInstanceRequestDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_spot_instance_request" {
@@ -548,7 +548,7 @@ func testAccCheckSpotInstanceRequestExists(n string, v *ec2.SpotInstanceRequest)
 			return fmt.Errorf("No EC2 Spot Instance Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindSpotInstanceRequestByID(conn, rs.Primary.ID)
 
@@ -603,7 +603,7 @@ func testAccCheckSpotInstanceRequestAttributesCheckSIRWithoutSpot(
 
 func testAccCheckSpotInstanceRequest_InstanceAttributes(v *ec2.SpotInstanceRequest, sgName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		instance, err := tfec2.FindInstanceByID(conn, aws.StringValue(v.InstanceId))
 

@@ -180,7 +180,7 @@ func ResourceWorkforce() *schema.Resource {
 }
 
 func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	name := d.Get("workforce_name").(string)
 	input := &sagemaker.CreateWorkforceInput{
@@ -219,7 +219,7 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	workforce, err := FindWorkforceByName(conn, d.Id())
 
@@ -259,7 +259,7 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.UpdateWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
@@ -291,7 +291,7 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
 	_, err := conn.DeleteWorkforce(&sagemaker.DeleteWorkforceInput{

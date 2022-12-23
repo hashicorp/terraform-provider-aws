@@ -814,7 +814,7 @@ func testAccCheckQueueExists(resourceName string, v *map[string]string) resource
 			return fmt.Errorf("No SQS Queue URL is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn()
 
 		output, err := tfsqs.FindQueueAttributesByURL(context.Background(), conn, rs.Primary.ID)
 
@@ -829,7 +829,7 @@ func testAccCheckQueueExists(resourceName string, v *map[string]string) resource
 }
 
 func testAccCheckQueueDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sqs_queue" {

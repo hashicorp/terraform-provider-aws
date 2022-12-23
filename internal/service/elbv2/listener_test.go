@@ -605,7 +605,7 @@ func testAccCheckListenerDefaultActionOrderDisappears(listener *elbv2.Listener, 
 			return fmt.Errorf("Unable to find default action order %d from default actions: %#v", actionOrderToDelete, listener.DefaultActions)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		input := &elbv2.ModifyListenerInput{
 			DefaultActions: newDefaultActions,
@@ -629,7 +629,7 @@ func testAccCheckListenerExists(n string, res *elbv2.Listener) resource.TestChec
 			return errors.New("No Listener ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		listener, err := tfelbv2.FindListenerByARN(conn, rs.Primary.ID)
 
@@ -647,7 +647,7 @@ func testAccCheckListenerExists(n string, res *elbv2.Listener) resource.TestChec
 }
 
 func testAccCheckListenerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_listener" && rs.Type != "aws_alb_listener" {

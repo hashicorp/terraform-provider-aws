@@ -30,7 +30,7 @@ func DataSourceEventCategories() *schema.Resource {
 }
 
 func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeEventCategoriesInput{}
 

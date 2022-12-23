@@ -56,7 +56,7 @@ func ResourceInternetGateway() *schema.Resource {
 }
 
 func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -83,7 +83,7 @@ func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -135,7 +135,7 @@ func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
@@ -165,7 +165,7 @@ func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Detach if it is attached.
 	if v, ok := d.GetOk("vpc_id"); ok {

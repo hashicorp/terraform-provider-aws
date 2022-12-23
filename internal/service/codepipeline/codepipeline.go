@@ -210,7 +210,7 @@ func ResourcePipeline() *schema.Resource {
 }
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -243,7 +243,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -302,7 +302,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		pipeline, err := expandPipelineDeclaration(d)
@@ -333,7 +333,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	log.Printf("[INFO] Deleting CodePipeline: %s", d.Id())
 	_, err := conn.DeletePipelineWithContext(ctx, &codepipeline.DeletePipelineInput{

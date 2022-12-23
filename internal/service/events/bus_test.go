@@ -194,7 +194,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 }
 
 func testAccCheckBusDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_bus" {
@@ -222,7 +222,7 @@ func testAccCheckBusExists(n string, v *eventbridge.DescribeEventBusOutput) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 		params := eventbridge.DescribeEventBusInput{
 			Name: aws.String(rs.Primary.ID),
 		}

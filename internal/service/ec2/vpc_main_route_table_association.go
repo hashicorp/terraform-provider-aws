@@ -42,7 +42,7 @@ func ResourceMainRouteTableAssociation() *schema.Resource {
 }
 
 func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcID := d.Get("vpc_id").(string)
 
@@ -78,7 +78,7 @@ func resourceMainRouteTableAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceMainRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	_, err := FindMainRouteTableAssociationByID(conn, d.Id())
 
@@ -96,7 +96,7 @@ func resourceMainRouteTableAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.ReplaceRouteTableAssociationInput{
@@ -124,7 +124,7 @@ func resourceMainRouteTableAssociationUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceMainRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),

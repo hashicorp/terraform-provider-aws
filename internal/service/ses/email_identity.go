@@ -39,7 +39,7 @@ func ResourceEmailIdentity() *schema.Resource {
 }
 
 func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
@@ -59,7 +59,7 @@ func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	email := d.Id()
 	d.Set("email", email)
@@ -95,7 +95,7 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	email := d.Get("email").(string)
 

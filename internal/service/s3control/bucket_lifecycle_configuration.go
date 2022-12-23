@@ -118,7 +118,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	bucket := d.Get("bucket").(string)
 
@@ -152,7 +152,7 @@ func resourceBucketLifecycleConfigurationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceBucketLifecycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -207,7 +207,7 @@ func resourceBucketLifecycleConfigurationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceBucketLifecycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -237,7 +237,7 @@ func resourceBucketLifecycleConfigurationUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceBucketLifecycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 

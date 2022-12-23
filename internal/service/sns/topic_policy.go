@@ -52,7 +52,7 @@ func ResourceTopicPolicy() *schema.Resource {
 }
 
 func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -76,7 +76,7 @@ func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
 
@@ -114,7 +114,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)

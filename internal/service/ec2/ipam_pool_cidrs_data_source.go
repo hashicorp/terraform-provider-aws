@@ -45,7 +45,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 }
 
 func dataSourceIPAMPoolCIDRsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	poolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.GetIpamPoolCidrsInput{

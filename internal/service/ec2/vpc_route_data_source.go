@@ -102,7 +102,7 @@ func DataSourceRoute() *schema.Resource {
 }
 
 func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID := d.Get("route_table_id").(string)
 

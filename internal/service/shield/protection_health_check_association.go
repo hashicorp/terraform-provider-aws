@@ -37,7 +37,7 @@ func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 }
 
 func ResourceProtectionHealthCheckAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	protectionId := d.Get("shield_protection_id").(string)
 	healthCheckArn := d.Get("health_check_arn").(string)
@@ -57,7 +57,7 @@ func ResourceProtectionHealthCheckAssociationCreate(d *schema.ResourceData, meta
 }
 
 func ResourceProtectionHealthCheckAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	protectionId, healthCheckArn, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 
@@ -94,7 +94,7 @@ func ResourceProtectionHealthCheckAssociationRead(d *schema.ResourceData, meta i
 }
 
 func ResourceProtectionHealthCheckAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	protectionId, healthCheckId, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 

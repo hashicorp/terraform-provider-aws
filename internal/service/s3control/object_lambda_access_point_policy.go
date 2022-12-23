@@ -58,7 +58,7 @@ func ResourceObjectLambdaAccessPointPolicy() *schema.Resource {
 }
 
 func resourceObjectLambdaAccessPointPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -92,7 +92,7 @@ func resourceObjectLambdaAccessPointPolicyCreate(d *schema.ResourceData, meta in
 }
 
 func resourceObjectLambdaAccessPointPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -132,7 +132,7 @@ func resourceObjectLambdaAccessPointPolicyRead(d *schema.ResourceData, meta inte
 }
 
 func resourceObjectLambdaAccessPointPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -163,7 +163,7 @@ func resourceObjectLambdaAccessPointPolicyUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceObjectLambdaAccessPointPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 

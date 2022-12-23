@@ -66,7 +66,7 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -100,7 +100,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -145,7 +145,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -159,7 +159,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Connection: %s", d.Id())
 	_, err := conn.DeleteConnection(&codestarconnections.DeleteConnectionInput{

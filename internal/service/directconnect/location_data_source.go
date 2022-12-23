@@ -46,7 +46,7 @@ func DataSourceLocation() *schema.Resource {
 }
 
 func dataSourceLocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	locationCode := d.Get("location_code").(string)
 
 	location, err := FindLocationByCode(conn, locationCode)

@@ -372,7 +372,7 @@ func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.Te
 			return fmt.Errorf("No Step Functions State Machine ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
 		output, err := tfsfn.FindStateMachineByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -387,7 +387,7 @@ func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.Te
 }
 
 func testAccCheckStateMachineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sfn_state_machine" {

@@ -51,7 +51,7 @@ func ResourceFindingAggregator() *schema.Resource {
 }
 
 func resourceFindingAggregatorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	linkingMode := d.Get("linking_mode").(string)
 
@@ -77,7 +77,7 @@ func resourceFindingAggregatorCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceFindingAggregatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	aggregatorArn := d.Id()
 
@@ -131,7 +131,7 @@ func FindingAggregatorCheckExists(conn *securityhub.SecurityHub, findingAggregat
 }
 
 func resourceFindingAggregatorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	aggregatorArn := d.Id()
 
@@ -158,7 +158,7 @@ func resourceFindingAggregatorUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceFindingAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	aggregatorArn := d.Id()
 

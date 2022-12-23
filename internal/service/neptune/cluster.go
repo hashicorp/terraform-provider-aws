@@ -285,7 +285,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -455,7 +455,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -514,7 +514,7 @@ func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *neptune.Serve
 }
 
 func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -600,7 +600,7 @@ func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptu
 }
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	requestUpdate := false
 
 	req := &neptune.ModifyDBClusterInput{
@@ -778,7 +778,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	log.Printf("[DEBUG] Destroying Neptune Cluster (%s)", d.Id())
 
 	deleteOpts := neptune.DeleteDBClusterInput{

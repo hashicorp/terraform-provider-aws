@@ -26,7 +26,7 @@ func sweepVirtualClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EMRContainersConn
+	conn := client.(*conns.AWSClient).EMRContainersConn()
 	input := &emrcontainers.ListVirtualClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

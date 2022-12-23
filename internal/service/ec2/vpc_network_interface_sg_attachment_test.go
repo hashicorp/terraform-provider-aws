@@ -140,7 +140,7 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resourc
 			return fmt.Errorf("No EC2 Network Interface Security Group Attachment ID is set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
 
@@ -149,7 +149,7 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resourc
 }
 
 func testAccCheckNetworkInterfaceSGAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_interface_sg_attachment" {

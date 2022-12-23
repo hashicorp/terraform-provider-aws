@@ -61,6 +61,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"Function": {
 			"basic":                   testAccFunction_basic,
+			"code":                    testAccFunction_code,
 			"disappears":              testAccFunction_disappears,
 			"description":             testAccFunction_description,
 			"responseMappingTemplate": testAccFunction_responseMappingTemplate,
@@ -68,6 +69,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"Resolver": {
 			"basic":             testAccResolver_basic,
+			"code":              testAccResolver_code,
 			"disappears":        testAccResolver_disappears,
 			"dataSource":        testAccResolver_dataSource,
 			"DataSource_lambda": testAccResolver_DataSource_lambda,
@@ -81,6 +83,10 @@ func TestAccAppSync_serial(t *testing.T) {
 		"ApiCache": {
 			"basic":      testAccAPICache_basic,
 			"disappears": testAccAPICache_disappears,
+		},
+		"Type": {
+			"basic":      testAccType_basic,
+			"disappears": testAccType_disappears,
 		},
 		"DomainName": {
 			"basic":       testAccDomainName_basic,

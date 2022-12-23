@@ -2063,7 +2063,7 @@ func TestAccWAFV2RuleGroup_Operators_maxNested(t *testing.T) {
 }
 
 func testAccPreCheckScopeRegional(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 	input := &wafv2.ListRuleGroupsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
@@ -2086,7 +2086,7 @@ func testAccCheckRuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		_, err := tfwafv2.FindRuleGroupByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
@@ -2115,7 +2115,7 @@ func testAccCheckRuleGroupExists(n string, v *wafv2.RuleGroup) resource.TestChec
 			return fmt.Errorf("No WAFv2 RuleGroup ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		output, err := tfwafv2.FindRuleGroupByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 

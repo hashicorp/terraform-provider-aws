@@ -149,7 +149,7 @@ func ResourceLocationHDFS() *schema.Resource {
 }
 
 func resourceLocationHDFSCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -205,7 +205,7 @@ func resourceLocationHDFSCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLocationHDFSRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -267,7 +267,7 @@ func resourceLocationHDFSRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationHDFSUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationHdfsInput{
@@ -339,7 +339,7 @@ func resourceLocationHDFSUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLocationHDFSDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

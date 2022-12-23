@@ -171,7 +171,7 @@ func ResourceRoute() *schema.Resource {
 }
 
 func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -259,7 +259,7 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -322,7 +322,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
@@ -401,7 +401,7 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 

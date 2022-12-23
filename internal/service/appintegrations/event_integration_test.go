@@ -189,7 +189,7 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 }
 
 func testAccCheckEventIntegrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appintegrations_event_integration" {
 			continue
@@ -219,7 +219,7 @@ func testAccCheckEventIntegrationExists(name string, eventIntegration *appintegr
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
 		input := &appintegrationsservice.GetEventIntegrationInput{
 			Name: aws.String(rs.Primary.ID),
 		}

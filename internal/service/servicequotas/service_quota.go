@@ -82,7 +82,7 @@ func ResourceServiceQuota() *schema.Resource {
 }
 
 func resourceServiceQuotaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
@@ -130,7 +130,7 @@ func resourceServiceQuotaCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
@@ -202,7 +202,7 @@ func resourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
 
 	value := d.Get("value").(float64)
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())

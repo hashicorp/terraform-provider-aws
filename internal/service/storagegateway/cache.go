@@ -39,7 +39,7 @@ func ResourceCache() *schema.Resource {
 }
 
 func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -89,7 +89,7 @@ func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	gatewayARN, diskID, err := DecodeCacheID(d.Id())
 	if err != nil {

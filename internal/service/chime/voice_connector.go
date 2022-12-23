@@ -15,10 +15,10 @@ import (
 
 func ResourceVoiceConnector() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceVoiceConnectorCreate,
-		ReadContext:   resourceVoiceConnectorRead,
-		UpdateContext: resourceVoiceConnectorUpdate,
-		DeleteContext: resourceVoiceConnectorDelete,
+		CreateWithoutTimeout: resourceVoiceConnectorCreate,
+		ReadWithoutTimeout:   resourceVoiceConnectorRead,
+		UpdateWithoutTimeout: resourceVoiceConnectorUpdate,
+		DeleteWithoutTimeout: resourceVoiceConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -50,7 +50,7 @@ func ResourceVoiceConnector() *schema.Resource {
 }
 
 func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	createInput := &chime.CreateVoiceConnectorInput{
 		Name:              aws.String(d.Get("name").(string)),
@@ -72,7 +72,7 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	getInput := &chime.GetVoiceConnectorInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -98,7 +98,7 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	if d.HasChanges("name", "require_encryption") {
 		updateInput := &chime.UpdateVoiceConnectorInput{
@@ -115,7 +115,7 @@ func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.DeleteVoiceConnectorInput{
 		VoiceConnectorId: aws.String(d.Id()),

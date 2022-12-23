@@ -94,7 +94,7 @@ func ResourceFunctionEventInvokeConfig() *schema.Resource {
 }
 
 func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -153,7 +153,7 @@ func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
@@ -194,7 +194,7 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
@@ -249,7 +249,7 @@ func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 

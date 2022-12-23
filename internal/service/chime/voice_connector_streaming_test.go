@@ -144,7 +144,7 @@ func testAccCheckVoiceConnectorStreamingExists(name string) resource.TestCheckFu
 			return fmt.Errorf("no Chime Voice Connector streaming configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorStreamingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -167,7 +167,7 @@ func testAccCheckVoiceConnectorStreamingDestroy(s *terraform.State) error {
 		if rs.Type != "aws_chime_voice_connector_termination" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorStreamingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}

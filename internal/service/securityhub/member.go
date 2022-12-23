@@ -59,7 +59,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
 
 	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
@@ -100,7 +100,7 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
 	resp, err := conn.GetMembers(&securityhub.GetMembersInput{
@@ -138,7 +138,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},

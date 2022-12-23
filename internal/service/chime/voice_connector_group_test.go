@@ -151,7 +151,7 @@ func testAccCheckVoiceConnectorGroupExists(name string, vc *chime.VoiceConnector
 			return fmt.Errorf("no Chime voice connector group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorGroupInput{
 			VoiceConnectorGroupId: aws.String(rs.Primary.ID),
 		}
@@ -171,7 +171,7 @@ func testAccCheckVoiceConnectorGroupDestroy(s *terraform.State) error {
 		if rs.Type != "aws_chime_voice_connector" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorGroupInput{
 			VoiceConnectorGroupId: aws.String(rs.Primary.ID),
 		}

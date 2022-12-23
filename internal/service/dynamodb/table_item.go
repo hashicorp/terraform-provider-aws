@@ -58,7 +58,7 @@ func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 }
 
 func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
@@ -91,7 +91,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating DynamoDB table %s", d.Id())
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	if d.HasChange("item") {
 		tableName := d.Get("table_name").(string)
@@ -166,7 +166,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
 
@@ -206,7 +206,7 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {

@@ -99,7 +99,7 @@ func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 }
 
 func resourceWorkspaceSAMLConfigurationUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	d.SetId(d.Get("workspace_id").(string))
 	workspace, err := FindWorkspaceByID(conn, d.Id())
@@ -217,7 +217,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(d *schema.ResourceData, meta inter
 }
 
 func resourceWorkspaceSAMLConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	saml, err := FindSamlConfigurationByID(conn, d.Id())
 

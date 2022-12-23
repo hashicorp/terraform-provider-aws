@@ -131,7 +131,7 @@ func testAccCheckTransitGatewayPeeringExists(n string, v *networkmanager.Transit
 			return fmt.Errorf("No Network Manager Transit Gateway Peering ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		output, err := tfnetworkmanager.FindTransitGatewayPeeringByID(context.Background(), conn, rs.Primary.ID)
 
@@ -146,7 +146,7 @@ func testAccCheckTransitGatewayPeeringExists(n string, v *networkmanager.Transit
 }
 
 func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_transit_gateway_peering" {

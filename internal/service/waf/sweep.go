@@ -136,7 +136,7 @@ func sweepByteMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -210,7 +210,7 @@ func sweepGeoMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -284,7 +284,7 @@ func sweepIPSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -358,7 +358,7 @@ func sweepRateBasedRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -432,7 +432,7 @@ func sweepRegexMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -506,7 +506,7 @@ func sweepRegexPatternSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -580,7 +580,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -654,7 +654,7 @@ func sweepRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -732,7 +732,7 @@ func sweepSizeConstraintSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -806,7 +806,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -880,7 +880,7 @@ func sweepWebACLs(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -958,7 +958,7 @@ func sweepXSSMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).WAFConn
+	conn := client.(*conns.AWSClient).WAFConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group

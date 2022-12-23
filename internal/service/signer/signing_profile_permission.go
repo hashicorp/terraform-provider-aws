@@ -76,7 +76,7 @@ func ResourceSigningProfilePermission() *schema.Resource {
 }
 
 func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 
 	profileName := d.Get("profile_name").(string)
 
@@ -164,7 +164,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceSigningProfilePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 
 	listProfilePermissionsInput := &signer.ListProfilePermissionsInput{
 		ProfileName: aws.String(d.Get("profile_name").(string)),
@@ -238,7 +238,7 @@ func getProfilePermission(permissions []*signer.Permission, statementId string) 
 }
 
 func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 
 	profileName := d.Get("profile_name").(string)
 

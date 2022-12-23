@@ -51,7 +51,7 @@ func sweepHTTPNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := client.(*conns.AWSClient).ServiceDiscoveryConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeHttp)
@@ -87,7 +87,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := client.(*conns.AWSClient).ServiceDiscoveryConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeDnsPrivate)
@@ -123,7 +123,7 @@ func sweepPublicDNSNamespaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := client.(*conns.AWSClient).ServiceDiscoveryConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeDnsPublic)
@@ -159,7 +159,7 @@ func sweepServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := client.(*conns.AWSClient).ServiceDiscoveryConn()
 	input := &servicediscovery.ListServicesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

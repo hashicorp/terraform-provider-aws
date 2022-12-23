@@ -104,7 +104,7 @@ func testAccIPSet_tags(t *testing.T) {
 }
 
 func testAccCheckIPSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_ipset" {
@@ -155,7 +155,7 @@ func testAccCheckIPSetExists(name string) resource.TestCheckFunc {
 			IpSetId:    aws.String(ipSetId),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 		_, err = conn.GetIPSet(input)
 		return err
 	}

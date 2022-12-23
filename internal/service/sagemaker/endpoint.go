@@ -162,7 +162,7 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -206,7 +206,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -250,7 +250,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -289,7 +289,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deleteEndpointOpts := &sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),

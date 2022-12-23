@@ -130,7 +130,7 @@ func ResourceWorkteam() *schema.Resource {
 }
 
 func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -165,7 +165,7 @@ func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -216,7 +216,7 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateWorkteamInput{
@@ -252,7 +252,7 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())
 	_, err := conn.DeleteWorkteam(&sagemaker.DeleteWorkteamInput{

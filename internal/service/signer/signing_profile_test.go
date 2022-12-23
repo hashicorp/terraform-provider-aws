@@ -156,7 +156,7 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 }
 
 func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 	input := &signer.ListSigningPlatformsInput{}
 
@@ -276,7 +276,7 @@ func testAccCheckSigningProfileExists(res string, sp *signer.GetSigningProfileOu
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 		params := &signer.GetSigningProfileInput{
 			ProfileName: aws.String(rs.Primary.ID),
@@ -294,7 +294,7 @@ func testAccCheckSigningProfileExists(res string, sp *signer.GetSigningProfileOu
 }
 
 func testAccCheckSigningProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 	time.Sleep(5 * time.Second)
 

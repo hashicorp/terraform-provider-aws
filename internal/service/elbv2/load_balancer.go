@@ -296,7 +296,7 @@ func suppressIfLBTypeNot(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -410,7 +410,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	lb, err := FindLoadBalancerByARN(conn, d.Id())
 
@@ -438,7 +438,7 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
@@ -661,7 +661,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	log.Printf("[INFO] Deleting LB: %s", d.Id())
 
@@ -673,7 +673,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("deleting LB: %w", err)
 	}
 
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	err := cleanupALBNetworkInterfaces(ec2conn, d.Id())
 	if err != nil {
@@ -837,7 +837,7 @@ func SuffixFromARN(arn *string) string {
 
 // flattenResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

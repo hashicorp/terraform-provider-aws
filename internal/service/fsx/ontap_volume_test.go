@@ -385,7 +385,7 @@ func testAccCheckOntapVolumeExists(resourceName string, volume *fsx.Volume) reso
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 		volume1, err := tffsx.FindVolumeByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -403,7 +403,7 @@ func testAccCheckOntapVolumeExists(resourceName string, volume *fsx.Volume) reso
 }
 
 func testAccCheckOntapVolumeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_ontap_volume" {

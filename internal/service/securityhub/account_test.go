@@ -41,7 +41,7 @@ func testAccCheckAccountExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
 
@@ -58,7 +58,7 @@ func testAccCheckAccountExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_account" {

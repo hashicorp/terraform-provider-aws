@@ -264,7 +264,7 @@ func testAccCheckTransitGatewayConnectExists(n string, v *ec2.TransitGatewayConn
 			return fmt.Errorf("No EC2 Transit Gateway Connect ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTransitGatewayConnectByID(conn, rs.Primary.ID)
 
@@ -279,7 +279,7 @@ func testAccCheckTransitGatewayConnectExists(n string, v *ec2.TransitGatewayConn
 }
 
 func testAccCheckTransitGatewayConnectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_connect" {

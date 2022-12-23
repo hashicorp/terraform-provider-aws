@@ -128,7 +128,7 @@ func ResourceFleet() *schema.Resource {
 }
 
 func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkLinkConn
+	conn := meta.(*conns.AWSClient).WorkLinkConn()
 
 	input := &worklink.CreateFleetInput{
 		FleetName:                  aws.String(d.Get("name").(string)),
@@ -166,7 +166,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkLinkConn
+	conn := meta.(*conns.AWSClient).WorkLinkConn()
 
 	resp, err := conn.DescribeFleetMetadata(&worklink.DescribeFleetMetadataInput{
 		FleetArn: aws.String(d.Id()),
@@ -229,7 +229,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkLinkConn
+	conn := meta.(*conns.AWSClient).WorkLinkConn()
 
 	input := &worklink.UpdateFleetMetadataInput{
 		FleetArn:                   aws.String(d.Id()),
@@ -275,7 +275,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkLinkConn
+	conn := meta.(*conns.AWSClient).WorkLinkConn()
 
 	input := &worklink.DeleteFleetInput{
 		FleetArn: aws.String(d.Id()),

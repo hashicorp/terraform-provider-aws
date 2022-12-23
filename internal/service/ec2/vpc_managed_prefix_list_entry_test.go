@@ -199,7 +199,7 @@ func TestAccVPCManagedPrefixListEntry_disappears(t *testing.T) {
 }
 
 func testAccCheckManagedPrefixListEntryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_managed_prefix_list_entry" {
@@ -239,7 +239,7 @@ func testAccCheckManagedPrefixListEntryExists(n string, v *ec2.PrefixListEntry) 
 			return fmt.Errorf("No EC2 Managed Prefix List Entry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
 

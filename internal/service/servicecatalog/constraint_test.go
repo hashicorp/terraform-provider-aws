@@ -100,7 +100,7 @@ func TestAccServiceCatalogConstraint_update(t *testing.T) {
 }
 
 func testAccCheckConstraintDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_constraint" {
@@ -137,7 +137,7 @@ func testAccCheckConstraintExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		input := &servicecatalog.DescribeConstraintInput{
 			Id: aws.String(rs.Primary.ID),

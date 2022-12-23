@@ -3170,7 +3170,7 @@ func testAccCheckGroupExists(n string, v *autoscaling.Group) resource.TestCheckF
 			return fmt.Errorf("No Auto Scaling Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		output, err := tfautoscaling.FindGroupByName(conn, rs.Primary.ID)
 
@@ -3185,7 +3185,7 @@ func testAccCheckGroupExists(n string, v *autoscaling.Group) resource.TestCheckF
 }
 
 func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group" {
@@ -3228,7 +3228,7 @@ func testAccCheckGroupHealthyInstanceCount(v *autoscaling.Group, expected int) r
 
 func testAccCheckInstanceRefreshCount(v *autoscaling.Group, expected int) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		output, err := tfautoscaling.FindInstanceRefreshes(conn, &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: v.AutoScalingGroupName,
@@ -3248,7 +3248,7 @@ func testAccCheckInstanceRefreshCount(v *autoscaling.Group, expected int) resour
 
 func testAccCheckInstanceRefreshStatus(v *autoscaling.Group, index int, expected ...string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		output, err := tfautoscaling.FindInstanceRefreshes(conn, &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: v.AutoScalingGroupName,
@@ -3285,7 +3285,7 @@ func testAccCheckLBTargetGroupExists(n string, v *elbv2.TargetGroup) resource.Te
 			return errors.New("No ELBv2 Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		output, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
@@ -3307,7 +3307,7 @@ func testAccCheckLBTargetGroupExists(n string, v *elbv2.TargetGroup) resource.Te
 // sure that all instances in it are healthy.
 func testAccCheckALBTargetGroupHealthy(v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		output, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
 			TargetGroupArn: v.TargetGroupArn,

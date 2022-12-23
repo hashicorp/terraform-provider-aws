@@ -111,7 +111,7 @@ func DataSourceVPC() *schema.Resource {
 }
 
 func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// We specify "default" as boolean, but EC2 filters want

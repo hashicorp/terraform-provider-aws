@@ -62,7 +62,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 }
 
 func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{}
 

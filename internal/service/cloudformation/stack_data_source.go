@@ -70,7 +70,7 @@ func DataSourceStack() *schema.Resource {
 }
 
 func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)

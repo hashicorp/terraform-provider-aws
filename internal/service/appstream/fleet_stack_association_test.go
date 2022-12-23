@@ -77,7 +77,7 @@ func testAccCheckFleetStackAssociationExists(resourceName string) resource.TestC
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
 		if err != nil {
@@ -95,7 +95,7 @@ func testAccCheckFleetStackAssociationExists(resourceName string) resource.TestC
 }
 
 func testAccCheckFleetStackAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_fleet_stack_association" {

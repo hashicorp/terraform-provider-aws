@@ -38,7 +38,7 @@ func DataSourceSolutionStack() *schema.Resource {
 
 // dataSourceSolutionStackRead performs the API lookup.
 func dataSourceSolutionStackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	nameRegex := d.Get("name_regex")
 

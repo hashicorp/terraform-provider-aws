@@ -51,7 +51,7 @@ func DataSourceTracker() *schema.Resource {
 }
 
 func dataSourceTrackerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	input := &locationservice.DescribeTrackerInput{
 		TrackerName: aws.String(d.Get("tracker_name").(string)),

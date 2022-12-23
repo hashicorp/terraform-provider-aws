@@ -122,7 +122,7 @@ func DataSourceCertificateAuthority() *schema.Resource {
 }
 
 func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	certificateAuthorityARN := d.Get("arn").(string)
 

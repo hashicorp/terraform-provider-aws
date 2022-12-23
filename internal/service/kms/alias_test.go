@@ -229,7 +229,7 @@ func TestAccKMSAlias_arnDiffSuppress(t *testing.T) {
 }
 
 func testAccCheckAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_alias" {
@@ -263,7 +263,7 @@ func testAccCheckAliasExists(name string, v *kms.AliasListEntry) resource.TestCh
 			return fmt.Errorf("No KMS Alias ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 		output, err := tfkms.FindAliasByName(conn, rs.Primary.ID)
 

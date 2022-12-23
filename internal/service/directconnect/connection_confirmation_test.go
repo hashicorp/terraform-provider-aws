@@ -58,7 +58,7 @@ func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		connection, err := tfdirectconnect.FindConnectionByID(conn, rs.Primary.ID)
 

@@ -78,7 +78,7 @@ func ResourceHost() *schema.Resource {
 }
 
 func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -122,7 +122,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -169,7 +169,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyHostsInput{
@@ -218,7 +218,7 @@ func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 Host: %s", d.Id())
 	output, err := conn.ReleaseHosts(&ec2.ReleaseHostsInput{

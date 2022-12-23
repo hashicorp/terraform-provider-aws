@@ -151,7 +151,7 @@ func ResourceStackSetInstance() *schema.Resource {
 }
 
 func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
@@ -255,7 +255,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 
@@ -305,7 +305,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
 		stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
@@ -357,7 +357,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 

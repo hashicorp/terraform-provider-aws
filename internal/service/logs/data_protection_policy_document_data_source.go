@@ -12,7 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func DataSourceDataProtectionPolicyDocument() *schema.Resource {
+func init() {
+	_sp.registerSDKDataSourceFactory("aws_cloudwatch_log_data_protection_policy_document", dataSourceDataProtectionPolicyDocument)
+}
+
+func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,
 

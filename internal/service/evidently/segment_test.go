@@ -198,7 +198,7 @@ func TestAccEvidentlySegment_disappears(t *testing.T) {
 }
 
 func testAccCheckSegmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_evidently_segment" {
 			continue
@@ -232,7 +232,7 @@ func testAccCheckSegmentExists(n string, v *cloudwatchevidently.Segment) resourc
 			return fmt.Errorf("No CloudWatch Evidently Segment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
 
 		output, err := tfcloudwatchevidently.FindSegmentByNameOrARN(context.Background(), conn, rs.Primary.ID)
 

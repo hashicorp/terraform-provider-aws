@@ -38,7 +38,7 @@ func DataSourceConnection() *schema.Resource {
 func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("name").(string))
 
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.DescribeConnectionInput{
 		Name: aws.String(d.Id()),

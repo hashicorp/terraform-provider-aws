@@ -405,7 +405,7 @@ func testAccCheckDataSourceExists(resourceName string, dataSource *quicksight.Da
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
 
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -429,7 +429,7 @@ func testAccCheckDataSourceExists(resourceName string, dataSource *quicksight.Da
 }
 
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_data_source" {
 			continue

@@ -181,7 +181,7 @@ func testAccCheckEnvironmentEC2Exists(n string, v *cloud9.Environment) resource.
 			return fmt.Errorf("No Cloud9 Environment EC2 ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
 		output, err := tfcloud9.FindEnvironmentByID(conn, rs.Primary.ID)
 
@@ -196,7 +196,7 @@ func testAccCheckEnvironmentEC2Exists(n string, v *cloud9.Environment) resource.
 }
 
 func testAccCheckEnvironmentEC2Destroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloud9_environment_ec2" {

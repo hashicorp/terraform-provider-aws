@@ -250,7 +250,7 @@ func TestAccAuditManagerControl_optionalSources(t *testing.T) {
 
 func testAccCheckControlDestroy(s *terraform.State) error {
 	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_auditmanager_control" {
@@ -284,7 +284,7 @@ func testAccCheckControlExists(name string, control *types.Control) resource.Tes
 		}
 
 		ctx := context.Background()
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 		resp, err := tfauditmanager.FindControlByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameControl, rs.Primary.ID, err)

@@ -163,7 +163,7 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 }
 
 func testAccCheckLocationS3Destroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_s3" {
@@ -195,7 +195,7 @@ func testAccCheckLocationS3Exists(resourceName string, locationS3 *datasync.Desc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 		input := &datasync.DescribeLocationS3Input{
 			LocationArn: aws.String(rs.Primary.ID),
 		}

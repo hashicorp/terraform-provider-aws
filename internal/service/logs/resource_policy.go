@@ -15,7 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceResourcePolicy() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_resource_policy", resourceResourcePolicy)
+}
+
+func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
@@ -50,7 +54,7 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
@@ -76,7 +80,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	resourcePolicy, err := FindResourcePolicyByName(ctx, conn, d.Id())
 
@@ -108,7 +112,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy: %s", d.Id())
 	_, err := conn.DeleteResourcePolicyWithContext(ctx, &cloudwatchlogs.DeleteResourcePolicyInput{
