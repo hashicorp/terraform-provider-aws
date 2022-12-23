@@ -1214,7 +1214,7 @@ func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual node: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Node: %s", d.Id())
 	_, err := conn.DeleteVirtualNode(&appmesh.DeleteVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
