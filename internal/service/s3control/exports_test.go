@@ -7,5 +7,6 @@ var (
 	ResourceAccountPublicAccessBlock     = resourceAccountPublicAccessBlock
 	ResourceBucket                       = resourceBucket
 	ResourceBucketLifecycleConfiguration = resourceBucketLifecycleConfiguration
+	ResourceBucketPolicy                 = resourceBucketPolicy
 	ResourceStorageLensConfiguration     = resourceStorageLensConfiguration
 )

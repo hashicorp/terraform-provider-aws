@@ -8,6 +8,7 @@ const (
 	errCodeNoSuchAccessPointPolicy      = "NoSuchAccessPointPolicy"
 	errCodeNoSuchAsyncRequest           = "NoSuchAsyncRequest"
 	errCodeNoSuchBucket                 = "NoSuchBucket"
+	errCodeNoSuchBucketPolicy           = "NoSuchBucketPolicy"
 	errCodeNoSuchLifecycleConfiguration = "NoSuchLifecycleConfiguration"
 	errCodeNoSuchMultiRegionAccessPoint = "NoSuchMultiRegionAccessPoint"
 	errCodeNoSuchOutpost                = "NoSuchOutpost"

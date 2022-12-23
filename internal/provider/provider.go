@@ -2005,7 +2005,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_s3_object_copy":                                 s3.ResourceObjectCopy(),
 			"aws_s3_bucket_object":                               s3.ResourceBucketObject(), // DEPRECATED: use aws_s3_object instead
 
-			"aws_s3control_bucket_policy":                     s3control.ResourceBucketPolicy(),
 			"aws_s3control_multi_region_access_point":         s3control.ResourceMultiRegionAccessPoint(),
 			"aws_s3control_multi_region_access_point_policy":  s3control.ResourceMultiRegionAccessPointPolicy(),
 			"aws_s3control_object_lambda_access_point":        s3control.ResourceObjectLambdaAccessPoint(),
