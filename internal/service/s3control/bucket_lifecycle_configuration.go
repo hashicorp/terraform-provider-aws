@@ -236,12 +236,11 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
-	input := &s3control.DeleteBucketLifecycleConfigurationInput{
+	log.Printf("[DEBUG] Deleting S3 Control Bucket Lifecycle Configuration: %s", d.Id())
+	_, err = conn.DeleteBucketLifecycleConfigurationWithContext(ctx, &s3control.DeleteBucketLifecycleConfigurationInput{
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
-	}
-
-	_, err = conn.DeleteBucketLifecycleConfigurationWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeNoSuchOutpost) {
 		return nil

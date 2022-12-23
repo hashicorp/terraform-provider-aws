@@ -5,6 +5,7 @@ var (
 	ResourceAccessPoint                  = resourceAccessPoint
 	ResourceAccessPointPolicy            = resourceAccessPointPolicy
 	ResourceAccountPublicAccessBlock     = resourceAccountPublicAccessBlock
+	ResourceBucket                       = resourceBucket
 	ResourceBucketLifecycleConfiguration = resourceBucketLifecycleConfiguration
 	ResourceStorageLensConfiguration     = resourceStorageLensConfiguration
 )
