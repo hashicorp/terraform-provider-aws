@@ -293,9 +293,7 @@ func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interfa
 	//RootVolumeSecurityStyle and SVMAdminPassword are write only properties so they don't get returned from the describe API so we just store the original setting to state
 	d.Set("root_volume_security_style", d.Get("root_volume_security_style").(string))
 	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
-	// Subtype removed in AWS SDK for Go v1.44.147.
-	// d.Set("subtype", storageVirtualMachine.Subtype)
-	d.Set("subtype", nil)
+	d.Set("subtype", storageVirtualMachine.Subtype)
 	d.Set("uuid", storageVirtualMachine.UUID)
 
 	if err := d.Set("active_directory_configuration", flattenOntapSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
