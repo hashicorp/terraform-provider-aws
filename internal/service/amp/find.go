@@ -101,6 +101,43 @@ func FindWorkspaceByID(ctx context.Context, conn *prometheusservice.PrometheusSe
 	return output.Workspace, nil
 }
 
+func FindWorkspaceByAlias(ctx context.Context, conn *prometheusservice.PrometheusService, alias string) (*prometheusservice.WorkspaceDescription, error) {
+	input := &prometheusservice.ListWorkspacesInput{
+		Alias: aws.String(alias),
+	}
+
+	var result *prometheusservice.WorkspaceSummary
+	err := conn.ListWorkspacesPages(input, func(page *prometheusservice.ListWorkspacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, w := range page.Workspaces {
+			if w == nil {
+				continue
+			}
+
+			// ListWorkspaces returns all workspaces that begin with the given alias, so
+			// we need to return the result that matches the alias exactly.
+			if aws.StringValue(w.Alias) == alias {
+				result = w
+				return false
+			}
+		}
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	// Call FindWorkspaceByID so that we can return a WorkspaceDescription instead of a WorkspaceSummary.
+	return FindWorkspaceByID(ctx, conn, aws.StringValue(result.WorkspaceId))
+}
+
 func FindLoggingConfigurationByWorkspaceID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.LoggingConfigurationMetadata, error) {
 	input := &prometheusservice.DescribeLoggingConfigurationInput{
 		WorkspaceId: aws.String(id),
