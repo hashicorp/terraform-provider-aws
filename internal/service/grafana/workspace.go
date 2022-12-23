@@ -369,6 +369,10 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error updating Grafana Workspace Configuration (%s): %w", d.Id(), err)
 		}
+
+		if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Grafana Workspace (%s) configuration update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
