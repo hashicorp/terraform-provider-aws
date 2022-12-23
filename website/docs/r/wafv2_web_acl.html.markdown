@@ -354,7 +354,6 @@ The `challenge` block supports the following arguments:
 
 * `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
 
-
 ### Count
 
 The `count` block supports the following arguments:
