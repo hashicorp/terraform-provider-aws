@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
@@ -338,6 +339,7 @@ type AWSClient struct {
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
 	rdsClient       lazyClient[*rds_sdkv2.Client]
+	s3Client        lazyClient[*s3_sdkv2.Client]
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
 	ssmClient       lazyClient[*ssm_sdkv2.Client]
 
@@ -1657,6 +1659,10 @@ func (client *AWSClient) Route53ResolverConn() *route53resolver.Route53Resolver 
 
 func (client *AWSClient) S3Conn() *s3.S3 {
 	return client.s3Conn
+}
+
+func (client *AWSClient) S3Client() *s3_sdkv2.Client {
+	return client.s3Client.Client()
 }
 
 func (client *AWSClient) S3ControlConn() *s3control.S3Control {
