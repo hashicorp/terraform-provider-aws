@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,7 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceObjectLambdaAccessPointPolicy() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_s3control_object_lambda_access_point_policy", resourceObjectLambdaAccessPointPolicy)
+}
+
+func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceObjectLambdaAccessPointPolicyCreate,
 		Read:   resourceObjectLambdaAccessPointPolicyRead,
@@ -186,4 +191,58 @@ func resourceObjectLambdaAccessPointPolicyDelete(d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn *s3control.S3Control, accountID string, name string) (string, *s3control.PolicyStatus, error) {
+	input1 := &s3control.GetAccessPointPolicyForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output1, err := conn.GetAccessPointPolicyForObjectLambda(input1)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
+		return "", nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input1,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if output1 == nil {
+		return "", nil, tfresource.NewEmptyResultError(input1)
+	}
+
+	policy := aws.StringValue(output1.Policy)
+
+	if policy == "" {
+		return "", nil, tfresource.NewEmptyResultError(input1)
+	}
+
+	input2 := &s3control.GetAccessPointPolicyStatusForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output2, err := conn.GetAccessPointPolicyStatusForObjectLambda(input2)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
+		return "", nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input2,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if output2 == nil || output2.PolicyStatus == nil {
+		return "", nil, tfresource.NewEmptyResultError(input2)
+	}
+
+	return policy, output2.PolicyStatus, nil
 }
