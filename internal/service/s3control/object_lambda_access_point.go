@@ -165,7 +165,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	output, err := FindObjectLambdaAccessPointByAccountIDAndName(ctx, conn, accountID, name)
+	output, err := FindObjectLambdaAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
@@ -248,7 +248,7 @@ func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func FindObjectLambdaAccessPointByAccountIDAndName(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaConfiguration, error) {
+func FindObjectLambdaAccessPointByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaConfiguration, error) {
 	input := &s3control.GetAccessPointConfigurationForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),

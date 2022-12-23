@@ -161,7 +161,7 @@ func testAccCheckObjectLambdaAccessPointDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfs3control.FindObjectLambdaAccessPointByAccountIDAndName(context.Background(), conn, accountID, name)
+		_, err = tfs3control.FindObjectLambdaAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -196,7 +196,7 @@ func testAccCheckObjectLambdaAccessPointExists(n string, v *s3control.ObjectLamb
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		output, err := tfs3control.FindObjectLambdaAccessPointByAccountIDAndName(context.Background(), conn, accountID, name)
+		output, err := tfs3control.FindObjectLambdaAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err

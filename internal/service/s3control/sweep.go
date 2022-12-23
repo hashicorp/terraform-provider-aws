@@ -162,7 +162,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 		}
 
 		for _, v := range page.ObjectLambdaAccessPointList {
-			r := ResourceObjectLambdaAccessPoint()
+			r := resourceObjectLambdaAccessPoint()
 			d := r.Data(nil)
 			d.SetId(ObjectLambdaAccessPointCreateResourceID(accountID, aws.StringValue(v.Name)))
 
