@@ -22,7 +22,7 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SSMIncidentsEndpointID, t)
+			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

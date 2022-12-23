@@ -27,6 +27,7 @@ const (
 	ResNameReplicationSet = "Replication Set"
 )
 
+// @SDKResource("aws_ssmincidents_replication_set")
 func ResourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSetCreate,
@@ -108,7 +109,7 @@ func resourceReplicationSetCreate(context context.Context, d *schema.ResourceDat
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(context, d.Get("tags").(map[string]interface{})))
 
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAWS().Map()

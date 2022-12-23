@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ssmincidents_replication_set")
 func DataSourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSetRead,

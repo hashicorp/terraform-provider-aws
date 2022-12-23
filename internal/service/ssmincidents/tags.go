@@ -23,10 +23,10 @@ func listResourceTags(context context.Context, client *ssmincidents.Client, arn 
 	output, err := client.ListTagsForResource(context, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(context, nil), err
 	}
 
-	return tftags.New(output.Tags), nil
+	return tftags.New(context, output.Tags), nil
 }
 
 // gets all tags via get request and sets them in Resource Data ssmincidents resource
@@ -55,8 +55,8 @@ func setResourceDataTags(context context.Context, d *schema.ResourceData, meta i
 func updateResourceTags(context context.Context, client *ssmincidents.Client, d *schema.ResourceData) error {
 	old, new := d.GetChange("tags_all")
 
-	oldTags := tftags.New(old)
-	newTags := tftags.New(new)
+	oldTags := tftags.New(context, old)
+	newTags := tftags.New(context, new)
 
 	allNewTagsMap := flex.ExpandStringValueMap(new.(map[string]interface{}))
 
@@ -70,8 +70,8 @@ func updateResourceTags(context context.Context, client *ssmincidents.Client, d 
 
 	old, new = d.GetChange("tags")
 
-	oldTags = tftags.New(old)
-	newTags = tftags.New(new)
+	oldTags = tftags.New(context, old)
+	newTags = tftags.New(context, new)
 
 	toUpdate := make(map[string]string)
 
@@ -88,7 +88,7 @@ func updateResourceTags(context context.Context, client *ssmincidents.Client, d 
 	d.Set("tags_all", allNewTagsMap)
 
 	empty := tftags.KeyValueTags{}
-	if err := updateResourceTag(context, client, d.Id(), empty, tftags.New(toUpdate)); err != nil {
+	if err := updateResourceTag(context, client, d.Id(), empty, tftags.New(context, toUpdate)); err != nil {
 		return err
 	}
 
