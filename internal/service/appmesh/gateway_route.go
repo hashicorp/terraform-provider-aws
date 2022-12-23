@@ -643,7 +643,7 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh gateway route (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Gateway Route (%s)", d.Id())
 	_, err := conn.DeleteGatewayRoute(&appmesh.DeleteGatewayRouteInput{
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),

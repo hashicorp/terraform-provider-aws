@@ -579,7 +579,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn()
 
-	log.Printf("[DEBUG] Deleting Amplify App (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Amplify App: %s", d.Id())
 	_, err := conn.DeleteApp(&amplify.DeleteAppInput{
 		AppId: aws.String(d.Id()),
 	})

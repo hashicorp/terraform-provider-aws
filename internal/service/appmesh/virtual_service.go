@@ -288,7 +288,7 @@ func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual service: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Service: %s", d.Id())
 	_, err := conn.DeleteVirtualService(&appmesh.DeleteVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),

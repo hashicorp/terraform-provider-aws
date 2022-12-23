@@ -244,7 +244,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 domain name (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting API Gateway v2 Domain Name: %s", d.Id())
 	_, err := conn.DeleteDomainName(&apigatewayv2.DeleteDomainNameInput{
 		DomainName: aws.String(d.Id()),
 	})
