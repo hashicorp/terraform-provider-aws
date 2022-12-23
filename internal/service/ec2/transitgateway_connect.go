@@ -73,7 +73,7 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -128,7 +128,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -208,7 +208,7 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
@@ -243,7 +243,7 @@ func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayConnectWithContext(ctx, &ec2.DeleteTransitGatewayConnectInput{

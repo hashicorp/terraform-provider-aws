@@ -37,7 +37,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 }
 
 func testAccCheckAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProviderAdmin.Meta().(*conns.AWSClient).FMSConn
+	conn := testAccProviderAdmin.Meta().(*conns.AWSClient).FMSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_admin_account" {

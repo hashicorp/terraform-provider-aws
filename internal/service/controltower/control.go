@@ -52,7 +52,7 @@ func ResourceControl() *schema.Resource {
 }
 
 func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn
+	conn := meta.(*conns.AWSClient).ControlTowerConn()
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
@@ -78,7 +78,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn
+	conn := meta.(*conns.AWSClient).ControlTowerConn()
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 
@@ -105,7 +105,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn
+	conn := meta.(*conns.AWSClient).ControlTowerConn()
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 

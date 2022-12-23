@@ -32,7 +32,7 @@ func DataSourceVPCPeeringConnections() *schema.Resource {
 }
 
 func dataSourceVPCPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 

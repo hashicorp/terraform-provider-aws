@@ -159,7 +159,7 @@ func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 }
 
 func testAccCheckIdentityProviderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_provider" {
@@ -199,7 +199,7 @@ func testAccCheckIdentityProviderExists(resourceName string, identityProvider *c
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		input := &cognitoidentityprovider.DescribeIdentityProviderInput{
 			ProviderName: aws.String(providerName),

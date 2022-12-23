@@ -159,7 +159,7 @@ func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Service Discovery Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
 		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(context.Background(), conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
@@ -179,7 +179,7 @@ func testAccInstanceImportStateIdFunc(resourceName string) resource.ImportStateI
 }
 
 func testAccCheckInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_instance" {

@@ -57,7 +57,7 @@ func ResourceAccountPublicAccessBlock() *schema.Resource {
 }
 
 func resourceAccountPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -86,7 +86,7 @@ func resourceAccountPublicAccessBlockCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAccountPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	input := &s3control.GetPublicAccessBlockInput{
 		AccountId: aws.String(d.Id()),
@@ -137,7 +137,7 @@ func resourceAccountPublicAccessBlockRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAccountPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	input := &s3control.PutPublicAccessBlockInput{
 		AccountId: aws.String(d.Id()),
@@ -183,7 +183,7 @@ func resourceAccountPublicAccessBlockUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAccountPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	input := &s3control.DeletePublicAccessBlockInput{
 		AccountId: aws.String(d.Id()),

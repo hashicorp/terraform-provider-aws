@@ -201,7 +201,7 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckAPIDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_api_destination" {
@@ -229,7 +229,7 @@ func testAccCheckAPIDestinationExists(n string, v *eventbridge.DescribeApiDestin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 		params := eventbridge.DescribeApiDestinationInput{
 			Name: aws.String(rs.Primary.ID),
 		}

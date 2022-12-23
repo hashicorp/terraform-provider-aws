@@ -92,7 +92,7 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 }
 
 func testAccCheckPullThroughCacheRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_pull_through_cache_rule" {
@@ -126,7 +126,7 @@ func testAccCheckPullThroughCacheRuleExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ECR Pull Through Cache Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 		_, err := tfecr.FindPullThroughCacheRuleByRepositoryPrefix(context.Background(), conn, rs.Primary.ID)
 

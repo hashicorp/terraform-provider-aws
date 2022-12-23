@@ -138,7 +138,7 @@ func ResourceWorkspace() *schema.Resource {
 }
 
 func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -185,7 +185,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -233,7 +233,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	// IMPORTANT: Only one workspace property could be changed in a time.
 	// I've create AWS Support feature request to allow multiple properties modification in a time.
@@ -280,7 +280,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	return WorkspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 }

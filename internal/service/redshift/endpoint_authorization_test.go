@@ -150,7 +150,7 @@ func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
 }
 
 func testAccCheckEndpointAuthorizationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_endpoint_authorization" {
@@ -184,7 +184,7 @@ func testAccCheckEndpointAuthorizationExists(n string, v *redshift.EndpointAutho
 			return fmt.Errorf("No Redshift Endpoint Authorization ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		output, err := tfredshift.FindEndpointAuthorizationById(conn, rs.Primary.ID)
 

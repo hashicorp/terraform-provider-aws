@@ -219,7 +219,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_tags(t *testing.T) {
 }
 
 func testAccCheckFirewallRuleGroupAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_firewall_rule_group_association" {
@@ -253,7 +253,7 @@ func testAccCheckFirewallRuleGroupAssociationExists(n string, v *route53resolver
 			return fmt.Errorf("No Route53 Resolver Firewall Rule Group Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 		output, err := tfroute53resolver.FindFirewallRuleGroupAssociationByID(context.Background(), conn, rs.Primary.ID)
 

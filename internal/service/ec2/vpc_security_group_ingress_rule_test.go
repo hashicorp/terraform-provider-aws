@@ -954,7 +954,7 @@ func testAccCheckSecurityGroupRuleRecreated(i, j *ec2.SecurityGroupRule) resourc
 }
 
 func testAccCheckSecurityGroupIngressRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_security_group_ingress_rule" {
@@ -988,7 +988,7 @@ func testAccCheckSecurityGroupIngressRuleExists(n string, v *ec2.SecurityGroupRu
 			return fmt.Errorf("No VPC Security Group Ingress Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindSecurityGroupIngressRuleByID(context.Background(), conn, rs.Primary.ID)
 
@@ -1004,7 +1004,7 @@ func testAccCheckSecurityGroupIngressRuleExists(n string, v *ec2.SecurityGroupRu
 
 func testAccCheckSecurityGroupIngressRuleUpdateTags(v *ec2.SecurityGroupRule, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		return tfec2.UpdateTagsWithContext(context.Background(), conn, aws.StringValue(v.SecurityGroupRuleId), oldTags, newTags)
 	}

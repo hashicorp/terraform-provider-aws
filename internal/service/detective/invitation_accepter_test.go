@@ -55,7 +55,7 @@ func testAccCheckInvitationAccepterExists(resourceName string) resource.TestChec
 			return fmt.Errorf("resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
 
 		result, err := tfdetective.FindInvitationByGraphARN(context.Background(), conn, rs.Primary.ID)
 
@@ -72,7 +72,7 @@ func testAccCheckInvitationAccepterExists(resourceName string) resource.TestChec
 }
 
 func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_detective_invitation_accepter" {

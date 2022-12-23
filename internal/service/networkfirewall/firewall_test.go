@@ -358,7 +358,7 @@ func testAccCheckFirewallDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 		output, err := tfnetworkfirewall.FindFirewall(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -385,7 +385,7 @@ func testAccCheckFirewallExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No NetworkFirewall Firewall ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 		output, err := tfnetworkfirewall.FindFirewall(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -400,7 +400,7 @@ func testAccCheckFirewallExists(n string) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 
 	input := &networkfirewall.ListFirewallsInput{}
 

@@ -475,7 +475,7 @@ func testAccCheckInstanceStorageConfigExists(resourceName string, function *conn
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeInstanceStorageConfigInput{
 			AssociationId: aws.String(associationId),
@@ -500,7 +500,7 @@ func testAccCheckInstanceStorageConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceId, associationId, resourceType, err := tfconnect.InstanceStorageConfigParseId(rs.Primary.ID)
 

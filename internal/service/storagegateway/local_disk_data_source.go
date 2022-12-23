@@ -41,7 +41,7 @@ func DataSourceLocalDisk() *schema.Resource {
 }
 
 func dataSourceLocalDiskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(d.Get("gateway_arn").(string)),

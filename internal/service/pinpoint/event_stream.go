@@ -45,7 +45,7 @@ func ResourceEventStream() *schema.Resource {
 }
 
 func resourceEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -88,7 +88,7 @@ func resourceEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEventStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
 
@@ -114,7 +114,7 @@ func resourceEventStreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEventStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())
 	_, err := conn.DeleteEventStream(&pinpoint.DeleteEventStreamInput{

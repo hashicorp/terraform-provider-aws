@@ -71,7 +71,7 @@ func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
 }
 
 func testAccCheckAuthenticationProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_authentication_profile" {
@@ -105,7 +105,7 @@ func testAccCheckAuthenticationProfileExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("Authentication Profile ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		_, err := tfredshift.FindAuthenticationProfileByID(conn, rs.Primary.ID)
 

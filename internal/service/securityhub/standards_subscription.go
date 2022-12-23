@@ -34,7 +34,7 @@ func ResourceStandardsSubscription() *schema.Resource {
 }
 
 func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	standardsARN := d.Get("standards_arn").(string)
 	input := &securityhub.BatchEnableStandardsInput{
@@ -64,7 +64,7 @@ func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	output, err := FindStandardsSubscriptionByARN(conn, d.Id())
 
@@ -80,7 +80,7 @@ func resourceStandardsSubscriptionRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	log.Printf("[DEBUG] Deleting Security Hub Standards Subscription: %s", d.Id())
 	_, err := conn.BatchDisableStandards(&securityhub.BatchDisableStandardsInput{

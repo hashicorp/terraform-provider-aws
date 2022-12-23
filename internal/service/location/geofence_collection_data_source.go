@@ -16,7 +16,7 @@ import (
 
 func DataSourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceGeofenceCollectionRead,
+		ReadWithoutTimeout: dataSourceGeofenceCollectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"collection_arn": {
@@ -55,7 +55,7 @@ const (
 )
 
 func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	name := d.Get("collection_name").(string)
 

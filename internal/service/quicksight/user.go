@@ -94,7 +94,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 
@@ -135,7 +135,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -169,7 +169,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -193,7 +193,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {

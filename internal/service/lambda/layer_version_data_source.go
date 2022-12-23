@@ -94,7 +94,7 @@ func DataSourceLayerVersion() *schema.Resource {
 }
 
 func dataSourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	layerName := d.Get("layer_name").(string)
 
 	var version int64

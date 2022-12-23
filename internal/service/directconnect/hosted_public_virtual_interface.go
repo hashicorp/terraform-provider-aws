@@ -110,7 +110,7 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 }
 
 func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	req := &directconnect.AllocatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -151,7 +151,7 @@ func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta int
 }
 
 func resourceHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
@@ -194,7 +194,7 @@ func resourceHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, meta int
 }
 
 func resourceHostedPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

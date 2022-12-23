@@ -249,7 +249,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 }
 
 func testAccCheckRepositoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_repository" {
@@ -291,7 +291,7 @@ func testAccCheckRepositoryExists(name string, res *ecr.Repository) resource.Tes
 			return fmt.Errorf("No ECR repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 		output, err := conn.DescribeRepositories(&ecr.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),

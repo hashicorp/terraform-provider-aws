@@ -194,7 +194,7 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 }
 
 func testAccCheckAgentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_agent" {
@@ -224,7 +224,7 @@ func testAccCheckAgentExists(resourceName string, agent *datasync.DescribeAgentO
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 		output, err := tfdatasync.FindAgentByARN(conn, rs.Primary.ID)
 

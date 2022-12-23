@@ -38,7 +38,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConn
+	conn := client.(*conns.AWSClient).KafkaConn()
 	input := &kafka.ListClustersV2Input{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -81,7 +81,7 @@ func sweepConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConn
+	conn := client.(*conns.AWSClient).KafkaConn()
 	var sweeperErrs *multierror.Error
 
 	input := &kafka.ListConfigurationsInput{}

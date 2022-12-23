@@ -10,11 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
@@ -35,7 +35,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -127,7 +126,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -135,7 +133,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -154,7 +151,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
@@ -181,13 +177,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
@@ -206,7 +200,7 @@ import (
 
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
-func New(_ context.Context) (*schema.Provider, error) {
+func New(ctx context.Context) (*schema.Provider, error) {
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
 		// Notably the attributes can have no Default values.
@@ -490,10 +484,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
-			"aws_cloudwatch_log_data_protection_policy_document": logs.DataSourceDataProtectionPolicyDocument(),
-			"aws_cloudwatch_log_group":                           logs.DataSourceGroup(),
-			"aws_cloudwatch_log_groups":                          logs.DataSourceGroups(),
-
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
 
@@ -759,6 +749,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lambda_code_signing_config": lambda.DataSourceCodeSigningConfig(),
 			"aws_lambda_function_url":        lambda.DataSourceFunctionURL(),
 			"aws_lambda_function":            lambda.DataSourceFunction(),
+			"aws_lambda_functions":           lambda.DataSourceFunctions(),
 			"aws_lambda_invocation":          lambda.DataSourceInvocation(),
 			"aws_lambda_layer_version":       lambda.DataSourceLayerVersion(),
 
@@ -837,6 +828,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_db_cluster_snapshot":            rds.DataSourceClusterSnapshot(),
 			"aws_db_event_categories":            rds.DataSourceEventCategories(),
 			"aws_db_instance":                    rds.DataSourceInstance(),
+			"aws_db_instances":                   rds.DataSourceInstances(),
 			"aws_db_proxy":                       rds.DataSourceProxy(),
 			"aws_db_snapshot":                    rds.DataSourceSnapshot(),
 			"aws_db_subnet_group":                rds.DataSourceSubnetGroup(),
@@ -878,7 +870,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
 			"aws_s3_bucket_policy":  s3.DataSourceBucketPolicy(),
 
-			"aws_s3_account_public_access_block": s3control.DataSourceAccountPublicAccessBlock(),
+			"aws_s3_account_public_access_block":      s3control.DataSourceAccountPublicAccessBlock(),
+			"aws_s3control_multi_region_access_point": s3control.DataSourceMultiRegionAccessPoint(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
@@ -1066,6 +1059,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_appsync_function":                    appsync.ResourceFunction(),
 			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
 			"aws_appsync_resolver":                    appsync.ResourceResolver(),
+			"aws_appsync_type":                        appsync.ResourceType(),
 
 			"aws_athena_database":     athena.ResourceDatabase(),
 			"aws_athena_data_catalog": athena.ResourceDataCatalog(),
@@ -1161,16 +1155,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudwatch_event_permission":      events.ResourcePermission(),
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
-
-			"aws_cloudwatch_log_data_protection_policy": logs.ResourceDataProtectionPolicy(),
-			"aws_cloudwatch_log_destination":            logs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":     logs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":                  logs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":          logs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":        logs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":                 logs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter":    logs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":           logs.ResourceQueryDefinition(),
 
 			"aws_rum_app_monitor":         rum.ResourceAppMonitor(),
 			"aws_rum_metrics_destination": rum.ResourceMetricsDestination(),
@@ -1302,6 +1286,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_dx_hosted_transit_virtual_interface":          directconnect.ResourceHostedTransitVirtualInterface(),
 			"aws_dx_hosted_transit_virtual_interface_accepter": directconnect.ResourceHostedTransitVirtualInterfaceAccepter(),
 			"aws_dx_lag":                       directconnect.ResourceLag(),
+			"aws_dx_macsec_key_association":    directconnect.ResourceMacSecKeyAssociation(),
 			"aws_dx_private_virtual_interface": directconnect.ResourcePrivateVirtualInterface(),
 			"aws_dx_public_virtual_interface":  directconnect.ResourcePublicVirtualInterface(),
 			"aws_dx_transit_virtual_interface": directconnect.ResourceTransitVirtualInterface(),
@@ -2054,6 +2039,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_notebook_instance":                         sagemaker.ResourceNotebookInstance(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": sagemaker.ResourceNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_project":                                   sagemaker.ResourceProject(),
+			"aws_sagemaker_space":                                     sagemaker.ResourceSpace(),
 			"aws_sagemaker_servicecatalog_portfolio_status":           sagemaker.ResourceServicecatalogPortfolioStatus(),
 			"aws_sagemaker_studio_lifecycle_config":                   sagemaker.ResourceStudioLifecycleConfig(),
 			"aws_sagemaker_user_profile":                              sagemaker.ResourceUserProfile(),
@@ -2171,6 +2157,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
 			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
 			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
+			"aws_ssoadmin_permissions_boundary_attachment":    ssoadmin.ResourcePermissionsBoundaryAttachment(),
 
 			"aws_storagegateway_cache":                   storagegateway.ResourceCache(),
 			"aws_storagegateway_cached_iscsi_volume":     storagegateway.ResourceCachediSCSIVolume(),
@@ -2253,25 +2240,77 @@ func New(_ context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
-	providerData := &conns.AWSClient{
-		// TODO: This should be generated.
+	var errs *multierror.Error
+	servicePackages := servicePackages(ctx)
 
-		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
-		ServicePackages: []intf.ServicePackageData{
-			auditmanager.ServicePackageData,
-			ec2.ServicePackageData,
-			globalaccelerator.ServicePackageData,
-			medialive.ServicePackageData,
-			meta.ServicePackageData,
-			resourceexplorer2.ServicePackageData,
-			simpledb.ServicePackageData,
-			sts.ServicePackageData,
-		},
+	for _, sp := range servicePackages {
+		for _, v := range sp.SDKDataSources(ctx) {
+			typeName := v.TypeName
+
+			if _, ok := provider.DataSourcesMap[typeName]; ok {
+				errs = multierror.Append(errs, fmt.Errorf("duplicate data source: %s", typeName))
+				continue
+			}
+
+			ds := v.Factory()
+
+			if v := ds.ReadWithoutTimeout; v != nil {
+				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
+			}
+
+			provider.DataSourcesMap[typeName] = ds
+		}
+
+		for _, v := range sp.SDKResources(ctx) {
+			typeName := v.TypeName
+
+			if _, ok := provider.ResourcesMap[typeName]; ok {
+				errs = multierror.Append(errs, fmt.Errorf("duplicate resource: %s", typeName))
+				continue
+			}
+
+			r := v.Factory()
+
+			if v := r.CreateWithoutTimeout; v != nil {
+				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
+			}
+			if v := r.ReadWithoutTimeout; v != nil {
+				r.ReadWithoutTimeout = wrappedReadContextFunc(v)
+			}
+			if v := r.UpdateWithoutTimeout; v != nil {
+				r.UpdateWithoutTimeout = wrappedUpdateContextFunc(v)
+			}
+			if v := r.DeleteWithoutTimeout; v != nil {
+				r.DeleteWithoutTimeout = wrappedDeleteContextFunc(v)
+			}
+			if v := r.Importer; v != nil {
+				if v := v.StateContext; v != nil {
+					r.Importer.StateContext = wrappedStateContextFunc(v)
+				}
+			}
+			if v := r.CustomizeDiff; v != nil {
+				r.CustomizeDiff = wrappedCustomizeDiffFunc(v)
+			}
+			for _, stateUpgrader := range r.StateUpgraders {
+				if v := stateUpgrader.Upgrade; v != nil {
+					stateUpgrader.Upgrade = wrappedStateUpgradeFunc(v)
+				}
+			}
+
+			provider.ResourcesMap[typeName] = r
+		}
+	}
+
+	if err := errs.ErrorOrNil(); err != nil {
+		return nil, err
 	}
 
 	// Set the provider Meta (instance data) here.
-	// It will be overwritten by the result of the call to ConfigureContextFunc.
-	provider.SetMeta(providerData)
+	// It will be overwritten by the result of the call to ConfigureContextFunc,
+	// but can be used pre-configuration by other (non-primary) provider servers.
+	provider.SetMeta(&conns.AWSClient{
+		ServicePackages: servicePackages,
+	})
 
 	return provider, nil
 }
@@ -2367,15 +2406,15 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	providerData, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+	meta, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
 
 	if diags.HasError() {
 		return nil, diags
 	}
 
 	// Configure each service.
-	for _, v := range providerData.ServicePackages {
-		if err := v.Configure(ctx, providerData); err != nil {
+	for _, v := range meta.ServicePackages {
+		if err := v.Configure(ctx, meta); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
 	}
@@ -2384,7 +2423,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		return nil, diags
 	}
 
-	return providerData, diags
+	return meta, diags
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -2718,4 +2757,60 @@ func expandEndpoints(tfList []interface{}) (map[string]string, error) {
 	}
 
 	return endpoints, nil
+}
+
+func wrappedCreateContextFunc(f schema.CreateContextFunc) schema.CreateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedReadContextFunc(f schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedUpdateContextFunc(f schema.UpdateContextFunc) schema.UpdateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedDeleteContextFunc(f schema.DeleteContextFunc) schema.DeleteContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedStateContextFunc(f schema.StateContextFunc) schema.StateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedCustomizeDiffFunc(f schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, d, meta)
+	}
+}
+
+func wrappedStateUpgradeFunc(f schema.StateUpgradeFunc) schema.StateUpgradeFunc {
+	return func(ctx context.Context, rawState map[string]interface{}, meta any) (map[string]interface{}, error) {
+		ctx = meta.(*conns.AWSClient).InitContext(ctx)
+
+		return f(ctx, rawState, meta)
+	}
 }

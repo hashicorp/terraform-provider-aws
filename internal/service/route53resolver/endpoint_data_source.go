@@ -67,7 +67,7 @@ func DataSourceEndpoint() *schema.Resource {
 }
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	endpointID := d.Get("resolver_endpoint_id").(string)
 	input := &route53resolver.ListResolverEndpointsInput{}

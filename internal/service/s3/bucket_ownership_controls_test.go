@@ -126,7 +126,7 @@ func TestAccS3BucketOwnershipControls_Rule_objectOwnership(t *testing.T) {
 }
 
 func testAccCheckBucketOwnershipControlsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_ownership_controls" {
@@ -168,7 +168,7 @@ func testAccCheckBucketOwnershipControlsExists(resourceName string) resource.Tes
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		input := &s3.GetBucketOwnershipControlsInput{
 			Bucket: aws.String(rs.Primary.ID),

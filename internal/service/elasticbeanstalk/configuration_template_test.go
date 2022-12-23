@@ -77,7 +77,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T
 }
 
 func testAccCheckConfigurationTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_configuration_template" {
@@ -120,7 +120,7 @@ func testAccCheckConfigurationTemplateDestroy(s *terraform.State) error {
 
 func testAccCheckConfigurationTemplateExists(n string, config *elasticbeanstalk.ConfigurationSettingsDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

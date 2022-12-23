@@ -89,7 +89,7 @@ func TestAccRedshiftPartner_disappears_cluster(t *testing.T) {
 }
 
 func testAccCheckPartnerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_partner" {
@@ -122,7 +122,7 @@ func testAccCheckPartnerExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Redshift Partner ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		_, err := tfredshift.FindPartnerById(conn, rs.Primary.ID)
 

@@ -38,7 +38,7 @@ func ResourceReceiptRuleSet() *schema.Resource {
 }
 
 func resourceReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -57,7 +57,7 @@ func resourceReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	input := &ses.DescribeReceiptRuleSetInput{
 		RuleSetName: aws.String(d.Id()),
@@ -96,7 +96,7 @@ func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	log.Printf("[DEBUG] SES Delete Receipt Rule Set: %s", d.Id())
 	input := &ses.DeleteReceiptRuleSetInput{

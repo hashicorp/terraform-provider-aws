@@ -119,7 +119,7 @@ func ResourcePool() *schema.Resource {
 }
 
 func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating Cognito Identity Pool")
@@ -165,7 +165,7 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -227,7 +227,7 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
 	if d.HasChangesExcept("tags_all", "tags") {
@@ -261,7 +261,7 @@ func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
 	_, err := conn.DeleteIdentityPool(&cognitoidentity.DeleteIdentityPoolInput{

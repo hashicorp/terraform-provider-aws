@@ -270,7 +270,7 @@ func testAccCheckBucketPublicAccessBlockExists(n string, config *s3.PublicAccess
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		input := &s3.GetPublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -317,7 +317,7 @@ func testAccCheckBucketPublicAccessBlockDisappears(n string) resource.TestCheckF
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		deleteInput := &s3.DeletePublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),

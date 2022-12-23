@@ -59,7 +59,7 @@ func ResourceGroupPolicy() *schema.Resource {
 }
 
 func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.PutGroupPolicyInput{
 		GroupName:      aws.String(d.Get("group").(string)),
@@ -85,7 +85,7 @@ func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -158,7 +158,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {

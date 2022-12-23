@@ -37,7 +37,7 @@ func ResourceNetworkACLAssociation() *schema.Resource {
 }
 
 func resourceNetworkACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	associationID, err := networkACLAssociationCreate(conn, d.Get("network_acl_id").(string), d.Get("subnet_id").(string))
 
@@ -51,7 +51,7 @@ func resourceNetworkACLAssociationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceNetworkACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	association, err := FindNetworkACLAssociationByID(conn, d.Id())
 
@@ -72,7 +72,7 @@ func resourceNetworkACLAssociationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeNetworkAclsInput{
 		Filters: BuildAttributeFilterList(map[string]string{

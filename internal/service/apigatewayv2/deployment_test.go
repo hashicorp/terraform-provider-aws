@@ -130,7 +130,7 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 }
 
 func testAccCheckDeploymentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_deployment" {
@@ -156,7 +156,7 @@ func testAccCheckDeploymentDestroy(s *terraform.State) error {
 
 func testAccCheckDeploymentDisappears(apiId *string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		_, err := conn.DeleteDeployment(&apigatewayv2.DeleteDeploymentInput{
 			ApiId:        apiId,
@@ -178,7 +178,7 @@ func testAccCheckDeploymentExists(n string, vApiId *string, v *apigatewayv2.GetD
 			return fmt.Errorf("No API Gateway v2 deployment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetDeployment(&apigatewayv2.GetDeploymentInput{

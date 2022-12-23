@@ -26,7 +26,7 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Enabling Security Hub for account")
 
 	_, err := conn.EnableSecurityHub(&securityhub.EnableSecurityHubInput{})
@@ -41,7 +41,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	log.Printf("[DEBUG] Checking if Security Hub is enabled")
 	_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
@@ -59,7 +59,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Disabling Security Hub for account")
 
 	err := resource.Retry(adminAccountNotFoundTimeout, func() *resource.RetryError {

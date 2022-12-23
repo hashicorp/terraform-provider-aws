@@ -59,7 +59,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
-	conn := client.(*conns.AWSClient).LogsConn
+	conn := client.(*conns.AWSClient).LogsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
@@ -68,7 +68,7 @@ func sweepGroups(region string) error {
 		}
 
 		for _, v := range page.LogGroups {
-			r := ResourceGroup()
+			r := resourceGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.LogGroupName))
 
@@ -102,7 +102,7 @@ func sweeplogQueryDefinitions(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
-	conn := client.(*conns.AWSClient).LogsConn
+	conn := client.(*conns.AWSClient).LogsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeQueryDefinitionsPages(conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
@@ -111,7 +111,7 @@ func sweeplogQueryDefinitions(region string) error {
 		}
 
 		for _, v := range page.QueryDefinitions {
-			r := ResourceQueryDefinition()
+			r := resourceQueryDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.QueryDefinitionId))
 
@@ -145,7 +145,7 @@ func sweepResourcePolicies(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
-	conn := client.(*conns.AWSClient).LogsConn
+	conn := client.(*conns.AWSClient).LogsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeResourcePoliciesPages(conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
@@ -154,7 +154,7 @@ func sweepResourcePolicies(region string) error {
 		}
 
 		for _, v := range page.ResourcePolicies {
-			r := ResourceResourcePolicy()
+			r := resourceResourcePolicy()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.PolicyName))
 

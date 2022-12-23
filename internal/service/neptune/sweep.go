@@ -28,7 +28,7 @@ func sweepEventSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn
+	conn := client.(*conns.AWSClient).NeptuneConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {

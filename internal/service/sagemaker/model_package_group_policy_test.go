@@ -90,7 +90,7 @@ func TestAccSageMakerModelPackageGroupPolicy_Disappears_modelPackageGroup(t *tes
 }
 
 func testAccCheckModelPackageGroupPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_model_package_group_policy" {
@@ -121,7 +121,7 @@ func testAccCheckModelPackageGroupPolicyExists(n string, mpg *sagemaker.GetModel
 			return fmt.Errorf("No sagmaker Model Package Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		resp, err := tfsagemaker.FindModelPackageGroupPolicyByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

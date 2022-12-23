@@ -3204,7 +3204,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 func testAccCheckTargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
@@ -3242,7 +3242,7 @@ func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.Te
 			return errors.New("No Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
@@ -3754,7 +3754,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccCheckATargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_alb_target_group" {
@@ -3794,7 +3794,7 @@ func testAccCheckATargetGroupExists(n string, res *elbv2.TargetGroup) resource.T
 			return errors.New("No Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		describe, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
 			TargetGroupArns: []*string{aws.String(rs.Primary.ID)},

@@ -377,7 +377,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.
 }
 
 func testAccCheckDomainNameDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_domain_name" {
@@ -411,7 +411,7 @@ func testAccCheckDomainNameExists(n string, v *apigatewayv2.GetDomainNameOutput)
 			return fmt.Errorf("No API Gateway v2 domain name ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		output, err := tfapigatewayv2.FindDomainNameByName(conn, rs.Primary.ID)
 

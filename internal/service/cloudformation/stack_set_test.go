@@ -700,7 +700,7 @@ func testAccCheckStackSetExists(resourceName string, v *cloudformation.StackSet)
 
 		callAs := rs.Primary.Attributes["call_as"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
@@ -715,7 +715,7 @@ func testAccCheckStackSetExists(resourceName string, v *cloudformation.StackSet)
 }
 
 func testAccCheckStackSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack_set" {
@@ -761,7 +761,7 @@ func testAccCheckStackSetRecreated(i, j *cloudformation.StackSet) resource.TestC
 }
 
 func testAccPreCheckStackSet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	input := &cloudformation.ListStackSetsInput{}
 	_, err := conn.ListStackSets(input)

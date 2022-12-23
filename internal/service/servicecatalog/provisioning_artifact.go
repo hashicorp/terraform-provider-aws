@@ -103,7 +103,7 @@ func ResourceProvisioningArtifact() *schema.Resource {
 }
 
 func resourceProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	parameters := make(map[string]interface{})
 	parameters["description"] = d.Get("description")
@@ -161,7 +161,7 @@ func resourceProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 
@@ -209,7 +209,7 @@ func resourceProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
 		artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
@@ -267,7 +267,7 @@ func resourceProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 

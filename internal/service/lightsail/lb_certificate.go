@@ -138,7 +138,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	in := lightsail.CreateLoadBalancerTlsCertificateInput{
 		CertificateDomainName: aws.String(d.Get("domain_name").(string)),
@@ -179,7 +179,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := FindLoadBalancerCertificateById(ctx, conn, d.Id())
 
@@ -206,7 +206,7 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	lbName := id_parts[0]

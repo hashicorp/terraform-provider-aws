@@ -496,7 +496,7 @@ func testAccCheckQueueExists(resourceName string, function *connect.DescribeQueu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeQueueInput{
 			QueueId:    aws.String(queueID),
@@ -520,7 +520,7 @@ func testAccCheckQueueDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, queueID, err := tfconnect.QueueParseID(rs.Primary.ID)
 

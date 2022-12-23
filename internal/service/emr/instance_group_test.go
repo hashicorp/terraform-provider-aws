@@ -307,7 +307,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 }
 
 func testAccCheckInstanceGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -348,7 +348,7 @@ func testAccCheckInstanceGroupExists(name string, ig *emr.InstanceGroup) resourc
 		}
 
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRConn
+		conn := meta.(*conns.AWSClient).EMRConn()
 		group, err := tfemr.FetchInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)

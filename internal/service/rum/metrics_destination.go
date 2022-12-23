@@ -52,7 +52,7 @@ func ResourceMetricsDestination() *schema.Resource {
 }
 
 func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	name := d.Get("app_monitor_name").(string)
 	input := &cloudwatchrum.PutRumMetricsDestinationInput{
@@ -82,7 +82,7 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	dest, err := FindMetricsDestinationByName(ctx, conn, d.Id())
 
@@ -105,7 +105,7 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	input := &cloudwatchrum.DeleteRumMetricsDestinationInput{
 		AppMonitorName: aws.String(d.Id()),

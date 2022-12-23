@@ -190,7 +190,7 @@ func TestAccAppConfigApplication_tags(t *testing.T) {
 }
 
 func testAccCheckApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_application" {
@@ -230,7 +230,7 @@ func testAccCheckApplicationExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		input := &appconfig.GetApplicationInput{
 			ApplicationId: aws.String(rs.Primary.ID),

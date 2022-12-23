@@ -122,7 +122,7 @@ func TestAccBackupVaultPolicy_ignoreEquivalent(t *testing.T) {
 }
 
 func testAccCheckVaultPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault_policy" {
@@ -156,7 +156,7 @@ func testAccCheckVaultPolicyExists(name string, vault *backup.GetBackupVaultAcce
 			return fmt.Errorf("No Backup Vault Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 		output, err := tfbackup.FindVaultAccessPolicyByName(conn, rs.Primary.ID)
 

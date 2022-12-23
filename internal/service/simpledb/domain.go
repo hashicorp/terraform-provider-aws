@@ -22,7 +22,7 @@ import (
 )
 
 func init() {
-	registerFrameworkResourceFactory(newResourceDomain)
+	_sp.registerFrameworkResourceFactory(newResourceDomain)
 }
 
 // newResourceDomain instantiates a new Resource for the aws_simpledb_domain resource.
@@ -66,7 +66,7 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn
+	conn := r.Meta().SimpleDBConn()
 
 	name := data.Name.ValueString()
 	input := &simpledb.CreateDomainInput{
@@ -97,7 +97,7 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn
+	conn := r.Meta().SimpleDBConn()
 
 	_, err := FindDomainByName(ctx, conn, data.ID.ValueString())
 
@@ -137,7 +137,7 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn
+	conn := r.Meta().SimpleDBConn()
 
 	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
 		"id": data.ID.ValueString(),

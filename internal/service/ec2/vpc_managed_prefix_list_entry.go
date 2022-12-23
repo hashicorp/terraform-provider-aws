@@ -49,7 +49,7 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 }
 
 func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidr := d.Get("cidr").(string)
 	plID := d.Get("prefix_list_id").(string)
@@ -95,7 +95,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
@@ -126,7 +126,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 

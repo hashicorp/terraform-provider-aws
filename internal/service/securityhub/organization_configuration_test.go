@@ -50,7 +50,7 @@ func testAccOrganizationConfigurationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		_, err := conn.DescribeOrganizationConfiguration(&securityhub.DescribeOrganizationConfigurationInput{})
 

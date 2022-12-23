@@ -78,7 +78,7 @@ func ResourceInstanceProfile() *schema.Resource {
 }
 
 func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -202,7 +202,7 @@ func instanceProfileRemoveAllRoles(d *schema.ResourceData, conn *iam.IAM) error 
 }
 
 func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("role") {
 		oldRole, newRole := d.GetChange("role")
@@ -242,7 +242,7 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.GetInstanceProfileInput{
 		InstanceProfileName: aws.String(d.Id()),
@@ -281,7 +281,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if err := instanceProfileRemoveAllRoles(d, conn); err != nil {
 		return err

@@ -59,7 +59,7 @@ func DataSourceRole() *schema.Resource {
 }
 
 func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)

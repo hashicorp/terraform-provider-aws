@@ -104,7 +104,7 @@ func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) 
 }
 
 func testAccCheckCustomerGatewayAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_customer_gateway_association" {
@@ -144,7 +144,7 @@ func testAccCheckCustomerGatewayAssociationExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No Network Manager Customer Gateway Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		globalNetworkID, customerGatewayARN, err := tfnetworkmanager.CustomerGatewayAssociationParseResourceID(rs.Primary.ID)
 

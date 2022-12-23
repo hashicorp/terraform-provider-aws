@@ -74,7 +74,7 @@ func DataSourceRepository() *schema.Resource {
 }
 
 func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)

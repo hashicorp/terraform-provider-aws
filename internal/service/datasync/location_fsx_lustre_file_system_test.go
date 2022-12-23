@@ -160,7 +160,7 @@ func TestAccDataSyncLocationFSxLustreFileSystem_tags(t *testing.T) {
 }
 
 func testAccCheckLocationFSxLustreDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_fsx_lustre_file_system" {
@@ -190,7 +190,7 @@ func testAccCheckLocationFSxLustreExists(resourceName string, locationFsxLustre 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 		output, err := tfdatasync.FindFSxLustreLocationByARN(conn, rs.Primary.ID)
 
 		if err != nil {

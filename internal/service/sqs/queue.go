@@ -191,7 +191,7 @@ func ResourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -265,7 +265,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -339,7 +339,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
@@ -386,7 +386,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
 	_, err := conn.DeleteQueueWithContext(ctx, &sqs.DeleteQueueInput{

@@ -27,7 +27,7 @@ func sweepPipelines(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &codepipeline.ListPipelinesInput{}
-	conn := client.(*conns.AWSClient).CodePipelineConn
+	conn := client.(*conns.AWSClient).CodePipelineConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListPipelinesPages(input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {

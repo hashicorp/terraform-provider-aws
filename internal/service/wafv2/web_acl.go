@@ -150,7 +150,7 @@ func ResourceWebACL() *schema.Resource {
 }
 
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -192,7 +192,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -249,7 +249,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateWebACLInput{
@@ -297,7 +297,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	input := &wafv2.DeleteWebACLInput{
 		Id:        aws.String(d.Id()),

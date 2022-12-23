@@ -1514,7 +1514,7 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 }
 
 func testAccCheckUserPoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool" {
@@ -1549,7 +1549,7 @@ func testAccCheckUserPoolExists(name string, pool *cognitoidentityprovider.Descr
 			return errors.New("No Cognito User Pool ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		params := &cognitoidentityprovider.DescribeUserPoolInput{
 			UserPoolId: aws.String(rs.Primary.ID),
@@ -1569,7 +1569,7 @@ func testAccCheckUserPoolExists(name string, pool *cognitoidentityprovider.Descr
 }
 
 func testAccPreCheckIdentityProvider(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(1),

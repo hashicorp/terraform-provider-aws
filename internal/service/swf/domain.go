@@ -76,7 +76,7 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -103,7 +103,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -147,7 +147,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -161,7 +161,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 
 	_, err := conn.DeprecateDomainWithContext(ctx, &swf.DeprecateDomainInput{
 		Name: aws.String(d.Get("name").(string)),

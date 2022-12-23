@@ -63,7 +63,7 @@ func ResourceUsageLimit() *schema.Resource {
 }
 
 func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := redshiftserverless.CreateUsageLimitInput{
 		Amount:      aws.Int64(int64(d.Get("amount").(int))),
@@ -91,7 +91,7 @@ func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	out, err := FindUsageLimitByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -115,7 +115,7 @@ func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	input := &redshiftserverless.UpdateUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),
@@ -138,7 +138,7 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Usage Limit: %s", d.Id())
 	_, err := conn.DeleteUsageLimit(&redshiftserverless.DeleteUsageLimitInput{

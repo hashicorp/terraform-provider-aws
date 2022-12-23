@@ -144,7 +144,7 @@ func DataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbClusterID := d.Get("cluster_identifier").(string)

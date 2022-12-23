@@ -928,7 +928,7 @@ func ResourceApplication() *schema.Resource {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -972,7 +972,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1028,7 +1028,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 	applicationName := d.Get("name").(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
@@ -1527,7 +1527,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {

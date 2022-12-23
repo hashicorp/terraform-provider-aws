@@ -270,7 +270,7 @@ func TestAccIVSChatRoom_update_remove_messageReviewHandler_uri(t *testing.T) {
 }
 
 func testAccCheckRoomDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -307,7 +307,7 @@ func testAccCheckRoomExists(name string, room *ivschat.GetRoomOutput) resource.T
 			return create.Error(names.IVSChat, create.ErrActionCheckingExistence, tfivschat.ResNameRoom, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
 		ctx := context.Background()
 		resp, err := conn.GetRoom(ctx, &ivschat.GetRoomInput{
 			Identifier: aws.String(rs.Primary.ID),
@@ -324,7 +324,7 @@ func testAccCheckRoomExists(name string, room *ivschat.GetRoomOutput) resource.T
 }
 
 func testAccPreCheckRoom(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
 	ctx := context.Background()
 
 	input := &ivschat.ListRoomsInput{}

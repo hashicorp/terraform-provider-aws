@@ -71,7 +71,7 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 }
 
 func testAccCheckProtectionHealthCheckAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection_health_check_association" {
@@ -123,7 +123,7 @@ func testAccCheckProtectionHealthCheckAssociationExists(resourceName string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(protectionId),

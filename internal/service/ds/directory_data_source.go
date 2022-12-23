@@ -166,7 +166,7 @@ func DataSourceDirectory() *schema.Resource {
 }
 
 func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dir, err := FindDirectoryByID(conn, d.Get("directory_id").(string))

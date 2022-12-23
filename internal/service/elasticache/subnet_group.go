@@ -78,7 +78,7 @@ func resourceSubnetGroupDiff(_ context.Context, diff *schema.ResourceDiff, meta 
 }
 
 func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -138,7 +138,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -192,7 +192,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	if d.HasChanges("subnet_ids", "description") {
 		var subnets []*string
@@ -231,7 +231,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceSubnetGroupRead(d, meta)
 }
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	log.Printf("[DEBUG] Cache subnet group delete: %s", d.Id())
 

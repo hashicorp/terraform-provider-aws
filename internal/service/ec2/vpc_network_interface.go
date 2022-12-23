@@ -324,7 +324,7 @@ func ResourceNetworkInterface() *schema.Resource {
 }
 
 func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -479,7 +479,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -565,7 +565,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	privateIPsNetChange := 0
 
 	if d.HasChange("attachment") {
@@ -1047,7 +1047,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})

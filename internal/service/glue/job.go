@@ -169,7 +169,7 @@ func ResourceJob() *schema.Resource {
 }
 
 func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -252,7 +252,7 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -323,7 +323,7 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		jobUpdate := &glue.JobUpdate{
@@ -413,7 +413,7 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceJobDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
 	_, err := conn.DeleteJob(&glue.DeleteJobInput{

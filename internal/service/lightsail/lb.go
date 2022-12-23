@@ -94,7 +94,7 @@ func ResourceLoadBalancer() *schema.Resource {
 }
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -130,7 +130,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -172,7 +172,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	in := &lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(d.Get("name").(string)),
@@ -221,7 +221,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := conn.DeleteLoadBalancerWithContext(ctx, &lightsail.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),

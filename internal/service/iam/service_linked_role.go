@@ -79,7 +79,7 @@ func ResourceServiceLinkedRole() *schema.Resource {
 }
 
 func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -129,7 +129,7 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -179,7 +179,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
@@ -221,7 +221,7 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 

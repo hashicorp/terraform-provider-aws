@@ -34,39 +34,57 @@ func ResourceResolver() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"type": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-			"field": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"caching_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"caching_keys": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"ttl": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 3600),
+						},
+					},
+				},
+			},
+			"code": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"runtime"},
+				ValidateFunc: validation.StringLenBetween(1, 32768),
 			},
 			"data_source": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"pipeline_config"},
 			},
-			"max_batch_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 2000),
-			},
-			"request_template": {
+			"field": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"response_template": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
+				ForceNew: true,
 			},
 			"kind": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      appsync.ResolverKindUnit,
 				ValidateFunc: validation.StringInSlice(appsync.ResolverKind_Values(), true),
+			},
+			"max_batch_size": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 2000),
 			},
 			"pipeline_config": {
 				Type:          schema.TypeList,
@@ -85,22 +103,29 @@ func ResourceResolver() *schema.Resource {
 					},
 				},
 			},
-			"caching_config": {
-				Type:     schema.TypeList,
+			"request_template": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
+			},
+			"response_template": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"runtime": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"code"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"caching_keys": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(appsync.RuntimeName_Values(), false),
 						},
-						"ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
+						"runtime_version": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -138,22 +163,27 @@ func ResourceResolver() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			"type": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
 func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		TypeName:  aws.String(d.Get("type").(string)),
 		FieldName: aws.String(d.Get("field").(string)),
 		Kind:      aws.String(d.Get("kind").(string)),
+	}
+
+	if v, ok := d.GetOk("code"); ok {
+		input.Code = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOkExists("max_batch_size"); ok {
@@ -168,11 +198,8 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 		input.DataSourceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("pipeline_config"); ok {
-		config := v.([]interface{})[0].(map[string]interface{})
-		input.PipelineConfig = &appsync.PipelineConfig{
-			Functions: flex.ExpandStringList(config["functions"].([]interface{})),
-		}
+	if v, ok := d.GetOk("pipeline_config"); ok && len(v.([]interface{})) > 0 {
+		input.PipelineConfig = expandPipelineConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("request_template"); ok {
@@ -185,6 +212,10 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("caching_config"); ok {
 		input.CachingConfig = expandResolverCachingConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
+		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
@@ -205,7 +236,7 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
@@ -241,6 +272,7 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("response_template", resolver.ResponseMappingTemplate)
 	d.Set("kind", resolver.Kind)
 	d.Set("max_batch_size", resolver.MaxBatchSize)
+	d.Set("code", resolver.Code)
 
 	if err := d.Set("sync_config", flattenSyncConfig(resolver.SyncConfig)); err != nil {
 		return fmt.Errorf("error setting sync_config: %w", err)
@@ -254,17 +286,25 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting caching_config: %w", err)
 	}
 
+	if err := d.Set("runtime", flattenRuntime(resolver.Runtime)); err != nil {
+		return fmt.Errorf("error setting runtime: %w", err)
+	}
+
 	return nil
 }
 
 func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.UpdateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		FieldName: aws.String(d.Get("field").(string)),
 		TypeName:  aws.String(d.Get("type").(string)),
 		Kind:      aws.String(d.Get("kind").(string)),
+	}
+
+	if v, ok := d.GetOk("code"); ok {
+		input.Code = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_source"); ok {
@@ -298,6 +338,10 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
+		input.Runtime = expandRuntime(v.([]interface{}))
+	}
+
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -314,7 +358,7 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
@@ -367,6 +411,22 @@ func expandResolverCachingConfig(l []interface{}) *appsync.CachingConfig {
 	}
 
 	return cachingConfig
+}
+
+func expandPipelineConfig(l []interface{}) *appsync.PipelineConfig {
+	if len(l) < 1 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &appsync.PipelineConfig{}
+
+	if v, ok := m["functions"].([]interface{}); ok && len(v) > 0 {
+		config.Functions = flex.ExpandStringList(v)
+	}
+
+	return config
 }
 
 func flattenPipelineConfig(c *appsync.PipelineConfig) []interface{} {

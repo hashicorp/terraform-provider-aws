@@ -168,7 +168,7 @@ func testAccCheckRepositoryPermissionsExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
 
 		domainOwner, domainName, repoName, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {
@@ -191,7 +191,7 @@ func testAccCheckRepositoryPermissionsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
 
 		domainOwner, domainName, repoName, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {

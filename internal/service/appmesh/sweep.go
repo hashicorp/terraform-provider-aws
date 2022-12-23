@@ -69,7 +69,7 @@ func sweepGatewayRoutes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn
+	conn := client.(*conns.AWSClient).AppMeshConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -147,7 +147,7 @@ func sweepMeshes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn
+	conn := client.(*conns.AWSClient).AppMeshConn()
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
@@ -187,7 +187,7 @@ func sweepRoutes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn
+	conn := client.(*conns.AWSClient).AppMeshConn()
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
@@ -267,7 +267,7 @@ func sweepVirtualGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn
+	conn := client.(*conns.AWSClient).AppMeshConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -328,7 +328,7 @@ func sweepVirtualNodes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn
+	conn := client.(*conns.AWSClient).AppMeshConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -392,7 +392,7 @@ func sweepVirtualRouters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn
+	conn := client.(*conns.AWSClient).AppMeshConn()
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
@@ -451,7 +451,7 @@ func sweepVirtualServices(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppMeshConn
+	conn := client.(*conns.AWSClient).AppMeshConn()
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {

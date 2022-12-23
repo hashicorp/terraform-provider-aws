@@ -36,7 +36,7 @@ func DataSourceDetector() *schema.Resource {
 }
 
 func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorId := d.Get("id").(string)
 

@@ -501,7 +501,7 @@ func testAccCheckMaintenanceWindowExists(n string, res *ssm.MaintenanceWindowIde
 			return fmt.Errorf("No SSM Maintenance Window ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		resp, err := conn.DescribeMaintenanceWindows(&ssm.DescribeMaintenanceWindowsInput{
 			Filters: []*ssm.MaintenanceWindowFilter{
@@ -528,7 +528,7 @@ func testAccCheckMaintenanceWindowExists(n string, res *ssm.MaintenanceWindowIde
 
 func testAccCheckMaintenanceWindowDisappears(maintenanceWindowIdentity *ssm.MaintenanceWindowIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		id := aws.StringValue(maintenanceWindowIdentity.WindowId)
 		_, err := conn.DeleteMaintenanceWindow(&ssm.DeleteMaintenanceWindowInput{
@@ -542,7 +542,7 @@ func testAccCheckMaintenanceWindowDisappears(maintenanceWindowIdentity *ssm.Main
 }
 
 func testAccCheckMaintenanceWindowDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_maintenance_window" {

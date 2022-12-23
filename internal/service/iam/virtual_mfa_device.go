@@ -63,7 +63,7 @@ func ResourceVirtualMFADevice() *schema.Resource {
 }
 
 func resourceVirtualMFADeviceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -116,7 +116,7 @@ func resourceVirtualMFADeviceCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVirtualMFADeviceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -159,7 +159,7 @@ func resourceVirtualMFADeviceRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVirtualMFADeviceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	o, n := d.GetChange("tags_all")
 
@@ -179,7 +179,7 @@ func resourceVirtualMFADeviceUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVirtualMFADeviceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteVirtualMFADeviceInput{
 		SerialNumber: aws.String(d.Id()),

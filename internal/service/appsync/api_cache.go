@@ -57,7 +57,7 @@ func ResourceAPICache() *schema.Resource {
 }
 
 func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
 
@@ -91,7 +91,7 @@ func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	cache, err := FindAPICacheByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -115,7 +115,7 @@ func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.UpdateApiCacheInput{
 		ApiId: aws.String(d.Id()),
@@ -146,7 +146,7 @@ func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),

@@ -40,7 +40,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 }
 
 func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	log.Printf(
 		"[INFO] Creating WAF Regional Web ACL association: %s => %s",
@@ -79,7 +79,7 @@ func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	resourceArn := WebACLAssociationParseID(d.Id())
 
@@ -112,7 +112,7 @@ func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceWebACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	resourceArn := WebACLAssociationParseID(d.Id())
 

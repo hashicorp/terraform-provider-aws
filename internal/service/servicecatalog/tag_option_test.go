@@ -155,7 +155,7 @@ func TestAccServiceCatalogTagOption_notActive(t *testing.T) {
 }
 
 func testAccCheckTagOptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_tag_option" {
@@ -192,7 +192,7 @@ func testAccCheckTagOptionExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(rs.Primary.ID),

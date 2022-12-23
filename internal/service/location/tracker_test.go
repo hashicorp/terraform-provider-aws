@@ -206,7 +206,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 	})
 }
 func testAccCheckTrackerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_location_tracker" {
@@ -243,7 +243,7 @@ func testAccCheckTrackerExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 		input := &locationservice.DescribeTrackerInput{
 			TrackerName: aws.String(rs.Primary.ID),

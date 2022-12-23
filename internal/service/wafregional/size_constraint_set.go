@@ -28,7 +28,7 @@ func ResourceSizeConstraintSet() *schema.Resource {
 }
 
 func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get("name").(string)
@@ -55,7 +55,7 @@ func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get("name").(string))
 	params := &waf.GetSizeConstraintSetInput{
@@ -85,7 +85,7 @@ func resourceSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("size_constraints")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.WAFRegionalConn, client.Region)
+		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.WAFRegionalConn(), client.Region)
 		if err != nil {
 			return fmt.Errorf("error updating WAF Regional SizeConstraintSet(%s): %w", d.Id(), err)
 		}
@@ -95,7 +95,7 @@ func resourceSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()

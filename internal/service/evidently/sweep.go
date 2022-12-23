@@ -27,7 +27,7 @@ func sweepProject(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EvidentlyConn
+	conn := client.(*conns.AWSClient).EvidentlyConn()
 	input := &cloudwatchevidently.ListProjectsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

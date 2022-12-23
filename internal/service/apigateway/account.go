@@ -49,7 +49,7 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
 	account, err := conn.GetAccount(&apigateway.GetAccountInput{})
@@ -71,7 +71,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := apigateway.UpdateAccountInput{}
 	operations := make([]*apigateway.PatchOperation, 0)

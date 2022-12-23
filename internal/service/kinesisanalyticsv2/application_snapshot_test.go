@@ -93,7 +93,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *test
 }
 
 func testAccCheckApplicationSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesisanalyticsv2_application_snapshot" {
@@ -126,7 +126,7 @@ func testAccCheckApplicationSnapshotExists(n string, v *kinesisanalyticsv2.Snaps
 			return fmt.Errorf("No Kinesis Analytics v2 Application Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn()
 
 		application, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 

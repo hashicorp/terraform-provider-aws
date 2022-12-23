@@ -404,7 +404,7 @@ func ResourceReplicationGroup() *schema.Resource {
 }
 
 func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -611,7 +611,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -775,7 +775,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	if d.HasChanges(
 		"cluster_mode.0.num_node_groups",
@@ -981,7 +981,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
 	if hasGlobalReplicationGroupID {

@@ -52,7 +52,7 @@ func ResourceBackupPolicy() *schema.Resource {
 }
 
 func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	fsID := d.Get("file_system_id").(string)
 
@@ -66,7 +66,7 @@ func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	output, err := FindBackupPolicyByID(conn, d.Id())
 
@@ -90,7 +90,7 @@ func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	if err := backupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return err
@@ -100,7 +100,7 @@ func resourceBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	err := backupPolicyPut(conn, d.Id(), map[string]interface{}{
 		"status": efs.StatusDisabled,

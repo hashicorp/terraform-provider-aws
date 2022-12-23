@@ -712,7 +712,7 @@ func TestAccImageBuilderImageRecipe_windowsBaseImage(t *testing.T) {
 }
 
 func testAccCheckImageRecipeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_image_recipe" {
@@ -748,7 +748,7 @@ func testAccCheckImageRecipeExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 		input := &imagebuilder.GetImageRecipeInput{
 			ImageRecipeArn: aws.String(rs.Primary.ID),

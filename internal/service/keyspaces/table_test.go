@@ -439,7 +439,7 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 }
 
 func testAccCheckTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_keyspaces_table" {
@@ -479,7 +479,7 @@ func testAccCheckTableExists(n string, v *keyspaces.GetTableOutput) resource.Tes
 			return fmt.Errorf("No Keyspaces Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn()
 
 		keyspaceName, tableName, err := tfkeyspaces.TableParseResourceID(rs.Primary.ID)
 

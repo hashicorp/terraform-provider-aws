@@ -74,7 +74,7 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 }
 
 func resourceRegistryScanningConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := ecr.PutRegistryScanningConfigurationInput{
 		ScanType: aws.String(d.Get("scan_type").(string)),
@@ -93,7 +93,7 @@ func resourceRegistryScanningConfigurationPut(d *schema.ResourceData, meta inter
 }
 
 func resourceRegistryScanningConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	out, err := conn.GetRegistryScanningConfiguration(&ecr.GetRegistryScanningConfigurationInput{})
 
@@ -109,7 +109,7 @@ func resourceRegistryScanningConfigurationRead(d *schema.ResourceData, meta inte
 }
 
 func resourceRegistryScanningConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	log.Printf("[DEBUG] Deleting ECR Registry Scanning Configuration: (%s)", d.Id())
 	_, err := conn.PutRegistryScanningConfiguration(&ecr.PutRegistryScanningConfigurationInput{

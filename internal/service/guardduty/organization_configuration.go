@@ -120,7 +120,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 }
 
 func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorID := d.Get("detector_id").(string)
 
@@ -145,7 +145,7 @@ func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	input := &guardduty.DescribeOrganizationConfigurationInput{
 		DetectorId: aws.String(d.Id()),

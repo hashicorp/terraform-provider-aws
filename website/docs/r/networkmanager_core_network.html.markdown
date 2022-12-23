@@ -63,9 +63,9 @@ The following arguments are supported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10m`)
-* `delete` - (Default `10m`)
-* `update` - (Default `10m`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Attributes Reference
 

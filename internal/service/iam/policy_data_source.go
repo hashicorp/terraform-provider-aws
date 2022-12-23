@@ -62,7 +62,7 @@ func DataSourcePolicy() *schema.Resource {
 }
 
 func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)

@@ -241,7 +241,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 }
 
 func testAccCheckServiceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_service" {
@@ -275,7 +275,7 @@ func testAccCheckServiceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Service Discovery Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
 		_, err := tfservicediscovery.FindServiceByID(context.Background(), conn, rs.Primary.ID)
 

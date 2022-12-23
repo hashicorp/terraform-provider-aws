@@ -62,7 +62,7 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -93,7 +93,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -135,7 +135,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -175,7 +175,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Subnet Group: %s", d.Id())
 	_, err := conn.DeleteClusterSubnetGroup(&redshift.DeleteClusterSubnetGroupInput{

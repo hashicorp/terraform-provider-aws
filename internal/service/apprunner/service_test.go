@@ -441,7 +441,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(rs.Primary.ID),
@@ -476,7 +476,7 @@ func testAccCheckServiceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(rs.Primary.ID),
@@ -497,7 +497,7 @@ func testAccCheckServiceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 	ctx := context.Background()
 
 	input := &apprunner.ListServicesInput{}

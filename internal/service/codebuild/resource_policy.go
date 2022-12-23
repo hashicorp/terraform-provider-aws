@@ -44,7 +44,7 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -68,7 +68,7 @@ func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	output, err := FindResourcePolicyByARN(conn, d.Id())
 
@@ -101,7 +101,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	deleteOpts := &codebuild.DeleteResourcePolicyInput{
 		ResourceArn: aws.String(d.Id()),

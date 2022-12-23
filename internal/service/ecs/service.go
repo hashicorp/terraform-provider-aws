@@ -443,7 +443,7 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -627,7 +627,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -763,7 +763,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateServiceInput{
@@ -943,7 +943,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	service, err := FindServiceNoTagsByID(context.TODO(), conn, d.Id(), d.Get("cluster").(string))
 	if tfresource.NotFound(err) {
@@ -1287,7 +1287,9 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 
 func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
 	if len(sc) == 0 {
-		return &ecs.ServiceConnectConfiguration{}
+		return &ecs.ServiceConnectConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 	raw := sc[0].(map[string]interface{})
 
@@ -1376,7 +1378,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 		if v, ok := raw["discovery_name"].(string); ok && v != "" {
 			config.DiscoveryName = aws.String(v)
 		}
-		if v, ok := raw["ingress_port_override"].(int); ok {
+		if v, ok := raw["ingress_port_override"].(int); ok && v != 0 {
 			config.IngressPortOverride = aws.Int64(int64(v))
 		}
 		if v, ok := raw["port_name"].(string); ok && v != "" {

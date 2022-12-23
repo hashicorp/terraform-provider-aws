@@ -223,7 +223,7 @@ func testAccWorkforce_disappears(t *testing.T) {
 }
 
 func testAccCheckWorkforceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_workforce" {
@@ -257,7 +257,7 @@ func testAccCheckWorkforceExists(n string, workforce *sagemaker.Workforce) resou
 			return fmt.Errorf("No SageMaker Workforce ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		output, err := tfsagemaker.FindWorkforceByName(conn, rs.Primary.ID)
 

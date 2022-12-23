@@ -224,7 +224,7 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 
 func testAccCheckAliasDisappears(res *gamelift.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 		input := &gamelift.DeleteAliasInput{AliasId: res.AliasId}
 
@@ -245,7 +245,7 @@ func testAccCheckAliasExists(n string, res *gamelift.Alias) resource.TestCheckFu
 			return fmt.Errorf("No GameLift Alias ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 		out, err := conn.DescribeAlias(&gamelift.DescribeAliasInput{
 			AliasId: aws.String(rs.Primary.ID),
@@ -266,7 +266,7 @@ func testAccCheckAliasExists(n string, res *gamelift.Alias) resource.TestCheckFu
 }
 
 func testAccCheckAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_alias" {

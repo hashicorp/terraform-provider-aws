@@ -317,7 +317,7 @@ func testAccCheckStackSetInstanceExists(resourceName string, v *cloudformation.S
 
 		callAs := rs.Primary.Attributes["call_as"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 		stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseResourceID(rs.Primary.ID)
 
@@ -339,7 +339,7 @@ func testAccCheckStackSetInstanceExists(resourceName string, v *cloudformation.S
 
 func testAccCheckStackSetInstanceStackExists(stackInstance *cloudformation.StackInstance, v *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 		output, err := tfcloudformation.FindStackByID(conn, aws.StringValue(stackInstance.StackId))
 
@@ -354,7 +354,7 @@ func testAccCheckStackSetInstanceStackExists(stackInstance *cloudformation.Stack
 }
 
 func testAccCheckStackSetInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack_set_instance" {

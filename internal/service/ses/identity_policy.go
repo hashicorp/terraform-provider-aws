@@ -55,7 +55,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 }
 
 func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity := d.Get("identity").(string)
 	policyName := d.Get("name").(string)
@@ -83,7 +83,7 @@ func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -111,7 +111,7 @@ func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -161,7 +161,7 @@ func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {

@@ -45,9 +45,9 @@ func ResourceCoreNetwork() *schema.Resource {
 		),
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -137,7 +137,7 @@ func ResourceCoreNetwork() *schema.Resource {
 }
 
 func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -176,7 +176,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -241,7 +241,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	if d.HasChange("description") {
 		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
@@ -316,7 +316,7 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	log.Printf("[DEBUG] Deleting Network Manager Core Network: %s", d.Id())
 	_, err := conn.DeleteCoreNetworkWithContext(ctx, &networkmanager.DeleteCoreNetworkInput{

@@ -84,7 +84,7 @@ func ResourceAuthorizer() *schema.Resource {
 }
 
 func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	name := d.Get("name").(string)
 	input := &iot.CreateAuthorizerInput{
@@ -116,7 +116,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	authorizer, err := FindAuthorizerByName(conn, d.Id())
 
@@ -143,7 +143,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	input := iot.UpdateAuthorizerInput{
 		AuthorizerName: aws.String(d.Id()),
@@ -180,7 +180,7 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
 	if d.Get("status").(string) == iot.AuthorizerStatusActive {

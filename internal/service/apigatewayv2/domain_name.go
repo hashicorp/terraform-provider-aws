@@ -117,7 +117,7 @@ func ResourceDomainName() *schema.Resource {
 }
 
 func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	domainName := d.Get("domain_name").(string)
@@ -146,7 +146,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -196,7 +196,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
 		input := &apigatewayv2.UpdateDomainNameInput{
@@ -242,7 +242,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 domain name (%s)", d.Id())
 	_, err := conn.DeleteDomainName(&apigatewayv2.DeleteDomainNameInput{

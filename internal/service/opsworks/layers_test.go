@@ -24,7 +24,7 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 			return fmt.Errorf("No OpsWorks Layer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 		output, err := tfopsworks.FindLayerByID(context.Background(), conn, rs.Primary.ID)
 
@@ -39,7 +39,7 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 }
 
 func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourceType {

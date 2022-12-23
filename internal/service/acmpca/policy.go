@@ -47,7 +47,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -74,7 +74,7 @@ func resourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	policy, err := FindPolicyByARN(conn, d.Id())
 
@@ -95,7 +95,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	log.Printf("[DEBUG] Deleting ACM PCA Policy: %s", d.Id())
 	_, err := conn.DeletePolicy(&acmpca.DeletePolicyInput{

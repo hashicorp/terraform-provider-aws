@@ -29,7 +29,7 @@ func sweepApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).KinesisAnalyticsConn
+	conn := client.(*conns.AWSClient).KinesisAnalyticsConn()
 	input := &kinesisanalytics.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 

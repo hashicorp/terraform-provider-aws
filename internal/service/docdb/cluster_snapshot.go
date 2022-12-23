@@ -91,7 +91,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 }
 
 func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	params := &docdb.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
@@ -123,7 +123,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	params := &docdb.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
@@ -166,7 +166,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	params := &docdb.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),

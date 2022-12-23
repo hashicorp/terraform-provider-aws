@@ -229,7 +229,7 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 }
 
 func testAccCheckDeploymentConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_deployment_config" {
@@ -263,7 +263,7 @@ func testAccCheckDeploymentConfigExists(name string, config *codedeploy.Deployme
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn()
 
 		resp, err := conn.GetDeploymentConfig(&codedeploy.GetDeploymentConfigInput{
 			DeploymentConfigName: aws.String(rs.Primary.ID),
