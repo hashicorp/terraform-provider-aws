@@ -174,7 +174,7 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 
 	uri := aws.StringValue(output.LocationUri)
 
-	hostname, bucketName, err := decodeObjectStorageUri(uri)
+	hostname, bucketName, err := decodeObjectStorageURI(uri)
 	if err != nil {
 		return err
 	}
@@ -273,7 +273,7 @@ func resourceLocationObjectStorageDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func decodeObjectStorageUri(uri string) (string, string, error) {
+func decodeObjectStorageURI(uri string) (string, string, error) {
 	prefix := "object-storage://"
 	if !strings.HasPrefix(uri, prefix) {
 		return "", "", fmt.Errorf("incorrect uri format needs to start with %s", prefix)
