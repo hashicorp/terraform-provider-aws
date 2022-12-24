@@ -60,7 +60,6 @@ func ResourceLocationObjectStorage() *schema.Resource {
 			"server_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"server_hostname": {
 				Type:         schema.TypeString,
