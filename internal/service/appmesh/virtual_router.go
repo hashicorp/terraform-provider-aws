@@ -280,7 +280,7 @@ func resourceVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceVirtualRouterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual router: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Router: %s", d.Id())
 	_, err := conn.DeleteVirtualRouter(&appmesh.DeleteVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		VirtualRouterName: aws.String(d.Get("name").(string)),

@@ -60,7 +60,7 @@ func sweepAccessPoints(region string) error {
 		}
 
 		for _, v := range page.AccessPointList {
-			r := ResourceAccessPoint()
+			r := resourceAccessPoint()
 			d := r.Data(nil)
 			if id, err := AccessPointCreateResourceID(aws.StringValue(v.AccessPointArn)); err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, err)
@@ -116,7 +116,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		}
 
 		for _, v := range page.AccessPoints {
-			r := ResourceMultiRegionAccessPoint()
+			r := resourceMultiRegionAccessPoint()
 			d := r.Data(nil)
 			d.SetId(MultiRegionAccessPointCreateResourceID(accountID, aws.StringValue(v.Name)))
 
@@ -162,7 +162,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 		}
 
 		for _, v := range page.ObjectLambdaAccessPointList {
-			r := ResourceObjectLambdaAccessPoint()
+			r := resourceObjectLambdaAccessPoint()
 			d := r.Data(nil)
 			d.SetId(ObjectLambdaAccessPointCreateResourceID(accountID, aws.StringValue(v.Name)))
 
@@ -214,7 +214,7 @@ func sweepStorageLensConfigurations(region string) error {
 				continue
 			}
 
-			r := ResourceStorageLensConfiguration()
+			r := resourceStorageLensConfiguration()
 			d := r.Data(nil)
 			d.SetId(StorageLensConfigurationCreateResourceID(accountID, configID))
 

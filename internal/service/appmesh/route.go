@@ -859,7 +859,7 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh route: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
 	_, err := conn.DeleteRoute(&appmesh.DeleteRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),

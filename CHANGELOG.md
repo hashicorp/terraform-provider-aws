@@ -1,5 +1,9 @@
 ## 4.49.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute is no longer deprecated ([#28567](https://github.com/hashicorp/terraform-provider-aws/issues/28567))
+
 FEATURES:
 
 * **New Data Source:** `aws_s3control_multi_region_access_point` ([#28373](https://github.com/hashicorp/terraform-provider-aws/issues/28373))
@@ -11,6 +15,10 @@ ENHANCEMENTS:
 * resource/aws_appsync_resolver: Add `runtime` and `code` arguments ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
 * resource/aws_appsync_resolver: Add plan time validation for `caching_config.ttl` ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
 * resource/aws_lightsail_instance_public_ports: Add `cidr_list_aliases` argument ([#28376](https://github.com/hashicorp/terraform-provider-aws/issues/28376))
+* resource/aws_s3_access_point: Add `bucket_account_id` argument ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
+* resource/aws_s3control_storage_lens_configuration: Add `advanced_cost_optimization_metrics`, `advanced_data_protection_metrics`, and `detailed_status_code_metrics` arguments to the `storage_lens_configuration.account_level` and `storage_lens_configuration.account_level.bucket_level` configuration blocks ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
+* resource/aws_wafv2_rule_group: Add `rule.action.captcha` argument ([#28435](https://github.com/hashicorp/terraform-provider-aws/issues/28435))
+* resource/aws_wafv2_web_acl: Add `rule.action.challenge` argument ([#28305](https://github.com/hashicorp/terraform-provider-aws/issues/28305))
 
 BUG FIXES:
 

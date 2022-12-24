@@ -159,7 +159,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 VPC Link (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting API Gateway v2 VPC Link: %s", d.Id())
 	_, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
 	})
