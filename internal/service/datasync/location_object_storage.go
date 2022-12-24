@@ -83,17 +83,8 @@ func ResourceLocationObjectStorage() *schema.Resource {
 			"subdirectory": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "/",
+				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(1, 4096),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "/" {
-						return false
-					}
-					if strings.TrimSuffix(old, "/") == strings.TrimSuffix(new, "/") {
-						return true
-					}
-					return false
-				},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -182,6 +173,18 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 	d.Set("server_port", output.ServerPort)
 	d.Set("server_certificate", string(output.ServerCertificate))
 
+	uri := aws.StringValue(output.LocationUri)
+
+	hostname, bucketName, err := decodeObjectStorageUri(uri)
+	if err != nil {
+		return err
+	}
+
+	d.Set("server_hostname", hostname)
+	d.Set("bucket_name", bucketName)
+
+	d.Set("uri", uri)
+
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
@@ -269,4 +272,19 @@ func resourceLocationObjectStorageDelete(d *schema.ResourceData, meta interface{
 	}
 
 	return nil
+}
+
+func decodeObjectStorageUri(uri string) (string, string, error) {
+	prefix := "object-storage://"
+	if !strings.HasPrefix(uri, prefix) {
+		return "", "", fmt.Errorf("incorrect uri format needs to start with %s", prefix)
+	}
+	trimmedUri := strings.TrimPrefix(uri, prefix)
+	uriParts := strings.Split(trimmedUri, "/")
+
+	if len(uri) < 2 {
+		return "", "", fmt.Errorf("incorrect uri format needs to start with %sSERVER-NAME/BUCKET-NAME/SUBDIRECTORY", prefix)
+	}
+
+	return uriParts[0], uriParts[1], nil
 }
