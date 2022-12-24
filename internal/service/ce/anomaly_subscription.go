@@ -79,6 +79,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 			"threshold": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.FloatAtLeast(0.0),
 				Deprecated:   "use threshold_expression instead",
 			},

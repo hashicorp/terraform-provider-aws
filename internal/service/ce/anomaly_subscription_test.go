@@ -55,6 +55,36 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	})
 }
 
+func TestAccCEAnomalySubscription_thresholdExpression(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
+	resourceName := "aws_ce_anomaly_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	address := acctest.RandomEmailAddress(domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnomalySubscriptionConfig_thresholdExpression(rName, address),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					// resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
@@ -398,6 +428,34 @@ resource "aws_ce_anomaly_subscription" "test" {
   subscriber {
     type    = "EMAIL"
     address = %[2]q
+  }
+}
+`, rName, address))
+}
+
+func testAccAnomalySubscriptionConfig_thresholdExpression(rName string, address string) string {
+	return acctest.ConfigCompose(
+		testAccAnomalySubscriptionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ce_anomaly_subscription" "test" {
+  name      = %[1]q
+  frequency = "DAILY"
+
+  monitor_arn_list = [
+    aws_ce_anomaly_monitor.test.arn,
+  ]
+
+  subscriber {
+    type    = "EMAIL"
+    address = %[2]q
+  }
+
+  threshold_expression {
+	dimension {
+	  key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+	  values        = ["100.0"]
+	  match_options = ["GREATER_THAN_OR_EQUAL"]
+	}
   }
 }
 `, rName, address))
