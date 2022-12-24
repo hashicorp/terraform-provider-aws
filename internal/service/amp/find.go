@@ -150,11 +150,5 @@ func FindWorkspaces(ctx context.Context, conn *prometheusservice.PrometheusServi
 		return !lastPage
 	})
 
-	if err != nil {
-		return nil, err
-	}
-	if len(results) == 0 {
-		return nil, tfresource.NewEmptyResultError(nil)
-	}
-	return results, nil
+	return results, err
 }
