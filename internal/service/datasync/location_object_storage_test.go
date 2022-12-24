@@ -181,7 +181,7 @@ func testAccCheckLocationObjectStorageNotRecreated(i, j *datasync.DescribeLocati
 
 func testAccLocationObjectStorageBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "m5.2xlarge", "m5.4xlarge"),
 		fmt.Sprintf(`
@@ -240,7 +240,7 @@ resource "aws_instance" "test" {
   associate_public_ip_address = true
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test[*].id
+  subnet_id                   = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
