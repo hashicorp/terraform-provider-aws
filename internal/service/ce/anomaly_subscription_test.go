@@ -451,11 +451,11 @@ resource "aws_ce_anomaly_subscription" "test" {
   }
 
   threshold_expression {
-	dimension {
-	  key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
-	  values        = ["100.0"]
-	  match_options = ["GREATER_THAN_OR_EQUAL"]
-	}
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 }
 `, rName, address))
