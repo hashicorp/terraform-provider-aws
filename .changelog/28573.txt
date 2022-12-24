@@ -1,7 +1,7 @@
 ```release-note:enhancement
-resource/aws_ce_anomaly_subscripton: Add `threshold_expression` argument
+resource/aws_ce_anomaly_subscription: Add `threshold_expression` argument
 ```
 
 ```release-note:enhancement
-resource/aws_ce_anomaly_subscripton: Depracated `threshold` argument in favour of `threshold_expression`
+resource/aws_ce_anomaly_subscription: Depracated `threshold` argument in favour of `threshold_expression`
 ```
