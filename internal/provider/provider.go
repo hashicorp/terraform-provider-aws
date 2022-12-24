@@ -813,7 +813,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
 
-			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
+			"aws_prometheus_workspace":  amp.DataSourceWorkspace(),
+			"aws_prometheus_workspaces": amp.DataSourceWorkspaces(),
 
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
