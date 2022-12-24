@@ -38,7 +38,7 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", rName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^object-storage://.+/`)),
+					// resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^object-storage://.+/`)),
 				),
 			},
 			{

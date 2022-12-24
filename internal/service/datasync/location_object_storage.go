@@ -57,23 +57,28 @@ func ResourceLocationObjectStorage() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(8, 200),
 			},
+			"server_certificate": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"server_hostname": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
-			"server_protocol": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      datasync.ObjectStorageServerProtocolHttps,
-				ValidateFunc: validation.StringInSlice(datasync.ObjectStorageServerProtocol_Values(), false),
-			},
 			"server_port": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      443,
 				ValidateFunc: validation.IsPortNumber,
+			},
+			"server_protocol": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      datasync.ObjectStorageServerProtocolHttps,
+				ValidateFunc: validation.StringInSlice(datasync.ObjectStorageServerProtocol_Values(), false),
 			},
 			"subdirectory": {
 				Type:         schema.TypeString,
@@ -131,6 +136,10 @@ func resourceLocationObjectStorageCreate(d *schema.ResourceData, meta interface{
 		input.SecretKey = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("server_certficate"); ok {
+		input.ServerCertificate = []byte(v.(string))
+	}
+
 	log.Printf("[DEBUG] Creating DataSync Location Object Storage: %s", input)
 	output, err := conn.CreateLocationObjectStorage(input)
 	if err != nil {
@@ -171,6 +180,7 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 	d.Set("subdirectory", subdirectory)
 	d.Set("access_key", output.AccessKey)
 	d.Set("server_port", output.ServerPort)
+	d.Set("server_certificate", string(output.ServerCertificate))
 
 	tags, err := ListTags(conn, d.Id())
 
@@ -218,6 +228,10 @@ func resourceLocationObjectStorageUpdate(d *schema.ResourceData, meta interface{
 
 		if d.HasChange("subdirectory") {
 			input.Subdirectory = aws.String(d.Get("subdirectory").(string))
+		}
+
+		if d.HasChange("server_certficate") {
+			input.ServerCertificate = []byte(d.Get("server_certficate").(string))
 		}
 
 		_, err := conn.UpdateLocationObjectStorage(input)
