@@ -24,10 +24,10 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationObjectStorageDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_basic(rName),
@@ -56,10 +56,10 @@ func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationObjectStorageDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_basic(rName),
@@ -80,10 +80,10 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationObjectStorageDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_tags1(rName, "key1", "value1"),
@@ -122,7 +122,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 }
 
 func testAccCheckLocationObjectStorageDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_object_storage" {
@@ -152,7 +152,7 @@ func testAccCheckLocationObjectStorageExists(resourceName string, locationObject
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 		output, err := tfdatasync.FindLocationObjectStorageByARN(conn, rs.Primary.ID)
 
 		if err != nil {
@@ -181,38 +181,20 @@ func testAccCheckLocationObjectStorageNotRecreated(i, j *datasync.DescribeLocati
 
 func testAccLocationObjectStorageBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.2xlarge", "m5.4xlarge"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "m5.2xlarge", "m5.4xlarge"),
 		fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 # Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
 data "aws_ssm_parameter" "aws_service_datasync_ami" {
   name = "/aws/service/datasync/ami"
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-object-storage"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-object-storage"
-  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-datasync-location-object-storage"
+    Name = %[1]q
   }
 }
 
@@ -225,7 +207,7 @@ resource "aws_default_route_table" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test-datasync-location-object-storage"
+    Name = %[1]q
   }
 }
 
@@ -247,7 +229,7 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test-datasync-object-storage"
+    Name = %[1]q
   }
 }
 
@@ -261,7 +243,7 @@ resource "aws_instance" "test" {
   subnet_id                   = aws_subnet.test.id
 
   tags = {
-    Name = "tf-acc-test-datasync-object-storage"
+    Name = %[1]q
   }
 }
 

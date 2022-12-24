@@ -103,7 +103,7 @@ func ResourceLocationObjectStorage() *schema.Resource {
 }
 
 func resourceLocationObjectStorageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -143,7 +143,7 @@ func resourceLocationObjectStorageCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -193,7 +193,7 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceLocationObjectStorageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationObjectStorageInput{
@@ -237,7 +237,7 @@ func resourceLocationObjectStorageUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceLocationObjectStorageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
