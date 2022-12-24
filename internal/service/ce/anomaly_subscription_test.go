@@ -38,7 +38,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`anomalysubscription/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_arn_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
