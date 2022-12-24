@@ -240,7 +240,7 @@ resource "aws_instance" "test" {
   associate_public_ip_address = true
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test.id
+  subnet_id                   = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
