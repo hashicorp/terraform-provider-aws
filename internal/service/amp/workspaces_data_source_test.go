@@ -27,7 +27,7 @@ func TestAccAMPWorkspacesDataSource_basic(t *testing.T) {
 				Config: testAccWorkspacesDataSourceConfig_resources(rCount, rName),
 			},
 			{
-				Config: testAccWorkspacesDataSourceConfig_all(rCount, rName),
+				Config: testAccWorkspacesDataSourceConfig_basic(rCount, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspacesExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "aliases.#", rCount),
@@ -72,7 +72,7 @@ resource "aws_prometheus_workspace" "test" {
 `, rCount, rName)
 }
 
-func testAccWorkspacesDataSourceConfig_all(rCount, rName string) string {
+func testAccWorkspacesDataSourceConfig_basic(rCount, rName string) string {
 	return fmt.Sprintf(`
 %s
 data "aws_prometheus_workspaces" "test" {
