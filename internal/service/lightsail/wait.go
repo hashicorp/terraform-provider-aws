@@ -34,8 +34,8 @@ const (
 	DatabaseMinTimeout = 3 * time.Second
 )
 
-// waitOperation waits for an Operation to return Succeeded or Compleated
-func waitOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
+// waitOperation waits for an Operation to return Succeeded or Completed
+func waitOperation(conn *lightsail.Lightsail, oid *string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{lightsail.OperationStatusStarted},
 		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
@@ -45,7 +45,7 @@ func waitOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string) 
 		MinTimeout: OperationMinTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForState()
 
 	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
 		return err
@@ -227,4 +227,24 @@ func waitInstanceStateWithContext(ctx context.Context, conn *lightsail.Lightsail
 	}
 
 	return nil, err
+}
+
+// waitOperation waits for an Operation to return Succeeded or Completed with context
+func waitOperationWithContext(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{lightsail.OperationStatusStarted},
+		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
+		Refresh:    statusOperation(conn, oid),
+		Timeout:    OperationTimeout,
+		Delay:      OperationDelay,
+		MinTimeout: OperationMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
+		return err
+	}
+
+	return err
 }
