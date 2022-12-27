@@ -3,5 +3,5 @@ resource/aws_lightsail_database: The `availability_zone` attribute is now option
 ```
 
 ```release-note:enhancement
-resource/aws_lightsail_database: Add configurable timeouts
+resource/aws_lightsail_database: Update Resource functions to use WithoutTimeout CRUD handlers
 ```
