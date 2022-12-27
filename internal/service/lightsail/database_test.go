@@ -24,7 +24,7 @@ import (
 func TestAccLightsailDatabase_basic(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -76,7 +76,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameTooShort := "s"
 	rNameTooLong := fmt.Sprintf("%s-%s", rName, sdkacctest.RandString(255))
 	rNameContainsUnderscore := fmt.Sprintf("%s-%s", rName, "_test")
@@ -137,7 +137,7 @@ func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 
 func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	dbName := "randomdatabasename"
 	dbNameTooShort := ""
@@ -203,7 +203,7 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 
 func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	username := "username1"
 	usernameTooShort := ""
@@ -273,7 +273,7 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 }
 
 func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	password := "testpassword"
 	passwordTooShort := "short"
 	passwordTooLong := fmt.Sprintf("%s-%s", password, sdkacctest.RandString(128))
@@ -322,7 +322,7 @@ func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
 
 func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	backupWindowInvalidHour := "25:30-10:00"
 	backupWindowInvalidMinute := "10:00-10:70"
@@ -376,7 +376,7 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 
 func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	maintenanceWindowInvalidDay := "tuesday:04:30-tue:05:00"
 	maintenanceWindowInvalidHour := "tue:04:30-tue:30:00"
@@ -435,7 +435,7 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 
 func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -479,7 +479,7 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 
 func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -523,7 +523,7 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 
 func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	sName := fmt.Sprintf("%s-snapshot", rName)
 	sNameTooShort := "s"
@@ -580,7 +580,7 @@ func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 
 func TestAccLightsailDatabase_Tags(t *testing.T) {
 	var db1, db2, db3 lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -633,9 +633,48 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 	})
 }
 
+func TestAccLightsailDatabase_ha(t *testing.T) {
+	var db lightsail.RelationalDatabase
+	resourceName := "aws_lightsail_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_ha(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDatabaseExists(resourceName, &db),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_1_0"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"master_password",
+					"skip_final_snapshot",
+					"final_snapshot_name",
+				},
+			},
+		},
+	})
+}
+
 func TestAccLightsailDatabase_disappears(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	testDestroy := func(*terraform.State) error {
@@ -995,4 +1034,20 @@ resource "aws_lightsail_database" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDatabaseConfig_ha(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDatabaseConfigBase(),
+		fmt.Sprintf(`	
+resource "aws_lightsail_database" "test" {
+  relational_database_name = %[1]q
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_ha_1_0"
+  skip_final_snapshot      = true
+}
+`, rName))
 }
