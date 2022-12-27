@@ -236,7 +236,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	op := resp.Operations[0]
 	d.SetId(d.Get("relational_database_name").(string))
 
-	err = waitOperation(ctx, conn, op.Id)
+	err = waitOperationWithContext(ctx, conn, op.Id)
 	if err != nil {
 		return diag.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 	}
@@ -262,7 +262,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		op := resp.Operations[0]
 
-		err = waitOperation(ctx, conn, op.Id)
+		err = waitOperationWithContext(ctx, conn, op.Id)
 		if err != nil {
 			return diag.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}
@@ -372,7 +372,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	op := resp.Operations[0]
 
-	err = waitOperation(ctx, conn, op.Id)
+	err = waitOperationWithContext(ctx, conn, op.Id)
 	if err != nil {
 		return diag.Errorf("Error waiting for Relational Database (%s) to Delete: %s", d.Id(), err)
 	}
@@ -459,7 +459,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		op := resp.Operations[0]
 
-		err = waitOperation(ctx, conn, op.Id)
+		err = waitOperationWithContext(ctx, conn, op.Id)
 		if err != nil {
 			return diag.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}
