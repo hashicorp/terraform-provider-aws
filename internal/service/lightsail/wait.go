@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	// OperationTimeout is the Timout Value for Operations
-	OperationTimeout = 20 * time.Minute
+	// OperationTimeout is the Timeout Value for Operations
+	OperationTimeout = 30 * time.Minute
 	// OperationDelay is the Delay Value for Operations
 	OperationDelay = 5 * time.Second
-	// OperationMinTimeout is the MinTimout Value for Operations
+	// OperationMinTimeout is the MinTimeout Value for Operations
 	OperationMinTimeout = 3 * time.Second
 
 	// DatabaseStateModifying is a state value for a Relational Database undergoing a modification
@@ -26,11 +26,11 @@ const (
 	// DatabaseStateAvailable is a state value for a Relational Database available for modification
 	DatabaseStateAvailable = "available"
 
-	// DatabaseTimeout is the Timout Value for Relational Database Modifications
-	DatabaseTimeout = 20 * time.Minute
+	// DatabaseTimeout is the Timeout Value for Relational Database Modifications
+	DatabaseTimeout = 30 * time.Minute
 	// DatabaseDelay is the Delay Value for Relational Database Modifications
 	DatabaseDelay = 5 * time.Second
-	// DatabaseMinTimeout is the MinTimout Value for Relational Database Modifications
+	// DatabaseMinTimeout is the MinTimeout Value for Relational Database Modifications
 	DatabaseMinTimeout = 3 * time.Second
 )
 
