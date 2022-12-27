@@ -24,7 +24,7 @@ resource "aws_lightsail_bucket" "test" {
 The following arguments are supported:
 
 * `name` - (Required) The name for the bucket.
-* `bundle_id` - (Required) - The ID of the bundle to use for the bucket. A bucket bundle specifies the monthly cost, storage space, and data transfer quota for a bucket. Use the (get-bucket-bundles)[https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-bucket-bundles.html] cli command to get a list of bundle IDs that you can specify.
+* `bundle_id` - (Required) - The ID of the bundle to use for the bucket. A bucket bundle specifies the monthly cost, storage space, and data transfer quota for a bucket. Use the [get-bucket-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-bucket-bundles.html) cli command to get a list of bundle IDs that you can specify.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
