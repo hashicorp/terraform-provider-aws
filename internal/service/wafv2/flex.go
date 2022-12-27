@@ -999,14 +999,12 @@ func expandManagedRuleGroupConfigs(m map[string]interface{}) []*wafv2.ManagedRul
 		c = append(c, &wafv2.ManagedRuleGroupConfig{
 			LoginPath: aws.String(v.(string)),
 		})
-
 	}
 
 	if v, ok := m["payload_type"]; ok && len(v.(string)) > 0 {
 		c = append(c, &wafv2.ManagedRuleGroupConfig{
 			PayloadType: aws.String(v.(string)),
 		})
-
 	}
 
 	if v, ok := m["password_field"]; ok && len(v.(string)) > 0 {
@@ -1015,7 +1013,6 @@ func expandManagedRuleGroupConfigs(m map[string]interface{}) []*wafv2.ManagedRul
 				Identifier: aws.String(v.(string)),
 			},
 		})
-
 	}
 
 	if v, ok := m["username_field"]; ok && len(v.(string)) > 0 {
@@ -1024,7 +1021,6 @@ func expandManagedRuleGroupConfigs(m map[string]interface{}) []*wafv2.ManagedRul
 				Identifier: aws.String(v.(string)),
 			},
 		})
-
 	}
 
 	if v, ok := m["inspection_level"]; ok && len(v.(string)) > 0 {
@@ -1976,6 +1972,7 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 	if apiObject.Version != nil {
 		tfMap["version"] = aws.StringValue(apiObject.Version)
 	}
+
 	if apiObject.ManagedRuleGroupConfigs != nil {
 		tfMap["managed_rule_group_config"] = []interface{}{flattenManagedRuleGroupConfigs(apiObject.ManagedRuleGroupConfigs)}
 	}
@@ -1990,10 +1987,11 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) interface
 		if config.AWSManagedRulesBotControlRuleSet != nil {
 			tfMap["inspection_level"] = aws.StringValue(config.AWSManagedRulesBotControlRuleSet.InspectionLevel)
 		}
+
 		if config.LoginPath != nil {
 			tfMap["login_path"] = aws.StringValue(config.LoginPath)
-
 		}
+
 		if config.PasswordField != nil {
 			tfMap["password_field"] = aws.StringValue(config.PasswordField.Identifier)
 		}
@@ -2001,13 +1999,13 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) interface
 		if config.UsernameField != nil {
 			tfMap["username_field"] = aws.StringValue(config.UsernameField.Identifier)
 		}
+
 		if config.PayloadType != nil {
 			tfMap["payload_type"] = aws.StringValue(config.PayloadType)
 		}
 	}
 
 	return tfMap
-
 }
 
 func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} {

@@ -1,0 +1,2 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add support for ManagedRuleGroupConfig```
