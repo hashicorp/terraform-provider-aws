@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_endpoint: Typo in `ignore_header_rows` setting.
+```
