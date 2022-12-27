@@ -23,10 +23,10 @@ const (
 
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDatabaseCreate,
-		ReadContext:   resourceDatabaseRead,
-		UpdateContext: resourceDatabaseUpdate,
-		DeleteContext: resourceDatabaseDelete,
+		CreateWithoutTimeout: resourceDatabaseCreate,
+		ReadWithoutTimeout:   resourceDatabaseRead,
+		UpdateWithoutTimeout: resourceDatabaseUpdate,
+		DeleteWithoutTimeout: resourceDatabaseDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: ResourceDatabaseImport,
 		},
@@ -176,12 +176,6 @@ func ResourceDatabase() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Read:   schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}

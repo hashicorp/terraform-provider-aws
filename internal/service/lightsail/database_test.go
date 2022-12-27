@@ -73,7 +73,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -135,7 +135,7 @@ func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -201,7 +201,7 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
+func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -272,7 +272,7 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
+func TestAccLightsailDatabase_masterPassword(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	password := "testpassword"
 	passwordTooShort := "short"
@@ -320,7 +320,7 @@ func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
+func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -374,7 +374,7 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
+func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -433,7 +433,7 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
+func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -477,7 +477,7 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
+func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -521,7 +521,7 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
+func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -578,7 +578,7 @@ func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_Tags(t *testing.T) {
+func TestAccLightsailDatabase_tags(t *testing.T) {
 	var db1, db2, db3 lightsail.RelationalDatabase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"

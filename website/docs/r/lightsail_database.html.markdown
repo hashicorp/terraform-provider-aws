@@ -184,15 +184,6 @@ In addition to all arguments above, the following attributes are exported:
 * `support_code` - The support code for the database. Include this code in your email to support when you have questions about a database in Lightsail. This code enables our support team to look up your Lightsail information more easily.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Timeouts
-
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `read` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
-
 ## Import
 
 Lightsail Databases can be imported using their name, e.g.
