@@ -733,6 +733,9 @@ service/networkmanager:
 service/nimble:
   - 'internal/service/nimble/**/*'
   - 'website/**/nimble_*'
+service/oam:
+  - 'internal/service/oam/**/*'
+  - 'website/**/oam_*'
 service/opensearch:
   - 'internal/service/opensearch/**/*'
   - 'website/**/opensearch_*'
