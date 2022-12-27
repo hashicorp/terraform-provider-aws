@@ -1857,10 +1857,48 @@ resource "aws_lambda_event_source_mapping" "test" {
 
 func testAccEventSourceMappingConfig_sqsUpdateFunctionName(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
+resource "aws_iam_role" "test_update" {
+	name = "%[1]s-update"
+
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+			"Service": "lambda.amazonaws.com"
+		},
+		"Effect": "Allow"
+	}]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_update" {
+	role = aws_iam_role.test_update.name
+
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"sqs:*"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+
+	depends_on = [aws_lambda_function.test_update]
+}
+
 resource "aws_lambda_function" "test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-update"
-  role          = aws_iam_role.test.arn
+  role          = aws_iam_role.test_update.arn
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
