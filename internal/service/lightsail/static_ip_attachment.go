@@ -36,7 +36,7 @@ func ResourceStaticIPAttachment() *schema.Resource {
 }
 
 func resourceStaticIPAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	staticIpName := d.Get("static_ip_name").(string)
 	log.Printf("[INFO] Attaching Lightsail Static IP: %q", staticIpName)
@@ -55,7 +55,7 @@ func resourceStaticIPAttachmentCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceStaticIPAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	staticIpName := d.Get("static_ip_name").(string)
 	log.Printf("[INFO] Reading Lightsail Static IP: %q", staticIpName)
@@ -87,7 +87,7 @@ func resourceStaticIPAttachmentRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceStaticIPAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("static_ip_name").(string)
 	log.Printf("[INFO] Detaching Lightsail Static IP: %q", name)

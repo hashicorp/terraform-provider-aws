@@ -233,7 +233,7 @@ func testAccCheckConnectorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MSK Connect Connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
 		_, err := tfkafkaconnect.FindConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -242,7 +242,7 @@ func testAccCheckConnectorExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckConnectorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mskconnect_connector" {

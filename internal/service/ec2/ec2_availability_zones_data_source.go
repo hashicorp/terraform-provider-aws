@@ -67,7 +67,7 @@ func DataSourceAvailabilityZones() *schema.Resource {
 }
 
 func dataSourceAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Reading Availability Zones.")
 

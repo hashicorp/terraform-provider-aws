@@ -5,5 +5,5 @@
 resource "github_actions_secret" "maintainer_list" {
   repository      = "terraform-provider-aws"
   secret_name     = "MAINTAINER_LIST"
-  plaintext_value = "['breathingdust', 'dependabot[bot]', 'ewbankkit', 'gdavison', 'johnsonaj', 'justinretzolk', 'YakDriver', 'zhelding']"
+  plaintext_value = "['breathingdust', 'dependabot[bot]', 'ewbankkit', 'gdavison', 'jar-b', 'johnsonaj', 'justinretzolk', 'marcosentino', 'YakDriver']"
 }

@@ -120,7 +120,7 @@ func ResourceOntapVolume() *schema.Resource {
 }
 
 func resourceOntapVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -161,11 +161,10 @@ func resourceOntapVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceOntapVolumeRead(d, meta)
-
 }
 
 func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -224,7 +223,7 @@ func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOntapVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -276,7 +275,7 @@ func resourceOntapVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOntapVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Volume: %s", d.Id())
 	_, err := conn.DeleteVolume(&fsx.DeleteVolumeInput{

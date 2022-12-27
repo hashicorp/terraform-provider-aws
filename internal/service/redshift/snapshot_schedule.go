@@ -66,11 +66,10 @@ func ResourceSnapshotSchedule() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
-
 }
 
 func resourceSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -104,7 +103,7 @@ func resourceSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -155,7 +154,7 @@ func resourceSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -180,7 +179,7 @@ func resourceSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.Get("force_destroy").(bool) {
 		if err := resourceSnapshotScheduleDeleteAllAssociatedClusters(conn, d.Id()); err != nil {
@@ -202,7 +201,6 @@ func resourceSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift, scheduleIdentifier string) error {
-
 	resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(scheduleIdentifier),
 	})

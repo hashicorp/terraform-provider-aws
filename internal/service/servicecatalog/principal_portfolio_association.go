@@ -59,7 +59,7 @@ func ResourcePrincipalPortfolioAssociation() *schema.Resource {
 }
 
 func resourcePrincipalPortfolioAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.AssociatePrincipalWithPortfolioInput{
 		PortfolioId:  aws.String(d.Get("portfolio_id").(string)),
@@ -109,7 +109,7 @@ func resourcePrincipalPortfolioAssociationCreate(d *schema.ResourceData, meta in
 }
 
 func resourcePrincipalPortfolioAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	acceptLanguage, principalARN, portfolioID, err := PrincipalPortfolioAssociationParseID(d.Id())
 
@@ -146,7 +146,7 @@ func resourcePrincipalPortfolioAssociationRead(d *schema.ResourceData, meta inte
 }
 
 func resourcePrincipalPortfolioAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	acceptLanguage, principalARN, portfolioID, err := PrincipalPortfolioAssociationParseID(d.Id())
 

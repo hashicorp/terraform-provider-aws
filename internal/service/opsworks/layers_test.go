@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -23,9 +24,9 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 			return fmt.Errorf("No OpsWorks Layer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
-		output, err := tfopsworks.FindLayerByID(conn, rs.Primary.ID)
+		output, err := tfopsworks.FindLayerByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -38,14 +39,14 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 }
 
 func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourceType {
 			continue
 		}
 
-		_, err := tfopsworks.FindLayerByID(conn, rs.Primary.ID)
+		_, err := tfopsworks.FindLayerByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

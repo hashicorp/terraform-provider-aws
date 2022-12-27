@@ -65,7 +65,7 @@ func ResourceApplicationSnapshot() *schema.Resource {
 }
 
 func resourceApplicationSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 	applicationName := d.Get("application_name").(string)
 	snapshotName := d.Get("snapshot_name").(string)
 
@@ -94,7 +94,7 @@ func resourceApplicationSnapshotCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 
 	applicationName, snapshotName, err := applicationSnapshotParseID(d.Id())
 
@@ -123,7 +123,7 @@ func resourceApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceApplicationSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 
 	applicationName, snapshotName, err := applicationSnapshotParseID(d.Id())
 

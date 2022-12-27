@@ -602,7 +602,7 @@ func testAccCheckAssociationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SSM Assosciation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		_, err := tfssm.FindAssociationById(conn, rs.Primary.ID)
 
@@ -611,7 +611,7 @@ func testAccCheckAssociationExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_association" {

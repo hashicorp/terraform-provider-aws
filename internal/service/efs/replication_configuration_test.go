@@ -133,7 +133,7 @@ func testAccCheckReplicationConfigurationExists(n string) resource.TestCheckFunc
 			return fmt.Errorf("No EFS Replication Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 
 		_, err := tfefs.FindReplicationConfigurationByID(conn, rs.Primary.ID)
 
@@ -142,7 +142,7 @@ func testAccCheckReplicationConfigurationExists(n string) resource.TestCheckFunc
 }
 
 func testAccCheckReplicationConfigurationDestroy(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).EFSConn
+	conn := provider.Meta().(*conns.AWSClient).EFSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_replication_configuration" {

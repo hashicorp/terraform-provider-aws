@@ -12,7 +12,7 @@ import (
 
 func DataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceLambdaFunctionAssociationRead,
+		ReadWithoutTimeout: dataSourceLambdaFunctionAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"function_arn": {
 				Type:         schema.TypeString,
@@ -28,7 +28,7 @@ func DataSourceLambdaFunctionAssociation() *schema.Resource {
 }
 
 func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	functionArn := d.Get("function_arn")
 	instanceID := d.Get("instance_id")
 

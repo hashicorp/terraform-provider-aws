@@ -30,7 +30,7 @@ func DataSourceNodeGroups() *schema.Resource {
 }
 
 func dataSourceNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName := d.Get("cluster_name").(string)
 

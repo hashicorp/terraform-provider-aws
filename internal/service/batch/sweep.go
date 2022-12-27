@@ -56,8 +56,8 @@ func sweepComputeEnvironments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).BatchConn
-	iamconn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).BatchConn()
+	iamconn := client.(*conns.AWSClient).IAMConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -178,7 +178,7 @@ func sweepJobDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).BatchConn
+	conn := client.(*conns.AWSClient).BatchConn()
 	input := &batch.DescribeJobDefinitionsInput{
 		Status: aws.String("ACTIVE"),
 	}
@@ -222,7 +222,7 @@ func sweepJobQueues(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).BatchConn
+	conn := client.(*conns.AWSClient).BatchConn()
 
 	out, err := conn.DescribeJobQueues(&batch.DescribeJobQueuesInput{})
 	if err != nil {
@@ -257,7 +257,7 @@ func sweepSchedulingPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).BatchConn
+	conn := client.(*conns.AWSClient).BatchConn()
 	input := &batch.ListSchedulingPoliciesInput{}
 	var sweeperErrs *multierror.Error
 

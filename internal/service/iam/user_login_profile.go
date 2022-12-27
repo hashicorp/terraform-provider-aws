@@ -127,7 +127,7 @@ func CheckPwdPolicy(pass []byte) bool {
 }
 
 func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("user").(string)
 
 	passwordLength := d.Get("password_length").(int)
@@ -142,7 +142,6 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 		PasswordResetRequired: aws.Bool(d.Get("password_reset_required").(bool)),
 	}
 
-	log.Println("[DEBUG] Create IAM User Login Profile request:", request)
 	createResp, err := conn.CreateLoginProfile(request)
 	if err != nil {
 		return fmt.Errorf("Error creating IAM User Login Profile for %q: %w", username, err)
@@ -171,7 +170,7 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.GetLoginProfileInput{
 		UserName: aws.String(d.Id()),
@@ -222,7 +221,7 @@ func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(d.Id()),

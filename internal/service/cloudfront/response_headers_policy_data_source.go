@@ -270,7 +270,7 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 }
 
 func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	var responseHeadersPolicyID string
 

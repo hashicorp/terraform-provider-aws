@@ -952,7 +952,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 }
 
 func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -986,7 +986,7 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1042,7 +1042,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	updateKeys := []string{
 		"block_device_mappings",
@@ -1102,7 +1102,6 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		latestVersion = aws.Int64Value(output.LaunchTemplateVersion.VersionNumber)
-
 	}
 
 	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {
@@ -1135,7 +1134,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
 	_, err := conn.DeleteLaunchTemplate(&ec2.DeleteLaunchTemplateInput{

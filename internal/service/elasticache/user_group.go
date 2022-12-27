@@ -66,7 +66,7 @@ var resourceUserGroupPendingStates = []string{
 }
 
 func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -85,7 +85,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := conn.CreateUserGroup(input)
 
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache User Group with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil
@@ -118,7 +118,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, aws.StringValue(out.ARN), nil, tags)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed adding tags after create for ElastiCache User Group (%s): %w", d.Id(), err)
 			}
@@ -131,7 +131,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -153,13 +153,13 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(resp.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		return fmt.Errorf("listing tags for ElastiCache User Group (%s): %w", aws.StringValue(resp.ARN), err)
 	}
 
 	// tags not supported in all partitions
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache User Group (%s): %s", aws.StringValue(resp.ARN), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache User Group (%s): %s", aws.StringValue(resp.ARN), err)
 	}
 
 	if tags != nil {
@@ -179,7 +179,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	hasChange := false
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -230,7 +230,7 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed updating ElastiCache User Group (%s) tags: %w", d.Get("arn").(string), err)
 			}
@@ -243,7 +243,7 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	input := &elasticache.DeleteUserGroupInput{
 		UserGroupId: aws.String(d.Id()),

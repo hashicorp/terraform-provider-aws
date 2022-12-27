@@ -46,7 +46,7 @@ func ResourceAPIMapping() *schema.Resource {
 }
 
 func resourceAPIMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -69,7 +69,7 @@ func resourceAPIMappingCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
@@ -92,7 +92,7 @@ func resourceAPIMappingRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.UpdateApiMappingInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -116,7 +116,7 @@ func resourceAPIMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API mapping (%s)", d.Id())
 	_, err := conn.DeleteApiMapping(&apigatewayv2.DeleteApiMappingInput{

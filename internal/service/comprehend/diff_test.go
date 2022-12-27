@@ -64,5 +64,4 @@ func TestDiffSuppressKMSKeyId(t *testing.T) {
 			}
 		})
 	}
-
 }

@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `id` - (Optional) Identifier of the Outpost.
 * `name` - (Optional) Name of the Outpost.
-* `arn` - (Optional) Amazon Resource Name (ARN).
+* `arn` - (Optional) ARN.
 * `owner_id` - (Optional) AWS Account identifier of the Outpost owner.
 
 ## Attribute Reference

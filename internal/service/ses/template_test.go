@@ -47,7 +47,6 @@ func TestAccSESTemplate_basic(t *testing.T) {
 }
 
 func TestAccSESTemplate_update(t *testing.T) {
-	acctest.Skip(t, "Skip due to SES.UpdateTemplate eventual consistency issues")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_template.test"
 	var template ses.Template
@@ -123,7 +122,7 @@ func TestAccSESTemplate_disappears(t *testing.T) {
 
 func testAccCheckTemplateExists(pr string, template *ses.Template) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -153,7 +152,7 @@ func testAccCheckTemplateExists(pr string, template *ses.Template) resource.Test
 }
 
 func testAccCheckTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_template" {

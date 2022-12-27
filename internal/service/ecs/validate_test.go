@@ -37,7 +37,6 @@ func TestValidPlacementConstraint(t *testing.T) {
 			t.Fatalf("Unexpected validation error for \"%s:%s\": %s",
 				tc.constType, tc.constExpr, err)
 		}
-
 	}
 }
 

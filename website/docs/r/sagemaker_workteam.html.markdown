@@ -76,7 +76,6 @@ The following arguments are supported:
 
 * `notification_topic_arn` - (Required) The ARN for the SNS topic to which notifications should be published.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

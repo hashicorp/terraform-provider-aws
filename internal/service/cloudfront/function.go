@@ -68,7 +68,7 @@ func ResourceFunction() *schema.Resource {
 }
 
 func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	functionName := d.Get("name").(string)
 	input := &cloudfront.CreateFunctionInput{
@@ -107,7 +107,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	describeFunctionOutput, err := FindFunctionByNameAndStage(conn, d.Id(), cloudfront.FunctionStageDevelopment)
 
@@ -153,7 +153,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	etag := d.Get("etag").(string)
 
 	if d.HasChanges("code", "comment", "runtime") {
@@ -195,7 +195,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[INFO] Deleting CloudFront Function: %s", d.Id())
 	_, err := conn.DeleteFunction(&cloudfront.DeleteFunctionInput{

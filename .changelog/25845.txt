@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `cookies` attribute to the `field_to_match` block
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `cookies` attribute to the `field_to_match` block
+```

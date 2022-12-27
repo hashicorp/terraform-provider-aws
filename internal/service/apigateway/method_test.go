@@ -300,7 +300,7 @@ func testAccCheckMethodExists(n string, res *apigateway.Method) resource.TestChe
 			return fmt.Errorf("No API Gateway Method ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetMethodInput{
 			HttpMethod: aws.String("GET"),
@@ -319,7 +319,7 @@ func testAccCheckMethodExists(n string, res *apigateway.Method) resource.TestChe
 }
 
 func testAccCheckMethodDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_method" {
@@ -433,7 +433,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name    = "tf_acc_api_gateway_authorizer_%d"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 
 resource "aws_api_gateway_authorizer" "test" {

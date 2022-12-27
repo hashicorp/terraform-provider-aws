@@ -1,20 +1,20 @@
-// GetTag fetches an individual {{ .ServicePackage }} service tag for a resource.
+// {{ .GetTagFunc }} fetches an individual {{ .ServicePackage }} service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
+// This function will optimise the handling over {{ .ListTagsFunc }}, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 {{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
-func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
+func {{ .GetTagFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
 {{- else }}
-func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
+func {{ .GetTagFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
 {{- end }}
-	return GetTagWithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key)
+	return {{ .GetTagFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key)
 }
 
 {{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
-func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
+func {{ .GetTagFunc }}WithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
 {{- else }}
-func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
+func {{ .GetTagFunc }}WithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
 {{- end }}
 	{{- if .ListTagsInFiltIDName }}
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
@@ -38,7 +38,7 @@ func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier s
 
 	listTags := KeyValueTags(output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	{{- else }}
-	listTags, err := ListTagsWithContext(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	listTags, err := {{ .ListTagsFunc }}WithContext(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
 		return nil, err

@@ -687,6 +687,16 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
 				),
 			},
+			{
+				Config: testAccJobConfig_pythonShellVersion(rName, "3.9"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
+				),
+			},
 		},
 	})
 }
@@ -739,7 +749,7 @@ func testAccCheckJobExists(n string, v *glue.Job) resource.TestCheckFunc {
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := tfglue.FindJobByName(conn, rs.Primary.ID)
 
@@ -759,7 +769,7 @@ func testAccCheckJobDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		_, err := tfglue.FindJobByName(conn, rs.Primary.ID)
 

@@ -784,7 +784,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_cluster" {
@@ -815,7 +815,7 @@ func testAccCheckDestroyClusterSnapshot(rName string) resource.TestCheckFunc {
 			}
 
 			// Try and delete the snapshot before we check for the cluster not found
-			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 			_, err := conn.DeleteClusterSnapshot(
 				&redshift.DeleteClusterSnapshotInput{
@@ -854,7 +854,7 @@ func testAccCheckClusterExists(n string, v *redshift.Cluster) resource.TestCheck
 			return fmt.Errorf("No Redshift Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		output, err := tfredshift.FindClusterByID(conn, rs.Primary.ID)
 

@@ -15,7 +15,7 @@ import (
 
 func testAccManagedPrefixListGetIdByNameDataSource(name string, id *string, arn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := conn.DescribeManagedPrefixLists(&ec2.DescribeManagedPrefixListsInput{
 			Filters: []*ec2.Filter{
@@ -159,7 +159,7 @@ func TestAccVPCManagedPrefixListDataSource_matchesTooMany(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCManagedPrefixListDataSourceConfig_matchesTooMany,
-				ExpectError: regexp.MustCompile(`more than 1 prefix list matched the given criteria`),
+				ExpectError: regexp.MustCompile(`multiple EC2 Managed Prefix Lists matched`),
 			},
 		},
 	})

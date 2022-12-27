@@ -111,10 +111,10 @@ func ResourceStack() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 			"default_availability_zone": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"vpc_id"},
 			},
 			"default_instance_profile_arn": {
 				Type:     schema.TypeString,
@@ -181,11 +181,11 @@ func ResourceStack() *schema.Resource {
 				Default:  true,
 			},
 			"vpc_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Computed:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"default_availability_zone"},
 			},
 		},
 
@@ -194,7 +194,7 @@ func ResourceStack() *schema.Resource {
 }
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -260,7 +260,6 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VpcId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating OpsWorks Stack: %s", input)
 	outputRaw, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateStack(input)
@@ -316,7 +315,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -331,7 +330,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	stack, err := FindStackByID(conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		// If it's not found in the the default region we're in, we check us-east-1
+		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
 		conn, err = regionalConn(meta.(*conns.AWSClient), endpoints.UsEast1RegionID)
@@ -433,7 +432,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
@@ -529,7 +528,6 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.UseOpsworksSecurityGroups = aws.Bool(d.Get("use_opsworks_security_groups").(bool))
 		}
 
-		log.Printf("[DEBUG] Updating OpsWorks Stack: %s", input)
 		_, err = conn.UpdateStack(input)
 
 		if err != nil {
@@ -550,7 +548,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
@@ -697,7 +695,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 //   - https://github.com/hashicorp/terraform/pull/12688
 //   - https://github.com/hashicorp/terraform/issues/12842
 func regionalConn(client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
-	conn := client.OpsWorksConn
+	conn := client.OpsWorksConn()
 
 	// Regions are the same, no need to reconfigure.
 	if aws.StringValue(conn.Config.Region) == regionName {

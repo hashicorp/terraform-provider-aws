@@ -20,9 +20,6 @@ heading-increment: false
 # MD004
 ul-style: false
 
-# MD012
-no-multiple-blanks: false
-
 # MD013
 line-length: false
 

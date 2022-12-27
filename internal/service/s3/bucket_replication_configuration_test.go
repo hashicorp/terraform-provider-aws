@@ -1155,7 +1155,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 }
 
 func testAccCheckBucketReplicationConfigurationDestroy(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).S3Conn
+	conn := provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_replication_configuration" {
@@ -1194,7 +1194,7 @@ func testAccCheckBucketReplicationConfigurationExists(n string) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		output, err := conn.GetBucketReplication(&s3.GetBucketReplicationInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -1952,7 +1952,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, rName, rNameDestination)
 }
 
-func testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination string) string {
+func testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination string) string { //nolint:unused // used in skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

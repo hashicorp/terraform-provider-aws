@@ -37,7 +37,7 @@ func ResourceAdminAccount() *schema.Resource {
 }
 
 func resourceAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	// Ensure there is not an existing FMS Admin Account
 	output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
@@ -111,7 +111,7 @@ func associateAdminAccountRefreshFunc(conn *fms.FMS, accountId string) resource.
 }
 
 func resourceAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
 
@@ -141,7 +141,7 @@ func resourceAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	_, err := conn.DisassociateAdminAccount(&fms.DisassociateAdminAccountInput{})
 

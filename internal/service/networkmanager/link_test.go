@@ -161,7 +161,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 }
 
 func testAccCheckLinkDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_link" {
@@ -195,7 +195,7 @@ func testAccCheckLinkExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Network Manager Link ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		_, err := tfnetworkmanager.FindLinkByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 

@@ -133,7 +133,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 }
 
 func testAccCheckKeySigningKeyDestroy(s *terraform.State) error {
-	conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
+	conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_key_signing_key" {
@@ -174,7 +174,7 @@ func testAccKeySigningKeyExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
+		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn()
 
 		keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(conn, rs.Primary.ID)
 

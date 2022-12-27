@@ -40,7 +40,7 @@ func ResourceRegistryPolicy() *schema.Resource {
 }
 
 func resourceRegistryPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -65,7 +65,7 @@ func resourceRegistryPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRegistryPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	log.Printf("[DEBUG] Reading registry policy %s", d.Id())
 	out, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
@@ -98,7 +98,7 @@ func resourceRegistryPolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceRegistryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	_, err := conn.DeleteRegistryPolicy(&ecr.DeleteRegistryPolicyInput{})
 	if err != nil {

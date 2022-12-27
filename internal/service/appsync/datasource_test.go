@@ -495,7 +495,7 @@ func testAccDataSource_Type_none(t *testing.T) {
 }
 
 func testAccCheckDestroyDataSource(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_datasource" {
 			continue
@@ -539,7 +539,7 @@ func testAccCheckExistsDataSource(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
 		input := &appsync.GetDataSourceInput{
 			ApiId: aws.String(apiID),
@@ -687,7 +687,7 @@ resource "aws_lambda_function" "test" {
   function_name = %q
   handler       = "exports.test"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_iam_role" "test" {

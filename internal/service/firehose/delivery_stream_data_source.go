@@ -25,7 +25,7 @@ func DataSourceDeliveryStream() *schema.Resource {
 }
 
 func dataSourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FirehoseConn
+	conn := meta.(*conns.AWSClient).FirehoseConn()
 
 	sn := d.Get("name").(string)
 	output, err := FindDeliveryStreamByName(conn, sn)

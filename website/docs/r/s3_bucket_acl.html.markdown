@@ -111,7 +111,6 @@ In addition to all arguments above, the following attributes are exported:
 
 S3 bucket ACL can be imported in one of four ways.
 
-
 If the owner (account ID) of the source bucket is the _same_ account used to configure the Terraform AWS Provider, and the source bucket is **not configured** with a
 [canned ACL][1] (i.e. predefined grant), the S3 bucket ACL resource should be imported using the `bucket` e.g.,
 

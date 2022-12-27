@@ -33,7 +33,7 @@ func sweepDiscoverers(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn
+	conn := client.(*conns.AWSClient).SchemasConn()
 	input := &schemas.ListDiscoverersInput{}
 	var sweeperErrs *multierror.Error
 
@@ -75,7 +75,7 @@ func sweepRegistries(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SchemasConn
+	conn := client.(*conns.AWSClient).SchemasConn()
 	input := &schemas.ListRegistriesInput{}
 	var sweeperErrs *multierror.Error
 

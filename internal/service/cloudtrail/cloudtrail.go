@@ -248,7 +248,7 @@ func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-
 }
 
 func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -346,7 +346,7 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { 
 }
 
 func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -463,7 +463,7 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 }
 
 func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
 		input := cloudtrail.UpdateTrailInput{
@@ -565,7 +565,7 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { 
 }
 
 func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())
 	_, err := conn.DeleteTrail(&cloudtrail.DeleteTrailInput{
@@ -753,11 +753,9 @@ func expandAdvancedEventSelector(configured []interface{}) []*cloudtrail.Advance
 		}
 
 		advancedEventSelectors = append(advancedEventSelectors, aes)
-
 	}
 
 	return advancedEventSelectors
-
 }
 
 func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []*cloudtrail.AdvancedFieldSelector {

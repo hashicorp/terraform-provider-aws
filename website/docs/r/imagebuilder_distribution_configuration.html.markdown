@@ -48,7 +48,6 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the distribution configuration.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key used to encrypt the distribution configuration.
 * `tags` - (Optional) Key-value map of resource tags for the distribution configuration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### distribution

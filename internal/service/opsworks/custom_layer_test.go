@@ -52,6 +52,8 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elastic_load_balancer", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "300"),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.enable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "short_name", "tf-ops-acc-custom-layer"),
 					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "2"),
@@ -226,6 +228,76 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 	})
 }
 
+func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
+	var v opsworks.Layer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_custom_layer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomLayerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomLayerConfig_loadBasedAutoScaling(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLayerExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.alarms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.cpu_threshold", "20"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.ignore_metrics_time", "15"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.load_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.memory_threshold", "20"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.thresholds_wait_time", "30"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.alarms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.cpu_threshold", "80"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.ignore_metrics_time", "15"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.instance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.load_threshold", "10"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.memory_threshold", "80"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.thresholds_wait_time", "35"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCustomLayerConfig_loadBasedAutoScaling(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLayerExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.alarms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.cpu_threshold", "20"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.ignore_metrics_time", "15"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.load_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.memory_threshold", "20"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.thresholds_wait_time", "30"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.alarms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.cpu_threshold", "80"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.ignore_metrics_time", "15"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.instance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.load_threshold", "10"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.memory_threshold", "80"),
+					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.upscaling.0.thresholds_wait_time", "35"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCustomLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_custom_layer", s)
 }
@@ -382,4 +454,42 @@ resource "aws_opsworks_custom_layer" "test" {
   }
 }
 `, rName))
+}
+
+func testAccCustomLayerConfig_loadBasedAutoScaling(rName string, enable bool) string {
+	return acctest.ConfigCompose(testAccLayerConfig_base(rName), fmt.Sprintf(`
+resource "aws_opsworks_custom_layer" "test" {
+  stack_id               = aws_opsworks_stack.test.id
+  name                   = %[1]q
+  short_name             = "tf-ops-acc-custom-layer"
+  auto_assign_public_ips = true
+
+  custom_security_group_ids = aws_security_group.test[*].id
+
+  drain_elb_on_shutdown     = true
+  instance_shutdown_timeout = 300
+
+  load_based_auto_scaling {
+    enable = %[2]t
+
+    downscaling {
+      cpu_threshold        = 20
+      ignore_metrics_time  = 15
+      instance_count       = 2
+      load_threshold       = 5
+      memory_threshold     = 20
+      thresholds_wait_time = 30
+    }
+
+    upscaling {
+      cpu_threshold        = 80
+      ignore_metrics_time  = 15
+      instance_count       = 3
+      load_threshold       = 10
+      memory_threshold     = 80
+      thresholds_wait_time = 35
+    }
+  }
+}
+`, rName, enable))
 }

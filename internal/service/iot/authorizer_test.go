@@ -158,7 +158,7 @@ func testAccCheckAuthorizerExists(n string, v *iot.AuthorizerDescription) resour
 			return fmt.Errorf("No IoT Authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		output, err := tfiot.FindAuthorizerByName(conn, rs.Primary.ID)
 
@@ -173,7 +173,7 @@ func testAccCheckAuthorizerExists(n string, v *iot.AuthorizerDescription) resour
 }
 
 func testAccCheckAuthorizerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_authorizer" {
@@ -224,7 +224,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 `, rName)
 }

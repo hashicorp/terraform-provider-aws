@@ -19,7 +19,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(eventbridge.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -520,7 +519,7 @@ func testAccCheckRuleExists(n string, rule *eventbridge.DescribeRuleOutput) reso
 			return fmt.Errorf("No EventBridge Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 		resp, err := tfevents.FindRuleByResourceID(conn, rs.Primary.ID)
 
@@ -541,7 +540,7 @@ func testAccCheckRuleEnabled(n string, desired string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 		resp, err := tfevents.FindRuleByResourceID(conn, rs.Primary.ID)
 
@@ -558,7 +557,7 @@ func testAccCheckRuleEnabled(n string, desired string) resource.TestCheckFunc {
 }
 
 func testAccCheckRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_rule" {

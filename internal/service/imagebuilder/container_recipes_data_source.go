@@ -36,7 +36,7 @@ func DataSourceContainerRecipes() *schema.Resource {
 }
 
 func dataSourceContainerRecipesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.ListContainerRecipesInput{}
 

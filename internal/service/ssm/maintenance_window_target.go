@@ -94,7 +94,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 }
 
 func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Target")
 
@@ -127,7 +127,7 @@ func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	windowID := d.Get("window_id").(string)
 	params := &ssm.DescribeMaintenanceWindowTargetsInput{
@@ -179,7 +179,7 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
@@ -210,7 +210,7 @@ func resourceMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Target: %s", d.Id())
 

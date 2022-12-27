@@ -40,6 +40,12 @@ func ResourceKey() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"custom_key_store_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 22),
+			},
 			"customer_master_key_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -99,7 +105,7 @@ func ResourceKey() *schema.Resource {
 }
 
 func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -119,6 +125,11 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("policy"); ok {
 		input.Policy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_key_store_id"); ok {
+		input.Origin = aws.String(kms.OriginTypeAwsCloudhsm)
+		input.CustomKeyStoreId = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -170,7 +181,7 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -192,6 +203,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", key.metadata.Arn)
+	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
@@ -223,7 +235,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
@@ -273,7 +285,7 @@ func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

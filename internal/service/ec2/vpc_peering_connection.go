@@ -84,9 +84,10 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"allow_classic_link_to_remote_vpc": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    false,
+				Deprecated: `With the retirement of EC2-Classic the allow_classic_link_to_remote_vpc attribute has been deprecated and will be removed in a future version.`,
 			},
 			"allow_remote_vpc_dns_resolution": {
 				Type:     schema.TypeBool,
@@ -94,18 +95,23 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 				Default:  false,
 			},
 			"allow_vpc_to_remote_classic_link": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    false,
+				Deprecated: `With the retirement of EC2-Classic the allow_vpc_to_remote_classic_link attribute has been deprecated and will be removed in a future version.`,
 			},
 		},
 	},
 }
 
 func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if peeringConnectionOptionsAllowsClassicLink(d) {
+		return errors.New(`with the retirement of EC2-Classic no new VPC Peering Connections can be created with ClassicLink options enabled`)
+	}
 
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
@@ -156,7 +162,7 @@ func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -218,7 +224,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
@@ -252,7 +258,7 @@ func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceVPCPeeringConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", d.Id())
 	_, err := conn.DeleteVpcPeeringConnection(&ec2.DeleteVpcPeeringConnectionInput{
@@ -286,7 +292,7 @@ func acceptVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string, ti
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("error acccepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
+		return nil, fmt.Errorf("error accepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
 	}
 
 	// "OperationNotPermitted: Peering pcx-0000000000000000 is not active. Peering options can be added only to active peerings."
@@ -422,4 +428,24 @@ func flattenVPCPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConn
 	}
 
 	return tfMap
+}
+
+func peeringConnectionOptionsAllowsClassicLink(d *schema.ResourceData) bool {
+	fn := func(key string) bool {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := tfMap["allow_classic_link_to_remote_vpc"].(bool); ok && v {
+				return true
+			}
+
+			if v, ok := tfMap["allow_vpc_to_remote_classic_link"].(bool); ok && v {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return fn("accepter") || fn("requester")
 }

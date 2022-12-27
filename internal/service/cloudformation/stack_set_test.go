@@ -700,7 +700,7 @@ func testAccCheckStackSetExists(resourceName string, v *cloudformation.StackSet)
 
 		callAs := rs.Primary.Attributes["call_as"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
@@ -715,7 +715,7 @@ func testAccCheckStackSetExists(resourceName string, v *cloudformation.StackSet)
 }
 
 func testAccCheckStackSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack_set" {
@@ -761,7 +761,7 @@ func testAccCheckStackSetRecreated(i, j *cloudformation.StackSet) resource.TestC
 }
 
 func testAccPreCheckStackSet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	input := &cloudformation.ListStackSetsInput{}
 	_, err := conn.ListStackSets(input)
@@ -825,7 +825,7 @@ Outputs:
 `, rName)
 }
 
-func testAccStackSetTemplateBodyParametersDefault1(rName string) string {
+func testAccStackSetTemplateBodyParametersDefault1(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 Parameters:
   Parameter1:
@@ -849,7 +849,7 @@ Outputs:
 `, rName)
 }
 
-func testAccStackSetTemplateBodyParametersNoEcho1(rName string) string {
+func testAccStackSetTemplateBodyParametersNoEcho1(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 Parameters:
   Parameter1:
@@ -1200,7 +1200,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyParameters2(rName), value1, value2)
 }
 
-func testAccStackSetConfig_parametersDefault0(rName string) string {
+func testAccStackSetConfig_parametersDefault0(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
@@ -1236,7 +1236,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyParametersDefault1(rName))
 }
 
-func testAccStackSetConfig_parametersDefault1(rName, value1 string) string {
+func testAccStackSetConfig_parametersDefault1(rName, value1 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
@@ -1276,7 +1276,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyParametersDefault1(rName), value1)
 }
 
-func testAccStackSetConfig_parametersNoEcho1(rName, value1 string) string {
+func testAccStackSetConfig_parametersNoEcho1(rName, value1 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
@@ -1539,7 +1539,7 @@ resource "aws_cloudformation_stack_set" "test" {
 `, rName, testAccStackSetTemplateBodyVPC(rName+"2"))
 }
 
-func testAccStackSetConfig_permissionModel(rName string) string {
+func testAccStackSetConfig_permissionModel(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
   name             = %[1]q

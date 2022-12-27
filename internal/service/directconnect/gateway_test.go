@@ -95,7 +95,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 }
 
 func testAccCheckGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway" {
@@ -128,7 +128,7 @@ func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.T
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		output, err := tfdirectconnect.FindGatewayByID(conn, rs.Primary.ID)
 

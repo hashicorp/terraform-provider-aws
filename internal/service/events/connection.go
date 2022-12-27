@@ -257,7 +257,7 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	name := d.Get("name").(string)
 	input := &eventbridge.CreateConnectionInput{
@@ -269,8 +269,6 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-
-	log.Printf("[DEBUG] Creating EventBridge connection: %s", input)
 
 	_, err := conn.CreateConnection(input)
 
@@ -290,7 +288,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	output, err := FindConnectionByName(conn, d.Id())
 
@@ -321,7 +319,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.UpdateConnectionInput{
 		Name: aws.String(d.Id()),
@@ -339,7 +337,6 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Updating EventBridge connection: %s", input)
 	_, err := conn.UpdateConnection(input)
 
 	if err != nil {
@@ -356,7 +353,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	log.Printf("[INFO] Deleting EventBridge connection (%s)", d.Id())
 	_, err := conn.DeleteConnection(&eventbridge.DeleteConnectionInput{

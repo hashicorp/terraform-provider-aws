@@ -160,7 +160,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 
 func testAccCheckPipelineDisappears(conf *datapipeline.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
 		params := &datapipeline.DeletePipelineInput{
 			PipelineId: conf.PipelineId,
 		}
@@ -174,7 +174,7 @@ func testAccCheckPipelineDisappears(conf *datapipeline.PipelineDescription) reso
 }
 
 func testAccCheckPipelineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datapipeline_pipeline" {
@@ -210,7 +210,7 @@ func testAccCheckPipelineExists(n string, v *datapipeline.PipelineDescription) r
 			return fmt.Errorf("No DataPipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
 
 		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(rs.Primary.ID, conn)
 
@@ -227,7 +227,7 @@ func testAccCheckPipelineExists(n string, v *datapipeline.PipelineDescription) r
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
 
 	input := &datapipeline.ListPipelinesInput{}
 
@@ -257,7 +257,6 @@ func testAccPipelineConfig_basic(rName string) string {
 resource "aws_datapipeline_pipeline" "default" {
   name = "%[1]s"
 }`, rName)
-
 }
 
 func testAccPipelineConfig_description(rName, description string) string {
@@ -266,7 +265,6 @@ resource "aws_datapipeline_pipeline" "default" {
   name        = "%[1]s"
   description = %[2]q
 }`, rName, description)
-
 }
 
 func testAccPipelineConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -279,5 +277,4 @@ resource "aws_datapipeline_pipeline" "default" {
     %[4]s = %[5]q
   }
 }`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-
 }

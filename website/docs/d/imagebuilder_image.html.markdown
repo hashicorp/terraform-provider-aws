@@ -22,22 +22,22 @@ data "aws_imagebuilder_image" "example" {
 
 ## Argument Reference
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
+* `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `build_version_arn` - Build version Amazon Resource Name (ARN) of the image. This will always have the `#.#.#/#` suffix.
-* `container_recipe_arn` - Amazon Resource Name (ARN) of the container recipe.
+* `build_version_arn` - Build version ARN of the image. This will always have the `#.#.#/#` suffix.
+* `container_recipe_arn` - ARN of the container recipe.
 * `date_created` - Date the image was created.
-* `distribution_configuration_arn` - Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
+* `distribution_configuration_arn` - ARN of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - Whether additional information about the image being created is collected.
-* `image_recipe_arn` - Amazon Resource Name (ARN) of the image recipe.
+* `image_recipe_arn` - ARN of the image recipe.
 * `image_tests_configuration` - List of an object with image tests configuration.
     * `image_tests_enabled` - Whether image tests are enabled.
     * `timeout_minutes` - Number of minutes before image tests time out.
-* `infrastructure_configuration_arn` - Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration.
+* `infrastructure_configuration_arn` - ARN of the Image Builder Infrastructure Configuration.
 * `name` - Name of the image.
 * `platform` - Platform of the image.
 * `os_version` - Operating System version of the image.

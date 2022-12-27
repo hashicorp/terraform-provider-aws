@@ -1877,7 +1877,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 }
 
 func testAccCheckApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_analytics_application" {
@@ -1910,7 +1910,7 @@ func testAccCheckApplicationExists(n string, v *kinesisanalytics.ApplicationDeta
 			return fmt.Errorf("No Kinesis Analytics Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn()
 
 		application, err := tfkinesisanalytics.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
@@ -1925,7 +1925,7 @@ func testAccCheckApplicationExists(n string, v *kinesisanalytics.ApplicationDeta
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn()
 
 	input := &kinesisanalytics.ListApplicationsInput{}
 
@@ -2028,7 +2028,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s_${count.index}"
   handler       = "exports.example"
   role          = aws_iam_role.test[0].arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

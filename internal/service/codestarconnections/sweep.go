@@ -34,9 +34,9 @@ func sweepConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := client.(*conns.AWSClient).CodeStarConnectionsConn()
 	input := &codestarconnections.ListConnectionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListConnectionsPages(input, func(page *codestarconnections.ListConnectionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -77,9 +77,9 @@ func sweepHosts(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := client.(*conns.AWSClient).CodeStarConnectionsConn()
 	input := &codestarconnections.ListHostsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListHostsPages(input, func(page *codestarconnections.ListHostsOutput, lastPage bool) bool {
 		if page == nil {

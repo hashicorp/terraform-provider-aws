@@ -1,19 +1,20 @@
 package sns
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceTopic() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTopicsRead,
+		ReadWithoutTimeout: dataSourceTopicRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -28,13 +29,13 @@ func DataSourceTopic() *schema.Resource {
 	}
 }
 
-func dataSourceTopicsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	resourceArn := ""
 	name := d.Get("name").(string)
 
-	err := conn.ListTopicsPages(&sns.ListTopicsInput{}, func(page *sns.ListTopicsOutput, lastPage bool) bool {
+	err := conn.ListTopicsPagesWithContext(ctx, &sns.ListTopicsInput{}, func(page *sns.ListTopicsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -60,11 +61,11 @@ func dataSourceTopicsRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing SNS Topics: %w", err)
+		return diag.Errorf("listing SNS Topics: %s", err)
 	}
 
 	if resourceArn == "" {
-		return fmt.Errorf("no matching SNS Topic found")
+		return diag.Errorf("no matching SNS Topic found")
 	}
 
 	d.SetId(resourceArn)

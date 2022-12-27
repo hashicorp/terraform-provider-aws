@@ -1,10 +1,35 @@
 # HCL Changelog
 
+## v2.15.0 (November 10, 2022)
+
+### Bugs Fixed
+
+* ext/typeexpr: Skip null objects when applying defaults. This prevents crashes when null objects are creating inside collections, and stops incomplete objects being created with only optional attributes set. ([#567](https://github.com/hashicorp/hcl/pull/567))
+* ext/typeexpr: Ensure default values do not have optional metadata attached. This prevents crashes when default values are inserted into concrete go-cty values that have also been stripped of their optional metadata. ([#568](https://github.com/hashicorp/hcl/pull/568))
+
+### Enhancements
+
+* ext/typeexpr: With the [go-cty](https://github.com/zclconf/go-cty) upstream depenendency updated to v1.12.0, the `Defaults` struct and associated functions can apply additional and more flexible 'unsafe' conversions (examples include tuples into collections such as lists and sets, and additional safety around null and dynamic values). ([#564](https://github.com/hashicorp/hcl/pull/564))
+* ext/typeexpr: With the [go-cty](https://github.com/zclconf/go-cty) upstream depenendency updated to v1.12.0, users should now apply the go-cty convert functionality *before* setting defaults on a given `cty.Value`, rather than after, if they require a specific `cty.Type`.  ([#564](https://github.com/hashicorp/hcl/pull/564))
+
+## v2.14.1 (September 23, 2022)
+
+### Bugs Fixed
+
+* ext/typeexpr: Type convert defaults for optional object attributes when applying them. This prevents crashes in certain cases when the objects in question are part of a collection. ([#555](https://github.com/hashicorp/hcl/pull/555))
+
+## v2.14.0 (September 1, 2022)
+
+### Enhancements
+
+* ext/typeexpr: Added support for optional object attributes to `TypeConstraint`. Attributes can be wrapped in the special `optional(…)` modifier, allowing the attribute to be omitted while still meeting the type constraint. For more information, [cty's documentation on conversion between object types](https://github.com/zclconf/go-cty/blob/main/docs/convert.md#conversion-between-object-types). ([#549](https://github.com/hashicorp/hcl/pull/549))
+* ext/typeexpr: New function: `TypeConstraintWithDefaults`. In this mode, the `optional(…)` modifier accepts a second argument which can be used as the default value for omitted object attributes. The function returns both a `cty.Type` and associated `Defaults`, the latter of which has an `Apply` method to apply defaults to a given value. ([#549](https://github.com/hashicorp/hcl/pull/549))
+
 ## v2.13.0 (June 22, 2022)
 
 ### Enhancements
 
-* hcl: `hcl.Diagnostic` how has an additional field `Extra` which is intended for carrying arbitrary supporting data ("extra information") related to the diagnostic message, intended to allow diagnostic renderers to optionally tailor the presentation of messages for particular situations. ([#539](https://github.com/hashicorp/hcl/pull/539))
+* hcl: `hcl.Diagnostic` now has an additional field `Extra` which is intended for carrying arbitrary supporting data ("extra information") related to the diagnostic message, intended to allow diagnostic renderers to optionally tailor the presentation of messages for particular situations. ([#539](https://github.com/hashicorp/hcl/pull/539))
 * hclsyntax: When an error occurs during a function call, the returned diagnostics will include _extra information_ (as described in the previous point) about which function was being called and, if the message is about an error returned by the function itself, that raw `error` value without any post-processing. ([#539](https://github.com/hashicorp/hcl/pull/539))
 
 ### Bugs Fixed

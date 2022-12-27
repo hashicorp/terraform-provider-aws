@@ -123,7 +123,7 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 }
 
 func testAccCheckSnapshotCopyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_snapshot_copy" {
@@ -156,7 +156,7 @@ func testAccCheckSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.TestC
 			return fmt.Errorf("no RDS DB Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		out, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
 		if err != nil {

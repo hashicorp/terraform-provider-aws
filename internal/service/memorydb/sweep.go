@@ -67,9 +67,9 @@ func sweepACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeACLsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeACLsPages(conn, input, func(page *memorydb.DescribeACLsOutput, lastPage bool) bool {
 		if page == nil {
@@ -116,9 +116,9 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeClustersPages(conn, input, func(page *memorydb.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -159,9 +159,9 @@ func sweepParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeParameterGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeParameterGroupsPages(conn, input, func(page *memorydb.DescribeParameterGroupsOutput, lastPage bool) bool {
 		if page == nil {
@@ -208,9 +208,9 @@ func sweepSnapshots(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeSnapshotsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeSnapshotsPages(conn, input, func(page *memorydb.DescribeSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
@@ -251,9 +251,9 @@ func sweepSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeSubnetGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeSubnetGroupsPages(conn, input, func(page *memorydb.DescribeSubnetGroupsOutput, lastPage bool) bool {
 		if page == nil {
@@ -300,9 +300,9 @@ func sweepUsers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeUsersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeUsersPages(conn, input, func(page *memorydb.DescribeUsersOutput, lastPage bool) bool {
 		if page == nil {

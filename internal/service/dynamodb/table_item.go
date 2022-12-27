@@ -58,7 +58,7 @@ func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 }
 
 func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
@@ -73,12 +73,9 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = conn.PutItem(&dynamodb.PutItemInput{
 		Item: attributes,
 		// Explode if item exists. We didn't create it.
-		Expected: map[string]*dynamodb.ExpectedAttributeValue{
-			hashKey: {
-				Exists: aws.Bool(false),
-			},
-		},
-		TableName: aws.String(tableName),
+		ConditionExpression:      aws.String("attribute_not_exists(#hk)"),
+		ExpressionAttributeNames: aws.StringMap(map[string]string{"#hk": hashKey}),
+		TableName:                aws.String(tableName),
 	})
 	if err != nil {
 		return err
@@ -94,7 +91,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating DynamoDB table %s", d.Id())
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	if d.HasChange("item") {
 		tableName := d.Get("table_name").(string)
@@ -169,7 +166,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
 
@@ -209,7 +206,7 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {

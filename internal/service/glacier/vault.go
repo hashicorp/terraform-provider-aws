@@ -99,7 +99,7 @@ func ResourceVault() *schema.Resource {
 }
 
 func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -136,7 +136,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -161,7 +161,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -238,7 +238,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	log.Printf("[DEBUG] Glacier Delete Vault: %s", d.Id())
 	_, err := conn.DeleteVault(&glacier.DeleteVaultInput{
@@ -251,7 +251,6 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceData) error {
-
 	if v, ok := d.GetOk("notification"); ok {
 		settings := v.([]interface{})
 
@@ -276,7 +275,6 @@ func resourceVaultNotificationUpdate(conn *glacier.Glacier, d *schema.ResourceDa
 		if err != nil {
 			return fmt.Errorf("Error Removing Glacier Vault Notifications: %w", err)
 		}
-
 	}
 
 	return nil

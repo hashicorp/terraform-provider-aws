@@ -177,7 +177,7 @@ func testAccCheckAccessExists(n string, v *transfer.DescribedAccess) resource.Te
 			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 		output, err := tftransfer.FindAccessByServerIDAndExternalID(conn, serverID, externalID)
 
@@ -192,7 +192,7 @@ func testAccCheckAccessExists(n string, v *transfer.DescribedAccess) resource.Te
 }
 
 func testAccCheckAccessDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_access" {

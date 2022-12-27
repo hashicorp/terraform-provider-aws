@@ -26,9 +26,9 @@ func sweepScalingPlans(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingPlansConn
+	conn := client.(*conns.AWSClient).AutoScalingPlansConn()
 	input := &autoscalingplans.DescribeScalingPlansInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
 		if page == nil {

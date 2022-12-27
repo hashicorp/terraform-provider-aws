@@ -129,7 +129,6 @@ func StatusOrganizationsAccess(conn *servicecatalog.ServiceCatalog) resource.Sta
 		}
 
 		if err != nil {
-
 			return nil, OrganizationAccessStatusError, fmt.Errorf("error getting Organizations Access: %w", err)
 		}
 

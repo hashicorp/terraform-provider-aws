@@ -69,7 +69,7 @@ func ResourceJobQueue() *schema.Resource {
 }
 
 func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	input := batch.CreateJobQueueInput{
@@ -115,7 +115,7 @@ func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -165,7 +165,7 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	if d.HasChanges("compute_environments", "priority", "scheduling_policy_arn", "state") {
 		name := d.Get("name").(string)
@@ -222,7 +222,7 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Disabling Batch Job Queue %s", name)

@@ -603,7 +603,7 @@ func testAccCheckLoggingConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 		output, err := tfnetworkfirewall.FindLoggingConfiguration(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -630,12 +630,12 @@ func testAccCheckLoggingConfigurationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No NetworkFirewall Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 		output, err := tfnetworkfirewall.FindLoggingConfiguration(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		if output == nil && output.LoggingConfiguration == nil {
+		if output == nil || output.LoggingConfiguration == nil {
 			return fmt.Errorf("NetworkFirewall Logging Configuration for firewall (%s) not found", rs.Primary.ID)
 		}
 

@@ -52,7 +52,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
 
@@ -71,7 +71,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.GetGroupInput{
 		GroupName: aws.String(d.Id()),
@@ -132,7 +132,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("name", "path") {
-		conn := meta.(*conns.AWSClient).IAMConn
+		conn := meta.(*conns.AWSClient).IAMConn()
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 
@@ -152,7 +152,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),

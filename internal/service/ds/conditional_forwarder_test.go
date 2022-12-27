@@ -58,7 +58,7 @@ func TestAccDSConditionalForwarder_Condition_basic(t *testing.T) {
 }
 
 func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_conditional_forwarder" {
@@ -107,7 +107,7 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 		res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),

@@ -63,7 +63,7 @@ func ResourceAlias() *schema.Resource {
 }
 
 func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	namePrefix := d.Get("name_prefix").(string)
 	if namePrefix == "" {
@@ -93,7 +93,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		return FindAliasByName(conn, d.Id())
@@ -128,7 +128,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if d.HasChange("target_key_id") {
 		input := &kms.UpdateAliasInput{
@@ -148,7 +148,7 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	log.Printf("[DEBUG] Deleting KMS Alias: (%s)", d.Id())
 	_, err := conn.DeleteAlias(&kms.DeleteAliasInput{

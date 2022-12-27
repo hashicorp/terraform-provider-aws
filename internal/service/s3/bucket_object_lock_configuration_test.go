@@ -174,8 +174,35 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectLockConfigurationConfig_noRule(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBucketObjectLockConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_object_lock_configuration" {
@@ -224,7 +251,7 @@ func testAccCheckBucketObjectLockConfigurationExists(resourceName string) resour
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -293,4 +320,18 @@ resource "aws_s3_bucket_object_lock_configuration" "test" {
   }
 }
 `, bucketName, s3.ObjectLockModeGovernance)
+}
+
+func testAccBucketObjectLockConfigurationConfig_noRule(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+}
+`, bucketName)
 }

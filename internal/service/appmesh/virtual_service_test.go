@@ -172,7 +172,7 @@ func testAccVirtualService_tags(t *testing.T) {
 }
 
 func testAccCheckVirtualServiceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_virtual_service" {
@@ -197,7 +197,7 @@ func testAccCheckVirtualServiceDestroy(s *terraform.State) error {
 
 func testAccCheckVirtualServiceExists(name string, v *appmesh.VirtualServiceData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

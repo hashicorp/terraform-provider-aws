@@ -26,7 +26,7 @@ func sweepKeys(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).KMSConn
+	conn := client.(*conns.AWSClient).KMSConn()
 
 	err = conn.ListKeysPages(&kms.ListKeysInput{Limit: aws.Int64(1000)}, func(out *kms.ListKeysOutput, lastPage bool) bool {
 		for _, k := range out.Keys {

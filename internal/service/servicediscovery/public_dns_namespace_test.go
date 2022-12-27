@@ -149,7 +149,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 }
 
 func testAccCheckPublicDNSNamespaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_public_dns_namespace" {
@@ -183,7 +183,7 @@ func testAccCheckPublicDNSNamespaceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Service Discovery Public DNS Namespace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
 		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 

@@ -157,7 +157,7 @@ func ResourceCachePolicy() *schema.Resource {
 }
 
 func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.CachePolicyConfig{
@@ -192,7 +192,7 @@ func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	output, err := FindCachePolicyByID(conn, d.Id())
 
@@ -225,7 +225,7 @@ func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateCachePolicy.html:
@@ -263,7 +263,7 @@ func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCachePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
 	_, err := conn.DeleteCachePolicy(&cloudfront.DeleteCachePolicyInput{

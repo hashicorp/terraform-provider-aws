@@ -126,8 +126,8 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 						// TODO: remove attributes marked as Deprecated
 						// as they are not supported by the WAFv2 API
 						// in the context of WebACL Logging Configurations
-						"all_query_arguments": emptySchemaDeprecated(),
-						"body":                emptySchemaDeprecated(),
+						"all_query_arguments": emptyDeprecatedSchema(),
+						"body":                emptyDeprecatedSchema(),
 						"method":              emptySchema(),
 						"query_string":        emptySchema(),
 						"single_header": {
@@ -188,7 +188,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 }
 
 func resourceWebACLLoggingConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	resourceArn := d.Get("resource_arn").(string)
 
@@ -227,7 +227,7 @@ func resourceWebACLLoggingConfigurationPut(d *schema.ResourceData, meta interfac
 }
 
 func resourceWebACLLoggingConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	input := &wafv2.GetLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
@@ -274,7 +274,7 @@ func resourceWebACLLoggingConfigurationRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceWebACLLoggingConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
 	input := &wafv2.DeleteLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),

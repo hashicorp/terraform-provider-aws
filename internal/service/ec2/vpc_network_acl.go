@@ -38,7 +38,7 @@ func ResourceNetworkACL() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).EC2Conn
+				conn := meta.(*conns.AWSClient).EC2Conn()
 
 				nacl, err := FindNetworkACLByID(conn, d.Id())
 
@@ -148,7 +148,7 @@ var networkACLRuleNestedBlock = &schema.Resource{
 }
 
 func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -174,7 +174,7 @@ func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -250,7 +250,7 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if err := modifyNetworkACLAttributesOnUpdate(conn, d, true); err != nil {
 		return err
@@ -260,7 +260,7 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Delete all NACL/Subnet associations, even if they are managed via aws_network_acl_association resources.
 	nacl, err := FindNetworkACLByID(conn, d.Id())
@@ -420,7 +420,7 @@ func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{},
 			// to set from_port and to_port to 0 for these rules, to keep the
 			// hashing consistent.
 			if from, to := aws.Int64Value(naclEntry.PortRange.From), aws.Int64Value(naclEntry.PortRange.To); from != 0 || to != 0 {
-				return fmt.Errorf("to_port (%d) and from_port (%d) must both be 0 to use the the 'all' \"-1\" protocol!", to, from)
+				return fmt.Errorf("to_port (%d) and from_port (%d) must both be 0 to use the 'all' \"-1\" protocol!", to, from)
 			}
 		}
 

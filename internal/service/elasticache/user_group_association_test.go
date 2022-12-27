@@ -108,7 +108,7 @@ func testAccCheckUserGroupAssociationDestroy(s *terraform.State) error {
 }
 
 func testAccCheckUserGroupAssociationDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_user_group_association" {
@@ -166,7 +166,7 @@ func testAccCheckUserGroupAssociationExistsWithProvider(n string, providerF func
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 		output, err := tfelasticache.FindUserGroupByID(conn, groupID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User Group Association (%s) not found: %w", rs.Primary.ID, err)

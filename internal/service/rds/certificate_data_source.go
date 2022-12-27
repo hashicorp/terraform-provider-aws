@@ -57,7 +57,7 @@ func DataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeCertificatesInput{}
 

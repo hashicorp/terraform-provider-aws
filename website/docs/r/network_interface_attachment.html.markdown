@@ -36,3 +36,11 @@ In addition to all arguments above, the following attributes are exported:
 * `network_interface_id` - Network interface ID.
 * `attachment_id` - The ENI Attachment ID.
 * `status` - The status of the Network Interface Attachment.
+
+## Import
+
+Elastic network interface (ENI) Attachments can be imported using its Attachment ID e.g.,
+
+```
+terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c
+```

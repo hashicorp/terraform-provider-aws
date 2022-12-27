@@ -13,7 +13,7 @@ import (
 
 func DataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNodeGroupRead,
+		ReadWithoutTimeout: dataSourceNodeGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"ami_type": {
@@ -21,6 +21,10 @@ func DataSourceNodeGroup() *schema.Resource {
 				Computed: true,
 			},
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"capacity_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -156,7 +160,7 @@ func DataSourceNodeGroup() *schema.Resource {
 }
 
 func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
@@ -172,6 +176,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("ami_type", nodeGroup.AmiType)
 	d.Set("arn", nodeGroup.NodegroupArn)
+	d.Set("capacity_type", nodeGroup.CapacityType)
 	d.Set("cluster_name", nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)

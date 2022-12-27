@@ -58,5 +58,5 @@ Defaults to the region from the AWS provider configuration.
 
 ## Attributes Reference
 
-* `id` - The ID of the AWS Redshift service account in the selected region.
-* `arn` - The ARN of the AWS Redshift service account in the selected region.
+* `id` - ID of the AWS Redshift service account in the selected region.
+* `arn` - ARN of the AWS Redshift service account in the selected region.

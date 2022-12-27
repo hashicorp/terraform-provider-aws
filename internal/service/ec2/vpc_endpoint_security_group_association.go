@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -40,7 +41,7 @@ func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 }
 
 func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
@@ -56,7 +57,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, m
 
 		vpcID := aws.StringValue(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(conn, vpcID)
+		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(context.TODO(), conn, vpcID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 VPC (%s) default Security Group: %w", vpcID, err)
@@ -101,7 +102,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, m
 }
 
 func resourceVPCEndpointSecurityGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
@@ -124,7 +125,7 @@ func resourceVPCEndpointSecurityGroupAssociationRead(d *schema.ResourceData, met
 }
 
 func resourceVPCEndpointSecurityGroupAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
@@ -139,7 +140,7 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(d *schema.ResourceData, m
 
 		vpcID := aws.StringValue(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(conn, vpcID)
+		defaultSecurityGroup, err := FindVPCDefaultSecurityGroup(context.TODO(), conn, vpcID)
 
 		if err != nil {
 			return fmt.Errorf("error reading EC2 VPC (%s) default Security Group: %w", vpcID, err)

@@ -536,7 +536,7 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 
 func testAccCheckAPIRoutes(v *apigatewayv2.GetApiOutput, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		resp, err := conn.GetRoutes(&apigatewayv2.GetRoutesInput{
 			ApiId: v.ApiId,
@@ -756,7 +756,7 @@ func TestAccAPIGatewayV2API_quickCreate(t *testing.T) {
 }
 
 func testAccCheckAPIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_api" {
@@ -790,7 +790,7 @@ func testAccCheckAPIExists(n string, v *apigatewayv2.GetApiOutput) resource.Test
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -816,7 +816,7 @@ func testAccCheckAPIQuickCreateIntegration(n, expectedType, expectedUri string) 
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		resp, err := conn.GetIntegrations(&apigatewayv2.GetIntegrationsInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -851,7 +851,7 @@ func testAccCheckAPIQuickCreateRoute(n, expectedRouteKey string) resource.TestCh
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		resp, err := conn.GetRoutes(&apigatewayv2.GetRoutesInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -883,7 +883,7 @@ func testAccCheckAPIQuickCreateStage(n, expectedName string) resource.TestCheckF
 			return fmt.Errorf("No API Gateway v2 API ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		resp, err := conn.GetStages(&apigatewayv2.GetStagesInput{
 			ApiId: aws.String(rs.Primary.ID),

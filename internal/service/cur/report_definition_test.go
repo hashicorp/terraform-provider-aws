@@ -310,7 +310,7 @@ func testAccReportDefinition_disappears(t *testing.T) {
 }
 
 func testAccCheckReportDefinitionDestroy(s *terraform.State) error {
-	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
+	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cur_report_definition" {
@@ -329,12 +329,11 @@ func testAccCheckReportDefinitionDestroy(s *terraform.State) error {
 		return fmt.Errorf("Report Definition still exists: %q", rs.Primary.ID)
 	}
 	return nil
-
 }
 
 func testAccCheckReportDefinitionExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
+		conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn()
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

@@ -71,11 +71,11 @@ func waitDocumentActive(conn *ssm.SSM, name string) (*ssm.DocumentDescription, e
 	return nil, err
 }
 
-func waitServiceSettingUpdated(conn *ssm.SSM, arn string, timeout time.Duration) (*ssm.ServiceSetting, error) {
+func waitServiceSettingUpdated(conn *ssm.SSM, id string, timeout time.Duration) (*ssm.ServiceSetting, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
-		Refresh: statusServiceSetting(conn, arn),
+		Refresh: statusServiceSetting(conn, id),
 		Timeout: timeout,
 	}
 
@@ -88,11 +88,11 @@ func waitServiceSettingUpdated(conn *ssm.SSM, arn string, timeout time.Duration)
 	return nil, err
 }
 
-func waitServiceSettingReset(conn *ssm.SSM, arn string, timeout time.Duration) error {
+func waitServiceSettingReset(conn *ssm.SSM, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
-		Refresh: statusServiceSetting(conn, arn),
+		Refresh: statusServiceSetting(conn, id),
 		Timeout: timeout,
 	}
 

@@ -59,7 +59,7 @@ func ResourceMonitoringSubscription() *schema.Resource {
 }
 
 func resourceMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	id := d.Get("distribution_id").(string)
 	input := &cloudfront.CreateMonitoringSubscriptionInput{
@@ -83,7 +83,7 @@ func resourceMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	output, err := FindMonitoringSubscriptionByDistributionID(conn, d.Id())
 
@@ -109,7 +109,7 @@ func resourceMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceMonitoringSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription (%s)", d.Id())
 	_, err := conn.DeleteMonitoringSubscription(&cloudfront.DeleteMonitoringSubscriptionInput{

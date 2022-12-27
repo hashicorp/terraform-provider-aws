@@ -88,7 +88,7 @@ func ResourceAgent() *schema.Resource {
 }
 
 func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -119,7 +119,6 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 
 		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
 			response, err = client.Do(request)
 
 			if err, ok := err.(net.Error); ok {
@@ -206,7 +205,7 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -257,7 +256,7 @@ func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("name") {
 		input := &datasync.UpdateAgentInput{
@@ -285,7 +284,7 @@ func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAgentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
 	_, err := conn.DeleteAgent(&datasync.DeleteAgentInput{

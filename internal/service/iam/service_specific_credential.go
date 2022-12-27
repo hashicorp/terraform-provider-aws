@@ -60,7 +60,7 @@ func ResourceServiceSpecificCredential() *schema.Resource {
 }
 
 func resourceServiceSpecificCredentialCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.CreateServiceSpecificCredentialInput{
 		ServiceName: aws.String(d.Get("service_name").(string)),
@@ -94,7 +94,7 @@ func resourceServiceSpecificCredentialCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	serviceName, userName, credID, err := DecodeServiceSpecificCredentialId(d.Id())
 	if err != nil {
@@ -127,7 +127,7 @@ func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceServiceSpecificCredentialUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.UpdateServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
@@ -143,7 +143,7 @@ func resourceServiceSpecificCredentialUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceServiceSpecificCredentialDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),

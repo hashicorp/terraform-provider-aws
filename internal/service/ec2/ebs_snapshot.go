@@ -101,7 +101,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 }
 
 func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -163,7 +163,7 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -212,7 +212,7 @@ func resourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("storage_tier") {
 		if tier := d.Get("storage_tier").(string); tier == ec2.TargetStorageTierArchive {
@@ -262,7 +262,7 @@ func resourceEBSSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EBS Snapshot: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {

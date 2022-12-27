@@ -55,7 +55,7 @@ func DataSourceSecretVersion() *schema.Resource {
 }
 
 func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 	var version string
 

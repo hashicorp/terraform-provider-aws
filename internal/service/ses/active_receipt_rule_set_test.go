@@ -23,7 +23,8 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 			"disappears": testAccActiveReceiptRuleSet_disappears,
 		},
 		"DataSource": {
-			"basic": testAccActiveReceiptRuleSetDataSource_basic,
+			"basic":           testAccActiveReceiptRuleSetDataSource_basic,
+			"noActiveRuleSet": testAccActiveReceiptRuleSetDataSource_noActiveRuleSet,
 		},
 	}
 
@@ -92,7 +93,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 }
 
 func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_active_receipt_rule_set" {
@@ -107,11 +108,9 @@ func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
 		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) == rs.Primary.ID) {
 			return fmt.Errorf("Active receipt rule set still exists")
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {
@@ -125,7 +124,7 @@ func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Active Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		response, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 		if err != nil {

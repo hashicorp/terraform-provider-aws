@@ -53,7 +53,7 @@ func ResourceDiscoverer() *schema.Resource {
 }
 
 func resourceDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -83,7 +83,7 @@ func resourceDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDiscovererRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -123,7 +123,7 @@ func resourceDiscovererRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDiscovererUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	if d.HasChange("description") {
 		input := &schemas.UpdateDiscovererInput{
@@ -150,7 +150,7 @@ func resourceDiscovererUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDiscovererDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Discoverer (%s)", d.Id())
 	_, err := conn.DeleteDiscoverer(&schemas.DeleteDiscovererInput{

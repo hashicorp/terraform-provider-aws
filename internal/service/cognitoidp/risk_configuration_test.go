@@ -151,7 +151,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 }
 
 func testAccCheckRiskConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_risk_configuration" {
@@ -183,7 +183,7 @@ func testAccCheckRiskConfigurationExists(name string) resource.TestCheckFunc {
 			return errors.New("No Cognito Risk Configuration ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		_, err := tfcognitoidp.FindRiskConfigurationById(conn, rs.Primary.ID)
 

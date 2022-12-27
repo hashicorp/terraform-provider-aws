@@ -17,7 +17,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -737,7 +736,7 @@ func testAccCheckBotExistsWithVersion(rName, botVersion string, v *lexmodelbuild
 			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		output, err := tflexmodels.FindBotVersionByName(conn, rs.Primary.ID, botVersion)
 
@@ -757,7 +756,7 @@ func testAccCheckBotExists(rName string, output *lexmodelbuildingservice.GetBotO
 
 func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		_, err := tflexmodels.FindBotVersionByName(conn, botName, botVersion)
 
@@ -774,7 +773,7 @@ func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc
 }
 
 func testAccCheckBotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_bot" {

@@ -21,7 +21,6 @@ resource "aws_emr_studio_session_mapping" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are required:

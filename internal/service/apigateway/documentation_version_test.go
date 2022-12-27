@@ -130,7 +130,7 @@ func testAccCheckDocumentationVersionExists(n string, res *apigateway.Documentat
 			return fmt.Errorf("No API Gateway Documentation Version ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		apiId, version, err := tfapigateway.DecodeDocumentationVersionID(rs.Primary.ID)
 		if err != nil {
@@ -153,7 +153,7 @@ func testAccCheckDocumentationVersionExists(n string, res *apigateway.Documentat
 }
 
 func testAccCheckDocumentationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_documentation_version" {

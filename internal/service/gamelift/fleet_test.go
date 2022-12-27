@@ -636,7 +636,7 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 			return fmt.Errorf("No GameLift Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 		fleet, err := tfgamelift.FindFleetByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -654,7 +654,7 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 }
 
 func testAccCheckFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_fleet" {

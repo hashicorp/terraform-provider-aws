@@ -80,7 +80,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -743,7 +743,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -1205,7 +1205,7 @@ func ResourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	in := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(d.Get("name").(string)),
@@ -1245,7 +1245,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	out, err := FindFlowByARN(ctx, conn, d.Id())
 
@@ -1322,7 +1322,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	in := &appflow.UpdateFlowInput{
 		FlowName:                  aws.String(d.Get("name").(string)),
@@ -1356,7 +1356,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	out, _ := FindFlowByARN(ctx, conn, d.Id())
 

@@ -91,7 +91,7 @@ func DataSourceProxy() *schema.Resource {
 }
 
 func dataSourceProxyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	name := d.Get("name").(string)
 	dbProxy, err := FindDBProxyByName(conn, name)

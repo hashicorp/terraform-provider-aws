@@ -293,7 +293,7 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 }
 
 func testAccCheckEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_environment" {
@@ -346,7 +346,7 @@ func testAccCheckEnvironmentExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		input := &appconfig.GetEnvironmentInput{
 			ApplicationId: aws.String(appID),
@@ -458,7 +458,7 @@ resource "aws_appconfig_environment" "test" {
   application_id = aws_appconfig_application.test.id
 
   dynamic "monitor" {
-    for_each = aws_cloudwatch_metric_alarm.test.*.arn
+    for_each = aws_cloudwatch_metric_alarm.test[*].arn
     content {
       alarm_arn      = monitor.value
       alarm_role_arn = aws_iam_role.test.arn

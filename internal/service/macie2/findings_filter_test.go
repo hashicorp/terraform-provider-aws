@@ -397,7 +397,7 @@ func testAccCheckFindingsFilterExists(resourceName string, macie2Session *macie2
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.GetFindingsFilterInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetFindingsFilter(input)
@@ -417,7 +417,7 @@ func testAccCheckFindingsFilterExists(resourceName string, macie2Session *macie2
 }
 
 func testAccCheckFindingsFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_findings_filter" {
@@ -442,7 +442,6 @@ func testAccCheckFindingsFilterDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccFindingsFilterConfig_nameGenerated() string {

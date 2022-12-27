@@ -85,7 +85,7 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 }
 
 func resourceRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
@@ -117,7 +117,7 @@ func resourceRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	logConfig, err := FindRealtimeLogConfigByARN(conn, d.Id())
 
@@ -143,7 +143,7 @@ func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRealtimeLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateRealtimeLogConfig.html:
@@ -176,7 +176,7 @@ func resourceRealtimeLogConfigUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceRealtimeLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config (%s)", d.Id())
 	_, err := conn.DeleteRealtimeLogConfig(&cloudfront.DeleteRealtimeLogConfigInput{

@@ -72,7 +72,7 @@ func ResourceTrigger() *schema.Resource {
 }
 
 func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	// Expand the "trigger" set to aws-sdk-go compat []*codecommit.RepositoryTrigger
 	triggers := expandTriggers(d.Get("trigger").(*schema.Set).List())
@@ -96,7 +96,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	input := &codecommit.GetRepositoryTriggersInput{
 		RepositoryName: aws.String(d.Id()),
@@ -113,8 +113,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
-
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	log.Printf("[DEBUG] Deleting Trigger: %q", d.Id())
 

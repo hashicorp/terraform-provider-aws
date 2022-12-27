@@ -94,7 +94,7 @@ func ResourceConformancePack() *schema.Resource {
 }
 
 func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("name").(string)
 
@@ -137,7 +137,7 @@ func resourceConformancePackPut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	pack, err := DescribeConformancePack(conn, d.Id())
 
@@ -174,7 +174,7 @@ func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.DeleteConformancePackInput{
 		ConformancePackName: aws.String(d.Id()),

@@ -185,7 +185,7 @@ func testAccCheckIdentityProviderExistsConfig(ctx context.Context, resourceName 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 		output, err := tfeks.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
@@ -201,7 +201,7 @@ func testAccCheckIdentityProviderExistsConfig(ctx context.Context, resourceName 
 
 func testAccCheckIdentityProviderDestroyConfig(s *terraform.State) error {
 	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_identity_provider_config" {

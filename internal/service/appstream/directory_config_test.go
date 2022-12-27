@@ -152,14 +152,14 @@ func testAccCheckDirectoryConfigExists(resourceName string, appStreamDirectoryCo
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 		resp, err := conn.DescribeDirectoryConfigs(&appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil && len(resp.DirectoryConfigs) == 0 {
+		if resp == nil || len(resp.DirectoryConfigs) == 0 {
 			return fmt.Errorf("AppStream Directory Config %q does not exist", rs.Primary.ID)
 		}
 
@@ -170,7 +170,7 @@ func testAccCheckDirectoryConfigExists(resourceName string, appStreamDirectoryCo
 }
 
 func testAccCheckDirectoryConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_directory_config" {

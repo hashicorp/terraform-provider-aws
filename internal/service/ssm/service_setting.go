@@ -47,7 +47,7 @@ func ResourceServiceSetting() *schema.Resource {
 }
 
 func resourceServiceSettingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] SSM service setting create: %s", d.Get("setting_id").(string))
 
@@ -70,11 +70,11 @@ func resourceServiceSettingUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceServiceSettingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
 
-	output, err := FindServiceSettingByARN(conn, d.Id())
+	output, err := FindServiceSettingByID(conn, d.Id())
 	if err != nil {
 		return create.Error(names.SSM, create.ErrActionReading, ResNameServiceSetting, d.Id(), err)
 	}
@@ -90,7 +90,7 @@ func resourceServiceSettingRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceServiceSettingReset(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] Deleting SSM Service Setting: %s", d.Id())
 

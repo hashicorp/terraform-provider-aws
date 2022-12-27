@@ -46,7 +46,7 @@ func ResourceClusterRoleAssociation() *schema.Resource {
 }
 
 func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID := d.Get("db_cluster_identifier").(string)
 	roleARN := d.Get("role_arn").(string)
@@ -86,7 +86,7 @@ func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 
@@ -114,7 +114,7 @@ func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 

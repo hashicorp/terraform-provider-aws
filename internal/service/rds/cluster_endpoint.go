@@ -85,7 +85,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 }
 
 func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -123,7 +123,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -191,7 +191,7 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	input := &rds.ModifyDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}
@@ -229,7 +229,7 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	input := &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}

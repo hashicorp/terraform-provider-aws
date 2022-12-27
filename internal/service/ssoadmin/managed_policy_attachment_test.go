@@ -168,7 +168,7 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 }
 
 func testAccCheckManagedPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_managed_policy_attachment" {
@@ -195,7 +195,6 @@ func testAccCheckManagedPolicyAttachmentDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("Managed Policy (%s) for SSO Permission Set (%s) still exists", managedPolicyArn, permissionSetArn)
-
 	}
 
 	return nil
@@ -218,7 +217,7 @@ func testAccCheckManagedPolicyAttachmentExists(resourceName string) resource.Tes
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 		policy, err := tfssoadmin.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 

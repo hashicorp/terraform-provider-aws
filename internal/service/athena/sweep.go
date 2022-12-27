@@ -27,13 +27,13 @@ func sweepDatabases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AthenaConn
+	conn := client.(*conns.AWSClient).AthenaConn()
 	input := &athena.ListDatabasesInput{
 		CatalogName: aws.String("AwsDataCatalog"),
 	}
 	var errs *multierror.Error
 
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	for {
 		output, err := conn.ListDatabases(input)
 

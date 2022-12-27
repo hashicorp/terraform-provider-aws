@@ -268,7 +268,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 }
 
 func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -384,7 +384,7 @@ func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -452,7 +452,7 @@ func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -531,7 +531,7 @@ func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	input := &fsx.DeleteFileSystemInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
@@ -573,7 +573,6 @@ func expandAliasValues(aliases []*fsx.Alias) []*string {
 func updateAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set, timeout time.Duration) error {
 	if newSet.Len() > 0 {
 		if newAliases := newSet.Difference(oldSet); newAliases.Len() > 0 {
-
 			input := &fsx.AssociateFileSystemAliasesInput{
 				FileSystemId: aws.String(identifier),
 				Aliases:      flex.ExpandStringSet(newAliases),

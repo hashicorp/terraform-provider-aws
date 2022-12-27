@@ -134,7 +134,7 @@ func ResourceEventDestination() *schema.Resource {
 }
 
 func resourceEventDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestinationName := d.Get("name").(string)
@@ -190,7 +190,7 @@ func resourceEventDestinationCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	input := &ses.DescribeConfigurationSetInput{
@@ -250,7 +250,7 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	log.Printf("[DEBUG] SES Delete Configuration Set Destination: %s", d.Id())
 	_, err := conn.DeleteConfigurationSetEventDestination(&ses.DeleteConfigurationSetEventDestinationInput{
@@ -278,7 +278,6 @@ func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([
 }
 
 func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {
-
 	b := make([]*ses.CloudWatchDimensionConfiguration, len(v))
 
 	for i, vI := range v {

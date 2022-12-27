@@ -393,7 +393,6 @@ func waitForConformancePackStateCreateComplete(conn *configservice.ConfigService
 	}
 
 	return err
-
 }
 
 func waitForConformancePackStateDeleteComplete(conn *configservice.ConfigService, name string) error {
@@ -426,7 +425,6 @@ func waitForOrganizationConformancePackStatusCreateSuccessful(conn *configservic
 	_, err := stateChangeConf.WaitForState()
 
 	return err
-
 }
 
 func waitForOrganizationConformancePackStatusUpdateSuccessful(conn *configservice.ConfigService, name string, timeout time.Duration) error {

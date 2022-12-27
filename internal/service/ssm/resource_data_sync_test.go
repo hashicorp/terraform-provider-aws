@@ -71,7 +71,7 @@ func TestAccSSMResourceDataSync_update(t *testing.T) {
 }
 
 func testAccCheckResourceDataSyncDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_resource_data_sync" {

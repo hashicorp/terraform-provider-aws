@@ -156,7 +156,7 @@ resource "aws_{service}_tag" "example" {
 
 The following arguments are supported:
 
-* `resource_arn` - (Required) Amazon Resource Name (ARN) of the {SERVICE} resource to tag.
+* `resource_arn` - (Required) ARN of the {SERVICE} resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
@@ -174,6 +174,3 @@ In addition to all arguments above, the following attributes are exported:
 $ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
 ```
 ``````
-
-
-

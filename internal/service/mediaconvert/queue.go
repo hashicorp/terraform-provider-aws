@@ -190,7 +190,6 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChanges("description", "reservation_plan_settings", "status") {
-
 		updateOpts := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
 			Status: aws.String(d.Get("status").(string)),
@@ -255,7 +254,7 @@ func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, e
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := awsClient.MediaConvertConn.DescribeEndpoints(input)
+	output, err := awsClient.MediaConvertConn().DescribeEndpoints(input)
 
 	if err != nil {
 		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)
@@ -267,7 +266,7 @@ func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, e
 
 	endpointURL := aws.StringValue(output.Endpoints[0].Url)
 
-	sess, err := session.NewSession(&awsClient.MediaConvertConn.Config)
+	sess, err := session.NewSession(&awsClient.MediaConvertConn().Config)
 
 	if err != nil {
 		return nil, fmt.Errorf("error creating AWS MediaConvert session: %w", err)

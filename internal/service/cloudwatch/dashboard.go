@@ -59,7 +59,7 @@ func ResourceDashboard() *schema.Resource {
 func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 	dashboardName := d.Get("dashboard_name").(string)
 	log.Printf("[DEBUG] Reading CloudWatch Dashboard: %s", dashboardName)
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
 	params := cloudwatch.GetDashboardInput{
 		DashboardName: aws.String(d.Id()),
@@ -83,7 +83,7 @@ func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDashboardPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := cloudwatch.PutDashboardInput{
 		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
 		DashboardName: aws.String(d.Get("dashboard_name").(string)),
@@ -103,7 +103,7 @@ func resourceDashboardPut(d *schema.ResourceData, meta interface{}) error {
 
 func resourceDashboardDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting CloudWatch Dashboard %s", d.Id())
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []*string{aws.String(d.Id())},
 	}
@@ -124,5 +124,4 @@ func IsDashboardNotFoundErr(err error) bool {
 		err,
 		"ResourceNotFound",
 		"does not exist")
-
 }

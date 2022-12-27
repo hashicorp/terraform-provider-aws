@@ -19,10 +19,10 @@ import (
 
 func ResourceBucketObjectLockConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketObjectLockConfigurationCreate,
-		ReadContext:   resourceBucketObjectLockConfigurationRead,
-		UpdateContext: resourceBucketObjectLockConfigurationUpdate,
-		DeleteContext: resourceBucketObjectLockConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketObjectLockConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketObjectLockConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketObjectLockConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketObjectLockConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -49,7 +49,7 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 			},
 			"rule": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -90,7 +90,7 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 }
 
 func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -132,7 +132,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 }
 
 func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -182,7 +182,7 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 }
 
 func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -221,7 +221,7 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 }
 
 func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

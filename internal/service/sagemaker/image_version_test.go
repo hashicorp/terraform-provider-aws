@@ -17,7 +17,6 @@ import (
 )
 
 func TestAccSageMakerImageVersion_basic(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -55,7 +54,6 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 }
 
 func TestAccSageMakerImageVersion_disappears(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -84,7 +82,6 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 }
 
 func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -113,7 +110,7 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 }
 
 func testAccCheckImageVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_image_version" {
@@ -149,7 +146,7 @@ func testAccCheckImageVersionExists(n string, image *sagemaker.DescribeImageVers
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		resp, err := tfsagemaker.FindImageVersionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

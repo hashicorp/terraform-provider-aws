@@ -22,9 +22,9 @@ data "aws_wafregional_rule" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAF Regional rule.
+* `name` - (Required) Name of the WAF Regional rule.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF Regional rule.
+* `id` - ID of the WAF Regional rule.

@@ -9,6 +9,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+func TestValid4ByteASNString(t *testing.T) {
+	validAsns := []string{
+		"0",
+		"1",
+		"65534",
+		"65535",
+		"4294967294",
+		"4294967295",
+	}
+	for _, v := range validAsns {
+		_, errors := Valid4ByteASN(v, "bgp_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
+	}
+
+	invalidAsns := []string{
+		"-1",
+		"ABCDEFG",
+		"",
+		"4294967296",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := Valid4ByteASN(v, "bgp_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
 func TestValidTypeStringNullableBoolean(t *testing.T) {
 	testCases := []struct {
 		val         interface{}
@@ -201,7 +232,7 @@ func TestValidateCIDRBlock(t *testing.T) {
 		{"2001::/15", false},
 		{"", false},
 	} {
-		err := validateCIDRBlock(ts.cidr)
+		err := ValidateCIDRBlock(ts.cidr)
 		if !ts.valid && err == nil {
 			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
 		}

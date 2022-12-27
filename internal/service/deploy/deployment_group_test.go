@@ -2277,7 +2277,7 @@ func testAccCheckDeploymentGroupTriggerTargetARN(group *codedeploy.DeploymentGro
 }
 
 func testAccCheckDeploymentGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_deployment_group" {
@@ -2312,7 +2312,7 @@ func testAccCheckDeploymentGroupExists(name string, group *codedeploy.Deployment
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn()
 
 		resp, err := conn.GetDeploymentGroup(&codedeploy.GetDeploymentGroupInput{
 			ApplicationName:     aws.String(rs.Primary.Attributes["app_name"]),
@@ -2413,7 +2413,6 @@ ec2_tag_set {
   }
 }
 `
-
 	} else {
 		tagGroupOrFilter = `
 ec2_tag_filter {
@@ -2422,7 +2421,6 @@ ec2_tag_filter {
   value = "filtervalue"
 }
 `
-
 	}
 
 	return testAccDeploymentGroupConfig_base2(rName) + fmt.Sprintf(`
@@ -2447,7 +2445,6 @@ ec2_tag_set {
   }
 }
 `
-
 	} else {
 		tagGroupOrFilter = `
 ec2_tag_filter {
@@ -2456,7 +2453,6 @@ ec2_tag_filter {
   value = "anotherfiltervalue"
 }
 `
-
 	}
 
 	return testAccDeploymentGroupConfig_base2(rName) + fmt.Sprintf(`

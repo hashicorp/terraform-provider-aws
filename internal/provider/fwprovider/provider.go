@@ -2,12 +2,19 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
+	"reflect"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -121,9 +128,10 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
-				Type:        types.BoolType,
-				Optional:    true,
-				Description: "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				Type:               types.BoolType,
+				Optional:           true,
+				Description:        "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
+				DeprecationMessage: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:        types.StringType,
@@ -165,7 +173,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -200,6 +208,11 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 						Optional:    true,
 						Description: "An identifier for the assumed role session.",
 					},
+					"source_identity": {
+						Type:        types.StringType,
+						Optional:    true,
+						Description: "Source identity specified by the principal assuming the role.",
+					},
 					"tags": {
 						Type:        types.MapType{ElemType: types.StringType},
 						Optional:    true,
@@ -217,7 +230,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -294,34 +307,69 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 // provider configuration block.
 func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
+	v := p.Primary.Meta()
+	response.DataSourceData = v
+	response.ResourceData = v
 }
 
-// GetResources returns a mapping of resource names to type
-// implementations.
-func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	resources := make(map[string]provider.ResourceType)
+// DataSources returns a slice of functions to instantiate each DataSource
+// implementation.
+//
+// The data source type name is determined by the DataSource implementing
+// the Metadata method. All data sources must have unique names.
+func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var dataSources []func() datasource.DataSource
 
-	return resources, diags
-}
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		for _, v := range sp.FrameworkDataSources(ctx) {
+			v, err := v(ctx)
 
-// GetDataSources returns a mapping of data source name to types
-// implementations.
-func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	dataSources := make(map[string]provider.DataSourceType)
+			if err != nil {
+				tflog.Warn(ctx, "creating data source", map[string]interface{}{
+					"service_package_name": sp.ServicePackageName(),
+					"error":                err.Error(),
+				})
 
-	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
-	t, err := meta.NewDataSourceARNType(ctx)
+				continue
+			}
 
-	if err != nil {
-		diags.AddError("UhOh", err.Error())
-		return nil, diags
+			dataSources = append(dataSources, func() datasource.DataSource {
+				return newWrappedDataSource(v)
+			})
+		}
 	}
 
-	dataSources["aws_arn"] = t
+	return dataSources
+}
 
-	return dataSources, diags
+// Resources returns a slice of functions to instantiate each Resource
+// implementation.
+//
+// The resource type name is determined by the Resource implementing
+// the Metadata method. All resources must have unique names.
+func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	var resources []func() resource.Resource
+
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		for _, v := range sp.FrameworkResources(ctx) {
+			v, err := v(ctx)
+
+			if err != nil {
+				tflog.Warn(ctx, "creating resource", map[string]interface{}{
+					"service_package_name": sp.ServicePackageName(),
+					"error":                err.Error(),
+				})
+
+				continue
+			}
+
+			resources = append(resources, func() resource.Resource {
+				return newWrappedResource(v)
+			})
+		}
+	}
+
+	return resources
 }
 
 func endpointsBlock() tfsdk.Block {
@@ -338,5 +386,171 @@ func endpointsBlock() tfsdk.Block {
 	return tfsdk.Block{
 		Attributes:  endpointsAttributes,
 		NestingMode: tfsdk.BlockNestingModeSet,
+	}
+}
+
+// wrappedDataSource wraps a data source, adding common functionality.
+type wrappedDataSource struct {
+	inner    datasource.DataSourceWithConfigure
+	typeName string
+}
+
+func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
+	return &wrappedDataSource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	if v, ok := w.inner.(datasource.DataSourceWithSchema); ok {
+		v.Schema(ctx, request, response)
+		return
+	}
+	response.Diagnostics.AddError(
+		"DataSource Schema Not Implemented",
+		"This data source does not support get schema. Please contact the provider developer for additional information.",
+	)
+}
+
+func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	w.inner.Configure(ctx, request, response)
+}
+
+// wrappedResource wraps a resource, adding common functionality.
+type wrappedResource struct {
+	inner    resource.ResourceWithConfigure
+	meta     *conns.AWSClient
+	typeName string
+}
+
+func newWrappedResource(inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
+	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	if v, ok := w.inner.(resource.ResourceWithSchema); ok {
+		v.Schema(ctx, request, response)
+		return
+	}
+	response.Diagnostics.AddError(
+		"Resource Schema Not Implemented",
+		"This resource does not support get schema. Please contact the provider developer for additional information.",
+	)
+}
+
+func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
+
+	w.inner.Create(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create exit", w.typeName))
+}
+
+func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
+
+	w.inner.Update(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update exit", w.typeName))
+}
+
+func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
+
+	w.inner.Delete(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete exit", w.typeName))
+}
+
+func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
+		if w.meta != nil {
+			ctx = w.meta.InitContext(ctx)
+		}
+
+		v.ImportState(ctx, request, response)
+
+		return
+	}
+
+	response.Diagnostics.AddError(
+		"Resource Import Not Implemented",
+		"This resource does not support import. Please contact the provider developer for additional information.",
+	)
+}
+
+func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
+		if w.meta != nil {
+			ctx = w.meta.InitContext(ctx)
+		}
+
+		v.ModifyPlan(ctx, request, response)
+
+		return
+	}
+}
+
+func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
+		if w.meta != nil {
+			ctx = w.meta.InitContext(ctx)
+		}
+
+		v.ValidateConfig(ctx, request, response)
 	}
 }

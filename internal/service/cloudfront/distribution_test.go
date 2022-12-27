@@ -562,6 +562,47 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_Origin_originAccessControl(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution cloudfront.Distribution
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_originAccessControl(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists("aws_cloudfront_distribution.test", &distribution),
+					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.0", "id"),
+				),
+			},
+			{
+				ResourceName:      "aws_cloudfront_distribution.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_originAccessControl(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists("aws_cloudfront_distribution.test", &distribution),
+					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.1", "id"),
+				),
+			},
+		},
+	})
+}
+
 // TestAccCloudFrontDistribution_noOptionalItems runs an
 // aws_cloudfront_distribution acceptance test with no optional items set.
 //
@@ -1168,13 +1209,13 @@ func TestAccCloudFrontDistribution_ViewerCertificate_acmCertificateARN(t *testin
 		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_viewerCertificateACMCertificateARN(retainOnDelete),
+				Config: testAccDistributionConfig_viewerCertificateACMCertificateARN(t, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(resourceName, &distribution),
 				),
 			},
 			{
-				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARN(retainOnDelete),
+				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARN(t, retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1200,13 +1241,13 @@ func TestAccCloudFrontDistribution_ViewerCertificateACMCertificateARN_conflictsW
 		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(retainOnDelete),
+				Config: testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t, retainOnDelete),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(resourceName, &distribution),
 				),
 			},
 			{
-				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(retainOnDelete),
+				Config:            testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t, retainOnDelete),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1344,7 +1385,7 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 }
 
 func testAccCheckDistributionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_distribution" {
@@ -1389,7 +1430,7 @@ func testAccCheckDistributionExists(resourceName string, distribution *cloudfron
 			return fmt.Errorf("Resource ID not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		input := &cloudfront.GetDistributionInput{
 			Id: aws.String(rs.Primary.ID),
@@ -1409,7 +1450,7 @@ func testAccCheckDistributionExists(resourceName string, distribution *cloudfron
 
 func testAccCheckDistributionExistsAPIOnly(distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		input := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,
@@ -1473,7 +1514,7 @@ func testAccCheckDistributionDisabled(distribution *cloudfront.Distribution) res
 // This requires the CloudFront Distribution to previously be disabled and fetches latest ETag automatically.
 func testAccCheckDistributionDisappears(distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,
@@ -3532,9 +3573,9 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 // CloudFront Distribution ACM Certificates must be created in us-east-1
-func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
+func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t *testing.T, commonName string) string {
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
 	return testAccRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
@@ -3544,11 +3585,11 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccDistributionConfig_viewerCertificateACMCertificateARN(retainOnDelete bool) string {
-	return testAccDistributionViewerCertificateACMCertificateARNBaseConfig("example.com") + fmt.Sprintf(`
+func testAccDistributionConfig_viewerCertificateACMCertificateARN(t *testing.T, retainOnDelete bool) string {
+	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
-  retain_on_delete = %t
+  retain_on_delete = %[1]t
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
@@ -3588,14 +3629,14 @@ resource "aws_cloudfront_distribution" "test" {
     ssl_support_method  = "sni-only"
   }
 }
-`, retainOnDelete)
+`, retainOnDelete))
 }
 
-func testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(retainOnDelete bool) string {
-	return testAccDistributionViewerCertificateACMCertificateARNBaseConfig("example.com") + fmt.Sprintf(`
+func testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(t *testing.T, retainOnDelete bool) string {
+	return acctest.ConfigCompose(testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t, "example.com"), fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = false
-  retain_on_delete = %t
+  retain_on_delete = %[1]t
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
@@ -3636,7 +3677,7 @@ resource "aws_cloudfront_distribution" "test" {
     ssl_support_method             = "sni-only"
   }
 }
-`, retainOnDelete)
+`, retainOnDelete))
 }
 
 func testAccDistributionConfig_waitForDeployment(enabled, waitForDeployment bool) string {
@@ -4319,4 +4360,76 @@ resource "aws_cloudfront_distribution" "main" {
   %[2]s
 }
 `, rName, testAccDistributionRetainConfig()))
+}
+
+func testAccDistributionConfig_originAccessControl(rName string, which int) string {
+	return acctest.ConfigCompose(
+		originBucket(rName),
+		logBucket(rName),
+		fmt.Sprintf(`
+locals {
+  rName = %[1]q
+}
+
+resource "aws_cloudfront_origin_access_control" "test" {
+  count = 2
+
+  name                              = "${local.rName}-${count.index}"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "test" {
+  origin {
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
+    origin_id   = "myS3Origin"
+
+    origin_access_control_id = aws_cloudfront_origin_access_control.test[%[3]d].id
+  }
+
+  enabled             = true
+  default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = aws_s3_bucket.s3_bucket_logs.bucket_regional_domain_name
+    prefix          = "myprefix"
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myS3Origin"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+`, rName, testAccDistributionRetainConfig(), which))
 }

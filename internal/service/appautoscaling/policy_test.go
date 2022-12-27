@@ -96,6 +96,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "StepScaling"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
@@ -136,7 +137,7 @@ func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
-					testAccCheckPolicyDisappears(&policy),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappautoscaling.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -442,7 +443,7 @@ func testAccCheckPolicyExists(n string, policy *applicationautoscaling.ScalingPo
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
 		params := &applicationautoscaling.DescribeScalingPoliciesInput{
 			PolicyNames:       []*string{aws.String(rs.Primary.ID)},
 			ResourceId:        aws.String(rs.Primary.Attributes["resource_id"]),
@@ -464,7 +465,7 @@ func testAccCheckPolicyExists(n string, policy *applicationautoscaling.ScalingPo
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		params := applicationautoscaling.DescribeScalingPoliciesInput{
@@ -483,23 +484,6 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckPolicyDisappears(policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
-
-		input := &applicationautoscaling.DeleteScalingPolicyInput{
-			PolicyName:        policy.PolicyName,
-			ResourceId:        policy.ResourceId,
-			ScalableDimension: policy.ScalableDimension,
-			ServiceNamespace:  policy.ServiceNamespace,
-		}
-
-		_, err := conn.DeleteScalingPolicy(input)
-
-		return err
-	}
 }
 
 func testAccPolicyConfig_basic(rName string) string {

@@ -285,7 +285,7 @@ func TestAccDocDBClusterParameterGroup_tags(t *testing.T) {
 }
 
 func testAccCheckClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_cluster_parameter_group" {
@@ -316,9 +316,8 @@ func testAccCheckClusterParameterGroupDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterParameterGroupDisappears(group *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
 
 		params := &docdb.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: group.DBClusterParameterGroupName,
@@ -335,7 +334,6 @@ func testAccCheckClusterParameterGroupDisappears(group *docdb.DBClusterParameter
 
 func testAccCheckClusterParameterGroupAttributes(v *docdb.DBClusterParameterGroup, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.DBClusterParameterGroupName != name {
 			return fmt.Errorf("bad name: %#v expected: %v", *v.DBClusterParameterGroupName, name)
 		}
@@ -359,7 +357,7 @@ func testAccCheckClusterParameterGroupExists(n string, v *docdb.DBClusterParamet
 			return errors.New("No DocDB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
 
 		opts := docdb.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),

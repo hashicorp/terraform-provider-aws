@@ -104,7 +104,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 }
 
 func testAccCheckMonitoringSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_monitoring_subscription" {
@@ -138,7 +138,7 @@ func testAccCheckMonitoringSubscriptionExists(n string, v *cloudfront.GetMonitor
 			return fmt.Errorf("No CloudFront Monitoring Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		output, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
 

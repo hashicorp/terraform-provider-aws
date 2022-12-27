@@ -191,7 +191,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 }
 
 func testAccCheckAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_alias" {
@@ -205,7 +205,6 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Lambda alias was not deleted")
 		}
-
 	}
 
 	return nil
@@ -222,7 +221,7 @@ func testAccCheckAliasExists(n string, mapping *lambda.AliasConfiguration) resou
 			return fmt.Errorf("Lambda alias not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		params := &lambda.GetAliasInput{
 			FunctionName: aws.String(rs.Primary.ID),
@@ -322,7 +321,7 @@ EOF
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
-  description = "IAM policy for for Lamda alias testing"
+  description = "IAM policy for Lamda alias testing"
 
   policy = <<EOF
 {
@@ -357,7 +356,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -380,7 +379,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
@@ -403,7 +402,7 @@ resource "aws_lambda_function" "test" {
   function_name    = "%s"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest_modified.zip")
   publish          = "true"
 }

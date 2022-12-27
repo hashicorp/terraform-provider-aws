@@ -705,7 +705,6 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 					t.Fatalf("unexpected error: %q", err.Error())
 				}
 			}
-
 		})
 	}
 }

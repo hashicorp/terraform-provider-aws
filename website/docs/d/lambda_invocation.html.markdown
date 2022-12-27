@@ -33,9 +33,9 @@ output "result_entry" {
 
 ## Argument Reference
 
-* `function_name` - (Required) The name of the lambda function.
-* `input` - (Required) A string in JSON format that is passed as payload to the lambda function.
-* `qualifier` - (Optional) The qualifier (a.k.a version) of the lambda function. Defaults
+* `function_name` - (Required) Name of the lambda function.
+* `input` - (Required) String in JSON format that is passed as payload to the lambda function.
+* `qualifier` - (Optional) Qualifier (a.k.a version) of the lambda function. Defaults
  to `$LATEST`.
 
 ## Attributes Reference

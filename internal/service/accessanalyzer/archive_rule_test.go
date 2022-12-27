@@ -144,7 +144,7 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 }
 
 func testAccCheckArchiveRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_accessanalyzer_archive_rule" {
@@ -183,7 +183,7 @@ func testAccCheckArchiveRuleExists(name string, archiveRule *accessanalyzer.Arch
 			return fmt.Errorf("No AccessAnalyzer ArchiveRule is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 		analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)

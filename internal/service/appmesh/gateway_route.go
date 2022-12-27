@@ -488,7 +488,7 @@ func ResourceGatewayRoute() *schema.Resource {
 }
 
 func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -516,7 +516,7 @@ func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -607,7 +607,7 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
@@ -641,9 +641,9 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh gateway route (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Gateway Route (%s)", d.Id())
 	_, err := conn.DeleteGatewayRoute(&appmesh.DeleteGatewayRouteInput{
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
@@ -672,7 +672,7 @@ func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	name := parts[2]
 	log.Printf("[DEBUG] Importing App Mesh gateway route %s from mesh %s/virtual gateway %s ", name, mesh, vgName)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	gatewayRoute, err := FindGatewayRoute(conn, mesh, vgName, name, "")
 
@@ -934,7 +934,6 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 	}
 
 	if hostnameMatch := routeMatch.Hostname; hostnameMatch != nil {
-
 		mHostnameMatch := map[string]interface{}{}
 		if hostnameMatch.Exact != nil {
 			mHostnameMatch["exact"] = aws.StringValue(hostnameMatch.Exact)
@@ -944,7 +943,6 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 		}
 
 		mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
-
 	}
 	return []interface{}{mRouteMatch}
 }

@@ -26,9 +26,9 @@ func sweepRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ECRPublicConn
+	conn := client.(*conns.AWSClient).ECRPublicConn()
 	input := &ecrpublic.DescribeRepositoriesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeRepositoriesPages(input, func(page *ecrpublic.DescribeRepositoriesOutput, lastPage bool) bool {
 		if page == nil {

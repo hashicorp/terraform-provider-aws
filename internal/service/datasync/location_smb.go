@@ -106,7 +106,7 @@ func ResourceLocationSMB() *schema.Resource {
 }
 
 func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -124,7 +124,6 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Domain = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location SMB: %s", input)
 	output, err := conn.CreateLocationSmb(input)
 	if err != nil {
 		return fmt.Errorf("error creating DataSync Location SMB: %w", err)
@@ -136,7 +135,7 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -205,7 +204,7 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationSmbInput{
@@ -238,7 +237,7 @@ func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationSMBDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

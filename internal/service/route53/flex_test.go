@@ -47,7 +47,6 @@ func checkFlattenResourceRecords(
 	recordType string,
 	expanded []*route53.ResourceRecord,
 	expected []string) {
-
 	result := FlattenResourceRecords(expanded, recordType)
 
 	if result == nil {

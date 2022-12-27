@@ -119,7 +119,7 @@ func testAccCheckVaultLockExists(resourceName string, getVaultLockOutput *glacie
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
 
 		input := &glacier.GetVaultLockInput{
 			VaultName: aws.String(rs.Primary.ID),
@@ -141,7 +141,7 @@ func testAccCheckVaultLockExists(resourceName string, getVaultLockOutput *glacie
 }
 
 func testAccCheckVaultLockDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glacier_vault_lock" {

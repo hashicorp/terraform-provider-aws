@@ -20,8 +20,7 @@ data "aws_cognito_user_pool_clients" "main" {
 
 ## Argument Reference
 
-* `user_pool_id` - (required) The Cognito user pool ID.
-
+* `user_pool_id` - (Required) Cognito user pool ID.
 
 ## Attributes Reference
 

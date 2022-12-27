@@ -51,7 +51,7 @@ func ResourceLocalGatewayRoute() *schema.Resource {
 }
 
 func resourceLocalGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	destination := d.Get("destination_cidr_block").(string)
 	localGatewayRouteTableID := d.Get("local_gateway_route_table_id").(string)
@@ -74,7 +74,7 @@ func resourceLocalGatewayRouteCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
@@ -138,7 +138,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceLocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {

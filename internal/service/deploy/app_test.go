@@ -244,7 +244,7 @@ func TestAccDeployApp_disappears(t *testing.T) {
 }
 
 func testAccCheckAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_app" {
@@ -276,7 +276,7 @@ func testAccCheckAppExists(name string, application *codedeploy.ApplicationInfo)
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn()
 
 		input := &codedeploy.GetApplicationInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["name"]),

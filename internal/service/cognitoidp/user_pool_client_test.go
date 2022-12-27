@@ -36,6 +36,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
 				),
 			},
 			{
@@ -521,6 +522,41 @@ func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolClient_authSessionValidity(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolClientConfig_authSessionValidity(rName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolClientConfig_authSessionValidity(rName, 15),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "15"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPoolClient_disappears(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -578,7 +614,7 @@ func testAccUserPoolClientImportStateIDFunc(resourceName string) resource.Import
 			return "", errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
 		clientId := rs.Primary.ID
 
@@ -593,7 +629,7 @@ func testAccUserPoolClientImportStateIDFunc(resourceName string) resource.Import
 }
 
 func testAccCheckUserPoolClientDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_client" {
@@ -624,7 +660,7 @@ func testAccCheckUserPoolClientExists(name string, client *cognitoidentityprovid
 			return errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		resp, err := tfcognitoidp.FindCognitoUserPoolClient(conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
 		if err != nil {
@@ -860,8 +896,19 @@ resource "aws_cognito_user_pool_client" "test" {
 `, rName)
 }
 
+func testAccUserPoolClientConfig_authSessionValidity(rName string, validity int) string {
+	return testAccUserPoolClientBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name                  = %[1]q
+  auth_session_validity = %[2]d
+  user_pool_id          = aws_cognito_user_pool.test.id
+  explicit_auth_flows   = ["ADMIN_NO_SRP_AUTH"]
+}
+`, rName, validity)
+}
+
 func testAccPreCheckPinpointApp(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	input := &pinpoint.GetAppsInput{}
 

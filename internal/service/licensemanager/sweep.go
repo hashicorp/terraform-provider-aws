@@ -26,9 +26,9 @@ func sweepLicenseConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LicenseManagerConn
+	conn := client.(*conns.AWSClient).LicenseManagerConn()
 	input := &licensemanager.ListLicenseConfigurationsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listLicenseConfigurationsPages(conn, input, func(page *licensemanager.ListLicenseConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
