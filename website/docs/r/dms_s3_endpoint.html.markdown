@@ -128,7 +128,7 @@ The following arguments are optional:
 * `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. (AWS default is `rle_dictionary`.)
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. (AWS default is `SSE_S3`.) (Ignored for source endpoints -- only `SSE_S3` is valid.)
 * `expected_bucket_owner` - (Optional) Bucket owner to prevent sniping. Value is an AWS account ID.
-* `ignore_headers_row` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
+* `ignore_header_rows` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
 * `kms_key_arn` - (Optional) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `max_file_size` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. (AWS default is 1 GB, _i.e._, `1048576`.)
