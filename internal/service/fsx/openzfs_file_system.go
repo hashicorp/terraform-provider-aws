@@ -1,6 +1,7 @@
 package fsx
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -21,6 +22,7 @@ import (
 
 func ResourceOpenzfsFileSystem() *schema.Resource {
 	return &schema.Resource{
+
 		Create: resourceOepnzfsFileSystemCreate,
 		Read:   resourceOpenzfsFileSystemRead,
 		Update: resourceOpenzfsFileSystemUpdate,
@@ -246,7 +248,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntInSlice([]int{64, 128, 256, 512, 1024, 2048, 3072, 4096}),
+				ValidateFunc: validation.IntInSlice(resourceOpenZfsFileSystemThroughputAll()),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -263,7 +265,9 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		// validate throughput during diff time to handle specific
+		// values depending on deployment type
+		CustomizeDiff: resourceOpenZfsFileSystemCustomizeDiff,
 	}
 }
 
@@ -849,4 +853,42 @@ func flattenOpenzfsFileUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota) []m
 	}
 
 	return nil
+}
+
+func resourceOpenZfsFileSystemThroughputSingleAZ1() []int {
+	return []int{64, 128, 256, 512, 1024, 2048, 3072, 4096}
+}
+
+func resourceOpenZfsFileSystemThroughputSingleAZ2() []int {
+	return []int{160, 320, 640, 1280, 2560, 3850, 5120, 7680, 10240}
+}
+
+func resourceOpenZfsFileSystemThroughputAll() []int {
+	return append(resourceOpenZfsFileSystemThroughputSingleAZ1(), resourceOpenZfsFileSystemThroughputSingleAZ2()...)
+}
+
+func resourceOpenZfsFileSystemCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	deploymentType := diff.Get("deployment_type").(string)
+	throughputCapacity := diff.Get("throughput_capacity").(int)
+
+	var valid []int
+	if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz1 {
+		valid = resourceOpenZfsFileSystemThroughputSingleAZ1()
+	} else if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz2 {
+		valid = resourceOpenZfsFileSystemThroughputSingleAZ2()
+	}
+
+	found := false
+	for _, v := range valid {
+		if v == throughputCapacity {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("expected throughput_capacity to be one of #{valid} for #{deploymentType} deployment_type, got #{thoughputCapacity}")
+	}
+
+	return verify.SetTagsDiff(ctx, diff, v)
 }
