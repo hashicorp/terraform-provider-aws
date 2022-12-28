@@ -54,6 +54,7 @@ func ResourcePlacementGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
+				Default:      ec2.SpreadLevelRack,
 				ValidateFunc: validation.StringInSlice(ec2.SpreadLevel_Values(), false),
 			},
 			"strategy": {
@@ -205,7 +206,7 @@ func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.Resourc
 	}
 
 	if diff.Id() == "" {
-		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != "" && strategy != ec2.PlacementGroupStrategySpread {
+		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != ec2.SpreadLevelRack && strategy != ec2.PlacementGroupStrategySpread {
 			return fmt.Errorf("spread_level must not be set when strategy = %q", strategy)
 		}
 	}
