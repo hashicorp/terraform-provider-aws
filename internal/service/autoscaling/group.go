@@ -81,6 +81,10 @@ func ResourceGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"desired_capacity_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"enabled_metrics": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -879,6 +883,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createInput.CapacityRebalance = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("desired_capacity_type"); ok {
+		createInput.DesiredCapacityType = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("context"); ok {
 		createInput.Context = aws.String(v.(string))
 	}
@@ -1073,6 +1081,8 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
 	d.Set("desired_capacity", g.DesiredCapacity)
+	d.Set("desired_capacity_type", g.DesiredCapacityType)
+
 	if len(g.EnabledMetrics) > 0 {
 		d.Set("enabled_metrics", flattenEnabledMetrics(g.EnabledMetrics))
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
@@ -1210,6 +1220,10 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("desired_capacity") {
 			input.DesiredCapacity = aws.Int64(int64(d.Get("desired_capacity").(int)))
 			shouldWaitForCapacity = true
+		}
+
+		if d.HasChange("desired_capacity_type") {
+			input.DesiredCapacityType = aws.String(d.Get("desired_capacity_type").(string))
 		}
 
 		if d.HasChange("health_check_grace_period") {
