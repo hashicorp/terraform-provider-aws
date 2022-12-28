@@ -319,7 +319,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 ##### SAPOData Source Properties
 
-* `object_path` - (Optional) Object path specified in the SAPOData flow source.
+* `object_path` - (Required) Object path specified in the SAPOData flow source.
 
 ##### Veeva Source Properties
 

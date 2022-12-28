@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix source_connector_properties.0.sapo_data.0.* argument(s) to align with implementation and AWS API behaviour
+```
