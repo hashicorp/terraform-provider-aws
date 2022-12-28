@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -21,6 +22,25 @@ func DataSourceSecrets() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"context": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"encryption_algorithm": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(kms.EncryptionAlgorithmSpec_Values(), false),
+						},
+						"grant_tokens": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"keyid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -28,16 +48,6 @@ func DataSourceSecrets() *schema.Resource {
 						"payload": {
 							Type:     schema.TypeString,
 							Required: true,
-						},
-						"context": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"grant_tokens": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -77,11 +87,20 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 				params.EncryptionContext[k] = aws.String(v.(string))
 			}
 		}
+
+		if encryption_algorithm, exists := secret["encryption_algorithm"]; exists {
+			params.EncryptionAlgorithm = aws.String(encryption_algorithm.(string))
+		}
+
 		if grant_tokens, exists := secret["grant_tokens"]; exists {
 			params.GrantTokens = make([]*string, 0)
 			for _, v := range grant_tokens.([]interface{}) {
 				params.GrantTokens = append(params.GrantTokens, aws.String(v.(string)))
 			}
+		}
+
+		if keyid, exists := secret["keyid"]; exists {
+			params.KeyId = aws.String(keyid.(string))
 		}
 
 		// decrypt
