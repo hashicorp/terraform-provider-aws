@@ -208,10 +208,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Cannot enable add ons with creation request
-	if expandAddOnEnabled(d.Get("add_on").(*schema.Set).List()) {
+	if expandAddOnEnabled(d.Get("add_on").([]interface{})) {
 		in := lightsail.EnableAddOnInput{
 			ResourceName: aws.String(d.Get("name").(string)),
-			AddOnRequest: expandAddOnRequest(d.Get("add_on").(*schema.Set).List()),
+			AddOnRequest: expandAddOnRequest(d.Get("add_on").([]interface{})),
 		}
 
 		out, err := conn.EnableAddOnWithContext(ctx, &in)
@@ -419,10 +419,10 @@ func flattenAddOns(addOns []*lightsail.AddOn) []interface{} {
 }
 
 func updateAddOnWithContext(ctx context.Context, conn *lightsail.Lightsail, name string, oldAddOnsRaw interface{}, newAddOnsRaw interface{}) diag.Diagnostics {
-	oldAddOns := expandAddOnRequest(oldAddOnsRaw.(*schema.Set).List())
-	newAddOns := expandAddOnRequest(newAddOnsRaw.(*schema.Set).List())
-	oldAddOnStatus := expandAddOnEnabled(oldAddOnsRaw.(*schema.Set).List())
-	newAddonStatus := expandAddOnEnabled(newAddOnsRaw.(*schema.Set).List())
+	oldAddOns := expandAddOnRequest(oldAddOnsRaw.([]interface{}))
+	newAddOns := expandAddOnRequest(newAddOnsRaw.([]interface{}))
+	oldAddOnStatus := expandAddOnEnabled(oldAddOnsRaw.([]interface{}))
+	newAddonStatus := expandAddOnEnabled(newAddOnsRaw.([]interface{}))
 
 	if (oldAddOnStatus && newAddonStatus) || !newAddonStatus {
 		in := lightsail.DisableAddOnInput{
