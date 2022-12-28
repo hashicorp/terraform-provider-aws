@@ -180,8 +180,8 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 func TestAccLightsailInstance_addOn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance.test"
-	enabledTrue := "true"
-	enabledFalse := "false"
+	statusEnabled := "Enabled"
+	statusDisabled := "Disabled"
 	snapshotTime1 := "06:00"
 	snapshotTime2 := "10:00"
 
@@ -196,7 +196,7 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_addOn(rName, snapshotTime1, enabledTrue),
+				Config: testAccInstanceConfig_addOn(rName, snapshotTime1, statusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
@@ -207,12 +207,12 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 						"snapshot_time": snapshotTime1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"enabled": enabledTrue,
+						"status": statusEnabled,
 					}),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, enabledTrue),
+				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, statusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
@@ -223,12 +223,12 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 						"snapshot_time": snapshotTime2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"enabled": enabledTrue,
+						"status": statusEnabled,
 					}),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, enabledFalse),
+				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, statusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
@@ -239,7 +239,7 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 						"snapshot_time": snapshotTime2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"enabled": enabledFalse,
+						"status": statusDisabled,
 					}),
 				),
 			},
@@ -416,7 +416,7 @@ resource "aws_lightsail_instance" "test" {
 `, rName, rIPAddressType))
 }
 
-func testAccInstanceConfig_addOn(rName string, snapshotTime string, enabled string) string {
+func testAccInstanceConfig_addOn(rName string, snapshotTime string, status string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
@@ -426,10 +426,10 @@ resource "aws_lightsail_instance" "test" {
   blueprint_id      = "amazon_linux"
   bundle_id         = "nano_1_0"
   add_on {
-    type  = "AutoSnapshot"
+    type          = "AutoSnapshot"
     snapshot_time = %[2]q
-    enabled  = %[3]q
+    status        = %[3]q
   }
 }
-`, rName, snapshotTime, enabled))
+`, rName, snapshotTime, status))
 }

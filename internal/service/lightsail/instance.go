@@ -32,7 +32,7 @@ func ResourceInstance() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"add_on": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -47,9 +47,10 @@ func ResourceInstance() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
 						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
+						"status": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Enabled", "Disabled"}, false),
 						},
 					},
 				},
@@ -224,14 +225,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		op := out.Operations[0]
-		d.SetId(d.Get("name").(string))
 
 		err = waitOperation(conn, op.Id)
 
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, d.Get("name").(string), errors.New("Error waiting for request operation"))
 		}
-
 	}
 
 	return resourceInstanceRead(ctx, d, meta)
@@ -398,7 +397,7 @@ func expandAddOnEnabled(addOnListRaw []interface{}) bool {
 	var enabled bool
 	for _, addOnRaw := range addOnListRaw {
 		addOnMap := addOnRaw.(map[string]interface{})
-		enabled = addOnMap["enabled"].(bool)
+		enabled = addOnMap["status"].(string) == "Enabled"
 	}
 
 	return enabled
@@ -411,7 +410,7 @@ func flattenAddOns(addOns []*lightsail.AddOn) []interface{} {
 		rawAddOn := map[string]interface{}{
 			"type":          aws.StringValue(addOn.Name),
 			"snapshot_time": aws.StringValue(addOn.SnapshotTimeOfDay),
-			"enabled":       aws.StringValue(addOn.Status) == "Enabled",
+			"status":        aws.StringValue(addOn.Status),
 		}
 		rawAddOns = append(rawAddOns, rawAddOn)
 	}
