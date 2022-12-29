@@ -37,7 +37,7 @@ func DataSourceSecrets() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"keyid": {
+						"key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -99,8 +99,8 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if keyid, exists := secret["keyid"]; exists {
-			params.KeyId = aws.String(keyid.(string))
+		if key_id, exists := secret["key_id"]; exists {
+			params.KeyId = aws.String(key_id.(string))
 		}
 
 		// decrypt
