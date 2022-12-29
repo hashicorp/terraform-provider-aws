@@ -287,8 +287,8 @@ resource "aws_placement_group" "test" {
 func testAccPlacementGroupConfig_defaultSpreadLevel(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name         = %[1]q
-  strategy     = "spread"
+  name     = %[1]q
+  strategy = "spread"
 }
 `, rName)
 }
