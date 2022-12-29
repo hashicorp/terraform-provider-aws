@@ -56,11 +56,11 @@ resource "aws_rds_cluster" "example" {
 data "aws_kms_secrets" "example" {
   secret {
     # ... potentially other configuration ...
-    name                 = "app_specific_secret"
-    payload              = "AQECAHgaPa0J8WadplGCqqVAr4HNvDaFSQ+NaiwIBhmm6qDSFwAAAGIwYAYJKoZIhvcNAQcGoFMwUQIBADBMBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDI+LoLdvYv8l41OhAAIBEIAfx49FFJCLeYrkfMfAw6XlnxP23MmDBdqP8dPp28OoAQ=="
-    # Use same algorithm used to Encrypt the payload.
+    name    = "app_specific_secret"
+    payload = "AQECAHgaPa0J8WadplGCqqVAr4HNvDaFSQ+NaiwIBhmm6qDSFwAAAGIwYAYJKoZIhvcNAQcGoFMwUQIBADBMBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDI+LoLdvYv8l41OhAAIBEIAfx49FFJCLeYrkfMfAw6XlnxP23MmDBdqP8dPp28OoAQ=="
+    # ... Use same algorithm used to Encrypt the payload ...
     encryption_algorithm = "RSAES_OAEP_SHA_256"
-    keyid                = "ab123456-c012-4567-890a-deadbeef123"     
+    keyid                = "ab123456-c012-4567-890a-deadbeef123"
   }
 }
 ```

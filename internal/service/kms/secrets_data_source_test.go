@@ -188,10 +188,10 @@ func testAccSecretsDataSourceConfig_asymSecret(payload string, keyid string) str
 	return testAccSecretsDataSourceConfig_asymkey + fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {
-    name    = "secret1"
-    payload = %[1]q
-	encryption_algorithm = "RSAES_OAEP_SHA_1"
-    keyid   = %[2]q
+    name                 = "secret1"
+    payload              = %[1]q
+    encryption_algorithm = "RSAES_OAEP_SHA_1"
+    keyid                = %[2]q
   }
 }
 `, payload, keyid)
