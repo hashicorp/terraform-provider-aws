@@ -1176,7 +1176,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(0, 2),
-														validation.StringMatch(regexp.MustCompile(` ^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
+														validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
 													),
 												},
 												"oauth_properties": {
