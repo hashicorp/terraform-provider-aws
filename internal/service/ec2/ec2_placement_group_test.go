@@ -144,6 +144,7 @@ func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -157,6 +158,15 @@ func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", "host"),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
+				),
+			},
+			{
+				Config: testAccPlacementGroupConfig_defaultSpreadLevel(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlacementGroupExists(resourceName, &pg),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "spread_level", "rack"),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
 				),
 			},
@@ -269,6 +279,15 @@ func testAccPlacementGroupConfig_hostSpreadLevel(rName string) string {
 resource "aws_placement_group" "test" {
   name         = %[1]q
   spread_level = "host"
+  strategy     = "spread"
+}
+`, rName)
+}
+
+func testAccPlacementGroupConfig_defaultSpreadLevel(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name         = %[1]q
   strategy     = "spread"
 }
 `, rName)
