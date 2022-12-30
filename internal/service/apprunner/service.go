@@ -205,7 +205,7 @@ func ResourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"observability_configuration_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"observability_enabled": {
@@ -790,7 +790,7 @@ func expandServiceObservabilityConfiguration(l []interface{}) *apprunner.Service
 
 	result := &apprunner.ServiceObservabilityConfiguration{}
 
-	if v, ok := tfMap["observability_configuration_arn"].(string); ok {
+	if v, ok := tfMap["observability_configuration_arn"].(string); ok && len(v) > 0 {
 		result.ObservabilityConfigurationArn = aws.String(v)
 	}
 
