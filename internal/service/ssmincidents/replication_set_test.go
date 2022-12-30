@@ -1,166 +1,189 @@
 package ssmincidents_test
 
-// Remember to register this new resource in the provider
-// (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
-// know about it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
 	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/ssmincidents/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
-	"github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfssmincidents "github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestReplicationSetExampleUnitTest(t *testing.T) {
+func TestUpdateRegionIsValidUnitTest(t *testing.T) {
 	testCases := []struct {
 		TestName string
-		Input    string
-		Expected string
-		Error    bool
+		Input    map[string]string
+		Expected bool
 	}{
 		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
+			TestName: "valid empty",
+			Input: map[string]string{
+				"reg1": "",
+				"reg2": "",
+				"reg3": "",
+			},
+			Expected: true,
 		},
 		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
+			TestName: "single item",
+			Input: map[string]string{
+				"reg1": "someKey",
+			},
+			Expected: true,
 		},
 		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
+			TestName: "valid with keys",
+			Input: map[string]string{
+				"reg1": "key1",
+				"reg2": "key2",
+				"reg3": "key3",
+			},
+			Expected: true,
+		},
+		{
+			TestName: "invalid mix",
+			Input: map[string]string{
+				"reg1": "",
+				"reg2": "",
+				"reg3": "key",
+			},
+			Expected: false,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tfssmincidents.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
+			got := tfssmincidents.UpdateRegionsIsValid(testCase.Input)
 
 			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
+				t.Errorf("got %t, expected %t", got, testCase.Expected)
 			}
 		})
 	}
 }
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccSSMIncidentsReplicationSet_basic(t *testing.T) {
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationset ssmincidents.DescribeReplicationSetResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmincidents_replication_set.test"
+	region1 := "us-west-2"
+	region2 := "ap-southeast-2"
+	rKey := sdkacctest.RandString(26)
+	rVal := sdkacctest.RandString(26)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.SSMIncidentsEndpointID, t)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSetConfig_basic(rName),
+				Config: testAccReplicationSetConfig_basic(region1, "", region2, "", rKey, rVal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName, &replicationset),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
+					testAccCheckReplicationSetExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "regions.*", map[string]string{
+						region1: "",
+						region2: "",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tags.*", map[string]string{
+						rKey: rVal,
+					}),
+
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssmincidents", regexp.MustCompile(`replicationset:+.`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMIncidentsReplicationSet_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_ssmincidents_replication_set.test"
+	region1 := "us-west-2"
+	iniRegion2 := "ap-southeast-2"
+	updRegion2 := "eu-west-2"
+	rKey1 := sdkacctest.RandString(26)
+	rVal1Ini := sdkacctest.RandString(26)
+	rVal1Updated := sdkacctest.RandString(26)
+	rKey2 := sdkacctest.RandString(26)
+	rVal2 := sdkacctest.RandString(26)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SSMIncidentsEndpointID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationSetConfig_basic(region1, "", iniRegion2, "", rKey1, rVal1Ini),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSetExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "regions.*", map[string]string{
+						region1:    "",
+						iniRegion2: "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tags.*", map[string]string{
+						rKey1: rVal1Ini,
+					}),
+
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssmincidents", regexp.MustCompile(`replicationset:+.`)),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				Config: testAccReplicationSetConfig_basic(region1, "", updRegion2, "", rKey1, rVal1Updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSetExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "regions.*", map[string]string{
+						region1:    "",
+						updRegion2: "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tags.*", map[string]string{
+						rKey1: rVal1Updated,
+					}),
+
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssmincidents", regexp.MustCompile(`replicationset:+.`)),
+				),
+			},
+			{
+				Config: testAccReplicationSetConfig_basic(region1, "", updRegion2, "", rKey2, rVal2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSetExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "regions.*", map[string]string{
+						region1:    "",
+						updRegion2: "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tags.*", map[string]string{
+						rKey2: rVal2,
+					}),
+
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssmincidents", regexp.MustCompile(`replicationset:+.`)),
+				),
 			},
 		},
 	})
@@ -171,24 +194,25 @@ func TestAccSSMIncidentsReplicationSet_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationset ssmincidents.DescribeReplicationSetResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmincidents_replication_set.test"
+	region1 := "us-west-2"
+	region2 := "ap-southeast-2"
+	rKey := sdkacctest.RandString(26)
+	rVal := sdkacctest.RandString(26)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.SSMIncidentsEndpointID, t)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSetConfig_basic(rName, testAccReplicationSetVersionNewer),
+				Config: testAccReplicationSetConfig_basic(region1, "", region2, "", rKey, rVal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(resourceName, &replicationset),
+					testAccCheckReplicationSetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssmincidents.ResourceReplicationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -196,6 +220,12 @@ func TestAccSSMIncidentsReplicationSet_disappears(t *testing.T) {
 		},
 	})
 }
+
+// TODO:
+// single region change just CMK
+// single region change region
+// multiple region error when updating to mix of cmk and not cmk
+// multiple region valid when just changing cmk
 
 func testAccCheckReplicationSetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient
@@ -206,18 +236,15 @@ func testAccCheckReplicationSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &ssmincidents.DescribeReplicationSetInput{
-			ReplicationSetId: aws.String(rs.Primary.ID),
+		_, err := tfssmincidents.FindReplicationSetByID(ctx, conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		_, err := conn.DescribeReplicationSet(ctx, &ssmincidents.DescribeReplicationSetInput{
-			ReplicationSetId: aws.String(rs.Primary.ID),
-		})
+
 		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
-			}
-			return err
+			return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, rs.Primary.ID,
+				errors.New("expected resource not found error, received an unexpected error"))
 		}
 
 		return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, rs.Primary.ID, errors.New("not destroyed"))
@@ -226,7 +253,7 @@ func testAccCheckReplicationSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckReplicationSetExists(name string, replicationset *ssmincidents.DescribeReplicationSetResponse) resource.TestCheckFunc {
+func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -239,69 +266,33 @@ func testAccCheckReplicationSetExists(name string, replicationset *ssmincidents.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient
 		ctx := context.Background()
-		resp, err := conn.DescribeReplicationSet(ctx, &ssmincidents.DescribeReplicationSetInput{
-			ReplicationSetId: aws.String(rs.Primary.ID),
-		})
+
+		_, err := tfssmincidents.FindReplicationSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, rs.Primary.ID, err)
 		}
 
-		*replicationset = *resp
-
 		return nil
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient
-	ctx := context.Background()
-
-	input := &ssmincidents.ListReplicationSetsInput{}
-	_, err := conn.ListReplicationSets(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckReplicationSetNotRecreated(before, after *ssmincidents.DescribeReplicationSetResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.ReplicationSetId), aws.StringValue(after.ReplicationSetId); before != after {
-			return create.Error(names.SSMIncidents, create.ErrActionCheckingNotRecreated, tfssmincidents.ResNameReplicationSet, aws.StringValue(before.ReplicationSetId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccReplicationSetConfig_basic(rName, version string) string {
+func testAccReplicationSetConfig_basic(region1, region1key, region2, region2key, tagKey, tagVal string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
 
 resource "aws_ssmincidents_replication_set" "test" {
-  replication_set_name             = %[1]q
-  engine_type             = "ActiveSSMIncidents"
-  engine_version          = %[2]q
-  host_instance_type      = "ssmincidents.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
+  regions {
+	%[1]q = %[2]q
+	%[3]q = %[4]q
   }
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  tags {
+	%[5]q = %[6]q
   }
 }
-`, rName, version)
+`, trim(region1), region1key, trim(region2), region2key, trim(tagKey), tagVal)
+}
+
+func trim(s string) string {
+	return strings.Trim(s, "\"")
 }
