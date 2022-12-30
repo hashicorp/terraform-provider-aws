@@ -2,15 +2,19 @@ package ssmincidents
 
 import (
 	"math/rand"
+	"time"
 )
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // generates a pseudo-random unique temporary client token
 func GenerateClientToken() string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	rand.Seed(time.Now().UnixNano())
 
-	s := make([]rune, 26)
-	for i := range s {
-		s[i] = letters[rand.Intn(len(letters))]
+	n := 30
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
 	}
-	return string(s)
+	return string(b)
 }
