@@ -75,6 +75,8 @@ func TestAccServiceCatalogPortfolioShare_sharePrincipals(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
