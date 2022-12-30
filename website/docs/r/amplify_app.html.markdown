@@ -128,7 +128,7 @@ resource "aws_amplify_app" "example" {
 
 ```terraform
 resource "aws_amplify_app" "example" {
-  name       = "example"
+  name = "example"
 
   environment_variables = {
     "_CUSTOM_IMAGE" = "node:16",
