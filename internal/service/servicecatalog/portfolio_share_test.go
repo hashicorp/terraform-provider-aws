@@ -75,7 +75,6 @@ func TestAccServiceCatalogPortfolioShare_sharePrincipals(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
@@ -165,7 +164,7 @@ func TestAccServiceCatalogPortfolioShare_disappears(t *testing.T) {
 			{
 				Config: testAccPortfolioShareConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductExists(resourceName),
+					testAccCheckPortfolioShareExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
