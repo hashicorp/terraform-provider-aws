@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccWindowsFileSystemDataSource_basic(t *testing.T) {
-  if testing.Short() {
+	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
