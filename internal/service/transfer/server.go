@@ -457,7 +457,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
-	
+
 	if err := d.Set("protocol_details", flattenProtocolDetails(output.ProtocolDetails)); err != nil {
 		return fmt.Errorf("error setting protocol_details: %w", err)
 	}
@@ -642,7 +642,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("protocol_details") {
 			input.ProtocolDetails = expandProtocolDetails(d.Get("protocol_details").([]interface{}))
 		}
-		
+
 		if d.HasChange("protocols") {
 			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
 		}
