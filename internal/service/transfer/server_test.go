@@ -727,6 +727,46 @@ func testAccServer_protocols(t *testing.T) {
 	})
 }
 
+func TestAccServer_protocolDetails(t *testing.T) {
+	var s transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerConfig_protocolDetails("AUTO", "DEFAULT", "ENFORCED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &s),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.passive_ip", "AUTO"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.set_stat_option", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.tls_session_resumption_mode", "ENFORCED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccServerConfig_protocolDetails("AUTO", "ENABLE_NO_OP", "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &s),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.passive_ip", "AUTO"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.set_stat_option", "ENABLE_NO_OP"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.tls_session_resumption_mode", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccServer_apiGateway(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
@@ -1597,6 +1637,18 @@ resource "aws_transfer_server" "test" {
   }
 }
 `)
+}
+
+func testAccServerConfig_protocolDetails(passive_ip, set_stat_option, tls_session_resumption_mode string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+	protocol_details {
+		passive_ip                  = %[1]q
+		set_stat_option             = %[2]q
+		tls_session_resumption_mode = %[3]q
+	}
+}
+`, passive_ip, set_stat_option, tls_session_resumption_mode)
 }
 
 func testAccServerConfig_rootCA(domain string) string {

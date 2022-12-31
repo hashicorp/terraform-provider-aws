@@ -176,6 +176,37 @@ func ResourceServer() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
 				},
 			},
+			"protocol_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"passive_ip": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 15),
+						},
+						"set_stat_option": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"DEFAULT",
+								"ENABLE_NO_OP",
+							}, false),
+						},
+						"tls_session_resumption_mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"DISABLED",
+								"ENABLED",
+								"ENFORCED",
+							}, false),
+						},
+					},
+				},
+			},
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -295,6 +326,10 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
 		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("protocol_details"); ok && len(v.([]interface{})) > 0 {
+		input.ProtocolDetails = expandProtocolDetails(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("security_policy_name"); ok {
@@ -423,6 +458,11 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
+
+	if err := d.Set("protocol_details", flattenProtocolDetails(output.ProtocolDetails)); err != nil {
+		return fmt.Errorf("error setting protocol_details: %w", err)
+	}
+
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
@@ -601,6 +641,10 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("protocols") {
 			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
+		}
+
+		if d.HasChange("protocol_details") {
+			input.ProtocolDetails = expandProtocolDetails(d.Get("protocol_details").([]interface{}))
 		}
 
 		if d.HasChange("security_policy_name") {
@@ -792,6 +836,52 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	return tfMap
+}
+
+func expandProtocolDetails(m []interface{}) *transfer.ProtocolDetails {
+	if len(m) < 1 || m[0] == nil {
+		return nil
+	}
+
+	tfMap := m[0].(map[string]interface{})
+
+	apiObject := &transfer.ProtocolDetails{}
+
+	if v, ok := tfMap["passive_ip"].(string); ok && len(v) > 0 {
+		apiObject.PassiveIp = aws.String(v)
+	}
+
+	if v, ok := tfMap["set_stat_option"].(string); ok && len(v) > 0 {
+		apiObject.SetStatOption = aws.String(v)
+	}
+
+	if v, ok := tfMap["tls_session_resumption_mode"].(string); ok && len(v) > 0 {
+		apiObject.TlsSessionResumptionMode = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.PassiveIp; v != nil {
+		tfMap["passive_ip"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SetStatOption; v != nil {
+		tfMap["set_stat_option"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TlsSessionResumptionMode; v != nil {
+		tfMap["tls_session_resumption_mode"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {
