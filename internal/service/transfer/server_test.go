@@ -727,7 +727,7 @@ func testAccServer_protocols(t *testing.T) {
 	})
 }
 
-func TestAccServer_protocolDetails(t *testing.T) {
+func testAccServer_protocolDetails(t *testing.T) {
 	var s transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
