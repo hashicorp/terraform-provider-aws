@@ -1642,11 +1642,11 @@ resource "aws_transfer_server" "test" {
 func testAccServerConfig_protocolDetails(passive_ip, set_stat_option, tls_session_resumption_mode string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
-	protocol_details {
-		passive_ip                  = %[1]q
-		set_stat_option             = %[2]q
-		tls_session_resumption_mode = %[3]q
-	}
+  protocol_details {
+    passive_ip                  = %[1]q
+    set_stat_option             = %[2]q
+    tls_session_resumption_mode = %[3]q
+  }
 }
 `, passive_ip, set_stat_option, tls_session_resumption_mode)
 }
