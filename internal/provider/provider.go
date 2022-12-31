@@ -664,7 +664,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
-			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
+			"aws_fsx_openzfs_snapshot":    fsx.DataSourceOpenzfsSnapshot(),
+			"aws_fsx_windows_file_system": fsx.DataSourceWindowsFileSystem(),
 
 			"aws_glue_catalog_table":                    glue.DataSourceCatalogTable(),
 			"aws_glue_connection":                       glue.DataSourceConnection(),
