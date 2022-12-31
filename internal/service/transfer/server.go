@@ -165,17 +165,6 @@ func ResourceServer() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			"protocols": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				MaxItems: 3,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
-				},
-			},
 			"protocol_details": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -205,6 +194,17 @@ func ResourceServer() *schema.Resource {
 							}, false),
 						},
 					},
+				},
+			},
+			"protocols": {
+				Type:     schema.TypeSet,
+				MinItems: 1,
+				MaxItems: 3,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
 				},
 			},
 			"security_policy_name": {
@@ -324,12 +324,12 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.PreAuthenticationLoginBanner = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
-		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("protocol_details"); ok && len(v.([]interface{})) > 0 {
 		input.ProtocolDetails = expandProtocolDetails(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
+		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("security_policy_name"); ok {
@@ -457,12 +457,12 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
-	d.Set("protocols", aws.StringValueSlice(output.Protocols))
-
+	
 	if err := d.Set("protocol_details", flattenProtocolDetails(output.ProtocolDetails)); err != nil {
 		return fmt.Errorf("error setting protocol_details: %w", err)
 	}
 
+	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
@@ -639,12 +639,12 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_authentication_login_banner").(string))
 		}
 
-		if d.HasChange("protocols") {
-			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
-		}
-
 		if d.HasChange("protocol_details") {
 			input.ProtocolDetails = expandProtocolDetails(d.Get("protocol_details").([]interface{}))
+		}
+		
+		if d.HasChange("protocols") {
+			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
 		}
 
 		if d.HasChange("security_policy_name") {
