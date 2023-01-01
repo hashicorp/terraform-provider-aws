@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -98,7 +99,7 @@ const (
 )
 
 func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
@@ -123,9 +124,9 @@ func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *sche
 }
 
 func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
-	configurationSetEventDestinationID, err := ParseConfigurationSetEventDestinationID(d.Id())
+	configurationSetName, _, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
@@ -142,7 +143,7 @@ func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
-	d.Set("configuration_set_name", configurationSetEventDestinationID.ConfigurationSetName)
+	d.Set("configuration_set_name", configurationSetName)
 	d.Set("event_destination_name", out.Name)
 
 	if err := d.Set("event_destination", []interface{}{flattenEventDestination(out)}); err != nil {
@@ -180,18 +181,18 @@ func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *sche
 }
 
 func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSetEventDestination %s", d.Id())
 
-	configurationSetEventDestinationID, err := ParseConfigurationSetEventDestinationID(d.Id())
+	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
 	_, err = conn.DeleteConfigurationSetEventDestination(ctx, &sesv2.DeleteConfigurationSetEventDestinationInput{
-		ConfigurationSetName: aws.String(configurationSetEventDestinationID.ConfigurationSetName),
-		EventDestinationName: aws.String(configurationSetEventDestinationID.EventDestinationName),
+		ConfigurationSetName: aws.String(configurationSetName),
+		EventDestinationName: aws.String(eventDestinationName),
 	})
 
 	if err != nil {
@@ -207,13 +208,13 @@ func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *sche
 }
 
 func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.Client, id string) (types.EventDestination, error) {
-	configurationSetEventDestinationID, err := ParseConfigurationSetEventDestinationID(id)
+	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(id)
 	if err != nil {
 		return types.EventDestination{}, err
 	}
 
 	in := &sesv2.GetConfigurationSetEventDestinationsInput{
-		ConfigurationSetName: aws.String(configurationSetEventDestinationID.ConfigurationSetName),
+		ConfigurationSetName: aws.String(configurationSetName),
 	}
 	out, err := conn.GetConfigurationSetEventDestinations(ctx, in)
 	if err != nil {
@@ -233,7 +234,7 @@ func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.C
 	}
 
 	for _, eventDestination := range out.EventDestinations {
-		if aws.ToString(eventDestination.Name) == configurationSetEventDestinationID.EventDestinationName {
+		if aws.ToString(eventDestination.Name) == eventDestinationName {
 			return eventDestination, nil
 		}
 	}
@@ -251,7 +252,7 @@ func flattenEventDestination(apiObject types.EventDestination) map[string]interf
 	}
 
 	if v := apiObject.MatchingEventTypes; v != nil {
-		m["matching_event_types"] = eventTypesToStrings(apiObject.MatchingEventTypes)
+		m["matching_event_types"] = enum.Slice(apiObject.MatchingEventTypes...)
 	}
 
 	return m
@@ -384,16 +385,13 @@ func FormatConfigurationSetEventDestinationID(configurationSetName, eventDestina
 	return fmt.Sprintf("%s|%s", configurationSetName, eventDestinationName)
 }
 
-func ParseConfigurationSetEventDestinationID(id string) (ConfigurationSetEventDestinationID, error) {
+func ParseConfigurationSetEventDestinationID(id string) (string, string, error) {
 	idParts := strings.Split(id, "|")
 	if len(idParts) != 2 {
-		return ConfigurationSetEventDestinationID{}, errors.New("please make sure the ID is in the form CONFIGURATION_SET_NAME|EVENT_DESTINATION_NAME")
+		return "", "", errors.New("please make sure the ID is in the form CONFIGURATION_SET_NAME|EVENT_DESTINATION_NAME")
 	}
 
-	return ConfigurationSetEventDestinationID{
-		ConfigurationSetName: idParts[0],
-		EventDestinationName: idParts[1],
-	}, nil
+	return idParts[0], idParts[1], nil
 }
 
 func stringsToEventTypes(values []*string) []types.EventType {
@@ -404,14 +402,4 @@ func stringsToEventTypes(values []*string) []types.EventType {
 	}
 
 	return eventTypes
-}
-
-func eventTypesToStrings(values []types.EventType) []*string {
-	var strings []*string
-
-	for _, eventType := range values {
-		strings = append(strings, aws.String(string(eventType)))
-	}
-
-	return strings
 }

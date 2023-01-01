@@ -17,64 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestFormatConfigurationSetEventDestinationID(t *testing.T) {
-	expected := "configurationSetName|eventDestinationName"
-	got := tfsesv2.FormatConfigurationSetEventDestinationID("configurationSetName", "eventDestinationName")
-
-	if got != expected {
-		t.Errorf("got %s, expected %s", got, expected)
-	}
-}
-
-func TestParseConfigurationSetEventDestinationID(t *testing.T) {
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected tfsesv2.ConfigurationSetEventDestinationID
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: tfsesv2.ConfigurationSetEventDestinationID{},
-			Error:    true,
-		},
-		{
-			TestName: "no pipe",
-			Input:    "configurationSetNameEventDestinationName",
-			Expected: tfsesv2.ConfigurationSetEventDestinationID{},
-			Error:    true,
-		},
-		{
-			TestName: "valid",
-			Input:    "configurationSetName|eventDestinationName",
-			Expected: tfsesv2.ConfigurationSetEventDestinationID{
-				ConfigurationSetName: "configurationSetName",
-				EventDestinationName: "eventDestinationName",
-			},
-			Error: false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tfsesv2.ParseConfigurationSetEventDestinationID(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_configuration_set_event_destination.test"
@@ -134,7 +76,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckConfigurationSetEventDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -168,7 +110,7 @@ func testAccCheckConfigurationSetEventDestinationExists(name string) resource.Te
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSetEventDestination, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
 
 		_, err := tfsesv2.FindConfigurationSetEventDestinationByID(context.Background(), conn, rs.Primary.ID)
 
