@@ -210,5 +210,7 @@ func dataSourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
+	d.SetId(aws.StringValue(filesystem.FileSystemId))
+
 	return nil
 }
