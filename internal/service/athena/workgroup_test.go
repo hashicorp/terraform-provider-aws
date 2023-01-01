@@ -788,7 +788,7 @@ resource "aws_athena_workgroup" "test" {
 func testAccWorkGroupConfig_configurationExecutionRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
   assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
@@ -818,13 +818,13 @@ resource "aws_athena_workgroup" "test" {
     enforce_workgroup_configuration    = false
     publish_cloudwatch_metrics_enabled = false
 
-	engine_version {
-	  selected_engine_version = "PySpark engine version 3"
-	}
+    engine_version {
+      selected_engine_version = "PySpark engine version 3"
+    }
 
-	result_configuration {
-	  output_location = "s3://${aws_s3_bucket.test.id}/logs/athena_spark/"
-	}
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.id}/logs/athena_spark/"
+    }
   }
 }
 `, rName)
