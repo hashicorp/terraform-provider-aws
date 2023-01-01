@@ -87,7 +87,7 @@ resource "aws_directory_service_directory" "test" {
 }
 
 func testAccWindowsFileSystemDataSourceConfig_subnetIDs1() string {
-	return testAccWindowsFileSystemBaseConfig() + `
+	return testAccWindowsFileSystemDataSourceBaseConfig() + `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
