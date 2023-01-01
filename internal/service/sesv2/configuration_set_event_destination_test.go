@@ -28,20 +28,75 @@ func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
+				Config: testAccConfigurationSetEventDestinationConfig_cloudWatchDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetEventDestinationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.0", "SEND"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSESV2ConfigurationSetEventDestination_cloudWatchDestination(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set_event_destination.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetEventDestinationConfig_cloudWatchDestination(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetEventDestinationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.cloud_watch_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.cloud_watch_destination.0.dimension_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.cloud_watch_destination.0.dimension_configuration.0.default_dimension_value", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.cloud_watch_destination.0.dimension_configuration.0.dimension_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_destination.0.cloud_watch_destination.0.dimension_configuration.0.dimension_value_source", "MESSAGE_TAG"),
-					resource.TestCheckResourceAttr(resourceName, "event_destination.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_destination.0.matching_event_types.0", "SEND"),
-					resource.TestCheckResourceAttr(resourceName, "event_destination_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSESV2ConfigurationSetEventDestination_kinesisFirehoseDestination(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set_event_destination.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestination(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetEventDestinationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_destination.0.kinesis_firehose_destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.delivery_stream_arn", "aws_kinesis_firehose_delivery_stream.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_destination.0.kinesis_firehose_destination.0.iam_role_arn", "aws_iam_role.delivery_stream", "arn"),
 				),
 			},
 			{
@@ -64,7 +119,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEventDestinationConfig_basic(rName),
+				Config: testAccConfigurationSetEventDestinationConfig_cloudWatchDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetEventDestinationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceConfigurationSetEventDestination(), resourceName),
@@ -122,7 +177,7 @@ func testAccCheckConfigurationSetEventDestinationExists(name string) resource.Te
 	}
 }
 
-func testAccConfigurationSetEventDestinationConfig_basic(rName string) string {
+func testAccConfigurationSetEventDestinationConfig_cloudWatchDestination(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
@@ -133,15 +188,120 @@ resource "aws_sesv2_configuration_set_event_destination" "test" {
   event_destination_name = %[1]q
 
   event_destination {
-	cloud_watch_destination {
-	  dimension_configuration {
-		default_dimension_value = %[1]q
-		dimension_name 			= %[1]q
-		dimension_value_source  = "MESSAGE_TAG"
-	  }
-	}
+    cloud_watch_destination {
+      dimension_configuration {
+        default_dimension_value = %[1]q
+        dimension_name          = %[1]q
+        dimension_value_source  = "MESSAGE_TAG"
+      }
+    }
 
-	matching_event_types = ["SEND"]
+    matching_event_types = ["SEND"]
+  }
+}
+`, rName)
+}
+
+func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestination(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_iam_role" "bucket" {
+  name = "%[1]s2"
+
+  assume_role_policy = <<EOF
+  {
+	"Version": "2012-10-17",
+	"Statement": [
+	  {
+		"Action": "sts:AssumeRole",
+		"Principal": {
+		  "Service": "firehose.amazonaws.com"
+		},
+		"Effect": "Allow"
+	  }
+	]
+  }
+  EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.bucket.arn
+    bucket_arn = aws_s3_bucket.test.arn
+  }
+}
+
+
+resource "aws_iam_role" "delivery_stream" {
+  name = "%[1]s1"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+	  "Action": "sts:AssumeRole",
+	  "Principal": {
+		"Service": "ses.amazonaws.com"
+	  },
+	  "Effect": "Allow"
+	}
+  ]
+}
+  EOF
+}
+
+resource "aws_iam_role_policy" "delivery_stream" {
+  name = %[1]q
+  role = aws_iam_role.delivery_stream.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "firehose:*",
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+	{
+	  "Action": "kinesis:*",
+	  "Effect": "Allow",
+      "Resource": "*"
+	}
+  ]
+}
+  EOF
+}
+
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+}
+
+resource "aws_sesv2_configuration_set_event_destination" "test" {
+  depends_on = [aws_iam_role_policy.delivery_stream]
+
+  configuration_set_name = aws_sesv2_configuration_set.test.configuration_set_name
+  event_destination_name = %[1]q
+
+  event_destination {
+    kinesis_firehose_destination {
+      delivery_stream_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      iam_role_arn        = aws_iam_role.delivery_stream.arn
+    }
+
+    matching_event_types = ["SEND"]
   }
 }
 `, rName)

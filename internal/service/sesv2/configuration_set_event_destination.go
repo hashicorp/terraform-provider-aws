@@ -77,6 +77,23 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"kinesis_firehose_destination": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"delivery_stream_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"iam_role_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"matching_event_types": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -251,6 +268,10 @@ func flattenEventDestination(apiObject types.EventDestination) map[string]interf
 		m["cloud_watch_destination"] = []interface{}{flattenCloudWatchDestination(v)}
 	}
 
+	if v := apiObject.KinesisFirehoseDestination; v != nil {
+		m["kinesis_firehose_destination"] = []interface{}{flattenKinesisFirehoseDestination(v)}
+	}
+
 	if v := apiObject.MatchingEventTypes; v != nil {
 		m["matching_event_types"] = enum.Slice(apiObject.MatchingEventTypes...)
 	}
@@ -286,6 +307,24 @@ func flattenCloudWatchDimensionConfigurations(apiObjects []types.CloudWatchDimen
 	return l
 }
 
+func flattenKinesisFirehoseDestination(apiObject *types.KinesisFirehoseDestination) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.DeliveryStreamArn; v != nil {
+		m["delivery_stream_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.IamRoleArn; v != nil {
+		m["iam_role_arn"] = aws.ToString(v)
+	}
+
+	return m
+}
+
 func flattenCloudWatchDimensionConfiguration(apiObject types.CloudWatchDimensionConfiguration) map[string]interface{} {
 	m := map[string]interface{}{
 		"dimension_value_source": string(apiObject.DimensionValueSource),
@@ -317,6 +356,10 @@ func expandEventDestination(tfMap map[string]interface{}) *types.EventDestinatio
 		a.Enabled = v
 	}
 
+	if v, ok := tfMap["kinesis_firehose_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.KinesisFirehoseDestination = expandKinesisFirehoseDestination(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["matching_event_types"].([]interface{}); ok && len(v) > 0 {
 		a.MatchingEventTypes = stringsToEventTypes(flex.ExpandStringList(v))
 	}
@@ -333,6 +376,24 @@ func expandCloudWatchDestination(tfMap map[string]interface{}) *types.CloudWatch
 
 	if v, ok := tfMap["dimension_configuration"].([]interface{}); ok && len(v) > 0 {
 		a.DimensionConfigurations = expandCloudWatchDimensionConfigurations(v)
+	}
+
+	return a
+}
+
+func expandKinesisFirehoseDestination(tfMap map[string]interface{}) *types.KinesisFirehoseDestination {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.KinesisFirehoseDestination{}
+
+	if v, ok := tfMap["delivery_stream_arn"].(string); ok && v != "" {
+		a.DeliveryStreamArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["iam_role_arn"].(string); ok && v != "" {
+		a.IamRoleArn = aws.String(v)
 	}
 
 	return a
