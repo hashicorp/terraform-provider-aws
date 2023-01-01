@@ -2102,6 +2102,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_sesv2_email_identity_feedback_attributes":  sesv2.ResourceEmailIdentityFeedbackAttributes(),
 			"aws_sesv2_email_identity_mail_from_attributes": sesv2.ResourceEmailIdentityMailFromAttributes(),
 
+			"aws_sfn_activity":      sfn.ResourceActivity(),
+			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
+
 			"aws_shield_protection":                          shield.ResourceProtection(),
 			"aws_shield_protection_group":                    shield.ResourceProtectionGroup(),
 			"aws_shield_protection_health_check_association": shield.ResourceProtectionHealthCheckAssociation(),
