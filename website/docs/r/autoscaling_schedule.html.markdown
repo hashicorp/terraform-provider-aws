@@ -42,7 +42,7 @@ The following arguments are required:
 * `autoscaling_group_name` - (Required) The name of the Auto Scaling group.
 * `scheduled_action_name` - (Required) The name of this scaling action.
 
-The following arugments are optional:
+The following arguments are optional:
 
 * `desired_capacity` - (Optional) The initial capacity of the Auto Scaling group after the scheduled action runs and the capacity it attempts to maintain. Set to `-1` if you don't want to change the desired capacity at the scheduled time. Defaults to `0`.
 * `end_time` - (Optional) The date and time for the recurring schedule to end, in UTC with the format `"YYYY-MM-DDThh:mm:ssZ"` (e.g. `"2021-06-01T00:00:00Z"`).
