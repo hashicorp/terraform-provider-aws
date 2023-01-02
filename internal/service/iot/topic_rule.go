@@ -451,6 +451,11 @@ func ResourceTopicRule() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validTopicRuleFirehoseSeparator,
 									},
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 								},
 							},
 							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
@@ -506,6 +511,11 @@ func ResourceTopicRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 								},
 							},
 							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
@@ -528,6 +538,11 @@ func ResourceTopicRule() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -800,6 +815,11 @@ func ResourceTopicRule() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validTopicRuleFirehoseSeparator,
 						},
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -851,6 +871,11 @@ func ResourceTopicRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -871,6 +896,11 @@ func ResourceTopicRule() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -1571,6 +1601,10 @@ func expandFirehoseAction(tfList []interface{}) *iot.FirehoseAction {
 		apiObject.Separator = aws.String(v)
 	}
 
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -1626,6 +1660,10 @@ func expandAnalyticsAction(tfList []interface{}) *iot.IotAnalyticsAction {
 		apiObject.RoleArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -1647,6 +1685,10 @@ func expandEventsAction(tfList []interface{}) *iot.IotEventsAction {
 
 	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
 	}
 
 	return apiObject
@@ -2655,6 +2697,10 @@ func flattenFirehoseAction(apiObject *iot.FirehoseAction) []interface{} {
 		tfMap["separator"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
+
 	return []interface{}{tfMap}
 }
 
@@ -2738,6 +2784,10 @@ func flattenAnalyticsAction(apiObject *iot.IotAnalyticsAction) []interface{} {
 		tfMap["role_arn"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
+
 	return []interface{}{tfMap}
 }
 
@@ -2775,6 +2825,10 @@ func flattenEventsAction(apiObject *iot.IotEventsAction) []interface{} {
 
 	if v := apiObject.RoleArn; v != nil {
 		tfMap["role_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
 	}
 
 	return []interface{}{tfMap}
