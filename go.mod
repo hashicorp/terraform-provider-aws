@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.9
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.2.1
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.2
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.0.2
