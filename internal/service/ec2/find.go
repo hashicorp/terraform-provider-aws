@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -6538,4 +6539,29 @@ func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, 
 	}
 
 	return nil, &resource.NotFoundError{}
+}
+
+func FindInstanceStateById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
+	in := &ec2.DescribeInstancesInput{
+		InstanceIds: aws.StringSlice([]string{id}),
+	}
+
+	out, err := conn.DescribeInstancesWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.Reservations) == 0 || len(out.Reservations[0].Instances) == 0 || out.Reservations[0].Instances[0].State == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Reservations[0].Instances[0].State, nil
 }
