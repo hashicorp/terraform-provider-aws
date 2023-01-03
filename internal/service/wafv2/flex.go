@@ -1003,24 +1003,35 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 		if !ok {
 			continue
 		}
-		var r wafv2.ManagedRuleGroupConfig
+
 		if v, ok := m["aws_managed_rules_bot_rule_set"].([]interface{}); ok && len(v) > 0 {
-			r.AWSManagedRulesBotControlRuleSet = expandAWSManagedRulesBotControlRuleSet(v)
+			out = append(out, &wafv2.ManagedRuleGroupConfig{
+				AWSManagedRulesBotControlRuleSet: expandManagedRulesBotControlRuleSet(v),
+			})
 		}
-		if v, ok := m["login_path"].(string); ok && v != "" {
-			r.LoginPath = aws.String(v)
-		}
-		if v, ok := m["payload_type"].(string); ok && v != "" {
-			r.PayloadType = aws.String(v)
-		}
-		if v, ok := m["password_field"].([]interface{}); ok && len(v) > 0 {
-			r.PasswordField = expandPasswordField(v)
-		}
-		if v, ok := m["username_field"].([]interface{}); ok && len(v) > 0 {
-			r.UsernameField = expandUsernameField(v)
+		if v, ok := m["login_path"]; ok && len(v.(string)) > 0 {
+			out = append(out, &wafv2.ManagedRuleGroupConfig{
+				LoginPath: aws.String(v.(string)),
+			})
 		}
 
-		out = append(out, &r)
+		if v, ok := m["payload_type"]; ok && len(v.(string)) > 0 {
+			out = append(out, &wafv2.ManagedRuleGroupConfig{
+				PayloadType: aws.String(v.(string)),
+			})
+		}
+
+		if v, ok := m["password_field"].([]interface{}); ok && len(v) > 0 {
+			out = append(out, &wafv2.ManagedRuleGroupConfig{
+				PasswordField: expandPasswordField(v),
+			})
+		}
+
+		if v, ok := m["username_field"].([]interface{}); ok && len(v) > 0 {
+			out = append(out, &wafv2.ManagedRuleGroupConfig{
+				UsernameField: expandUsernameField(v),
+			})
+		}
 	}
 
 	return out
@@ -1052,7 +1063,7 @@ func expandUsernameField(tfList []interface{}) *wafv2.UsernameField {
 	return &out
 }
 
-func expandAWSManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesBotControlRuleSet {
+func expandManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesBotControlRuleSet {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -2017,21 +2028,27 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interfa
 		return nil
 	}
 
-	var out []interface{}
-
+	m := make(map[string]interface{})
 	for _, config := range c {
-		m := map[string]interface{}{
-			"aws_managed_rules_bot_control_rule_set": flattenAWSManagedRulesBotControlRuleSet(config.AWSManagedRulesBotControlRuleSet),
-			"login_path":                             aws.StringValue(config.LoginPath),
-			"payload_type":                           aws.StringValue(config.PayloadType),
-			"password_field":                         flattenPasswordField(config.PasswordField),
-			"username_field":                         flattenUsernameField(config.UsernameField),
+		if config.AWSManagedRulesBotControlRuleSet != nil {
+			m["aws_managed_rules_bot_control_rule_set"] = flattenManagedRulesBotControlRuleSet(config.AWSManagedRulesBotControlRuleSet)
+		}
+		if config.LoginPath != nil {
+			m["login_path"] = aws.StringValue(config.LoginPath)
+		}
+		if config.PayloadType != nil {
+			m["payload_type"] = aws.StringValue(config.PayloadType)
+		}
+		if config.PasswordField != nil {
+			m["password_field"] = flattenPasswordField(config.PasswordField)
+		}
+		if config.UsernameField != nil {
+			m["username_field"] = flattenUsernameField(config.UsernameField)
 		}
 
-		out = append(out, m)
 	}
 
-	return out
+	return []interface{}{m}
 }
 
 func flattenPasswordField(apiObject *wafv2.PasswordField) []interface{} {
@@ -2058,7 +2075,7 @@ func flattenUsernameField(apiObject *wafv2.UsernameField) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenAWSManagedRulesBotControlRuleSet(apiObject *wafv2.AWSManagedRulesBotControlRuleSet) []interface{} {
+func flattenManagedRulesBotControlRuleSet(apiObject *wafv2.AWSManagedRulesBotControlRuleSet) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

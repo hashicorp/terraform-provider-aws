@@ -632,15 +632,15 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 						"override_action.0.count.#": "0",
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                                            "1",
-						"statement.0.managed_rule_group_statement.0.name":                                       "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                            "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                     "0",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.login_path":     "/login",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.password_field": "/password",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.payload_type":   "JSON",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.username_field": "/username",
+						"statement.0.managed_rule_group_statement.#":                                                         "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                    "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                             "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                         "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                  "0",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.login_path":                  "/login",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.password_field.0.identifier": "/password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.payload_type":                "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.username_field.0.identifier": "/username",
 					}),
 				),
 			},
@@ -658,15 +658,15 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 						"override_action.0.count.#": "0",
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                                            "1",
-						"statement.0.managed_rule_group_statement.0.name":                                       "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                            "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                     "0",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.login_path":     "/app-login",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.password_field": "/app-password",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.payload_type":   "JSON",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.username_field": "/app-username",
+						"statement.0.managed_rule_group_statement.#":                                                         "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                    "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                             "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                         "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                  "0",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.login_path":                  "/app-login",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.password_field.0.identifier": "/app-password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.payload_type":                "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_config.0.username_field.0.identifier": "/app-username",
 					}),
 				),
 			},
@@ -2911,10 +2911,16 @@ resource "aws_wafv2_web_acl" "test" {
         vendor_name = "AWS"
 
         managed_rule_group_config {
-          login_path     = "/login"
-          password_field = "/password"
-          payload_type   = "JSON"
-          username_field = "/username"
+          login_path   = "/login"
+          payload_type = "JSON"
+
+          password_field {
+            identifier = "/password"
+          }
+
+          username_field {
+            identifier = "/username"
+          }
         }
       }
     }
@@ -2965,10 +2971,16 @@ resource "aws_wafv2_web_acl" "test" {
         vendor_name = "AWS"
 
         managed_rule_group_config {
-          login_path     = "/app-login"
-          password_field = "/app-password"
-          payload_type   = "JSON"
-          username_field = "/app-username"
+          login_path   = "/app-login"
+          payload_type = "JSON"
+
+          password_field {
+            identifier = "/app-password"
+          }
+
+          username_field {
+            identifier = "/app-username"
+          }
         }
       }
     }

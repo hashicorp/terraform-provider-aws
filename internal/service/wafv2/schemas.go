@@ -947,6 +947,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"aws_managed_rules_bot_control_rule_set": {
