@@ -27,7 +27,7 @@ import (
 )
 
 func init() {
-	//registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
+	// _sp.registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
 }
 
 // newResourceSecurityGroupIngressRule instantiates a new Resource for the aws_vpc_security_group_ingress_rule resource.

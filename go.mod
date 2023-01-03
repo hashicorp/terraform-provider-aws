@@ -44,12 +44,12 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.15.0
-	github.com/hashicorp/terraform-plugin-framework v0.17.0
-	github.com/hashicorp/terraform-plugin-framework-timeouts v0.2.0
-	github.com/hashicorp/terraform-plugin-framework-validators v0.7.0
+	github.com/hashicorp/terraform-plugin-framework v1.0.1
+	github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.9.0
 	github.com/hashicorp/terraform-plugin-go v0.14.2
 	github.com/hashicorp/terraform-plugin-log v0.7.0
-	github.com/hashicorp/terraform-plugin-mux v0.7.0
+	github.com/hashicorp/terraform-plugin-mux v0.8.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/cli v1.1.5
