@@ -35,10 +35,10 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, schema),
@@ -80,10 +80,10 @@ func TestAccAPIGatewayV2Model_disappears(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, schema),
@@ -132,10 +132,10 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_allAttributes(rName, schema1),
@@ -178,7 +178,7 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 }
 
 func testAccCheckModelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_model" {
@@ -189,7 +189,7 @@ func testAccCheckModelDestroy(s *terraform.State) error {
 			ApiId:   aws.String(rs.Primary.Attributes["api_id"]),
 			ModelId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -204,7 +204,7 @@ func testAccCheckModelDestroy(s *terraform.State) error {
 
 func testAccCheckModelDisappears(apiId *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		_, err := conn.DeleteModel(&apigatewayv2.DeleteModelInput{
 			ApiId:   apiId,
@@ -226,7 +226,7 @@ func testAccCheckModelExists(n string, vApiId *string, v *apigatewayv2.GetModelO
 			return fmt.Errorf("No API Gateway v2 model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetModel(&apigatewayv2.GetModelInput{

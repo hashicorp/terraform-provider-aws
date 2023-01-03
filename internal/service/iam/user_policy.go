@@ -58,7 +58,7 @@ func ResourceUserPolicy() *schema.Resource {
 }
 
 func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.PutUserPolicyInput{
 		UserName:       aws.String(d.Get("user").(string)),
@@ -90,7 +90,7 @@ func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
@@ -104,7 +104,7 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetUserPolicyOutput
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetUserPolicy(request)
@@ -158,7 +158,7 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
@@ -171,7 +171,7 @@ func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteUserPolicy(request); err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting IAM user policy %s: %s", d.Id(), err)

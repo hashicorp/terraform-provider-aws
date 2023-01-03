@@ -27,9 +27,9 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -76,9 +76,9 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -121,9 +121,9 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_conclusionStatement(testIntentID),
@@ -177,9 +177,9 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_confirmationPromptAndRejectionStatement(testIntentID),
@@ -243,9 +243,9 @@ func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -279,9 +279,9 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_followUpPrompt(testIntentID),
@@ -351,9 +351,9 @@ func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -389,9 +389,9 @@ func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_sampleUtterances(testIntentID),
@@ -434,9 +434,9 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_slots(testIntentID),
@@ -490,9 +490,9 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -537,9 +537,9 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -560,7 +560,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 
 	testAccCheckAWSLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
-			conn := provider.Meta().(*conns.AWSClient).LexModelsConn
+			conn := provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 			resourceState, ok := s.RootModule().Resources[resourceName]
 			if !ok {
@@ -578,7 +578,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.PutIntent(input)
 
-				if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+				if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 					return resource.RetryableError(fmt.Errorf("%q: intent still updating", resourceName))
 				}
 				if err != nil {
@@ -600,9 +600,9 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentID),
@@ -638,9 +638,9 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -688,7 +688,7 @@ func testAccCheckIntentExistsWithVersion(rName, intentVersion string, output *le
 		}
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		output, err = conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(rs.Primary.ID),
@@ -711,7 +711,7 @@ func testAccCheckIntentExists(rName string, output *lexmodelbuildingservice.GetI
 
 func testAccCheckIntentNotExists(intentName, intentVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		_, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(intentName),
@@ -729,7 +729,7 @@ func testAccCheckIntentNotExists(intentName, intentVersion string) resource.Test
 }
 
 func testAccCheckIntentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_intent" {
@@ -784,7 +784,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s"
   handler       = "lambdatest.handler"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 `, rName)
 }

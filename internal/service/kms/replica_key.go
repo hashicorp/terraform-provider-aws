@@ -92,7 +92,7 @@ func ResourceReplicaKey() *schema.Resource {
 }
 
 func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -151,7 +151,7 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_id", d.Id())
 
 	if enabled := d.Get("enabled").(bool); !enabled {
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -173,11 +173,11 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	key, err := findKmsKey(conn, d.Id(), d.IsNewResource())
+	key, err := findKey(conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Replica Key (%s) not found, removing from state", d.Id())
@@ -235,30 +235,30 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := updateKmsKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
+		if err := updateKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("policy") {
-		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && !enabled {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -279,7 +279,7 @@ func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

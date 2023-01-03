@@ -33,3 +33,9 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Account ID for the account using the resource.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `10m`)

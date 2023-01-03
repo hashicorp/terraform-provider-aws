@@ -31,7 +31,7 @@ func ResourceEBSDefaultKMSKey() *schema.Resource {
 }
 
 func resourceEBSDefaultKMSKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	resp, err := conn.ModifyEbsDefaultKmsKeyId(&ec2.ModifyEbsDefaultKmsKeyIdInput{
 		KmsKeyId: aws.String(d.Get("key_arn").(string)),
@@ -46,7 +46,7 @@ func resourceEBSDefaultKMSKeyCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	resp, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
@@ -59,7 +59,7 @@ func resourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEBSDefaultKMSKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	_, err := conn.ResetEbsDefaultKmsKeyId(&ec2.ResetEbsDefaultKmsKeyIdInput{})
 	if err != nil {

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -50,7 +49,7 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
 	account, err := conn.GetAccount(&apigateway.GetAccountInput{})
@@ -72,7 +71,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := apigateway.UpdateAccountInput{}
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -99,7 +98,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
 	var out *apigateway.Account
 	var err error
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		out, err = conn.UpdateAccount(&input)
 
 		if err != nil {

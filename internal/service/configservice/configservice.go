@@ -393,7 +393,6 @@ func waitForConformancePackStateCreateComplete(conn *configservice.ConfigService
 	}
 
 	return err
-
 }
 
 func waitForConformancePackStateDeleteComplete(conn *configservice.ConfigService, name string) error {
@@ -426,7 +425,6 @@ func waitForOrganizationConformancePackStatusCreateSuccessful(conn *configservic
 	_, err := stateChangeConf.WaitForState()
 
 	return err
-
 }
 
 func waitForOrganizationConformancePackStatusUpdateSuccessful(conn *configservice.ConfigService, name string, timeout time.Duration) error {
@@ -480,7 +478,7 @@ func waitForOrganizationRuleStatusDeleteSuccessful(conn *configservice.ConfigSer
 
 	_, err := stateChangeConf.WaitForState()
 
-	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
 		return nil
 	}
 

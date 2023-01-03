@@ -48,7 +48,7 @@ func DataSourceAlias() *schema.Resource {
 }
 
 func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	name := d.Get("name").(string)
@@ -69,7 +69,7 @@ func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", aliasConfiguration.Description)
 	d.Set("function_version", aliasConfiguration.FunctionVersion)
 
-	invokeArn := functionInvokeArn(*aliasConfiguration.AliasArn, meta)
+	invokeArn := functionInvokeARN(*aliasConfiguration.AliasArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	return nil

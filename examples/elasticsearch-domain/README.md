@@ -3,6 +3,7 @@
 This example creates an Elasticsearch Domain with [fine-grained access control](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/fgac.html) enabled
 
 ## Fine-Grained Access Control Requirements
+
 - Elasticsearch 6.7 or later
 - Encryption of data at rest and node-to-node encryption enabled
 - Require HTTPS for all traffic to the domain enabled

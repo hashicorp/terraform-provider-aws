@@ -8,10 +8,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
-// RetrieveGPGKey returns the PGP key specified as the pgpKey parameter, or queries
+// retrieveGPGKey returns the PGP key specified as the pgpKey parameter, or queries
 // the public key from the keybase service if the parameter is a keybase username
 // prefixed with the phrase "keybase:"
-func RetrieveGPGKey(pgpKey string) (string, error) {
+func retrieveGPGKey(pgpKey string) (string, error) {
 	const keybasePrefix = "keybase:"
 
 	encryptionKey := pgpKey
@@ -26,9 +26,9 @@ func RetrieveGPGKey(pgpKey string) (string, error) {
 	return encryptionKey, nil
 }
 
-// EncryptValue encrypts the given value with the given encryption key. Description
+// encryptValue encrypts the given value with the given encryption key. Description
 // should be set such that errors return a meaningful user-facing response.
-func EncryptValue(encryptionKey, value, description string) (string, string, error) {
+func encryptValue(encryptionKey, value, description string) (string, string, error) {
 	fingerprints, encryptedValue, err :=
 		pgpkeys.EncryptShares([][]byte{[]byte(value)}, []string{encryptionKey})
 	if err != nil {

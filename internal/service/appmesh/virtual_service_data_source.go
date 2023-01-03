@@ -100,7 +100,7 @@ func DataSourceVirtualService() *schema.Resource {
 }
 
 func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeVirtualServiceInput{
@@ -129,7 +129,7 @@ func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
 
-	err = d.Set("spec", flattenAppMeshVirtualServiceSpec(resp.VirtualService.Spec))
+	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}

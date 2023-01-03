@@ -57,7 +57,7 @@ func ResourceRecoveryGroup() *schema.Resource {
 }
 
 func resourceRecoveryGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -84,7 +84,7 @@ func resourceRecoveryGroupCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRecoveryGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -128,7 +128,7 @@ func resourceRecoveryGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRecoveryGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.UpdateRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Id()),
@@ -153,7 +153,7 @@ func resourceRecoveryGroupUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRecoveryGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.DeleteRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Id()),
@@ -162,7 +162,7 @@ func resourceRecoveryGroupDelete(d *schema.ResourceData, meta interface{}) error
 	_, err := conn.DeleteRecoveryGroup(input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Route53 Recovery Readiness RecoveryGroup: %s", err)
@@ -175,7 +175,7 @@ func resourceRecoveryGroupDelete(d *schema.ResourceData, meta interface{}) error
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetRecoveryGroup(gcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)

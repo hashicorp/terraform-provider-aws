@@ -182,7 +182,7 @@ func ResourceDomainName() *schema.Resource {
 }
 
 func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway Domain Name")
@@ -213,7 +213,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
+		params.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("regional_certificate_arn"); ok {
@@ -247,7 +247,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -294,7 +294,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("security_policy", domainName.SecurityPolicy)
 	d.Set("ownership_verification_certificate_arn", domainName.OwnershipVerificationCertificateArn)
 
-	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
+	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
 	}
 
@@ -390,7 +390,7 @@ func resourceDomainNameUpdateOperations(d *schema.ResourceData) []*apigateway.Pa
 }
 
 func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Updating API Gateway Domain Name %s", d.Id())
 
 	if d.HasChange("tags_all") {
@@ -413,14 +413,14 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
 
 	_, err := conn.DeleteDomainName(&apigateway.DeleteDomainNameInput{
 		DomainName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

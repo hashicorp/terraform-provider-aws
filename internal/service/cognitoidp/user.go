@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceUser() *schema.Resource {
@@ -133,7 +135,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	username := d.Get("username").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -216,7 +218,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	log.Println("[DEBUG] Reading Cognito User")
 
@@ -226,13 +228,14 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	user, err := conn.AdminGetUser(params)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException) {
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string))
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException) {
-			log.Printf("[WARN] Cognito User %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Cognito User (%s): %w", d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string), err)
 	}
 
 	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
@@ -254,7 +257,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	log.Println("[DEBUG] Updating Cognito User")
 
@@ -361,7 +364,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	log.Print("[DEBUG] Deleting Cognito User")
 
@@ -464,7 +467,7 @@ func computeUserAttributesUpdate(old interface{}, new interface{}) (map[string]i
 
 	del := make([]*string, 0, len(oldMap))
 	for k := range oldMap {
-		del = append(del, &k)
+		del = append(del, aws.String(k))
 	}
 
 	return upd, del

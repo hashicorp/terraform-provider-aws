@@ -8,14 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccInviteAccepter_basic(t *testing.T) {
-	var providers []*schema.Provider
 	masterDetectorResourceName := "aws_guardduty_detector.master"
 	memberDetectorResourceName := "aws_guardduty_detector.member"
 	resourceName := "aws_guardduty_invite_accepter.test"
@@ -26,9 +24,9 @@ func testAccInviteAccepter_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInviteAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInviteAccepterConfig_basic(email),
@@ -49,7 +47,7 @@ func testAccInviteAccepter_basic(t *testing.T) {
 }
 
 func testAccCheckInviteAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_invite_accepter" {
@@ -91,7 +89,7 @@ func testAccCheckInviteAccepterExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("Resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
 		input := &guardduty.GetMasterAccountInput{
 			DetectorId: aws.String(rs.Primary.ID),

@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -12,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceIdentityProvider() *schema.Resource {
@@ -82,7 +85,7 @@ func ResourceIdentityProvider() *schema.Resource {
 }
 
 func resourceIdentityProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Print("[DEBUG] Creating Cognito Identity Provider")
 
 	providerName := d.Get("provider_name").(string)
@@ -116,7 +119,7 @@ func resourceIdentityProviderCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
@@ -129,19 +132,24 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 		UserPoolId:   aws.String(userPoolID),
 	})
 
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if ret == nil || ret.IdentityProvider == nil {
-		log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), errors.New("not found after creation"))
 	}
 
 	ip := ret.IdentityProvider
@@ -165,7 +173,7 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
@@ -199,7 +207,7 @@ func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
@@ -213,7 +221,7 @@ func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

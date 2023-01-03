@@ -29,7 +29,6 @@ func describeDirectoryConfigsPagesWithContext(ctx context.Context, conn *appstre
 	}
 	return nil
 }
-
 func describeFleetsPages(conn *appstream.AppStream, input *appstream.DescribeFleetsInput, fn func(*appstream.DescribeFleetsOutput, bool) bool) error {
 	return describeFleetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func describeFleetsPagesWithContext(ctx context.Context, conn *appstream.AppStre
 	}
 	return nil
 }
-
 func describeImageBuildersPages(conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput, fn func(*appstream.DescribeImageBuildersOutput, bool) bool) error {
 	return describeImageBuildersPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -71,7 +69,6 @@ func describeImageBuildersPagesWithContext(ctx context.Context, conn *appstream.
 	}
 	return nil
 }
-
 func describeStacksPages(conn *appstream.AppStream, input *appstream.DescribeStacksInput, fn func(*appstream.DescribeStacksOutput, bool) bool) error {
 	return describeStacksPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -92,7 +89,6 @@ func describeStacksPagesWithContext(ctx context.Context, conn *appstream.AppStre
 	}
 	return nil
 }
-
 func describeUsersPages(conn *appstream.AppStream, input *appstream.DescribeUsersInput, fn func(*appstream.DescribeUsersOutput, bool) bool) error {
 	return describeUsersPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -113,7 +109,6 @@ func describeUsersPagesWithContext(ctx context.Context, conn *appstream.AppStrea
 	}
 	return nil
 }
-
 func listAssociatedStacksPages(conn *appstream.AppStream, input *appstream.ListAssociatedStacksInput, fn func(*appstream.ListAssociatedStacksOutput, bool) bool) error {
 	return listAssociatedStacksPagesWithContext(context.Background(), conn, input, fn)
 }

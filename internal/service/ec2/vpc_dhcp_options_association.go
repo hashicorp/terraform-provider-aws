@@ -39,7 +39,7 @@ func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 }
 
 func resourceVPCDHCPOptionsAssociationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	dhcpOptionsID := d.Get("dhcp_options_id").(string)
 	vpcID := d.Get("vpc_id").(string)
@@ -62,7 +62,7 @@ func resourceVPCDHCPOptionsAssociationPut(d *schema.ResourceData, meta interface
 }
 
 func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
 
@@ -70,7 +70,7 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return nil, FindVPCDHCPOptionsAssociation(conn, vpcID, dhcpOptionsID)
 	}, d.IsNewResource())
 
@@ -91,7 +91,7 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
 
@@ -112,7 +112,7 @@ func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interf
 		VpcId:         aws.String(vpcID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return nil
 	}
 
@@ -124,7 +124,7 @@ func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interf
 }
 
 func resourceVPCDHCPOptionsAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpc, err := FindVPCByID(conn, d.Id())
 

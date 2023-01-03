@@ -13,8 +13,6 @@ import (
 const (
 	domainUpgradeSuccessMinTimeout = 10 * time.Second
 	domainUpgradeSuccessDelay      = 30 * time.Second
-	domainRetryTimeout             = 60 * time.Minute
-	domainDeleteRetryTimeout       = 90 * time.Minute
 )
 
 // UpgradeSucceeded waits for an Upgrade to return Success
@@ -37,9 +35,9 @@ func waitUpgradeSucceeded(conn *elasticsearch.ElasticsearchService, name string,
 	return nil, err
 }
 
-func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName string) error {
+func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.Retry(domainRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		var err error
 		out, err = FindDomainByName(conn, domainName)
 		if err != nil {
@@ -62,15 +60,13 @@ func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName 
 			return nil
 		}
 	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be created: %w", err)
-	}
-	return nil
+
+	return err
 }
 
-func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName string) error {
+func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.Retry(domainRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		var err error
 		out, err = FindDomainByName(conn, domainName)
 		if err != nil {
@@ -93,15 +89,13 @@ func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName st
 			return nil
 		}
 	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain changes to be processed: %w", err)
-	}
-	return nil
+
+	return err
 }
 
-func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName string) error {
+func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.Retry(domainDeleteRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		var err error
 		out, err = FindDomainByName(conn, domainName)
 
@@ -130,8 +124,21 @@ func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName st
 			return nil
 		}
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be deleted: %s", err)
+		return err
 	}
-	return nil
+
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{ConfigStatusUnknown, ConfigStatusExists},
+		Target:                    []string{ConfigStatusNotFound},
+		Refresh:                   domainConfigStatus(conn, domainName),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err = stateConf.WaitForState()
+
+	return err
 }

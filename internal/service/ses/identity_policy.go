@@ -55,7 +55,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 }
 
 func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity := d.Get("identity").(string)
 	policyName := d.Get("name").(string)
@@ -74,7 +74,7 @@ func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err = conn.PutIdentityPolicy(input)
 	if err != nil {
-		return fmt.Errorf("error creating SES Identity (%s) Policy: %s", identity, err)
+		return fmt.Errorf("creating SES Identity (%s) Policy: %s", identity, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", identity, policyName))
@@ -83,7 +83,7 @@ func resourceIdentityPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -104,14 +104,14 @@ func resourceIdentityPolicyUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err = conn.PutIdentityPolicy(&req)
 	if err != nil {
-		return fmt.Errorf("error updating SES Identity (%s) Policy (%s): %s", identity, policyName, err)
+		return fmt.Errorf("updating SES Identity (%s) Policy (%s): %s", identity, policyName, err)
 	}
 
 	return resourceIdentityPolicyRead(d, meta)
 }
 
 func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -126,11 +126,11 @@ func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	output, err := conn.GetIdentityPolicies(input)
 
 	if err != nil {
-		return fmt.Errorf("error getting SES Identity (%s) Policy (%s): %s", identity, policyName, err)
+		return fmt.Errorf("getting SES Identity (%s) Policy (%s): %s", identity, policyName, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting SES Identity (%s) Policy (%s): empty result", identity, policyName)
+		return fmt.Errorf("getting SES Identity (%s) Policy (%s): empty result", identity, policyName)
 	}
 
 	if len(output.Policies) == 0 {
@@ -161,7 +161,7 @@ func resourceIdentityPolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, policyName, err := IdentityPolicyParseID(d.Id())
 	if err != nil {
@@ -177,7 +177,7 @@ func resourceIdentityPolicyDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err = conn.DeleteIdentityPolicy(input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting SES Identity (%s) Policy (%s): %s", identity, policyName, err)
+		return fmt.Errorf("deleting SES Identity (%s) Policy (%s): %s", identity, policyName, err)
 	}
 
 	return nil

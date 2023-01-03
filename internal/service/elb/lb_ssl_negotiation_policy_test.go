@@ -21,17 +21,17 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSslNegotiationPolicyConfig(rName, key, certificate),
+				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
@@ -47,17 +47,17 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLBSSLNegotiationPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSslNegotiationPolicyConfig(rName, key, certificate),
+				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
 					testAccCheckLoadBalancerExists(elbResourceName, &loadBalancer),
@@ -70,7 +70,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" && rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -136,7 +136,7 @@ func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource strin
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		elbName, _, policyName, err := tfelb.SSLNegotiationPolicyParseID(policy.Primary.ID)
 		if err != nil {
@@ -195,7 +195,7 @@ func policyAttributesToMap(attributes *[]*elb.PolicyAttributeDescription) map[st
 }
 
 // Sets the SSL Negotiation policy with attributes.
-func testAccSslNegotiationPolicyConfig(rName, key, certificate string) string {
+func testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

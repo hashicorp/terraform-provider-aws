@@ -28,7 +28,7 @@ func sweepRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ECRConn
+	conn := client.(*conns.AWSClient).ECRConn()
 
 	var errors error
 	err = conn.DescribeRepositoriesPages(&ecr.DescribeRepositoriesInput{}, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
@@ -47,7 +47,7 @@ func sweepRepositories(region string) error {
 				RepositoryName: repository.RepositoryName,
 			})
 			if err != nil {
-				if !tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+				if !tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 					sweeperErr := fmt.Errorf("Error deleting ECR repository (%s): %w", repositoryName, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					errors = multierror.Append(errors, sweeperErr)

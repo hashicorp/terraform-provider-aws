@@ -2,22 +2,28 @@
 package route53recoveryreadiness
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness/route53recoveryreadinessiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists route53recoveryreadiness service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn route53recoveryreadinessiface.Route53RecoveryReadinessAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn route53recoveryreadinessiface.Route53RecoveryReadinessAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &route53recoveryreadiness.ListTagsForResourcesInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResources(input)
+	output, err := conn.ListTagsForResourcesWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -41,7 +47,10 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates route53recoveryreadiness service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn route53recoveryreadinessiface.Route53RecoveryReadinessAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn route53recoveryreadinessiface.Route53RecoveryReadinessAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -51,10 +60,10 @@ func UpdateTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identif
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -64,10 +73,10 @@ func UpdateTags(conn *route53recoveryreadiness.Route53RecoveryReadiness, identif
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

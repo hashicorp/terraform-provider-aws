@@ -1,0 +1,4 @@
+Phrase	IPA	SoundsLike	DisplayAs
+acute-respiratory-distress-syndrome			acute respiratory distress syndrome
+A.L.L.	eɪ ɛ l ɛ l		ALL
+atrioventricular-nodal-reentrant-tachycardia		ay-tree-o-ven-trick-u-lar-node-al-re-entr-ant-tack-ih-card-ia	

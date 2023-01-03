@@ -51,7 +51,7 @@ func ResourceInvocation() *schema.Resource {
 }
 
 func resourceInvocationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)

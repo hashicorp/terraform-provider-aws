@@ -21,11 +21,11 @@ import (
 // and converts STS assumed roles into the IAM role resource.
 //
 // Supported IAM resources are:
-//   * AWS account: arn:aws:iam::123456789012:root
-//   * IAM user: arn:aws:iam::123456789012:user/Bob
-//   * IAM role: arn:aws:iam::123456789012:role/S3Access
-//   * IAM Assumed role: arn:aws:sts::123456789012:assumed-role/Accounting-Role/Mary (converted to IAM role)
-//   * Federated user: arn:aws:sts::123456789012:federated-user/Bob
+//   - AWS account: arn:aws:iam::123456789012:root
+//   - IAM user: arn:aws:iam::123456789012:user/Bob
+//   - IAM role: arn:aws:iam::123456789012:role/S3Access
+//   - IAM Assumed role: arn:aws:sts::123456789012:assumed-role/Accounting-Role/Mary (converted to IAM role)
+//   - Federated user: arn:aws:sts::123456789012:federated-user/Bob
 func Canonicalize(arn string) (string, error) {
 	parsed, err := awsarn.Parse(arn)
 	if err != nil {

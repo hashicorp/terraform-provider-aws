@@ -27,13 +27,13 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "example" {
 
 ## Argument Reference
 
-* `application_id` - (Required) The ARN of the application.
-* `semantic_version` - (Optional) The requested version of the application. By default, retrieves the latest version.
+* `application_id` - (Required) ARN of the application.
+* `semantic_version` - (Optional) Requested version of the application. By default, retrieves the latest version.
 
 ## Attributes Reference
 
-* `application_id` - The ARN of the application.
-* `name` - The name of the application.
+* `application_id` - ARN of the application.
+* `name` - Name of the application.
 * `required_capabilities` - A list of capabilities describing the permissions needed to deploy the application.
-* `source_code_url` - A URL pointing to the source code of the application version.
-* `template_url` - A URL pointing to the Cloud Formation template for the application version.
+* `source_code_url` - URL pointing to the source code of the application version.
+* `template_url` - URL pointing to the Cloud Formation template for the application version.

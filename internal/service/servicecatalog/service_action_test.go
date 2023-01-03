@@ -22,10 +22,10 @@ func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
@@ -55,10 +55,10 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
@@ -78,10 +78,10 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
@@ -108,7 +108,7 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 }
 
 func testAccCheckServiceActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_service_action" {
@@ -145,7 +145,7 @@ func testAccCheckServiceActionExists(resourceName string) resource.TestCheckFunc
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(rs.Primary.ID),

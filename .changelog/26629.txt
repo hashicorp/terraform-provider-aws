@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_addon: Support configurable timeouts for addon create, update, and delete
+```

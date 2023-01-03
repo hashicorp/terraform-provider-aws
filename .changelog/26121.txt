@@ -1,0 +1,311 @@
+```release-note:enhancement
+resource/aws_internet_gateway: Allow customizable timeouts
+```
+
+```release-note:enhancement
+resource/aws_internet_gateway_attachment: Allow customizable timeouts
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket: Allow customizable timeouts
+```
+
+```release-note:enhancement
+data-source/aws_ebs_default_kms_key: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ebs_encryption_by_default: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ebs_snapshot: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ebs_snapshot_ids: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ebs_volume: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ebs_volumes: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ami: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ami_ids: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_availability_zone: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_availability_zones: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_eip: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_eips: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_host: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_instance: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_instance_type: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_instance_type_offering: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_instance_type_offerings: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_instance_types: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_instances: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_key_pair: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_serial_console_access: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_spot_price: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc_ipam_pool: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc_ipam_preview_next_cidr: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_coip_pool: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_coip_pools: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_local_gateway: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_local_gateway_route_table: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_local_gateway_route_tables: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_local_gateway_virtual_interface: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_local_gateway_virtual_interface_group: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_local_gateway_virtual_interface_groups: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_local_gateways: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_connect: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_connect_peer: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_dx_gateway_attachment: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_multicast_domain: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_peering_attachment: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_route_table: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_route_tables: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_vpc_attachment: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_vpc_attachments: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_vpn_attachment: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc_dhcp_options: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc_endpoint: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc_endpoint_service: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_internet_gateway: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_managed_prefix_list: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_nat_gateway: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_nat_gateways: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_network_acls: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_network_interface: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_network_interfaces: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc_peering_connection: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpc_peering_connections: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_prefix_list: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_route: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_route_table: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_route_tables: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_security_group: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_security_groups: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_subnet: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_subnet_ids: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_subnets: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpcs: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_ec2_client_vpn_endpoint: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_customer_gateway: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_vpn_gateway: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_lb: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_alb: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_lb_target_group: Allow customizable read timeout
+```

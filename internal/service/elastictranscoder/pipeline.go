@@ -228,7 +228,7 @@ func ResourcePipeline() *schema.Resource {
 }
 
 func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.CreatePipelineInput{
 		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
@@ -404,7 +404,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 }
 
 func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
@@ -453,14 +453,14 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	resp, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] No such resource found for Elastic Transcoder Pipeline (%s)", d.Id())
 			d.SetId("")
 			return nil
@@ -526,7 +526,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
 	_, err := conn.DeletePipeline(&elastictranscoder.DeletePipelineInput{

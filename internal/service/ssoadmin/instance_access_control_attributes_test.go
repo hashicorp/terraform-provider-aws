@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,14 +16,15 @@ import (
 
 func TestAccSSOAdminAccessControlAttributes_basic(t *testing.T) {
 	resourceName := "aws_ssoadmin_instance_access_control_attributes.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessControlAttributesDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessControlAttributesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminAccessControlAttributesBasicConfig(),
+				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessControlAttributesExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "1"),
@@ -41,14 +41,15 @@ func TestAccSSOAdminAccessControlAttributes_basic(t *testing.T) {
 }
 func TestAccSSOAdminAccessControlAttributes_multiple(t *testing.T) {
 	resourceName := "aws_ssoadmin_instance_access_control_attributes.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessControlAttributesDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessControlAttributesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminAccessControlAttributesMultipleConfig(),
+				Config: testAccInstanceAccessControlAttributesConfig_multiple(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessControlAttributesExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "2"),
@@ -68,13 +69,13 @@ func TestAccSSOAdminAccessControlAttributes_update(t *testing.T) {
 	resourceName := "aws_ssoadmin_instance_access_control_attributes.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessControlAttributesDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessControlAttributesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminAccessControlAttributesBasicConfig(),
+				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessControlAttributesExists(resourceName),
 				),
@@ -85,7 +86,7 @@ func TestAccSSOAdminAccessControlAttributes_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSSOAdminAdminAccessControlAttributesUpdate(),
+				Config: testAccInstanceAccessControlAttributesConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessControlAttributesExists(resourceName),
 				),
@@ -96,16 +97,15 @@ func TestAccSSOAdminAccessControlAttributes_update(t *testing.T) {
 
 func TestAccSSOAdminAccessControlAttributes_disappears(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set_inline_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
+				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
@@ -117,7 +117,7 @@ func TestAccSSOAdminAccessControlAttributes_disappears(t *testing.T) {
 }
 
 func testAccCheckAccessControlAttributesDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_instance_access_control_attributes" {
@@ -166,7 +166,7 @@ func testAccCheckAccessControlAttributesExists(resourceName string) resource.Tes
 		input := &ssoadmin.DescribeInstanceAccessControlAttributeConfigurationInput{
 			InstanceArn: aws.String(rs.Primary.ID),
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 		output, err := conn.DescribeInstanceAccessControlAttributeConfiguration(input)
 		if err != nil {
 			return err
@@ -180,7 +180,7 @@ func testAccCheckAccessControlAttributesExists(resourceName string) resource.Tes
 	}
 }
 
-func testAccSSOAdminAccessControlAttributesBasicConfig() string {
+func testAccInstanceAccessControlAttributesConfig_basic() string {
 	return `
 data "aws_ssoadmin_instances" "test" {}
 
@@ -195,7 +195,7 @@ resource "aws_ssoadmin_instance_access_control_attributes" "test" {
 }
 `
 }
-func testAccSSOAdminAccessControlAttributesMultipleConfig() string {
+func testAccInstanceAccessControlAttributesConfig_multiple() string {
 	return `
 data "aws_ssoadmin_instances" "test" {}
 
@@ -217,7 +217,7 @@ resource "aws_ssoadmin_instance_access_control_attributes" "test" {
 `
 }
 
-func testAccSSOAdminAdminAccessControlAttributesUpdate() string {
+func testAccInstanceAccessControlAttributesConfig_update() string {
 	return `
 data "aws_ssoadmin_instances" "test" {}
 

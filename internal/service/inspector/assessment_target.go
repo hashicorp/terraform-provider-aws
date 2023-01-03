@@ -43,7 +43,7 @@ func ResourceAssessmentTarget() *schema.Resource {
 }
 
 func resourceAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	input := &inspector.CreateAssessmentTargetInput{
 		AssessmentTargetName: aws.String(d.Get("name").(string)),
@@ -64,7 +64,7 @@ func resourceAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	assessmentTarget, err := DescribeAssessmentTarget(conn, d.Id())
 
@@ -86,7 +86,7 @@ func resourceAssessmentTargetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
@@ -106,14 +106,14 @@ func resourceAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
 	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteAssessmentTarget(input)
 
-		if tfawserr.ErrMessageContains(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
+		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeAssessmentRunInProgressException) {
 			return resource.RetryableError(err)
 		}
 
@@ -139,7 +139,7 @@ func DescribeAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector
 
 	output, err := conn.DescribeAssessmentTargets(input)
 
-	if tfawserr.ErrMessageContains(err, inspector.ErrCodeInvalidInputException, "") {
+	if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
 		return nil, nil
 	}
 

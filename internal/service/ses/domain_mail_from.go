@@ -40,7 +40,7 @@ func ResourceDomainMailFrom() *schema.Resource {
 }
 
 func resourceDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
 	domainName := d.Get("domain").(string)
@@ -63,7 +63,7 @@ func resourceDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainMailFromRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 
@@ -76,11 +76,11 @@ func resourceDomainMailFromRead(d *schema.ResourceData, meta interface{}) error 
 	out, err := conn.GetIdentityMailFromDomainAttributes(readOpts)
 
 	if err != nil {
-		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: %s", domainName, err)
+		return fmt.Errorf("fetching SES MAIL FROM domain attributes for %s: %s", domainName, err)
 	}
 
 	if out == nil {
-		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: empty response", domainName)
+		return fmt.Errorf("fetching SES MAIL FROM domain attributes for %s: empty response", domainName)
 	}
 
 	attributes, ok := out.MailFromDomainAttributes[domainName]
@@ -99,7 +99,7 @@ func resourceDomainMailFromRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 

@@ -55,7 +55,7 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 }
 
 func resourceVaultLockConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	name := d.Get("backup_vault_name").(string)
 	input := &backup.PutBackupVaultLockConfigurationInput{
@@ -86,9 +86,9 @@ func resourceVaultLockConfigurationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
-	output, err := FindBackupVaultByName(conn, d.Id())
+	output, err := FindVaultByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())
@@ -109,7 +109,7 @@ func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceVaultLockConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	log.Printf("[DEBUG] Deleting Backup Vault Lock Configuration: %s", d.Id())
 	_, err := conn.DeleteBackupVaultLockConfiguration(&backup.DeleteBackupVaultLockConfigurationInput{

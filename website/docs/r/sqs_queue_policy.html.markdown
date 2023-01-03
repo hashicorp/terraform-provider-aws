@@ -1,5 +1,5 @@
 ---
-subcategory: "SQS"
+subcategory: "SQS (Simple Queue)"
 layout: "aws"
 page_title: "AWS: aws_sqs_queue_policy"
 description: |-

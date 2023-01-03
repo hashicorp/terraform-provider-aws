@@ -59,7 +59,7 @@ func ResourceWorkflow() *schema.Resource {
 }
 
 func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -92,7 +92,7 @@ func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -103,7 +103,7 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glue Workflow: %#v", input)
 	output, err := conn.GetWorkflow(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Workflow (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -155,7 +155,7 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChanges("default_run_properties", "description", "max_concurrent_runs") {
 		input := &glue.UpdateWorkflowInput{
@@ -192,7 +192,7 @@ func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
 	err := DeleteWorkflow(conn, d.Id())
@@ -210,7 +210,7 @@ func DeleteWorkflow(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteWorkflow(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return err

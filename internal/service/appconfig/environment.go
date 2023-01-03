@@ -86,7 +86,7 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -103,7 +103,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("monitor"); ok && v.(*schema.Set).Len() > 0 {
-		input.Monitors = expandAppconfigEnvironmentMonitors(v.(*schema.Set).List())
+		input.Monitors = expandEnvironmentMonitors(v.(*schema.Set).List())
 	}
 
 	environment, err := conn.CreateEnvironment(input)
@@ -123,7 +123,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -195,7 +195,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		envID, appID, err := EnvironmentParseID(d.Id())
@@ -218,7 +218,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("monitor") {
-			updateInput.Monitors = expandAppconfigEnvironmentMonitors(d.Get("monitor").(*schema.Set).List())
+			updateInput.Monitors = expandEnvironmentMonitors(d.Get("monitor").(*schema.Set).List())
 		}
 
 		_, err = conn.UpdateEnvironment(updateInput)
@@ -239,7 +239,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	envID, appID, err := EnvironmentParseID(d.Id())
 
@@ -275,7 +275,7 @@ func EnvironmentParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandAppconfigEnvironmentMonitor(tfMap map[string]interface{}) *appconfig.Monitor {
+func expandEnvironmentMonitor(tfMap map[string]interface{}) *appconfig.Monitor {
 	if tfMap == nil {
 		return nil
 	}
@@ -293,7 +293,7 @@ func expandAppconfigEnvironmentMonitor(tfMap map[string]interface{}) *appconfig.
 	return monitor
 }
 
-func expandAppconfigEnvironmentMonitors(tfList []interface{}) []*appconfig.Monitor {
+func expandEnvironmentMonitors(tfList []interface{}) []*appconfig.Monitor {
 	// AppConfig API requires a 0 length slice instead of a nil value
 	// when updating from N monitors to 0/nil monitors
 	monitors := make([]*appconfig.Monitor, 0)
@@ -305,7 +305,7 @@ func expandAppconfigEnvironmentMonitors(tfList []interface{}) []*appconfig.Monit
 			continue
 		}
 
-		monitor := expandAppconfigEnvironmentMonitor(tfMap)
+		monitor := expandEnvironmentMonitor(tfMap)
 
 		if monitor == nil {
 			continue

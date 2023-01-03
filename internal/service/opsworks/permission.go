@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -63,7 +62,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
@@ -98,7 +97,6 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("stack_id", permission.StackId)
 			d.Set("level", permission.Level)
 		}
-
 	}
 
 	if !found {
@@ -110,7 +108,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
@@ -123,10 +121,9 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 		req.Level = aws.String(d.Get("level").(string))
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := client.SetPermission(req)
 		if err != nil {
-
 			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
 				return resource.RetryableError(err)
 			}

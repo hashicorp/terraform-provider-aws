@@ -18,13 +18,13 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReportPlanDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`Error getting Backup Report Plan`),
+				ExpectError: regexp.MustCompile(`error reading Backup Report Plan`),
 			},
 			{
 				Config: testAccReportPlanDataSourceConfig_basic(rName, rName2),

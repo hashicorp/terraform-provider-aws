@@ -1,6 +1,6 @@
 package iam
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 
 	"fmt"
 	"log"
@@ -52,7 +52,7 @@ func ResourceSigningCertificate() *schema.Resource {
 }
 
 func resourceSigningCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	createOpts := &iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
@@ -86,14 +86,14 @@ func resourceSigningCertificateCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
 		return err
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindSigningCertificate(conn, userName, certId)
 	}, d.IsNewResource())
 
@@ -118,7 +118,7 @@ func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
@@ -140,7 +140,7 @@ func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSigningCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	log.Printf("[INFO] Deleting IAM Signing Certificate: %s", d.Id())
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())

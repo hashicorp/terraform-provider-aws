@@ -121,7 +121,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 }
 
 func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -158,7 +158,7 @@ func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
 
-	if err := dxTransitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := transitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -166,11 +166,11 @@ func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -224,11 +224,11 @@ func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceTransitVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
+	if err := virtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
 
-	if err := dxTransitVirtualInterfaceWaitUntilAvailable(meta.(*conns.AWSClient).DirectConnectConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := transitVirtualInterfaceWaitUntilAvailable(meta.(*conns.AWSClient).DirectConnectConn(), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return err
 	}
 
@@ -236,13 +236,13 @@ func resourceTransitVirtualInterfaceUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return dxVirtualInterfaceDelete(d, meta)
+	return virtualInterfaceDelete(d, meta)
 }
 
 func resourceTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -257,8 +257,8 @@ func resourceTransitVirtualInterfaceImport(d *schema.ResourceData, meta interfac
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxTransitVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return dxVirtualInterfaceWaitUntilAvailable(
+func transitVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(
 		conn,
 		vifId,
 		timeout,

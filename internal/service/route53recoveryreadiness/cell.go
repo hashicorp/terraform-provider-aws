@@ -64,7 +64,7 @@ func ResourceCell() *schema.Resource {
 }
 
 func resourceCellCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -91,7 +91,7 @@ func resourceCellCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -137,7 +137,7 @@ func resourceCellRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCellUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.UpdateCellInput{
 		CellName: aws.String(d.Id()),
@@ -161,14 +161,14 @@ func resourceCellUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCellDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.DeleteCellInput{
 		CellName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteCell(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Route53 Recovery Readiness Cell: %s", err)
@@ -180,7 +180,7 @@ func resourceCellDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetCell(gcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)

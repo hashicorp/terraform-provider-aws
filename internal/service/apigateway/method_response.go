@@ -6,13 +6,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 var resourceMethodResponseMutex = &sync.Mutex{}
@@ -83,7 +84,7 @@ func ResourceMethodResponse() *schema.Resource {
 }
 
 func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	models := make(map[string]string)
 	for k, v := range d.Get("response_models").(map[string]interface{}) {
@@ -104,7 +105,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 	resourceMethodResponseMutex.Lock()
 	defer resourceMethodResponseMutex.Unlock()
 
-	_, err := verify.RetryOnAWSCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutMethodResponse(&apigateway.PutMethodResponseInput{
 			HttpMethod:         aws.String(d.Get("http_method").(string)),
 			ResourceId:         aws.String(d.Get("resource_id").(string)),
@@ -113,7 +114,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 			ResponseModels:     aws.StringMap(models),
 			ResponseParameters: aws.BoolMap(parameters),
 		})
-	})
+	}, apigateway.ErrCodeConflictException)
 
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Method Response: %s", err)
@@ -126,7 +127,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceMethodResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Method Response %s", d.Id())
 	methodResponse, err := conn.GetMethodResponse(&apigateway.GetMethodResponseInput{
@@ -158,7 +159,7 @@ func resourceMethodResponseRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceMethodResponseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Updating API Gateway Method Response %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -190,7 +191,7 @@ func resourceMethodResponseUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceMethodResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Method Response: %s", d.Id())
 
 	_, err := conn.DeleteMethodResponse(&apigateway.DeleteMethodResponseInput{
@@ -200,7 +201,7 @@ func resourceMethodResponseDelete(d *schema.ResourceData, meta interface{}) erro
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

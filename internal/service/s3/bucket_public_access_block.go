@@ -59,7 +59,7 @@ func ResourceBucketPublicAccessBlock() *schema.Resource {
 }
 
 func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 
 	input := &s3.PutPublicAccessBlockInput{
@@ -76,7 +76,7 @@ func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutPublicAccessBlock(input)
 
-		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
 		}
 
@@ -98,7 +98,7 @@ func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.GetPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -159,7 +159,7 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.PutPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -173,19 +173,6 @@ func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] Updating S3 bucket Public Access Block: %s", input)
 	_, err := conn.PutPublicAccessBlock(input)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
-		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
 		return fmt.Errorf("error updating S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
@@ -204,7 +191,7 @@ func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceBucketPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.DeletePublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),

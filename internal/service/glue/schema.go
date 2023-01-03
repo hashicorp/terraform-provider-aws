@@ -93,7 +93,7 @@ func ResourceSchema() *schema.Resource {
 }
 
 func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -132,13 +132,13 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindSchemaByID(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -192,7 +192,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
@@ -253,7 +253,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{
@@ -262,7 +262,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteSchema(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue Schema (%s): %w", d.Id(), err)
@@ -270,7 +270,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = waitSchemaDeleted(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Schema (%s) to be deleted: %w", d.Id(), err)

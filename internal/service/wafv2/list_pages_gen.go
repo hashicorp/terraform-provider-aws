@@ -29,7 +29,6 @@ func listIPSetsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, input *w
 	}
 	return nil
 }
-
 func listRegexPatternSetsPages(conn *wafv2.WAFV2, input *wafv2.ListRegexPatternSetsInput, fn func(*wafv2.ListRegexPatternSetsOutput, bool) bool) error {
 	return listRegexPatternSetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func listRegexPatternSetsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2
 	}
 	return nil
 }
-
 func listRuleGroupsPages(conn *wafv2.WAFV2, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool) error {
 	return listRuleGroupsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -71,7 +69,6 @@ func listRuleGroupsPagesWithContext(ctx context.Context, conn *wafv2.WAFV2, inpu
 	}
 	return nil
 }
-
 func listWebACLsPages(conn *wafv2.WAFV2, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool) error {
 	return listWebACLsPagesWithContext(context.Background(), conn, input, fn)
 }

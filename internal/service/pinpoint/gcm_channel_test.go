@@ -31,10 +31,10 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	apiKey := os.Getenv("GCM_API_KEY")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGCMChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGCMChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGCMChannelConfig_basic(apiKey),
@@ -71,7 +71,7 @@ func testAccCheckGCMChannelExists(n string, channel *pinpoint.GCMChannelResponse
 			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the app exists
 		params := &pinpoint.GetGcmChannelInput{
@@ -102,7 +102,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 }
 
 func testAccCheckGCMChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_gcm_channel" {
@@ -115,7 +115,7 @@ func testAccCheckGCMChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetGcmChannel(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

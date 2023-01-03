@@ -2,23 +2,29 @@
 package ssoadmin
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go/service/ssoadmin/ssoadminiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier, resourceType)
+}
+
+func ListTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &ssoadmin.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 		InstanceArn: aws.String(resourceType),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -59,7 +65,10 @@ func KeyValueTags(tags []*ssoadmin.Tag) tftags.KeyValueTags {
 // UpdateTags updates ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, resourceType, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -70,10 +79,10 @@ func UpdateTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string,
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -84,10 +93,10 @@ func UpdateTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string,
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

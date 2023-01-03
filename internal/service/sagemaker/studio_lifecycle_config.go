@@ -61,7 +61,7 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 }
 
 func resourceStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -80,7 +80,7 @@ func resourceStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{
 	_, err := conn.CreateStudioLifecycleConfig(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Studio Lifecycle Config (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker Studio Lifecycle Config (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -89,7 +89,7 @@ func resourceStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -102,7 +102,7 @@ func resourceStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(image.StudioLifecycleConfigArn)
@@ -114,31 +114,31 @@ func resourceStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{})
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
 func resourceStudioLifecycleConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Studio Lifecycle Config (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating Studio Lifecycle Config (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -146,7 +146,7 @@ func resourceStudioLifecycleConfigUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceStudioLifecycleConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteStudioLifecycleConfigInput{
 		StudioLifecycleConfigName: aws.String(d.Id()),
@@ -158,7 +158,7 @@ func resourceStudioLifecycleConfigDelete(d *schema.ResourceData, meta interface{
 			return nil
 		}
 
-		return fmt.Errorf("error deleting SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
 	}
 
 	return nil

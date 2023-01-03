@@ -67,6 +67,7 @@ func init() {
 			"aws_glue_crawler",
 			"aws_glue_job",
 			"aws_instance",
+			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_launch_configuration",
 			"aws_redshift_cluster",
@@ -108,6 +109,7 @@ func init() {
 			"aws_iam_service_specific_credential",
 			"aws_iam_virtual_mfa_device",
 			"aws_iam_signing_certificate",
+			"aws_opsworks_user_profile",
 		},
 	})
 
@@ -124,7 +126,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 	input := &iam.ListGroupsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -237,7 +239,7 @@ func sweepInstanceProfile(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -266,7 +268,7 @@ func sweepInstanceProfile(region string) error {
 			}
 
 			log.Printf("[INFO] Sweeping IAM Instance Profile %q", name)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting IAM Instance Profile (%s): %w", name, err))
@@ -294,7 +296,7 @@ func sweepOpenIDConnectProvider(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -306,7 +308,7 @@ func sweepOpenIDConnectProvider(region string) error {
 		r := ResourceOpenIDConnectProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
-		err := r.Delete(d, client)
+		err := sweep.DeleteResource(r, d, client)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error deleting IAM OIDC Provider (%s): %w", arn, err)
@@ -333,7 +335,7 @@ func sweepServiceSpecificCredentials(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -371,7 +373,7 @@ func sweepServiceSpecificCredentials(region string) error {
 			r := ResourceServiceSpecificCredential()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Specific Credential (%s): %w", id, err)
@@ -401,7 +403,7 @@ func sweepPolicies(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 	input := &iam.ListPoliciesInput{
 		Scope: aws.String(iam.PolicyScopeTypeLocal),
 	}
@@ -471,7 +473,7 @@ func sweepRoles(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 
 	roles := make([]string, 0)
 	err = conn.ListRolesPages(&iam.ListRolesInput{}, func(page *iam.ListRolesOutput, lastPage bool) bool {
@@ -530,7 +532,7 @@ func sweepSAMLProvider(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -542,7 +544,7 @@ func sweepSAMLProvider(region string) error {
 		r := ResourceSAMLProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
-		err := r.Delete(d, client)
+		err := sweep.DeleteResource(r, d, client)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error deleting IAM SAML Provider (%s): %w", arn, err)
@@ -569,7 +571,7 @@ func sweepServerCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 
 	err = conn.ListServerCertificatesPages(&iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, sc := range out.ServerCertificateMetadataList {
@@ -602,7 +604,7 @@ func sweepServiceLinkedRoles(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 	var sweeperErrs *multierror.Error
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
@@ -628,7 +630,7 @@ func sweepServiceLinkedRoles(region string) error {
 			r := ResourceServiceLinkedRole()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(role.Arn))
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", roleName, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -656,7 +658,7 @@ func sweepUsers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 	prefixes := []string{
 		"test-user",
 		"test_user",
@@ -838,10 +840,18 @@ func roleNameFilter(name string) bool {
 		return true
 	}
 
+	randTF := regexp.MustCompile(`^tf-[0-9]{16}`)
+	if randTF.MatchString(name) {
+		return true
+	}
+
 	// We have a lot of role name prefixes for role names that don't match the standard pattern. This is not an
 	// exhaustive list.
 	prefixes := []string{
 		"another_rds",
+		"aws_batch_service_role",
+		"aws_elastictranscoder_pipeline_tf_test",
+		"batch_tf_batch_target-",
 		"codepipeline-",
 		"cognito_authenticated_",
 		"cognito_unauthenticated_",
@@ -852,13 +862,24 @@ func roleNameFilter(name string) bool {
 		"foobar",
 		"iam_emr",
 		"iam_for_sfn",
+		"KinesisFirehoseServiceRole-test",
 		"rds",
+		"resource-test-terraform-",
 		"role",
 		"sns-delivery-status",
 		"ssm_role",
 		"ssm-role",
+		"terraform-2021",
+		"terraform-2022",
 		"test",
+		"tf_ecs_target",
+		"tf_ecs",
+		"tf_test",
 		"tf-acc",
+		"tf-iam-role-replication",
+		"tf-opsworks-acc",
+		"tf-test-iam",
+		"tf-test",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
@@ -874,7 +895,7 @@ func sweepVirtualMFADevice(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 	var sweeperErrs *multierror.Error
 	input := &iam.ListVirtualMFADevicesInput{}
 
@@ -894,7 +915,7 @@ func sweepVirtualMFADevice(region string) error {
 			r := ResourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Virtual MFA Device (%s): %w", device, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -922,7 +943,7 @@ func sweepSigningCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IAMConn
+	conn := client.(*conns.AWSClient).IAMConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -960,7 +981,7 @@ func sweepSigningCertificates(region string) error {
 			r := ResourceSigningCertificate()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Signing Certificate (%s): %w", id, err)

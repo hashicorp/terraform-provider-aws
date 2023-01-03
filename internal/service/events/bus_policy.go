@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -53,7 +52,7 @@ func ResourceBusPolicy() *schema.Resource {
 }
 
 func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Get("event_bus_name").(string)
 
@@ -81,7 +80,7 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
@@ -93,7 +92,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	var policy *string
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBus(&input)
 		if err != nil {
@@ -114,8 +113,8 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if tfresource.NotFound(err) {
-		log.Printf("[WARN] Policy on {%s} EventBus not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Policy on EventBridge Bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -143,7 +142,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, error) {
 	if output == nil || output.Policy == nil {
 		return nil, &resource.NotFoundError{
-			Message:      fmt.Sprintf("Policy for EventBridge Bus %s not found", *output.Name),
+			Message:      fmt.Sprintf("Policy for EventBridge Bus (%s) not found", *output.Name),
 			LastResponse: output,
 		}
 	}
@@ -152,7 +151,7 @@ func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, err
 }
 
 func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
@@ -169,11 +168,6 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
 	_, err = conn.PutPermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] EventBridge Bus %q not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("error updating policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}
@@ -182,7 +176,7 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 	removeAllPermissions := true
@@ -194,7 +188,7 @@ func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Delete EventBridge Bus Policy: %s", input)
 	_, err := conn.RemovePermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {

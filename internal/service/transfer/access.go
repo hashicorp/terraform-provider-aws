@@ -119,7 +119,7 @@ func ResourceAccess() *schema.Resource {
 }
 
 func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
@@ -152,7 +152,7 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandTransferUserPosixUser(v.([]interface{}))
+		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("role"); ok {
@@ -172,7 +172,7 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -199,7 +199,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("home_directory_type", access.HomeDirectoryType)
 
-	if err := d.Set("posix_profile", flattenTransferUserPosixUser(access.PosixProfile)); err != nil {
+	if err := d.Set("posix_profile", flattenUserPOSIXUser(access.PosixProfile)); err != nil {
 		return fmt.Errorf("error setting posix_profile: %w", err)
 	}
 	// Role is currently not returned via the API.
@@ -219,7 +219,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -255,7 +255,7 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("posix_profile") {
-		input.PosixProfile = expandTransferUserPosixUser(d.Get("posix_profile").([]interface{}))
+		input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
 	}
 
 	if d.HasChange("role") {
@@ -273,7 +273,7 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 

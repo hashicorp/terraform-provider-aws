@@ -44,7 +44,7 @@ func ResourceContainerPolicy() *schema.Resource {
 }
 
 func resourceContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -67,7 +67,7 @@ func resourceContainerPolicyPut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.GetContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
@@ -75,12 +75,12 @@ func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetContainerPolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -102,7 +102,7 @@ func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceContainerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.DeleteContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
@@ -110,10 +110,10 @@ func resourceContainerPolicyDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err := conn.DeleteContainerPolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
 			return nil
 		}
 		// if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {

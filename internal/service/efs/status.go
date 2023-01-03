@@ -46,9 +46,9 @@ func statusBackupPolicy(conn *efs.EFS, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusFileSystemLifeCycleState(conn *efs.EFS, id string) resource.StateRefreshFunc {
+func statusReplicationConfiguration(conn *efs.EFS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFileSystemByID(conn, id)
+		output, err := FindReplicationConfigurationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -58,6 +58,6 @@ func statusFileSystemLifeCycleState(conn *efs.EFS, id string) resource.StateRefr
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.LifeCycleState), nil
+		return output, aws.StringValue(output.Destinations[0].Status), nil
 	}
 }

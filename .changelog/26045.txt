@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_elasticsearch_domain: Add `throughput` attribute to the `ebs_options` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_elasticsearch_domain: Add `throughput` attribute to the `ebs_options` configuration block
+```
+
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `throughput` attribute to the `ebs_options` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_opensearch_domain: Add `throughput` attribute to the `ebs_options` configuration block
+```

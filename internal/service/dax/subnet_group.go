@@ -47,7 +47,7 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.CreateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Get("name").(string)),
@@ -67,13 +67,13 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	resp, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
 		SubnetGroupNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
 			log.Printf("[WARN] DAX SubnetGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -94,7 +94,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.UpdateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
@@ -117,7 +117,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.DeleteSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
@@ -125,7 +125,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteSubnetGroup(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
 			return nil
 		}
 		return err

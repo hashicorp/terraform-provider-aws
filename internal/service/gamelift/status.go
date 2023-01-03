@@ -38,3 +38,19 @@ func statusFleet(conn *gamelift.GameLift, id string) resource.StateRefreshFunc {
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func statusGameServerGroup(conn *gamelift.GameLift, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindGameServerGroupByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}

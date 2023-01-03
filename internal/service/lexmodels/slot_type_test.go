@@ -25,9 +25,9 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -70,9 +70,9 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -116,9 +116,9 @@ func TestAccLexModelsSlotType_description(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -160,9 +160,9 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -210,9 +210,9 @@ func TestAccLexModelsSlotType_name(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID1),
@@ -254,9 +254,9 @@ func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -298,9 +298,9 @@ func TestAccLexModelsSlotType_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
@@ -330,9 +330,9 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSlotTypeDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSlotTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -381,7 +381,7 @@ func testAccCheckSlotTypeExistsWithVersion(rName, slotTypeVersion string, v *lex
 			return fmt.Errorf("No Lex Slot Type ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		output, err := tflexmodels.FindSlotTypeVersionByName(conn, rs.Primary.ID, slotTypeVersion)
 
@@ -401,7 +401,7 @@ func testAccCheckSlotTypeExists(rName string, output *lexmodelbuildingservice.Ge
 
 func testAccCheckSlotTypeNotExists(slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		_, err := tflexmodels.FindSlotTypeVersionByName(conn, slotTypeName, slotTypeVersion)
 
@@ -418,7 +418,7 @@ func testAccCheckSlotTypeNotExists(slotTypeName, slotTypeVersion string) resourc
 }
 
 func testAccCheckSlotTypeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_slot_type" {

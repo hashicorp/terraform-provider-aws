@@ -31,7 +31,7 @@ func DataSourceExport() *schema.Resource {
 }
 
 func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	var value string
 	name := d.Get("name").(string)
 	region := meta.(*conns.AWSClient).Region

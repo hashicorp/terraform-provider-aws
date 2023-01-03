@@ -49,6 +49,7 @@ func init() {
 			"aws_efs_mount_target",
 			"aws_efs_file_system",
 			"aws_sagemaker_user_profile",
+			"aws_sagemaker_space",
 		},
 	})
 
@@ -120,6 +121,14 @@ func init() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_sagemaker_space", &resource.Sweeper{
+		Name: "aws_sagemaker_space",
+		F:    sweepUserProfiles,
+		Dependencies: []string{
+			"aws_sagemaker_app",
+		},
+	})
+
 	resource.AddTestSweepers("aws_sagemaker_user_profile", &resource.Sweeper{
 		Name: "aws_sagemaker_user_profile",
 		F:    sweepUserProfiles,
@@ -151,10 +160,10 @@ func sweepAppImagesConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	input := &sagemaker.ListAppImageConfigsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -167,7 +176,7 @@ func sweepAppImagesConfig(region string) error {
 		}
 
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving Example Thing: %w", err))
 			return sweeperErrs
 		}
 
@@ -179,9 +188,7 @@ func sweepAppImagesConfig(region string) error {
 			d.SetId(name)
 			err = r.Delete(d, client)
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("deleting SageMaker App Image Config (%s): %w", name, err))
 				continue
 			}
 		}
@@ -196,12 +203,51 @@ func sweepAppImagesConfig(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
+func sweepSpaces(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).SageMakerConn()
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListSpacesPages(&sagemaker.ListSpacesInput{}, func(page *sagemaker.ListSpacesOutput, lastPage bool) bool {
+		for _, space := range page.Spaces {
+
+			r := ResourceSpace()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(space.SpaceName))
+			d.Set("domain_id", space.DomainId)
+			d.Set("space_name", space.SpaceName)
+
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker Space sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Spaces: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func sweepApps(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListAppsPages(&sagemaker.ListAppsInput{}, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
@@ -218,10 +264,10 @@ func sweepApps(region string) error {
 			d.Set("app_type", app.AppType)
 			d.Set("domain_id", app.DomainId)
 			d.Set("user_profile_name", app.UserProfileName)
-			err := r.Delete(d, client)
+			d.Set("space_name", app.SpaceName)
 
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -231,12 +277,12 @@ func sweepApps(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping SageMaker App sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Apps: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Apps: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -245,21 +291,20 @@ func sweepApps(region string) error {
 func sweepCodeRepositories(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListCodeRepositoriesPages(&sagemaker.ListCodeRepositoriesInput{}, func(page *sagemaker.ListCodeRepositoriesOutput, lastPage bool) bool {
 		for _, instance := range page.CodeRepositorySummaryList {
-			name := aws.StringValue(instance.CodeRepositoryName)
+			r := ResourceCodeRepository()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(instance.CodeRepositoryName))
 
-			input := &sagemaker.DeleteCodeRepositoryInput{
-				CodeRepositoryName: instance.CodeRepositoryName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Code Repository: %s", name)
-			if _, err := conn.DeleteCodeRepository(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Code Repository (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -269,22 +314,22 @@ func sweepCodeRepositories(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Code Repository sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Code Repositorys: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Code Repositories: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepDeviceFleets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListDeviceFleetsPages(&sagemaker.ListDeviceFleetsInput{}, func(page *sagemaker.ListDeviceFleetsOutput, lastPage bool) bool {
@@ -294,9 +339,9 @@ func sweepDeviceFleets(region string) error {
 			r := ResourceDeviceFleet()
 			d := r.Data(nil)
 			d.SetId(name)
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -311,7 +356,7 @@ func sweepDeviceFleets(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Device Fleets: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Device Fleets: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -320,9 +365,9 @@ func sweepDeviceFleets(region string) error {
 // func sweepDevices(region string) error {
 // 	client, err := sweep.SharedRegionalSweepClient(region)
 // 	if err != nil {
-// 		return fmt.Errorf("error getting client: %s", err)
+// 		return fmt.Errorf("getting client: %s", err)
 // 	}
-// 	conn := client.(*conns.AWSClient).SageMakerConn
+// 	conn := client.(*conns.AWSClient).SageMakerConn()
 // 	var sweeperErrs *multierror.Error
 
 // 	err = conn.ListDevicesPages(&sagemaker.ListDevicesInput{}, func(page *sagemaker.ListDevicesOutput, lastPage bool) bool {
@@ -332,9 +377,9 @@ func sweepDeviceFleets(region string) error {
 // 			r := ResourceDeviceFleet()
 // 			d := r.Data(nil)
 // 			d.SetId(name)
+
 // 			err := r.Delete(d, client)
 // 			if err != nil {
-// 				log.Printf("[ERROR] %s", err)
 // 				sweeperErrs = multierror.Append(sweeperErrs, err)
 // 				continue
 // 			}
@@ -349,7 +394,7 @@ func sweepDeviceFleets(region string) error {
 // 	}
 
 // 	if err != nil {
-// 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Device Fleets: %w", err))
+// 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Device Fleets: %w", err))
 // 	}
 
 // 	return sweeperErrs.ErrorOrNil()
@@ -358,9 +403,9 @@ func sweepDeviceFleets(region string) error {
 func sweepDomains(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListDomainsPages(&sagemaker.ListDomainsInput{}, func(page *sagemaker.ListDomainsOutput, lastPage bool) bool {
@@ -370,9 +415,9 @@ func sweepDomains(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domain.DomainId))
 			d.Set("retention_policy.0.home_efs_file_system", "Delete")
+
 			err = r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -387,7 +432,7 @@ func sweepDomains(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Domains: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Domains: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -396,9 +441,9 @@ func sweepDomains(region string) error {
 func sweepEndpointConfigurations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	req := &sagemaker.ListEndpointConfigsInput{
@@ -406,13 +451,12 @@ func sweepEndpointConfigurations(region string) error {
 	}
 	err = conn.ListEndpointConfigsPages(req, func(page *sagemaker.ListEndpointConfigsOutput, lastPage bool) bool {
 		for _, endpointConfig := range page.EndpointConfigs {
-
 			r := ResourceEndpointConfiguration()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(endpointConfig.EndpointConfigName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -427,7 +471,7 @@ func sweepEndpointConfigurations(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Endpoint Configs: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Endpoint Configs: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -436,16 +480,16 @@ func sweepEndpointConfigurations(region string) error {
 func sweepEndpoints(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 
 	req := &sagemaker.ListEndpointsInput{
 		NameContains: aws.String(sweep.ResourcePrefix),
 	}
 	resp, err := conn.ListEndpoints(req)
 	if err != nil {
-		return fmt.Errorf("error listing endpoints: %s", err)
+		return fmt.Errorf("listing endpoints: %s", err)
 	}
 
 	if len(resp.Endpoints) == 0 {
@@ -458,9 +502,7 @@ func sweepEndpoints(region string) error {
 			EndpointName: endpoint.EndpointName,
 		})
 		if err != nil {
-			return fmt.Errorf(
-				"error deleting SageMaker Endpoint (%s): %s",
-				*endpoint.EndpointName, err)
+			return fmt.Errorf("deleting SageMaker Endpoint (%s): %s", aws.StringValue(endpoint.EndpointName), err)
 		}
 	}
 
@@ -470,21 +512,20 @@ func sweepEndpoints(region string) error {
 func sweepFeatureGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListFeatureGroupsPages(&sagemaker.ListFeatureGroupsInput{}, func(page *sagemaker.ListFeatureGroupsOutput, lastPage bool) bool {
 		for _, group := range page.FeatureGroupSummaries {
-			name := aws.StringValue(group.FeatureGroupName)
+			r := ResourceFeatureGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(group.FeatureGroupName))
 
-			input := &sagemaker.DeleteFeatureGroupInput{
-				FeatureGroupName: group.FeatureGroupName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Feature Group: %s", name)
-			if _, err := conn.DeleteFeatureGroup(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Feature Group (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -494,22 +535,22 @@ func sweepFeatureGroups(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Feature Group sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Feature Groups: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Feature Groups: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepFlowDefinitions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListFlowDefinitionsPages(&sagemaker.ListFlowDefinitionsInput{}, func(page *sagemaker.ListFlowDefinitionsOutput, lastPage bool) bool {
@@ -518,9 +559,9 @@ func sweepFlowDefinitions(region string) error {
 			r := ResourceFlowDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(flowDefinition.FlowDefinitionName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -535,7 +576,7 @@ func sweepFlowDefinitions(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Flow Definitions: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Flow Definitions: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -544,9 +585,9 @@ func sweepFlowDefinitions(region string) error {
 func sweepHumanTaskUIs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListHumanTaskUisPages(&sagemaker.ListHumanTaskUisInput{}, func(page *sagemaker.ListHumanTaskUisOutput, lastPage bool) bool {
@@ -555,9 +596,9 @@ func sweepHumanTaskUIs(region string) error {
 			r := ResourceHumanTaskUI()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(humanTaskUi.HumanTaskUiName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -572,7 +613,7 @@ func sweepHumanTaskUIs(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker HumanTaskUis: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker HumanTaskUis: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -581,21 +622,20 @@ func sweepHumanTaskUIs(region string) error {
 func sweepImages(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListImagesPages(&sagemaker.ListImagesInput{}, func(page *sagemaker.ListImagesOutput, lastPage bool) bool {
-		for _, Image := range page.Images {
-			name := aws.StringValue(Image.ImageName)
+		for _, image := range page.Images {
+			r := ResourceImage()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(image.ImageName))
 
-			input := &sagemaker.DeleteImageInput{
-				ImageName: Image.ImageName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Image: %s", name)
-			if _, err := conn.DeleteImage(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Image (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -605,34 +645,33 @@ func sweepImages(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Image sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Images: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Images: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepModelPackageGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListModelPackageGroupsPages(&sagemaker.ListModelPackageGroupsInput{}, func(page *sagemaker.ListModelPackageGroupsOutput, lastPage bool) bool {
-		for _, ModelPackageGroup := range page.ModelPackageGroupSummaryList {
-			name := aws.StringValue(ModelPackageGroup.ModelPackageGroupName)
+		for _, modelPackageGroup := range page.ModelPackageGroupSummaryList {
+			r := ResourceModelPackageGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(modelPackageGroup.ModelPackageGroupName))
 
-			input := &sagemaker.DeleteModelPackageGroupInput{
-				ModelPackageGroupName: ModelPackageGroup.ModelPackageGroupName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Model Package Group: %s", name)
-			if _, err := conn.DeleteModelPackageGroup(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Model Package Group (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -642,22 +681,22 @@ func sweepModelPackageGroups(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Model Package Group sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Model Package Groups: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Model Package Groups: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepModels(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListModelsPages(&sagemaker.ListModelsInput{}, func(page *sagemaker.ListModelsOutput, lastPage bool) bool {
@@ -666,9 +705,9 @@ func sweepModels(region string) error {
 			r := ResourceModel()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(model.ModelName))
+
 			err = r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -682,7 +721,7 @@ func sweepModels(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Models: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Models: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -691,76 +730,62 @@ func sweepModels(region string) error {
 func sweepNotebookInstanceLifecycleConfiguration(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
+	var sweeperErrs *multierror.Error
 
 	input := &sagemaker.ListNotebookInstanceLifecycleConfigsInput{}
 	err = conn.ListNotebookInstanceLifecycleConfigsPages(input, func(page *sagemaker.ListNotebookInstanceLifecycleConfigsOutput, lastPage bool) bool {
-		if len(page.NotebookInstanceLifecycleConfigs) == 0 {
-			log.Printf("[INFO] No SageMaker Notebook Instance Lifecycle Configuration to sweep")
-			return false
-		}
 		for _, lifecycleConfig := range page.NotebookInstanceLifecycleConfigs {
 			name := aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName)
 			if !strings.HasPrefix(name, sweep.ResourcePrefix) {
-				log.Printf("[INFO] Skipping SageMaker Notebook Instance Lifecycle Configuration: %s", name)
+				log.Printf("[INFO] Skipping SageMaker Notebook Instance Lifecycle Configuration (%s): not in allow list", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting SageMaker Notebook Instance Lifecycle Configuration: %s", name)
-			_, err := conn.DeleteNotebookInstanceLifecycleConfig(&sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
-				NotebookInstanceLifecycleConfigName: aws.String(name),
-			})
+			r := ResourceNotebookInstanceLifeCycleConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName))
+
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete SageMaker Notebook Instance Lifecycle Configuration %s: %s", name, err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
 			}
 		}
 		return !lastPage
 	})
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
+		return nil
+	}
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving SageMaker Notebook Instance Lifecycle Configuration: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Notebook Instance Lifecycle Configuration: %s", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepNotebookInstances(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListNotebookInstancesPages(&sagemaker.ListNotebookInstancesInput{}, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
 		for _, instance := range page.NotebookInstances {
 			name := aws.StringValue(instance.NotebookInstanceName)
-			status := aws.StringValue(instance.NotebookInstanceStatus)
 
-			input := &sagemaker.DeleteNotebookInstanceInput{
-				NotebookInstanceName: instance.NotebookInstanceName,
-			}
+			r := ResourceNotebookInstance()
+			d := r.Data(nil)
+			d.SetId(name)
 
-			log.Printf("[INFO] Stopping SageMaker Notebook Instance: %s", name)
-			if status != sagemaker.NotebookInstanceStatusFailed && status != sagemaker.NotebookInstanceStatusStopped {
-				if err := StopNotebookInstance(conn, name); err != nil {
-					log.Printf("[ERROR] Error stopping SageMaker Notebook Instance (%s): %s", name, err)
-					continue
-				}
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Notebook Instance: %s", name)
-			if _, err := conn.DeleteNotebookInstance(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Notebook Instance (%s): %s", name, err)
-				continue
-			}
-
-			if _, err := WaitNotebookInstanceDeleted(conn, name); err != nil {
-				log.Printf("error waiting for sagemaker notebook instance (%s) to delete: %s", name, err)
+			err = r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -770,22 +795,22 @@ func sweepNotebookInstances(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Notebook Instance sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Notebook Instances: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Notbook Instances: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepStudioLifecyclesConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListStudioLifecycleConfigsPages(&sagemaker.ListStudioLifecycleConfigsInput{}, func(page *sagemaker.ListStudioLifecycleConfigsOutput, lastPage bool) bool {
@@ -794,9 +819,9 @@ func sweepStudioLifecyclesConfig(region string) error {
 			r := ResourceStudioLifecycleConfig()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(config.StudioLifecycleConfigName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -811,7 +836,7 @@ func sweepStudioLifecyclesConfig(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Studio Lifecycle Configs: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Studio Lifecycle Configs: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -820,9 +845,9 @@ func sweepStudioLifecyclesConfig(region string) error {
 func sweepUserProfiles(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListUserProfilesPages(&sagemaker.ListUserProfilesInput{}, func(page *sagemaker.ListUserProfilesOutput, lastPage bool) bool {
@@ -833,10 +858,9 @@ func sweepUserProfiles(region string) error {
 			d.SetId(aws.StringValue(userProfile.UserProfileName))
 			d.Set("user_profile_name", userProfile.UserProfileName)
 			d.Set("domain_id", userProfile.DomainId)
-			err := r.Delete(d, client)
 
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -851,7 +875,7 @@ func sweepUserProfiles(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker User Profiles: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker User Profiles: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -860,9 +884,9 @@ func sweepUserProfiles(region string) error {
 func sweepWorkforces(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListWorkforcesPages(&sagemaker.ListWorkforcesInput{}, func(page *sagemaker.ListWorkforcesOutput, lastPage bool) bool {
@@ -871,9 +895,9 @@ func sweepWorkforces(region string) error {
 			r := ResourceWorkforce()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workforce.WorkforceName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -888,7 +912,7 @@ func sweepWorkforces(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Workforces: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Workforces: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -897,9 +921,9 @@ func sweepWorkforces(region string) error {
 func sweepWorkteams(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListWorkteamsPages(&sagemaker.ListWorkteamsInput{}, func(page *sagemaker.ListWorkteamsOutput, lastPage bool) bool {
@@ -908,9 +932,9 @@ func sweepWorkteams(region string) error {
 			r := ResourceWorkteam()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workteam.WorkteamName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -925,7 +949,7 @@ func sweepWorkteams(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Workteams: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Workteams: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -934,9 +958,9 @@ func sweepWorkteams(region string) error {
 func sweepProjects(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SageMakerConn
+	conn := client.(*conns.AWSClient).SageMakerConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListProjectsPages(&sagemaker.ListProjectsInput{}, func(page *sagemaker.ListProjectsOutput, lastPage bool) bool {
@@ -946,9 +970,9 @@ func sweepProjects(region string) error {
 			r := ResourceProject()
 			d := r.Data(nil)
 			d.SetId(name)
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -963,7 +987,7 @@ func sweepProjects(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Projects: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Projects: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

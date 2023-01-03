@@ -46,7 +46,7 @@ func ResourceDelegationSet() *schema.Resource {
 }
 
 func resourceDelegationSetCreate(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*conns.AWSClient).Route53Conn
+	r53 := meta.(*conns.AWSClient).Route53Conn()
 
 	callerRef := resource.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
@@ -72,7 +72,7 @@ func resourceDelegationSetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*conns.AWSClient).Route53Conn
+	r53 := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.GetReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),
@@ -80,10 +80,9 @@ func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Route53 reusable delegation set: %#v", input)
 	out, err := r53.GetReusableDelegationSet(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchDelegationSet, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
 			d.SetId("")
 			return nil
-
 		}
 		return err
 	}
@@ -103,19 +102,19 @@ func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDelegationSetDelete(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*conns.AWSClient).Route53Conn
+	r53 := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.DeleteReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),
 	}
 	log.Printf("[DEBUG] Deleting Route53 reusable delegation set: %#v", input)
 	_, err := r53.DeleteReusableDelegationSet(input)
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchDelegationSet, "") {
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 reusable delegation set (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Route53 reusable delegation set (%s): %w", d.Id(), err)
 	}
 
 	return nil

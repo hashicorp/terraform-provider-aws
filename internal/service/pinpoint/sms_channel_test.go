@@ -19,10 +19,10 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_sms_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSMSChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSChannelConfig_basic,
@@ -64,10 +64,10 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 	newShortCode := "7890"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSMSChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSChannelConfig_full(senderId, shortCode),
@@ -114,10 +114,10 @@ func TestAccPinpointSMSChannel_disappears(t *testing.T) {
 	resourceName := "aws_pinpoint_sms_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSMSChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSMSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSChannelConfig_basic,
@@ -142,7 +142,7 @@ func testAccCheckSMSChannelExists(n string, channel *pinpoint.SMSChannelResponse
 			return fmt.Errorf("No Pinpoint SMS Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the app exists
 		params := &pinpoint.GetSmsChannelInput{
@@ -182,7 +182,7 @@ resource "aws_pinpoint_sms_channel" "test" {
 }
 
 func testAccCheckSMSChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_sms_channel" {
@@ -195,7 +195,7 @@ func testAccCheckSMSChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetSmsChannel(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

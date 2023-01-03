@@ -56,7 +56,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 }
 
 func resourceConfigurationTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	// Get the relevant properties
 	name := d.Get("name").(string)
@@ -93,7 +93,7 @@ func resourceConfigurationTemplateCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceConfigurationTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	log.Printf("[DEBUG] Elastic Beanstalk configuration template read: %s", d.Get("name").(string))
 
@@ -127,7 +127,7 @@ func resourceConfigurationTemplateRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	log.Printf("[DEBUG] Elastic Beanstalk configuration template update: %s", d.Get("name").(string))
 
@@ -192,7 +192,8 @@ func resourceConfigurationTemplateOptionSettingsUpdate(conn *elasticbeanstalk.El
 		var remove []*elasticbeanstalk.ConfigurationOptionSetting
 		for _, r := range rm {
 			for _, a := range add {
-				if *r.Namespace == *a.Namespace && *r.OptionName == *a.OptionName {
+				if aws.StringValue(r.Namespace) == aws.StringValue(a.Namespace) &&
+					aws.StringValue(r.OptionName) == aws.StringValue(a.OptionName) {
 					continue
 				}
 				remove = append(remove, r)
@@ -222,7 +223,7 @@ func resourceConfigurationTemplateOptionSettingsUpdate(conn *elasticbeanstalk.El
 }
 
 func resourceConfigurationTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	application := d.Get("application").(string)
 

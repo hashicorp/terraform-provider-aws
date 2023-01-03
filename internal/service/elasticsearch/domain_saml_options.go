@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -18,11 +19,17 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		Read:   resourceDomainSAMLOptionsRead,
 		Update: resourceDomainSAMLOptionsPut,
 		Delete: resourceDomainSAMLOptionsDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("domain_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -80,13 +87,13 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 							Optional:         true,
 							Default:          60,
 							ValidateFunc:     validation.IntBetween(1, 1440),
-							DiffSuppressFunc: elasticsearchDomainSamlOptionsDiffSupress,
+							DiffSuppressFunc: domainSamlOptionsDiffSupress,
 						},
 						"subject_key": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          "NameID",
-							DiffSuppressFunc: elasticsearchDomainSamlOptionsDiffSupress,
+							Default:          "",
+							DiffSuppressFunc: domainSamlOptionsDiffSupress,
 						},
 					},
 				},
@@ -94,7 +101,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		},
 	}
 }
-func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
 	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
 		if enabled, ok := v[0].(map[string]interface{})["enabled"].(bool); ok && !enabled {
 			return true
@@ -104,7 +111,7 @@ func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.Res
 }
 
 func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 
@@ -130,7 +137,7 @@ func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
@@ -149,7 +156,7 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(domainName)
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options update (%s) to succeed: %w", d.Id(), err)
 	}
 
@@ -157,7 +164,7 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
@@ -173,7 +180,7 @@ func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options (%s) to be deleted: %w", d.Id(), err)
 	}
 

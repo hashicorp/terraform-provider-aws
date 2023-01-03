@@ -130,7 +130,7 @@ func ResourceFramework() *schema.Resource {
 }
 
 func resourceFrameworkCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -168,7 +168,7 @@ func resourceFrameworkCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -176,7 +176,7 @@ func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
 		FrameworkName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -218,7 +218,7 @@ func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFrameworkUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	if d.HasChanges("description", "control") {
 		input := &backup.UpdateFrameworkInput{
@@ -254,7 +254,7 @@ func resourceFrameworkUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFrameworkDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.DeleteFrameworkInput{
 		FrameworkName: aws.String(d.Id()),

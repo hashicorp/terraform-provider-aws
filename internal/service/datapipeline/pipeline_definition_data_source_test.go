@@ -16,13 +16,13 @@ func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataPipelinePipelineDefinitionDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelinePipelineDefinitionDataSourceConfig(rName),
+				Config: testAccPipelineDefinitionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.#", resourceName, "pipeline_object.#"),
@@ -36,7 +36,7 @@ func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataPipelinePipelineDefinitionDataSourceConfig(name string) string {
+func testAccPipelineDefinitionDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name = %[1]q

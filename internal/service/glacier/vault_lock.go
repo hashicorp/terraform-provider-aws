@@ -60,7 +60,7 @@ func ResourceVaultLock() *schema.Resource {
 }
 
 func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 	vaultName := d.Get("vault_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -107,7 +107,7 @@ func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	input := &glacier.GetVaultLockInput{
 		AccountId: aws.String("-"),
@@ -117,7 +117,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", d.Id(), input)
 	output, err := conn.GetVaultLock(input)
 
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Glacier Vault Lock (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -148,7 +148,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	input := &glacier.AbortVaultLockInput{
 		VaultName: aws.String(d.Id()),
@@ -157,7 +157,7 @@ func resourceVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Aborting Glacier Vault Lock (%s): %s", d.Id(), input)
 	_, err := conn.AbortVaultLock(input)
 
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -178,7 +178,7 @@ func vaultLockRefreshFunc(conn *glacier.Glacier, vaultName string) resource.Stat
 		log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", vaultName, input)
 		output, err := conn.GetVaultLock(input)
 
-		if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
 		}
 

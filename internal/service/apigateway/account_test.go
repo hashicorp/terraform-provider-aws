@@ -24,10 +24,10 @@ func TestAccAPIGatewayAccount_basic(t *testing.T) {
 	expectedRoleArn_second := regexp.MustCompile("role/" + secondName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_updated(firstName),
@@ -94,7 +94,7 @@ func testAccCheckAccountExists(n string, res *apigateway.Account) resource.TestC
 			return fmt.Errorf("No API Gateway Account ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetAccountInput{}
 		describe, err := conn.GetAccount(req)

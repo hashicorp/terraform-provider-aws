@@ -36,7 +36,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validName,
+				ValidateFunc:  validNameForResource,
 			},
 
 			"name_prefix": {
@@ -45,7 +45,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validName,
+				ValidateFunc:  validNameForResource,
 			},
 
 			"target_key_arn": {
@@ -56,14 +56,14 @@ func ResourceAlias() *schema.Resource {
 			"target_key_id": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentKmsKeyARNOrID,
+				DiffSuppressFunc: suppressEquivalentKeyARNOrID,
 			},
 		},
 	}
 }
 
 func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	namePrefix := d.Get("name_prefix").(string)
 	if namePrefix == "" {
@@ -93,7 +93,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		return FindAliasByName(conn, d.Id())
@@ -128,7 +128,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if d.HasChange("target_key_id") {
 		input := &kms.UpdateAliasInput{
@@ -148,7 +148,7 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	log.Printf("[DEBUG] Deleting KMS Alias: (%s)", d.Id())
 	_, err := conn.DeleteAlias(&kms.DeleteAliasInput{
@@ -166,6 +166,6 @@ func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func suppressEquivalentKmsKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
+func suppressEquivalentKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
 	return KeyARNOrIDEqual(old, new)
 }

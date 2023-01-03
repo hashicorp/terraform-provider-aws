@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -70,7 +71,7 @@ func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Durati
 	outputRaw, err := stateConf.WaitForState()
 
 	if err != nil {
-		events, fErr := getGameliftFleetFailures(conn, id)
+		events, fErr := getFleetFailures(conn, id)
 		if fErr != nil {
 			log.Printf("[WARN] Failed to poll fleet failures: %s", fErr)
 		}
@@ -86,13 +87,13 @@ func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Durati
 	return nil, err
 }
 
-func getGameliftFleetFailures(conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
+func getFleetFailures(conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
 	var events []*gamelift.Event
-	err := _getGameliftFleetFailures(conn, id, nil, &events)
+	err := _getFleetFailures(conn, id, nil, &events)
 	return events, err
 }
 
-func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
+func _getFleetFailures(conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
 	eOut, err := conn.DescribeFleetEvents(&gamelift.DescribeFleetEventsInput{
 		FleetId:   aws.String(id),
 		NextToken: nextToken,
@@ -102,13 +103,13 @@ func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *st
 	}
 
 	for _, e := range eOut.Events {
-		if isGameliftEventFailure(e) {
+		if isEventFailure(e) {
 			*events = append(*events, e)
 		}
 	}
 
 	if eOut.NextToken != nil {
-		err := _getGameliftFleetFailures(conn, id, nextToken, events)
+		err := _getFleetFailures(conn, id, nextToken, events)
 		if err != nil {
 			return err
 		}
@@ -117,7 +118,7 @@ func _getGameliftFleetFailures(conn *gamelift.GameLift, id string, nextToken *st
 	return nil
 }
 
-func isGameliftEventFailure(event *gamelift.Event) bool {
+func isEventFailure(event *gamelift.Event) bool {
 	failureCodes := []string{
 		gamelift.EventCodeFleetActivationFailed,
 		gamelift.EventCodeFleetActivationFailedNoInstances,
@@ -143,4 +144,48 @@ func isGameliftEventFailure(event *gamelift.Event) bool {
 		}
 	}
 	return false
+}
+
+func waitGameServerGroupActive(conn *gamelift.GameLift, name string, timeout time.Duration) (*gamelift.GameServerGroup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			gamelift.GameServerGroupStatusNew,
+			gamelift.GameServerGroupStatusActivating,
+		},
+		Target:  []string{gamelift.GameServerGroupStatusActive},
+		Refresh: statusGameServerGroup(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*gamelift.GameServerGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGameServerGroupTerminated(conn *gamelift.GameLift, name string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			gamelift.GameServerGroupStatusDeleteScheduled,
+			gamelift.GameServerGroupStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: statusGameServerGroup(conn, name),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting GameLift Game Server Group (%s): %w", name, err)
+	}
+
+	return nil
 }

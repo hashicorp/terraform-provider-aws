@@ -170,7 +170,7 @@ func ResourceImageBuilder() *schema.Resource {
 }
 
 func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -218,7 +218,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfig = expandAppStreamImageBuilderVpcConfig(v.([]interface{}))
+		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -241,7 +241,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -281,7 +281,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "domain_join_info", d.Id(), err))
 	}
 
-	if err = d.Set("vpc_config", flattenVpcConfig(imageBuilder.VpcConfig)); err != nil {
+	if err = d.Set("vpc_config", flattenVPCConfig(imageBuilder.VpcConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "vpc_config", d.Id(), err))
 	}
 
@@ -309,7 +309,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if d.HasChange("tags_all") {
-		conn := meta.(*conns.AWSClient).AppStreamConn
+		conn := meta.(*conns.AWSClient).AppStreamConn()
 
 		o, n := d.GetChange("tags_all")
 
@@ -322,7 +322,7 @@ func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	log.Printf("[DEBUG] Deleting AppStream Image Builder: (%s)", d.Id())
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
@@ -347,7 +347,7 @@ func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func expandAppStreamImageBuilderVpcConfig(tfList []interface{}) *appstream.VpcConfig {
+func expandImageBuilderVPCConfig(tfList []interface{}) *appstream.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func statusRoute53RecoveryControlConfigCluster(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
+func statusCluster(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(clusterArn),
@@ -22,7 +22,7 @@ func statusRoute53RecoveryControlConfigCluster(conn *r53rcc.Route53RecoveryContr
 	}
 }
 
-func statusRoute53RecoveryControlConfigRoutingControl(conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
+func statusRoutingControl(conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(routingControlArn),
@@ -38,7 +38,7 @@ func statusRoute53RecoveryControlConfigRoutingControl(conn *r53rcc.Route53Recove
 	}
 }
 
-func statusRoute53RecoveryControlConfigControlPanel(conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
+func statusControlPanel(conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeControlPanelInput{
 			ControlPanelArn: aws.String(controlPanelArn),
@@ -54,7 +54,7 @@ func statusRoute53RecoveryControlConfigControlPanel(conn *r53rcc.Route53Recovery
 	}
 }
 
-func statusRoute53RecoveryControlConfigSafetyRule(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
+func statusSafetyRule(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(safetyRuleArn),

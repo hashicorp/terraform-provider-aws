@@ -38,7 +38,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 }
 
 func resourceVPCEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -69,7 +69,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta
 }
 
 func resourceVPCEndpointRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -92,7 +92,7 @@ func resourceVPCEndpointRouteTableAssociationRead(d *schema.ResourceData, meta i
 }
 
 func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -107,7 +107,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting VPC Endpoint Route Table Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidParameter) {
 		return nil
 	}
 
@@ -127,7 +127,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta
 func resourceVPCEndpointRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("Wrong format of resource: %s. Please follow 'vpc-endpoint-id/route-table-id'", d.Id())
+		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/route-table-id'", d.Id())
 	}
 
 	endpointID := parts[0]

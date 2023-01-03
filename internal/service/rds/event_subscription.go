@@ -94,7 +94,7 @@ func ResourceEventSubscription() *schema.Resource {
 }
 
 func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -138,7 +138,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -186,16 +186,14 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
 		input := &rds.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		if d.HasChange("enabled") {
-			input.Enabled = aws.Bool(d.Get("enabled").(bool))
-		}
+		input.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
@@ -266,7 +264,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[DEBUG] Deleting RDS Event Subscription: (%s)", d.Id())
 	_, err := conn.DeleteEventSubscription(&rds.DeleteEventSubscriptionInput{

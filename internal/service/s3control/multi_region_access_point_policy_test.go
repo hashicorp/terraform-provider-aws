@@ -1,10 +1,12 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,14 +22,10 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	multiRegionAccessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	if acctest.Partition() == "aws-us-gov" {
-		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -61,14 +59,10 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_disappears_MultiRegionAccessPo
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	if acctest.Partition() == "aws-us-gov" {
-		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -91,14 +85,10 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_details_policy(t *testing.T) {
 	multiRegionAccessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	if acctest.Partition() == "aws-us-gov" {
-		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -132,14 +122,10 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_details_name(t *testing.T) {
 	multiRegionAccessPointName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	if acctest.Partition() == "aws-us-gov" {
-		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.
 		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
@@ -184,13 +170,13 @@ func testAccCheckMultiRegionAccessPointPolicyExists(n string, v *s3control.Multi
 			return err
 		}
 
-		conn, err := tfs3control.S3ControlConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfs3control.ConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
 
 		if err != nil {
 			return err
 		}
 
-		output, err := tfs3control.FindMultiRegionAccessPointPolicyDocumentByAccountIDAndName(conn, accountID, name)
+		output, err := tfs3control.FindMultiRegionAccessPointPolicyDocumentByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err

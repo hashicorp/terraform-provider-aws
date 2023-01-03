@@ -1,12 +1,14 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -22,6 +24,12 @@ func ResourceConfiguration() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("latest_revision", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("server_properties")
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -58,7 +66,7 @@ func ResourceConfiguration() *schema.Resource {
 }
 
 func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.CreateConfigurationInput{
 		Name:             aws.String(d.Get("name").(string)),
@@ -85,7 +93,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	configurationInput := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(d.Id()),
@@ -142,7 +150,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.UpdateConfigurationInput{
 		Arn:              aws.String(d.Id()),
@@ -163,7 +171,7 @@ func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.DeleteConfigurationInput{
 		Arn: aws.String(d.Id()),

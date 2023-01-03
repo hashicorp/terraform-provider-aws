@@ -1,5 +1,5 @@
 ---
-subcategory: "SNS"
+subcategory: "SNS (Simple Notification)"
 layout: "aws"
 page_title: "AWS: aws_sns_topic_policy"
 description: |-
@@ -86,4 +86,3 @@ SNS Topic Policy can be imported using the topic ARN, e.g.,
 ```
 $ terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
 ```
-

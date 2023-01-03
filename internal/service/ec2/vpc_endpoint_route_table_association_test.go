@@ -14,20 +14,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpointRouteTableAssociation_basic(t *testing.T) {
+func TestAccVPCEndpointRouteTableAssociation_basic(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
+				Config: testAccVPCEndpointRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
+					testAccCheckVPCEndpointRouteTableAssociationExists(resourceName),
 				),
 			},
 			{
@@ -40,20 +40,20 @@ func TestAccEC2VPCEndpointRouteTableAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointRouteTableAssociation_disappears(t *testing.T) {
+func TestAccVPCEndpointRouteTableAssociation_disappears(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
+				Config: testAccVPCEndpointRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
+					testAccCheckVPCEndpointRouteTableAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpointRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -62,8 +62,8 @@ func TestAccEC2VPCEndpointRouteTableAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckVPCEndpointRouteTableAssociationDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_route_table_association" {
@@ -86,7 +86,7 @@ func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccCheckVpcEndpointRouteTableAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCEndpointRouteTableAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -97,7 +97,7 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string) resource.TestC
 			return fmt.Errorf("No VPC Endpoint Route Table Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		return tfec2.FindVPCEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 	}
@@ -115,7 +115,7 @@ func testAccVPCEndpointRouteTableAssociationImportStateIdFunc(n string) resource
 	}
 }
 
-func testAccVpcEndpointRouteTableAssociationConfig(rName string) string {
+func testAccVPCEndpointRouteTableAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

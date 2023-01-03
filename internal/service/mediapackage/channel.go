@@ -80,7 +80,7 @@ func ResourceChannel() *schema.Resource {
 }
 
 func resourceChannelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -104,7 +104,7 @@ func resourceChannelCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -119,7 +119,7 @@ func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("channel_id", resp.Id)
 	d.Set("description", resp.Description)
 
-	if err := d.Set("hls_ingest", flattenMediaPackageHLSIngest(resp.HlsIngest)); err != nil {
+	if err := d.Set("hls_ingest", flattenHLSIngest(resp.HlsIngest)); err != nil {
 		return fmt.Errorf("error setting hls_ingest: %s", err)
 	}
 
@@ -138,7 +138,7 @@ func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceChannelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
@@ -163,14 +163,14 @@ func resourceChannelUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaPackageConn
+	conn := meta.(*conns.AWSClient).MediaPackageConn()
 
 	input := &mediapackage.DeleteChannelInput{
 		Id: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteChannel(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting MediaPackage Channel: %s", err)
@@ -182,7 +182,7 @@ func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeChannel(dcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -199,7 +199,7 @@ func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenMediaPackageHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
+func flattenHLSIngest(h *mediapackage.HlsIngest) []map[string]interface{} {
 	if h.IngestEndpoints == nil {
 		return []map[string]interface{}{
 			{"ingest_endpoints": []map[string]interface{}{}},

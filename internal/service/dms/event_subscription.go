@@ -87,7 +87,7 @@ func ResourceEventSubscription() *schema.Resource {
 }
 
 func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -133,7 +133,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChanges("enabled", "event_categories", "sns_topic_arn", "source_type") {
 		request := &dms.ModifyEventSubscriptionInput{
@@ -180,7 +180,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -190,7 +190,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	response, err := conn.DescribeEventSubscriptions(request)
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -245,7 +245,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
@@ -253,7 +253,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.DeleteEventSubscription(request)
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return nil
 	}
 
@@ -284,7 +284,7 @@ func resourceEventSubscriptionStateRefreshFunc(conn *dms.DatabaseMigrationServic
 			SubscriptionName: aws.String(name),
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			return nil, "", nil
 		}
 

@@ -142,7 +142,7 @@ func ResourceResourceSet() *schema.Resource {
 }
 
 func resourceResourceSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -170,7 +170,7 @@ func resourceResourceSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -219,7 +219,7 @@ func resourceResourceSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.UpdateResourceSetInput{
 		ResourceSetName: aws.String(d.Id()),
@@ -244,14 +244,14 @@ func resourceResourceSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.DeleteResourceSetInput{
 		ResourceSetName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteResourceSet(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Route53 Recovery Readiness Resource Set: %s", err)
@@ -263,7 +263,7 @@ func resourceResourceSetDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetResourceSet(gcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)

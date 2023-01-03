@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -48,7 +47,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 }
 
 func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -65,7 +64,7 @@ func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error
 
 	// Retry due to IAM eventual consistency
 	var out *ecr.SetRepositoryPolicyOutput
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
 		if tfawserr.ErrMessageContains(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
@@ -91,7 +90,7 @@ func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.GetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -166,15 +165,15 @@ func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	_, err := conn.DeleteRepositoryPolicy(&ecr.DeleteRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
-			tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryPolicyNotFoundException) {
 			return nil
 		}
 		return err

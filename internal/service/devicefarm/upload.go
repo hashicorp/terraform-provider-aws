@@ -68,7 +68,7 @@ func ResourceUpload() *schema.Resource {
 }
 
 func resourceUploadCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.CreateUploadInput{
 		Name:       aws.String(d.Get("name").(string)),
@@ -93,9 +93,9 @@ func resourceUploadCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
-	upload, err := FindUploadByArn(conn, d.Id())
+	upload, err := FindUploadByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Upload (%s) not found, removing from state", d.Id())
@@ -116,7 +116,7 @@ func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metadata", upload.Metadata)
 	d.Set("arn", arn)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "upload", meta)
+	projectArn, err := decodeProjectARN(arn, "upload", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
@@ -127,7 +127,7 @@ func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUploadUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.UpdateUploadInput{
 		Arn: aws.String(d.Id()),
@@ -151,7 +151,7 @@ func resourceUploadUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUploadDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteUploadInput{
 		Arn: aws.String(d.Id()),
@@ -160,7 +160,7 @@ func resourceUploadDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting DeviceFarm Upload: %s", d.Id())
 	_, err := conn.DeleteUpload(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Upload: %w", err)

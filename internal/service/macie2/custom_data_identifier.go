@@ -22,9 +22,9 @@ import (
 
 func ResourceCustomDataIdentifier() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2CustomDataIdentifierCreate,
-		ReadWithoutTimeout:   resourceMacie2CustomDataIdentifierRead,
-		DeleteWithoutTimeout: resourceMacie2CustomDataIdentifierDelete,
+		CreateWithoutTimeout: resourceCustomDataIdentifierCreate,
+		ReadWithoutTimeout:   resourceCustomDataIdentifierRead,
+		DeleteWithoutTimeout: resourceCustomDataIdentifierDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -100,8 +100,8 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 	}
 }
 
-func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -155,11 +155,11 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 
 	d.SetId(aws.StringValue(output.CustomDataIdentifierId))
 
-	return resourceMacie2CustomDataIdentifierRead(ctx, d, meta)
+	return resourceCustomDataIdentifierRead(ctx, d, meta)
 }
 
-func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -212,8 +212,8 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceMacie2CustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),

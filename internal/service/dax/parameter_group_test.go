@@ -19,13 +19,13 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 	resourceName := "aws_dax_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dax.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaxParameterGroupConfig(rName),
+				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
@@ -37,7 +37,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDaxParameterGroupConfig_parameters(rName),
+				Config: testAccParameterGroupConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
@@ -48,7 +48,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 }
 
 func testAccCheckParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_parameter_group" {
@@ -59,7 +59,7 @@ func testAccCheckParameterGroupDestroy(s *terraform.State) error {
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeParameterGroupNotFoundFault) {
 				return nil
 			}
 			return err
@@ -75,7 +75,7 @@ func testAccCheckParameterGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 		_, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},
@@ -85,7 +85,7 @@ func testAccCheckParameterGroupExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDaxParameterGroupConfig(rName string) string {
+func testAccParameterGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dax_parameter_group" "test" {
   name = "%s"
@@ -93,7 +93,7 @@ resource "aws_dax_parameter_group" "test" {
 `, rName)
 }
 
-func testAccDaxParameterGroupConfig_parameters(rName string) string {
+func testAccParameterGroupConfig_parameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dax_parameter_group" "test" {
   name = "%s"

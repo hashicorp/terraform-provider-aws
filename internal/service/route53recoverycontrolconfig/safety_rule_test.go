@@ -19,13 +19,13 @@ func testAccSafetyRule_assertionRule(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSafetyRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlSafetyRuleAssertionConfig(rName),
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -49,13 +49,13 @@ func testAccSafetyRule_disappears(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSafetyRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlSafetyRuleAssertionConfig(rName),
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceSafetyRule(), resourceName),
@@ -71,13 +71,13 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSafetyRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlSafetyRuleGatingConfig(rName),
+				Config: testAccSafetyRuleConfig_routingControlGating(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -98,7 +98,7 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 }
 
 func testAccCheckSafetyRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_safety_rule" {
@@ -126,7 +126,7 @@ func testAccCheckSafetyRuleExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(rs.Primary.ID),
@@ -138,7 +138,7 @@ func testAccCheckSafetyRuleExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRoutingControlSafetyRuleAssertionConfig(rName string) string {
+func testAccSafetyRuleConfig_routingControlAssertion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q
@@ -170,7 +170,7 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
 `, rName)
 }
 
-func testAccRoutingControlSafetyRuleGatingConfig(rName string) string {
+func testAccSafetyRuleConfig_routingControlGating(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q

@@ -61,7 +61,7 @@ func ResourceIntegrationResponse() *schema.Resource {
 }
 
 func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.CreateIntegrationResponseInput{
 		ApiId:                  aws.String(d.Get("api_id").(string)),
@@ -81,7 +81,7 @@ func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Creating API Gateway v2 integration response: %s", req)
 	resp, err := conn.CreateIntegrationResponse(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("creating API Gateway v2 integration response: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.IntegrationResponseId))
@@ -90,7 +90,7 @@ func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetIntegrationResponse(&apigatewayv2.GetIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
@@ -103,14 +103,14 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("reading API Gateway v2 integration response: %s", err)
 	}
 
 	d.Set("content_handling_strategy", resp.ContentHandlingStrategy)
 	d.Set("integration_response_key", resp.IntegrationResponseKey)
 	err = d.Set("response_templates", flex.PointersMapToStringList(resp.ResponseTemplates))
 	if err != nil {
-		return fmt.Errorf("error setting response_templates: %s", err)
+		return fmt.Errorf("setting response_templates: %s", err)
 	}
 	d.Set("template_selection_expression", resp.TemplateSelectionExpression)
 
@@ -118,7 +118,7 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceIntegrationResponseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.UpdateIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
@@ -141,14 +141,14 @@ func resourceIntegrationResponseUpdate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Updating API Gateway v2 integration response: %s", req)
 	_, err := conn.UpdateIntegrationResponse(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("updating API Gateway v2 integration response: %s", err)
 	}
 
 	return resourceIntegrationResponseRead(d, meta)
 }
 
 func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration response (%s)", d.Id())
 	_, err := conn.DeleteIntegrationResponse(&apigatewayv2.DeleteIntegrationResponseInput{
@@ -156,11 +156,11 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 integration response: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 integration response: %s", err)
 	}
 
 	return nil
@@ -169,7 +169,7 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 func resourceIntegrationResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/integration-id/integration-response-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id/integration-response-id'", d.Id())
 	}
 
 	d.SetId(parts[2])

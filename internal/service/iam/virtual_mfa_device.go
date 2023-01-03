@@ -63,7 +63,7 @@ func ResourceVirtualMFADevice() *schema.Resource {
 }
 
 func resourceVirtualMFADeviceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -80,7 +80,7 @@ func resourceVirtualMFADeviceCreate(d *schema.ResourceData, meta interface{}) er
 	output, err := conn.CreateVirtualMFADevice(request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if request.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Virtual MFA Device (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
@@ -102,7 +102,7 @@ func resourceVirtualMFADeviceCreate(d *schema.ResourceData, meta interface{}) er
 		err := virtualMFAUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Virtual MFA Device (%s): %s", d.Id(), err)
 			return resourceVirtualMFADeviceRead(d, meta)
 		}
@@ -116,7 +116,7 @@ func resourceVirtualMFADeviceCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVirtualMFADeviceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -159,14 +159,14 @@ func resourceVirtualMFADeviceRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVirtualMFADeviceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	o, n := d.GetChange("tags_all")
 
 	err := virtualMFAUpdateTags(conn, d.Id(), o, n)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed updating tags for IAM Virtual MFA Device (%s): %s", d.Id(), err)
 		return resourceVirtualMFADeviceRead(d, meta)
 	}
@@ -179,7 +179,7 @@ func resourceVirtualMFADeviceUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVirtualMFADeviceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteVirtualMFADeviceInput{
 		SerialNumber: aws.String(d.Id()),

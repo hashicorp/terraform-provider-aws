@@ -39,11 +39,11 @@ func DataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
-	certificateArn := d.Get("arn").(string)
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	certificateARN := d.Get("arn").(string)
 
 	getCertificateInput := &acmpca.GetCertificateInput{
-		CertificateArn:          aws.String(certificateArn),
+		CertificateArn:          aws.String(certificateARN),
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
@@ -51,10 +51,10 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 	certificateOutput, err := conn.GetCertificate(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACM PCA Certificate (%s): %w", certificateArn, err)
+		return fmt.Errorf("error reading ACM PCA Certificate (%s): %w", certificateARN, err)
 	}
 
-	d.SetId(certificateArn)
+	d.SetId(certificateARN)
 	d.Set("certificate", certificateOutput.Certificate)
 	d.Set("certificate_chain", certificateOutput.CertificateChain)
 

@@ -41,6 +41,11 @@ func ResourceAuthorizer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"enable_caching_for_http": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -79,12 +84,13 @@ func ResourceAuthorizer() *schema.Resource {
 }
 
 func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	name := d.Get("name").(string)
 	input := &iot.CreateAuthorizerInput{
 		AuthorizerFunctionArn: aws.String(d.Get("authorizer_function_arn").(string)),
 		AuthorizerName:        aws.String(name),
+		EnableCachingForHttp:  aws.Bool(d.Get("enable_caching_for_http").(bool)),
 		SigningDisabled:       aws.Bool(d.Get("signing_disabled").(bool)),
 		Status:                aws.String(d.Get("status").(string)),
 	}
@@ -110,7 +116,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	authorizer, err := FindAuthorizerByName(conn, d.Id())
 
@@ -126,6 +132,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", authorizer.AuthorizerArn)
 	d.Set("authorizer_function_arn", authorizer.AuthorizerFunctionArn)
+	d.Set("enable_caching_for_http", authorizer.EnableCachingForHttp)
 	d.Set("name", authorizer.AuthorizerName)
 	d.Set("signing_disabled", authorizer.SigningDisabled)
 	d.Set("status", authorizer.Status)
@@ -136,7 +143,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	input := iot.UpdateAuthorizerInput{
 		AuthorizerName: aws.String(d.Id()),
@@ -144,6 +151,10 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("authorizer_function_arn") {
 		input.AuthorizerFunctionArn = aws.String(d.Get("authorizer_function_arn").(string))
+	}
+
+	if d.HasChange("enable_caching_for_http") {
+		input.EnableCachingForHttp = aws.Bool(d.Get("enable_caching_for_http").(bool))
 	}
 
 	if d.HasChange("status") {
@@ -169,7 +180,7 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
 	if d.Get("status").(string) == iot.AuthorizerStatusActive {

@@ -41,7 +41,6 @@ func ResourceApplication() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 			},
 			"appversion_lifecycle": {
 				Type:     schema.TypeList,
@@ -75,7 +74,7 @@ func ResourceApplication() *schema.Resource {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -106,7 +105,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	if d.HasChange("description") {
 		if err := resourceApplicationDescriptionUpdate(conn, d); err != nil {
@@ -219,14 +218,14 @@ func resourceApplicationAppversionLifecycleUpdate(beanstalkConn *elasticbeanstal
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		var err error
-		app, err = getBeanstalkApplication(d.Id(), conn)
+		app, err = getApplication(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -241,7 +240,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getBeanstalkApplication(d.Id(), conn)
+		app, err = getApplication(d.Id(), conn)
 	}
 	if err != nil {
 		if app == nil {
@@ -282,7 +281,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	_, err := beanstalkConn.DeleteApplication(&elasticbeanstalk.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Id()),
@@ -293,7 +292,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err = resource.Retry(10*time.Second, func() *resource.RetryError {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -305,7 +304,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
 	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Beanstalk application: %s", err)
@@ -313,12 +312,12 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getBeanstalkApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
+func getApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
 	resp, err := conn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{
 		ApplicationNames: []*string{aws.String(id)},
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidBeanstalkAppID.NotFound") {
 			return nil, nil
 		}
 		return nil, err

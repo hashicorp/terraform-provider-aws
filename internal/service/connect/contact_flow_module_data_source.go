@@ -14,7 +14,7 @@ import (
 
 func DataSourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceContactFlowModuleRead,
+		ReadWithoutTimeout: dataSourceContactFlowModuleRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -58,7 +58,7 @@ func DataSourceContactFlowModule() *schema.Resource {
 }
 
 func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -71,7 +71,7 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 		input.ContactFlowModuleId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		contactFlowModuleSummary, err := dataSourceGetConnectContactFlowModuleSummaryByName(ctx, conn, instanceID, name)
+		contactFlowModuleSummary, err := dataSourceGetContactFlowModuleSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Module Summary by name (%s): %w", name, err))
@@ -113,7 +113,7 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func dataSourceGetConnectContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowModuleSummary, error) {
+func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowModuleSummary, error) {
 	var result *connect.ContactFlowModuleSummary
 
 	input := &connect.ListContactFlowModulesInput{

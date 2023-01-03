@@ -136,7 +136,7 @@ func ResourceLayerVersion() *schema.Resource {
 }
 
 func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
@@ -198,7 +198,7 @@ func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	layerName, version, err := LayerVersionParseID(d.Id())
 	if err != nil {
@@ -210,7 +210,7 @@ func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
 		VersionNumber: aws.Int64(version),
 	})
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Layer Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -270,7 +270,7 @@ func resourceLayerVersionDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
 	if err != nil {

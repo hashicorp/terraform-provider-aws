@@ -22,10 +22,10 @@ func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConstraintDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConstraintConfig_basic(rName, rName),
@@ -55,10 +55,10 @@ func TestAccServiceCatalogConstraint_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConstraintDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConstraintConfig_basic(rName, rName),
@@ -78,10 +78,10 @@ func TestAccServiceCatalogConstraint_update(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConstraintDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConstraintConfig_basic(rName, rName),
@@ -100,7 +100,7 @@ func TestAccServiceCatalogConstraint_update(t *testing.T) {
 }
 
 func testAccCheckConstraintDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_constraint" {
@@ -137,7 +137,7 @@ func testAccCheckConstraintExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		input := &servicecatalog.DescribeConstraintInput{
 			Id: aws.String(rs.Primary.ID),
@@ -233,7 +233,7 @@ resource "aws_servicecatalog_constraint" "test" {
   product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
   type         = "NOTIFICATION"
 
-  parameters = jsonencode({ "NotificationArns" : ["${aws_sns_topic.test.arn}"] })
+  parameters = jsonencode({ "NotificationArns" : [aws_sns_topic.test.arn] })
 
   depends_on = [aws_sns_topic.test]
 }

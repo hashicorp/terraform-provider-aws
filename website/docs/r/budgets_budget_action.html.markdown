@@ -1,5 +1,5 @@
 ---
-subcategory: "Budgets"
+subcategory: "Web Services Budgets"
 layout: "aws"
 page_title: "AWS: aws_budgets_budget_action"
 description: |-

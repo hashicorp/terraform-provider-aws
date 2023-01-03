@@ -1,0 +1,3 @@
+```release-note:new-data-source
+aws_redshift_subnet_group
+```

@@ -41,9 +41,9 @@ func sweepDirectoryConfigs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn
+	conn := client.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.DescribeDirectoryConfigsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeDirectoryConfigsPages(conn, input, func(page *appstream.DescribeDirectoryConfigsOutput, lastPage bool) bool {
 		if page == nil {
@@ -84,9 +84,9 @@ func sweepFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn
+	conn := client.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.DescribeFleetsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeFleetsPages(conn, input, func(page *appstream.DescribeFleetsOutput, lastPage bool) bool {
 		if page == nil {
@@ -127,9 +127,9 @@ func sweepImageBuilders(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn
+	conn := client.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.DescribeImageBuildersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeImageBuildersPages(conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
@@ -170,9 +170,9 @@ func sweepStacks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).AppStreamConn
+	conn := client.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.DescribeStacksInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeStacksPages(conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
 		if page == nil {

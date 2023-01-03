@@ -34,7 +34,7 @@ func ResourceConnectionAssociation() *schema.Resource {
 }
 
 func resourceConnectionAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	connectionID := d.Get("connection_id").(string)
 	lagID := d.Get("lag_id").(string)
@@ -56,7 +56,7 @@ func resourceConnectionAssociationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceConnectionAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	lagID := d.Get("lag_id").(string)
 	err := FindConnectionAssociationExists(conn, d.Id(), lagID)
@@ -75,12 +75,12 @@ func resourceConnectionAssociationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConnectionAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	return deleteDirectConnectConnectionLAGAssociation(conn, d.Id(), d.Get("lag_id").(string))
+	return deleteConnectionLAGAssociation(conn, d.Id(), d.Get("lag_id").(string))
 }
 
-func deleteDirectConnectConnectionLAGAssociation(conn *directconnect.DirectConnect, connectionID, lagID string) error {
+func deleteConnectionLAGAssociation(conn *directconnect.DirectConnect, connectionID, lagID string) error {
 	input := &directconnect.DisassociateConnectionFromLagInput{
 		ConnectionId: aws.String(connectionID),
 		LagId:        aws.String(lagID),

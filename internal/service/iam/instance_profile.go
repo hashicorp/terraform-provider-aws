@@ -46,14 +46,14 @@ func ResourceInstanceProfile() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validIamResourceName(instanceProfileNameMaxLen),
+				ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(instanceProfileNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -78,7 +78,7 @@ func ResourceInstanceProfile() *schema.Resource {
 }
 
 func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -104,7 +104,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 	response, err := conn.CreateInstanceProfile(request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if request.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Instance Profile (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
@@ -135,7 +135,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 		err := instanceProfileUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Instance Profile (%s): %s", d.Id(), err)
 			return resourceInstanceProfileUpdate(d, meta)
 		}
@@ -154,7 +154,7 @@ func instanceProfileAddRole(conn *iam.IAM, profileName, roleName string) error {
 		RoleName:            aws.String(roleName),
 	}
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.AddRoleToInstanceProfile(request)
 		// IAM unfortunately does not provide a better error code or message for eventual consistency
 		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
@@ -184,7 +184,7 @@ func instanceProfileRemoveRole(conn *iam.IAM, profileName, roleName string) erro
 	}
 
 	_, err := conn.RemoveRoleFromInstanceProfile(request)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 	return err
@@ -202,7 +202,7 @@ func instanceProfileRemoveAllRoles(d *schema.ResourceData, conn *iam.IAM) error 
 }
 
 func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("role") {
 		oldRole, newRole := d.GetChange("role")
@@ -228,7 +228,7 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		err := instanceProfileUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
 			return nil
 		}
@@ -242,15 +242,15 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.GetInstanceProfileInput{
 		InstanceProfileName: aws.String(d.Id()),
 	}
 
 	result, err := conn.GetInstanceProfile(request)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -267,7 +267,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 
 		_, err := conn.GetRole(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				err := instanceProfileRemoveRole(conn, d.Id(), roleName)
 				if err != nil {
 					return fmt.Errorf("removing role %s to IAM instance profile %s: %w", roleName, d.Id(), err)
@@ -281,7 +281,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if err := instanceProfileRemoveAllRoles(d, conn); err != nil {
 		return err
@@ -292,7 +292,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	_, err := conn.DeleteInstanceProfile(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return fmt.Errorf("deleting IAM instance profile %s: %w", d.Id(), err)

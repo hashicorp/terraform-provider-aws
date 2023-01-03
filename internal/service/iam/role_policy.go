@@ -53,19 +53,20 @@ func ResourceRolePolicy() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(rolePolicyNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
 			},
 			"role": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validRolePolicyRole,
 			},
 		},
 	}
 }
 
 func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(d.Get("role").(string)),
@@ -91,7 +92,7 @@ func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
@@ -105,7 +106,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetRolePolicyOutput
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetRolePolicy(request)
@@ -159,7 +160,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
@@ -172,7 +173,7 @@ func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteRolePolicy(request); err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting IAM role policy %s: %s", d.Id(), err)

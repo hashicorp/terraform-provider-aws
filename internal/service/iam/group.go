@@ -52,7 +52,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
 
@@ -71,7 +71,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.GetGroupInput{
 		GroupName: aws.String(d.Id()),
@@ -79,7 +79,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetGroupOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetGroup(request)
@@ -132,7 +132,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("name", "path") {
-		conn := meta.(*conns.AWSClient).IAMConn
+		conn := meta.(*conns.AWSClient).IAMConn()
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 
@@ -152,7 +152,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),
@@ -176,7 +176,7 @@ func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 
@@ -192,7 +192,7 @@ func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 
 		_, err := conn.DetachGroupPolicy(input)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 
@@ -215,7 +215,7 @@ func DeleteGroupPolicies(conn *iam.IAM, groupName string) error {
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 
@@ -231,7 +231,7 @@ func DeleteGroupPolicies(conn *iam.IAM, groupName string) error {
 
 		_, err := conn.DeleteGroupPolicy(input)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 

@@ -52,7 +52,7 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 }
 
 func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -78,7 +78,7 @@ func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta int
 }
 
 func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
@@ -93,7 +93,7 @@ func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta inter
 
 	output, err := conn.GetProvisionedConcurrencyConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Provisioned Concurrency Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -111,7 +111,7 @@ func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta inter
 }
 
 func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
@@ -139,7 +139,7 @@ func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
@@ -154,7 +154,7 @@ func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta int
 
 	_, err = conn.DeleteProvisionedConcurrencyConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

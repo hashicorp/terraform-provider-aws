@@ -43,12 +43,12 @@ func sweepStackSetInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFormationConn
+	conn := client.(*conns.AWSClient).CloudFormationConn()
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListStackSetsPages(input, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
 		if page == nil {
@@ -116,11 +116,11 @@ func sweepStackSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFormationConn
+	conn := client.(*conns.AWSClient).CloudFormationConn()
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListStackSetsPages(input, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
 		if page == nil {
@@ -163,7 +163,7 @@ func sweepStacks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).CloudFormationConn
+	conn := client.(*conns.AWSClient).CloudFormationConn()
 	input := &cloudformation.ListStacksInput{
 		StackStatusFilter: aws.StringSlice([]string{
 			cloudformation.StackStatusCreateComplete,
@@ -176,13 +176,29 @@ func sweepStacks(region string) error {
 
 	err = conn.ListStacksPages(input, func(page *cloudformation.ListStacksOutput, lastPage bool) bool {
 		for _, stack := range page.StackSummaries {
+			name := aws.StringValue(stack.StackName)
+
+			updateTerminationProtectionInput := &cloudformation.UpdateTerminationProtectionInput{
+				EnableTerminationProtection: aws.Bool(false),
+				StackName:                   stack.StackName,
+			}
+
+			log.Printf("[INFO] Disabling termination protection for CloudFormation Stack: %s", name)
+			_, err := conn.UpdateTerminationProtection(updateTerminationProtectionInput)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error disabling termination protection for CloudFormation Stack (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
 			input := &cloudformation.DeleteStackInput{
 				StackName: stack.StackName,
 			}
-			name := aws.StringValue(stack.StackName)
 
 			log.Printf("[INFO] Deleting CloudFormation Stack: %s", name)
-			_, err := conn.DeleteStack(input)
+			_, err = conn.DeleteStack(input)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting CloudFormation Stack (%s): %w", name, err)

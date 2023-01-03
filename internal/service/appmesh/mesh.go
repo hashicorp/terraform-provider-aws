@@ -101,7 +101,7 @@ func ResourceMesh() *schema.Resource {
 }
 
 func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -124,7 +124,7 @@ func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -188,7 +188,7 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", resp.Mesh.Metadata.MeshOwner)
 	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshMeshSpec(resp.Mesh.Spec))
+	err = d.Set("spec", flattenMeshSpec(resp.Mesh.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -214,7 +214,7 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -243,13 +243,13 @@ func resourceMeshUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMeshDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh service mesh: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Service Mesh: %s", d.Id())
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

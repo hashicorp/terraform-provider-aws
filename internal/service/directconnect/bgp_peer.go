@@ -77,7 +77,7 @@ func ResourceBGPPeer() *schema.Resource {
 }
 
 func resourceBGPPeerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -116,7 +116,7 @@ func resourceBGPPeerCreate(d *schema.ResourceData, meta interface{}) error {
 			directconnect.BGPPeerStateAvailable,
 			directconnect.BGPPeerStateVerifying,
 		},
-		Refresh:    dxBgpPeerStateRefresh(conn, vifId, addrFamily, asn),
+		Refresh:    bgpPeerStateRefresh(conn, vifId, addrFamily, asn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -130,13 +130,13 @@ func resourceBGPPeerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBGPPeerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
 	asn := int64(d.Get("bgp_asn").(int))
 
-	bgpPeerRaw, state, err := dxBgpPeerStateRefresh(conn, vifId, addrFamily, asn)()
+	bgpPeerRaw, state, err := bgpPeerStateRefresh(conn, vifId, addrFamily, asn)()
 	if err != nil {
 		return fmt.Errorf("Error reading Direct Connect BGP peer: %s", err)
 	}
@@ -158,7 +158,7 @@ func resourceBGPPeerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBGPPeerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -188,7 +188,7 @@ func resourceBGPPeerDelete(d *schema.ResourceData, meta interface{}) error {
 		Target: []string{
 			directconnect.BGPPeerStateDeleted,
 		},
-		Refresh:    dxBgpPeerStateRefresh(conn, vifId, addrFamily, asn),
+		Refresh:    bgpPeerStateRefresh(conn, vifId, addrFamily, asn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -201,9 +201,9 @@ func resourceBGPPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func dxBgpPeerStateRefresh(conn *directconnect.DirectConnect, vifId, addrFamily string, asn int64) resource.StateRefreshFunc {
+func bgpPeerStateRefresh(conn *directconnect.DirectConnect, vifId, addrFamily string, asn int64) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vif, err := dxVirtualInterfaceRead(vifId, conn)
+		vif, err := virtualInterfaceRead(vifId, conn)
 		if err != nil {
 			return nil, "", err
 		}

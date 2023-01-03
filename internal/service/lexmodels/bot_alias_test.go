@@ -26,9 +26,9 @@ func TestAccLexModelsBotAlias_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAliasDestroy(testBotAliasID, testBotAliasID),
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -70,9 +70,9 @@ func testAccBotAlias_botVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAliasDestroy(testBotAliasID, testBotAliasID),
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -126,9 +126,9 @@ func TestAccLexModelsBotAlias_conversationLogsText(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAliasDestroy(testBotID, testBotAliasID),
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -176,9 +176,9 @@ func TestAccLexModelsBotAlias_conversationLogsAudio(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAliasDestroy(testBotID, testBotAliasID),
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -227,9 +227,9 @@ func TestAccLexModelsBotAlias_conversationLogsBoth(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAliasDestroy(testBotID, testBotAliasID),
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -277,9 +277,9 @@ func TestAccLexModelsBotAlias_description(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAliasDestroy(testBotAliasID, testBotAliasID),
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -326,9 +326,9 @@ func TestAccLexModelsBotAlias_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -361,7 +361,7 @@ func testAccCheckBotAliasExists(rName string, output *lexmodelbuildingservice.Ge
 		botAliasName := rs.Primary.Attributes["name"]
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		output, err = conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
@@ -380,7 +380,7 @@ func testAccCheckBotAliasExists(rName string, output *lexmodelbuildingservice.Ge
 
 func testAccCheckBotAliasDestroy(botName, botAliasName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		_, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
@@ -388,7 +388,7 @@ func testAccCheckBotAliasDestroy(botName, botAliasName string) resource.TestChec
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 				return nil
 			}
 

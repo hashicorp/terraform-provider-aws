@@ -143,7 +143,7 @@ func DataSourceOrganization() *schema.Resource {
 }
 
 func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 	if err != nil {
@@ -206,7 +206,7 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
-		if err := d.Set("accounts", flattenOrganizationsAccounts(accounts)); err != nil {
+		if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 			return fmt.Errorf("error setting accounts: %w", err)
 		}
 
@@ -218,14 +218,13 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("error setting enabled_policy_types: %w", err)
 		}
 
-		if err := d.Set("non_master_accounts", flattenOrganizationsAccounts(nonMasterAccounts)); err != nil {
+		if err := d.Set("non_master_accounts", flattenAccounts(nonMasterAccounts)); err != nil {
 			return fmt.Errorf("error setting non_master_accounts: %w", err)
 		}
 
 		if err := d.Set("roots", FlattenRoots(roots)); err != nil {
 			return fmt.Errorf("error setting roots: %w", err)
 		}
-
 	}
 	return nil
 }

@@ -34,7 +34,7 @@ func DataSourceVersion() *schema.Resource {
 	}
 }
 
-func findKafkaVersion(preferredVersions []interface{}, versions []*kafka.KafkaVersion) *kafka.KafkaVersion {
+func findVersion(preferredVersions []interface{}, versions []*kafka.KafkaVersion) *kafka.KafkaVersion {
 	var found *kafka.KafkaVersion
 
 	for _, v := range preferredVersions {
@@ -61,7 +61,7 @@ func findKafkaVersion(preferredVersions []interface{}, versions []*kafka.KafkaVe
 }
 
 func dataSourceVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	var kafkaVersions []*kafka.KafkaVersion
 
@@ -86,9 +86,9 @@ func dataSourceVersionRead(d *schema.ResourceData, meta interface{}) error {
 	var found *kafka.KafkaVersion
 
 	if v, ok := d.GetOk("preferred_versions"); ok {
-		found = findKafkaVersion(v.([]interface{}), kafkaVersions)
+		found = findVersion(v.([]interface{}), kafkaVersions)
 	} else if v, ok := d.GetOk("version"); ok {
-		found = findKafkaVersion([]interface{}{v}, kafkaVersions)
+		found = findVersion([]interface{}{v}, kafkaVersions)
 	}
 
 	if found == nil {

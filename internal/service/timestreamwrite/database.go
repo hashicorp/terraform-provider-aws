@@ -70,7 +70,7 @@ func ResourceDatabase() *schema.Resource {
 }
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -104,7 +104,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -157,7 +157,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	if d.HasChange("kms_key_id") {
 		input := &timestreamwrite.UpdateDatabaseInput{
@@ -184,7 +184,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	input := &timestreamwrite.DeleteDatabaseInput{
 		DatabaseName: aws.String(d.Id()),

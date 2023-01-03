@@ -16,12 +16,12 @@ func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 	resourceName := "data.aws_cloudformation_stack.network"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckStackDataSourceConfig_basic(stackName),
+				Config: testAccStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexp.MustCompile("^vpc-[a-z0-9]+")),
@@ -40,7 +40,7 @@ func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckStackDataSourceConfig_basic(stackName string) string {
+func testAccStackDataSourceConfig_basic(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
   name = "%s"
@@ -102,12 +102,12 @@ func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 	resourceName := "data.aws_cloudformation_stack.yaml"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, cloudformation.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckStackDataSourceConfig_yaml(stackName),
+				Config: testAccStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexp.MustCompile("^vpc-[a-z0-9]+")),
@@ -126,7 +126,7 @@ func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 	})
 }
 
-func testAccCheckStackDataSourceConfig_yaml(stackName string) string {
+func testAccStackDataSourceConfig_yaml(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
   name = "%s"

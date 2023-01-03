@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `instance_requirements` argument
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `instance_requirements` attribute
+```

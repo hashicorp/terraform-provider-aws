@@ -27,11 +27,11 @@ func sweepEnvironment(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).MWAAConn
+	conn := client.(*conns.AWSClient).MWAAConn()
 
 	listOutput, err := conn.ListEnvironments(&mwaa.ListEnvironmentsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
 			return nil
 		}

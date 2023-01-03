@@ -21,12 +21,12 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyOrganizationAdminAccountConfigSelf(),
+				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
@@ -42,7 +42,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 }
 
 func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_organization_admin_account" {
@@ -76,7 +76,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
 		adminAccount, err := tfguardduty.GetOrganizationAdminAccount(conn, rs.Primary.ID)
 
@@ -92,7 +92,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 	}
 }
 
-func testAccGuardDutyOrganizationAdminAccountConfigSelf() string {
+func testAccOrganizationAdminAccountConfig_self() string {
 	return `
 data "aws_caller_identity" "current" {}
 

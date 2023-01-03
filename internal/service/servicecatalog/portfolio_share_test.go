@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +15,6 @@ import (
 )
 
 func TestAccServiceCatalogPortfolioShare_basic(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	dataSourceName := "data.aws_caller_identity.alternate"
@@ -28,9 +26,9 @@ func TestAccServiceCatalogPortfolioShare_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckPortfolioShareDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_basic(rName),
@@ -68,9 +66,9 @@ func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(t)
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPortfolioShareDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_organizationalUnit(rName),
@@ -97,7 +95,7 @@ func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 }
 
 func testAccCheckPortfolioShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_portfolio_share" {
@@ -135,7 +133,7 @@ func testAccCheckPortfolioShareExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		_, err := tfservicecatalog.FindPortfolioShare(
 			conn,

@@ -14,13 +14,10 @@ import (
 
 const (
 	// Associated is the member status naming for regions that do not support Organizations
-	SecurityHubMemberStatusAssociated = "Associated"
-	SecurityHubMemberStatusCreated    = "Created"
-	SecurityHubMemberStatusInvited    = "Invited"
-	SecurityHubMemberStatusEnabled    = "Enabled"
-	SecurityHubMemberStatusRemoved    = "Removed"
-	SecurityHubMemberStatusResigned   = "Resigned"
-	SecurityHubMemberStatusDeleted    = "Deleted"
+	memberStatusAssociated = "Associated"
+	memberStatusInvited    = "Invited"
+	memberStatusEnabled    = "Enabled"
+	memberStatusResigned   = "Resigned"
 )
 
 func ResourceMember() *schema.Resource {
@@ -62,7 +59,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
 
 	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
@@ -103,7 +100,7 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	log.Printf("[DEBUG] Reading Security Hub member %s", d.Id())
 	resp, err := conn.GetMembers(&securityhub.GetMembersInput{
@@ -111,7 +108,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -134,19 +131,19 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	status := aws.StringValue(member.MemberStatus)
 	d.Set("member_status", status)
 
-	invited := status == SecurityHubMemberStatusInvited || status == SecurityHubMemberStatusEnabled || status == SecurityHubMemberStatusAssociated || status == SecurityHubMemberStatusResigned
+	invited := status == memberStatusInvited || status == memberStatusEnabled || status == memberStatusAssociated || status == memberStatusResigned
 	d.Set("invite", invited)
 
 	return nil
 }
 
 func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},
 	})
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -157,7 +154,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 		AccountIds: []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {

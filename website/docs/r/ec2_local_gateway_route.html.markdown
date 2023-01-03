@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_route"
 description: |-

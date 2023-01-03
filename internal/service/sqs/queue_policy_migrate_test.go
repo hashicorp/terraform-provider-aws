@@ -8,7 +8,6 @@ import (
 )
 
 func TestQueuePolicyMigrateState(t *testing.T) {
-
 	cases := map[string]struct {
 		StateVersion int
 		ID           string

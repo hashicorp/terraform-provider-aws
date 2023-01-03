@@ -22,10 +22,10 @@ func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 	secretKey := "456"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBaiduChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBaiduChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBaiduChannelConfig_basic(apiKey, secretKey),
@@ -66,7 +66,7 @@ func testAccCheckBaiduChannelExists(n string, channel *pinpoint.BaiduChannelResp
 			return fmt.Errorf("No Pinpoint Baidu channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the Baidu Channel exists
 		params := &pinpoint.GetBaiduChannelInput{
@@ -99,7 +99,7 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 }
 
 func testAccCheckBaiduChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_baidu_channel" {
@@ -112,7 +112,7 @@ func testAccCheckBaiduChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetBaiduChannel(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

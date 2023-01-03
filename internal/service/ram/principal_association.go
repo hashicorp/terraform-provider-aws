@@ -48,7 +48,7 @@ func ResourcePrincipalAssociation() *schema.Resource {
 }
 
 func resourcePrincipalAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareArn := d.Get("resource_share_arn").(string)
 	principal := d.Get("principal").(string)
@@ -80,7 +80,7 @@ func resourcePrincipalAssociationCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {
@@ -106,7 +106,7 @@ func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error reading RAM Resource Share (%s) Principal Association (%s): %s", resourceShareArn, principal, err)
 	}
 
-	if association == nil || aws.StringValue(association.Status) == ram.ResourceShareAssociationStatusDisassociated {
+	if !d.IsNewResource() && (association == nil || aws.StringValue(association.Status) == ram.ResourceShareAssociationStatusDisassociated) {
 		log.Printf("[WARN] RAM resource share principal association with ARN (%s) found, but empty or disassociated - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -123,7 +123,7 @@ func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareArn, principal, err := PrincipalAssociationParseID(d.Id())
 	if err != nil {

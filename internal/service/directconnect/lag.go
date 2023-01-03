@@ -82,7 +82,7 @@ func ResourceLag() *schema.Resource {
 }
 
 func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -121,7 +121,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Delete unmanaged connection.
 	if !connectionIDSpecified {
-		err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
+		err = deleteConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
 
 		if err != nil {
 			return err
@@ -132,7 +132,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -185,7 +185,7 @@ func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	if d.HasChange("name") {
 		input := &directconnect.UpdateLagInput{
@@ -214,7 +214,7 @@ func resourceLagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	if d.Get("force_destroy").(bool) {
 		lag, err := FindLagByID(conn, d.Id())
@@ -224,14 +224,14 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
+			err = deleteConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
 
 			if err != nil {
 				return err
 			}
 		}
 	} else if v, ok := d.GetOk("connection_id"); ok {
-		if err := deleteDirectConnectConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
+		if err := deleteConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
 			return err
 		}
 	}

@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDomainPermissionsPolicy() *schema.Resource {
@@ -60,7 +62,7 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 }
 
 func resourceDomainPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Print("[DEBUG] Creating CodeArtifact Domain Permissions Policy")
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
@@ -93,7 +95,7 @@ func resourceDomainPermissionsPolicyPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Printf("[DEBUG] Reading CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
@@ -105,13 +107,14 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(domainOwner),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] CodeArtifact Domain Permissions Policy %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)
@@ -137,7 +140,7 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
@@ -152,7 +155,7 @@ func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interfac
 
 	_, err = conn.DeleteDomainPermissionsPolicy(input)
 
-	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

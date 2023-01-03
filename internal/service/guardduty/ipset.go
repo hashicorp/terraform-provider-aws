@@ -74,7 +74,7 @@ func ResourceIPSet() *schema.Resource {
 }
 
 func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,7 +99,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{guardduty.IpSetStatusActivating, guardduty.IpSetStatusDeactivating},
 		Target:     []string{guardduty.IpSetStatusActive, guardduty.IpSetStatusInactive},
-		Refresh:    guardDutyIpsetRefreshStatusFunc(conn, *resp.IpSetId, detectorID),
+		Refresh:    ipsetRefreshStatusFunc(conn, *resp.IpSetId, detectorID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -114,7 +114,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -167,7 +167,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
@@ -208,7 +208,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	ipSetId, detectorId, err := DecodeIPSetID(d.Id())
 	if err != nil {
@@ -233,7 +233,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 			guardduty.IpSetStatusDeletePending,
 		},
 		Target:     []string{guardduty.IpSetStatusDeleted},
-		Refresh:    guardDutyIpsetRefreshStatusFunc(conn, ipSetId, detectorId),
+		Refresh:    ipsetRefreshStatusFunc(conn, ipSetId, detectorId),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -246,7 +246,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func guardDutyIpsetRefreshStatusFunc(conn *guardduty.GuardDuty, ipSetID, detectorID string) resource.StateRefreshFunc {
+func ipsetRefreshStatusFunc(conn *guardduty.GuardDuty, ipSetID, detectorID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.GetIPSetInput{
 			DetectorId: aws.String(detectorID),

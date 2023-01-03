@@ -29,7 +29,6 @@ func listEventBusesPagesWithContext(ctx context.Context, conn *eventbridge.Event
 	}
 	return nil
 }
-
 func listRulesPages(conn *eventbridge.EventBridge, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool) error {
 	return listRulesPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func listRulesPagesWithContext(ctx context.Context, conn *eventbridge.EventBridg
 	}
 	return nil
 }
-
 func listTargetsByRulePages(conn *eventbridge.EventBridge, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool) error {
 	return listTargetsByRulePagesWithContext(context.Background(), conn, input, fn)
 }

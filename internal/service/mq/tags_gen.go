@@ -2,22 +2,28 @@
 package mq
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/mq/mqiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists mq service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *mq.MQ, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn mqiface.MQAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn mqiface.MQAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &mq.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(input)
+	output, err := conn.ListTagsWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -41,7 +47,10 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates mq service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *mq.MQ, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn mqiface.MQAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn mqiface.MQAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -51,10 +60,10 @@ func UpdateTags(conn *mq.MQ, identifier string, oldTagsMap interface{}, newTagsM
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.DeleteTags(input)
+		_, err := conn.DeleteTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -64,10 +73,10 @@ func UpdateTags(conn *mq.MQ, identifier string, oldTagsMap interface{}, newTagsM
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.CreateTags(input)
+		_, err := conn.CreateTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

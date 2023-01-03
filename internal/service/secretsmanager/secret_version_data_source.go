@@ -55,7 +55,7 @@ func DataSourceSecretVersion() *schema.Resource {
 }
 
 func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 	var version string
 
@@ -76,7 +76,7 @@ func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Reading Secrets Manager Secret Version: %s", input)
 	output, err := conn.GetSecretValue(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("Secrets Manager Secret %q Version %q not found", secretID, version)
 		}
 		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {

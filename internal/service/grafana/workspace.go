@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -48,12 +49,18 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(managedgrafana.AuthenticationProviderTypes_Values(), false),
+				},
 			},
 			"data_sources": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(managedgrafana.DataSourceType_Values(), false),
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -75,7 +82,10 @@ func ResourceWorkspace() *schema.Resource {
 			"notification_destinations": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(managedgrafana.NotificationDestinationType_Values(), false),
+				},
 			},
 			"organization_role_name": {
 				Type:     schema.TypeString,
@@ -104,18 +114,55 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 2,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &managedgrafana.CreateWorkspaceInput{
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 		ClientToken:             aws.String(resource.UniqueId()),
 		PermissionType:          aws.String(d.Get("permission_type").(string)),
+		Tags:                    Tags(tags.IgnoreAWS()),
+	}
+
+	if v, ok := d.GetOk("organization_role_name"); ok {
+		input.OrganizationRoleName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("stack_set_name"); ok {
+		input.StackSetName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_sources"); ok {
@@ -134,10 +181,6 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkspaceNotificationDestinations = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("organization_role_name"); ok {
-		input.OrganizationRoleName = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("organizational_units"); ok {
 		input.WorkspaceOrganizationalUnits = flex.ExpandStringList(v.([]interface{}))
 	}
@@ -146,8 +189,8 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkspaceRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("stack_set_name"); ok {
-		input.StackSetName = aws.String(v.(string))
+	if v, ok := d.GetOk("vpc_configuration"); ok {
+		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Grafana Workspace: %s", input)
@@ -159,16 +202,17 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.Workspace.Id))
 
-	_, err = waitWorkspaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := waitWorkspaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Grafana Workspace (%s) create: %w", d.Id(), err)
 	}
+
 	return resourceWorkspaceRead(d, meta)
 }
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspace, err := FindWorkspaceByID(conn, d.Id())
 
@@ -206,73 +250,96 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
 
+	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
+		return fmt.Errorf("error setting vpc_configuration: %w", err)
+	}
+
+	tags := KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
-	input := &managedgrafana.UpdateWorkspaceInput{
-		WorkspaceId: aws.String(d.Id()),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &managedgrafana.UpdateWorkspaceInput{
+			WorkspaceId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("account_access_type") {
+			input.AccountAccessType = aws.String(d.Get("account_access_type").(string))
+		}
+
+		if d.HasChange("data_sources") {
+			input.WorkspaceDataSources = flex.ExpandStringList(d.Get("data_sources").([]interface{}))
+		}
+
+		if d.HasChange("description") {
+			input.WorkspaceDescription = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("name") {
+			input.WorkspaceName = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("notification_destinations") {
+			input.WorkspaceNotificationDestinations = flex.ExpandStringList(d.Get("notification_destinations").([]interface{}))
+		}
+
+		if d.HasChange("organization_role_name") {
+			input.OrganizationRoleName = aws.String(d.Get("organization_role_name").(string))
+		}
+
+		if d.HasChange("organizational_units") {
+			input.WorkspaceOrganizationalUnits = flex.ExpandStringList(d.Get("organizational_units").([]interface{}))
+		}
+
+		if d.HasChange("permission_type") {
+			input.PermissionType = aws.String(d.Get("permission_type").(string))
+		}
+
+		if d.HasChange("role_arn") {
+			input.WorkspaceRoleArn = aws.String(d.Get("role_arn").(string))
+		}
+
+		if d.HasChange("stack_set_name") {
+			input.StackSetName = aws.String(d.Get("stack_set_name").(string))
+		}
+
+		_, err := conn.UpdateWorkspace(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Grafana Workspace (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Grafana Workspace (%s) update: %w", d.Id(), err)
+		}
 	}
 
-	if d.HasChange("account_access_type") {
-		input.AccountAccessType = aws.String(d.Get("account_access_type").(string))
-	}
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-	if d.HasChange("data_sources") {
-		input.WorkspaceDataSources = flex.ExpandStringList(d.Get("data_sources").([]interface{}))
-	}
-
-	if d.HasChange("description") {
-		input.WorkspaceDescription = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("name") {
-		input.WorkspaceName = aws.String(d.Get("name").(string))
-	}
-
-	if d.HasChange("notification_destinations") {
-		input.WorkspaceNotificationDestinations = flex.ExpandStringList(d.Get("notification_destinations").([]interface{}))
-	}
-
-	if d.HasChange("organization_role_name") {
-		input.OrganizationRoleName = aws.String(d.Get("organization_role_name").(string))
-	}
-
-	if d.HasChange("organizational_units") {
-		input.WorkspaceOrganizationalUnits = flex.ExpandStringList(d.Get("organizational_units").([]interface{}))
-	}
-
-	if d.HasChange("permission_type") {
-		input.PermissionType = aws.String(d.Get("permission_type").(string))
-	}
-
-	if d.HasChange("role_arn") {
-		input.WorkspaceRoleArn = aws.String(d.Get("role_arn").(string))
-	}
-
-	if d.HasChange("stack_set_name") {
-		input.StackSetName = aws.String(d.Get("stack_set_name").(string))
-	}
-
-	_, err := conn.UpdateWorkspace(input)
-
-	if err != nil {
-		return fmt.Errorf("error updating Grafana Workspace (%s): %w", d.Id(), err)
-	}
-
-	_, err = waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Grafana Workspace (%s) update: %w", d.Id(), err)
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Grafana Workspace (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return resourceWorkspaceRead(d, meta)
 }
 
 func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspace(&managedgrafana.DeleteWorkspaceInput{
@@ -287,11 +354,45 @@ func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Grafana Workspace (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitWorkspaceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if _, err := waitWorkspaceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Grafana Workspace (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func expandVPCConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	conf := cfg[0].(map[string]interface{})
+
+	out := managedgrafana.VpcConfiguration{}
+
+	if v, ok := conf["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.SecurityGroupIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := conf["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.SubnetIds = flex.ExpandStringSet(v)
+	}
+
+	return &out
+}
+
+func flattenVPCConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.SecurityGroupIds != nil {
+		m["security_group_ids"] = flex.FlattenStringSet(rs.SecurityGroupIds)
+	}
+	if rs.SubnetIds != nil {
+		m["subnet_ids"] = flex.FlattenStringSet(rs.SubnetIds)
+	}
+
+	return []interface{}{m}
 }

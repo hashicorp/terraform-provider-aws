@@ -1,20 +1,20 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3ControlBucket_basic(t *testing.T) {
@@ -22,13 +22,13 @@ func TestAccS3ControlBucket_basic(t *testing.T) {
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
@@ -53,13 +53,13 @@ func TestAccS3ControlBucket_disappears(t *testing.T) {
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucket(), resourceName),
@@ -77,13 +77,13 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccBucketConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +96,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBucketConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -105,7 +105,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccBucketConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -117,7 +117,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 }
 
 func testAccCheckBucketDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_bucket" {
@@ -127,17 +127,12 @@ func testAccCheckBucketDestroy(s *terraform.State) error {
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		input := &s3control.GetBucketInput{
-			AccountId: aws.String(parsedArn.AccountID),
-			Bucket:    aws.String(rs.Primary.ID),
-		}
+		_, err = tfs3control.FindBucketByTwoPartKey(context.Background(), conn, parsedArn.AccountID, rs.Primary.ID)
 
-		_, err = conn.GetBucket(input)
-
-		if tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -145,47 +140,38 @@ func testAccCheckBucketDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("S3 Control Bucket (%s) still exists", rs.Primary.ID)
+		return fmt.Errorf("S3 Control Bucket %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no resource ID is set")
+			return fmt.Errorf("No S3 Control Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", rs.Primary.ID, err)
-		}
-
-		input := &s3control.GetBucketInput{
-			AccountId: aws.String(parsedArn.AccountID),
-			Bucket:    aws.String(rs.Primary.ID),
-		}
-
-		_, err = conn.GetBucket(input)
 
 		if err != nil {
 			return err
 		}
 
-		return nil
+		_, err = tfs3control.FindBucketByTwoPartKey(context.Background(), conn, parsedArn.AccountID, rs.Primary.ID)
+
+		return err
 	}
 }
 
-func testAccBucketConfig_Bucket(rName string) string {
+func testAccBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -200,7 +186,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName)
 }
 
-func testAccBucketConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccBucketConfig_tags1(rName, tagKey1, tagValue1 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -219,7 +205,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccBucketConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBucketConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

@@ -36,7 +36,7 @@ func sweepQueues(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SQSConn
+	conn := client.(*conns.AWSClient).SQSConn()
 	input := &sqs.ListQueuesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -49,7 +49,7 @@ func sweepQueues(region string) error {
 			r := ResourceQueue()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(queueUrl))
-			err = r.Delete(d, client)
+			err = sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				log.Printf("[ERROR] %s", err)

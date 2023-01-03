@@ -26,9 +26,9 @@ func init() {
 func sweepEventSubscriptions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn
+	conn := client.(*conns.AWSClient).NeptuneConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -43,22 +43,22 @@ func sweepEventSubscriptions(region string) error {
 			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 				continue
 			}
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Neptune Event Subscription (%s): %w", name, err)
+				sweeperErr := fmt.Errorf("deleting Neptune Event Subscription (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
 			}
 
 			_, err = WaitEventSubscriptionDeleted(conn, name)
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 				continue
 			}
 			if err != nil {
-				sweeperErr := fmt.Errorf("error waiting for Neptune Event Subscription (%s) deletion: %w", name, err)
+				sweeperErr := fmt.Errorf("waiting for Neptune Event Subscription (%s) deletion: %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
@@ -72,7 +72,7 @@ func sweepEventSubscriptions(region string) error {
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Neptune Event Subscriptions: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving Neptune Event Subscriptions: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

@@ -1,20 +1,20 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
@@ -22,13 +22,13 @@ func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
@@ -49,13 +49,13 @@ func TestAccS3ControlBucketPolicy_disappears(t *testing.T) {
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucketPolicy(), resourceName),
@@ -71,13 +71,13 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:GetObject"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:GetObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:GetObject`)),
@@ -89,7 +89,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:PutObject"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:PutObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:PutObject`)),
@@ -100,7 +100,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 }
 
 func testAccCheckBucketPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_bucket_policy" {
@@ -110,25 +110,12 @@ func testAccCheckBucketPolicyDestroy(s *terraform.State) error {
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		input := &s3control.GetBucketPolicyInput{
-			AccountId: aws.String(parsedArn.AccountID),
-			Bucket:    aws.String(rs.Primary.ID),
-		}
+		_, err = tfs3control.FindBucketPolicyByTwoPartKey(context.Background(), conn, parsedArn.AccountID, rs.Primary.ID)
 
-		_, err = conn.GetBucketPolicy(input)
-
-		if tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
-			continue
-		}
-
-		if tfawserr.ErrCodeEquals(err, "NoSuchBucketPolicy") {
-			continue
-		}
-
-		if tfawserr.ErrCodeEquals(err, "NoSuchOutpost") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -136,47 +123,38 @@ func testAccCheckBucketPolicyDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("S3 Control Bucket Policy (%s) still exists", rs.Primary.ID)
+		return fmt.Errorf("S3 Control Bucket Policy %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckBucketPolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketPolicyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no resource ID is set")
+			return fmt.Errorf("No S3 Control Bucket Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", rs.Primary.ID, err)
-		}
-
-		input := &s3control.GetBucketPolicyInput{
-			AccountId: aws.String(parsedArn.AccountID),
-			Bucket:    aws.String(rs.Primary.ID),
-		}
-
-		_, err = conn.GetBucketPolicy(input)
 
 		if err != nil {
 			return err
 		}
 
-		return nil
+		_, err = tfs3control.FindBucketPolicyByTwoPartKey(context.Background(), conn, parsedArn.AccountID, rs.Primary.ID)
+
+		return err
 	}
 }
 
-func testAccBucketPolicyConfig_Policy(rName, action string) string {
+func testAccBucketPolicyConfig_basic(rName, action string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

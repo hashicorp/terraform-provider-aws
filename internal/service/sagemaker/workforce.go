@@ -146,12 +146,41 @@ func ResourceWorkforce() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9\-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
+			"workforce_vpc_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 5,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnets": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 16,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_endpoint_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	name := d.Get("workforce_name").(string)
 	input := &sagemaker.CreateWorkforceInput{
@@ -159,31 +188,38 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("cognito_config"); ok {
-		input.CognitoConfig = expandSagemakerWorkforceCognitoConfig(v.([]interface{}))
+		input.CognitoConfig = expandWorkforceCognitoConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("oidc_config"); ok {
-		input.OidcConfig = expandSagemakerWorkforceOidcConfig(v.([]interface{}))
+		input.OidcConfig = expandWorkforceOIDCConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("source_ip_config"); ok {
-		input.SourceIpConfig = expandSagemakerWorkforceSourceIpConfig(v.([]interface{}))
+		input.SourceIpConfig = expandWorkforceSourceIPConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Workforce: %s", input)
+	if v, ok := d.GetOk("workforce_vpc_config"); ok {
+		input.WorkforceVpcConfig = expandWorkforceVPCConfig(v.([]interface{}))
+	}
+
 	_, err := conn.CreateWorkforce(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Workforce (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker Workforce (%s): %w", name, err)
 	}
 
 	d.SetId(name)
+
+	if _, err := WaitWorkforceActive(conn, name); err != nil {
+		return fmt.Errorf("waiting for SageMaker Workforce (%s) create: %w", d.Id(), err)
+	}
 
 	return resourceWorkforceRead(d, meta)
 }
 
 func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	workforce, err := FindWorkforceByName(conn, d.Id())
 
@@ -194,57 +230,68 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", workforce.WorkforceArn)
 	d.Set("subdomain", workforce.SubDomain)
 	d.Set("workforce_name", workforce.WorkforceName)
 
-	if err := d.Set("cognito_config", flattenSagemakerWorkforceCognitoConfig(workforce.CognitoConfig)); err != nil {
-		return fmt.Errorf("error setting cognito_config : %w", err)
+	if err := d.Set("cognito_config", flattenWorkforceCognitoConfig(workforce.CognitoConfig)); err != nil {
+		return fmt.Errorf("setting cognito_config : %w", err)
 	}
 
 	if workforce.OidcConfig != nil {
-		if err := d.Set("oidc_config", flattenSagemakerWorkforceOidcConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
-			return fmt.Errorf("error setting oidc_config: %w", err)
+		if err := d.Set("oidc_config", flattenWorkforceOIDCConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
+			return fmt.Errorf("setting oidc_config: %w", err)
 		}
 	}
 
-	if err := d.Set("source_ip_config", flattenSagemakerWorkforceSourceIpConfig(workforce.SourceIpConfig)); err != nil {
-		return fmt.Errorf("error setting source_ip_config: %w", err)
+	if err := d.Set("source_ip_config", flattenWorkforceSourceIPConfig(workforce.SourceIpConfig)); err != nil {
+		return fmt.Errorf("setting source_ip_config: %w", err)
+	}
+
+	if err := d.Set("workforce_vpc_config", flattenWorkforceVPCConfig(workforce.WorkforceVpcConfig)); err != nil {
+		return fmt.Errorf("setting workforce_vpc_config: %w", err)
 	}
 
 	return nil
 }
 
 func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.UpdateWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
 	}
 
 	if d.HasChange("source_ip_config") {
-		input.SourceIpConfig = expandSagemakerWorkforceSourceIpConfig(d.Get("source_ip_config").([]interface{}))
+		input.SourceIpConfig = expandWorkforceSourceIPConfig(d.Get("source_ip_config").([]interface{}))
 	}
 
 	if d.HasChange("oidc_config") {
-		input.OidcConfig = expandSagemakerWorkforceOidcConfig(d.Get("oidc_config").([]interface{}))
+		input.OidcConfig = expandWorkforceOIDCConfig(d.Get("oidc_config").([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating SageMaker Workforce: %s", input)
+	if d.HasChange("workforce_vpc_config") {
+		input.WorkforceVpcConfig = expandWorkforceVPCConfig(d.Get("workforce_vpc_config").([]interface{}))
+	}
+
 	_, err := conn.UpdateWorkforce(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating SageMaker Workforce (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitWorkforceActive(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for SageMaker Workforce (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceWorkforceRead(d, meta)
 }
 
 func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
 	_, err := conn.DeleteWorkforce(&sagemaker.DeleteWorkforceInput{
@@ -256,13 +303,17 @@ func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Workforce (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitWorkforceDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for SageMaker Workforce (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandSagemakerWorkforceSourceIpConfig(l []interface{}) *sagemaker.SourceIpConfig {
+func expandWorkforceSourceIPConfig(l []interface{}) *sagemaker.SourceIpConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -276,7 +327,7 @@ func expandSagemakerWorkforceSourceIpConfig(l []interface{}) *sagemaker.SourceIp
 	return config
 }
 
-func flattenSagemakerWorkforceSourceIpConfig(config *sagemaker.SourceIpConfig) []map[string]interface{} {
+func flattenWorkforceSourceIPConfig(config *sagemaker.SourceIpConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -288,7 +339,7 @@ func flattenSagemakerWorkforceSourceIpConfig(config *sagemaker.SourceIpConfig) [
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerWorkforceCognitoConfig(l []interface{}) *sagemaker.CognitoConfig {
+func expandWorkforceCognitoConfig(l []interface{}) *sagemaker.CognitoConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -303,7 +354,7 @@ func expandSagemakerWorkforceCognitoConfig(l []interface{}) *sagemaker.CognitoCo
 	return config
 }
 
-func flattenSagemakerWorkforceCognitoConfig(config *sagemaker.CognitoConfig) []map[string]interface{} {
+func flattenWorkforceCognitoConfig(config *sagemaker.CognitoConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -316,7 +367,7 @@ func flattenSagemakerWorkforceCognitoConfig(config *sagemaker.CognitoConfig) []m
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerWorkforceOidcConfig(l []interface{}) *sagemaker.OidcConfig {
+func expandWorkforceOIDCConfig(l []interface{}) *sagemaker.OidcConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -337,7 +388,7 @@ func expandSagemakerWorkforceOidcConfig(l []interface{}) *sagemaker.OidcConfig {
 	return config
 }
 
-func flattenSagemakerWorkforceOidcConfig(config *sagemaker.OidcConfigForResponse, clientSecret string) []map[string]interface{} {
+func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientSecret string) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -351,6 +402,37 @@ func flattenSagemakerWorkforceOidcConfig(config *sagemaker.OidcConfigForResponse
 		"logout_endpoint":        aws.StringValue(config.LogoutEndpoint),
 		"token_endpoint":         aws.StringValue(config.TokenEndpoint),
 		"user_info_endpoint":     aws.StringValue(config.UserInfoEndpoint),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandWorkforceVPCConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequest {
+	if len(l) == 0 || l[0] == nil {
+		return &sagemaker.WorkforceVpcConfigRequest{}
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.WorkforceVpcConfigRequest{
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
+		VpcId:            aws.String(m["vpc_id"].(string)),
+	}
+
+	return config
+}
+
+func flattenWorkforceVPCConfig(config *sagemaker.WorkforceVpcConfigResponse) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"security_group_ids": flex.FlattenStringSet(config.SecurityGroupIds),
+		"subnets":            flex.FlattenStringSet(config.Subnets),
+		"vpc_endpoint_id":    aws.StringValue(config.VpcEndpointId),
+		"vpc_id":             aws.StringValue(config.VpcId),
 	}
 
 	return []map[string]interface{}{m}

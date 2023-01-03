@@ -71,7 +71,7 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 }
 
 func resourceVPCIPv4CIDRBlockAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcID := d.Get("vpc_id").(string)
 	input := &ec2.AssociateVpcCidrBlockInput{
@@ -109,7 +109,7 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceVPCIPv4CIDRBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcCidrBlockAssociation, vpc, err := FindVPCCIDRBlockAssociationByID(conn, d.Id())
 
@@ -130,14 +130,14 @@ func resourceVPCIPv4CIDRBlockAssociationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceVPCIPv4CIDRBlockAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 VPC IPv4 CIDR Block Association: %s", d.Id())
 	_, err := conn.DisassociateVpcCidrBlock(&ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcCidrBlockAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
 		return nil
 	}
 

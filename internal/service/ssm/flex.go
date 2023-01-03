@@ -47,7 +47,7 @@ func flattenTargets(targets []*ssm.Target) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(targets))
 	for _, target := range targets {
 		t := make(map[string]interface{}, 1)
-		t["key"] = *target.Key
+		t["key"] = aws.StringValue(target.Key)
 		t["values"] = flex.FlattenStringList(target.Values)
 
 		result = append(result, t)

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -76,7 +75,7 @@ func ResourceActivation() *schema.Resource {
 }
 
 func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -112,7 +111,7 @@ func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry to allow iam_role to be created and policy attachment to take place
 	var resp *ssm.CreateActivationOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreateActivation(activationInput)
@@ -146,7 +145,7 @@ func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -169,7 +168,7 @@ func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error reading SSM activation: %s", err)
 	}
-	if resp.ActivationList == nil || len(resp.ActivationList) == 0 {
+	if !d.IsNewResource() && (resp.ActivationList == nil || len(resp.ActivationList) == 0) {
 		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -198,7 +197,7 @@ func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceActivationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())
 

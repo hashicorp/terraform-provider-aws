@@ -2,6 +2,7 @@ package codebuild
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceWebhook() *schema.Resource {
@@ -91,7 +93,7 @@ func ResourceWebhook() *schema.Resource {
 }
 
 func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	input := &codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
@@ -158,7 +160,7 @@ func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFi
 }
 
 func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 		Names: []*string{
@@ -166,20 +168,34 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	})
 
-	if err != nil {
-		return err
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if len(resp.Projects) == 0 {
-		log.Printf("[WARN] CodeBuild Project %q not found, removing from state", d.Id())
+	if err != nil {
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+	}
+
+	if d.IsNewResource() && len(resp.Projects) == 0 {
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
+	}
+
+	if !d.IsNewResource() && len(resp.Projects) == 0 {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	project := resp.Projects[0]
 
-	if project.Webhook == nil {
-		log.Printf("[WARN] CodeBuild Project %q webhook not found, removing from state", d.Id())
+	if d.IsNewResource() && project.Webhook == nil {
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
+	}
+
+	if !d.IsNewResource() && project.Webhook == nil {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -196,7 +212,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
@@ -230,14 +246,14 @@ func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	_, err := conn.DeleteWebhook(&codebuild.DeleteWebhookInput{
 		ProjectName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

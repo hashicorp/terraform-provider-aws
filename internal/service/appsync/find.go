@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindApiCacheByID(conn *appsync.AppSync, id string) (*appsync.ApiCache, error) {
+func FindAPICacheByID(conn *appsync.AppSync, id string) (*appsync.ApiCache, error) {
 	input := &appsync.GetApiCacheInput{
 		ApiId: aws.String(id),
 	}
@@ -56,7 +56,7 @@ func FindDomainNameByID(conn *appsync.AppSync, id string) (*appsync.DomainNameCo
 	return out.DomainNameConfig, nil
 }
 
-func FindDomainNameApiAssociationByID(conn *appsync.AppSync, id string) (*appsync.ApiAssociation, error) {
+func FindDomainNameAPIAssociationByID(conn *appsync.AppSync, id string) (*appsync.ApiAssociation, error) {
 	input := &appsync.GetApiAssociationInput{
 		DomainName: aws.String(id),
 	}
@@ -78,4 +78,30 @@ func FindDomainNameApiAssociationByID(conn *appsync.AppSync, id string) (*appsyn
 	}
 
 	return out.ApiAssociation, nil
+}
+
+func FindTypeByID(conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
+	input := &appsync.GetTypeInput{
+		ApiId:    aws.String(apiID),
+		Format:   aws.String(format),
+		TypeName: aws.String(name),
+	}
+	out, err := conn.GetType(input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return out.Type, nil
 }

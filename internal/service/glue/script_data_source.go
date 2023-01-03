@@ -99,14 +99,14 @@ func DataSourceScript() *schema.Resource {
 }
 
 func dataSourceScriptRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	dagEdge := d.Get("dag_edge").([]interface{})
 	dagNode := d.Get("dag_node").([]interface{})
 
 	input := &glue.CreateScriptInput{
-		DagEdges: expandGlueCodeGenEdges(dagEdge),
-		DagNodes: expandGlueCodeGenNodes(dagNode),
+		DagEdges: expandCodeGenEdges(dagEdge),
+		DagNodes: expandCodeGenNodes(dagNode),
 	}
 
 	if v, ok := d.GetOk("language"); ok {
@@ -130,7 +130,7 @@ func dataSourceScriptRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandGlueCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
+func expandCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
 	args := []*glue.CodeGenNodeArg{}
 
 	for _, mRaw := range l {
@@ -146,7 +146,7 @@ func expandGlueCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
 	return args
 }
 
-func expandGlueCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
+func expandCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
 	edges := []*glue.CodeGenEdge{}
 
 	for _, mRaw := range l {
@@ -164,13 +164,13 @@ func expandGlueCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
 	return edges
 }
 
-func expandGlueCodeGenNodes(l []interface{}) []*glue.CodeGenNode {
+func expandCodeGenNodes(l []interface{}) []*glue.CodeGenNode {
 	nodes := []*glue.CodeGenNode{}
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 		node := &glue.CodeGenNode{
-			Args:     expandGlueCodeGenNodeArgs(m["args"].([]interface{})),
+			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
 			Id:       aws.String(m["id"].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}

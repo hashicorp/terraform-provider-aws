@@ -61,7 +61,7 @@ func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 }
 
 func resourceVPCEndpointConnectionNotificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	req := &ec2.CreateVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
@@ -88,13 +88,13 @@ func resourceVPCEndpointConnectionNotificationCreate(d *schema.ResourceData, met
 }
 
 func resourceVPCEndpointConnectionNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	resp, err := conn.DescribeVpcEndpointConnectionNotifications(&ec2.DescribeVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConnectionNotification") {
 			log.Printf("[WARN] VPC Endpoint connection notification (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -107,7 +107,7 @@ func resourceVPCEndpointConnectionNotificationRead(d *schema.ResourceData, meta 
 }
 
 func resourceVPCEndpointConnectionNotificationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	req := &ec2.ModifyVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationId: aws.String(d.Id()),
@@ -130,14 +130,14 @@ func resourceVPCEndpointConnectionNotificationUpdate(d *schema.ResourceData, met
 }
 
 func resourceVPCEndpointConnectionNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint connection notification: %s", d.Id())
 	_, err := conn.DeleteVpcEndpointConnectionNotifications(&ec2.DeleteVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationIds: aws.StringSlice([]string{d.Id()}),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConnectionNotification") {
 			log.Printf("[DEBUG] VPC Endpoint connection notification %s is already gone", d.Id())
 		} else {
 			return fmt.Errorf("Error deleting VPC Endpoint connection notification: %s", err.Error())

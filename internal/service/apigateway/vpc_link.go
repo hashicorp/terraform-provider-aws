@@ -55,7 +55,7 @@ func ResourceVPCLink() *schema.Resource {
 }
 
 func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -75,7 +75,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.Id))
 
-	if err := waitAPIGatewayVPCLinkAvailable(conn, d.Id()); err != nil {
+	if err := waitVPCLinkAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after creation: %w", d.Id(), err)
 	}
 
@@ -83,7 +83,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -127,7 +127,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -164,7 +164,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating API Gateway VPC Link (%s): %w", d.Id(), err)
 	}
 
-	if err := waitAPIGatewayVPCLinkAvailable(conn, d.Id()); err != nil {
+	if err := waitVPCLinkAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after update: %w", d.Id(), err)
 	}
 
@@ -172,7 +172,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := &apigateway.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
@@ -180,7 +180,7 @@ func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteVpcLink(input)
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 
@@ -188,7 +188,7 @@ func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting API Gateway VPC Link (%s): %w", d.Id(), err)
 	}
 
-	if err := waitAPIGatewayVPCLinkDeleted(conn, d.Id()); err != nil {
+	if err := waitVPCLinkDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) deletion: %w", d.Id(), err)
 	}
 

@@ -35,7 +35,7 @@ func sweepApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := client.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	resp, err := conn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{})
 	if err != nil {
@@ -59,7 +59,7 @@ func sweepApplications(region string) error {
 				ApplicationName: bsa.ApplicationName,
 			})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") || tfawserr.ErrCodeEquals(err, "ValidationError") {
 				log.Printf("[DEBUG] beanstalk application %q not found", applicationName)
 				continue
 			}
@@ -76,7 +76,7 @@ func sweepEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := client.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
 		IncludeDeleted: aws.Bool(false),

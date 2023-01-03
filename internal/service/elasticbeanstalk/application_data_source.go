@@ -55,7 +55,7 @@ func DataSourceApplication() *schema.Resource {
 }
 
 func dataSourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	// Get the name and description
 	name := d.Get("name").(string)

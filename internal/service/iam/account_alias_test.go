@@ -41,13 +41,13 @@ func testAccAccountAlias_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAliasConfig(rName),
+				Config: testAccAccountAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountAliasExists(resourceName),
 				),
@@ -62,7 +62,7 @@ func testAccAccountAlias_basic(t *testing.T) {
 }
 
 func testAccCheckAccountAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_alias" {
@@ -87,7 +87,6 @@ func testAccCheckAccountAliasDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
@@ -97,7 +96,7 @@ func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		params := &iam.ListAccountAliasesInput{}
 
 		resp, err := conn.ListAccountAliases(params)
@@ -118,7 +117,7 @@ func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAccountAliasConfig(rName string) string {
+func testAccAccountAliasConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = %[1]q

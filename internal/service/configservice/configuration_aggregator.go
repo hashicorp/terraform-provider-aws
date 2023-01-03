@@ -2,6 +2,7 @@ package configservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -12,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceConfigurationAggregator() *schema.Resource {
@@ -117,7 +120,7 @@ func ResourceConfigurationAggregator() *schema.Resource {
 }
 
 func resourceConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -155,7 +158,7 @@ func resourceConfigurationAggregatorPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -164,19 +167,24 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 	}
 
 	res, err := conn.DescribeConfigurationAggregators(req)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
-			log.Printf("[WARN] No such configuration aggregator (%s), removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if res == nil || len(res.ConfigurationAggregators) == 0 {
+	if err != nil {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
 		log.Printf("[WARN] No aggregators returned (%s), removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
 	}
 
 	aggregator := res.ConfigurationAggregators[0]
@@ -213,14 +221,14 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceConfigurationAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	req := &configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteConfigurationAggregator(req)
 
-	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
 		return nil
 	}
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb"
 description: |-
@@ -33,7 +33,7 @@ data "aws_elb" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The unique name of the load balancer.
+* `name` - (Required) Unique name of the load balancer.
 
 ## Attributes Reference
 

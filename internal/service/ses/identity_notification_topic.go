@@ -57,7 +57,7 @@ func ResourceIdentityNotificationTopic() *schema.Resource {
 }
 
 func resourceNotificationTopicSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)
 	includeOriginalHeaders := d.Get("include_original_headers").(bool)
@@ -95,9 +95,9 @@ func resourceNotificationTopicSet(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceIdentityNotificationTopicRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
-	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
+	identity, notificationType, err := decodeIdentityNotificationTopicID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -143,9 +143,9 @@ func resourceIdentityNotificationTopicRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceIdentityNotificationTopicDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
-	identity, notificationType, err := decodeSesIdentityNotificationTopicId(d.Id())
+	identity, notificationType, err := decodeIdentityNotificationTopicID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func resourceIdentityNotificationTopicDelete(d *schema.ResourceData, meta interf
 	return resourceIdentityNotificationTopicRead(d, meta)
 }
 
-func decodeSesIdentityNotificationTopicId(id string) (string, string, error) {
+func decodeIdentityNotificationTopicID(id string) (string, string, error) {
 	parts := strings.Split(id, "|")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected IDENTITY|TYPE", id)

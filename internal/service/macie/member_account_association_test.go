@@ -21,10 +21,10 @@ func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberAccountAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, macie.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberAccountAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberAccountAssociationConfig_basic(memberAcctId),
@@ -38,9 +38,9 @@ func TestAccMacieMemberAccountAssociation_basic(t *testing.T) {
 
 func TestAccMacieMemberAccountAssociation_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, macie.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// master account associated with Macie it can't be disassociated.
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccMacieMemberAccountAssociation_self(t *testing.T) {
 }
 
 func testAccCheckMemberAccountAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie_member_account_association" {
@@ -88,7 +88,7 @@ func testAccCheckMemberAccountAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckMemberAccountAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

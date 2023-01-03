@@ -14,7 +14,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func TestDecodeStorageGatewayWorkingStorageID(t *testing.T) {
+func TestDecodeWorkingStorageID(t *testing.T) {
 	var testCases = []struct {
 		Input              string
 		ExpectedGatewayARN string
@@ -77,15 +77,15 @@ func TestAccStorageGatewayWorkingStorage_basic(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Storage Gateway API does not support removing working storages,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkingStorageConfig_Basic(rName),
+				Config: testAccWorkingStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkingStorageExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
@@ -108,7 +108,7 @@ func testAccCheckWorkingStorageExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 		gatewayARN, diskID, err := tfstoragegateway.DecodeWorkingStorageID(rs.Primary.ID)
 		if err != nil {
@@ -139,8 +139,8 @@ func testAccCheckWorkingStorageExists(resourceName string) resource.TestCheckFun
 	}
 }
 
-func testAccWorkingStorageConfig_Basic(rName string) string {
-	return testAccGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
+func testAccWorkingStorageConfig_basic(rName string) string {
+	return testAccGatewayConfig_typeStored(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

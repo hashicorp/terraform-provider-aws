@@ -46,7 +46,7 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 }
 
 func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("resource_policy").(string))
 
@@ -62,7 +62,7 @@ func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}
 
 	_, err = conn.PutModelPackageGroupPolicy(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Model Package Group Policy %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker Model Package Group Policy %s: %w", name, err)
 	}
 
 	d.SetId(name)
@@ -71,7 +71,7 @@ func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	mpg, err := FindModelPackageGroupPolicyByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -81,7 +81,7 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("model_package_group_name", d.Id())
@@ -98,7 +98,7 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(d.Id()),
@@ -109,7 +109,7 @@ func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interfac
 			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find resource policy") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

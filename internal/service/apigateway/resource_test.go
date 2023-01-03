@@ -21,13 +21,13 @@ func TestAccAPIGatewayResource_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig(rName),
+				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(resourceName, &conf),
 					testAccCheckResourceAttributes(&conf, "/test"),
@@ -53,13 +53,13 @@ func TestAccAPIGatewayResource_update(t *testing.T) {
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig(rName),
+				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(resourceName, &conf),
 					testAccCheckResourceAttributes(&conf, "/test"),
@@ -97,13 +97,13 @@ func TestAccAPIGatewayResource_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig(rName),
+				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceResource(), resourceName),
@@ -135,7 +135,7 @@ func testAccCheckResourceExists(n string, res *apigateway.Resource) resource.Tes
 			return fmt.Errorf("No API Gateway Resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetResourceInput{
 			ResourceId: aws.String(rs.Primary.ID),
@@ -157,7 +157,7 @@ func testAccCheckResourceExists(n string, res *apigateway.Resource) resource.Tes
 }
 
 func testAccCheckResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_resource" {
@@ -201,7 +201,7 @@ func testAccResourceImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
-func testAccResourceConfig(rName string) string {
+func testAccResourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

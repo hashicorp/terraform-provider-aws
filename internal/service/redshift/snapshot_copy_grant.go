@@ -53,7 +53,7 @@ func ResourceSnapshotCopyGrant() *schema.Resource {
 }
 
 func resourceSnapshotCopyGrantCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -77,7 +77,7 @@ func resourceSnapshotCopyGrantCreate(d *schema.ResourceData, meta interface{}) e
 	out, err = conn.CreateSnapshotCopyGrant(&input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Snapshot Copy Grant (%s): %s", grantName, err)
+		return fmt.Errorf("creating Redshift Snapshot Copy Grant (%s): %s", grantName, err)
 	}
 
 	log.Printf("[DEBUG] Created new Redshift SnapshotCopyGrant: %s", *out.SnapshotCopyGrant.SnapshotCopyGrantName)
@@ -87,7 +87,7 @@ func resourceSnapshotCopyGrantCreate(d *schema.ResourceData, meta interface{}) e
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findSnapshotCopyGrant(conn, grantName)
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -107,16 +107,15 @@ func resourceSnapshotCopyGrantCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceSnapshotCopyGrantRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	grantName := d.Id()
-	log.Printf("[DEBUG] Looking for grant: %s", grantName)
 
 	grant, err := findSnapshotCopyGrant(conn, grantName)
-	if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
-		log.Printf("[WARN] snapshot copy grant (%s) not found, removing from state", grantName)
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil) {
+		log.Printf("[WARN] Redshift Snapshot Copy Grant (%s) not found, removing from state", grantName)
 		d.SetId("")
 		return nil
 	}
@@ -141,24 +140,24 @@ func resourceSnapshotCopyGrantRead(d *schema.ResourceData, meta interface{}) err
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
 func resourceSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Snapshot Copy Grant (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Snapshot Copy Grant (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -166,7 +165,7 @@ func resourceSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	grantName := d.Id()
 
@@ -178,7 +177,7 @@ func resourceSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) e
 	_, err := conn.DeleteSnapshotCopyGrant(&deleteInput)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) {
 			return nil
 		}
 		return err
@@ -196,7 +195,7 @@ func WaitForSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName stri
 		var err error
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findSnapshotCopyGrant(conn, grantName)
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil {
 			return nil
 		}
 		if err != nil {
@@ -208,7 +207,7 @@ func WaitForSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName stri
 	if tfresource.TimedOut(err) {
 		var grant *redshift.SnapshotCopyGrant
 		grant, err = findSnapshotCopyGrant(conn, grantName)
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") || grant == nil {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) || grant == nil {
 			return nil
 		}
 	}
@@ -219,7 +218,6 @@ func WaitForSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName stri
 }
 
 func findSnapshotCopyGrant(conn *redshift.Redshift, grantName string) (*redshift.SnapshotCopyGrant, error) {
-
 	input := redshift.DescribeSnapshotCopyGrantsInput{
 		SnapshotCopyGrantName: aws.String(grantName),
 	}

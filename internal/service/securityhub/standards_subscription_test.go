@@ -19,10 +19,10 @@ func testAccStandardsSubscription_basic(t *testing.T) {
 	resourceName := "aws_securityhub_standards_subscription.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStandardsSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsSubscriptionConfig_basic,
@@ -44,10 +44,10 @@ func testAccStandardsSubscription_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_standards_subscription.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStandardsSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsSubscriptionConfig_basic,
@@ -72,7 +72,7 @@ func testAccCheckStandardsSubscriptionExists(n string, standardsSubscription *se
 			return fmt.Errorf("No Security Hub Standards Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		output, err := tfsecurityhub.FindStandardsSubscriptionByARN(conn, rs.Primary.ID)
 
@@ -87,7 +87,7 @@ func testAccCheckStandardsSubscriptionExists(n string, standardsSubscription *se
 }
 
 func testAccCheckStandardsSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_standards_subscription" {

@@ -1,5 +1,5 @@
 ---
-subcategory: "ACM PCA"
+subcategory: "ACM PCA (Certificate Manager Private Certificate Authority)"
 layout: "aws"
 page_title: "AWS: aws_acmpca_certificate_authority_certificate"
 description: |-
@@ -108,9 +108,9 @@ data "aws_partition" "current" {}
 
 The following arguments are supported:
 
-* `certificate` - (Required) The PEM-encoded certificate for the Certificate Authority.
-* `certificate_authority_arn` - (Required) Amazon Resource Name (ARN) of the Certificate Authority.
-* `certificate_chain` - (Optional) The PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA. Required for subordinate Certificate Authorities. Not allowed for root Certificate Authorities.
+* `certificate` - (Required) PEM-encoded certificate for the Certificate Authority.
+* `certificate_authority_arn` - (Required) ARN of the Certificate Authority.
+* `certificate_chain` - (Optional) PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA. Required for subordinate Certificate Authorities. Not allowed for root Certificate Authorities.
 
 ## Attributes Reference
 

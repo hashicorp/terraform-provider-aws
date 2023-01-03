@@ -52,7 +52,7 @@ func ResourcePublishingDestination() *schema.Resource {
 }
 
 func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -83,7 +83,7 @@ func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
 
@@ -115,7 +115,7 @@ func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
 
@@ -142,7 +142,7 @@ func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
 
@@ -158,7 +158,7 @@ func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Delete GuardDuty publishing destination: %s", input)
 	_, err := conn.DeletePublishingDestination(&input)
 
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "") {
+	if tfawserr.ErrCodeEquals(err, guardduty.ErrCodeBadRequestException) {
 		return nil
 	}
 

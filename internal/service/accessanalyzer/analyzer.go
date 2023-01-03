@@ -22,8 +22,8 @@ const (
 	// Maximum amount of time to wait for Organizations eventual consistency on creation
 	// This timeout value is much higher than usual since the cross-service validation
 	// appears to be consistently caching for 5 minutes:
-	// --- PASS: TestAccAWSAccessAnalyzer_serial/Analyzer/Type_Organization (315.86s)
-	accessAnalyzerOrganizationCreationTimeout = 10 * time.Minute
+	// --- PASS: TestAccAccessAnalyzer_serial/Analyzer/Type_Organization (315.86s)
+	organizationCreationTimeout = 10 * time.Minute
 )
 
 func ResourceAnalyzer() *schema.Resource {
@@ -69,7 +69,7 @@ func ResourceAnalyzer() *schema.Resource {
 }
 
 func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	analyzerName := d.Get("analyzer_name").(string)
@@ -82,7 +82,7 @@ func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Handle Organizations eventual consistency
-	err := resource.Retry(accessAnalyzerOrganizationCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(organizationCreationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAnalyzer(input)
 
 		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
@@ -110,7 +110,7 @@ func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -154,7 +154,7 @@ func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -167,7 +167,7 @@ func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	log.Printf("[DEBUG] Deleting Access Analyzer Analyzer: (%s)", d.Id())
 	_, err := conn.DeleteAnalyzer(&accessanalyzer.DeleteAnalyzerInput{

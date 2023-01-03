@@ -13,7 +13,6 @@ import (
 )
 
 func ResourceCiphertext() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceCiphertextCreate,
 		Read:   schema.Noop,
@@ -49,7 +48,7 @@ func ResourceCiphertext() *schema.Resource {
 }
 
 func resourceCiphertextCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	//lintignore:R017 // Allow legacy unstable ID usage in managed resource
 	d.SetId(time.Now().UTC().String())

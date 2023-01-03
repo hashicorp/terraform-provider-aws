@@ -14,6 +14,12 @@ func DataSourceLocation() *schema.Resource {
 		Read: dataSourceLocationRead,
 
 		Schema: map[string]*schema.Schema{
+			"available_macsec_port_speeds": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"available_port_speeds": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -40,7 +46,7 @@ func DataSourceLocation() *schema.Resource {
 }
 
 func dataSourceLocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	locationCode := d.Get("location_code").(string)
 
 	location, err := FindLocationByCode(conn, locationCode)
@@ -54,6 +60,7 @@ func dataSourceLocationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(locationCode)
+	d.Set("available_macsec_port_speeds", aws.StringValueSlice(location.AvailableMacSecPortSpeeds))
 	d.Set("available_port_speeds", aws.StringValueSlice(location.AvailablePortSpeeds))
 	d.Set("available_providers", aws.StringValueSlice(location.AvailableProviders))
 	d.Set("location_code", location.LocationCode)

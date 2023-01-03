@@ -20,13 +20,13 @@ func TestAccChimeVoiceConnectorStreaming_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorStreamingConfig(name),
+				Config: testAccVoiceConnectorStreamingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "5"),
@@ -48,13 +48,13 @@ func TestAccChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorStreamingConfig(name),
+				Config: testAccVoiceConnectorStreamingConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorStreaming(), resourceName),
@@ -70,19 +70,19 @@ func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorStreamingConfig(name),
+				Config: testAccVoiceConnectorStreamingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(resourceName),
 				),
 			},
 			{
-				Config: testAccVoiceConnectorStreamingUpdated(name),
+				Config: testAccVoiceConnectorStreamingConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "2"),
@@ -99,7 +99,7 @@ func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 	})
 }
 
-func testAccVoiceConnectorStreamingConfig(name string) string {
+func testAccVoiceConnectorStreamingConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -116,7 +116,7 @@ resource "aws_chime_voice_connector_streaming" "test" {
 `, name)
 }
 
-func testAccVoiceConnectorStreamingUpdated(name string) string {
+func testAccVoiceConnectorStreamingConfig_updated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -144,7 +144,7 @@ func testAccCheckVoiceConnectorStreamingExists(name string) resource.TestCheckFu
 			return fmt.Errorf("no Chime Voice Connector streaming configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorStreamingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -167,13 +167,13 @@ func testAccCheckVoiceConnectorStreamingDestroy(s *terraform.State) error {
 		if rs.Type != "aws_chime_voice_connector_termination" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorStreamingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 		resp, err := conn.GetVoiceConnectorStreamingConfiguration(input)
 
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 			continue
 		}
 

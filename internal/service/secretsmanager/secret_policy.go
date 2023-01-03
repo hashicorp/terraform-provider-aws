@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -53,7 +52,7 @@ func ResourceSecretPolicy() *schema.Resource {
 }
 
 func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -73,7 +72,7 @@ func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 	var output *secretsmanager.PutResourcePolicyOutput
 
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutResourcePolicy(input)
 		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
@@ -98,7 +97,7 @@ func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
@@ -141,7 +140,7 @@ func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	if d.HasChanges("policy", "block_public_policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -155,7 +154,7 @@ func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -178,7 +177,7 @@ func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSecretPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.DeleteResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
@@ -187,7 +186,7 @@ func resourceSecretPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %#v", input)
 	_, err := conn.DeleteResourcePolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error removing Secrets Manager Secret %q policy: %w", d.Id(), err)

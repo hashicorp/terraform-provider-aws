@@ -1,6 +1,7 @@
 package verify
 
 import (
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"gopkg.in/yaml.v2"
 )
@@ -41,6 +42,7 @@ const (
 	ErrCodeInternalServiceError        = "InternalServiceError"
 	ErrCodeInvalidAction               = "InvalidAction"
 	ErrCodeInvalidParameterException   = "InvalidParameterException"
+	ErrCodeInvalidParameterValue       = "InvalidParameterValue"
 	ErrCodeInvalidRequest              = "InvalidRequest"
 	ErrCodeOperationDisabledException  = "OperationDisabledException"
 	ErrCodeOperationNotPermitted       = "OperationNotPermitted"
@@ -51,7 +53,21 @@ const (
 	ErrCodeValidationException         = "ValidationException"
 )
 
-func CheckISOErrorTagsUnsupported(err error) bool {
+// ErrorISOUnsupported checks the partition and specific error to make
+// an educated guess about whether the problem stems from a feature not being
+// available in ISO (or non standard partitions) that is normally available.
+// true means that there is an error AND it suggests a feature is not supported
+// in ISO. Be careful with false, which means either there is NO error or there
+// is an error but not one that suggests an unsupported feature in ISO.
+func ErrorISOUnsupported(partition string, err error) bool {
+	if partition == endpoints.AwsPartitionID {
+		return false
+	}
+
+	if err == nil { // not strictly necessary but make logic clearer
+		return false
+	}
+
 	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) {
 		return true
 	}
@@ -73,6 +89,10 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 	}
 
 	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterValue) {
 		return true
 	}
 

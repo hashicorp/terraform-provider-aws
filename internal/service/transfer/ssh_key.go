@@ -13,7 +13,6 @@ import (
 )
 
 func ResourceSSHKey() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceSSHKeyCreate,
 		Read:   resourceSSHKeyRead,
@@ -51,7 +50,7 @@ func ResourceSSHKey() *schema.Resource {
 }
 
 func resourceSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
 
@@ -74,7 +73,7 @@ func resourceSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -89,7 +88,7 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeUser(descOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing ssh public key (%s) from state", userName, serverID, sshKeyID)
 			d.SetId("")
 			return nil
@@ -117,7 +116,7 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -133,7 +132,7 @@ func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteSshPublicKey(delOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Transfer User Ssh Key (%s): %s", d.Id(), err)

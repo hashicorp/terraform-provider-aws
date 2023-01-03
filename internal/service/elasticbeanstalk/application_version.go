@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -64,7 +64,7 @@ func ResourceApplicationVersion() *schema.Resource {
 }
 
 func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -100,7 +100,7 @@ func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -148,7 +148,7 @@ func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	if d.HasChange("description") {
 		if err := resourceApplicationVersionDescriptionUpdate(conn, d); err != nil {
@@ -166,11 +166,10 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceApplicationVersionRead(d, meta)
-
 }
 
 func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	application := d.Get("application").(string)
 	name := d.Id()
@@ -191,14 +190,13 @@ func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) 
 		DeleteSourceBundle: aws.Bool(false),
 	})
 
+	// application version is pending delete, or no longer exists.
+	if tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
+		return nil
+	}
+
 	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok {
-			// application version is pending delete, or no longer exists.
-			if awserr.Code() == "InvalidParameterValue" {
-				return nil
-			}
-		}
-		return err
+		return fmt.Errorf("deleting Elastic Beanstalk Application version (%s): %w", d.Id(), err)
 	}
 
 	return nil

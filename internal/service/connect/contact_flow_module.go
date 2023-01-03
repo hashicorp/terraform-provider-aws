@@ -20,14 +20,14 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexConnectContactFlowModuleKey = `aws_connect_contact_flow_module`
+const contactFlowModuleMutexKey = `aws_connect_contact_flow_module`
 
 func ResourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContactFlowModuleCreate,
-		ReadContext:   resourceContactFlowModuleRead,
-		UpdateContext: resourceContactFlowModuleUpdate,
-		DeleteContext: resourceContactFlowModuleDelete,
+		CreateWithoutTimeout: resourceContactFlowModuleCreate,
+		ReadWithoutTimeout:   resourceContactFlowModuleRead,
+		UpdateWithoutTimeout: resourceContactFlowModuleUpdate,
+		DeleteWithoutTimeout: resourceContactFlowModuleDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -83,7 +83,7 @@ func ResourceContactFlowModule() *schema.Resource {
 }
 
 func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -104,8 +104,8 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		// Grab an exclusive lock so that we're only reading one contact flow module into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+		conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
+		defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
 		file, err := resourceContactFlowModuleLoadFileContent(filename)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -135,7 +135,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -150,7 +150,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 		InstanceId:          aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Contact Flow Module (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -186,7 +186,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -220,8 +220,8 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 			// Grab an exclusive lock so that we're only reading one contact flow module into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+			conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
+			defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
 			file, err := resourceContactFlowModuleLoadFileContent(filename)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -249,7 +249,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 	if err != nil {

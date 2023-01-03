@@ -40,8 +40,8 @@ func sweepGraphQLAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).AppSyncConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListGraphqlApisInput{}
@@ -95,8 +95,8 @@ func sweepDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).AppSyncConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListDomainNamesInput{}
@@ -150,8 +150,8 @@ func sweepDomainNameAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).AppSyncConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListDomainNamesInput{}
@@ -172,7 +172,7 @@ func sweepDomainNameAssociations(region string) error {
 
 		for _, dm := range output.DomainNameConfigs {
 
-			r := ResourceDomainNameApiAssociation()
+			r := ResourceDomainNameAPIAssociation()
 			d := r.Data(nil)
 
 			id := aws.StringValue(dm.DomainName)

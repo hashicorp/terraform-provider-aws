@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -46,7 +45,7 @@ func ResourceEventStream() *schema.Resource {
 }
 
 func resourceEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -61,7 +60,7 @@ func resourceEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutEventStream(&req)
 
 		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeBadRequestException, "make sure the IAM Role is configured correctly") {
@@ -89,7 +88,7 @@ func resourceEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEventStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
 
@@ -97,7 +96,7 @@ func resourceEventStreamRead(d *schema.ResourceData, meta interface{}) error {
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Pinpoint Event Stream for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -115,14 +114,14 @@ func resourceEventStreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEventStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())
 	_, err := conn.DeleteEventStream(&pinpoint.DeleteEventStreamInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 		return nil
 	}
 

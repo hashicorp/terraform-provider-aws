@@ -42,7 +42,7 @@ func DataSourceCiphertext() *schema.Resource {
 }
 
 func dataSourceCiphertextRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	req := &kms.EncryptInput{
 		KeyId:     aws.String(d.Get("key_id").(string)),

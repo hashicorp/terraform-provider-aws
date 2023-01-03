@@ -18,13 +18,13 @@ func testAccAccount_basic(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieAccountBasicConfig(),
+				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
@@ -48,13 +48,13 @@ func testAccAccount_FindingPublishingFrequency(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieAccountWithFindingConfig(macie2.FindingPublishingFrequencyFifteenMinutes),
+				Config: testAccAccountConfig_finding(macie2.FindingPublishingFrequencyFifteenMinutes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
@@ -65,7 +65,7 @@ func testAccAccount_FindingPublishingFrequency(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMacieAccountWithFindingConfig(macie2.FindingPublishingFrequencyOneHour),
+				Config: testAccAccountConfig_finding(macie2.FindingPublishingFrequencyOneHour),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyOneHour),
@@ -89,13 +89,13 @@ func testAccAccount_WithStatus(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieAccountWithstatusConfig(macie2.MacieStatusEnabled),
+				Config: testAccAccountConfig_status(macie2.MacieStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
@@ -106,7 +106,7 @@ func testAccAccount_WithStatus(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMacieAccountWithstatusConfig(macie2.MacieStatusPaused),
+				Config: testAccAccountConfig_status(macie2.MacieStatusPaused),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
@@ -130,13 +130,13 @@ func testAccAccount_WithFindingAndStatus(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieAccountWithfindingandstatusConfig(macie2.FindingPublishingFrequencyFifteenMinutes, macie2.MacieStatusEnabled),
+				Config: testAccAccountConfig_findingAndStatus(macie2.FindingPublishingFrequencyFifteenMinutes, macie2.MacieStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyFifteenMinutes),
@@ -147,7 +147,7 @@ func testAccAccount_WithFindingAndStatus(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMacieAccountWithfindingandstatusConfig(macie2.FindingPublishingFrequencyOneHour, macie2.MacieStatusPaused),
+				Config: testAccAccountConfig_findingAndStatus(macie2.FindingPublishingFrequencyOneHour, macie2.MacieStatusPaused),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", macie2.FindingPublishingFrequencyOneHour),
@@ -171,13 +171,13 @@ func testAccAccount_disappears(t *testing.T) {
 	resourceName := "aws_macie2_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieAccountBasicConfig(),
+				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(resourceName, &macie2Output),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
@@ -189,7 +189,7 @@ func testAccAccount_disappears(t *testing.T) {
 }
 
 func testAccCheckAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_account" {
@@ -213,7 +213,6 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAccountExists(resourceName string, macie2Session *macie2.GetMacieSessionOutput) resource.TestCheckFunc {
@@ -223,7 +222,7 @@ func testAccCheckAccountExists(resourceName string, macie2Session *macie2.GetMac
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.GetMacieSessionInput{}
 
 		resp, err := conn.GetMacieSession(input)
@@ -242,13 +241,13 @@ func testAccCheckAccountExists(resourceName string, macie2Session *macie2.GetMac
 	}
 }
 
-func testAccMacieAccountBasicConfig() string {
+func testAccAccountConfig_basic() string {
 	return `
 resource "aws_macie2_account" "test" {}
 `
 }
 
-func testAccMacieAccountWithFindingConfig(finding string) string {
+func testAccAccountConfig_finding(finding string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {
   finding_publishing_frequency = "%s"
@@ -256,7 +255,7 @@ resource "aws_macie2_account" "test" {
 `, finding)
 }
 
-func testAccMacieAccountWithstatusConfig(status string) string {
+func testAccAccountConfig_status(status string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {
   status = "%s"
@@ -264,7 +263,7 @@ resource "aws_macie2_account" "test" {
 `, status)
 }
 
-func testAccMacieAccountWithfindingandstatusConfig(finding, status string) string {
+func testAccAccountConfig_findingAndStatus(finding, status string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {
   finding_publishing_frequency = "%s"

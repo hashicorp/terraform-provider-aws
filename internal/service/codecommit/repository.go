@@ -10,8 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceRepository() *schema.Resource {
@@ -71,7 +73,7 @@ func ResourceRepository() *schema.Resource {
 }
 
 func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -102,7 +104,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	if d.HasChange("default_branch") {
 		if err := resourceUpdateDefaultBranch(conn, d); err != nil {
@@ -128,7 +130,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -137,14 +139,14 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	out, err := conn.GetRepository(input)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
+		create.LogNotFoundRemoveState(names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codecommit.ErrCodeRepositoryDoesNotExistException, "") {
-			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		} else {
-			return fmt.Errorf("Error reading CodeCommit Repository: %s", err.Error())
-		}
+		return create.Error(names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)
@@ -181,7 +183,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	log.Printf("[DEBUG] CodeCommit Delete Repository: %s", d.Id())
 	_, err := conn.DeleteRepository(&codecommit.DeleteRepositoryInput{

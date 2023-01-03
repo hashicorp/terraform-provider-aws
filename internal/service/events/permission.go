@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -83,7 +82,7 @@ func ResourcePermission() *schema.Resource {
 }
 
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
@@ -110,7 +109,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -123,7 +122,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	var policyStatement *PermissionPolicyStatement
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBus(&input)
 		if err != nil {
@@ -144,7 +143,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -207,7 +206,7 @@ func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID 
 }
 
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -221,13 +220,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 		StatementId:  aws.String(statementID),
 	}
 
-	log.Printf("[DEBUG] Update EventBridge permission: %s", input)
 	_, err = conn.PutPermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] EventBridge permission %q not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("error updating EventBridge permission (%s): %w", d.Id(), err)
 	}
@@ -236,7 +229,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -249,7 +242,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Delete EventBridge permission: %s", input)
 	_, err = conn.RemovePermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -375,7 +368,6 @@ func (c *PermissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
 
 func FindPermissionPolicyStatementByID(policy *PermissionPolicyDoc, id string) (
 	*PermissionPolicyStatement, error) {
-
 	log.Printf("[DEBUG] Finding statement (%s) in EventBridge permission policy: %s", id, policy)
 	for _, statement := range policy.Statements {
 		if statement.Sid == id {

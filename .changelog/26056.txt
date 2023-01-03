@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb: Add `preserve_host_header` argument
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `preserve_host_header` attribute
+```

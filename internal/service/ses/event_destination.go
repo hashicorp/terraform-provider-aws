@@ -134,7 +134,7 @@ func ResourceEventDestination() *schema.Resource {
 }
 
 func resourceEventDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestinationName := d.Get("name").(string)
@@ -190,7 +190,7 @@ func resourceEventDestinationCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	input := &ses.DescribeConfigurationSetInput{
@@ -199,13 +199,13 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	output, err := conn.DescribeConfigurationSet(input)
-	if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", configurationSetName)
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading SES Configuration Set Event Destination (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SES Configuration Set Event Destination (%s): %w", d.Id(), err)
 	}
 
 	var thisEventDestination *ses.EventDestination
@@ -224,17 +224,17 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("configuration_set_name", output.ConfigurationSet.Name)
 	d.Set("enabled", thisEventDestination.Enabled)
 	d.Set("name", thisEventDestination.Name)
-	if err := d.Set("cloudwatch_destination", flattenSesCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_destination: %w", err)
+	if err := d.Set("cloudwatch_destination", flattenCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
+		return fmt.Errorf("setting cloudwatch_destination: %w", err)
 	}
-	if err := d.Set("kinesis_destination", flattenSesKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
-		return fmt.Errorf("error setting kinesis_destination: %w", err)
+	if err := d.Set("kinesis_destination", flattenKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
+		return fmt.Errorf("setting kinesis_destination: %w", err)
 	}
 	if err := d.Set("matching_types", flex.FlattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
-		return fmt.Errorf("error setting matching_types: %w", err)
+		return fmt.Errorf("setting matching_types: %w", err)
 	}
-	if err := d.Set("sns_destination", flattenSesSnsDestination(thisEventDestination.SNSDestination)); err != nil {
-		return fmt.Errorf("error setting sns_destination: %w", err)
+	if err := d.Set("sns_destination", flattenSNSDestination(thisEventDestination.SNSDestination)); err != nil {
+		return fmt.Errorf("setting sns_destination: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -250,7 +250,7 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	log.Printf("[DEBUG] SES Delete Configuration Set Destination: %s", d.Id())
 	_, err := conn.DeleteConfigurationSetEventDestination(&ses.DeleteConfigurationSetEventDestinationInput{
@@ -264,7 +264,7 @@ func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) er
 func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'configuration-set-name/event-destination-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'configuration-set-name/event-destination-name'", d.Id())
 	}
 
 	configurationSetName := parts[0]
@@ -278,7 +278,6 @@ func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([
 }
 
 func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {
-
 	b := make([]*ses.CloudWatchDimensionConfiguration, len(v))
 
 	for i, vI := range v {
@@ -293,7 +292,7 @@ func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionCo
 	return b
 }
 
-func flattenSesCloudWatchDestination(destination *ses.CloudWatchDestination) []interface{} {
+func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
@@ -313,7 +312,7 @@ func flattenSesCloudWatchDestination(destination *ses.CloudWatchDestination) []i
 	return vDimensionConfigurations
 }
 
-func flattenSesKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestination) []interface{} {
+func flattenKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
@@ -326,7 +325,7 @@ func flattenSesKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestin
 	return []interface{}{mDestination}
 }
 
-func flattenSesSnsDestination(destination *ses.SNSDestination) []interface{} {
+func flattenSNSDestination(destination *ses.SNSDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}

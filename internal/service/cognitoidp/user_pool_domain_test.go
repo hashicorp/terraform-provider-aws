@@ -22,10 +22,10 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_basic(domainName, poolName),
@@ -58,10 +58,10 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPoolDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_custom(rootDomain, domain, poolName),
@@ -92,10 +92,10 @@ func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_basic(domainName, poolName),
@@ -120,7 +120,7 @@ func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
 			return errors.New("No Cognito User Pool Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		_, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
 			Domain: aws.String(rs.Primary.ID),
@@ -131,7 +131,7 @@ func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckUserPoolDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_domain" {
@@ -143,7 +143,7 @@ func testAccCheckUserPoolDomainDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err
@@ -168,7 +168,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
 	return acctest.ConfigCompose(
-		testAccCognitoUserPoolCustomDomainRegionProviderConfig(),
+		testAccUserPoolCustomDomainRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q

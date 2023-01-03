@@ -94,7 +94,7 @@ func ResourceHostedConnection() *schema.Resource {
 }
 
 func resourceHostedConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	name := d.Get("name").(string)
 	input := &directconnect.AllocateHostedConnectionInput{
@@ -118,7 +118,7 @@ func resourceHostedConnectionCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceHostedConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	connection, err := FindHostedConnectionByID(conn, d.Id())
 
@@ -153,7 +153,7 @@ func resourceHostedConnectionRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceHostedConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	return deleteDirectConnectConnection(conn, d.Id(), waitHostedConnectionDeleted)
+	return deleteConnection(conn, d.Id(), waitHostedConnectionDeleted)
 }

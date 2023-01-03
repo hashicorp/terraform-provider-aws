@@ -23,11 +23,11 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDKIMDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDKIMDestroy,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: fmt.Sprintf(testAccDomainDKIMConfig, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainDKIMExists(resourceName),
@@ -39,7 +39,7 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 }
 
 func testAccCheckDomainDKIMDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_domain_dkim" {
@@ -79,7 +79,7 @@ func testAccCheckDomainDKIMExists(n string) resource.TestCheckFunc {
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		params := &ses.GetIdentityDkimAttributesInput{
 			Identities: []*string{

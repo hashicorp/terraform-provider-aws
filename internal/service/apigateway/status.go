@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func apiGatewayVpcLinkStatus(conn *apigateway.APIGateway, vpcLinkId string) resource.StateRefreshFunc {
+func vpcLinkStatus(conn *apigateway.APIGateway, vpcLinkId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{
 			VpcLinkId: aws.String(vpcLinkId),

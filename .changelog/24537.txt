@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix PreconditionFailed errors when other CloudFront resources are changed before the distribution
+```

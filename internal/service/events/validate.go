@@ -92,7 +92,7 @@ var validBusNameOrARN = validation.Any(
 	),
 )
 
-var validCustomEventBusEventSourceName = validation.All(
+var validSourceName = validation.All(
 	validation.StringLenBetween(1, 256),
 	validation.StringMatch(regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`), ""),
 )

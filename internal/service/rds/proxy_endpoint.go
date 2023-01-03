@@ -88,7 +88,7 @@ func ResourceProxyEndpoint() *schema.Resource {
 }
 
 func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -123,7 +123,7 @@ func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -188,7 +188,7 @@ func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("vpc_security_group_ids") {
 		params := rds.ModifyDBProxyEndpointInput{
@@ -206,8 +206,8 @@ func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("Error updating RDS DB Proxy Endpoint (%s) tags: %w", d.Get("arn").(string), err)
@@ -218,7 +218,7 @@ func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceProxyEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	params := rds.DeleteDBProxyEndpointInput{
 		DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),

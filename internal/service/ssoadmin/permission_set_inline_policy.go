@@ -52,7 +52,7 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 }
 
 func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -77,7 +77,7 @@ func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface
 	d.SetId(fmt.Sprintf("%s,%s", permissionSetArn, instanceArn))
 
 	// (Re)provision ALL accounts after making the above changes
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 
@@ -85,7 +85,7 @@ func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface
 }
 
 func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	permissionSetArn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -128,7 +128,7 @@ func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interfac
 }
 
 func resourcePermissionSetInlinePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	permissionSetArn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {

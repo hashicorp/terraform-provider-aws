@@ -52,7 +52,7 @@ func ResourceManagedPolicyAttachment() *schema.Resource {
 }
 
 func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	instanceArn := d.Get("instance_arn").(string)
 	managedPolicyArn := d.Get("managed_policy_arn").(string)
@@ -73,7 +73,7 @@ func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interfac
 	d.SetId(fmt.Sprintf("%s,%s,%s", managedPolicyArn, permissionSetArn, instanceArn))
 
 	// Provision ALL accounts after attaching the managed policy
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 
@@ -81,7 +81,7 @@ func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -115,7 +115,7 @@ func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -138,7 +138,7 @@ func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interfac
 	}
 
 	// Provision ALL accounts after detaching the managed policy
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 

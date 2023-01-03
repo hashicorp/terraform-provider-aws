@@ -42,7 +42,7 @@ func ResourceBackendServerPolicy() *schema.Resource {
 }
 
 func resourceBackendServerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName := d.Get("load_balancer_name")
 
@@ -66,7 +66,7 @@ func resourceBackendServerPolicyCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
 
@@ -94,7 +94,7 @@ func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) e
 
 	policyNames := []*string{}
 	for _, backendServer := range lb.BackendServerDescriptions {
-		if instancePort != strconv.Itoa(int(*backendServer.InstancePort)) {
+		if instancePort != strconv.Itoa(int(aws.Int64Value(backendServer.InstancePort))) {
 			continue
 		}
 
@@ -104,7 +104,7 @@ func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("load_balancer_name", loadBalancerName)
 	instancePortVal, err := strconv.ParseInt(instancePort, 10, 64)
 	if err != nil {
-		return fmt.Errorf("error parsing instance port: %s", err)
+		return fmt.Errorf("parsing instance port: %s", err)
 	}
 	d.Set("instance_port", instancePortVal)
 	d.Set("policy_names", flex.FlattenStringList(policyNames))
@@ -113,7 +113,7 @@ func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceBackendServerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
 

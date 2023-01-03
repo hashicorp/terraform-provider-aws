@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDashboard() *schema.Resource {
@@ -57,20 +59,21 @@ func ResourceDashboard() *schema.Resource {
 func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 	dashboardName := d.Get("dashboard_name").(string)
 	log.Printf("[DEBUG] Reading CloudWatch Dashboard: %s", dashboardName)
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
 	params := cloudwatch.GetDashboardInput{
 		DashboardName: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetDashboard(&params)
+	if !d.IsNewResource() && IsDashboardNotFoundErr(err) {
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if IsDashboardNotFoundErr(err) {
-			log.Printf("[WARN] CloudWatch Dashboard %q not found, removing", dashboardName)
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Reading dashboard failed: %s", err)
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id(), err)
 	}
 
 	d.Set("dashboard_arn", resp.DashboardArn)
@@ -80,7 +83,7 @@ func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDashboardPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := cloudwatch.PutDashboardInput{
 		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
 		DashboardName: aws.String(d.Get("dashboard_name").(string)),
@@ -100,7 +103,7 @@ func resourceDashboardPut(d *schema.ResourceData, meta interface{}) error {
 
 func resourceDashboardDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting CloudWatch Dashboard %s", d.Id())
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []*string{aws.String(d.Id())},
 	}
@@ -121,5 +124,4 @@ func IsDashboardNotFoundErr(err error) bool {
 		err,
 		"ResourceNotFound",
 		"does not exist")
-
 }

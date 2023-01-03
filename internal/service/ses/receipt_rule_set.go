@@ -38,7 +38,7 @@ func ResourceReceiptRuleSet() *schema.Resource {
 }
 
 func resourceReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -48,7 +48,7 @@ func resourceReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.CreateReceiptRuleSet(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating SES rule set: %w", err)
+		return fmt.Errorf("creating SES rule set: %w", err)
 	}
 
 	d.SetId(ruleSetName)
@@ -57,7 +57,7 @@ func resourceReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	input := &ses.DescribeReceiptRuleSetInput{
 		RuleSetName: aws.String(d.Id()),
@@ -65,14 +65,14 @@ func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.DescribeReceiptRuleSet(input)
 
-	if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 		log.Printf("[WARN] SES Receipt Rule Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing SES Receipt Rule Set (%s): %w", d.Id(), err)
+		return fmt.Errorf("describing SES Receipt Rule Set (%s): %w", d.Id(), err)
 	}
 
 	if resp.Metadata == nil {
@@ -96,14 +96,14 @@ func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	log.Printf("[DEBUG] SES Delete Receipt Rule Set: %s", d.Id())
 	input := &ses.DeleteReceiptRuleSetInput{
 		RuleSetName: aws.String(d.Id()),
 	}
 	if _, err := conn.DeleteReceiptRuleSet(input); err != nil {
-		return fmt.Errorf("error deleting SES Receipt Rule Set (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SES Receipt Rule Set (%s): %w", d.Id(), err)
 	}
 
 	return nil

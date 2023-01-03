@@ -17,12 +17,12 @@ func TestAccECRImageDataSource_ecrImage(t *testing.T) {
 	resourceByDigest := "data.aws_ecr_image.by_digest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckImageDataSourceConfig(registry, repo, tag),
+				Config: testAccImageDataSourceConfig_basic(registry, repo, tag),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceByTag, "image_digest"),
 					resource.TestCheckResourceAttrSet(resourceByTag, "image_pushed_at"),
@@ -37,7 +37,7 @@ func TestAccECRImageDataSource_ecrImage(t *testing.T) {
 	})
 }
 
-func testAccCheckImageDataSourceConfig(reg, repo, tag string) string {
+func testAccImageDataSourceConfig_basic(reg, repo, tag string) string {
 	return fmt.Sprintf(`
 data "aws_ecr_image" "by_tag" {
   registry_id     = "%s"

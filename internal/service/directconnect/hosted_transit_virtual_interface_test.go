@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -37,7 +36,6 @@ func testAccHostedTransitVirtualInterface_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_transit_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_transit_virtual_interface_accepter.test"
@@ -52,12 +50,12 @@ func testAccHostedTransitVirtualInterface_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckHostedTransitVirtualInterfaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckHostedTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedTransitVirtualInterfaceConfig_basic(connectionId, rName, amzAsn, bgpAsn, vlan),
+				Config: testAccHostedTransitVirtualInterfaceConfig_basic(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -81,7 +79,7 @@ func testAccHostedTransitVirtualInterface_basic(t *testing.T) {
 			},
 			// Test import.
 			{
-				Config:            testAccDxHostedTransitVirtualInterfaceConfig_basic(connectionId, rName, amzAsn, bgpAsn, vlan),
+				Config:            testAccHostedTransitVirtualInterfaceConfig_basic(connectionId, rName, amzAsn, bgpAsn, vlan),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -97,7 +95,6 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_transit_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_transit_virtual_interface_accepter.test"
@@ -112,12 +109,12 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckHostedTransitVirtualInterfaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckHostedTransitVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedTransitVirtualInterfaceConfig_accepterTags(connectionId, rName, amzAsn, bgpAsn, vlan),
+				Config: testAccHostedTransitVirtualInterfaceConfig_accepterTags(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -143,7 +140,7 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxHostedTransitVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, amzAsn, bgpAsn, vlan),
+				Config: testAccHostedTransitVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, amzAsn, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -173,14 +170,14 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 }
 
 func testAccCheckHostedTransitVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckDxVirtualInterfaceExists(name, vif)
+	return testAccCheckVirtualInterfaceExists(name, vif)
 }
 
 func testAccCheckHostedTransitVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_transit_virtual_interface")
+	return testAccCheckVirtualInterfaceDestroy(s, "aws_dx_hosted_transit_virtual_interface")
 }
 
-func testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName string, amzAsn, bgpAsn, vlan int) string {
+func testAccHostedTransitVirtualInterfaceConfig_base(cid, rName string, amzAsn, bgpAsn, vlan int) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Creator
 resource "aws_dx_hosted_transit_virtual_interface" "test" {
@@ -210,8 +207,8 @@ resource "aws_dx_gateway" "test" {
 `, cid, rName, amzAsn, bgpAsn, vlan)
 }
 
-func testAccDxHostedTransitVirtualInterfaceConfig_basic(cid, rName string, amzAsn, bgpAsn, vlan int) string {
-	return testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + `
+func testAccHostedTransitVirtualInterfaceConfig_basic(cid, rName string, amzAsn, bgpAsn, vlan int) string {
+	return testAccHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + `
 resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -221,8 +218,8 @@ resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
 `
 }
 
-func testAccDxHostedTransitVirtualInterfaceConfig_accepterTags(cid, rName string, amzAsn, bgpAsn, vlan int) string {
-	return testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + fmt.Sprintf(`
+func testAccHostedTransitVirtualInterfaceConfig_accepterTags(cid, rName string, amzAsn, bgpAsn, vlan int) string {
+	return testAccHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -238,8 +235,8 @@ resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
 `, rName)
 }
 
-func testAccDxHostedTransitVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, amzAsn, bgpAsn, vlan int) string {
-	return testAccDxHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + fmt.Sprintf(`
+func testAccHostedTransitVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, amzAsn, bgpAsn, vlan int) string {
+	return testAccHostedTransitVirtualInterfaceConfig_base(cid, rName, amzAsn, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_transit_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 

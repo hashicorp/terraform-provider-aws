@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -46,7 +45,7 @@ func ResourceBucketPolicy() *schema.Resource {
 }
 
 func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 
@@ -65,7 +64,7 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutBucketPolicy(params)
-		if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") {
+		if tfawserr.ErrCodeEquals(err, "MalformedPolicy") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -86,12 +85,18 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	log.Printf("[DEBUG] S3 bucket policy, read for bucket: %s", d.Id())
 	pol, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 		Bucket: aws.String(d.Id()),
 	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, s3.ErrCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	v := ""
 	if err == nil && pol.Policy != nil {
@@ -122,7 +127,7 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 
@@ -131,10 +136,11 @@ func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		Bucket: aws.String(bucket),
 	})
 
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucket" {
-			return nil
-		}
 		return fmt.Errorf("Error deleting S3 policy: %s", err)
 	}
 

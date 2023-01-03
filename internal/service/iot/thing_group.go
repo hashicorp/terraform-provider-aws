@@ -121,7 +121,7 @@ const (
 )
 
 func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -155,7 +155,7 @@ func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -216,7 +216,7 @@ func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.UpdateThingGroupInput{
@@ -257,7 +257,7 @@ func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
 	_, err := tfresource.RetryWhen(thingGroupDeleteTimeout,
@@ -333,13 +333,13 @@ func flattenThingGroupMetadata(apiObject *iot.ThingGroupMetadata) map[string]int
 	}
 
 	if v := apiObject.RootToParentThingGroups; v != nil {
-		tfMap["root_to_parent_groups"] = flattenGroupNameAndArns(v)
+		tfMap["root_to_parent_groups"] = flattenGroupNameAndARNs(v)
 	}
 
 	return tfMap
 }
 
-func flattenGroupNameAndArn(apiObject *iot.GroupNameAndArn) map[string]interface{} {
+func flattenGroupNameAndARN(apiObject *iot.GroupNameAndArn) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -357,7 +357,7 @@ func flattenGroupNameAndArn(apiObject *iot.GroupNameAndArn) map[string]interface
 	return tfMap
 }
 
-func flattenGroupNameAndArns(apiObjects []*iot.GroupNameAndArn) []interface{} {
+func flattenGroupNameAndARNs(apiObjects []*iot.GroupNameAndArn) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -369,7 +369,7 @@ func flattenGroupNameAndArns(apiObjects []*iot.GroupNameAndArn) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenGroupNameAndArn(apiObject))
+		tfList = append(tfList, flattenGroupNameAndARN(apiObject))
 	}
 
 	return tfList

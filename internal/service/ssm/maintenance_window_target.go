@@ -94,7 +94,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 }
 
 func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Target")
 
@@ -127,7 +127,7 @@ func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	windowID := d.Get("window_id").(string)
 	params := &ssm.DescribeMaintenanceWindowTargetsInput{
@@ -141,7 +141,7 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 	}
 
 	resp, err := conn.DescribeMaintenanceWindowTargets(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Target (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -164,10 +164,12 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 			if err := d.Set("targets", flattenTargets(t.Targets)); err != nil {
 				return fmt.Errorf("Error setting targets: %w", err)
 			}
+
+			break
 		}
 	}
 
-	if !found {
+	if !d.IsNewResource() && !found {
 		log.Printf("[INFO] Maintenance Window Target not found. Removing from state")
 		d.SetId("")
 		return nil
@@ -177,7 +179,7 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
@@ -208,7 +210,7 @@ func resourceMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Target: %s", d.Id())
 
@@ -218,7 +220,7 @@ func resourceMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interfac
 	}
 
 	_, err := conn.DeregisterTargetFromMaintenanceWindow(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		return nil
 	}
 

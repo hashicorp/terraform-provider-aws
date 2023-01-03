@@ -129,6 +129,14 @@ func ResourceImagePipeline() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
+						"timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(3, 100),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]{2,}(?:\/[a-zA-z0-9-_+]+)*`), "")),
+						},
 					},
 				},
 			},
@@ -147,7 +155,7 @@ func ResourceImagePipeline() *schema.Resource {
 }
 
 func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -212,7 +220,7 @@ func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -282,7 +290,7 @@ func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChanges(
 		"description",
@@ -350,7 +358,7 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceImagePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
@@ -402,6 +410,10 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 		apiObject.ScheduleExpression = aws.String(v)
 	}
 
+	if v, ok := tfMap["timezone"].(string); ok && v != "" {
+		apiObject.Timezone = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -436,6 +448,10 @@ func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 
 	if v := apiObject.ScheduleExpression; v != nil {
 		tfMap["schedule_expression"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Timezone; v != nil {
+		tfMap["timezone"] = aws.StringValue(v)
 	}
 
 	return tfMap

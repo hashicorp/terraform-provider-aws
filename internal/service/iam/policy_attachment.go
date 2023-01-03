@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -56,7 +55,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 }
 
 func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
@@ -86,7 +85,7 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	arn := d.Get("policy_arn").(string)
 	name := d.Get("name").(string)
 
@@ -95,14 +94,12 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NoSuchEntity" {
-				log.Printf("[WARN] No such entity found for Policy Attachment (%s)", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			log.Printf("[WARN] IAM Policy Attachment (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
-		return err
+		return fmt.Errorf("error reading IAM Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	ul := make([]string, 0)
@@ -141,7 +138,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 func resourcePolicyAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	name := d.Get("name").(string)
 	var userErr, roleErr, groupErr error
 
@@ -161,7 +158,7 @@ func resourcePolicyAttachmentUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
 	users := flex.ExpandStringSet(d.Get("users").(*schema.Set))
@@ -296,7 +293,6 @@ func updateGroups(conn *iam.IAM, d *schema.ResourceData) error {
 		return aErr
 	}
 	return nil
-
 }
 func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 	for _, u := range users {
@@ -304,7 +300,7 @@ func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 			UserName:  u,
 			PolicyArn: aws.String(arn),
 		})
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -319,7 +315,7 @@ func detachPolicyFromRoles(conn *iam.IAM, roles []*string, arn string) error {
 			RoleName:  r,
 			PolicyArn: aws.String(arn),
 		})
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {
@@ -334,7 +330,7 @@ func detachPolicyFromGroups(conn *iam.IAM, groups []*string, arn string) error {
 			GroupName: g,
 			PolicyArn: aws.String(arn),
 		})
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if err != nil {

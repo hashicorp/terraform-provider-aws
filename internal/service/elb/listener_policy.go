@@ -42,7 +42,7 @@ func ResourceListenerPolicy() *schema.Resource {
 }
 
 func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName := d.Get("load_balancer_name")
 
@@ -66,7 +66,7 @@ func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 
@@ -94,7 +94,7 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 
 	policyNames := []*string{}
 	for _, listener := range lb.ListenerDescriptions {
-		if loadBalancerPort != strconv.Itoa(int(*listener.Listener.LoadBalancerPort)) {
+		if loadBalancerPort != strconv.Itoa(int(aws.Int64Value(listener.Listener.LoadBalancerPort))) {
 			continue
 		}
 
@@ -104,7 +104,7 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("load_balancer_name", loadBalancerName)
 	loadBalancerPortVal, err := strconv.ParseInt(loadBalancerPort, 10, 64)
 	if err != nil {
-		return fmt.Errorf("error parsing load balancer port: %s", err)
+		return fmt.Errorf("parsing load balancer port: %s", err)
 	}
 	d.Set("load_balancer_port", loadBalancerPortVal)
 	d.Set("policy_names", flex.FlattenStringList(policyNames))
@@ -113,7 +113,7 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceListenerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 

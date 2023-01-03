@@ -37,7 +37,7 @@ func DataSourceUsers() *schema.Resource {
 }
 
 func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	nameRegex := d.Get("name_regex").(string)
 	pathPrefix := d.Get("path_prefix").(string)

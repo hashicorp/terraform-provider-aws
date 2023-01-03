@@ -33,7 +33,7 @@ func ResourceReceiptFilter() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z._-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z]`), "must begin with a alphanumeric character"),
 					validation.StringMatch(regexp.MustCompile(`[0-9a-zA-Z]$`), "must end with a alphanumeric character"),
 				),
@@ -63,7 +63,7 @@ func ResourceReceiptFilter() *schema.Resource {
 }
 
 func resourceReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	name := d.Get("name").(string)
 
@@ -88,7 +88,7 @@ func resourceReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	listOpts := &ses.ListReceiptFiltersInput{}
 
@@ -129,7 +129,7 @@ func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	deleteOpts := &ses.DeleteReceiptFilterInput{
 		FilterName: aws.String(d.Id()),

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -131,7 +130,7 @@ func ResourceOptionGroup() *schema.Resource {
 }
 
 func resourceOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -168,7 +167,7 @@ func resourceOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -179,7 +178,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describe DB Option Group: %#v", params)
 	options, err := conn.DescribeOptionGroups(params)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
 		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -191,7 +190,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var option *rds.OptionGroup
 	for _, ogl := range options.OptionGroupsList {
-		if *ogl.OptionGroupName == d.Id() {
+		if aws.StringValue(ogl.OptionGroupName) == d.Id() {
 			option = ogl
 			break
 		}
@@ -235,7 +234,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func optionInList(optionName string, list []*string) bool {
 	for _, opt := range list {
-		if *opt == optionName {
+		if aws.StringValue(opt) == optionName {
 			return true
 		}
 	}
@@ -243,7 +242,7 @@ func optionInList(optionName string, list []*string) bool {
 }
 
 func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	if d.HasChange("option") {
 		o, n := d.GetChange("option")
 		if o == nil {
@@ -285,7 +284,7 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
 
-			err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+			err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyOptionGroup(modifyOpts)
 				if err != nil {
 					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE
@@ -317,17 +316,17 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOptionGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	deleteOpts := &rds.DeleteOptionGroupInput{
 		OptionGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Delete DB Option Group: %#v", deleteOpts)
+	log.Printf("[DEBUG] Deleting RDS Option Group: %s", d.Id())
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteOptionGroup(deleteOpts)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
 				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
 				return resource.RetryableError(err)
 			}

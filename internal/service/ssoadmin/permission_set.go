@@ -90,7 +90,7 @@ func ResourcePermissionSet() *schema.Resource {
 }
 
 func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -133,7 +133,7 @@ func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -191,7 +191,7 @@ func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -235,7 +235,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Re-provision ALL accounts after making the above changes
-	if err := provisionSsoAdminPermissionSet(conn, arn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, arn, instanceArn); err != nil {
 		return err
 	}
 
@@ -243,7 +243,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcePermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -274,7 +274,7 @@ func ParseResourceID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) error {
+func provisionPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) error {
 	input := &ssoadmin.ProvisionPermissionSetInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(arn),
@@ -282,7 +282,7 @@ func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn st
 	}
 
 	var output *ssoadmin.ProvisionPermissionSetOutput
-	err := resource.Retry(awsSSOAdminPermissionSetProvisionTimeout, func() *resource.RetryError {
+	err := resource.Retry(permissionSetProvisionTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.ProvisionPermissionSet(input)
 

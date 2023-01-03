@@ -92,3 +92,29 @@ func TestValidOpenIDURL(t *testing.T) {
 		}
 	}
 }
+
+func TestValidRolePolicyRoleName(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value: "S3Access",
+		},
+		{
+			Value: "role/S3Access",
+		},
+		{
+			Value:    "arn:aws:iam::123456789012:role/S3Access", // lintignore:AWSAT005
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validRolePolicyRole(tc.Value, "role")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected %d Role Policy role name validation errors, got %d", tc.ErrCount, len(errors))
+		}
+	}
+}

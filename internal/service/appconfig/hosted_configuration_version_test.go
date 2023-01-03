@@ -21,13 +21,13 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostedConfigurationVersion(rName),
+				Config: testAccHostedConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConfigurationVersionExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/configurationprofile/[a-z0-9]{4,7}/hostedconfigurationversion/[0-9]+`)),
@@ -53,13 +53,13 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppConfigHostedConfigurationVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostedConfigurationVersion(rName),
+				Config: testAccHostedConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConfigurationVersionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
@@ -70,8 +70,8 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAppConfigHostedConfigurationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+func testAccCheckHostedConfigurationVersionDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_hosted_configuration_version" {
@@ -125,7 +125,7 @@ func testAccCheckHostedConfigurationVersionExists(resourceName string) resource.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		output, err := conn.GetHostedConfigurationVersion(&appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),
@@ -145,9 +145,9 @@ func testAccCheckHostedConfigurationVersionExists(resourceName string) resource.
 	}
 }
 
-func testAccHostedConfigurationVersion(rName string) string {
+func testAccHostedConfigurationVersionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigurationProfileNameConfig(rName),
+		testAccConfigurationProfileConfig_name(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_hosted_configuration_version" "test" {
   application_id           = aws_appconfig_application.test.id

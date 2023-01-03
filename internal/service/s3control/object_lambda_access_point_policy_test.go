@@ -1,6 +1,7 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -19,13 +20,13 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -48,13 +49,13 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPointPolicy(), resourceName),
@@ -71,13 +72,13 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_Disappears_accessPoint(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), accessPointResourceName),
@@ -93,13 +94,13 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -114,7 +115,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccObjectLambdaAccessPointPolicyUpdatedConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -128,7 +129,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 }
 
 func testAccCheckObjectLambdaAccessPointPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_object_lambda_access_point_policy" {
@@ -141,7 +142,7 @@ func testAccCheckObjectLambdaAccessPointPolicyDestroy(s *terraform.State) error 
 			return err
 		}
 
-		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -174,19 +175,15 @@ func testAccCheckObjectLambdaAccessPointPolicyExists(n string) resource.TestChec
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccObjectLambdaAccessPointPolicyConfig(rName string) string {
+func testAccObjectLambdaAccessPointPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -235,7 +232,7 @@ resource "aws_s3control_object_lambda_access_point_policy" "test" {
 `, rName))
 }
 
-func testAccObjectLambdaAccessPointPolicyUpdatedConfig(rName string) string {
+func testAccObjectLambdaAccessPointPolicyConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

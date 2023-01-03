@@ -1,16 +1,19 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceAggregateAuthorization() *schema.Resource {
@@ -49,7 +52,7 @@ func ResourceAggregateAuthorization() *schema.Resource {
 }
 
 func resourceAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -73,7 +76,7 @@ func resourceAggregateAuthorizationPut(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -86,8 +89,14 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 	d.Set("region", region)
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(conn)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error retrieving list of aggregate authorizations: %s", err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	var aggregationAuthorization *configservice.AggregationAuthorization
@@ -98,10 +107,14 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if aggregationAuthorization == nil {
-		log.Printf("[WARN] Aggregate Authorization not found, removing from state: %s", d.Id())
+	if !d.IsNewResource() && aggregationAuthorization == nil {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && aggregationAuthorization == nil {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
@@ -127,7 +140,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -141,7 +154,7 @@ func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {

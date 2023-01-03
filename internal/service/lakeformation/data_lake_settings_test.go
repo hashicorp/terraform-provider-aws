@@ -18,10 +18,10 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsConfig_basic,
@@ -40,10 +40,10 @@ func testAccDataLakeSettings_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsConfig_basic,
@@ -61,10 +61,10 @@ func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsConfig_withoutCatalogID,
@@ -79,7 +79,7 @@ func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 }
 
 func testAccCheckDataLakeSettingsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_data_lake_settings" {
@@ -117,7 +117,7 @@ func testAccCheckDataLakeSettingsExists(resourceName string) resource.TestCheckF
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 

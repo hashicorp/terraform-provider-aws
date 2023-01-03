@@ -56,7 +56,7 @@ func ResourceSourceCredential() *schema.Resource {
 }
 
 func resourceSourceCredentialCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	authType := d.Get("auth_type").(string)
 
@@ -81,7 +81,7 @@ func resourceSourceCredentialCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSourceCredentialRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	resp, err := FindSourceCredentialByARN(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -102,14 +102,14 @@ func resourceSourceCredentialRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceSourceCredentialDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	deleteOpts := &codebuild.DeleteSourceCredentialsInput{
 		Arn: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteSourceCredentials(deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting CodeBuild Source Credentials(%s): %w", d.Id(), err)

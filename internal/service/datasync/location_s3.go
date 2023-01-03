@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -100,13 +99,13 @@ func ResourceLocationS3() *schema.Resource {
 }
 
 func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationS3Input{
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
-		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
+		S3Config:     expandS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		Tags:         Tags(tags.IgnoreAWS()),
 	}
@@ -122,7 +121,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
 
 	var output *datasync.CreateLocationS3Output
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateLocationS3(input)
 
@@ -159,7 +158,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationS3Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -188,7 +187,7 @@ func resourceLocationS3Read(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
 	d.Set("arn", output.LocationArn)
-	if err := d.Set("s3_config", flattenDataSyncS3Config(output.S3Config)); err != nil {
+	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
 		return fmt.Errorf("error setting s3_config: %s", err)
 	}
 	d.Set("s3_storage_class", output.S3StorageClass)
@@ -216,7 +215,7 @@ func resourceLocationS3Read(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationS3Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -230,7 +229,7 @@ func resourceLocationS3Update(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationS3Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
@@ -248,4 +247,30 @@ func resourceLocationS3Delete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func flattenS3Config(s3Config *datasync.S3Config) []interface{} {
+	if s3Config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"bucket_access_role_arn": aws.StringValue(s3Config.BucketAccessRoleArn),
+	}
+
+	return []interface{}{m}
+}
+
+func expandS3Config(l []interface{}) *datasync.S3Config {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	s3Config := &datasync.S3Config{
+		BucketAccessRoleArn: aws.String(m["bucket_access_role_arn"].(string)),
+	}
+
+	return s3Config
 }

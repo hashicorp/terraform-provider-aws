@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,31 +19,27 @@ func ResourceNotification() *schema.Resource {
 		Delete: resourceNotificationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"topic_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"group_names": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
 			"notifications": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+			},
+			"topic_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
 func resourceNotificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
 	nl := flex.ExpandStringSet(d.Get("notifications").(*schema.Set))
 
@@ -60,7 +55,7 @@ func resourceNotificationCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
 
 	opts := &autoscaling.DescribeNotificationConfigurationsInput{
@@ -123,7 +118,7 @@ func resourceNotificationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNotificationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	// Notifications API call is a PUT, so we don't need to diff the list, just
 	// push whatever it is and AWS sorts it out
@@ -169,13 +164,12 @@ func addNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, group
 		}
 
 		_, err := conn.PutNotificationConfiguration(opts)
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				return fmt.Errorf("Error creating Autoscaling Group Notification for Group %s, error: \"%s\", code: \"%s\"", *a, awsErr.Message(), awsErr.Code())
-			}
-			return err
+			return fmt.Errorf("Error creating Autoscaling Group Notification for Group (%s): %w", aws.StringValue(a), err)
 		}
 	}
+
 	return nil
 }
 
@@ -195,7 +189,7 @@ func removeNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, gr
 }
 
 func resourceNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
 

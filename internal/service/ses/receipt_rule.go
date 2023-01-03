@@ -414,7 +414,7 @@ func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*sch
 }
 
 func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	createOpts := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -436,7 +436,7 @@ func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -465,7 +465,7 @@ func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	describeOpts := &ses.DescribeReceiptRuleInput{
@@ -475,12 +475,12 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.DescribeReceiptRule(describeOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleDoesNotExistException) {
 			log.Printf("[WARN] SES Receipt Rule (%s) not found", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Receipt Rule (%s) not found, removing from state", aws.StringValue(describeOpts.RuleSetName), d.Id())
 			d.SetId("")
 			return nil
@@ -603,7 +603,6 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 			workmailActionList = append(workmailActionList, workmailAction)
 		}
-
 	}
 
 	err = d.Set("add_header_action", addHeaderActionList)
@@ -654,7 +653,7 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	deleteOpts := &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),

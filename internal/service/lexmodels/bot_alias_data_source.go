@@ -23,7 +23,7 @@ func DataSourceBotAlias() *schema.Resource {
 			"bot_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLexBotName,
+				ValidateFunc: validBotName,
 			},
 			"bot_version": {
 				Type:     schema.TypeString,
@@ -48,14 +48,14 @@ func DataSourceBotAlias() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLexBotAliasName,
+				ValidateFunc: validBotAliasName,
 			},
 		},
 	}
 }
 
 func dataSourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)

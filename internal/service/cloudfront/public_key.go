@@ -1,6 +1,7 @@
 package cloudfront
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePublicKey() *schema.Resource {
@@ -61,7 +64,7 @@ func ResourcePublicKey() *schema.Resource {
 }
 
 func resourcePublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -87,28 +90,33 @@ func resourcePublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
 	}
 
 	output, err := conn.GetPublicKey(request)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
-			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
-		log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
 		d.SetId("")
 		return nil
 	}
-	publicKeyConfig := output.PublicKey.PublicKeyConfig
 
+	if err != nil {
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), errors.New("empty response after creation"))
+	}
+
+	publicKeyConfig := output.PublicKey.PublicKeyConfig
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("name", publicKeyConfig.Name)
 	d.Set("comment", publicKeyConfig.Comment)
@@ -119,7 +127,7 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
@@ -136,7 +144,7 @@ func resourcePublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	request := &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
@@ -145,7 +153,7 @@ func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeletePublicKey(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 			return nil
 		}
 		return err

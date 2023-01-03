@@ -60,7 +60,7 @@ func ResourceEmailChannel() *schema.Resource {
 }
 
 func resourceEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -94,7 +94,7 @@ func resourceEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint Email Channel for application %s", d.Id())
 
@@ -102,7 +102,7 @@ func resourceEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Pinpoint Email Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -124,14 +124,14 @@ func resourceEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEmailChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint Email Channel for application %s", d.Id())
 	_, err := conn.DeleteEmailChannel(&pinpoint.DeleteEmailChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 		return nil
 	}
 

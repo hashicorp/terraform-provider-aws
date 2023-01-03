@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	lexBotAliasDeletedTimeout = 5 * time.Minute
-	lexIntentDeletedTimeout   = 5 * time.Minute
-	lexSlotTypeDeletedTimeout = 5 * time.Minute
+	botAliasDeletedTimeout = 5 * time.Minute
+	intentDeletedTimeout   = 5 * time.Minute
 )
 
 func waitBotVersionCreated(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) { //nolint:unparam
@@ -66,12 +65,12 @@ func waitBotDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name 
 	return nil, err
 }
 
-func waitLexBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) (*lexmodelbuildingservice.GetBotAliasOutput, error) {
+func waitBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) (*lexmodelbuildingservice.GetBotAliasOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{lexModelBuildingServiceStatusCreated},
+		Pending: []string{serviceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
-		Refresh: statusLexBotAlias(conn, botAliasName, botName),
-		Timeout: lexBotAliasDeletedTimeout,
+		Refresh: statusBotAlias(conn, botAliasName, botName),
+		Timeout: botAliasDeletedTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 
@@ -82,12 +81,12 @@ func waitLexBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingServic
 	return nil, err
 }
 
-func waitLexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
+func waitIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{lexModelBuildingServiceStatusCreated},
+		Pending: []string{serviceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
-		Refresh: statusLexIntent(conn, intentId),
-		Timeout: lexIntentDeletedTimeout,
+		Refresh: statusIntent(conn, intentId),
+		Timeout: intentDeletedTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 
@@ -98,12 +97,12 @@ func waitLexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService,
 	return nil, err
 }
 
-func waitLexSlotTypeDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
+func waitSlotTypeDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{lexModelBuildingServiceStatusCreated},
+		Pending: []string{serviceStatusCreated},
 		Target:  []string{},
-		Refresh: statusLexSlotType(conn, name, SlotTypeVersionLatest),
-		Timeout: lexSlotTypeDeletedTimeout,
+		Refresh: statusSlotType(conn, name, SlotTypeVersionLatest),
+		Timeout: slotTypeDeleteTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 

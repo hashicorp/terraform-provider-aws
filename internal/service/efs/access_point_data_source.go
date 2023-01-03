@@ -97,7 +97,7 @@ func DataSourceAccessPoint() *schema.Resource {
 }
 
 func dataSourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
@@ -129,11 +129,11 @@ func dataSourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", ap.AccessPointArn)
 	d.Set("owner_id", ap.OwnerId)
 
-	if err := d.Set("posix_user", flattenEfsAccessPointPosixUser(ap.PosixUser)); err != nil {
+	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
 		return fmt.Errorf("error setting posix user: %w", err)
 	}
 
-	if err := d.Set("root_directory", flattenEfsAccessPointRootDirectory(ap.RootDirectory)); err != nil {
+	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
 		return fmt.Errorf("error setting root directory: %w", err)
 	}
 

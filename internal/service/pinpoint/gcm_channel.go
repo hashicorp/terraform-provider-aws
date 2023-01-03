@@ -42,7 +42,7 @@ func ResourceGCMChannel() *schema.Resource {
 }
 
 func resourceGCMChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -67,7 +67,7 @@ func resourceGCMChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGCMChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint GCM Channel for application %s", d.Id())
 
@@ -75,7 +75,7 @@ func resourceGCMChannelRead(d *schema.ResourceData, meta interface{}) error {
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Pinpoint GCM Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -92,14 +92,14 @@ func resourceGCMChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGCMChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint GCM Channel for application %s", d.Id())
 	_, err := conn.DeleteGcmChannel(&pinpoint.DeleteGcmChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 		return nil
 	}
 

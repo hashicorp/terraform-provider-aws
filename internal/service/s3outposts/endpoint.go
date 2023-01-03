@@ -72,7 +72,7 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
@@ -100,7 +100,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	endpoint, err := FindEndpoint(conn, d.Id())
 
@@ -125,7 +125,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("creation_time", aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
 	}
 
-	if err := d.Set("network_interfaces", flattenS3outpostsNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {
+	if err := d.Set("network_interfaces", flattenNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("error setting network_interfaces: %w", err)
 	}
 
@@ -135,7 +135,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3OutpostsConn
+	conn := meta.(*conns.AWSClient).S3OutpostsConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -182,7 +182,7 @@ func resourceEndpointImportState(d *schema.ResourceData, meta interface{}) ([]*s
 	return []*schema.ResourceData{d}, nil
 }
 
-func flattenS3outpostsNetworkInterfaces(apiObjects []*s3outposts.NetworkInterface) []interface{} {
+func flattenNetworkInterfaces(apiObjects []*s3outposts.NetworkInterface) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
@@ -190,13 +190,13 @@ func flattenS3outpostsNetworkInterfaces(apiObjects []*s3outposts.NetworkInterfac
 			continue
 		}
 
-		tfList = append(tfList, flattenS3outpostsNetworkInterface(apiObject))
+		tfList = append(tfList, flattenNetworkInterface(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenS3outpostsNetworkInterface(apiObject *s3outposts.NetworkInterface) map[string]interface{} {
+func flattenNetworkInterface(apiObject *s3outposts.NetworkInterface) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

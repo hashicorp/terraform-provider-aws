@@ -39,6 +39,13 @@ func ResourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"container_recipe_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
 			"distribution_configuration_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -53,9 +60,10 @@ func ResourceImage() *schema.Resource {
 			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -148,13 +156,17 @@ func ResourceImage() *schema.Resource {
 }
 
 func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImageInput{
 		ClientToken:                  aws.String(resource.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("container_recipe_arn"); ok {
+		input.ContainerRecipeArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("distribution_configuration_arn"); ok {
@@ -197,7 +209,7 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -225,6 +237,10 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", image.Arn)
 	d.Set("date_created", image.DateCreated)
+
+	if image.ContainerRecipe != nil {
+		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
+	}
 
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
@@ -273,7 +289,7 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -287,7 +303,7 @@ func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),

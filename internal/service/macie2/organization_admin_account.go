@@ -18,9 +18,9 @@ import (
 
 func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2OrganizationAdminAccountCreate,
-		ReadWithoutTimeout:   resourceMacie2OrganizationAdminAccountRead,
-		DeleteWithoutTimeout: resourceMacie2OrganizationAdminAccountDelete,
+		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
+		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
+		DeleteWithoutTimeout: resourceOrganizationAdminAccountDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -34,8 +34,8 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceMacie2OrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
@@ -67,11 +67,11 @@ func resourceMacie2OrganizationAdminAccountCreate(ctx context.Context, d *schema
 
 	d.SetId(adminAccountID)
 
-	return resourceMacie2OrganizationAdminAccountRead(ctx, d, meta)
+	return resourceOrganizationAdminAccountRead(ctx, d, meta)
 }
 
-func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	var err error
 
@@ -98,8 +98,8 @@ func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.R
 	return nil
 }
 
-func resourceMacie2OrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),

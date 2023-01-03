@@ -173,7 +173,7 @@ func ResourceIntegration() *schema.Resource {
 }
 
 func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Print("[DEBUG] Creating API Gateway Integration")
 
@@ -231,7 +231,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
-		input.TlsConfig = expandApiGatewayTlsConfig(v.([]interface{}))
+		input.TlsConfig = expandTLSConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("uri"); ok {
@@ -250,7 +250,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Integration: %s", d.Id())
 	integration, err := conn.GetIntegration(&apigateway.GetIntegrationInput{
@@ -299,7 +299,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("type", integration.Type)
 	d.Set("uri", integration.Uri)
 
-	if err := d.Set("tls_config", flattenApiGatewayTlsConfig(integration.TlsConfig)); err != nil {
+	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {
 		return fmt.Errorf("error setting tls_config: %s", err)
 	}
 
@@ -307,7 +307,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Updating API Gateway Integration: %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -496,7 +496,7 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 
 	_, err := conn.DeleteIntegration(&apigateway.DeleteIntegrationInput{
@@ -505,7 +505,7 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 
@@ -516,7 +516,7 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandApiGatewayTlsConfig(vConfig []interface{}) *apigateway.TlsConfig {
+func expandTLSConfig(vConfig []interface{}) *apigateway.TlsConfig {
 	config := &apigateway.TlsConfig{}
 
 	if len(vConfig) == 0 || vConfig[0] == nil {
@@ -530,7 +530,7 @@ func expandApiGatewayTlsConfig(vConfig []interface{}) *apigateway.TlsConfig {
 	return config
 }
 
-func flattenApiGatewayTlsConfig(config *apigateway.TlsConfig) []interface{} {
+func flattenTLSConfig(config *apigateway.TlsConfig) []interface{} {
 	if config == nil {
 		return nil
 	}

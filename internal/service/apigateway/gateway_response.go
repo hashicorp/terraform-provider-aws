@@ -67,7 +67,7 @@ func ResourceGatewayResponse() *schema.Resource {
 }
 
 func resourceGatewayResponsePut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	templates := make(map[string]string)
 	if kv, ok := d.GetOk("response_templates"); ok {
@@ -108,7 +108,7 @@ func resourceGatewayResponsePut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceGatewayResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Gateway Response %s", d.Id())
 	gatewayResponse, err := conn.GetGatewayResponse(&apigateway.GetGatewayResponseInput{
@@ -135,7 +135,7 @@ func resourceGatewayResponseRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceGatewayResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 
 	_, err := conn.DeleteGatewayResponse(&apigateway.DeleteGatewayResponseInput{
@@ -143,7 +143,7 @@ func resourceGatewayResponseDelete(d *schema.ResourceData, meta interface{}) err
 		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

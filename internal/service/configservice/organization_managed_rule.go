@@ -1,6 +1,7 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceOrganizationManagedRule() *schema.Resource {
@@ -111,7 +114,7 @@ func ResourceOrganizationManagedRule() *schema.Resource {
 }
 
 func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -169,11 +172,11 @@ func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	rule, err := DescribeOrganizationConfigRule(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
 		log.Printf("[WARN] Config Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -183,10 +186,14 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", d.Id(), err)
 	}
 
-	if rule == nil {
+	if !d.IsNewResource() && rule == nil {
 		log.Printf("[WARN] Config Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && rule == nil {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationManagedRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata != nil {
@@ -221,7 +228,7 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -276,7 +283,7 @@ func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceOrganizationManagedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),

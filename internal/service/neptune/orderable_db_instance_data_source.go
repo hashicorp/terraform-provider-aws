@@ -132,7 +132,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 }
 
 func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -171,7 +171,7 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Neptune orderable DB instance options: %w", err)
+		return fmt.Errorf("reading Neptune orderable DB instance options: %w", err)
 	}
 
 	if len(instanceClassResults) == 0 {

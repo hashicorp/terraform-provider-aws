@@ -111,7 +111,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -154,7 +154,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -192,7 +192,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", cluster.VpcId)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
 	d.Set("hsm_type", cluster.HsmType)
-	if err := d.Set("cluster_certificates", readCloudHsmV2ClusterCertificates(cluster)); err != nil {
+	if err := d.Set("cluster_certificates", readClusterCertificates(cluster)); err != nil {
 		return fmt.Errorf("error setting cluster_certificates: %s", err)
 	}
 
@@ -219,7 +219,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -232,7 +232,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	input := &cloudhsmv2.DeleteClusterInput{
 		ClusterId: aws.String(d.Id()),
 	}
@@ -250,7 +250,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func readCloudHsmV2ClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]interface{} {
+func readClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]interface{} {
 	certs := map[string]interface{}{}
 	if cluster.Certificates != nil {
 		if aws.StringValue(cluster.State) == cloudhsmv2.ClusterStateUninitialized {

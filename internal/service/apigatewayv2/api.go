@@ -155,7 +155,7 @@ func ResourceAPI() *schema.Resource {
 }
 
 func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	if body, ok := d.GetOk("body"); ok {
@@ -200,7 +200,7 @@ func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
 				}
 			} else {
-				revertReq.CorsConfiguration = expandApiGateway2CorsConfiguration(corsConfiguration.([]interface{}))
+				revertReq.CorsConfiguration = expandCORSConfiguration(corsConfiguration.([]interface{}))
 			}
 		}
 
@@ -219,7 +219,7 @@ func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -233,7 +233,7 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 		req.ApiKeySelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("cors_configuration"); ok {
-		req.CorsConfiguration = expandApiGateway2CorsConfiguration(v.([]interface{}))
+		req.CorsConfiguration = expandCORSConfiguration(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("credentials_arn"); ok {
 		req.CredentialsArn = aws.String(v.(string))
@@ -274,7 +274,7 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -299,7 +299,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	d.Set("arn", apiArn)
-	if err := d.Set("cors_configuration", flattenApiGateway2CorsConfiguration(resp.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenCORSConfiguration(resp.CorsConfiguration)); err != nil {
 		return fmt.Errorf("error setting cors_configuration: %s", err)
 	}
 	d.Set("description", resp.Description)
@@ -332,7 +332,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	deleteCorsConfiguration := false
 	if d.HasChange("cors_configuration") {
@@ -360,7 +360,7 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
 		}
 		if d.HasChange("cors_configuration") {
-			req.CorsConfiguration = expandApiGateway2CorsConfiguration(d.Get("cors_configuration").([]interface{}))
+			req.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]interface{}))
 		}
 		if d.HasChange("description") {
 			req.Description = aws.String(d.Get("description").(string))
@@ -403,13 +403,13 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
 	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -419,7 +419,7 @@ func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandApiGateway2CorsConfiguration(vConfiguration []interface{}) *apigatewayv2.Cors {
+func expandCORSConfiguration(vConfiguration []interface{}) *apigatewayv2.Cors {
 	configuration := &apigatewayv2.Cors{}
 
 	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
@@ -449,7 +449,7 @@ func expandApiGateway2CorsConfiguration(vConfiguration []interface{}) *apigatewa
 	return configuration
 }
 
-func flattenApiGateway2CorsConfiguration(configuration *apigatewayv2.Cors) []interface{} {
+func flattenCORSConfiguration(configuration *apigatewayv2.Cors) []interface{} {
 	if configuration == nil {
 		return []interface{}{}
 	}

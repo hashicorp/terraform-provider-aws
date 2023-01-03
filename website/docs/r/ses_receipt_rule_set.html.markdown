@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_receipt_rule_set"
 description: |-

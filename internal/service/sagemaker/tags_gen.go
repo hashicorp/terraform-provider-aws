@@ -2,22 +2,28 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/sagemaker/sagemakeriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists sagemaker service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *sagemaker.SageMaker, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn sagemakeriface.SageMakerAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &sagemaker.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(input)
+	output, err := conn.ListTagsWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +64,10 @@ func KeyValueTags(tags []*sagemaker.Tag) tftags.KeyValueTags {
 // UpdateTags updates sagemaker service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *sagemaker.SageMaker, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn sagemakeriface.SageMakerAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn sagemakeriface.SageMakerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +77,10 @@ func UpdateTags(conn *sagemaker.SageMaker, identifier string, oldTagsMap interfa
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.DeleteTags(input)
+		_, err := conn.DeleteTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +90,10 @@ func UpdateTags(conn *sagemaker.SageMaker, identifier string, oldTagsMap interfa
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTags(input)
+		_, err := conn.AddTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

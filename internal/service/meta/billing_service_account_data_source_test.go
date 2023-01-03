@@ -9,17 +9,16 @@ import (
 )
 
 func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
-	dataSourceName := "data.aws_billing_service_account.main"
-
+	dataSourceName := "data.aws_billing_service_account.test"
 	billingAccountID := "386209384616"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSBillingServiceAccountConfig,
+				Config: testAccBillingServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", billingAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", billingAccountID, "iam", "root"),
@@ -29,6 +28,6 @@ func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckAWSBillingServiceAccountConfig = `
-data "aws_billing_service_account" "main" {}
+const testAccBillingServiceAccountDataSourceConfig_basic = `
+data "aws_billing_service_account" "test" {}
 `

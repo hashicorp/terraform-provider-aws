@@ -79,7 +79,7 @@ func ResourceServiceLinkedRole() *schema.Resource {
 }
 
 func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -115,7 +115,7 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 		err = roleUpdateTags(conn, roleName, nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Service Linked Role (%s): %s", d.Id(), err)
 			return resourceServiceLinkedRoleRead(d, meta)
 		}
@@ -129,7 +129,7 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -139,7 +139,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(conn, roleName)
 	}, d.IsNewResource())
 
@@ -179,7 +179,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
@@ -207,7 +207,7 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 		err := roleUpdateTags(conn, roleName, o, n)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Service Linked Role (%s): %s", d.Id(), err)
 			return resourceServiceLinkedRoleRead(d, meta)
 		}
@@ -221,7 +221,7 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 

@@ -28,7 +28,7 @@ func ResourceConnectionConfirmation() *schema.Resource {
 }
 
 func resourceConnectionConfirmationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	connectionID := d.Get("connection_id").(string)
 	input := &directconnect.ConfirmConnectionInput{
@@ -52,7 +52,7 @@ func resourceConnectionConfirmationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceConnectionConfirmationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	_, err := FindConnectionByID(conn, d.Id())
 

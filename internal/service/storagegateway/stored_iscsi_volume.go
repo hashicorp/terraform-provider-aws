@@ -120,7 +120,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 }
 
 func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -163,7 +163,7 @@ func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceStorediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -176,7 +176,7 @@ func resourceStorediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -188,7 +188,7 @@ func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 	output, err := conn.DescribeStorediSCSIVolumes(input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") || tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+		if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) || tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 			log.Printf("[WARN] Storage Gateway Stored iSCSI volume %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -252,7 +252,7 @@ func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceStorediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.DeleteVolumeInput{
 		VolumeARN: aws.String(d.Id()),
@@ -262,7 +262,7 @@ func resourceStorediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) e
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+			if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
 				return nil
 			}
 			// InvalidGatewayRequestException: The specified gateway is not connected.

@@ -20,15 +20,15 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryDataSourceConfig(rName, domain),
+				Config: testAccDirectoryDataSourceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "alias", resourceName, "alias"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
@@ -68,7 +68,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDirectoryDataSourceConfig(rName, domain string) string {
+func testAccDirectoryDataSourceConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`

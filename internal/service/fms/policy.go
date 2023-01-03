@@ -153,7 +153,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+	conn := meta.(*conns.AWSClient).FMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -174,7 +174,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+	conn := meta.(*conns.AWSClient).FMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -214,7 +214,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fms.PutPolicyInput{
@@ -240,7 +240,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	log.Printf("[DEBUG] Deleting FMS Policy: %s", d.Id())
 	_, err := conn.DeletePolicy(&fms.DeletePolicyInput{
@@ -289,10 +289,10 @@ func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutp
 
 	d.Set("name", resp.Policy.PolicyName)
 	d.Set("exclude_resource_tags", resp.Policy.ExcludeResourceTags)
-	if err := d.Set("exclude_map", flattenFMSPolicyMap(resp.Policy.ExcludeMap)); err != nil {
+	if err := d.Set("exclude_map", flattenPolicyMap(resp.Policy.ExcludeMap)); err != nil {
 		return err
 	}
-	if err := d.Set("include_map", flattenFMSPolicyMap(resp.Policy.IncludeMap)); err != nil {
+	if err := d.Set("include_map", flattenPolicyMap(resp.Policy.IncludeMap)); err != nil {
 		return err
 	}
 	d.Set("remediation_enabled", resp.Policy.RemediationEnabled)
@@ -302,7 +302,7 @@ func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutp
 	d.Set("delete_unused_fm_managed_resources", resp.Policy.DeleteUnusedFMManagedResources)
 	d.Set("resource_type", resp.Policy.ResourceType)
 	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
-	if err := d.Set("resource_tags", flattenFMSResourceTags(resp.Policy.ResourceTags)); err != nil {
+	if err := d.Set("resource_tags", flattenResourceTags(resp.Policy.ResourceTags)); err != nil {
 		return err
 	}
 
@@ -338,9 +338,9 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 		fmsPolicy.PolicyUpdateToken = aws.String(d.Get("policy_update_token").(string))
 	}
 
-	fmsPolicy.ExcludeMap = expandFMSPolicyMap(d.Get("exclude_map").([]interface{}))
+	fmsPolicy.ExcludeMap = expandPolicyMap(d.Get("exclude_map").([]interface{}))
 
-	fmsPolicy.IncludeMap = expandFMSPolicyMap(d.Get("include_map").([]interface{}))
+	fmsPolicy.IncludeMap = expandPolicyMap(d.Get("include_map").([]interface{}))
 
 	fmsPolicy.ResourceTags = constructResourceTags(d.Get("resource_tags"))
 
@@ -353,7 +353,7 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	return fmsPolicy
 }
 
-func expandFMSPolicyMap(set []interface{}) map[string][]*string {
+func expandPolicyMap(set []interface{}) map[string][]*string {
 	fmsPolicyMap := map[string][]*string{}
 	if len(set) > 0 {
 		if _, ok := set[0].(map[string]interface{}); !ok {
@@ -376,7 +376,7 @@ func expandFMSPolicyMap(set []interface{}) map[string][]*string {
 	return fmsPolicyMap
 }
 
-func flattenFMSPolicyMap(fmsPolicyMap map[string][]*string) []interface{} {
+func flattenPolicyMap(fmsPolicyMap map[string][]*string) []interface{} {
 	flatPolicyMap := map[string]interface{}{}
 
 	for key, value := range fmsPolicyMap {
@@ -393,7 +393,7 @@ func flattenFMSPolicyMap(fmsPolicyMap map[string][]*string) []interface{} {
 	return []interface{}{flatPolicyMap}
 }
 
-func flattenFMSResourceTags(resourceTags []*fms.ResourceTag) map[string]interface{} {
+func flattenResourceTags(resourceTags []*fms.ResourceTag) map[string]interface{} {
 	resTags := map[string]interface{}{}
 
 	for _, v := range resourceTags {

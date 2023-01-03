@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -73,7 +72,7 @@ func ResourceUserSSHKey() *schema.Resource {
 }
 
 func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("username").(string)
 	publicKey := d.Get("public_key").(string)
 
@@ -94,7 +93,7 @@ func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("username").(string)
 	encoding := d.Get("encoding").(string)
 	request := &iam.GetSSHPublicKeyInput{
@@ -105,7 +104,7 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetSSHPublicKeyOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetSSHPublicKey(request)
@@ -139,8 +138,8 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IAM User SSH Key (%s): empty response", d.Id())
 	}
 
-	publicKey := *getResp.SSHPublicKey.SSHPublicKeyBody
-	if encoding == "SSH" {
+	publicKey := aws.StringValue(getResp.SSHPublicKey.SSHPublicKeyBody)
+	if encoding == iam.EncodingTypeSsh {
 		publicKey = cleanSSHKey(publicKey)
 	}
 
@@ -153,7 +152,7 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("status") {
-		conn := meta.(*conns.AWSClient).IAMConn
+		conn := meta.(*conns.AWSClient).IAMConn()
 
 		request := &iam.UpdateSSHPublicKeyInput{
 			UserName:       aws.String(d.Get("username").(string)),
@@ -161,22 +160,16 @@ func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 			Status:         aws.String(d.Get("status").(string)),
 		}
 
-		log.Println("[DEBUG] Update IAM User SSH Key request:", request)
 		_, err := conn.UpdateSSHPublicKey(request)
 		if err != nil {
-			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-				log.Printf("[WARN] No IAM user ssh key by ID (%s) found", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error updating IAM User SSH Key %s: %s", d.Id(), err)
+			return fmt.Errorf("error updating IAM User SSH Key (%s): %w", d.Id(), err)
 		}
 	}
 	return resourceUserSSHKeyRead(d, meta)
 }
 
 func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteSSHPublicKeyInput{
 		UserName:       aws.String(d.Get("username").(string)),
@@ -185,7 +178,7 @@ func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Println("[DEBUG] Delete IAM User SSH Key request:", request)
 	if _, err := conn.DeleteSSHPublicKey(request); err != nil {
-		return fmt.Errorf("Error deleting IAM User SSH Key %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleting IAM User SSH Key (%s): %w", d.Id(), err)
 	}
 	return nil
 }

@@ -45,7 +45,7 @@ func DataSourceSessionContext() *schema.Resource {
 }
 
 func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	arn := d.Get("arn").(string)
 
@@ -66,7 +66,7 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 
 	var role *iam.Role
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		role, err = FindRoleByName(conn, roleName)

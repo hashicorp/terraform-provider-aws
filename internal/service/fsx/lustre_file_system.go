@@ -244,12 +244,12 @@ func ResourceLustreFileSystem() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			resourceFsxLustreFileSystemSchemaCustomizeDiff,
+			resourceLustreFileSystemSchemaCustomizeDiff,
 		),
 	}
 }
 
-func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	// we want to force a new resource if the new storage capacity is less than the old one
 	if d.HasChange("storage_capacity") {
 		o, n := d.GetChange("storage_capacity")
@@ -264,7 +264,7 @@ func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema
 }
 
 func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -365,8 +365,8 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(v.([]interface{}))
-		backupInput.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(v.([]interface{}))
+		input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
+		backupInput.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("backup_id"); ok {
@@ -399,7 +399,7 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -442,7 +442,7 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if d.HasChange("log_configuration") {
-			input.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
+			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
 			waitAdminAction = true
 		}
 
@@ -466,7 +466,7 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -527,7 +527,7 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	if err := d.Set("log_configuration", flattenFsxLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
+	if err := d.Set("log_configuration", flattenLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
 		return fmt.Errorf("error setting log_configuration: %w", err)
 	}
 
@@ -554,7 +554,7 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
@@ -578,7 +578,7 @@ func resourceLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func expandFsxLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateConfiguration {
+func expandLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -595,7 +595,7 @@ func expandFsxLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreate
 	return req
 }
 
-func flattenFsxLustreLogConfiguration(adopts *fsx.LustreLogConfiguration) []map[string]interface{} {
+func flattenLustreLogConfiguration(adopts *fsx.LustreLogConfiguration) []map[string]interface{} {
 	if adopts == nil {
 		return []map[string]interface{}{}
 	}

@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,6 +16,10 @@ import (
 func DataSourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceVPCDHCPOptionsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -60,7 +65,7 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 }
 
 func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeDhcpOptionsInput{}

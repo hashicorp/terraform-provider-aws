@@ -27,10 +27,10 @@ func testAccSSHKey_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSSHKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
@@ -61,7 +61,7 @@ func testAccCheckSSHKeyExists(n string, res *transfer.SshPublicKey) resource.Tes
 			return fmt.Errorf("No Transfer Ssh Public Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 		serverID, userName, sshKeyID, err := tftransfer.DecodeSSHKeyID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -88,7 +88,7 @@ func testAccCheckSSHKeyExists(n string, res *transfer.SshPublicKey) resource.Tes
 }
 
 func testAccCheckSSHKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_ssh_key" {
@@ -104,7 +104,7 @@ func testAccCheckSSHKeyDestroy(s *terraform.State) error {
 			ServerId: aws.String(serverID),
 		})
 
-		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

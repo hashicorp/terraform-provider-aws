@@ -23,10 +23,10 @@ func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName1),
@@ -65,10 +65,10 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName),
@@ -88,10 +88,10 @@ func TestAccAPIGatewayV2VPCLink_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_tags(rName),
@@ -124,7 +124,7 @@ func TestAccAPIGatewayV2VPCLink_tags(t *testing.T) {
 }
 
 func testAccCheckVPCLinkDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_vpc_link" {
@@ -134,7 +134,7 @@ func testAccCheckVPCLinkDestroy(s *terraform.State) error {
 		_, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -149,7 +149,7 @@ func testAccCheckVPCLinkDestroy(s *terraform.State) error {
 
 func testAccCheckVPCLinkDisappears(v *apigatewayv2.GetVpcLinkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		if _, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 			VpcLinkId: v.VpcLinkId,
@@ -158,7 +158,7 @@ func testAccCheckVPCLinkDisappears(v *apigatewayv2.GetVpcLinkOutput) resource.Te
 		}
 
 		_, err := tfapigatewayv2.WaitVPCLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			return nil
 		}
 		if err != nil {
@@ -180,7 +180,7 @@ func testAccCheckVPCLinkExists(n string, v *apigatewayv2.GetVpcLinkOutput) resou
 			return fmt.Errorf("No API Gateway v2 VPC Link ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		resp, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),
@@ -241,7 +241,7 @@ func testAccVPCLinkConfig_basic(rName string) string {
 resource "aws_apigatewayv2_vpc_link" "test" {
   name               = %[1]q
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test.*.id
+  subnet_ids         = aws_subnet.test[*].id
 }
 `, rName)
 }
@@ -251,7 +251,7 @@ func testAccVPCLinkConfig_tags(rName string) string {
 resource "aws_apigatewayv2_vpc_link" "test" {
   name               = %[1]q
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test.*.id
+  subnet_ids         = aws_subnet.test[*].id
 
   tags = {
     Key1 = "Value1"

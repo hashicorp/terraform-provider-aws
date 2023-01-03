@@ -28,15 +28,17 @@ func ResourceCertificate() *schema.Resource {
 		Read:   resourceCertificateRead,
 		Delete: resourceCertificateRevoke,
 
+		// Expects ACM PCA ARN format, e.g:
+		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile(`arn:.+:certificate-authority/[^/]+`)
-				authorityArn := re.FindString(d.Id())
-				if authorityArn == "" {
+				authorityARN := re.FindString(d.Id())
+				if authorityARN == "" {
 					return nil, fmt.Errorf("Unexpected format for ID (%q), expected ACM PCA Certificate ARN", d.Id())
 				}
 
-				d.Set("certificate_authority_arn", authorityArn)
+				d.Set("certificate_authority_arn", authorityARN)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -106,18 +108,18 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
-	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
+	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(resource.UniqueId()),
 		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
 	}
-	validity, err := expandAcmpcaValidity(d.Get("validity").([]interface{}))
+	validity, err := expandValidity(d.Get("validity").([]interface{}))
 	if err != nil {
-		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
+		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
 	}
 	input.Validity = validity
 
@@ -142,7 +144,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
+		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
 	}
 
 	d.SetId(aws.StringValue(output.CertificateArn))
@@ -154,14 +156,14 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err = conn.WaitUntilCertificateIssued(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityArn, d.Id(), err)
+		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityARN, d.Id(), err)
 	}
 
 	return resourceCertificateRead(d, meta)
 }
 
 func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -194,7 +196,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {
@@ -255,7 +257,7 @@ func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
-func expandAcmpcaValidity(l []interface{}) (*acmpca.Validity, error) {
+func expandValidity(l []interface{}) (*acmpca.Validity, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}

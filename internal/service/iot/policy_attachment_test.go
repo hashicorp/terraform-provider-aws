@@ -20,20 +20,20 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 	policyName2 := sdkacctest.RandomWithPrefix("PolicyName2-")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyAttchmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyAttchmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyAttachmentConfig(policyName),
+				Config: testAccPolicyAttachmentConfig_basic(policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists("aws_iot_policy_attachment.att"),
 					testAccCheckPolicyAttachmentCertStatus("aws_iot_certificate.cert", []string{policyName}),
 				),
 			},
 			{
-				Config: testAccPolicyAttachmentUpdate1Config(policyName, policyName2),
+				Config: testAccPolicyAttachmentConfig_update1(policyName, policyName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists("aws_iot_policy_attachment.att"),
 					testAccCheckPolicyAttachmentExists("aws_iot_policy_attachment.att2"),
@@ -41,14 +41,14 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyAttachmentUpdate2Config(policyName2),
+				Config: testAccPolicyAttachmentConfig_update2(policyName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists("aws_iot_policy_attachment.att2"),
 					testAccCheckPolicyAttachmentCertStatus("aws_iot_certificate.cert", []string{policyName2}),
 				),
 			},
 			{
-				Config: testAccPolicyAttachmentUpdate3Config(policyName2),
+				Config: testAccPolicyAttachmentConfig_update3(policyName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists("aws_iot_policy_attachment.att2"),
 					testAccCheckPolicyAttachmentExists("aws_iot_policy_attachment.att3"),
@@ -58,11 +58,10 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckPolicyAttchmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_policy_attachment" {
 			continue
@@ -114,7 +113,7 @@ func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 		target := rs.Primary.Attributes["target"]
 		policyName := rs.Primary.Attributes["policy"]
 
@@ -134,7 +133,7 @@ func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
 
 func testAccCheckPolicyAttachmentCertStatus(n string, policies []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		rs, ok := s.RootModule().Resources[n]
 
@@ -181,7 +180,7 @@ func testAccCheckPolicyAttachmentCertStatus(n string, policies []string) resourc
 	}
 }
 
-func testAccPolicyAttachmentConfig(policyName string) string {
+func testAccPolicyAttachmentConfig_basic(policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -217,7 +216,7 @@ resource "aws_iot_policy_attachment" "att" {
 `, policyName)
 }
 
-func testAccPolicyAttachmentUpdate1Config(policyName, policyName2 string) string {
+func testAccPolicyAttachmentConfig_update1(policyName, policyName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -280,7 +279,7 @@ resource "aws_iot_policy_attachment" "att2" {
 `, policyName, policyName2)
 }
 
-func testAccPolicyAttachmentUpdate2Config(policyName2 string) string {
+func testAccPolicyAttachmentConfig_update2(policyName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -316,7 +315,7 @@ resource "aws_iot_policy_attachment" "att2" {
 `, policyName2)
 }
 
-func testAccPolicyAttachmentUpdate3Config(policyName2 string) string {
+func testAccPolicyAttachmentConfig_update3(policyName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")

@@ -1,17 +1,20 @@
 package codebuild
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceReportGroup() *schema.Resource {
@@ -106,7 +109,7 @@ func ResourceReportGroup() *schema.Resource {
 }
 
 func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	createOpts := &codebuild.CreateReportGroupInput{
@@ -127,19 +130,29 @@ func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	reportGroup, err := FindReportGroupByARN(conn, d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error Listing CodeBuild Report Groups: %w", err)
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && reportGroup == nil {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	if reportGroup == nil {
-		log.Printf("[WARN] CodeBuild Report Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", reportGroup.Arn)
@@ -169,7 +182,7 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -194,7 +207,7 @@ func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	deleteOpts := &codebuild.DeleteReportGroupInput{
 		Arn:           aws.String(d.Id()),

@@ -31,7 +31,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 }
 
 func dataSourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")

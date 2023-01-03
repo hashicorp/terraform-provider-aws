@@ -18,16 +18,16 @@ func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretVersionDataSourceConfig_NonExistent,
+				Config:      testAccSecretVersionDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionStage_Default(rName),
+				Config: testAccSecretVersionDataSourceConfig_stageDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
 				),
@@ -42,12 +42,12 @@ func TestAccSecretsManagerSecretVersionDataSource_versionID(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionID(rName),
+				Config: testAccSecretVersionDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
 				),
@@ -62,12 +62,12 @@ func TestAccSecretsManagerSecretVersionDataSource_versionStage(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionStage_Custom(rName),
+				Config: testAccSecretVersionDataSourceConfig_stageCustom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
 				),
@@ -108,13 +108,13 @@ func testAccSecretVersionCheckDataSource(datasourceName, resourceName string) re
 	}
 }
 
-const testAccSecretVersionDataSourceConfig_NonExistent = `
+const testAccSecretVersionDataSourceConfig_nonExistent = `
 data "aws_secretsmanager_secret_version" "test" {
   secret_id = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccSecretVersionDataSourceConfig_VersionID(rName string) string {
+func testAccSecretVersionDataSourceConfig_id(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
@@ -132,7 +132,7 @@ data "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionDataSourceConfig_VersionStage_Custom(rName string) string {
+func testAccSecretVersionDataSourceConfig_stageCustom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
@@ -151,7 +151,7 @@ data "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccSecretVersionDataSourceConfig_VersionStage_Default(rName string) string {
+func testAccSecretVersionDataSourceConfig_stageDefault(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"

@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_delegation_set"
 description: |-
@@ -43,8 +43,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The delegation set ID
 * `name_servers` - A list of authoritative name servers for the hosted zone
   (effectively a list of NS records).
-
-
 
 ## Import
 

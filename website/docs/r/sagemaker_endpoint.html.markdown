@@ -1,5 +1,5 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint"
 description: |-
@@ -32,11 +32,11 @@ The following arguments are supported:
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `deployment_config` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Deployment Config
 
-* `blue_green_update_policy` - (Required) Update policy for a blue/green deployment. If this update policy is specified, SageMaker creates a new fleet during the deployment while maintaining the old fleet. See [Blue Green Update Config](#blue-green-update-policy).
+* `blue_green_update_policy` - (Required) Update policy for a blue/green deployment. If this update policy is specified, SageMaker creates a new fleet during the deployment while maintaining the old fleet. See [Blue Green Update Config](#blue-green-update-config).
 * `auto_rollback_configuration` - (Optional) Automatic rollback configuration for handling endpoint deployment failures and recovery. See [Auto Rollback Configuration](#auto-rollback-configuration).
 
 #### Blue Green Update Config
@@ -76,7 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint.
 * `name` - The name of the endpoint.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -2,23 +2,29 @@
 package ssm
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *ssm.SSM, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(conn ssmiface.SSMAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier, resourceType)
+}
+
+func ListTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &ssm.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: aws.String(resourceType),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -59,7 +65,10 @@ func KeyValueTags(tags []*ssm.Tag) tftags.KeyValueTags {
 // UpdateTags updates ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *ssm.SSM, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn ssmiface.SSMAPI, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, resourceType, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -70,10 +79,10 @@ func UpdateTags(conn *ssm.SSM, identifier string, resourceType string, oldTagsMa
 			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.RemoveTagsFromResource(input)
+		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -84,10 +93,10 @@ func UpdateTags(conn *ssm.SSM, identifier string, resourceType string, oldTagsMa
 			Tags:         Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTagsToResource(input)
+		_, err := conn.AddTagsToResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

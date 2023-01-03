@@ -1,6 +1,7 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -22,13 +23,13 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -63,13 +64,13 @@ func TestAccS3ControlObjectLambdaAccessPoint_disappears(t *testing.T) {
 	resourceName := "aws_s3control_object_lambda_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), resourceName),
@@ -88,13 +89,13 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointOptionalsConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_optionals(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -122,7 +123,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccObjectLambdaAccessPointConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -147,7 +148,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 }
 
 func testAccCheckObjectLambdaAccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_object_lambda_access_point" {
@@ -160,7 +161,7 @@ func testAccCheckObjectLambdaAccessPointDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfs3control.FindObjectLambdaAccessPointByAccountIDAndName(conn, accountID, name)
+		_, err = tfs3control.FindObjectLambdaAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -193,9 +194,9 @@ func testAccCheckObjectLambdaAccessPointExists(n string, v *s3control.ObjectLamb
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		output, err := tfs3control.FindObjectLambdaAccessPointByAccountIDAndName(conn, accountID, name)
+		output, err := tfs3control.FindObjectLambdaAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err
@@ -219,7 +220,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccObjectLambdaAccessPointConfig(rName string) string {
+func testAccObjectLambdaAccessPointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -250,7 +251,7 @@ resource "aws_s3control_object_lambda_access_point" "test" {
 `, rName))
 }
 
-func testAccObjectLambdaAccessPointOptionalsConfig(rName string) string {
+func testAccObjectLambdaAccessPointConfig_optionals(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

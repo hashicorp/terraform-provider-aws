@@ -16,14 +16,14 @@ import (
 )
 
 func TestAccDMSEndpoint_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
@@ -55,15 +55,201 @@ func TestAccDMSEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_S3_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+func TestAccDMSEndpoint_Aurora_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_aurora(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Aurora_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_auroraSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Aurora_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_aurora(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_auroraUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3307"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_AuroraPostgreSQL_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_auroraPostgreSQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_AuroraPostgreSQL_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_auroraPostgreSQLSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_AuroraPostgreSQL_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_auroraPostgreSQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_auroraPostgreSQLUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_S3_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_s3(rName),
@@ -85,6 +271,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", "false"),
 				),
 			},
 			{
@@ -94,10 +281,10 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccEndpointConfig_s3Config(rName),
+				Config: testAccEndpointConfig_s3Update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(``)),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
@@ -113,14 +300,14 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
 func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName),
@@ -140,14 +327,14 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_dynamoDB(rName),
@@ -177,10 +364,10 @@ func TestAccDMSEndpoint_OpenSearch_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_openSearch(rName),
@@ -211,10 +398,10 @@ func TestAccDMSEndpoint_OpenSearch_extraConnectionAttributes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_openSearchExtraConnectionAttributes(rName),
@@ -238,10 +425,10 @@ func TestAccDMSEndpoint_OpenSearch_errorRetryDuration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_openSearchErrorRetryDuration(rName, 60),
@@ -276,10 +463,10 @@ func TestAccDMSEndpoint_OpenSearch_fullLoadErrorPercentage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName, 1),
@@ -315,10 +502,10 @@ func TestAccDMSEndpoint_kafka(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_kafka(rName, domainName),
@@ -386,10 +573,10 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_kinesis(rName),
@@ -434,17 +621,44 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_MongoDB_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_mongoDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MongoDB_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mongoDBSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -464,14 +678,14 @@ func TestAccDMSEndpoint_MongoDB_basic(t *testing.T) {
 // configured fields and extra_connection_attributes now set in the resource
 // per https://github.com/hashicorp/terraform-provider-aws/issues/8009
 func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_mongoDB(rName),
@@ -508,15 +722,201 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+func TestAccDMSEndpoint_MariaDB_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mariaDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MariaDB_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mariaDBSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MariaDB_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mariaDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_mariaDBUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3307"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MySQL_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MySQL_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQLSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MySQL_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_mySQLUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3307"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`CleanSrcMetadataOnMismatch=false;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_oracle(rName),
@@ -536,14 +936,14 @@ func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_oracleSecretID(rName),
@@ -562,14 +962,14 @@ func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_oracle(rName),
@@ -602,14 +1002,14 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_PostgreSQL_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_postgreSQL(rName),
@@ -629,14 +1029,14 @@ func TestAccDMSEndpoint_PostgreSQL_basic(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_PostgreSQL_secretID(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_postgreSQLSecretID(rName),
@@ -655,14 +1055,14 @@ func TestAccDMSEndpoint_PostgreSQL_secretID(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_postgreSQL(rName),
@@ -694,15 +1094,267 @@ func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_docDB(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+// https://github.com/hashicorp/terraform-provider-aws/issues/23143
+func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_postgresKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_SQLServer_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sqlServer(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_SQLServer_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sqlServerSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_SQLServer_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sqlServer(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_sqlServerUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/23143
+func TestAccDMSEndpoint_SQLServer_kmsKey(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sqlserverKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Sybase_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sybase(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Sybase_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sybaseSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Sybase_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sybase(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_sybaseUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/23143
+func TestAccDMSEndpoint_Sybase_kmsKey(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_sybaseKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_docDB(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_docDB(rName),
@@ -735,14 +1387,14 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_db2(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_db2(rName),
@@ -774,6 +1426,155 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_redis(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redis(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_password", ""),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "none"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis1.test"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_security_protocol", "plaintext"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEndpointConfig_redisUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_password", "avoid-plaintext-passwords"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "auth-role"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", "tfacctest"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis2.test"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_security_protocol", "ssl-encryption"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshift(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_secretID(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftSecretID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_access_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "secrets_manager_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshift(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_redshiftUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.service_access_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.bucket_folder", "bucket_folder"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_S3"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
 // testAccCheckResourceAttrRegionalHostname ensures the Terraform state exactly matches a formatted DNS hostname with region and partition DNS suffix
 func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, serviceName, hostnamePrefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -784,7 +1585,7 @@ func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, servi
 }
 
 func testAccCheckEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
@@ -818,21 +1619,69 @@ func testAccCheckEndpointExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		_, err := tfdms.FindEndpointByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
+}
+
+func testAccEndpointConfig_secretBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_kms_alias" "dms" {
+  name = "alias/aws/dms"
+}
+
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Action": "secretsmanager:*",
+        "Effect": "Allow",
+        "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName)
 }
 
 func testAccEndpointConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -856,7 +1705,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_basicUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -878,11 +1727,143 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, rName)
 }
 
+func testAccEndpointConfig_aurora(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "aurora"
+  server_name                 = "tftest"
+  port                        = 3306
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_auroraSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "aurora"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_auroraUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "aurora"
+  server_name                 = "tftest-new-server_name"
+  port                        = 3307
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "none"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_auroraPostgreSQL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "aurora-postgresql"
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_auroraPostgreSQLSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "aurora-postgresql"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_auroraPostgreSQLUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "aurora-postgresql"
+  server_name                 = "tftest-new-server_name"
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "require"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
 func testAccEndpointConfig_dynamoDB(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id         = %[1]q
   endpoint_type       = "target"
   engine_name         = "dynamodb"
@@ -948,7 +1929,7 @@ func testAccEndpointConfig_dynamoDBUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id         = %[1]q
   endpoint_type       = "target"
   engine_name         = "dynamodb"
@@ -1012,7 +1993,7 @@ func testAccEndpointConfig_s3(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
@@ -1092,7 +2073,7 @@ func testAccEndpointConfig_s3ExtraConnectionAttributes(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
@@ -1166,16 +2147,16 @@ EOF
 `, rName)
 }
 
-func testAccEndpointConfig_s3Config(rName string) string {
+func testAccEndpointConfig_s3Update(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
   ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = ""
 
   tags = {
     Name   = %[1]q
@@ -1525,7 +2506,7 @@ data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "mongodb"
@@ -1556,13 +2537,41 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, rName)
 }
 
+func testAccEndpointConfig_mongoDBSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "mongodb"
+  database_name                   = "tftest"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  mongodb_settings {
+    auth_type           = "password"
+    auth_mechanism      = "default"
+    nesting_level       = "none"
+    extract_doc_id      = "false"
+    docs_to_investigate = "1000"
+    auth_source         = "admin"
+  }
+}
+`, rName))
+}
+
 func testAccEndpointConfig_mongoDBUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "mongodb"
@@ -1591,9 +2600,137 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, rName)
 }
 
+func testAccEndpointConfig_mariaDB(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "mariadb"
+  server_name                 = "tftest"
+  port                        = 3306
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_mariaDBSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "mariadb"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_mariaDBUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "mariadb"
+  server_name                 = "tftest-new-server_name"
+  port                        = 3307
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "none"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_mySQL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "mysql"
+  server_name                 = "tftest"
+  port                        = 3306
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_mySQLSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "mysql"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_mySQLUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "mysql"
+  server_name                 = "tftest-new-server_name"
+  port                        = 3307
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "none"
+  extra_connection_attributes = "CleanSrcMetadataOnMismatch=false;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
 func testAccEndpointConfig_oracle(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "oracle"
@@ -1616,7 +2753,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_oracleUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "oracle"
@@ -1638,56 +2775,8 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 }
 
 func testAccEndpointConfig_oracleSecretID(rName string) string {
-	return fmt.Sprintf(`
-data "aws_kms_alias" "dms" {
-  name = "alias/aws/dms"
-}
-
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_secretsmanager_secret" "test" {
-  name                    = %[1]q
-  recovery_window_in_days = 0
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
-  role   = aws_iam_role.test.id
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Action": "secretsmanager:*",
-        "Effect": "Allow",
-        "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_dms_endpoint" "dms_endpoint" {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "oracle"
@@ -1704,12 +2793,12 @@ resource "aws_dms_endpoint" "dms_endpoint" {
     Remove = "to-remove"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_postgreSQL(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "postgres"
@@ -1730,9 +2819,31 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, rName)
 }
 
+func testAccEndpointConfig_postgreSQLSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "postgres"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
 func testAccEndpointConfig_postgreSQLUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "postgres"
@@ -1753,62 +2864,16 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, rName)
 }
 
-func testAccEndpointConfig_postgreSQLSecretID(rName string) string {
+func testAccEndpointConfig_sqlServer(rName string) string {
 	return fmt.Sprintf(`
-data "aws_kms_alias" "dms" {
-  name = "alias/aws/dms"
-}
-
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_secretsmanager_secret" "test" {
-  name                    = %[1]q
-  recovery_window_in_days = 0
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
-  role   = aws_iam_role.test.id
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Action": "secretsmanager:*",
-        "Effect": "Allow",
-        "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id                     = %[1]q
-  endpoint_type                   = "source"
-  engine_name                     = "postgres"
-  secrets_manager_access_role_arn = aws_iam_role.test.arn
-  secrets_manager_arn             = aws_secretsmanager_secret.test.id
-
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "sqlserver"
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
   database_name               = "tftest"
   ssl_mode                    = "none"
   extra_connection_attributes = ""
@@ -1822,9 +2887,122 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 `, rName)
 }
 
+func testAccEndpointConfig_sqlServerUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "sqlserver"
+  server_name                 = "tftest-new-server_name"
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "require"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_sqlServerSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "sqlserver"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_sybase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "sybase"
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_sybaseUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "sybase"
+  server_name                 = "tftest-new-server_name"
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "none"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_sybaseSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "sybase"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
 func testAccEndpointConfig_docDB(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
@@ -1848,7 +3026,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_docDBUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
@@ -1872,7 +3050,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_db2(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -1896,7 +3074,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_db2Update(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -1916,4 +3094,253 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   username = "tftestupdate"
 }
 `, rName)
+}
+
+func testAccEndpointConfig_postgresKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 27018
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+  kms_key_arn                 = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_sqlserverKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "sqlserver"
+  server_name                 = "tftest"
+  port                        = 27018
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+  kms_key_arn                 = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_sybaseKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "sybase"
+  server_name                 = "tftest"
+  port                        = 27018
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+  kms_key_arn                 = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_redis(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redis"
+
+  redis_settings {
+    auth_type             = "none"
+    port                  = 6379
+    server_name           = "redis1.test"
+    ssl_security_protocol = "plaintext"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_redisUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redis"
+
+  redis_settings {
+    auth_password  = "avoid-plaintext-passwords"
+    auth_type      = "auth-role"
+    auth_user_name = "tfacctest"
+    port           = 6379
+    server_name    = "redis2.test"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_redshiftBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier = %[1]q
+  availability_zone  = data.aws_availability_zones.available.names[0]
+  database_name      = "mydb"
+  master_username    = "foo"
+  master_password    = "Mustbe8characters"
+  node_type          = "dc2.large"
+  cluster_type       = "single-node"
+
+  automated_snapshot_retention_period = 0
+  skip_final_snapshot                 = true
+}
+
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {"Service": "dms.${data.aws_partition.current.dns_suffix}"},
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "s3:CreateBucket",
+      "s3:ListBucket",
+      "s3:DeleteBucket",
+      "s3:GetBucketLocation",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:GetObjectVersion",
+      "s3:GetBucketPolicy",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy"
+    ]
+    resources = ["*"]
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshift(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "redshift"
+  server_name                 = aws_redshift_cluster.test.dns_name
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "target"
+  engine_name                     = "redshift"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+  database_name                   = "tftest"
+  ssl_mode                        = "none"
+  extra_connection_attributes     = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "redshift"
+  server_name                 = aws_redshift_cluster.test.dns_name
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  extra_connection_attributes = "key=value;"
+
+  redshift_settings {
+    service_access_role_arn = aws_iam_role.test.arn
+    bucket_name             = "bucket_name"
+    bucket_folder           = "bucket_folder"
+    encryption_mode         = "SSE_S3"
+  }
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName))
 }

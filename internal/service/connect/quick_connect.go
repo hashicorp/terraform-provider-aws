@@ -14,17 +14,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceQuickConnectCreate,
-		ReadContext:   resourceQuickConnectRead,
-		UpdateContext: resourceQuickConnectUpdate,
-		DeleteContext: resourceQuickConnectDelete,
+		CreateWithoutTimeout: resourceQuickConnectCreate,
+		ReadWithoutTimeout:   resourceQuickConnectRead,
+		UpdateWithoutTimeout: resourceQuickConnectUpdate,
+		DeleteWithoutTimeout: resourceQuickConnectDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Type:         schema.TypeString,
@@ -131,7 +133,7 @@ func ResourceQuickConnect() *schema.Resource {
 }
 
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -171,7 +173,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -186,7 +188,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 		QuickConnectId: aws.String(quickConnectID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Quick Connect (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -225,7 +227,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -273,7 +275,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -282,7 +284,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQuickConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 

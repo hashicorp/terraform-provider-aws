@@ -86,3 +86,28 @@ func FindPatchGroup(conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGro
 
 	return result, err
 }
+
+func FindServiceSettingByID(conn *ssm.SSM, id string) (*ssm.ServiceSetting, error) {
+	input := &ssm.GetServiceSettingInput{
+		SettingId: aws.String(id),
+	}
+
+	output, err := conn.GetServiceSetting(input)
+
+	if tfawserr.ErrCodeContains(err, ssm.ErrCodeServiceSettingNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ServiceSetting == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ServiceSetting, nil
+}

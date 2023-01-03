@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -21,11 +22,12 @@ func ResourceDomainPolicy() *schema.Resource {
 		Update: resourceDomainPolicyUpsert,
 		Delete: resourceDomainPolicyDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"access_policies": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -36,12 +38,16 @@ func ResourceDomainPolicy() *schema.Resource {
 					return json
 				},
 			},
+			"domain_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 
@@ -69,7 +75,7 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	domainName := d.Get("domain_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
@@ -88,7 +94,7 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId("esd-policy-" + domainName)
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be updated: %w", d.Id(), err)
 	}
 
@@ -96,7 +102,7 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:     aws.String(d.Get("domain_name").(string)),
@@ -108,7 +114,7 @@ func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain policy %q to be deleted", d.Get("domain_name").(string))
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be deleted: %w", d.Id(), err)
 	}
 

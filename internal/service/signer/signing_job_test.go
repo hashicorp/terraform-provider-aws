@@ -22,13 +22,13 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningJobConfig(rName),
+				Config: testAccSigningJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(profileResourceName, &conf),
 					testAccCheckSigningJobExists(resourceName, &job),
@@ -39,10 +39,9 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
-func testAccSigningJobConfig(rName string) string {
+func testAccSigningJobConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -107,7 +106,7 @@ func testAccCheckSigningJobExists(res string, job *signer.DescribeSigningJobOutp
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 		params := &signer.DescribeSigningJobInput{
 			JobId: aws.String(rs.Primary.ID),

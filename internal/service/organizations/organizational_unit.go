@@ -77,7 +77,7 @@ func ResourceOrganizationalUnit() *schema.Resource {
 }
 
 func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -118,7 +118,7 @@ func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -173,7 +173,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error listing Organizations Organizational Unit (%s) accounts: %w", d.Id(), err)
 	}
 
-	if err := d.Set("accounts", flattenOrganizationsOrganizationalUnitAccounts(accounts)); err != nil {
+	if err := d.Set("accounts", flattenOrganizationalUnitAccounts(accounts)); err != nil {
 		return fmt.Errorf("error setting accounts: %w", err)
 	}
 
@@ -202,7 +202,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	if d.HasChange("name") {
 		updateOpts := &organizations.UpdateOrganizationalUnitInput{
@@ -228,7 +228,7 @@ func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceOrganizationalUnitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
@@ -277,7 +277,7 @@ func resourceOrganizationalUnitGetParentID(conn *organizations.Organizations, ch
 	return aws.StringValue(parent.Id), nil
 }
 
-func flattenOrganizationsOrganizationalUnitAccounts(accounts []*organizations.Account) []map[string]interface{} {
+func flattenOrganizationalUnitAccounts(accounts []*organizations.Account) []map[string]interface{} {
 	if len(accounts) == 0 {
 		return nil
 	}

@@ -17,6 +17,10 @@ func DataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePortfolioRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(ConstraintReadTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,
@@ -54,7 +58,7 @@ func DataSourcePortfolio() *schema.Resource {
 }
 
 func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DescribePortfolioInput{
 		Id: aws.String(d.Get("id").(string)),

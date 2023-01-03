@@ -2,23 +2,29 @@
 package route53
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53/route53iface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *route53.Route53, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(conn route53iface.Route53API, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier, resourceType)
+}
+
+func ListTagsWithContext(ctx context.Context, conn route53iface.Route53API, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &route53.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: aws.String(resourceType),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -59,7 +65,10 @@ func KeyValueTags(tags []*route53.Tag) tftags.KeyValueTags {
 // UpdateTags updates route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *route53.Route53, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn route53iface.Route53API, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, resourceType, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn route53iface.Route53API, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 	removedTags := oldTags.Removed(newTags)
@@ -83,10 +92,10 @@ func UpdateTags(conn *route53.Route53, identifier string, resourceType string, o
 		input.RemoveTagKeys = aws.StringSlice(removedTags.Keys())
 	}
 
-	_, err := conn.ChangeTagsForResource(input)
+	_, err := conn.ChangeTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil

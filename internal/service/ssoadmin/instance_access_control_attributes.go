@@ -17,16 +17,12 @@ func ResourceAccessControlAttributes() *schema.Resource {
 		Read:   resourceAccessControlAttributesRead,
 		Update: resourceAccessControlAttributesUpdate,
 		Delete: resourceAccessControlAttributesDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"attribute": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -54,6 +50,12 @@ func ResourceAccessControlAttributes() *schema.Resource {
 					},
 				},
 			},
+			"instance_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -67,10 +69,11 @@ func ResourceAccessControlAttributes() *schema.Resource {
 }
 
 func resourceAccessControlAttributesCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
-	instanceArn := d.Get("instance_arn").(string)
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
+
+	instanceARN := d.Get("instance_arn").(string)
 	input := ssoadmin.CreateInstanceAccessControlAttributeConfigurationInput{
-		InstanceArn: aws.String(instanceArn),
+		InstanceArn: aws.String(instanceARN),
 		InstanceAccessControlAttributeConfiguration: &ssoadmin.InstanceAccessControlAttributeConfiguration{
 			AccessControlAttributes: expandAccessControlAttributes(d),
 		},
@@ -78,14 +81,16 @@ func resourceAccessControlAttributesCreate(d *schema.ResourceData, meta interfac
 
 	_, err := conn.CreateInstanceAccessControlAttributeConfiguration(&input)
 	if err != nil {
-		return fmt.Errorf("error putting access control attributes for SSO Instance Arn (%s): %w", instanceArn, err)
+		return fmt.Errorf("error putting access control attributes for SSO Instance Arn (%s): %w", instanceARN, err)
 	}
-	d.SetId(instanceArn)
+	d.SetId(instanceARN)
+
 	return resourceAccessControlAttributesRead(d, meta)
 }
 
 func resourceAccessControlAttributesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
+
 	instanceArn := d.Id()
 	input := ssoadmin.DescribeInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(instanceArn),
@@ -100,10 +105,12 @@ func resourceAccessControlAttributesRead(d *schema.ResourceData, meta interface{
 	}
 	d.Set("status", resp.Status)
 	d.Set("status_reason", resp.StatusReason)
+
 	return nil
 }
 func resourceAccessControlAttributesUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
+
 	instanceArn := d.Id()
 	if d.HasChanges("attribute") {
 		input := ssoadmin.UpdateInstanceAccessControlAttributeConfigurationInput{
@@ -117,10 +124,12 @@ func resourceAccessControlAttributesUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("error updating access control attributes for SSO Instance Arn (%s): %w", instanceArn, err)
 		}
 	}
+
 	return resourceAccessControlAttributesRead(d, meta)
 }
 func resourceAccessControlAttributesDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
+
 	instanceArn := d.Id()
 	input := ssoadmin.DeleteInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(instanceArn),
@@ -129,6 +138,7 @@ func resourceAccessControlAttributesDelete(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return fmt.Errorf("error deleting access control attributes for SSO Instance Arn (%s): %w", instanceArn, err)
 	}
+
 	return nil
 }
 

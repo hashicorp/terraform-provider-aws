@@ -16,11 +16,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkipLex)
-
+	acctest.RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"You can't set the enableModelImprovements field to false",
 	)
@@ -36,9 +35,9 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -108,9 +107,9 @@ func testAccBot_createVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -154,9 +153,9 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -214,9 +213,9 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -270,9 +269,9 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -317,9 +316,9 @@ func TestAccLexModelsBot_description(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -364,9 +363,9 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -411,9 +410,9 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -459,9 +458,9 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -506,9 +505,9 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -562,9 +561,9 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -613,9 +612,9 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -660,9 +659,9 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -707,9 +706,9 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -737,7 +736,7 @@ func testAccCheckBotExistsWithVersion(rName, botVersion string, v *lexmodelbuild
 			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		output, err := tflexmodels.FindBotVersionByName(conn, rs.Primary.ID, botVersion)
 
@@ -757,7 +756,7 @@ func testAccCheckBotExists(rName string, output *lexmodelbuildingservice.GetBotO
 
 func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		_, err := tflexmodels.FindBotVersionByName(conn, botName, botVersion)
 
@@ -774,7 +773,7 @@ func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc
 }
 
 func testAccCheckBotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_bot" {

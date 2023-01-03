@@ -76,18 +76,10 @@ func ResourceWorkspace() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"compute_type_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  workspaces.ComputeValue,
-							ValidateFunc: validation.StringInSlice([]string{
-								workspaces.ComputeValue,
-								workspaces.ComputeStandard,
-								workspaces.ComputePerformance,
-								workspaces.ComputePower,
-								workspaces.ComputePowerpro,
-								workspaces.ComputeGraphics,
-								workspaces.ComputeGraphicspro,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      workspaces.ComputeValue,
+							ValidateFunc: validation.StringInSlice(workspaces.Compute_Values(), false),
 						},
 						"root_volume_size_gib": {
 							Type:     schema.TypeInt,
@@ -146,7 +138,7 @@ func ResourceWorkspace() *schema.Resource {
 }
 
 func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -193,7 +185,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -241,7 +233,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	// IMPORTANT: Only one workspace property could be changed in a time.
 	// I've create AWS Support feature request to allow multiple properties modification in a time.
@@ -288,14 +280,9 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
-	err := WorkspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return WorkspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 }
 
 func WorkspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {

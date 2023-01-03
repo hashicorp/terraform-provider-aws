@@ -2,48 +2,50 @@ package ecs
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"status": {
+			"cluster_name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
-
 			"pending_tasks_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
-			"running_tasks_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"registered_container_instances_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
+			"running_tasks_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"service_connect_defaults": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"namespace": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"setting": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -60,29 +62,41 @@ func DataSourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	clusterName := d.Get("cluster_name").(string)
-	cluster, err := FindClusterByNameOrARN(context.Background(), conn, d.Get("cluster_name").(string))
+	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get("cluster_name").(string))
 
 	if err != nil {
-		return fmt.Errorf("error reading ECS Cluster (%s): %w", clusterName, err)
+		return diag.Errorf("reading ECS Cluster (%s): %s", clusterName, err)
 	}
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("status", cluster.Status)
 	d.Set("pending_tasks_count", cluster.PendingTasksCount)
 	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
+	d.Set("status", cluster.Status)
+
+	if cluster.ServiceConnectDefaults != nil {
+		if err := d.Set("service_connect_defaults", []interface{}{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
+			return diag.Errorf("setting service_connect_defaults: %s", err)
+		}
+	} else {
+		d.Set("service_connect_defaults", nil)
+	}
 
 	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
-		return fmt.Errorf("error setting setting: %w", err)
+		return diag.Errorf("setting setting: %s", err)
 	}
 
 	return nil

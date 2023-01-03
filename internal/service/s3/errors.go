@@ -4,7 +4,11 @@ package s3
 // https://docs.aws.amazon.com/sdk-for-go/api/service/s3/#pkg-constants
 
 const (
+	ErrCodeAccessDenied                              = "AccessDenied"
+	ErrCodeBucketNotEmpty                            = "BucketNotEmpty"
 	ErrCodeInvalidBucketState                        = "InvalidBucketState"
+	ErrCodeInvalidRequest                            = "InvalidRequest"
+	ErrCodeMalformedPolicy                           = "MalformedPolicy"
 	ErrCodeMethodNotAllowed                          = "MethodNotAllowed"
 	ErrCodeNoSuchBucketPolicy                        = "NoSuchBucketPolicy"
 	ErrCodeNoSuchConfiguration                       = "NoSuchConfiguration"
@@ -23,4 +27,8 @@ const (
 	// and so far has been noticed with calls to GetBucketWebsite.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645
 	ErrCodeXNotImplemented = "XNotImplemented"
+)
+
+const (
+	ErrMessageBucketAlreadyExists = "bucket already exists"
 )

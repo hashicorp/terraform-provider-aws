@@ -58,8 +58,8 @@ func AmplifyKeyValueTags(tags map[string]*string) KeyValueTags {
 ## Implementing a New Generated Service
 
 - In `main.go`: Add service name, e.g. `athena`, to one of the implementation handlers
-  - Use `sliceServiceNames` if the AWS Go SDK service implements a specific Go type such as `Tag`
-  - Use `mapServiceNames` if the AWS Go SDK service implements `map[string]*string`
+    - Use `sliceServiceNames` if the AWS Go SDK service implements a specific Go type such as `Tag`
+    - Use `mapServiceNames` if the AWS Go SDK service implements `map[string]*string`
 - Run `go generate ./...` (or `make gen`) from the root of the repository to regenerate the code
 - Run `go test ./...` (or `make test`) from the root of the repository to ensure the generated code compiles
 - (Optional, only for services with a specific Go type such as `Tag`) Customize the service generation, if necessary (see below)

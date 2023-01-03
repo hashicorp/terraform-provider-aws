@@ -73,17 +73,17 @@ func ResourceDevice() *schema.Resource {
 }
 
 func resourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.RegisterDevicesInput{
 		DeviceFleetName: aws.String(name),
-		Devices:         expandSagemakerDevice(d.Get("device").([]interface{})),
+		Devices:         expandDevice(d.Get("device").([]interface{})),
 	}
 
 	_, err := conn.RegisterDevices(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Device %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker Device %s: %w", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", name, aws.StringValue(input.Devices[0].DeviceName)))
@@ -92,7 +92,7 @@ func resourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
@@ -106,7 +106,7 @@ func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Device (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Device (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(device.DeviceArn)
@@ -114,15 +114,15 @@ func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("agent_version", device.AgentVersion)
 	d.Set("arn", arn)
 
-	if err := d.Set("device", flattenSagemakerDevice(device)); err != nil {
-		return fmt.Errorf("error setting device for Sagemaker Device (%s): %w", d.Id(), err)
+	if err := d.Set("device", flattenDevice(device)); err != nil {
+		return fmt.Errorf("setting device for SageMaker Device (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deviceFleetName, _, err := DecodeDeviceId(d.Id())
 	if err != nil {
@@ -131,20 +131,20 @@ func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &sagemaker.UpdateDevicesInput{
 		DeviceFleetName: aws.String(deviceFleetName),
-		Devices:         expandSagemakerDevice(d.Get("device").([]interface{})),
+		Devices:         expandDevice(d.Get("device").([]interface{})),
 	}
 
 	log.Printf("[DEBUG] sagemaker Device update config: %s", input.String())
 	_, err = conn.UpdateDevices(input)
 	if err != nil {
-		return fmt.Errorf("error updating SageMaker Device: %w", err)
+		return fmt.Errorf("updating SageMaker Device: %w", err)
 	}
 
 	return resourceDeviceRead(d, meta)
 }
 
 func resourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
@@ -161,13 +161,13 @@ func resourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
 			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device fleet with name") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Device (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Device (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandSagemakerDevice(l []interface{}) []*sagemaker.Device {
+func expandDevice(l []interface{}) []*sagemaker.Device {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -189,7 +189,7 @@ func expandSagemakerDevice(l []interface{}) []*sagemaker.Device {
 	return []*sagemaker.Device{config}
 }
 
-func flattenSagemakerDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interface{} {
+func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

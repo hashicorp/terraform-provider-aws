@@ -21,10 +21,10 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
@@ -67,10 +67,10 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_httpProxy(rName),
@@ -113,10 +113,10 @@ func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
@@ -137,10 +137,10 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_dataMappingHTTP(rName),
@@ -228,13 +228,13 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_integrationTypeHTTP(rName),
+				Config: testAccIntegrationConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
@@ -260,7 +260,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIntegrationConfig_integrationTypeHTTPUpdated(rName),
+				Config: testAccIntegrationConfig_typeHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
@@ -305,10 +305,10 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_lambdaWebSocket(rName),
@@ -351,10 +351,10 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_lambdaHTTP(rName),
@@ -397,10 +397,10 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_vpcLinkWebSocket(rName),
@@ -445,10 +445,10 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_vpcLinkHTTP(rName),
@@ -516,7 +516,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
+func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -526,13 +526,13 @@ func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_sqsIntegration(rName, 0),
+				Config: testAccIntegrationConfig_sqs(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
@@ -558,7 +558,7 @@ func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIntegrationConfig_sqsIntegration(rName, 1),
+				Config: testAccIntegrationConfig_sqs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
@@ -594,7 +594,7 @@ func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
 }
 
 func testAccCheckIntegrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_integration" {
@@ -605,7 +605,7 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 			ApiId:         aws.String(rs.Primary.Attributes["api_id"]),
 			IntegrationId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -620,7 +620,7 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 
 func testAccCheckIntegrationDisappears(apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		_, err := conn.DeleteIntegration(&apigatewayv2.DeleteIntegrationInput{
 			ApiId:         apiId,
@@ -642,7 +642,7 @@ func testAccCheckIntegrationExists(n string, vApiId *string, v *apigatewayv2.Get
 			return fmt.Errorf("No API Gateway v2 integration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
@@ -754,7 +754,7 @@ resource "aws_lb" "test" {
 
   internal           = true
   load_balancer_type = "network"
-  subnets            = aws_subnet.test.*.id
+  subnets            = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
@@ -859,7 +859,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccIntegrationConfig_integrationTypeHTTP(rName string) string {
+func testAccIntegrationConfig_typeHTTP(rName string) string {
 	return testAccIntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -885,7 +885,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccIntegrationConfig_integrationTypeHTTPUpdated(rName string) string {
+func testAccIntegrationConfig_typeHTTPUpdated(rName string) string {
 	return testAccIntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -1071,7 +1071,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `, rName))
 }
 
-func testAccIntegrationConfig_sqsIntegration(rName string, queueIndex int) string {
+func testAccIntegrationConfig_sqs(rName string, queueIndex int) string {
 	return acctest.ConfigCompose(
 		testAccIntegrationConfig_apiHTTP(rName),
 		fmt.Sprintf(`

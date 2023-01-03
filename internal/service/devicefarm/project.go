@@ -48,7 +48,7 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -81,11 +81,11 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindProjectByArn(conn, d.Id())
+	project, err := FindProjectByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Project (%s) not found, removing from state", d.Id())
@@ -123,7 +123,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateProjectInput{
@@ -157,7 +157,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteProjectInput{
 		Arn: aws.String(d.Id()),
@@ -166,7 +166,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
 	_, err := conn.DeleteProject(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Project: %w", err)

@@ -16,13 +16,13 @@ func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInfrastructureConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigInfrastructureConfigurations_filter(rName),
+				Config: testAccInfrastructureConfigurationsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -34,7 +34,7 @@ func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing
 	})
 }
 
-func testAccConfigInfrastructureConfigurations_filter(rName string) string {
+func testAccInfrastructureConfigurationsDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = %[1]q

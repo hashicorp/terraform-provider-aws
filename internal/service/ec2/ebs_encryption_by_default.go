@@ -29,10 +29,10 @@ func ResourceEBSEncryptionByDefault() *schema.Resource {
 }
 
 func resourceEBSEncryptionByDefaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	enabled := d.Get("enabled").(bool)
-	if err := setEbsEncryptionByDefault(conn, enabled); err != nil {
+	if err := setEBSEncryptionByDefault(conn, enabled); err != nil {
 		return fmt.Errorf("error creating EBS encryption by default (%t): %s", enabled, err)
 	}
 
@@ -43,7 +43,7 @@ func resourceEBSEncryptionByDefaultCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceEBSEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	resp, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
@@ -56,10 +56,10 @@ func resourceEBSEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceEBSEncryptionByDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	enabled := d.Get("enabled").(bool)
-	if err := setEbsEncryptionByDefault(conn, enabled); err != nil {
+	if err := setEBSEncryptionByDefault(conn, enabled); err != nil {
 		return fmt.Errorf("error updating EBS encryption by default (%t): %s", enabled, err)
 	}
 
@@ -67,17 +67,17 @@ func resourceEBSEncryptionByDefaultUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceEBSEncryptionByDefaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Removing the resource disables default encryption.
-	if err := setEbsEncryptionByDefault(conn, false); err != nil {
+	if err := setEBSEncryptionByDefault(conn, false); err != nil {
 		return fmt.Errorf("error disabling EBS encryption by default: %s", err)
 	}
 
 	return nil
 }
 
-func setEbsEncryptionByDefault(conn *ec2.EC2, enabled bool) error {
+func setEBSEncryptionByDefault(conn *ec2.EC2, enabled bool) error {
 	var err error
 
 	if enabled {

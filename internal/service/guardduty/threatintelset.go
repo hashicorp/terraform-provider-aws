@@ -74,7 +74,7 @@ func ResourceThreatintelset() *schema.Resource {
 }
 
 func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,7 +99,7 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{guardduty.ThreatIntelSetStatusActivating, guardduty.ThreatIntelSetStatusDeactivating},
 		Target:     []string{guardduty.ThreatIntelSetStatusActive, guardduty.ThreatIntelSetStatusInactive},
-		Refresh:    guardDutyThreatintelsetRefreshStatusFunc(conn, *resp.ThreatIntelSetId, detectorID),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, *resp.ThreatIntelSetId, detectorID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -115,7 +115,7 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -168,7 +168,7 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
 	if err != nil {
@@ -209,7 +209,7 @@ func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
 	if err != nil {
@@ -234,7 +234,7 @@ func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) erro
 			guardduty.ThreatIntelSetStatusDeletePending,
 		},
 		Target:     []string{guardduty.ThreatIntelSetStatusDeleted},
-		Refresh:    guardDutyThreatintelsetRefreshStatusFunc(conn, threatIntelSetID, detectorId),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, threatIntelSetID, detectorId),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -247,7 +247,7 @@ func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func guardDutyThreatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) resource.StateRefreshFunc {
+func threatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.GetThreatIntelSetInput{
 			DetectorId:       aws.String(detectorID),

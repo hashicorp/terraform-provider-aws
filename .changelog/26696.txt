@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: Update the environment variables if the `kms_key_arn` has changed
+```

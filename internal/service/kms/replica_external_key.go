@@ -104,7 +104,7 @@ func ResourceReplicaExternalKey() *schema.Resource {
 }
 
 func resourceReplicaExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -163,7 +163,7 @@ func resourceReplicaExternalKeyCreate(d *schema.ResourceData, meta interface{}) 
 	if v, ok := d.GetOk("key_material_base64"); ok {
 		validTo := d.Get("valid_to").(string)
 
-		if err := importKmsExternalKeyMaterial(conn, d.Id(), v.(string), validTo); err != nil {
+		if err := importExternalKeyMaterial(conn, d.Id(), v.(string), validTo); err != nil {
 			return fmt.Errorf("error importing KMS Replica External Key (%s) material: %w", d.Id(), err)
 		}
 
@@ -178,7 +178,7 @@ func resourceReplicaExternalKeyCreate(d *schema.ResourceData, meta interface{}) 
 		// The key can only be disabled if key material has been imported, else:
 		// "KMSInvalidStateException: arn:aws:kms:us-west-2:123456789012:key/47e3edc1-945f-413b-88b1-e7341c2d89f7 is pending import."
 		if enabled := d.Get("enabled").(bool); !enabled {
-			if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+			if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 				return err
 			}
 		}
@@ -201,11 +201,11 @@ func resourceReplicaExternalKeyCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceReplicaExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	key, err := findKmsKey(conn, d.Id(), d.IsNewResource())
+	key, err := findKey(conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS External Replica Key (%s) not found, removing from state", d.Id())
@@ -268,23 +268,23 @@ func resourceReplicaExternalKeyRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceReplicaExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
 		// Enable before any attributes are modified.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := updateKmsKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
+		if err := updateKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("policy") {
-		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return err
 		}
 	}
@@ -292,7 +292,7 @@ func resourceReplicaExternalKeyUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("valid_to") {
 		validTo := d.Get("valid_to").(string)
 
-		if err := importKmsExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), validTo); err != nil {
+		if err := importExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), validTo); err != nil {
 			return fmt.Errorf("error importing KMS External Replica Key (%s) material: %s", d.Id(), err)
 		}
 
@@ -307,7 +307,7 @@ func resourceReplicaExternalKeyUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && !enabled && state != kms.KeyStatePendingImport {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -328,7 +328,7 @@ func resourceReplicaExternalKeyUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceReplicaExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

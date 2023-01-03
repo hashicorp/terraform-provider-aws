@@ -2,6 +2,7 @@ package elasticache
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -16,6 +18,46 @@ func DataSourceCluster() *schema.Resource {
 		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cache_nodes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"outpost_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -24,133 +66,111 @@ func DataSourceCluster() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-
-			"node_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"num_cache_nodes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"engine": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"engine_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"parameter_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"replication_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"security_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"snapshot_window": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"snapshot_retention_limit": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"availability_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"notification_topic_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"configuration_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cluster_address": {
+			"engine": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"arn": {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cache_nodes": {
-				Type:     schema.TypeList,
+			"ip_discovery": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_delivery_configuration": {
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						"destination": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"address": {
+						"destination_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
-							Type:     schema.TypeInt,
+						"log_format": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zone": {
+						"log_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-
+			"maintenance_window": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"node_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"notification_topic_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"num_cache_nodes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"parameter_group_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"preferred_outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replication_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"security_group_names": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"snapshot_retention_limit": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"snapshot_window": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"subnet_group_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_id").(string)
@@ -170,6 +190,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subnet_group_name", cluster.CacheSubnetGroupName)
 	d.Set("engine", cluster.Engine)
 	d.Set("engine_version", cluster.EngineVersion)
+	d.Set("ip_discovery", cluster.IpDiscovery)
+	d.Set("network_type", cluster.NetworkType)
+	d.Set("preferred_outpost_arn", cluster.PreferredOutpostArn)
 	d.Set("security_group_names", flattenSecurityGroupNames(cluster.CacheSecurityGroups))
 	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
 
@@ -181,6 +204,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("replication_group_id", cluster.ReplicationGroupId)
 	}
 
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
@@ -206,14 +230,19 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(cluster.ARN))
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %w", d.Id(), err)
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err != nil {
+		log.Printf("[WARN] error listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)
+	}
+
+	if tags != nil {
+		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %w", err)
+		}
 	}
 
 	return nil
-
 }

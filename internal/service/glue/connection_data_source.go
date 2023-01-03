@@ -17,7 +17,7 @@ import (
 
 func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceConnectionRead,
+		ReadWithoutTimeout: dataSourceConnectionRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -84,7 +84,7 @@ func DataSourceConnection() *schema.Resource {
 }
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
@@ -120,7 +120,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting connection_properties: %s", err)
 	}
 
-	if err := d.Set("physical_connection_requirements", flattenGluePhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
+	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
 		return diag.Errorf("error setting physical_connection_requirements: %s", err)
 	}
 

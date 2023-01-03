@@ -47,7 +47,7 @@ func ResourcePipeline() *schema.Resource {
 }
 
 func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -75,12 +75,12 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := PipelineRetrieve(d.Id(), conn)
-	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
+	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -106,7 +106,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -120,14 +120,14 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	opts := datapipeline.DeletePipelineInput{
 		PipelineId: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeletePipeline(&opts)
-	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
+	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 		return nil
 	}
 	if err != nil {
@@ -169,7 +169,7 @@ func WaitForDeletion(conn *datapipeline.DataPipeline, pipelineID string) error {
 	}
 	return resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribePipelines(params)
-		if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
+		if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 			return nil
 		}
 		if err != nil {

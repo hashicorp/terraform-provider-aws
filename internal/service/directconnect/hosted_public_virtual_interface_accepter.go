@@ -48,7 +48,7 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmPublicVirtualInterfaceInput{
@@ -71,7 +71,7 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, 
 	}.String()
 	d.Set("arn", arn)
 
-	if err := dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := hostedPublicVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -79,11 +79,11 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, 
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, me
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
+	if err := virtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
 
@@ -138,9 +138,9 @@ func resourceHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceData, 
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +164,8 @@ func resourceHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxHostedPublicVirtualInterfaceAccepterWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return dxVirtualInterfaceWaitUntilAvailable(
+func hostedPublicVirtualInterfaceAccepterWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(
 		conn,
 		vifId,
 		timeout,

@@ -56,7 +56,7 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -67,7 +67,6 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 
 	if _, err := conn.PutVoiceConnectorTerminationCredentialsWithContext(ctx, input); err != nil {
 		return diag.Errorf("error creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
-
 	}
 
 	d.SetId(vcId)
@@ -76,14 +75,14 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 }
 
 func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
 	_, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -99,7 +98,7 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 }
 
 func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	if d.HasChanges("credentials") {
 		input := &chime.PutVoiceConnectorTerminationCredentialsInput{
@@ -118,7 +117,7 @@ func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *
 }
 
 func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.DeleteVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -127,7 +126,7 @@ func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *
 
 	_, err := conn.DeleteVoiceConnectorTerminationCredentialsWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		return nil
 	}
 

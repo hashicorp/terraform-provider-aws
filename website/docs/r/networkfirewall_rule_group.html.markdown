@@ -223,6 +223,38 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
+### IP Set References to the Rule Group
+
+```terraform
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity = 100
+  name     = "example"
+  type     = "STATEFUL"
+  rule_group {
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "DENYLIST"
+        target_types         = ["HTTP_HOST"]
+        targets              = ["test.example.com"]
+      }
+    }
+    reference_sets {
+      ip_set_references {
+        key = "example"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.this.arn
+        }
+      }
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -231,25 +263,42 @@ The following arguments are supported:
 
 * `description` - (Optional) A friendly description of the rule group.
 
+* `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
+
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 
 * `rule_group` - (Optional) A configuration block that defines the rule group rules. Required unless `rules` is specified. See [Rule Group](#rule-group) below for details.
 
 * `rules` - (Optional) The stateful rule group rules specifications in Suricata file format, with one rule per line. Use this to import your existing Suricata compatible rule groups. Required unless `rule_group` is specified.
 
-* `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `STATEFUL` or `STATELESS`.
+
+### Encryption Configuration
+
+`encryption_configuration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
+
+* `key_id` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
+* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
 ### Rule Group
 
 The `rule_group` block supports the following argument:
+
+* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details.
 
 * `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 
 * `rules_source` - (Required) A configuration block that defines the stateful or stateless rules for the rule group. See [Rules Source](#rules-source) below for details.
 
 * `stateful_rule_options` - (Optional) A configuration block that defines stateful rule options for the rule group. See [Stateful Rule Options](#stateful-rule-options) below for details.
+
+### Reference Sets
+
+The `reference_sets` block supports the following arguments:
+
+* `ip_set_reference` - (Optional) Set of configuration blocks that define the IP Reference information. See [IP Set Reference](#ip-set-reference) below for details.
 
 ### Rule Variables
 
@@ -272,6 +321,14 @@ The `ip_sets` block supports the following arguments:
 The `ip_set` configuration block supports the following argument:
 
 * `definition` - (Required) Set of IP addresses and address ranges, in CIDR notation.
+
+### IP Set Reference
+
+The `ip_set_reference` configuration block supports the following argument:
+
+* `key` - (Required) A unique alphanumeric string to identify the `ip_set`.
+
+* `reference_arn` - (Required) Set of Managed Prefix IP ARN(s)
 
 ### Port Sets
 
@@ -466,7 +523,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the rule group.
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating the rule group.
 

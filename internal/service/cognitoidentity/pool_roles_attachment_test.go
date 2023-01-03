@@ -23,10 +23,10 @@ func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	updatedName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolRolesAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
@@ -58,10 +58,10 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolRolesAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
@@ -113,10 +113,10 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolRolesAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
@@ -134,10 +134,10 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolRolesAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name),
@@ -151,10 +151,10 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t 
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolRolesAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name),
@@ -168,10 +168,10 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t 
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolRolesAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name),
@@ -192,7 +192,7 @@ func testAccCheckPoolRolesAttachmentExists(n string) resource.TestCheckFunc {
 			return errors.New("No Cognito Identity Pool Roles Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
 		_, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
@@ -203,7 +203,7 @@ func testAccCheckPoolRolesAttachmentExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckPoolRolesAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
@@ -215,7 +215,7 @@ func testAccCheckPoolRolesAttachmentDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err

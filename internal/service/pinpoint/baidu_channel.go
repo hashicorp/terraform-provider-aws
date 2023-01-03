@@ -47,7 +47,7 @@ func ResourceBaiduChannel() *schema.Resource {
 }
 
 func resourceBaiduChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -73,7 +73,7 @@ func resourceBaiduChannelUpsert(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBaiduChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint Baidu Channel for application %s", d.Id())
 
@@ -81,7 +81,7 @@ func resourceBaiduChannelRead(d *schema.ResourceData, meta interface{}) error {
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Pinpoint Baidu Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -98,14 +98,14 @@ func resourceBaiduChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBaiduChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint Baidu Channel for application %s", d.Id())
 	_, err := conn.DeleteBaiduChannel(&pinpoint.DeleteBaiduChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 		return nil
 	}
 

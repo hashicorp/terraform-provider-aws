@@ -201,7 +201,7 @@ func ResourceSMBFileShare() *schema.Resource {
 }
 
 func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -235,7 +235,7 @@ func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CacheAttributes = expandStorageGatewayCacheAttributes(v.([]interface{})[0].(map[string]interface{}))
+		input.CacheAttributes = expandCacheAttributes(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("case_sensitivity"); ok {
@@ -299,7 +299,7 @@ func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -323,7 +323,7 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bucket_region", fileshare.BucketRegion)
 
 	if fileshare.CacheAttributes != nil {
-		if err := d.Set("cache_attributes", []interface{}{flattenStorageGatewayCacheAttributes(fileshare.CacheAttributes)}); err != nil {
+		if err := d.Set("cache_attributes", []interface{}{flattenCacheAttributes(fileshare.CacheAttributes)}); err != nil {
 			return fmt.Errorf("error setting cache_attributes: %w", err)
 		}
 	} else {
@@ -366,7 +366,7 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &storagegateway.UpdateSMBFileShareInput{
@@ -388,7 +388,7 @@ func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if d.HasChange("cache_attributes") {
-			input.CacheAttributes = expandStorageGatewayCacheAttributes(d.Get("cache_attributes").([]interface{})[0].(map[string]interface{}))
+			input.CacheAttributes = expandCacheAttributes(d.Get("cache_attributes").([]interface{})[0].(map[string]interface{}))
 		}
 
 		if d.HasChange("case_sensitivity") {
@@ -451,7 +451,7 @@ func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", d.Id())
 	_, err := conn.DeleteFileShare(&storagegateway.DeleteFileShareInput{
@@ -473,7 +473,7 @@ func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandStorageGatewayCacheAttributes(tfMap map[string]interface{}) *storagegateway.CacheAttributes {
+func expandCacheAttributes(tfMap map[string]interface{}) *storagegateway.CacheAttributes {
 	if tfMap == nil {
 		return nil
 	}
@@ -487,7 +487,7 @@ func expandStorageGatewayCacheAttributes(tfMap map[string]interface{}) *storageg
 	return apiObject
 }
 
-func flattenStorageGatewayCacheAttributes(apiObject *storagegateway.CacheAttributes) map[string]interface{} {
+func flattenCacheAttributes(apiObject *storagegateway.CacheAttributes) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

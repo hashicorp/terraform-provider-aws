@@ -30,7 +30,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
 			customdiff.ForceNewIf("allowed_prefixes", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				conn := meta.(*conns.AWSClient).DirectConnectConn
+				conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
 
@@ -91,7 +91,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 }
 
 func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
 	associatedGatewayID := d.Get("associated_gateway_id").(string)
@@ -102,7 +102,7 @@ func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("allowed_prefixes"); ok && v.(*schema.Set).Len() > 0 {
-		input.AddAllowedPrefixesToDirectConnectGateway = expandDirectConnectRouteFilterPrefixes(v.(*schema.Set).List())
+		input.AddAllowedPrefixesToDirectConnectGateway = expandRouteFilterPrefixes(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect Gateway Association Proposal: %s", input)
@@ -118,7 +118,7 @@ func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	// First attempt to find by proposal ID.
 	output, err := FindGatewayAssociationProposalByID(conn, d.Id())
@@ -128,7 +128,7 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 		directConnectGatewayID := d.Get("dx_gateway_id").(string)
 		associatedGatewayID := d.Get("associated_gateway_id").(string)
 
-		output, err := FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
+		output, err := FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, removing from state", d.Id())
@@ -145,7 +145,7 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 		// to artificially populate the missing proposal in state as if it was still there.
 		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has reached end-of-life and has been removed by AWS", d.Id())
 
-		if err := d.Set("allowed_prefixes", flattenDirectConnectRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
+		if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
 			return fmt.Errorf("error setting allowed_prefixes: %w", err)
 		}
 
@@ -157,7 +157,7 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 	} else if err != nil {
 		return fmt.Errorf("error reading Direct Connect Gateway Association Proposal (%s): %w", d.Id(), err)
 	} else {
-		if err := d.Set("allowed_prefixes", flattenDirectConnectRouteFilterPrefixes(output.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
+		if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
 			return fmt.Errorf("error setting allowed_prefixes: %w", err)
 		}
 
@@ -172,7 +172,7 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceGatewayAssociationProposalDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association Proposal: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(&directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
@@ -190,7 +190,7 @@ func resourceGatewayAssociationProposalDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func expandDirectConnectRouteFilterPrefixes(tfList []interface{}) []*directconnect.RouteFilterPrefix {
+func expandRouteFilterPrefixes(tfList []interface{}) []*directconnect.RouteFilterPrefix {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -214,7 +214,7 @@ func expandDirectConnectRouteFilterPrefixes(tfList []interface{}) []*directconne
 	return apiObjects
 }
 
-func flattenDirectConnectRouteFilterPrefixes(apiObjects []*directconnect.RouteFilterPrefix) []interface{} {
+func flattenRouteFilterPrefixes(apiObjects []*directconnect.RouteFilterPrefix) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

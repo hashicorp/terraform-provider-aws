@@ -49,7 +49,7 @@ func ResourceRoutingControl() *schema.Resource {
 }
 
 func resourceRoutingControlCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.CreateRoutingControlInput{
 		ClientToken:        aws.String(resource.UniqueId()),
@@ -74,7 +74,7 @@ func resourceRoutingControlCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(result.RoutingControlArn))
 
-	if _, err := waitRoute53RecoveryControlConfigRoutingControlCreated(conn, d.Id()); err != nil {
+	if _, err := waitRoutingControlCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Route53 Recovery Control Config Routing Control (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -82,7 +82,7 @@ func resourceRoutingControlCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRoutingControlRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.DescribeRoutingControlInput{
 		RoutingControlArn: aws.String(d.Id()),
@@ -114,7 +114,7 @@ func resourceRoutingControlRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceRoutingControlUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.UpdateRoutingControlInput{
 		RoutingControlName: aws.String(d.Get("name").(string)),
@@ -131,7 +131,7 @@ func resourceRoutingControlUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRoutingControlDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Routing Control: %s", d.Id())
 	_, err := conn.DeleteRoutingControl(&r53rcc.DeleteRoutingControlInput{
@@ -146,7 +146,7 @@ func resourceRoutingControlDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Routing Control: %w", err)
 	}
 
-	_, err = waitRoute53RecoveryControlConfigRoutingControlDeleted(conn, d.Id())
+	_, err = waitRoutingControlDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil

@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_cluster_capacity_providers"
 description: |-

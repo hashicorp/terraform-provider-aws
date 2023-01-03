@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceActiveReceiptRuleSet() *schema.Resource {
@@ -28,12 +29,15 @@ func DataSourceActiveReceiptRuleSet() *schema.Resource {
 }
 
 func dataSourceActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	data, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 
 	if err != nil {
-		return fmt.Errorf("error reading SES Active Receipt Rule Set: %s", err)
+		return fmt.Errorf("reading SES Active Receipt Rule Set: %s", err)
+	}
+	if data == nil || data.Metadata == nil {
+		return tfresource.NewEmptyResultError(nil)
 	}
 
 	name := aws.StringValue(data.Metadata.Name)

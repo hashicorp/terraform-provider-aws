@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,10 +22,10 @@ func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStaticIPAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
@@ -45,7 +45,7 @@ func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 		_, err := conn.DetachStaticIp(&lightsail.DetachStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -58,10 +58,10 @@ func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStaticIPAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
@@ -86,7 +86,7 @@ func testAccCheckStaticIPAttachmentExists(n string, staticIp *lightsail.StaticIp
 			return errors.New("No Lightsail Static IP Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -114,11 +114,15 @@ func testAccCheckStaticIPAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
 		})
+
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			continue
+		}
 
 		if err == nil {
 			if *resp.StaticIp.IsAttached {
@@ -126,12 +130,6 @@ func testAccCheckStaticIPAttachmentDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Verify the error
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				return nil
-			}
-		}
 		return err
 	}
 

@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,6 +13,10 @@ func DataSourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceEBSDefaultKMSKeyRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"key_arn": {
 				Type:     schema.TypeString,
@@ -21,7 +26,7 @@ func DataSourceEBSDefaultKMSKey() *schema.Resource {
 	}
 }
 func dataSourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	res, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {

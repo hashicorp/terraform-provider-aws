@@ -124,7 +124,7 @@ func ResourceFilter() *schema.Resource {
 }
 
 func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -152,13 +152,13 @@ func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating GuardDuty Filter: %w", err)
 	}
 
-	d.SetId(guardDutyFilterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
+	d.SetId(filterCreateID(d.Get("detector_id").(string), aws.StringValue(output.Name)))
 
 	return resourceFilterRead(d, meta)
 }
 
 func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -223,13 +223,13 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-	d.SetId(guardDutyFilterCreateID(detectorID, name))
+	d.SetId(filterCreateID(detectorID, name))
 
 	return nil
 }
 
 func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	if d.HasChanges("action", "description", "finding_criteria", "rank") {
 		input := guardduty.UpdateFilterInput{
@@ -266,7 +266,7 @@ func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorId := d.Get("detector_id").(string)
 	name := d.Get("name").(string)
@@ -288,14 +288,14 @@ func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-const guardDutyFilterIDSeparator = ":"
+const filterIDSeparator = ":"
 
-func guardDutyFilterCreateID(detectorID, filterName string) string {
-	return detectorID + guardDutyFilterIDSeparator + filterName
+func filterCreateID(detectorID, filterName string) string {
+	return detectorID + filterIDSeparator + filterName
 }
 
 func FilterParseID(importedId string) (string, string, error) {
-	parts := strings.Split(importedId, guardDutyFilterIDSeparator)
+	parts := strings.Split(importedId, filterIDSeparator)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("GuardDuty filter ID must be of the form <Detector ID>:<Filter name>. Got %q.", importedId)
 	}

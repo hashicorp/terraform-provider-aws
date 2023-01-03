@@ -1,5 +1,5 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_patch_group"
 description: |-

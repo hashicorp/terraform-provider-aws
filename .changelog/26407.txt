@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_job: Add support for `3.9` as valid `python_version` value
+```

@@ -73,7 +73,7 @@ func ResourceProtectionGroup() *schema.Resource {
 }
 
 func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -106,7 +106,7 @@ func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -161,32 +161,34 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
-	input := &shield.UpdateProtectionGroupInput{
-		Aggregation:       aws.String(d.Get("aggregation").(string)),
-		Pattern:           aws.String(d.Get("pattern").(string)),
-		ProtectionGroupId: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &shield.UpdateProtectionGroupInput{
+			Aggregation:       aws.String(d.Get("aggregation").(string)),
+			Pattern:           aws.String(d.Get("pattern").(string)),
+			ProtectionGroupId: aws.String(d.Id()),
+		}
 
-	if v, ok := d.GetOk("members"); ok {
-		input.Members = flex.ExpandStringList(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("members"); ok {
+			input.Members = flex.ExpandStringList(v.([]interface{}))
+		}
 
-	if v, ok := d.GetOk("resource_type"); ok {
-		input.ResourceType = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("resource_type"); ok {
+			input.ResourceType = aws.String(v.(string))
+		}
 
-	log.Printf("[DEBUG] Updating Shield Protection Group: %s", input)
-	_, err := conn.UpdateProtectionGroup(input)
+		log.Printf("[DEBUG] Updating Shield Protection Group: %s", input)
+		_, err := conn.UpdateProtectionGroup(input)
 
-	if err != nil {
-		return fmt.Errorf("error updating Shield Protection Group (%s): %w", d.Id(), err)
+		if err != nil {
+			return fmt.Errorf("error updating Shield Protection Group (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("protection_group_arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
@@ -195,7 +197,7 @@ func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceProtectionGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
 	_, err := conn.DeleteProtectionGroup(&shield.DeleteProtectionGroupInput{

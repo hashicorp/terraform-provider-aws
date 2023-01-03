@@ -19,13 +19,13 @@ func testAccControlPanel_basic(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckControlPanelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckControlPanelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlPanelConfig(rName),
+				Config: testAccControlPanelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlPanelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -48,13 +48,13 @@ func testAccControlPanel_disappears(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckControlPanelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckControlPanelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlPanelConfig(rName),
+				Config: testAccControlPanelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlPanelExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceControlPanel(), resourceName),
@@ -66,7 +66,7 @@ func testAccControlPanel_disappears(t *testing.T) {
 }
 
 func testAccCheckControlPanelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_control_panel" {
@@ -95,7 +95,7 @@ resource "aws_route53recoverycontrolconfig_cluster" "test" {
 `, rName)
 }
 
-func testAccControlPanelConfig(rName string) string {
+func testAccControlPanelConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterSetUp(rName), fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_control_panel" "test" {
   name        = %[1]q
@@ -111,7 +111,7 @@ func testAccCheckControlPanelExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 		input := &r53rcc.DescribeControlPanelInput{
 			ControlPanelArn: aws.String(rs.Primary.ID),

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -14,22 +15,21 @@ import (
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
-func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
+func TestAccDSConditionalForwarder_Condition_basic(t *testing.T) {
 	resourceName := "aws_directory_service_conditional_forwarder.fwd"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
-
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConditionalForwarderDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConditionalForwarderDestroy,
 		Steps: []resource.TestStep{
 			// test create
 			{
-				Config: testAccDirectoryServiceConditionalForwarderConfig(domainName, ip1, ip2),
+				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConditionalForwarderExists(
 						resourceName,
@@ -39,7 +39,7 @@ func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 			},
 			// test update
 			{
-				Config: testAccDirectoryServiceConditionalForwarderConfig(domainName, ip1, ip3),
+				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConditionalForwarderExists(
 						resourceName,
@@ -58,14 +58,14 @@ func TestAccDirectoryServiceConditionalForwarder_Condition_basic(t *testing.T) {
 }
 
 func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_conditional_forwarder" {
 			continue
 		}
 
-		directoryId, domainName, err := tfds.ParseDSConditionalForwarderID(rs.Primary.ID)
+		directoryId, domainName, err := tfds.ParseConditionalForwarderID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -75,7 +75,7 @@ func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
 			RemoteDomainNames: []*string{aws.String(domainName)},
 		})
 
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			continue
 		}
 
@@ -102,12 +102,12 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		directoryId, domainName, err := tfds.ParseDSConditionalForwarderID(rs.Primary.ID)
+		directoryId, domainName, err := tfds.ParseConditionalForwarderID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 		res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),
@@ -140,9 +140,9 @@ func testAccCheckConditionalForwarderExists(name string, dnsIps []string) resour
 	}
 }
 
-func testAccDirectoryServiceConditionalForwarderConfig(domain, ip1, ip2 string) string {
+func testAccConditionalForwarderConfig_basic(rName, domain, ip1, ip2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_conditional_forwarder" "fwd" {
   directory_id = aws_directory_service_directory.test.id

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -45,7 +46,7 @@ func ResourceClusterRoleAssociation() *schema.Resource {
 }
 
 func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID := d.Get("db_cluster_identifier").(string)
 	roleARN := d.Get("role_arn").(string)
@@ -55,9 +56,20 @@ func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface
 		RoleArn:             aws.String(roleARN),
 	}
 
-	log.Printf("[DEBUG] Creating RDS DB Cluster IAM Role Association: %s", input)
-	_, err := conn.AddRoleToDBCluster(input)
-
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+		var err error
+		_, err = conn.AddRoleToDBCluster(input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.AddRoleToDBCluster(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating RDS DB Cluster (%s) IAM Role (%s) Association: %w", dbClusterID, roleARN, err)
 	}
@@ -74,7 +86,7 @@ func resourceClusterRoleAssociationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 
@@ -102,7 +114,7 @@ func resourceClusterRoleAssociationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceClusterRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
 

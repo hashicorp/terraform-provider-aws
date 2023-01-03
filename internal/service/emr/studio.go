@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -110,7 +109,7 @@ func ResourceStudio() *schema.Resource {
 }
 
 func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -146,7 +145,7 @@ func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var result *emr.CreateStudioOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		result, err = conn.CreateStudio(input)
 		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "entity does not have permissions to assume role") {
@@ -173,7 +172,7 @@ func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStudioUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emr.UpdateStudioInput{
@@ -209,7 +208,7 @@ func resourceStudioUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStudioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -254,7 +253,7 @@ func resourceStudioRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStudioDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	request := &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),

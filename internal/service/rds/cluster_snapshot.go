@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const rdsDbClusterSnapshotCreateTimeout = 2 * time.Minute
+const clusterSnapshotCreateTimeout = 2 * time.Minute
 
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
@@ -116,7 +116,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 }
 
 func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -126,10 +126,10 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
-	err := resource.Retry(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(clusterSnapshotCreateTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDBClusterSnapshot(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -164,7 +164,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -173,7 +173,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	}
 	resp, err := conn.DescribeDBClusterSnapshots(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 			log.Printf("[WARN] RDS DB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -228,7 +228,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcedbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -242,17 +242,19 @@ func resourcedbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	params := &rds.DeleteDBClusterSnapshotInput{
+	log.Printf("[DEBUG] Deleting RDS DB Cluster Snapshot: %s", d.Id())
+	_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		return nil
 	}
-	_, err := conn.DeleteDBClusterSnapshot(params)
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
-			return nil
-		}
-		return fmt.Errorf("error deleting RDS DB Cluster Snapshot %q: %s", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Cluster Snapshot (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -268,7 +270,7 @@ func resourceClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string,
 
 		resp, err := conn.DescribeDBClusterSnapshots(opts)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 				return nil, "", nil
 			}
 			return nil, "", fmt.Errorf("Error retrieving DB Cluster Snapshots: %s", err)

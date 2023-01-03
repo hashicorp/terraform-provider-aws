@@ -42,7 +42,7 @@ func ResourceUserGroupMembership() *schema.Resource {
 }
 
 func resourceUserGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user := d.Get("user").(string)
 	groupList := flex.ExpandStringSet(d.Get("groups").(*schema.Set))
@@ -58,7 +58,7 @@ func resourceUserGroupMembershipCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user := d.Get("user").(string)
 	groups := d.Get("groups").(*schema.Set)
@@ -69,7 +69,7 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) e
 
 	var gl []string
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		err := conn.ListGroupsForUserPages(input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
@@ -129,7 +129,7 @@ func resourceUserGroupMembershipRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceUserGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("groups") {
 		user := d.Get("user").(string)
@@ -160,7 +160,7 @@ func resourceUserGroupMembershipUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceUserGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	user := d.Get("user").(string)
 	groups := flex.ExpandStringSet(d.Get("groups").(*schema.Set))
 
@@ -175,7 +175,7 @@ func removeUserFromGroups(conn *iam.IAM, user string, groups []*string) error {
 			GroupName: group,
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				continue
 			}
 			return err

@@ -70,7 +70,7 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -108,7 +108,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -121,7 +121,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
 			log.Printf("[WARN] Neptune Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -135,7 +135,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	var subnetGroup *neptune.DBSubnetGroup = subnetGroups[0]
+	subnetGroup := subnetGroups[0]
 
 	if subnetGroup.DBSubnetGroupName == nil {
 		return fmt.Errorf("Unable to find Neptune Subnet Group: %#v", subnetGroups)
@@ -149,7 +149,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		subnets = append(subnets, aws.StringValue(s.SubnetIdentifier))
 	}
 	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %s", err)
+		return fmt.Errorf("setting subnet_ids: %s", err)
 	}
 
 	//Amazon Neptune shares the format of Amazon RDS ARNs. Neptune ARNs contain rds and not neptune.
@@ -159,25 +159,25 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Subnet Group (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for Neptune Subnet Group (%s): %s", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
 func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
@@ -205,7 +205,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Neptune Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -213,7 +213,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := neptune.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -222,10 +222,10 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Neptune Subnet Group: %s", d.Id())
 	_, err := conn.DeleteDBSubnetGroup(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Neptune Subnet Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting Neptune Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	return nil

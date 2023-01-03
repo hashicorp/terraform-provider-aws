@@ -28,7 +28,7 @@ func sweeps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CloudTrailConn
+	conn := client.(*conns.AWSClient).CloudTrailConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListTrailsPages(&cloudtrail.ListTrailsInput{}, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
@@ -68,7 +68,7 @@ func sweeps(region string) error {
 			_, err = conn.DeleteTrail(&cloudtrail.DeleteTrailInput{
 				Name: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeTrailNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeTrailNotFoundException) {
 				continue
 			}
 			if err != nil {

@@ -81,7 +81,7 @@ func ResourceCustomDomainAssociation() *schema.Resource {
 }
 
 func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	domainName := d.Get("domain_name").(string)
 	serviceArn := d.Get("service_arn").(string)
@@ -113,7 +113,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
@@ -138,7 +138,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 		return nil
 	}
 
-	if err := d.Set("certificate_validation_records", flattenAppRunnerCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
+	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting certificate_validation_records: %w", err))
 	}
 
@@ -151,7 +151,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
@@ -185,7 +185,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenAppRunnerCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
+func flattenCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
 	var results []interface{}
 
 	for _, record := range records {

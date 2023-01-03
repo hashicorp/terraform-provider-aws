@@ -24,13 +24,13 @@ func TestAccIAMRolePolicyAttachment_basic(t *testing.T) {
 	testPolicy3 := fmt.Sprintf("tf-acctest3-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRolePolicyAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyAttachConfig(rInt),
+				Config: testAccRolePolicyAttachmentConfig_attach(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists("aws_iam_role_policy_attachment.test-attach", 1, &out),
 					testAccCheckRolePolicyAttachmentAttributes([]string{testPolicy}, &out),
@@ -58,7 +58,7 @@ func TestAccIAMRolePolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccRolePolicyAttachUpdateConfig(rInt),
+				Config: testAccRolePolicyAttachmentConfig_attachUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists("aws_iam_role_policy_attachment.test-attach", 2, &out),
 					testAccCheckRolePolicyAttachmentAttributes([]string{testPolicy2, testPolicy3}, &out),
@@ -75,13 +75,13 @@ func TestAccIAMRolePolicyAttachment_disappears(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRolePolicyAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyAttachmentConfig(rName),
+				Config: testAccRolePolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
 					testAccCheckRolePolicyAttachmentDisappears(resourceName),
@@ -101,13 +101,13 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 	resourceName := "aws_iam_role_policy_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRolePolicyAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyAttachmentConfig(rName),
+				Config: testAccRolePolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(iamRoleResourceName, &role),
 					testAccCheckRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
@@ -122,7 +122,7 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 }
 
 func testAccCheckRolePolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role_policy_attachment" {
@@ -134,7 +134,7 @@ func testAccCheckRolePolicyAttachmentDestroy(s *terraform.State) error {
 
 		hasPolicyAttachment, err := tfiam.RoleHasPolicyARNAttachment(conn, role, policyARN)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 
@@ -161,7 +161,7 @@ func testAccCheckRolePolicyAttachmentExists(n string, c int, out *iam.ListAttach
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		role := rs.Primary.Attributes["role"]
 
 		attachedPolicies, err := conn.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
@@ -201,7 +201,7 @@ func testAccCheckRolePolicyAttachmentAttributes(policies []string, out *iam.List
 
 func testAccCheckRolePolicyAttachmentDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -227,7 +227,7 @@ func testAccRolePolicyAttachmentImportStateIdFunc(resourceName string) resource.
 	}
 }
 
-func testAccRolePolicyAttachConfig(rInt int) string {
+func testAccRolePolicyAttachmentConfig_attach(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "test-role-%d"
@@ -276,7 +276,7 @@ resource "aws_iam_role_policy_attachment" "test-attach" {
 `, rInt, rInt)
 }
 
-func testAccRolePolicyAttachUpdateConfig(rInt int) string {
+func testAccRolePolicyAttachmentConfig_attachUpdate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "test-role-%d"
@@ -370,7 +370,7 @@ resource "aws_iam_role_policy_attachment" "test-attach2" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccRolePolicyAttachmentConfig(rName string) string {
+func testAccRolePolicyAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

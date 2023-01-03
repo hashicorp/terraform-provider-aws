@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,6 +21,12 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 		Delete: resourceTagOptionResourceAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(TagOptionResourceAssociationReadyTimeout),
+			Read:   schema.DefaultTimeout(TagOptionResourceAssociationReadTimeout),
+			Delete: schema.DefaultTimeout(TagOptionResourceAssociationDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -56,7 +61,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 }
 
 func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.AssociateTagOptionWithResourceInput{
 		ResourceId:  aws.String(d.Get("resource_id").(string)),
@@ -64,7 +69,7 @@ func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta int
 	}
 
 	var output *servicecatalog.AssociateTagOptionWithResourceOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociateTagOptionWithResource(input)
@@ -98,7 +103,7 @@ func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 
@@ -106,7 +111,7 @@ func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
+	output, err := WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Tag Option Resource Association (%s) not found, removing from state", d.Id())
@@ -136,7 +141,7 @@ func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceTagOptionResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 
@@ -159,7 +164,7 @@ func resourceTagOptionResourceAssociationDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("error disassociating Service Catalog Tag Option from Resource (%s): %w", d.Id(), err)
 	}
 
-	err = WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID)
+	err = WaitTagOptionResourceAssociationDeleted(conn, tagOptionID, resourceID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Tag Option Resource Disassociation (%s): %w", d.Id(), err)

@@ -91,7 +91,7 @@ func ResourceMaintenanceWindow() *schema.Resource {
 }
 
 func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -150,7 +150,7 @@ func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	// Replace must be set otherwise its not possible to remove optional attributes, e.g.
 	// ValidationException: 1 validation error detected: Value '' at 'startDate' failed to satisfy constraint: Member must have length greater than or equal to 1
@@ -187,19 +187,14 @@ func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.UpdateMaintenanceWindow(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
-			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error updating SSM Maintenance Window (%s): %s", d.Id(), err)
+		return fmt.Errorf("error updating SSM Maintenance Window (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -207,7 +202,7 @@ func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -217,12 +212,12 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetMaintenanceWindow(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading SSM Maintenance Window (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading SSM Maintenance Window (%s): %w", d.Id(), err)
 	}
 
 	d.Set("allow_unassociated_targets", resp.AllowUnassociatedTargets)
@@ -258,7 +253,7 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceMaintenanceWindowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Deleting SSM Maintenance Window: %s", d.Id())
 

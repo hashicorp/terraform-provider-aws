@@ -1,17 +1,18 @@
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
@@ -21,15 +22,15 @@ func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfigConfig(rName),
+				Config: testAccQueryLogConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
+					testAccCheckQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -52,15 +53,15 @@ func TestAccRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 	resourceName := "aws_route53_resolver_query_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfigConfig(rName),
+				Config: testAccQueryLogConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
+					testAccCheckQueryLogConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceQueryLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,15 +77,15 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 	cwLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverQueryLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverQueryLogConfigConfigTags1(rName, "key1", "value1"),
+				Config: testAccQueryLogConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
+					testAccCheckQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -99,9 +100,9 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53ResolverQueryLogConfigConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccQueryLogConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
+					testAccCheckQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -112,9 +113,9 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoute53ResolverQueryLogConfigConfigTags1(rName, "key2", "value2"),
+				Config: testAccQueryLogConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverQueryLogConfigExists(resourceName, &v),
+					testAccCheckQueryLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -127,30 +128,31 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ResolverQueryLogConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+func testAccCheckQueryLogConfigDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_query_log_config" {
 			continue
 		}
 
-		// Try to find the resource
-		_, err := tfroute53resolver.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
-		// Verify the error is what we want
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		_, err := tfroute53resolver.FindResolverQueryLogConfigByID(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("Route 53 Resolver Query Log Config still exists: %s", rs.Primary.ID)
+
+		return fmt.Errorf("Route53 Resolver Query Log Config %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckRoute53ResolverQueryLogConfigExists(n string, v *route53resolver.ResolverQueryLogConfig) resource.TestCheckFunc {
+func testAccCheckQueryLogConfigExists(n string, v *route53resolver.ResolverQueryLogConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -158,22 +160,24 @@ func testAccCheckRoute53ResolverQueryLogConfigExists(n string, v *route53resolve
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver Query Log Config ID is set")
+			return fmt.Errorf("No Route53 Resolver Query Log Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		out, err := tfroute53resolver.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+
+		output, err := tfroute53resolver.FindResolverQueryLogConfigByID(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccRoute53ResolverQueryLogConfigConfig(rName string) string {
+func testAccQueryLogConfigConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -187,7 +191,7 @@ resource "aws_route53_resolver_query_log_config" "test" {
 `, rName)
 }
 
-func testAccRoute53ResolverQueryLogConfigConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccQueryLogConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -204,7 +208,7 @@ resource "aws_route53_resolver_query_log_config" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccRoute53ResolverQueryLogConfigConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccQueryLogConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q

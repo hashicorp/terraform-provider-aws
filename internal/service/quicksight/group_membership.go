@@ -64,7 +64,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
@@ -93,7 +93,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
@@ -111,8 +111,8 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}
 
-	if !found {
-		log.Printf("[WARN] QuickSight User-group membership %s is not found, removing from state", d.Id())
+	if !d.IsNewResource() && !found {
+		log.Printf("[WARN] QuickSight User-group membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -126,7 +126,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
@@ -141,7 +141,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, err := conn.DeleteGroupMembershipWithContext(ctx, deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return diag.Errorf("Error deleting QuickSight User-group membership %s: %s", d.Id(), err)

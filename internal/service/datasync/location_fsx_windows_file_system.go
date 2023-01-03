@@ -105,7 +105,7 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 }
 
 func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
@@ -126,7 +126,6 @@ func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta int
 		input.Domain = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Fsx Windows File System: %#v", input)
 	output, err := conn.CreateLocationFsxWindows(input)
 	if err != nil {
 		return fmt.Errorf("error creating DataSync Location Fsx Windows File System: %w", err)
@@ -138,7 +137,7 @@ func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta int
 }
 
 func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -200,7 +199,7 @@ func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta inter
 }
 
 func resourceLocationFSxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -214,7 +213,7 @@ func resourceLocationFSxWindowsFileSystemUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceLocationFSxWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR"
+subcategory: "ECR Public"
 layout: "aws"
 page_title: "AWS: aws_ecrpublic_repository_policy"
 description: |-
@@ -18,7 +18,7 @@ Note that currently only one policy may be applied to a repository.
 
 ```terraform
 resource "aws_ecrpublic_repository" "example" {
-  repository_name = "Example"
+  repository_name = "example"
 }
 
 resource "aws_ecrpublic_repository_policy" "example" {

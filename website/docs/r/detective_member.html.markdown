@@ -17,7 +17,7 @@ resource "aws_detective_graph" "example" {}
 
 resource "aws_detective_member" "example" {
   account_id                 = "AWS ACCOUNT ID"
-  email                      = "EMAIL"
+  email_address              = "EMAIL"
   graph_arn                  = aws_detective_graph.example.id
   message                    = "Message of the invitation"
   disable_email_notification = true
@@ -48,7 +48,6 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 `aws_detective_member` can be imported using the ARN of the graph followed by the account ID of the member account, e.g.
-
 
 ```
 $ terraform import aws_detective_member.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012

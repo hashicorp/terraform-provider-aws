@@ -15,17 +15,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSecurityProfileCreate,
-		ReadContext:   resourceSecurityProfileRead,
-		UpdateContext: resourceSecurityProfileUpdate,
-		DeleteContext: resourceSecurityProfileDelete,
+		CreateWithoutTimeout: resourceSecurityProfileCreate,
+		ReadWithoutTimeout:   resourceSecurityProfileRead,
+		UpdateWithoutTimeout: resourceSecurityProfileUpdate,
+		DeleteWithoutTimeout: resourceSecurityProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -70,7 +72,7 @@ func ResourceSecurityProfile() *schema.Resource {
 }
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -111,7 +113,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -126,7 +128,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 		SecurityProfileId: aws.String(securityProfileID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -146,7 +148,17 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("organization_resource_id", resp.SecurityProfile.OrganizationResourceId)
 	d.Set("security_profile_id", resp.SecurityProfile.Id)
 	d.Set("name", resp.SecurityProfile.SecurityProfileName)
-	// NOTE: The response does not return information about the permissions
+
+	// reading permissions requires a separate API call
+	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Permissions for Security Profile (%s): %w", securityProfileID, err))
+	}
+
+	if permissions != nil {
+		d.Set("permissions", flex.FlattenStringSet(permissions))
+	}
 
 	tags := KeyValueTags(resp.SecurityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -163,7 +175,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -192,7 +204,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -201,7 +213,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -229,4 +241,30 @@ func SecurityProfileParseID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func getSecurityProfilePermissions(ctx context.Context, conn *connect.Connect, instanceID, securityProfileID string) ([]*string, error) {
+	var result []*string
+
+	input := &connect.ListSecurityProfilePermissionsInput{
+		InstanceId:        aws.String(instanceID),
+		MaxResults:        aws.Int64(ListSecurityProfilePermissionsMaxResults),
+		SecurityProfileId: aws.String(securityProfileID),
+	}
+
+	err := conn.ListSecurityProfilePermissionsPagesWithContext(ctx, input, func(page *connect.ListSecurityProfilePermissionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		result = append(result, page.Permissions...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

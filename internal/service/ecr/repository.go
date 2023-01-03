@@ -65,6 +65,10 @@ func ResourceRepository() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				ForceNew:         true,
 			},
+			"force_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"image_scanning_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -108,14 +112,14 @@ func ResourceRepository() *schema.Resource {
 }
 
 func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := ecr.CreateRepositoryInput{
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:          aws.String(d.Get("name").(string)),
-		EncryptionConfiguration: expandEcrRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -137,7 +141,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.CreateRepository(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ECR Repository (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
@@ -148,7 +152,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed creating ECR Repository (%s): %w", d.Get("name").(string), err)
 	}
 
-	repository := *out.Repository // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+	repository := *out.Repository // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
 
 	log.Printf("[DEBUG] ECR repository created: %q", *repository.RepositoryArn)
 
@@ -159,7 +163,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, aws.StringValue(repository.RepositoryArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for ECR Repository (%s): %s", d.Id(), err)
 			return resourceRepositoryRead(d, meta)
 		}
@@ -173,7 +177,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -230,14 +234,14 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
-	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
 		return nil
 	}
@@ -273,7 +277,7 @@ func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []ma
 	}
 }
 
-func expandEcrRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
+func expandRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -290,7 +294,7 @@ func expandEcrRepositoryEncryptionConfiguration(data []interface{}) *ecr.Encrypt
 	return config
 }
 
-func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
+func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
 	if ec == nil {
 		return nil
 	}
@@ -307,7 +311,7 @@ func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration
 
 func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	if d.HasChange("image_tag_mutability") {
 		if err := resourceRepositoryUpdateImageTagMutability(conn, d); err != nil {
@@ -327,7 +331,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, arn, o, n)
 
 		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for ECR Repository (%s): %s", d.Id(), err)
 			return resourceRepositoryRead(d, meta)
 		}
@@ -341,18 +345,21 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	_, err := conn.DeleteRepository(&ecr.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
-		Force:          aws.Bool(true),
+		Force:          aws.Bool(d.Get("force_delete").(bool)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error deleting ECR repository: %s", err)
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotEmptyException) {
+			return fmt.Errorf("ECR Repository (%s) not empty, consider using force_delete: %w", d.Id(), err)
+		}
+		return fmt.Errorf("error deleting ECR Repository (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for ECR Repository %q to be deleted", d.Id())
@@ -362,19 +369,19 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
 		}
 
-		return resource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Repository to be deleted", d.Id()))
+		return resource.RetryableError(fmt.Errorf("ECR Repository (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeRepositories(input)
 	}
 
-	if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 		return nil
 	}
 
@@ -402,7 +409,6 @@ func resourceRepositoryUpdateImageTagMutability(conn *ecr.ECR, d *schema.Resourc
 	return nil
 }
 func resourceRepositoryUpdateImageScanningConfiguration(conn *ecr.ECR, d *schema.ResourceData) error {
-
 	var ecrImageScanningConfig ecr.ImageScanningConfiguration
 	imageScanningConfigs := d.Get("image_scanning_configuration").([]interface{})
 	if len(imageScanningConfigs) > 0 {

@@ -1,7 +1,8 @@
 package elb
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,7 +12,6 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -273,7 +273,7 @@ func ResourceLoadBalancer() *schema.Resource {
 }
 
 func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -325,16 +325,14 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := elbconn.CreateLoadBalancer(elbOpts)
 
+		if tfawserr.ErrCodeEquals(err, elb.ErrCodeCertificateNotFoundException) {
+			return resource.RetryableError(fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %w", err))
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// Check for IAM SSL Cert error, eventual consistancy issue
-				if awsErr.Code() == elb.ErrCodeCertificateNotFoundException {
-					return resource.RetryableError(
-						fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 	if tfresource.TimedOut(err) {
@@ -352,7 +350,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -374,19 +372,19 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeResp, err := elbconn.DescribeLoadBalancers(describeElbOpts)
 	if err != nil {
-		if IsNotFound(err) {
-			// The ELB is gone now, so just remove it from the state
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error retrieving ELB: %s", err)
+		return fmt.Errorf("Error retrieving ELB Classic LB (%s): %w", elbName, err)
 	}
 	if len(describeResp.LoadBalancerDescriptions) != 1 {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenLoadBalancerEResource(d, meta.(*conns.AWSClient).EC2Conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
+	return flattenLoadBalancerEResource(d, meta.(*conns.AWSClient).EC2Conn(), elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
 }
 
 // flattenLoadBalancerEResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
@@ -407,7 +405,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	var scheme bool
 	if lb.Scheme != nil {
-		scheme = *lb.Scheme == "internal"
+		scheme = aws.StringValue(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
 	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
@@ -417,14 +415,14 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
-		if lb.SourceSecurityGroup.OwnerAlias != nil && *lb.SourceSecurityGroup.OwnerAlias != "" {
-			group = aws.String(*lb.SourceSecurityGroup.OwnerAlias + "/" + *lb.SourceSecurityGroup.GroupName)
+		if v := aws.StringValue(lb.SourceSecurityGroup.OwnerAlias); v != "" {
+			group = aws.String(v + "/" + aws.StringValue(lb.SourceSecurityGroup.GroupName))
 		}
 		d.Set("source_security_group", group)
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(context.TODO(), ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
@@ -474,23 +472,23 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 	tags, err := ListTags(elbconn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	// There's only one health check, so save that to state as we
 	// currently can
-	if *lb.HealthCheck.Target != "" {
+	if aws.StringValue(lb.HealthCheck.Target) != "" {
 		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
 	}
 
@@ -498,7 +496,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 }
 
 func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
@@ -540,7 +538,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.CreateLoadBalancerListeners(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, elb.ErrCodeDuplicateListenerException, "") {
+					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
 						return resource.RetryableError(err)
 					}
@@ -804,7 +802,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(elbconn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ELB(%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating ELB(%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -812,7 +810,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 
 	log.Printf("[INFO] Deleting ELB: %s", d.Id())
 
@@ -826,7 +824,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 
 	name := d.Get("name").(string)
 
-	err := CleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn, name)
+	err := CleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn(), name)
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
 	}
@@ -838,22 +836,15 @@ func ListenerHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["instance_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-",
-		strings.ToLower(m["instance_protocol"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["instance_protocol"].(string))))
 	buf.WriteString(fmt.Sprintf("%d-", m["lb_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-",
-		strings.ToLower(m["lb_protocol"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["lb_protocol"].(string))))
 
 	if v, ok := m["ssl_certificate_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	return create.StringHashcode(buf.String())
-}
-
-func IsNotFound(err error) bool {
-	elberr, ok := err.(awserr.Error)
-	return ok && elberr.Code() == elb.ErrCodeAccessPointNotFoundException
 }
 
 func ValidAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {
@@ -927,7 +918,6 @@ func ValidHeathCheckTarget(v interface{}, k string) (ws []string, errors []error
 				"than 1024 characters in the Health Check target: %s",
 				k, value))
 		}
-
 	}
 
 	return ws, errors

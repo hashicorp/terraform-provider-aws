@@ -21,12 +21,12 @@ func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSHKeyDataSourceConfig(username, publicKey),
+				Config: testAccUserSSHKeyDataSourceConfig_basic(username, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "encoding", resourceName, "encoding"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fingerprint", resourceName, "fingerprint"),
@@ -40,7 +40,7 @@ func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSSHKeyDataSourceConfig(username, publicKey string) string {
+func testAccUserSSHKeyDataSourceConfig_basic(username, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q

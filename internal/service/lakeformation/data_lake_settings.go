@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -107,7 +106,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 }
 
 func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -136,14 +135,14 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 	input.DataLakeSettings = settings
 
 	var output *lakeformation.PutDataLakeSettingsOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutDataLakeSettings(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
 				return resource.RetryableError(err)
 			}
 
@@ -170,7 +169,7 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -205,7 +204,7 @@ func resourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.PutDataLakeSettingsInput{
 		DataLakeSettings: &lakeformation.DataLakeSettings{

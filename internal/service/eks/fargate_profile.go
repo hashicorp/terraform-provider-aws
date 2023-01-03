@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -99,7 +98,7 @@ func ResourceFargateProfile() *schema.Resource {
 }
 
 func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -112,7 +111,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 		ClusterName:         aws.String(clusterName),
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
-		Selectors:           expandEksFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
+		Selectors:           expandFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
 		Subnets:             flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 
@@ -125,7 +124,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
 		// Retry for IAM eventual consistency on error:
@@ -161,7 +160,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -188,7 +187,7 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("fargate_profile_name", fargateProfile.FargateProfileName)
 	d.Set("pod_execution_role_arn", fargateProfile.PodExecutionRoleArn)
 
-	if err := d.Set("selector", flattenEksFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
+	if err := d.Set("selector", flattenFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
 		return fmt.Errorf("error setting selector: %w", err)
 	}
 
@@ -213,7 +212,7 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -226,7 +225,7 @@ func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 
@@ -262,7 +261,7 @@ func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandEksFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSelector {
+func expandFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSelector {
 	if len(l) == 0 {
 		return nil
 	}
@@ -292,7 +291,7 @@ func expandEksFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSele
 	return fargateProfileSelectors
 }
 
-func flattenEksFargateProfileSelectors(fargateProfileSelectors []*eks.FargateProfileSelector) []map[string]interface{} {
+func flattenFargateProfileSelectors(fargateProfileSelectors []*eks.FargateProfileSelector) []map[string]interface{} {
 	if len(fargateProfileSelectors) == 0 {
 		return []map[string]interface{}{}
 	}

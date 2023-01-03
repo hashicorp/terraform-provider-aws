@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_cluster_auth"
 description: |-
@@ -38,9 +38,9 @@ provider "kubernetes" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the cluster
+* `name` - (Required) Name of the cluster
 
 ## Attributes Reference
 
 * `id` - Name of the cluster.
-* `token` - The token to use to authenticate with the cluster.
+* `token` - Token to use to authenticate with the cluster.

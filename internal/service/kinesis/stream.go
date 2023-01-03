@@ -138,7 +138,7 @@ func ResourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -247,7 +247,7 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Get("name").(string)
@@ -315,7 +315,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 	name := d.Get("name").(string)
 
 	if d.HasChange("tags_all") {
@@ -517,7 +517,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Deleting Kinesis Stream: (%s)", name)
@@ -544,7 +544,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	output, err := FindStreamByName(conn, d.Id())
 

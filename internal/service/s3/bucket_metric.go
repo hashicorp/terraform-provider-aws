@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,16 +53,17 @@ func ResourceBucketMetric() *schema.Resource {
 				},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
 	}
 }
 
 func resourceBucketMetricPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -111,7 +113,7 @@ func resourceBucketMetricPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
@@ -142,7 +144,7 @@ func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
@@ -221,16 +223,15 @@ func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	if metricsFilter.And != nil {
-		and := *metricsFilter.And
+	if and := metricsFilter.And; and != nil {
 		if and.Prefix != nil {
-			m["prefix"] = *and.Prefix
+			m["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
 			m["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
 		}
 	} else if metricsFilter.Prefix != nil {
-		m["prefix"] = *metricsFilter.Prefix
+		m["prefix"] = aws.StringValue(metricsFilter.Prefix)
 	} else if metricsFilter.Tag != nil {
 		tags := []*s3.Tag{
 			metricsFilter.Tag,

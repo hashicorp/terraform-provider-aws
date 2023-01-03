@@ -28,19 +28,16 @@ func DataSourceWebACL() *schema.Resource {
 				Required: true,
 			},
 			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 			},
 		},
 	}
 }
 
 func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	name := d.Get("name").(string)
 
 	var foundWebACL *wafv2.WebACLSummary

@@ -32,7 +32,7 @@ func sweepSecretPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SecretsManagerConn
+	conn := client.(*conns.AWSClient).SecretsManagerConn()
 
 	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
@@ -50,7 +50,7 @@ func sweepSecretPolicies(region string) error {
 
 			_, err := conn.DeleteResourcePolicy(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %s", name, err)
@@ -74,7 +74,7 @@ func sweepSecrets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SecretsManagerConn
+	conn := client.(*conns.AWSClient).SecretsManagerConn()
 
 	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
@@ -93,7 +93,7 @@ func sweepSecrets(region string) error {
 
 			_, err := conn.DeleteSecret(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret (%s): %s", name, err)

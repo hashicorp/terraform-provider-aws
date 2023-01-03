@@ -2,7 +2,9 @@ package memorydb
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,10 +24,10 @@ import (
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCreate,
-		ReadContext:   resourceClusterRead,
-		UpdateContext: resourceClusterUpdate,
-		DeleteContext: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -55,6 +57,12 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"cluster_endpoint": endpointSchema(),
+			"data_tiering": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+				Default:  false,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -187,7 +195,6 @@ func ResourceCluster() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      true,
-				MaxItems:      1,
 				ConflictsWith: []string{"snapshot_name"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -258,7 +265,7 @@ func endpointSchema() *schema.Schema {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -272,6 +279,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
 		Tags:                    Tags(tags.IgnoreAWS()),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("data_tiering"); ok {
+		input.DataTiering = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -346,7 +357,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	if d.HasChangesExcept("final_snapshot_name", "tags", "tags_all") {
 		waitParameterGroupInSync := false
@@ -464,7 +475,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -489,6 +500,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("port", v.Port)
 	}
 
+	if v := aws.StringValue(cluster.DataTiering); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return diag.Errorf("error reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+		}
+
+		d.Set("data_tiering", b)
+	}
+
 	d.Set("description", cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
 	d.Set("engine_version", cluster.EngineVersion)
@@ -498,25 +518,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(cluster.Name)))
 	d.Set("node_type", cluster.NodeType)
 
-	// The configured value of num_replicas_per_shard cannot be read back, so
-	// assume that it's the same as that of the largest shard.
-	//
-	// For the sake of caution, limit this search to stable shards.
-	var maxNumberOfNodesPerShard int64
-	for _, shard := range cluster.Shards {
-		if aws.StringValue(shard.Status) != ClusterShardStatusAvailable {
-			continue
-		}
-
-		n := aws.Int64Value(shard.NumberOfNodes)
-		if n > maxNumberOfNodesPerShard {
-			maxNumberOfNodesPerShard = n
-		}
+	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
+	if err != nil {
+		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
-	if maxNumberOfNodesPerShard == 0 {
-		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): no available shards found", d.Id())
-	}
-	d.Set("num_replicas_per_shard", maxNumberOfNodesPerShard-1)
+	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
 	d.Set("num_shards", cluster.NumberOfShards)
 	d.Set("parameter_group_name", cluster.ParameterGroupName)
@@ -564,7 +570,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	input := &memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -650,4 +656,30 @@ func flattenShards(shards []*memorydb.Shard) *schema.Set {
 	}
 
 	return shardSet
+}
+
+// deriveClusterNumReplicasPerShard determines the replicas per shard
+// configuration of a cluster. As this cannot directly be read back, we
+// assume that it's the same as that of the largest shard.
+//
+// For the sake of caution, this search is limited to stable shards.
+func deriveClusterNumReplicasPerShard(cluster *memorydb.Cluster) (int, error) {
+	var maxNumberOfNodesPerShard int64
+
+	for _, shard := range cluster.Shards {
+		if aws.StringValue(shard.Status) != ClusterShardStatusAvailable {
+			continue
+		}
+
+		n := aws.Int64Value(shard.NumberOfNodes)
+		if n > maxNumberOfNodesPerShard {
+			maxNumberOfNodesPerShard = n
+		}
+	}
+
+	if maxNumberOfNodesPerShard == 0 {
+		return 0, fmt.Errorf("no available shards found")
+	}
+
+	return int(maxNumberOfNodesPerShard - 1), nil
 }

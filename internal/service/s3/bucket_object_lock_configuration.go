@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -12,15 +13,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBucketObjectLockConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketObjectLockConfigurationCreate,
-		ReadContext:   resourceBucketObjectLockConfigurationRead,
-		UpdateContext: resourceBucketObjectLockConfigurationUpdate,
-		DeleteContext: resourceBucketObjectLockConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketObjectLockConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketObjectLockConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketObjectLockConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketObjectLockConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -47,7 +49,7 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 			},
 			"rule": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -79,15 +81,16 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 				},
 			},
 			"token": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}
 }
 
 func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -115,9 +118,9 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 		input.Token = aws.String(v.(string))
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutObjectLockConfigurationWithContext(ctx, input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) Object Lock configuration: %w", bucket, err))
@@ -129,7 +132,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 }
 
 func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -179,7 +182,7 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 }
 
 func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -218,7 +221,7 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 }
 
 func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

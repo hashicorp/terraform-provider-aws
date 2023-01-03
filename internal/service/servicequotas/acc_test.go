@@ -21,7 +21,7 @@ const (
 )
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
 
 	input := &servicequotas.ListServicesInput{}
 
@@ -36,8 +36,9 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+// nosemgrep:ci.servicequotas-in-func-name
 func preCheckServiceQuotaSet(serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
@@ -54,7 +55,7 @@ func preCheckServiceQuotaSet(serviceCode, quotaCode string, t *testing.T) {
 }
 
 func preCheckServiceQuotaUnset(serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),

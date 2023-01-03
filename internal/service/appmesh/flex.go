@@ -1084,7 +1084,7 @@ func expandVirtualServiceSpec(vSpec []interface{}) *appmesh.VirtualServiceSpec {
 	return spec
 }
 
-func flattenAppMeshClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{} {
+func flattenClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{} {
 	if clientPolicy == nil {
 		return []interface{}{}
 	}
@@ -1176,7 +1176,7 @@ func flattenAppMeshClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{
 	return []interface{}{mClientPolicy}
 }
 
-func flattenAppMeshDuration(duration *appmesh.Duration) []interface{} {
+func flattenDuration(duration *appmesh.Duration) []interface{} {
 	if duration == nil {
 		return []interface{}{}
 	}
@@ -1189,7 +1189,7 @@ func flattenAppMeshDuration(duration *appmesh.Duration) []interface{} {
 	return []interface{}{mDuration}
 }
 
-func flattenAppMeshGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
+func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 	if grpcRoute == nil {
 		return []interface{}{}
 	}
@@ -1263,32 +1263,32 @@ func flattenAppMeshGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 			"grpc_retry_events": flex.FlattenStringSet(grpcRetryPolicy.GrpcRetryEvents),
 			"http_retry_events": flex.FlattenStringSet(grpcRetryPolicy.HttpRetryEvents),
 			"max_retries":       int(aws.Int64Value(grpcRetryPolicy.MaxRetries)),
-			"per_retry_timeout": flattenAppMeshDuration(grpcRetryPolicy.PerRetryTimeout),
+			"per_retry_timeout": flattenDuration(grpcRetryPolicy.PerRetryTimeout),
 			"tcp_retry_events":  flex.FlattenStringSet(grpcRetryPolicy.TcpRetryEvents),
 		}
 
 		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
 	}
 
-	mGrpcRoute["timeout"] = flattenAppMeshGRPCTimeout(grpcRoute.Timeout)
+	mGrpcRoute["timeout"] = flattenGRPCTimeout(grpcRoute.Timeout)
 
 	return []interface{}{mGrpcRoute}
 }
 
-func flattenAppMeshGRPCTimeout(grpcTimeout *appmesh.GrpcTimeout) []interface{} {
+func flattenGRPCTimeout(grpcTimeout *appmesh.GrpcTimeout) []interface{} {
 	if grpcTimeout == nil {
 		return []interface{}{}
 	}
 
 	mGrpcTimeout := map[string]interface{}{
-		"idle":        flattenAppMeshDuration(grpcTimeout.Idle),
-		"per_request": flattenAppMeshDuration(grpcTimeout.PerRequest),
+		"idle":        flattenDuration(grpcTimeout.Idle),
+		"per_request": flattenDuration(grpcTimeout.PerRequest),
 	}
 
 	return []interface{}{mGrpcTimeout}
 }
 
-func flattenAppMeshHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
+func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 	if httpRoute == nil {
 		return []interface{}{}
 	}
@@ -1362,32 +1362,32 @@ func flattenAppMeshHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 		mHttpRetryPolicy := map[string]interface{}{
 			"http_retry_events": flex.FlattenStringSet(httpRetryPolicy.HttpRetryEvents),
 			"max_retries":       int(aws.Int64Value(httpRetryPolicy.MaxRetries)),
-			"per_retry_timeout": flattenAppMeshDuration(httpRetryPolicy.PerRetryTimeout),
+			"per_retry_timeout": flattenDuration(httpRetryPolicy.PerRetryTimeout),
 			"tcp_retry_events":  flex.FlattenStringSet(httpRetryPolicy.TcpRetryEvents),
 		}
 
 		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
 	}
 
-	mHttpRoute["timeout"] = flattenAppMeshHTTPTimeout(httpRoute.Timeout)
+	mHttpRoute["timeout"] = flattenHTTPTimeout(httpRoute.Timeout)
 
 	return []interface{}{mHttpRoute}
 }
 
-func flattenAppMeshHTTPTimeout(httpTimeout *appmesh.HttpTimeout) []interface{} {
+func flattenHTTPTimeout(httpTimeout *appmesh.HttpTimeout) []interface{} {
 	if httpTimeout == nil {
 		return []interface{}{}
 	}
 
 	mHttpTimeout := map[string]interface{}{
-		"idle":        flattenAppMeshDuration(httpTimeout.Idle),
-		"per_request": flattenAppMeshDuration(httpTimeout.PerRequest),
+		"idle":        flattenDuration(httpTimeout.Idle),
+		"per_request": flattenDuration(httpTimeout.PerRequest),
 	}
 
 	return []interface{}{mHttpTimeout}
 }
 
-func flattenAppMeshMeshSpec(spec *appmesh.MeshSpec) []interface{} {
+func flattenMeshSpec(spec *appmesh.MeshSpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}
@@ -1405,23 +1405,23 @@ func flattenAppMeshMeshSpec(spec *appmesh.MeshSpec) []interface{} {
 	return []interface{}{mSpec}
 }
 
-func flattenAppMeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
+func flattenRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}
 
 	mSpec := map[string]interface{}{
-		"grpc_route":  flattenAppMeshGRPCRoute(spec.GrpcRoute),
-		"http2_route": flattenAppMeshHTTPRoute(spec.Http2Route),
-		"http_route":  flattenAppMeshHTTPRoute(spec.HttpRoute),
+		"grpc_route":  flattenGRPCRoute(spec.GrpcRoute),
+		"http2_route": flattenHTTPRoute(spec.Http2Route),
+		"http_route":  flattenHTTPRoute(spec.HttpRoute),
 		"priority":    int(aws.Int64Value(spec.Priority)),
-		"tcp_route":   flattenAppMeshTCPRoute(spec.TcpRoute),
+		"tcp_route":   flattenTCPRoute(spec.TcpRoute),
 	}
 
 	return []interface{}{mSpec}
 }
 
-func flattenAppMeshTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
+func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 	if tcpRoute == nil {
 		return []interface{}{}
 	}
@@ -1449,24 +1449,24 @@ func flattenAppMeshTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 		}
 	}
 
-	mTcpRoute["timeout"] = flattenAppMeshTCPTimeout(tcpRoute.Timeout)
+	mTcpRoute["timeout"] = flattenTCPTimeout(tcpRoute.Timeout)
 
 	return []interface{}{mTcpRoute}
 }
 
-func flattenAppMeshTCPTimeout(tcpTimeout *appmesh.TcpTimeout) []interface{} {
+func flattenTCPTimeout(tcpTimeout *appmesh.TcpTimeout) []interface{} {
 	if tcpTimeout == nil {
 		return []interface{}{}
 	}
 
 	mTcpTimeout := map[string]interface{}{
-		"idle": flattenAppMeshDuration(tcpTimeout.Idle),
+		"idle": flattenDuration(tcpTimeout.Idle),
 	}
 
 	return []interface{}{mTcpTimeout}
 }
 
-func flattenAppMeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
+func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}
@@ -1481,7 +1481,7 @@ func flattenAppMeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 
 			if virtualService := backend.VirtualService; virtualService != nil {
 				mVirtualService := map[string]interface{}{
-					"client_policy":        flattenAppMeshClientPolicy(virtualService.ClientPolicy),
+					"client_policy":        flattenClientPolicy(virtualService.ClientPolicy),
 					"virtual_service_name": aws.StringValue(virtualService.VirtualServiceName),
 				}
 
@@ -1496,7 +1496,7 @@ func flattenAppMeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 
 	if backendDefaults := spec.BackendDefaults; backendDefaults != nil {
 		mBackendDefaults := map[string]interface{}{
-			"client_policy": flattenAppMeshClientPolicy(backendDefaults.ClientPolicy),
+			"client_policy": flattenClientPolicy(backendDefaults.ClientPolicy),
 		}
 
 		mSpec["backend_defaults"] = []interface{}{mBackendDefaults}
@@ -1557,8 +1557,8 @@ func flattenAppMeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 
 		if outlierDetection := listener.OutlierDetection; outlierDetection != nil {
 			mOutlierDetection := map[string]interface{}{
-				"base_ejection_duration": flattenAppMeshDuration(outlierDetection.BaseEjectionDuration),
-				"interval":               flattenAppMeshDuration(outlierDetection.Interval),
+				"base_ejection_duration": flattenDuration(outlierDetection.BaseEjectionDuration),
+				"interval":               flattenDuration(outlierDetection.Interval),
 				"max_ejection_percent":   int(aws.Int64Value(outlierDetection.MaxEjectionPercent)),
 				"max_server_errors":      int(aws.Int64Value(outlierDetection.MaxServerErrors)),
 			}
@@ -1575,10 +1575,10 @@ func flattenAppMeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 
 		if listenerTimeout := listener.Timeout; listenerTimeout != nil {
 			mListenerTimeout := map[string]interface{}{
-				"grpc":  flattenAppMeshGRPCTimeout(listenerTimeout.Grpc),
-				"http":  flattenAppMeshHTTPTimeout(listenerTimeout.Http),
-				"http2": flattenAppMeshHTTPTimeout(listenerTimeout.Http2),
-				"tcp":   flattenAppMeshTCPTimeout(listenerTimeout.Tcp),
+				"grpc":  flattenGRPCTimeout(listenerTimeout.Grpc),
+				"http":  flattenHTTPTimeout(listenerTimeout.Http),
+				"http2": flattenHTTPTimeout(listenerTimeout.Http2),
+				"tcp":   flattenTCPTimeout(listenerTimeout.Tcp),
 			}
 			mListener["timeout"] = []interface{}{mListenerTimeout}
 		}
@@ -1720,7 +1720,7 @@ func flattenAppMeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 	return []interface{}{mSpec}
 }
 
-func flattenAppMeshVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interface{} {
+func flattenVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}
@@ -1742,7 +1742,7 @@ func flattenAppMeshVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interfac
 	return []interface{}{mSpec}
 }
 
-func flattenAppMeshVirtualServiceSpec(spec *appmesh.VirtualServiceSpec) []interface{} {
+func flattenVirtualServiceSpec(spec *appmesh.VirtualServiceSpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}

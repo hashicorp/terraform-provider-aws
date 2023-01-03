@@ -14,7 +14,6 @@ import (
 )
 
 func ResourceAPICache() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceAPICacheCreate,
 		Read:   resourceAPICacheRead,
@@ -58,7 +57,7 @@ func ResourceAPICache() *schema.Resource {
 }
 
 func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
 
@@ -84,7 +83,7 @@ func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(apiID)
 
-	if err := waitApiCacheAvailable(conn, d.Id()); err != nil {
+	if err := waitAPICacheAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
 	}
 
@@ -92,9 +91,9 @@ func resourceAPICacheCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
-	cache, err := FindApiCacheByID(conn, d.Id())
+	cache, err := FindAPICacheByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync API Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -116,7 +115,7 @@ func resourceAPICacheRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.UpdateApiCacheInput{
 		ApiId: aws.String(d.Id()),
@@ -139,16 +138,15 @@ func resourceAPICacheUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Appsync API Cache %q: %w", d.Id(), err)
 	}
 
-	if err := waitApiCacheAvailable(conn, d.Id()); err != nil {
+	if err := waitAPICacheAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync API Cache (%s) availability: %w", d.Id(), err)
 	}
 
 	return resourceAPICacheRead(d, meta)
-
 }
 
 func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),
@@ -161,7 +159,7 @@ func resourceAPICacheDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Appsync API Cache: %w", err)
 	}
 
-	if err := waitApiCacheDeleted(conn, d.Id()); err != nil {
+	if err := waitAPICacheDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync API Cache (%s) to be deleted: %w", d.Id(), err)
 	}
 

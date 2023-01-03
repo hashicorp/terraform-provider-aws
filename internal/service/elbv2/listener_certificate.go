@@ -42,7 +42,7 @@ func ResourceListenerCertificate() *schema.Resource {
 }
 
 func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	listenerArn := d.Get("listener_arn").(string)
 	certificateArn := d.Get("certificate_arn").(string)
@@ -62,7 +62,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.AddListenerCertificates(params)
 
 		// Retry for IAM Server Certificate eventual consistency
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
 			return resource.RetryableError(err)
 		}
 
@@ -78,7 +78,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error adding LB Listener Certificate: %w", err)
+		return fmt.Errorf("adding LB Listener Certificate: %w", err)
 	}
 
 	d.SetId(listenerCertificateCreateID(listenerArn, certificateArn))
@@ -87,11 +87,11 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
+		return fmt.Errorf("parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
@@ -133,7 +133,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	certificateArn := d.Get("certificate_arn").(string)
 	listenerArn := d.Get("listener_arn").(string)
@@ -151,10 +151,10 @@ func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeListenerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error removing LB Listener Certificate: %w", err)

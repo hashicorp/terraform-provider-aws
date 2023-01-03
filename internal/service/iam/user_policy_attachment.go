@@ -39,7 +39,7 @@ func ResourceUserPolicyAttachment() *schema.Resource {
 }
 
 func resourceUserPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
@@ -56,7 +56,7 @@ func resourceUserPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -64,7 +64,7 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var attachedPolicy *iam.AttachedPolicy
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		attachedPolicy, err = FindUserAttachedPolicy(conn, user, arn)
@@ -114,7 +114,7 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceUserPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 

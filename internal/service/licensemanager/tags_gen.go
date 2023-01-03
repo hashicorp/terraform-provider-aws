@@ -2,29 +2,14 @@
 package licensemanager
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
+	"github.com/aws/aws-sdk-go/service/licensemanager/licensemanageriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
-
-// ListTags lists licensemanager service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func ListTags(conn *licensemanager.LicenseManager, identifier string) (tftags.KeyValueTags, error) {
-	input := &licensemanager.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResource(input)
-
-	if err != nil {
-		return tftags.New(nil), err
-	}
-
-	return KeyValueTags(output.Tags), nil
-}
 
 // []*SERVICE.Tag handling
 
@@ -58,7 +43,10 @@ func KeyValueTags(tags []*licensemanager.Tag) tftags.KeyValueTags {
 // UpdateTags updates licensemanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *licensemanager.LicenseManager, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn licensemanageriface.LicenseManagerAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn licensemanageriface.LicenseManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +56,10 @@ func UpdateTags(conn *licensemanager.LicenseManager, identifier string, oldTagsM
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +69,10 @@ func UpdateTags(conn *licensemanager.LicenseManager, identifier string, oldTagsM
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

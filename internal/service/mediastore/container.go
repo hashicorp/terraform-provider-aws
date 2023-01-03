@@ -51,7 +51,7 @@ func ResourceContainer() *schema.Resource {
 }
 
 func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -73,7 +73,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{mediastore.ContainerStatusCreating},
 		Target:     []string{mediastore.ContainerStatusActive},
-		Refresh:    mediaStoreContainerRefreshStatusFunc(conn, d.Id()),
+		Refresh:    containerRefreshStatusFunc(conn, d.Id()),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -88,7 +88,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -96,7 +96,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 		ContainerName: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeContainer(input)
-	if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 		log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -131,7 +131,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -146,14 +146,14 @@ func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.DeleteContainerInput{
 		ContainerName: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteContainer(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 			return nil
 		}
 		return err
@@ -165,7 +165,7 @@ func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeContainer(dcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -182,7 +182,7 @@ func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mediaStoreContainerRefreshStatusFunc(conn *mediastore.MediaStore, cn string) resource.StateRefreshFunc {
+func containerRefreshStatusFunc(conn *mediastore.MediaStore, cn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &mediastore.DescribeContainerInput{
 			ContainerName: aws.String(cn),

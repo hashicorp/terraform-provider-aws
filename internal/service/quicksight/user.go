@@ -3,6 +3,7 @@ package quicksight
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -60,9 +61,10 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Default:  "default",
-				ValidateFunc: validation.StringInSlice([]string{
-					"default",
-				}, false),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+				),
 			},
 
 			"session_name": {
@@ -92,7 +94,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 
@@ -133,7 +135,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -147,7 +149,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.DescribeUser(descOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 		d.SetId("")
 		return nil
@@ -167,7 +169,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -183,11 +185,6 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.UpdateUser(updateOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("Error updating QuickSight User %s: %s", d.Id(), err)
 	}
@@ -196,7 +193,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -210,7 +207,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteUser(deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting QuickSight User %s: %s", d.Id(), err)

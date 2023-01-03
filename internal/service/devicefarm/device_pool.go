@@ -85,7 +85,7 @@ func ResourceDevicePool() *schema.Resource {
 }
 
 func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -93,7 +93,7 @@ func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &devicefarm.CreateDevicePoolInput{
 		Name:       aws.String(name),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
-		Rules:      expandAwsDevicefarmDevicePoolRules(d.Get("rule").(*schema.Set)),
+		Rules:      expandDevicePoolRules(d.Get("rule").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -124,11 +124,11 @@ func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	devicePool, err := FindDevicepoolByArn(conn, d.Id())
+	devicePool, err := FindDevicePoolByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm DevicePool (%s) not found, removing from state", d.Id())
@@ -146,14 +146,14 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", devicePool.Description)
 	d.Set("max_devices", devicePool.MaxDevices)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "devicepool", meta)
+	projectArn, err := decodeProjectARN(arn, "devicepool", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
 
 	d.Set("project_arn", projectArn)
 
-	if err := d.Set("rule", flattenAwsDevicefarmDevicePoolRules(devicePool.Rules)); err != nil {
+	if err := d.Set("rule", flattenDevicePoolRules(devicePool.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %w", err)
 	}
 
@@ -178,7 +178,7 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateDevicePoolInput{
@@ -194,7 +194,7 @@ func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("rule") {
-			input.Rules = expandAwsDevicefarmDevicePoolRules(d.Get("rule").(*schema.Set))
+			input.Rules = expandDevicePoolRules(d.Get("rule").(*schema.Set))
 		}
 
 		if d.HasChange("max_devices") {
@@ -224,7 +224,7 @@ func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteDevicePoolInput{
 		Arn: aws.String(d.Id()),
@@ -244,7 +244,7 @@ func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsDevicefarmDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
+func expandDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
 	rules := make([]*devicefarm.Rule, 0)
 
 	for _, r := range s.List() {
@@ -268,7 +268,7 @@ func expandAwsDevicefarmDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
 	return rules
 }
 
-func flattenAwsDevicefarmDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
+func flattenDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
 	if len(list) == 0 {
 		return nil
 	}
@@ -294,7 +294,7 @@ func flattenAwsDevicefarmDevicePoolRules(list []*devicefarm.Rule) []map[string]i
 	return result
 }
 
-func decodeDevicefarmProjectArn(id, typ string, meta interface{}) (string, error) {
+func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 	poolArn, err := arn.Parse(id)
 	if err != nil {
 		return "", fmt.Errorf("Error parsing '%s': %w", id, err)

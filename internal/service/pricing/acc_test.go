@@ -24,26 +24,32 @@ var testAccPricingRegion string
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckPricing(t) must be called before using this provider instance.
+// testAccPreCheck(t) must be called before using this provider instance.
 var testAccProviderPricing *schema.Provider
 
 // testAccProviderPricingConfigure ensures the provider is only configured once
 var testAccProviderPricingConfigure sync.Once
 
-// testAccPreCheckPricing verifies AWS credentials and that Pricing is supported
-func testAccPreCheckPricing(t *testing.T) {
+// testAccPreCheck verifies AWS credentials and that Pricing is supported
+func testAccPreCheck(t *testing.T) {
 	acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderPricingConfigure.Do(func() {
-		testAccProviderPricing = provider.Provider()
+		ctx := context.Background()
+		var err error
+		testAccProviderPricing, err = provider.New(ctx)
 
-		config := map[string]interface{}{
-			"region": testAccGetPricingRegion(),
+		if err != nil {
+			t.Fatal(err)
 		}
 
-		diags := testAccProviderPricing.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		config := map[string]interface{}{
+			"region": testAccGetRegion(),
+		}
+
+		diags := testAccProviderPricing.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
@@ -55,16 +61,16 @@ func testAccPreCheckPricing(t *testing.T) {
 	})
 }
 
-// testAccPricingRegionProviderConfig is the Terraform provider configuration for Pricing region testing
+// testAccRegionProviderConfig is the Terraform provider configuration for Pricing region testing
 //
 // Testing Pricing assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccPricingRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetPricingRegion())
+func testAccRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetRegion())
 }
 
-// testAccGetPricingRegion returns the Pricing region for testing
-func testAccGetPricingRegion() string {
+// testAccGetRegion returns the Pricing region for testing
+func testAccGetRegion() string {
 	if testAccPricingRegion != "" {
 		return testAccPricingRegion
 	}

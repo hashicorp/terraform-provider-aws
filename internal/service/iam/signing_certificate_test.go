@@ -19,17 +19,17 @@ func TestAccIAMSigningCertificate_basic(t *testing.T) {
 
 	resourceName := "aws_iam_signing_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningCertificateBasicConfig(rName, certificate),
+				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
@@ -52,17 +52,17 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 
 	resourceName := "aws_iam_signing_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningCertificateConfigStatus(rName, "Inactive", certificate),
+				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
@@ -74,14 +74,14 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSigningCertificateConfigStatus(rName, "Active", certificate),
+				Config: testAccSigningCertificateConfig_status(rName, "Active", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 				),
 			},
 			{
-				Config: testAccSigningCertificateConfigStatus(rName, "Inactive", certificate),
+				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
@@ -96,17 +96,17 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 	resourceName := "aws_iam_signing_certificate.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSigningCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningCertificateBasicConfig(rName, certificate),
+				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
@@ -128,7 +128,7 @@ func testAccCheckSigningCertificateExists(n string, cred *iam.SigningCertificate
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Server Cert ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
 		if err != nil {
@@ -147,7 +147,7 @@ func testAccCheckSigningCertificateExists(n string, cred *iam.SigningCertificate
 }
 
 func testAccCheckSigningCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_signing_certificate" {
@@ -168,13 +168,12 @@ func testAccCheckSigningCertificateDestroy(s *terraform.State) error {
 		if output != nil {
 			return fmt.Errorf("IAM Service Specific Credential (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 
 	return nil
 }
 
-func testAccSigningCertificateBasicConfig(rName, cert string) string {
+func testAccSigningCertificateConfig_basic(rName, cert string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -187,7 +186,7 @@ resource "aws_iam_signing_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(cert))
 }
 
-func testAccSigningCertificateConfigStatus(rName, status, cert string) string {
+func testAccSigningCertificateConfig_status(rName, status, cert string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q

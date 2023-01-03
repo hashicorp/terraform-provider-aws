@@ -33,7 +33,7 @@ func ResourceThingPrincipalAttachment() *schema.Resource {
 }
 
 func resourceThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -55,7 +55,7 @@ func GetThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, e
 	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
 		ThingName: aws.String(thing),
 	})
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return false, nil
 	} else if err != nil {
 		return false, err
@@ -71,7 +71,7 @@ func GetThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, e
 }
 
 func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -91,7 +91,7 @@ func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface
 }
 
 func resourceThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -101,7 +101,7 @@ func resourceThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interfa
 		ThingName: aws.String(thing),
 	})
 
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] IoT Principal %s or Thing %s not found, removing from state", principal, thing)
 	} else if err != nil {
 		return fmt.Errorf("error detaching principal %s from thing %s: %s", principal, thing, err)

@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -76,7 +76,7 @@ func ResourceAccountPasswordPolicy() *schema.Resource {
 }
 
 func resourceAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.UpdateAccountPasswordPolicyInput{}
 
@@ -108,10 +108,9 @@ func resourceAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{
 		input.RequireUppercaseCharacters = aws.Bool(v.(bool))
 	}
 
-	log.Printf("[DEBUG] Updating IAM account password policy: %s", input)
 	_, err := conn.UpdateAccountPasswordPolicy(input)
 	if err != nil {
-		return fmt.Errorf("Error updating IAM Password Policy: %s", err)
+		return fmt.Errorf("Error updating IAM Password Policy: %w", err)
 	}
 	log.Println("[DEBUG] IAM account password policy updated")
 
@@ -121,21 +120,18 @@ func resourceAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAccountPasswordPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.GetAccountPasswordPolicyInput{}
 	resp, err := conn.GetAccountPasswordPolicy(input)
 	if err != nil {
-		awsErr, ok := err.(awserr.Error)
-		if ok && awsErr.Code() == "NoSuchEntity" {
-			log.Printf("[WARN] IAM account password policy is gone (i.e. default)")
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			log.Printf("[WARN] IAM Account Password Policy not found, removing from state")
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error reading IAM account password policy: %s", err)
+		return fmt.Errorf("Error reading IAM account password policy: %w", err)
 	}
-
-	log.Printf("[DEBUG] Received IAM account password policy: %s", resp)
 
 	policy := resp.PasswordPolicy
 
@@ -154,12 +150,12 @@ func resourceAccountPasswordPolicyRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAccountPasswordPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	log.Println("[DEBUG] Deleting IAM account password policy")
 	input := &iam.DeleteAccountPasswordPolicyInput{}
 	if _, err := conn.DeleteAccountPasswordPolicy(input); err != nil {
-		return fmt.Errorf("Error deleting IAM Password Policy: %s", err)
+		return fmt.Errorf("Error deleting IAM Password Policy: %w", err)
 	}
 	log.Println("[DEBUG] Deleted IAM account password policy")
 

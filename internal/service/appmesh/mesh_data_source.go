@@ -74,7 +74,7 @@ func DataSourceMesh() *schema.Resource {
 }
 
 func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get("name").(string)
@@ -102,7 +102,7 @@ func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", resp.Mesh.Metadata.MeshOwner)
 	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshMeshSpec(resp.Mesh.Spec))
+	err = d.Set("spec", flattenMeshSpec(resp.Mesh.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}

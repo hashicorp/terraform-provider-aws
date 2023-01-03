@@ -48,13 +48,19 @@ func testAccPreCheckEdgeDomainName(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderEdgeDomainNameConfigure.Do(func() {
-		testAccProviderEdgeDomainName = provider.Provider()
+		ctx := context.Background()
+		var err error
+		testAccProviderEdgeDomainName, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderEdgeDomainName.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderEdgeDomainName.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

@@ -107,6 +107,10 @@ func DataSourceContainerRecipe() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
+												"throughput": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
 												"volume_size": {
 													Type:     schema.TypeInt,
 													Computed: true,
@@ -186,7 +190,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 }
 
 func dataSourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetContainerRecipeInput{}

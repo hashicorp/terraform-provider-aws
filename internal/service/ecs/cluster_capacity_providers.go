@@ -18,10 +18,10 @@ import (
 
 func ResourceClusterCapacityProviders() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCapacityProvidersPut,
-		ReadContext:   resourceClusterCapacityProvidersRead,
-		UpdateContext: resourceClusterCapacityProvidersPut,
-		DeleteContext: resourceClusterCapacityProvidersDelete,
+		CreateWithoutTimeout: resourceClusterCapacityProvidersPut,
+		ReadWithoutTimeout:   resourceClusterCapacityProvidersRead,
+		UpdateWithoutTimeout: resourceClusterCapacityProvidersPut,
+		DeleteWithoutTimeout: resourceClusterCapacityProvidersDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -73,7 +73,7 @@ func ResourceClusterCapacityProviders() *schema.Resource {
 }
 
 func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	clusterName := d.Get("cluster_name").(string)
 
@@ -88,11 +88,11 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 	err := retryClusterCapacityProvidersPut(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error updating ECS Cluster (%s) capacity providers: %s", clusterName, err)
+		return diag.Errorf("error updating ECS Cluster (%s) Capacity Providers: %s", clusterName, err)
 	}
 
 	if _, err := waitClusterAvailable(ctx, conn, clusterName); err != nil {
-		return diag.Errorf("error waiting for ECS Cluster (%s) to become available: %s", clusterName, err)
+		return diag.Errorf("error waiting for ECS Cluster (%s) to become available while putting Capacity Providers: %s", clusterName, err)
 	}
 
 	d.SetId(clusterName)
@@ -101,7 +101,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 }
 
 func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Id())
 
@@ -136,7 +136,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	input := &ecs.PutClusterCapacityProvidersInput{
 		Cluster:                         aws.String(d.Id()),
@@ -144,7 +144,7 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 		DefaultCapacityProviderStrategy: []*ecs.CapacityProviderStrategyItem{},
 	}
 
-	log.Printf("[DEBUG] Removing ECS cluster (%s) capacity providers", d.Id())
+	log.Printf("[DEBUG] Removing ECS Cluster (%s) Capacity Providers", d.Id())
 
 	err := retryClusterCapacityProvidersPut(ctx, conn, input)
 
@@ -153,27 +153,27 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting ECS Cluster (%s) capacity providers: %s", d.Id(), err)
+		return diag.Errorf("error deleting ECS Cluster (%s) Capacity Providers: %s", d.Id(), err)
 	}
 
 	if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for ECS Cluster (%s) to become available: %s", d.Id(), err)
+		return diag.Errorf("error waiting for ECS Cluster (%s) to become available while deleting Capacity Providers: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.ECS, input *ecs.PutClusterCapacityProvidersInput) error {
-	err := resource.RetryContext(ctx, ecsClusterTimeoutUpdate, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, clusterUpdateTimeout, func() *resource.RetryError {
 		_, err := conn.PutClusterCapacityProvidersWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeResourceInUseException) {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

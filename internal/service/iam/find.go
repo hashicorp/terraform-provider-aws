@@ -1,9 +1,8 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -80,16 +79,64 @@ func FindUserAttachedPolicy(conn *iam.IAM, userName string, policyARN string) (*
 	return result, nil
 }
 
-// FindPolicies returns the FindPolicies corresponding to the specified ARN, name, and/or path-prefix.
-func FindPolicies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, error) {
-	input := &iam.ListPoliciesInput{}
+// FindPolicyByARN returns the Policy corresponding to the specified ARN.
+func FindPolicyByARN(conn *iam.IAM, arn string) (*iam.Policy, error) {
+	input := &iam.GetPolicyInput{
+		PolicyArn: aws.String(arn),
+	}
 
+	output, err := conn.GetPolicy(input)
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Policy, nil
+}
+
+// FindPolicyByName returns the Policy corresponding to the name and/or path-prefix.
+func FindPolicyByName(conn *iam.IAM, name, pathPrefix string) (*iam.Policy, error) {
+	input := &iam.ListPoliciesInput{}
 	if pathPrefix != "" {
 		input.PathPrefix = aws.String(pathPrefix)
 	}
 
-	var results []*iam.Policy
+	all, err := FindPolicies(conn, input)
+	if err != nil {
+		return nil, err
+	}
 
+	var results []*iam.Policy
+	for _, p := range all {
+		if name != "" && name != aws.StringValue(p.PolicyName) {
+			continue
+		}
+
+		results = append(results, p)
+	}
+
+	if len(results) == 0 || results[0] == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+	if l := len(results); l > 1 {
+		return nil, tfresource.NewTooManyResultsError(1, nil)
+	}
+
+	return results[0], nil
+}
+
+// FindPolicies returns the Policies matching the parameters in the iam.ListPoliciesInput.
+func FindPolicies(conn *iam.IAM, input *iam.ListPoliciesInput) ([]*iam.Policy, error) {
+	var results []*iam.Policy
 	err := conn.ListPoliciesPages(input, func(page *iam.ListPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -97,14 +144,6 @@ func FindPolicies(conn *iam.IAM, arn, name, pathPrefix string) ([]*iam.Policy, e
 
 		for _, p := range page.Policies {
 			if p == nil {
-				continue
-			}
-
-			if arn != "" && arn != aws.StringValue(p.Arn) {
-				continue
-			}
-
-			if name != "" && name != aws.StringValue(p.PolicyName) {
 				continue
 			}
 
@@ -283,10 +322,66 @@ func FindSigningCertificate(conn *iam.IAM, userName, certId string) (*iam.Signin
 	return cert, nil
 }
 
-func urlFromOpenIDConnectProviderArn(arn string) (string, error) {
-	parts := strings.SplitN(arn, "/", 2)
-	if len(parts) != 2 {
-		return "", fmt.Errorf("error reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
+func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
+	input := &iam.GetSAMLProviderInput{
+		SAMLProviderArn: aws.String(arn),
 	}
-	return parts[1], nil
+
+	output, err := conn.GetSAMLProviderWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
+	accessKeys, err := FindAccessKeys(ctx, conn, username)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, accessKey := range accessKeys {
+		if aws.StringValue(accessKey.AccessKeyId) == id {
+			return accessKey, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
+func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
+	var accessKeys []*iam.AccessKeyMetadata
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+	err := conn.ListAccessKeysPages(input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		accessKeys = append(accessKeys, page.AccessKeyMetadata...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	return accessKeys, err
 }

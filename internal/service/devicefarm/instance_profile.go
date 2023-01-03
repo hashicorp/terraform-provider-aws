@@ -63,7 +63,7 @@ func ResourceInstanceProfile() *schema.Resource {
 }
 
 func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -106,11 +106,11 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instaceProf, err := FindInstanceProfileByArn(conn, d.Id())
+	instaceProf, err := FindInstanceProfileByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Instance Profile (%s) not found, removing from state", d.Id())
@@ -151,7 +151,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateInstanceProfileInput{
@@ -197,7 +197,7 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteInstanceProfileInput{
 		Arn: aws.String(d.Id()),
@@ -206,7 +206,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
 	_, err := conn.DeleteInstanceProfile(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Instance Profile: %w", err)

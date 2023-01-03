@@ -45,7 +45,7 @@ func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 }
 
 func resourceVPCEndpointSubnetAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)
@@ -93,7 +93,7 @@ func resourceVPCEndpointSubnetAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceVPCEndpointSubnetAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)
@@ -116,7 +116,7 @@ func resourceVPCEndpointSubnetAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)
@@ -131,7 +131,7 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidParameter) {
 		return nil
 	}
 
@@ -151,7 +151,7 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 func resourceVPCEndpointSubnetAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("Wrong format of resource: %s. Please follow 'vpc-endpoint-id/subnet-id'", d.Id())
+		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/subnet-id'", d.Id())
 	}
 
 	endpointID := parts[0]

@@ -16,19 +16,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccCognitoUser_basic(t *testing.T) {
+func TestAccCognitoIDPUser_basic(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigBasic(rUserPoolName, rUserName),
+				Config: testAccUserConfig_basic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -57,19 +57,19 @@ func TestAccCognitoUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_disappears(t *testing.T) {
+func TestAccCognitoIDPUser_disappears(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigBasic(rUserPoolName, rUserName),
+				Config: testAccUserConfig_basic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, cognitoidp.ResourceUser(), resourceName),
@@ -80,7 +80,7 @@ func TestAccCognitoUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_temporaryPassword(t *testing.T) {
+func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -90,13 +90,13 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigTemporaryPassword(rUserPoolName, rClientName, rUserName, rUserPassword),
+				Config: testAccUserConfig_temporaryPassword(rUserPoolName, rClientName, rUserName, rUserPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
 					testAccUserTemporaryPassword(userResourceName, clientResourceName),
@@ -117,7 +117,7 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccUserConfigTemporaryPassword(rUserPoolName, rClientName, rUserName, rUserPasswordUpdated),
+				Config: testAccUserConfig_temporaryPassword(rUserPoolName, rClientName, rUserName, rUserPasswordUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
 					testAccUserTemporaryPassword(userResourceName, clientResourceName),
@@ -125,7 +125,7 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserConfigNoPassword(rUserPoolName, rClientName, rUserName),
+				Config: testAccUserConfig_noPassword(rUserPoolName, rClientName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
 					resource.TestCheckResourceAttr(userResourceName, "temporary_password", ""),
@@ -136,7 +136,7 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_password(t *testing.T) {
+func TestAccCognitoIDPUser_password(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -146,13 +146,13 @@ func TestAccCognitoUser_password(t *testing.T) {
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigPassword(rUserPoolName, rClientName, rUserName, rUserPassword),
+				Config: testAccUserConfig_password(rUserPoolName, rClientName, rUserName, rUserPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
 					testAccUserPassword(userResourceName, clientResourceName),
@@ -173,7 +173,7 @@ func TestAccCognitoUser_password(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccUserConfigPassword(rUserPoolName, rClientName, rUserName, rUserPasswordUpdated),
+				Config: testAccUserConfig_password(rUserPoolName, rClientName, rUserName, rUserPasswordUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
 					testAccUserPassword(userResourceName, clientResourceName),
@@ -181,7 +181,7 @@ func TestAccCognitoUser_password(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserConfigNoPassword(rUserPoolName, rClientName, rUserName),
+				Config: testAccUserConfig_noPassword(rUserPoolName, rClientName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(userResourceName),
 					resource.TestCheckResourceAttr(userResourceName, "password", ""),
@@ -192,19 +192,19 @@ func TestAccCognitoUser_password(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_attributes(t *testing.T) {
+func TestAccCognitoIDPUser_attributes(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigAttributes(rUserPoolName, rUserName),
+				Config: testAccUserConfig_attributes(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
@@ -227,7 +227,7 @@ func TestAccCognitoUser_attributes(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccUserConfigAttributesUpdated(rUserPoolName, rUserName),
+				Config: testAccUserConfig_attributesUpdated(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
@@ -240,19 +240,19 @@ func TestAccCognitoUser_attributes(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_enabled(t *testing.T) {
+func TestAccCognitoIDPUser_enabled(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigEnable(rUserPoolName, rUserName, false),
+				Config: testAccUserConfig_enable(rUserPoolName, rUserName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -272,7 +272,7 @@ func TestAccCognitoUser_enabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccUserConfigEnable(rUserPoolName, rUserName, true),
+				Config: testAccUserConfig_enable(rUserPoolName, rUserName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -305,7 +305,7 @@ func testAccCheckUserExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf(fmt.Sprintf("ID should be user_pool_id/name. ID was %s. name was %s, user_pool_id was %s", id, userName, userPoolId))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		params := &cognitoidentityprovider.AdminGetUserInput{
 			Username:   aws.String(rs.Primary.Attributes["username"]),
@@ -318,7 +318,7 @@ func testAccCheckUserExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user" {
@@ -359,7 +359,7 @@ func testAccUserTemporaryPassword(userResName string, clientResName string) reso
 		userPassword := userRs.Primary.Attributes["temporary_password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
@@ -399,7 +399,7 @@ func testAccUserPassword(userResName string, clientResName string) resource.Test
 		userPassword := userRs.Primary.Attributes["password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
@@ -423,7 +423,7 @@ func testAccUserPassword(userResName string, clientResName string) resource.Test
 	}
 }
 
-func testAccUserConfigBasic(userPoolName string, userName string) string {
+func testAccUserConfig_basic(userPoolName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -436,7 +436,7 @@ resource "aws_cognito_user" "test" {
 `, userPoolName, userName)
 }
 
-func testAccUserConfigTemporaryPassword(userPoolName string, clientName string, userName string, password string) string {
+func testAccUserConfig_temporaryPassword(userPoolName string, clientName string, userName string, password string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -463,7 +463,7 @@ resource "aws_cognito_user" "test" {
 `, userPoolName, clientName, userName, password)
 }
 
-func testAccUserConfigPassword(userPoolName string, clientName string, userName string, password string) string {
+func testAccUserConfig_password(userPoolName string, clientName string, userName string, password string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -490,7 +490,7 @@ resource "aws_cognito_user" "test" {
 `, userPoolName, clientName, userName, password)
 }
 
-func testAccUserConfigNoPassword(userPoolName string, clientName string, userName string) string {
+func testAccUserConfig_noPassword(userPoolName string, clientName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -516,7 +516,7 @@ resource "aws_cognito_user" "test" {
 `, userPoolName, clientName, userName)
 }
 
-func testAccUserConfigAttributes(userPoolName string, userName string) string {
+func testAccUserConfig_attributes(userPoolName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -568,7 +568,7 @@ resource "aws_cognito_user" "test" {
 `, userPoolName, userName)
 }
 
-func testAccUserConfigAttributesUpdated(userPoolName string, userName string) string {
+func testAccUserConfig_attributesUpdated(userPoolName string, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -620,7 +620,7 @@ resource "aws_cognito_user" "test" {
 `, userPoolName, userName)
 }
 
-func testAccUserConfigEnable(userPoolName string, userName string, enabled bool) string {
+func testAccUserConfig_enable(userPoolName string, userName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q

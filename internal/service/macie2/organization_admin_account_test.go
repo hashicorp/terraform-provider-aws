@@ -21,12 +21,12 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:               testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieOrganizationAdminAccountBasicConfig(),
+				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
@@ -49,12 +49,12 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:               testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieOrganizationAdminAccountBasicConfig(),
+				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
@@ -65,7 +65,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccErrorCheckSkipMacie2OrganizationAdminAccount(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkipOrganizationAdminAccount(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"AccessDeniedException: The request failed because you must be a user of the management account for your AWS organization to perform this operation",
 	)
@@ -78,7 +78,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(conn, rs.Primary.ID)
 
@@ -95,7 +95,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 }
 
 func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_organization_admin_account" {
@@ -121,10 +121,9 @@ func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
-func testAccMacieOrganizationAdminAccountBasicConfig() string {
+func testAccOrganizationAdminAccountConfig_basic() string {
 	return `
 data "aws_caller_identity" "current" {}
 

@@ -19,10 +19,10 @@ func testAccMember_basic(t *testing.T) {
 	resourceName := "aws_securityhub_member.example"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic("111111111111", acctest.DefaultEmailAddress),
@@ -44,10 +44,10 @@ func testAccMember_invite(t *testing.T) {
 	resourceName := "aws_securityhub_member.example"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite("111111111111", acctest.DefaultEmailAddress, true),
@@ -73,7 +73,7 @@ func testAccCheckMemberExists(n string, member *securityhub.Member) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		resp, err := conn.GetMembers(&securityhub.GetMembersInput{
 			AccountIds: []*string{aws.String(rs.Primary.ID)},
@@ -94,7 +94,7 @@ func testAccCheckMemberExists(n string, member *securityhub.Member) resource.Tes
 }
 
 func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_member" {

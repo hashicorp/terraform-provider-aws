@@ -59,7 +59,7 @@ func ResourceGroupPolicy() *schema.Resource {
 }
 
 func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.PutGroupPolicyInput{
 		GroupName:      aws.String(d.Get("group").(string)),
@@ -85,7 +85,7 @@ func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -99,7 +99,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetGroupPolicyOutput
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetGroupPolicy(request)
@@ -158,7 +158,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -171,7 +171,7 @@ func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteGroupPolicy(request); err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting IAM group policy %s: %s", d.Id(), err)

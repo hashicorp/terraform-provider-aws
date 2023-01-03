@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -16,6 +17,10 @@ import (
 func DataSourceVPC() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceVPCRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -65,6 +70,10 @@ func DataSourceVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_network_address_usage_metrics": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
@@ -102,7 +111,7 @@ func DataSourceVPC() *schema.Resource {
 }
 
 func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// We specify "default" as boolean, but EC2 filters want
@@ -176,6 +185,12 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
+	}
+
+	if v, err := FindVPCAttribute(conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+	} else {
+		d.Set("enable_network_address_usage_metrics", v)
 	}
 
 	if v, err := FindVPCMainRouteTable(conn, d.Id()); err != nil {

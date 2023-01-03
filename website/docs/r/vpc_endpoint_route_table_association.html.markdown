@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_route_table_association"
 description: |-
@@ -31,7 +31,6 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - A hash of the EC2 Route Table and VPC Endpoint identifiers.
-
 
 ## Import
 
