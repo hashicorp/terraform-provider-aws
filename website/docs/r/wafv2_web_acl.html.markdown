@@ -605,7 +605,7 @@ The `managed_rule_group_config` block support the following arguments:
 ### Username Field
 
 * `identifier` - (Optional) The name of the username field.
-* 
+
 ### Field to Match
 
 The part of a web request that you want AWS WAF to inspect. Include the single `field_to_match` type that you want to inspect, with additional specifications as needed, according to the type. You specify a single request component in `field_to_match` for each rule statement that requires it. To inspect more than one component of a web request, create a separate rule statement for each component. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-fields.html#waf-rule-statement-request-component) for more details.
