@@ -430,3 +430,25 @@ func FindBucketById(ctx context.Context, conn *lightsail.Lightsail, id string) (
 
 	return out.Buckets[0], nil
 }
+
+func FindInstanceById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.Instance, error) {
+	in := &lightsail.GetInstanceInput{InstanceName: aws.String(id)}
+	out, err := conn.GetInstanceWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Instance == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Instance, nil
+}
