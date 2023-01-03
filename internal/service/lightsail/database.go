@@ -375,6 +375,12 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
+		if d.HasChange("publicly_accessible") {
+			if err := waitDatabasePubliclyAccessibleModified(ctx, conn, aws.String(d.Id()), d.Get("publicly_accessible").(bool)); err != nil {
+				return diag.Errorf("waiting for Lightsail Relational Database (%s) publicly accessible update: %s", d.Id(), err)
+			}
+		}
+
 		// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 		if _, err = waitDatabaseModified(ctx, conn, aws.String(d.Id())); err != nil {
 			return diag.Errorf("waiting for Lightsail Relational Database (%s) to become available: %s", d.Id(), err)

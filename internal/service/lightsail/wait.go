@@ -76,11 +76,30 @@ func waitDatabaseModified(ctx context.Context, conn *lightsail.Lightsail, db *st
 
 // waitDatabaseBackupRetentionModified waits for a Modified  BackupRetention on Database return available
 
-func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Lightsail, db *string, status *bool) error {
+func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Lightsail, db *string, target bool) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{strconv.FormatBool(!aws.BoolValue(status))},
-		Target:     []string{strconv.FormatBool(aws.BoolValue(status))},
+		Pending:    []string{strconv.FormatBool(!target)},
+		Target:     []string{strconv.FormatBool(target)},
 		Refresh:    statusDatabaseBackupRetention(conn, db),
+		Timeout:    DatabaseTimeout,
+		Delay:      DatabaseDelay,
+		MinTimeout: DatabaseMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if _, ok := outputRaw.(*lightsail.GetRelationalDatabaseOutput); ok {
+		return err
+	}
+
+	return err
+}
+
+func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail.Lightsail, db *string, target bool) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{strconv.FormatBool(!target)},
+		Target:     []string{strconv.FormatBool(target)},
+		Refresh:    statusDatabasePubliclyAccessible(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
