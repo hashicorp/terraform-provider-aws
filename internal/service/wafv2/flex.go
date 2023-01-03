@@ -2045,7 +2045,6 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interfa
 		if config.UsernameField != nil {
 			m["username_field"] = flattenUsernameField(config.UsernameField)
 		}
-
 	}
 
 	return []interface{}{m}
