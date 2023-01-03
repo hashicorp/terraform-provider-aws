@@ -985,52 +985,84 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 	if v, ok := m["version"]; ok && v != "" {
 		r.Version = aws.String(v.(string))
 	}
-	if s, ok := m["managed_rule_group_config"].([]interface{}); ok && len(s) > 0 && s[0] != nil {
-		r.ManagedRuleGroupConfigs = expandManagedRuleGroupConfigs(s[0].(map[string]interface{}))
+	if v, ok := m["managed_rule_group_config"].([]interface{}); ok && len(v) > 0 {
+		r.ManagedRuleGroupConfigs = expandManagedRuleGroupConfigs(v)
 	}
 
 	return r
 }
 
-func expandManagedRuleGroupConfigs(m map[string]interface{}) []*wafv2.ManagedRuleGroupConfig {
-	c := make([]*wafv2.ManagedRuleGroupConfig, 0)
-
-	if v, ok := m["login_path"]; ok && len(v.(string)) > 0 {
-		c = append(c, &wafv2.ManagedRuleGroupConfig{
-			LoginPath: aws.String(v.(string)),
-		})
+func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGroupConfig {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	if v, ok := m["payload_type"]; ok && len(v.(string)) > 0 {
-		c = append(c, &wafv2.ManagedRuleGroupConfig{
-			PayloadType: aws.String(v.(string)),
-		})
+	var out []*wafv2.ManagedRuleGroupConfig
+	for _, item := range tfList {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		var r wafv2.ManagedRuleGroupConfig
+		if v, ok := m["aws_managed_rules_bot_rule_set"].([]interface{}); ok && len(v) > 0 {
+			r.AWSManagedRulesBotControlRuleSet = expandAWSManagedRulesBotControlRuleSet(v)
+		}
+		if v, ok := m["login_path"].(string); ok && v != "" {
+			r.LoginPath = aws.String(v)
+		}
+		if v, ok := m["payload_type"].(string); ok && v != "" {
+			r.PayloadType = aws.String(v)
+		}
+		if v, ok := m["password_field"].([]interface{}); ok && len(v) > 0 {
+			r.PasswordField = expandPasswordField(v)
+		}
+		if v, ok := m["username_field"].([]interface{}); ok && len(v) > 0 {
+			r.UsernameField = expandUsernameField(v)
+		}
+
+		out = append(out, &r)
 	}
 
-	if v, ok := m["password_field"]; ok && len(v.(string)) > 0 {
-		c = append(c, &wafv2.ManagedRuleGroupConfig{
-			PasswordField: &wafv2.PasswordField{
-				Identifier: aws.String(v.(string)),
-			},
-		})
+	return out
+}
+
+func expandPasswordField(tfList []interface{}) *wafv2.PasswordField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
 	}
 
-	if v, ok := m["username_field"]; ok && len(v.(string)) > 0 {
-		c = append(c, &wafv2.ManagedRuleGroupConfig{
-			UsernameField: &wafv2.UsernameField{
-				Identifier: aws.String(v.(string)),
-			},
-		})
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.PasswordField{
+		Identifier: aws.String(m["identifier"].(string)),
 	}
 
-	if v, ok := m["inspection_level"]; ok && len(v.(string)) > 0 {
-		c = append(c, &wafv2.ManagedRuleGroupConfig{
-			AWSManagedRulesBotControlRuleSet: &wafv2.AWSManagedRulesBotControlRuleSet{
-				InspectionLevel: aws.String(v.(string)),
-			},
-		})
+	return &out
+}
+
+func expandUsernameField(tfList []interface{}) *wafv2.UsernameField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
 	}
-	return c
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.UsernameField{
+		Identifier: aws.String(m["identifier"].(string)),
+	}
+
+	return &out
+}
+
+func expandAWSManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesBotControlRuleSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.AWSManagedRulesBotControlRuleSet{
+		InspectionLevel: aws.String(m["inspection_level"].(string)),
+	}
+
+	return &out
 }
 
 func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {

@@ -947,9 +947,22 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
-		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"aws_managed_rules_bot_control_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"inspection_level": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
+							},
+						},
+					},
+				},
 				"login_path": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -959,12 +972,21 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					),
 				},
 				"password_field": {
-					Type:     schema.TypeString,
+					Type:     schema.TypeList,
 					Optional: true,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 512),
-						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
-					),
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
 				},
 				"payload_type": {
 					Type:         schema.TypeString,
@@ -972,17 +994,21 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
 				},
 				"username_field": {
-					Type:     schema.TypeString,
+					Type:     schema.TypeList,
 					Optional: true,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 512),
-						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
-					),
-				},
-				"inspection_level": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
 				},
 			},
 		},
