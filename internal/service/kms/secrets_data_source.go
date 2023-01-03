@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -30,19 +29,10 @@ func DataSourceSecrets() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"algorithm": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(kms.EncryptionAlgorithmSpec_Values(), false),
-						},
 						"context": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 						"grant_tokens": {
 							Type:     schema.TypeList,
@@ -81,17 +71,11 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 		params := &kms.DecryptInput{
 			CiphertextBlob: payload,
 		}
-		if algorithm, ok := d.GetOk("algorithm"); ok {
-			params.EncryptionAlgorithm = aws.String(algorithm.(string))
-		}
 		if context, exists := secret["context"]; exists {
 			params.EncryptionContext = make(map[string]*string)
 			for k, v := range context.(map[string]interface{}) {
 				params.EncryptionContext[k] = aws.String(v.(string))
 			}
-		}
-		if keyID, ok := d.GetOk("key_id"); ok {
-			params.KeyId = aws.String(keyID.(string))
 		}
 		if grant_tokens, exists := secret["grant_tokens"]; exists {
 			params.GrantTokens = make([]*string, 0)

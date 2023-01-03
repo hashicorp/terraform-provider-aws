@@ -64,9 +64,7 @@ Each `secret` supports the following arguments:
 
 * `name` - (Required) The name to export this secret under in the attributes.
 * `payload` - (Required) Base64 encoded payload, as returned from a KMS encrypt operation.
-* `algorithm` - (Optional) Algorithm used for decrypting the secret.
 * `context` - (Optional) An optional mapping that makes up the Encryption Context for the secret.
-* `key_id` - (Optional) The KMS key id or arn for decrypting the secret.
 * `grant_tokens` (Optional) An optional list of Grant Tokens for the secret.
 
 For more information on `context` and `grant_tokens` see the [KMS
