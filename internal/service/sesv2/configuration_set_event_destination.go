@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -84,12 +85,14 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delivery_stream_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"iam_role_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -98,6 +101,34 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"pinpoint_destination": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"application_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"sns_destination": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"topic_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -171,28 +202,26 @@ func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema
 }
 
 func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
-	// update := false
+	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
+	if err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
+	}
 
-	// in := &sesv2.UpdateConfigurationSetEventDestinationInput{
-	// 	Id: aws.String(d.Id()),
-	// }
+	if d.HasChanges("event_destination") {
+		in := &sesv2.UpdateConfigurationSetEventDestinationInput{
+			ConfigurationSetName: aws.String(configurationSetName),
+			EventDestination:     expandEventDestination(d.Get("event_destination").([]interface{})[0].(map[string]interface{})),
+			EventDestinationName: aws.String(eventDestinationName),
+		}
 
-	// if d.HasChanges("an_argument") {
-	// 	in.AnArgument = aws.String(d.Get("an_argument").(string))
-	// 	update = true
-	// }
-
-	// if !update {
-	// 	return nil
-	// }
-
-	// log.Printf("[DEBUG] Updating SESV2 ConfigurationSetEventDestination (%s): %#v", d.Id(), in)
-	// out, err := conn.UpdateConfigurationSetEventDestination(ctx, in)
-	// if err != nil {
-	// 	return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
-	// }
+		log.Printf("[DEBUG] Updating SESV2 ConfigurationSetEventDestination (%s): %#v", d.Id(), in)
+		_, err := conn.UpdateConfigurationSetEventDestination(ctx, in)
+		if err != nil {
+			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
+		}
+	}
 
 	return resourceConfigurationSetEventDestinationRead(ctx, d, meta)
 }
@@ -276,6 +305,14 @@ func flattenEventDestination(apiObject types.EventDestination) map[string]interf
 		m["matching_event_types"] = enum.Slice(apiObject.MatchingEventTypes...)
 	}
 
+	if v := apiObject.PinpointDestination; v != nil {
+		m["pinpoint_destination"] = []interface{}{flattenPinpointDestination(v)}
+	}
+
+	if v := apiObject.SnsDestination; v != nil {
+		m["sns_destination"] = []interface{}{flattenSNSDestination(v)}
+	}
+
 	return m
 }
 
@@ -291,20 +328,6 @@ func flattenCloudWatchDestination(apiObject *types.CloudWatchDestination) map[st
 	}
 
 	return m
-}
-
-func flattenCloudWatchDimensionConfigurations(apiObjects []types.CloudWatchDimensionConfiguration) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		l = append(l, flattenCloudWatchDimensionConfiguration(apiObject))
-	}
-
-	return l
 }
 
 func flattenKinesisFirehoseDestination(apiObject *types.KinesisFirehoseDestination) map[string]interface{} {
@@ -323,6 +346,48 @@ func flattenKinesisFirehoseDestination(apiObject *types.KinesisFirehoseDestinati
 	}
 
 	return m
+}
+
+func flattenPinpointDestination(apiObject *types.PinpointDestination) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.ApplicationArn; v != nil {
+		m["application_arn"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSNSDestination(apiObject *types.SnsDestination) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.TopicArn; v != nil {
+		m["topic_arn"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenCloudWatchDimensionConfigurations(apiObjects []types.CloudWatchDimensionConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		l = append(l, flattenCloudWatchDimensionConfiguration(apiObject))
+	}
+
+	return l
 }
 
 func flattenCloudWatchDimensionConfiguration(apiObject types.CloudWatchDimensionConfiguration) map[string]interface{} {
@@ -364,6 +429,14 @@ func expandEventDestination(tfMap map[string]interface{}) *types.EventDestinatio
 		a.MatchingEventTypes = stringsToEventTypes(flex.ExpandStringList(v))
 	}
 
+	if v, ok := tfMap["pinpoint_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.PinpointDestination = expandPinpointDestinaton(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["sns_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.SnsDestination = expandSNSDestination(v[0].(map[string]interface{}))
+	}
+
 	return a
 }
 
@@ -394,6 +467,34 @@ func expandKinesisFirehoseDestination(tfMap map[string]interface{}) *types.Kines
 
 	if v, ok := tfMap["iam_role_arn"].(string); ok && v != "" {
 		a.IamRoleArn = aws.String(v)
+	}
+
+	return a
+}
+
+func expandPinpointDestinaton(tfMap map[string]interface{}) *types.PinpointDestination {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.PinpointDestination{}
+
+	if v, ok := tfMap["application_arn"].(string); ok && v != "" {
+		a.ApplicationArn = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSNSDestination(tfMap map[string]interface{}) *types.SnsDestination {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.SnsDestination{}
+
+	if v, ok := tfMap["topic_arn"].(string); ok && v != "" {
+		a.TopicArn = aws.String(v)
 	}
 
 	return a
