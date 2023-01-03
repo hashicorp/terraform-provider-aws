@@ -37,12 +37,12 @@ resource "aws_ssoadmin_instance_access_control_attributes" "example" {
 The following arguments are supported:
 
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance.
-* `attribute` - (Required) See [AccessControlAttribute](#AccessControlAttribute) for more details.
+* `attribute` - (Required) See [AccessControlAttribute](#accesscontrolattribute) for more details.
 
 ### AccessControlAttribute
 
 * `key` - (Required) The name of the attribute associated with your identities in your identity source. This is used to map a specified attribute in your identity source with an attribute in AWS SSO.
-* `value` - (Required) The value used for mapping a specified attribute to an identity source. See [AccessControlAttributeValue](#AccessControlAttributeValue)
+* `value` - (Required) The value used for mapping a specified attribute to an identity source. See [AccessControlAttributeValue](#accesscontrolattributevalue)
 
 ### AccessControlAttributeValue
 
