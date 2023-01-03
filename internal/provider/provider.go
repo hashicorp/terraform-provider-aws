@@ -1383,6 +1383,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_eip_association":                                  ec2.ResourceEIPAssociation(),
 			"aws_flow_log":                                         ec2.ResourceFlowLog(),
 			"aws_instance":                                         ec2.ResourceInstance(),
+			"aws_instance_state":                                   ec2.ResourceInstanceState(),
 			"aws_internet_gateway":                                 ec2.ResourceInternetGateway(),
 			"aws_internet_gateway_attachment":                      ec2.ResourceInternetGatewayAttachment(),
 			"aws_key_pair":                                         ec2.ResourceKeyPair(),
