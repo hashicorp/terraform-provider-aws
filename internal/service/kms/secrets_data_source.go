@@ -105,7 +105,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.DecryptWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("decrypting secret (%s): %w", name, err)
+			return diag.Errorf("decrypting secret (%s): %s", name, err)
 		}
 
 		// Set the secret via the name

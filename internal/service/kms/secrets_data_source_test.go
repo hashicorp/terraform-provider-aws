@@ -38,7 +38,7 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 		},
 	})
 }
-func TestAccKMSSecretsDataSource_asym(t *testing.T) {
+func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 	var encryptedPayload string
 	var key kms.KeyMetadata
 
@@ -52,7 +52,7 @@ func TestAccKMSSecretsDataSource_asym(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretsDataSourceConfig_asymkey,
+				Config: testAccSecretsDataSourceConfig_asymmetricKey,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					testAccSecretsEncryptDataSourceAsymmetric(&key, plaintext, &encryptedPayload),
@@ -143,7 +143,7 @@ func testAccSecretsDecryptDataSourceAsym(t *testing.T, key *kms.KeyMetadata, pla
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccSecretsDataSourceConfig_asymSecret(*encryptedPayload, *keyid),
+					Config: testAccSecretsDataSourceConfig_asymmetricSecret(*encryptedPayload, *keyid),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", "1"),
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.secret1", plaintext),
@@ -164,7 +164,7 @@ resource "aws_kms_key" "test" {
 `
 
 func testAccSecretsDataSourceConfig_secret(payload string) string {
-	return testAccSecretsDataSourceConfig_key + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSecretsDataSourceConfig_key, fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {
     name    = "secret1"
@@ -175,10 +175,10 @@ data "aws_kms_secrets" "test" {
     }
   }
 }
-`, payload)
+`, payload))
 }
 
-const testAccSecretsDataSourceConfig_asymkey = `
+const testAccSecretsDataSourceConfig_asymmetricKey = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days  = 7
   description              = "Testing the Terraform AWS KMS Secrets data_source"
@@ -186,8 +186,8 @@ resource "aws_kms_key" "test" {
 }
 `
 
-func testAccSecretsDataSourceConfig_asymSecret(payload string, keyid string) string {
-	return testAccSecretsDataSourceConfig_asymkey + fmt.Sprintf(`
+func testAccSecretsDataSourceConfig_asymmetricSecret(payload string, keyid string) string {
+	return acctest.ConfigCompose(testAccSecretsDataSourceConfig_asymmetricKey, fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {
     name                 = "secret1"
@@ -196,5 +196,5 @@ data "aws_kms_secrets" "test" {
     key_id               = %[2]q
   }
 }
-`, payload, keyid)
+`, payload, keyid))
 }
