@@ -66,7 +66,6 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(d.Get("instance_id").(string))
 
 	return resourceInstanceStateRead(ctx, d, meta)
-
 }
 
 func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
