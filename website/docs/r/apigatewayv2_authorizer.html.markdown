@@ -17,11 +17,12 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ```terraform
 resource "aws_apigatewayv2_authorizer" "example" {
-  api_id           = aws_apigatewayv2_api.example.id
-  authorizer_type  = "REQUEST"
-  authorizer_uri   = aws_lambda_function.example.invoke_arn
-  identity_sources = ["route.request.header.Auth"]
-  name             = "example-authorizer"
+  api_id                            = aws_apigatewayv2_api.example.id
+  authorizer_type                   = "REQUEST"
+  authorizer_uri                    = aws_lambda_function.example.invoke_arn
+  identity_sources                  = ["$request.header.Authorization"]
+  name                              = "example-authorizer"
+  authorizer_payload_format_version = "2.0"
 }
 ```
 
