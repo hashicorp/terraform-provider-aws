@@ -98,9 +98,9 @@ variable "workflow_labels" {
       color       = "d1ebff", # color:terraform accent
       description = "Proposes new design or functionality."
     },
-    "provider" = {
+    "roadmap" = {
       color       = "844fba", # color:terraform (main)
-      description = "Pertains to the provider itself, rather than any interaction with AWS.",
+      description = "Issue mentioned on the public roadmap.",
     },
     "question" = {
       color       = "f4ecff", # color:terraform secondary
@@ -113,6 +113,10 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
+    },
+    "provider" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to the provider itself, rather than any interaction with AWS.",
     },
     "service/meta" = {
       color       = "7b42bc", # color:terraform (logomark)
