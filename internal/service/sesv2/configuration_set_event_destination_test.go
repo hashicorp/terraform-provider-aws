@@ -494,9 +494,9 @@ resource "aws_sesv2_configuration_set_event_destination" "test" {
   event_destination_name = %[1]q
 
   event_destination {
-	pinpoint_destination {
-	  application_arn = aws_pinpoint_app.test1.arn
-	}
+    pinpoint_destination {
+      application_arn = aws_pinpoint_app.test1.arn
+    }
 
     matching_event_types = ["SEND"]
   }
@@ -517,9 +517,9 @@ resource "aws_sesv2_configuration_set_event_destination" "test" {
   event_destination_name = %[1]q
 
   event_destination {
-	pinpoint_destination {
-	  application_arn = aws_pinpoint_app.test2.arn
-	}
+    pinpoint_destination {
+      application_arn = aws_pinpoint_app.test2.arn
+    }
 
     matching_event_types = ["SEND"]
   }
@@ -540,9 +540,9 @@ resource "aws_sesv2_configuration_set_event_destination" "test" {
   event_destination_name = %[1]q
 
   event_destination {
-	sns_destination {
-	  topic_arn = aws_sns_topic.test1.arn
-	}
+    sns_destination {
+      topic_arn = aws_sns_topic.test1.arn
+    }
 
     matching_event_types = ["SEND"]
   }
@@ -563,9 +563,9 @@ resource "aws_sesv2_configuration_set_event_destination" "test" {
   event_destination_name = %[1]q
 
   event_destination {
-	sns_destination {
-	  topic_arn = aws_sns_topic.test2.arn
-	}
+    sns_destination {
+      topic_arn = aws_sns_topic.test2.arn
+    }
 
     matching_event_types = ["SEND"]
   }
