@@ -10,7 +10,7 @@ description: |-
 
 Provides an EC2 instance state resource. This allows managing an instance power state.
 
-~> **NOTE on Instance State Management:** As terraform currently does not support any method to validate that instance user data has completed applying. Use caution to ensure your instance user data applies successfully on creation before using the `aws_instance_state` resource to stop the instance. 
+~> **NOTE on Instance State Management:** As terraform currently does not support any method to validate that instance user data has completed applying. Use caution to ensure your instance user data applies successfully on creation before using the `aws_instance_state` resource to stop the instance.
 
 ## Example Usage
 
