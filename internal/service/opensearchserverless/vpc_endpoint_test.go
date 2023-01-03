@@ -1,0 +1,197 @@
+package opensearchserverless_test
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccOpenSearchServerlessVPCEndpoint_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var vpcendpoint opensearchserverless.BatchGetVpcEndpointOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessVPCEndpoint_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var vpcendpoint opensearchserverless.BatchGetVpcEndpointOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.OpenSearchServerlessEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &vpcendpoint),
+					acctest.CheckResourceDisappears(acctest.Provider, tfopensearchserverless.ResourceVPCEndpoint(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckVPCEndpointDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+	ctx := context.Background()
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_opensearchserverless_vpc_endpointa" {
+			continue
+		}
+
+		_, err := conn.BatchGetVpcEndpoint(ctx, &opensearchserverless.BatchGetVpcEndpointInput{
+			Ids: []string{rs.Primary.ID},
+		})
+		if err != nil {
+			var nfe *types.ResourceNotFoundException
+			if errors.As(err, &nfe) {
+				return nil
+			}
+			return err
+		}
+
+		return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, errors.New("not destroyed"))
+	}
+
+	return nil
+}
+
+func testAccCheckVPCEndpointExists(name string, vpcendpoint *opensearchserverless.BatchGetVpcEndpointOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, name, errors.New("not set"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+		ctx := context.Background()
+		resp, err := conn.BatchGetVpcEndpoint(ctx, &opensearchserverless.BatchGetVpcEndpointInput{
+			Ids: []string{rs.Primary.ID},
+		})
+
+		if err != nil {
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameVPCEndpoint, rs.Primary.ID, err)
+		}
+
+		*vpcendpoint = *resp
+
+		return nil
+	}
+}
+
+func testAccPreCheck(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient()
+	ctx := context.Background()
+
+	input := &opensearchserverless.ListVpcEndpointsInput{}
+	_, err := conn.ListVpcEndpoints(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccCheckVPCEndpointNotRecreated(before, after *opensearchserverless.BatchGetVpcEndpointOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.ToString(before.VpcEndpointDetails[0].Id), aws.ToString(after.VpcEndpointDetails[0].Id); before != after {
+			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingNotRecreated, tfopensearchserverless.ResNameVPCEndpoint, before, errors.New("recreated"))
+		}
+
+		return nil
+	}
+}
+
+func testAccVPCEndpointConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_opensearchserverless_vpc_endpoint" "test" {
+  name       = %[1]q
+  subnet_ids = [aws_subnet.test.id]
+  vpc_id     = aws_vpc.test.id
+}
+`, rName)
+}
