@@ -8,6 +8,7 @@ FEATURES:
 
 * **New Data Source:** `aws_s3control_multi_region_access_point` ([#28373](https://github.com/hashicorp/terraform-provider-aws/issues/28373))
 * **New Resource:** `aws_appsync_type` ([#28437](https://github.com/hashicorp/terraform-provider-aws/issues/28437))
+* **New Resource:** `aws_lightsail_bucket` ([#28585](https://github.com/hashicorp/terraform-provider-aws/issues/28585))
 
 ENHANCEMENTS:
 
