@@ -61,7 +61,7 @@ func findVersion(preferredVersions []interface{}, versions []*kafka.KafkaVersion
 }
 
 func dataSourceVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	var kafkaVersions []*kafka.KafkaVersion
 

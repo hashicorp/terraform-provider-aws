@@ -68,7 +68,7 @@ func DataSourceBucketObjects() *schema.Resource {
 }
 
 func dataSourceBucketObjectsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	prefix := d.Get("prefix").(string)

@@ -45,7 +45,7 @@ func DataSourceParameter() *schema.Resource {
 }
 
 func dataParameterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	name := d.Get("name").(string)
 

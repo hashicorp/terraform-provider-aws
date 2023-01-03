@@ -338,7 +338,7 @@ func TestAccSageMakerFeatureGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckFeatureGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_feature_group" {
@@ -372,7 +372,7 @@ func testAccCheckFeatureGroupExists(n string, v *sagemaker.DescribeFeatureGroupO
 			return fmt.Errorf("No SageMaker Feature Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		output, err := tfsagemaker.FindFeatureGroupByName(conn, rs.Primary.ID)
 

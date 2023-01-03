@@ -40,7 +40,7 @@ func ResourceUserGroupAssociation() *schema.Resource {
 }
 
 func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:  aws.String(d.Get("user_group_id").(string)),
@@ -79,7 +79,7 @@ func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceUserGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	groupID, userID, err := UserGroupAssociationParseID(d.Id())
 	if err != nil {
@@ -122,7 +122,7 @@ func resourceUserGroupAssociationRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceUserGroupAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:     aws.String(d.Get("user_group_id").(string)),

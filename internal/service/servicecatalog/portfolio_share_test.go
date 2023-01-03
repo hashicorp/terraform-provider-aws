@@ -95,7 +95,7 @@ func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 }
 
 func testAccCheckPortfolioShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_portfolio_share" {
@@ -133,7 +133,7 @@ func testAccCheckPortfolioShareExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		_, err := tfservicecatalog.FindPortfolioShare(
 			conn,

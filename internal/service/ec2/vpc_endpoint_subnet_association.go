@@ -45,7 +45,7 @@ func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 }
 
 func resourceVPCEndpointSubnetAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)
@@ -93,7 +93,7 @@ func resourceVPCEndpointSubnetAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceVPCEndpointSubnetAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)
@@ -116,7 +116,7 @@ func resourceVPCEndpointSubnetAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	subnetID := d.Get("subnet_id").(string)

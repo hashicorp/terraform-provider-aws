@@ -182,7 +182,7 @@ func TestAccLightsailInstance_disappears(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Instance
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 		_, err := conn.DeleteInstance(&lightsail.DeleteInstanceInput{
 			InstanceName: aws.String(lightsailName),
 		})
@@ -230,7 +230,7 @@ func testAccCheckInstanceExists(n string, res *lightsail.Instance) resource.Test
 			return errors.New("No LightsailInstance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		respInstance, err := conn.GetInstance(&lightsail.GetInstanceInput{
 			InstanceName: aws.String(rs.Primary.Attributes["name"]),
@@ -254,7 +254,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		respInstance, err := conn.GetInstance(&lightsail.GetInstanceInput{
 			InstanceName: aws.String(rs.Primary.Attributes["name"]),
@@ -277,7 +277,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.GetInstancesInput{}
 

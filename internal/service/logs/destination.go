@@ -18,7 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceDestination() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_destination", resourceDestination)
+}
+
+func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
 		ReadWithoutTimeout:   resourceDestinationRead,
@@ -66,7 +70,7 @@ const (
 )
 
 func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -100,7 +104,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -142,7 +146,7 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatchlogs.PutDestinationInput{
@@ -172,7 +176,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
 	_, err := conn.DeleteDestinationWithContext(ctx, &cloudwatchlogs.DeleteDestinationInput{

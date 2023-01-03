@@ -45,7 +45,7 @@ func DataSourceRepositoryEndpoint() *schema.Resource {
 }
 
 func dataSourceRepositoryEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	domainOwner := meta.(*conns.AWSClient).AccountID
 	domain := d.Get("domain").(string)
 	repo := d.Get("repository").(string)

@@ -66,7 +66,7 @@ func testAccCluster_disappears(t *testing.T) {
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoverycontrolconfig_cluster" {
@@ -102,7 +102,7 @@ func testAccCheckClusterExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),

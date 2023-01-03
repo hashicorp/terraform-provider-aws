@@ -94,7 +94,7 @@ func testAccCheckSnapshotScheduleAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		_, _, err := tfredshift.FindScheduleAssociationById(conn, rs.Primary.ID)
 
@@ -123,7 +123,7 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		_, _, err := tfredshift.FindScheduleAssociationById(conn, rs.Primary.ID)
 

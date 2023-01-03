@@ -64,7 +64,7 @@ func DataSourceSecrets() *schema.Resource {
 }
 
 func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	secrets := d.Get("secret").(*schema.Set).List()
 	plaintext := make(map[string]string, len(secrets))

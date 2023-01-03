@@ -26,7 +26,7 @@ func sweepScalingPlans(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingPlansConn
+	conn := client.(*conns.AWSClient).AutoScalingPlansConn()
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

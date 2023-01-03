@@ -203,7 +203,7 @@ func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 }
 
 func testAccCheckAppImageDestroyConfig(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_app_image_config" {
@@ -239,7 +239,7 @@ func testAccCheckAppImageExistsConfig(n string, config *sagemaker.DescribeAppIma
 			return fmt.Errorf("No sagmaker App Image Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		resp, err := tfsagemaker.FindAppImageConfigByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

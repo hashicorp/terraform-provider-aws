@@ -210,7 +210,7 @@ func testAccCheckBuildExists(n string, res *gamelift.Build) resource.TestCheckFu
 			return fmt.Errorf("No GameLift Build ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 		build, err := tfgamelift.FindBuildByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -228,7 +228,7 @@ func testAccCheckBuildExists(n string, res *gamelift.Build) resource.TestCheckFu
 }
 
 func testAccCheckBuildDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_build" {
@@ -250,7 +250,7 @@ func testAccCheckBuildDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 	input := &gamelift.ListBuildsInput{}
 

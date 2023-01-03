@@ -129,7 +129,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -185,7 +185,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -243,7 +243,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		serverID, userName, err := UserParseResourceID(d.Id())
@@ -306,7 +306,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, userName, err := UserParseResourceID(d.Id())
 

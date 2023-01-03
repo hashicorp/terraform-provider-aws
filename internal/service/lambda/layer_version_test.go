@@ -276,7 +276,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 }
 
 func testAccCheckLayerVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_layer_version" {
@@ -325,7 +325,7 @@ func testAccCheckLayerVersionExists(res, layerName string) resource.TestCheckFun
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 		_, err = conn.GetLayerVersion(&lambda.GetLayerVersionInput{
 			LayerName:     aws.String(layerName),
 			VersionNumber: aws.Int64(int64(version)),

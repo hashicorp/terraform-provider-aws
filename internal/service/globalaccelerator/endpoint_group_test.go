@@ -419,7 +419,7 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 
 func testAccCheckEndpointGroupExists(name string, v *globalaccelerator.EndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -443,7 +443,7 @@ func testAccCheckEndpointGroupExists(name string, v *globalaccelerator.EndpointG
 }
 
 func testAccCheckEndpointGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_endpoint_group" {
@@ -470,7 +470,7 @@ func testAccCheckEndpointGroupDestroy(s *terraform.State) error {
 func testAccCheckEndpointGroupDeleteSecurityGroup(vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EC2Conn
+		conn := meta.(*conns.AWSClient).EC2Conn()
 
 		v, err := tfec2.FindSecurityGroupByNameAndVPCID(context.Background(), conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
 

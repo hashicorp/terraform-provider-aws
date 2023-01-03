@@ -117,7 +117,7 @@ func ResourceEBSVolume() *schema.Resource {
 }
 
 func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -179,7 +179,7 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -229,7 +229,7 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyVolumeInput{
@@ -286,7 +286,7 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.Get("final_snapshot").(bool) {
 		input := &ec2.CreateSnapshotInput{

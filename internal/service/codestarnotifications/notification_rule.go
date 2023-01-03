@@ -129,7 +129,7 @@ func expandNotificationRuleTargets(targetsData []interface{}) []*codestarnotific
 }
 
 func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -157,7 +157,7 @@ func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -268,7 +268,7 @@ func cleanupNotificationRuleTargets(conn *codestarnotifications.CodeStarNotifica
 }
 
 func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
 
 	params := &codestarnotifications.UpdateNotificationRuleInput{
 		Arn:          aws.String(d.Id()),
@@ -301,7 +301,7 @@ func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNotificationRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
 
 	_, err := conn.DeleteNotificationRule(&codestarnotifications.DeleteNotificationRuleInput{
 		Arn: aws.String(d.Id()),

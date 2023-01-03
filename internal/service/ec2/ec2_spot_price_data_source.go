@@ -41,7 +41,7 @@ func DataSourceSpotPrice() *schema.Resource {
 }
 
 func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	now := time.Now()
 	input := &ec2.DescribeSpotPriceHistoryInput{

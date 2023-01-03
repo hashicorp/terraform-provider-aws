@@ -184,7 +184,7 @@ func testAccCheckDevicePoolExists(n string, v *devicefarm.DevicePool) resource.T
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 		resp, err := tfdevicefarm.FindDevicePoolByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -200,7 +200,7 @@ func testAccCheckDevicePoolExists(n string, v *devicefarm.DevicePool) resource.T
 }
 
 func testAccCheckDevicePoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_devicefarm_device_pool" {

@@ -65,7 +65,7 @@ func TestAccKMSSecretsDataSource_asym(t *testing.T) {
 }
 func testAccSecretsEncryptDataSource(key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,

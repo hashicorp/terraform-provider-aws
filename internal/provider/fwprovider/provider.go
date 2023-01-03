@@ -429,6 +429,7 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 // wrappedResource wraps a resource, adding common functionality.
 type wrappedResource struct {
 	inner    resource.ResourceWithConfigure
+	meta     *conns.AWSClient
 	typeName string
 }
 
@@ -452,6 +453,10 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
 	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
 
 	w.inner.Create(ctx, request, response)
@@ -460,6 +465,10 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
 	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
 
 	w.inner.Read(ctx, request, response)
@@ -468,6 +477,10 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
 	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
 
 	w.inner.Update(ctx, request, response)
@@ -476,6 +489,10 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	if w.meta != nil {
+		ctx = w.meta.InitContext(ctx)
+	}
+
 	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
 
 	w.inner.Delete(ctx, request, response)
@@ -484,11 +501,19 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
 	w.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
+		if w.meta != nil {
+			ctx = w.meta.InitContext(ctx)
+		}
+
 		v.ImportState(ctx, request, response)
 
 		return
@@ -502,6 +527,10 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 
 func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
+		if w.meta != nil {
+			ctx = w.meta.InitContext(ctx)
+		}
+
 		v.ModifyPlan(ctx, request, response)
 
 		return
@@ -518,6 +547,10 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 
 func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
+		if w.meta != nil {
+			ctx = w.meta.InitContext(ctx)
+		}
+
 		v.ValidateConfig(ctx, request, response)
 	}
 }

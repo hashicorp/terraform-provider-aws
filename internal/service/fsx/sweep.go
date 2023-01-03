@@ -69,7 +69,7 @@ func sweepBackups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeBackupsInput{}
@@ -113,7 +113,7 @@ func sweepLustreFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -161,7 +161,7 @@ func sweepOntapFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -209,7 +209,7 @@ func sweepOntapStorageVirtualMachine(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
@@ -253,7 +253,7 @@ func sweepOntapVolume(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
@@ -304,7 +304,7 @@ func sweepOpenZFSFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -352,7 +352,7 @@ func sweepOpenZFSVolume(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
@@ -403,7 +403,7 @@ func sweepWindowsFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).FSxConn
+	conn := client.(*conns.AWSClient).FSxConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}

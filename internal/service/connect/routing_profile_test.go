@@ -393,7 +393,7 @@ func testAccCheckRoutingProfileExists(resourceName string, function *connect.Des
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeRoutingProfileInput{
 			InstanceId:       aws.String(instanceID),
@@ -417,7 +417,7 @@ func testAccCheckRoutingProfileDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, routingProfileID, err := tfconnect.RoutingProfileParseID(rs.Primary.ID)
 

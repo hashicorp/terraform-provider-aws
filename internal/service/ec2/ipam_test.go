@@ -221,7 +221,7 @@ func testAccCheckIPAMExists(n string, v *ec2.Ipam) resource.TestCheckFunc {
 			return fmt.Errorf("No IPAM ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindIPAMByID(conn, rs.Primary.ID)
 
@@ -236,7 +236,7 @@ func testAccCheckIPAMExists(n string, v *ec2.Ipam) resource.TestCheckFunc {
 }
 
 func testAccCheckIPAMDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_ipam" {
@@ -261,7 +261,7 @@ func testAccCheckIPAMDestroy(s *terraform.State) error {
 
 func testAccCheckIPAMScopeCreate(ipam *ec2.Ipam) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err := conn.CreateIpamScope(&ec2.CreateIpamScopeInput{
 			ClientToken: aws.String(resource.UniqueId()),

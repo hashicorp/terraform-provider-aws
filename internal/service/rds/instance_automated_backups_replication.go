@@ -66,7 +66,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 }
 
 func resourceInstanceAutomatedBackupsReplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
 		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
@@ -98,7 +98,7 @@ func resourceInstanceAutomatedBackupsReplicationCreate(d *schema.ResourceData, m
 }
 
 func resourceInstanceAutomatedBackupsReplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
 
@@ -121,7 +121,7 @@ func resourceInstanceAutomatedBackupsReplicationRead(d *schema.ResourceData, met
 
 func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.TODO()
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
 

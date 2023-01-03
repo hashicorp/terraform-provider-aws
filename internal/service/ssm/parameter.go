@@ -135,7 +135,7 @@ func ResourceParameter() *schema.Resource {
 }
 
 func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -207,7 +207,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -312,7 +312,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		value := d.Get("value").(string)
@@ -372,7 +372,7 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceParameterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
 		Name: aws.String(d.Get("name").(string)),

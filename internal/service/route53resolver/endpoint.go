@@ -102,7 +102,7 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -137,7 +137,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -191,7 +191,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	if d.HasChange("name") {
 		_, err := conn.UpdateResolverEndpointWithContext(ctx, &route53resolver.UpdateResolverEndpointInput{
@@ -259,7 +259,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Endpoint: %s", d.Id())
 	_, err := conn.DeleteResolverEndpointWithContext(ctx, &route53resolver.DeleteResolverEndpointInput{

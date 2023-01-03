@@ -73,7 +73,7 @@ const (
 )
 
 func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID := d.Get("application_id").(string)
 	envID := d.Get("environment_id").(string)

@@ -60,7 +60,7 @@ func ResourceVaultLock() *schema.Resource {
 }
 
 func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 	vaultName := d.Get("vault_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -107,7 +107,7 @@ func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	input := &glacier.GetVaultLockInput{
 		AccountId: aws.String("-"),
@@ -148,7 +148,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	input := &glacier.AbortVaultLockInput{
 		VaultName: aws.String(d.Id()),

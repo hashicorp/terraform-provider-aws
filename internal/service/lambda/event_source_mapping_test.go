@@ -1085,7 +1085,7 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 
 func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 		// Disable enabled state
 		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
@@ -1134,7 +1134,7 @@ func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappi
 }
 
 func testAccCheckEventSourceMappingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_event_source_mapping" {
@@ -1168,7 +1168,7 @@ func testAccCheckEventSourceMappingExists(n string, v *lambda.EventSourceMapping
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
@@ -2130,7 +2130,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccPreCheckMQ(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
 
 	input := &mq.ListBrokersInput{}
 
@@ -2146,7 +2146,7 @@ func testAccPreCheckMQ(t *testing.T) {
 }
 
 func testAccPreCheckMSK(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.ListClustersInput{}
 
@@ -2162,7 +2162,7 @@ func testAccPreCheckMSK(t *testing.T) {
 }
 
 func testAccPreCheckSecretsManager(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.ListSecretsInput{}
 

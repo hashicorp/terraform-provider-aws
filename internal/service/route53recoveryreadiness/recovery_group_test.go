@@ -163,7 +163,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 }
 
 func testAccCheckRecoveryGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_recovery_group" {
@@ -190,7 +190,7 @@ func testAccCheckRecoveryGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 		input := &route53recoveryreadiness.GetRecoveryGroupInput{
 			RecoveryGroupName: aws.String(rs.Primary.ID),

@@ -33,7 +33,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	adminAccountID := d.Get("admin_account_id").(string)
 
@@ -57,7 +57,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	adminAccount, err := GetOrganizationAdminAccount(conn, d.Id())
 
@@ -77,7 +77,7 @@ func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface
 }
 
 func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	input := &guardduty.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),

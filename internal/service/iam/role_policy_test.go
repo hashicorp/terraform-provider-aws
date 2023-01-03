@@ -248,7 +248,7 @@ func TestAccIAMRolePolicy_Policy_invalidResource(t *testing.T) {
 }
 
 func testAccCheckRolePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role_policy" {
@@ -285,7 +285,7 @@ func testAccCheckRolePolicyDestroy(s *terraform.State) error {
 
 func testAccCheckRolePolicyDisappears(out *iam.GetRolePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		params := &iam.DeleteRolePolicyInput{
 			PolicyName: out.PolicyName,
@@ -316,7 +316,7 @@ func testAccCheckRolePolicyExists(
 			return fmt.Errorf("Not Found: %s", iamRolePolicyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		role, name, err := tfiam.RolePolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err

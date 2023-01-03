@@ -72,7 +72,7 @@ func testAccCheckStandardsSubscriptionExists(n string, standardsSubscription *se
 			return fmt.Errorf("No Security Hub Standards Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		output, err := tfsecurityhub.FindStandardsSubscriptionByARN(conn, rs.Primary.ID)
 
@@ -87,7 +87,7 @@ func testAccCheckStandardsSubscriptionExists(n string, standardsSubscription *se
 }
 
 func testAccCheckStandardsSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_standards_subscription" {

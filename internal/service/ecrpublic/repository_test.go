@@ -363,7 +363,7 @@ func testAccCheckRepositoryExists(name string, res *ecrpublic.Repository) resour
 			return fmt.Errorf("No ECR Public repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
 
 		output, err := conn.DescribeRepositories(&ecrpublic.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
@@ -382,7 +382,7 @@ func testAccCheckRepositoryExists(name string, res *ecrpublic.Repository) resour
 }
 
 func testAccCheckRepositoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecrpublic_repository" {
@@ -530,7 +530,7 @@ func testAccPreCheck(t *testing.T) {
 		t.Skipf("skipping acceptance testing: region (%s) does not support ECR Public repositories", region)
 	}
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
 	input := &ecrpublic.DescribeRepositoriesInput{}
 	_, err := conn.DescribeRepositories(input)
 	if acctest.PreCheckSkipError(err) {

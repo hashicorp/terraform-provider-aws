@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.162
+	github.com/aws/aws-sdk-go v1.44.171
 	github.com/aws/aws-sdk-go-v2 v1.17.3
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.20
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.2
@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.76.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.9
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.9.2
@@ -34,7 +34,7 @@ require (
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
-	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.19.0
+	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.20
 	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.21
 	github.com/hashicorp/awspolicyequivalence v1.6.0

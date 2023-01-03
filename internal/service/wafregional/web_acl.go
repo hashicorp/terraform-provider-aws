@@ -170,7 +170,7 @@ func ResourceWebACL() *schema.Resource {
 }
 
 func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
@@ -242,7 +242,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -329,7 +329,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChanges("default_action", "rule") {
@@ -387,7 +387,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	// First, need to delete all rules

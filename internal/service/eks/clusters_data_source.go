@@ -24,7 +24,7 @@ func DataSourceClusters() *schema.Resource {
 }
 
 func dataSourceClustersRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	var clusters []*string
 

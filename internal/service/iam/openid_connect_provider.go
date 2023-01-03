@@ -63,7 +63,7 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 }
 
 func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -112,7 +112,7 @@ func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -149,7 +149,7 @@ func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("thumbprint_list") {
 		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
@@ -183,7 +183,7 @@ func resourceOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceOpenIDConnectProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.DeleteOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(d.Id()),

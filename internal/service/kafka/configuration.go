@@ -66,7 +66,7 @@ func ResourceConfiguration() *schema.Resource {
 }
 
 func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.CreateConfigurationInput{
 		Name:             aws.String(d.Get("name").(string)),
@@ -93,7 +93,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	configurationInput := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(d.Id()),
@@ -150,7 +150,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.UpdateConfigurationInput{
 		Arn:              aws.String(d.Id()),
@@ -171,7 +171,7 @@ func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.DeleteConfigurationInput{
 		Arn: aws.String(d.Id()),

@@ -150,7 +150,7 @@ func ResourceWebACL() *schema.Resource {
 }
 
 func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -217,7 +217,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -298,7 +298,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChanges("default_action", "rules") {
 		o, n := d.GetChange("rules")
@@ -353,7 +353,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	// First, need to delete all rules
 	rules := d.Get("rules").(*schema.Set).List()

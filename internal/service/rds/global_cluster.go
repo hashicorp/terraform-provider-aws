@@ -124,7 +124,7 @@ func ResourceGlobalCluster() *schema.Resource {
 }
 
 func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -176,7 +176,7 @@ func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	globalCluster, err := DescribeGlobalCluster(conn, d.Id())
 
@@ -233,7 +233,7 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -265,7 +265,7 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.Get("force_destroy").(bool) {
 		for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
@@ -533,7 +533,7 @@ func waitForGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string, time
 }
 
 func globalClusterUpgradeMajorEngineVersion(meta interface{}, clusterID string, engineVersion string, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.ModifyGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(clusterID),
@@ -632,7 +632,7 @@ func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 }
 
 func globalClusterUpgradeMinorEngineVersion(meta interface{}, clusterMembers *schema.Set, clusterID, engineVersion string, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[INFO] Performing RDS Global Cluster (%s) minor version (%s) upgrade", clusterID, engineVersion)
 

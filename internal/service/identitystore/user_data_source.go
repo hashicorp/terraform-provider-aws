@@ -19,7 +19,7 @@ import (
 
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {
@@ -280,7 +280,7 @@ const (
 )
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	identityStoreId := d.Get("identity_store_id").(string)
 

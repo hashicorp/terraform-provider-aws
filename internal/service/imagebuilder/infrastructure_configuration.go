@@ -145,7 +145,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 }
 
 func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -237,7 +237,7 @@ func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -305,7 +305,7 @@ func resourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChanges(
 		"description",
@@ -400,7 +400,7 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceInfrastructureConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),

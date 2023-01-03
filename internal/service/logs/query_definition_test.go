@@ -179,7 +179,7 @@ func testAccCheckQueryDefinitionExists(n string, v *cloudwatchlogs.QueryDefiniti
 			return fmt.Errorf("No CloudWatch Logs Query Definition ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 		output, err := tflogs.FindQueryDefinitionByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["name"], rs.Primary.ID)
 
@@ -194,7 +194,7 @@ func testAccCheckQueryDefinitionExists(n string, v *cloudwatchlogs.QueryDefiniti
 }
 
 func testAccCheckQueryDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_query_definition" {

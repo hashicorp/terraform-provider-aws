@@ -83,7 +83,7 @@ func ResourceRuleGroup() *schema.Resource {
 }
 
 func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -121,7 +121,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -179,7 +179,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
@@ -203,7 +203,7 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	err := deleteRuleGroup(d.Id(), oldRules, conn)

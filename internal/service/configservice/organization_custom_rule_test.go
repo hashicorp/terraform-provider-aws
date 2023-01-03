@@ -449,7 +449,7 @@ func testAccCheckOrganizationCustomRuleExists(resourceName string, ocr *configse
 			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
 		rule, err := tfconfigservice.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
@@ -468,7 +468,7 @@ func testAccCheckOrganizationCustomRuleExists(resourceName string, ocr *configse
 }
 
 func testAccCheckOrganizationCustomRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_organization_custom_rule" {

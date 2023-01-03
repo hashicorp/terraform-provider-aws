@@ -77,7 +77,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 }
 
 func resourceLayerVersionPermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	layerName := d.Get("layer_name").(string)
 	versionNumber := d.Get("version_number").(int)
@@ -105,7 +105,7 @@ func resourceLayerVersionPermissionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
@@ -190,7 +190,7 @@ func resourceLayerVersionPermissionRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceLayerVersionPermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {

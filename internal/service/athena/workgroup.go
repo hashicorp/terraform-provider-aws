@@ -166,7 +166,7 @@ func ResourceWorkGroup() *schema.Resource {
 }
 
 func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -210,7 +210,7 @@ func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -275,7 +275,7 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -294,7 +294,7 @@ func resourceWorkGroupDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateWorkGroupInput{

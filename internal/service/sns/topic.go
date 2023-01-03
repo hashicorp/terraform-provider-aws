@@ -214,7 +214,7 @@ func ResourceTopic() *schema.Resource {
 }
 
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -289,7 +289,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -352,7 +352,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
@@ -388,7 +388,7 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
 	_, err := conn.DeleteTopicWithContext(ctx, &sns.DeleteTopicInput{

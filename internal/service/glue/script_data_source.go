@@ -99,7 +99,7 @@ func DataSourceScript() *schema.Resource {
 }
 
 func dataSourceScriptRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	dagEdge := d.Get("dag_edge").([]interface{})
 	dagNode := d.Get("dag_node").([]interface{})

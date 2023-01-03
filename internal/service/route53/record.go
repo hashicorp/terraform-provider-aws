@@ -257,7 +257,7 @@ func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// Otherwise, we delete the existing record and create a new record within
 	// a transactional change.
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	zone := CleanZoneID(d.Get("zone_id").(string))
 
 	var err error
@@ -428,7 +428,7 @@ func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRecordCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	zone := CleanZoneID(d.Get("zone_id").(string))
 
 	var err error
@@ -661,7 +661,7 @@ func resourceRecordRead(d *schema.ResourceData, meta interface{}) error {
 // If there are other errors, it returns a nil recordset and passes on the
 // error.
 func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceRecordSet, error) {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	// Scan for a
 	zone := CleanZoneID(d.Get("zone_id").(string))
 
@@ -762,7 +762,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 }
 
 func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	// Get the records
 	rec, err := findRecord(d, meta)
 	if err != nil {

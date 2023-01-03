@@ -148,7 +148,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 }
 
 func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	filters := []*ssm.PatchOrchestratorFilter{
 		{

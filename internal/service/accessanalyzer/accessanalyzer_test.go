@@ -39,7 +39,7 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 	input := &accessanalyzer.ListAnalyzersInput{}
 

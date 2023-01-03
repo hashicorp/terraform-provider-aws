@@ -87,7 +87,7 @@ func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 }
 
 func testAccCheckEgressOnlyInternetGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_egress_only_internet_gateway" {
@@ -121,7 +121,7 @@ func testAccCheckEgressOnlyInternetGatewayExists(n string, v *ec2.EgressOnlyInte
 			return fmt.Errorf("No EC2 Egress-only Internet Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindEgressOnlyInternetGatewayByID(conn, rs.Primary.ID)
 

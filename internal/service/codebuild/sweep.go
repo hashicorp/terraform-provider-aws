@@ -39,7 +39,7 @@ func sweepReportGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).CodeBuildConn
+	conn := client.(*conns.AWSClient).CodeBuildConn()
 	input := &codebuild.ListReportGroupsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -86,7 +86,7 @@ func sweepProjects(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).CodeBuildConn
+	conn := client.(*conns.AWSClient).CodeBuildConn()
 	input := &codebuild.ListProjectsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -132,7 +132,7 @@ func sweepSourceCredentials(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).CodeBuildConn
+	conn := client.(*conns.AWSClient).CodeBuildConn()
 	input := &codebuild.ListSourceCredentialsInput{}
 	var sweeperErrs *multierror.Error
 

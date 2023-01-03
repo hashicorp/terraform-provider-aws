@@ -286,7 +286,7 @@ func DataSourceInstanceType() *schema.Resource {
 }
 
 func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	v, err := FindInstanceTypeByName(conn, d.Get("instance_type").(string))
 

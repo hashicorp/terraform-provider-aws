@@ -296,7 +296,7 @@ func validMetricAlarm(d *schema.ResourceData) error {
 }
 
 func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
 	err := validMetricAlarm(d)
 	if err != nil {
@@ -350,7 +350,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -449,7 +449,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := getPutMetricAlarmInput(d, meta)
 
 	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
@@ -480,7 +480,7 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []*string{aws.String(d.Id())},
 	}

@@ -102,7 +102,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 
 func testAccCheckRegionSettingsExists(v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 		output, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
 

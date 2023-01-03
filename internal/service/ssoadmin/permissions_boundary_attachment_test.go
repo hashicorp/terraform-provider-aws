@@ -152,7 +152,7 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_managedPolicyAndCustomerManage
 }
 
 func testAccCheckPermissionsBoundaryAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_permissions_boundary_attachment" {
@@ -198,7 +198,7 @@ func testAccCheckPermissionsBoundaryAttachmentExists(n string) resource.TestChec
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 		_, err = tfssoadmin.FindPermissionsBoundary(conn, permissionSetARN, instanceARN)
 

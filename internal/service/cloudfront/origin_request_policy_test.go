@@ -138,7 +138,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 }
 
 func testAccCheckOriginRequestPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_origin_request_policy" {
@@ -172,7 +172,7 @@ func testAccCheckOriginRequestPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No CloudFront Origin Request Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		_, err := tfcloudfront.FindOriginRequestPolicyByID(conn, rs.Primary.ID)
 

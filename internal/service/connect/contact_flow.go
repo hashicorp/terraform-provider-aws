@@ -24,10 +24,10 @@ const contactFlowMutexKey = `aws_connect_contact_flow`
 
 func ResourceContactFlow() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContactFlowCreate,
-		ReadContext:   resourceContactFlowRead,
-		UpdateContext: resourceContactFlowUpdate,
-		DeleteContext: resourceContactFlowDelete,
+		CreateWithoutTimeout: resourceContactFlowCreate,
+		ReadWithoutTimeout:   resourceContactFlowRead,
+		UpdateWithoutTimeout: resourceContactFlowUpdate,
+		DeleteWithoutTimeout: resourceContactFlowDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -88,7 +88,7 @@ func ResourceContactFlow() *schema.Resource {
 }
 
 func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -141,7 +141,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -193,7 +193,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
@@ -256,7 +256,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 

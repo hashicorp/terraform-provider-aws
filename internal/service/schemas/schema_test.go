@@ -217,7 +217,7 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 }
 
 func testAccCheckSchemaDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_schema" {
@@ -263,7 +263,7 @@ func testAccCheckSchemaExists(n string, v *schemas.DescribeSchemaOutput) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
 		output, err := tfschemas.FindSchemaByNameAndRegistryName(conn, name, registryName)
 

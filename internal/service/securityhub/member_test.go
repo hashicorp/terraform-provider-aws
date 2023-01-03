@@ -73,7 +73,7 @@ func testAccCheckMemberExists(n string, member *securityhub.Member) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		resp, err := conn.GetMembers(&securityhub.GetMembersInput{
 			AccountIds: []*string{aws.String(rs.Primary.ID)},
@@ -94,7 +94,7 @@ func testAccCheckMemberExists(n string, member *securityhub.Member) resource.Tes
 }
 
 func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_member" {

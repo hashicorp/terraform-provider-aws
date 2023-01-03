@@ -111,7 +111,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -154,7 +154,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -219,7 +219,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -232,7 +232,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	input := &cloudhsmv2.DeleteClusterInput{
 		ClusterId: aws.String(d.Id()),
 	}

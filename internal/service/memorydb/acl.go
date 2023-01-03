@@ -21,10 +21,10 @@ import (
 
 func ResourceACL() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceACLCreate,
-		ReadContext:   resourceACLRead,
-		UpdateContext: resourceACLUpdate,
-		DeleteContext: resourceACLDelete,
+		CreateWithoutTimeout: resourceACLCreate,
+		ReadWithoutTimeout:   resourceACLRead,
+		UpdateWithoutTimeout: resourceACLUpdate,
+		DeleteWithoutTimeout: resourceACLDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -72,7 +72,7 @@ func ResourceACL() *schema.Resource {
 }
 
 func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -103,7 +103,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateACLInput{
@@ -169,7 +169,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -212,7 +212,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	log.Printf("[DEBUG] Deleting MemoryDB ACL: (%s)", d.Id())
 	_, err := conn.DeleteACLWithContext(ctx, &memorydb.DeleteACLInput{

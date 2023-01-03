@@ -27,8 +27,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws/aws-sdk-go v1.44.162 h1:hKAd+X+/BLxVMzH+4zKxbQcQQGrk2UhFX0OTu1Mhon8=
-github.com/aws/aws-sdk-go v1.44.162/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.171 h1:maREiPAmibvuONMOEZIkCH2OTosLRnDelceTtH3SYfo=
+github.com/aws/aws-sdk-go v1.44.171/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.16.3/go.mod h1:ytwTPBG6fXTZLxxeeCCWj2/EMYp/xDUgX+OET6TLNNU=
 github.com/aws/aws-sdk-go-v2 v1.17.2/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2 v1.17.3 h1:shN7NlnVzvDUgPQ+1rLMSxY8OWRNDRYtiqe0p/PgrhY=
@@ -58,8 +58,8 @@ github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.2 h1:WlQpwFNADYOfgHrYf53Xm
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.2/go.mod h1:7Bx+sSNDcv8fkOzom5lCUpGEQ6s9m8KTy2F5DLb2rP0=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.2 h1:jFxCKvlglvo1YRVIuy7g+SQj6N9kBh7H2EQe4VirCdg=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.18.2/go.mod h1:GVIZsOKHO1IqycUD2Ps9Ut3dVq7ZZ8cI6NAmH68QTmY=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.76.1 h1:1bWBmJpLvYijhZEKnIebuhaFrEKcBuHFWhcS+PFg0Yo=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.76.1/go.mod h1:mV0E7631M1eXdB+tlGFIw6JxfsC7Pz7+7Aw15oLVhZw=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.77.0 h1:m6HYlpZlTWb9vHuuRHpWRieqPHWlS0mvQ90OJNrG/Nk=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.77.0/go.mod h1:mV0E7631M1eXdB+tlGFIw6JxfsC7Pz7+7Aw15oLVhZw=
 github.com/aws/aws-sdk-go-v2/service/fis v1.13.5 h1:FLv7hwflYyovRz+fbvsuk6GwzGPFzbtmszI5rVWsxqA=
 github.com/aws/aws-sdk-go-v2/service/fis v1.13.5/go.mod h1:GB4gMrhbD4CES5oNwCFV2hUd7mxN5wEmAQ28Uteoa6g=
 github.com/aws/aws-sdk-go-v2/service/iam v1.18.25 h1:Np+wTW2nuSBGyEu0WFsiu0LO05rxLFMh3hYVAjOzyVw=
@@ -172,8 +172,8 @@ github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2 h1:EVhdT+1Kseyi1/pUmXKaFxYsDNy9RQYkMWRH68J/W7Y=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.19.0 h1:xg/7j+3xZQndRcGsnMDehoREwkc6Ans2ie+AL8Z09xg=
-github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.19.0/go.mod h1:cdTE6F2pCKQobug+RqRaQp7Kz9hIEqiSvpPmb6E5G1w=
+github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0 h1:xc1OYpWvNo6dhnzemfjwtbNxeu3Ag4Wr6yT8BOo0/q0=
+github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0/go.mod h1:cdTE6F2pCKQobug+RqRaQp7Kz9hIEqiSvpPmb6E5G1w=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.20 h1:6TMEC7TynP6fsRepjxELIGRIVAlcv1XjoOhkMYp6SBU=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.20/go.mod h1:pWKwlzGC5N/VajQA21CRjoSDkTNMVL5iAJio4eRrAZU=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.21 h1:8VecSnykUvZoaWqMnD+dS41KUiDDMSd8yMskojZbzkw=

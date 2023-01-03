@@ -1585,7 +1585,7 @@ func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, servi
 }
 
 func testAccCheckEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
@@ -1619,7 +1619,7 @@ func testAccCheckEndpointExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		_, err := tfdms.FindEndpointByID(conn, rs.Primary.ID)
 

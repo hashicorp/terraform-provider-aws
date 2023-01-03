@@ -148,7 +148,7 @@ func testAccCheckRevisionExists(n string, v *dataexchange.GetRevisionOutput) res
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
 
 		dataSetId, revisionId, err := tfdataexchange.RevisionParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -170,7 +170,7 @@ func testAccCheckRevisionExists(n string, v *dataexchange.GetRevisionOutput) res
 }
 
 func testAccCheckRevisionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dataexchange_revision" {

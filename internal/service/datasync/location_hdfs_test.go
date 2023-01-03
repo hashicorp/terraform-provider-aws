@@ -128,7 +128,7 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 }
 
 func testAccCheckLocationHDFSDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_hdfs" {
@@ -158,7 +158,7 @@ func testAccCheckLocationHDFSExists(resourceName string, locationHDFS *datasync.
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 		output, err := tfdatasync.FindLocationHDFSByARN(conn, rs.Primary.ID)
 
 		if err != nil {

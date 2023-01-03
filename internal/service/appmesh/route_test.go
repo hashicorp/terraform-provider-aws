@@ -1356,7 +1356,7 @@ func testAccRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 }
 
 func testAccCheckRouteDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_route" {
@@ -1382,7 +1382,7 @@ func testAccCheckRouteDestroy(s *terraform.State) error {
 
 func testAccCheckRouteExists(name string, v *appmesh.RouteData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

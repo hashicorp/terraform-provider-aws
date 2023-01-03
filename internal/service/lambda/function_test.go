@@ -1993,7 +1993,7 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 }
 
 func testAccCheckFunctionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function" {
@@ -2027,7 +2027,7 @@ func testAccCheckFunctionExists(n string, v *lambda.GetFunctionOutput) resource.
 			return fmt.Errorf("No Lambda Function ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		output, err := tflambda.FindFunctionByName(conn, rs.Primary.ID)
 
@@ -2058,7 +2058,7 @@ func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutp
 func testAccInvokeFunction(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		f := function.Configuration
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		// If the function is VPC-enabled this will create ENI automatically
 		_, err := conn.Invoke(&lambda.InvokeInput{
@@ -3557,7 +3557,7 @@ func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 }
 
 func testAccPreCheckSignerSigningProfile(t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 	var foundPlatform bool
 	err := conn.ListSigningPlatformsPages(&signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {

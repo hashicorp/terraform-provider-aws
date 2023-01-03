@@ -407,7 +407,7 @@ func testAccCheckBucketHasPolicy(n string, expectedPolicyText string) resource.T
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		policy, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(rs.Primary.ID),

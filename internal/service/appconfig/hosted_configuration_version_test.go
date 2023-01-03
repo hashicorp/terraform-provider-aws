@@ -71,7 +71,7 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 }
 
 func testAccCheckHostedConfigurationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_hosted_configuration_version" {
@@ -125,7 +125,7 @@ func testAccCheckHostedConfigurationVersionExists(resourceName string) resource.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		output, err := conn.GetHostedConfigurationVersion(&appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),

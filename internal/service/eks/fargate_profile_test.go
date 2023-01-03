@@ -186,7 +186,7 @@ func testAccCheckFargateProfileExists(resourceName string, fargateProfile *eks.F
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 		output, err := tfeks.FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
 
@@ -201,7 +201,7 @@ func testAccCheckFargateProfileExists(resourceName string, fargateProfile *eks.F
 }
 
 func testAccCheckFargateProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_fargate_profile" {

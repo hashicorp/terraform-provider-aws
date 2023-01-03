@@ -208,7 +208,7 @@ func testAccCheckGameSessionQueueExists(n string, res *gamelift.GameSessionQueue
 			return fmt.Errorf("no GameLift Session Queue Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 		name := rs.Primary.Attributes["name"]
 		limit := int64(1)
@@ -241,7 +241,7 @@ func testAccCheckGameSessionQueueExists(n string, res *gamelift.GameSessionQueue
 
 func testAccCheckGameSessionQueueDisappears(res *gamelift.GameSessionQueue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 		input := &gamelift.DeleteGameSessionQueueInput{Name: res.Name}
 
@@ -252,7 +252,7 @@ func testAccCheckGameSessionQueueDisappears(res *gamelift.GameSessionQueue) reso
 }
 
 func testAccCheckGameSessionQueueDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_game_session_queue" {

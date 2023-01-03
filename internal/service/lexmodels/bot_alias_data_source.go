@@ -55,7 +55,7 @@ func DataSourceBotAlias() *schema.Resource {
 }
 
 func dataSourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)

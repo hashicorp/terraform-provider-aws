@@ -217,7 +217,7 @@ resource "aws_glue_partition_index" "test" {
 }
 
 func testAccCheckPartitionIndexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_partition_index" {
@@ -248,7 +248,7 @@ func testAccCheckPartitionIndexExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		out, err := tfglue.FindPartitionIndexByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

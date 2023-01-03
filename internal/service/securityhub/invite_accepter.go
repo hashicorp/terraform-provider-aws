@@ -36,7 +36,7 @@ func ResourceInviteAccepter() *schema.Resource {
 }
 
 func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
 	invitationId, err := resourceInviteAccepterGetInvitationID(conn, d.Get("master_id").(string))
@@ -79,7 +79,7 @@ func resourceInviteAccepterGetInvitationID(conn *securityhub.SecurityHub, master
 }
 
 func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Reading Security Hub master account")
 
 	resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
@@ -107,7 +107,7 @@ func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Disassociating from Security Hub master account")
 
 	_, err := conn.DisassociateFromMasterAccount(&securityhub.DisassociateFromMasterAccountInput{})

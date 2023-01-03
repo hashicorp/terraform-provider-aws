@@ -72,7 +72,7 @@ func ResourceMap() *schema.Resource {
 }
 
 func resourceMapCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -110,7 +110,7 @@ func resourceMapCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMapRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -160,7 +160,7 @@ func resourceMapRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMapUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	if d.HasChange("description") {
 		input := &locationservice.UpdateMapInput{
@@ -190,7 +190,7 @@ func resourceMapUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMapDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	input := &locationservice.DeleteMapInput{
 		MapName: aws.String(d.Id()),

@@ -60,7 +60,7 @@ func DataSourceGroup() *schema.Resource {
 }
 
 func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	groupName := d.Get("group_name").(string)
 

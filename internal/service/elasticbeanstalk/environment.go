@@ -217,7 +217,7 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -322,7 +322,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	envID := d.Id()
 
@@ -502,7 +502,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -643,7 +643,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func fetchEnvironmentSettings(d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	app := d.Get("application").(string)
 	name := d.Get("name").(string)
@@ -739,7 +739,7 @@ func resourceEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
 	if err != nil {
@@ -965,7 +965,7 @@ func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptio
 }
 
 func dropGeneratedSecurityGroup(settingValue string, meta interface{}) string {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	groups := strings.Split(settingValue, ",")
 

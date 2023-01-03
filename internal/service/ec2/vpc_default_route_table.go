@@ -143,7 +143,7 @@ func ResourceDefaultRouteTable() *schema.Resource {
 }
 
 func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -265,7 +265,7 @@ func resourceDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceDefaultRouteTableImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTable, err := FindMainRouteTableByVPCID(conn, d.Id())
 

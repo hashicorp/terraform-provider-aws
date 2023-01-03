@@ -181,7 +181,7 @@ func ResourceSelection() *schema.Resource {
 }
 
 func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	selection := &backup.Selection{
 		Conditions:    expandConditions(d.Get("condition").(*schema.Set).List()),
@@ -238,7 +238,7 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.GetBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
@@ -335,7 +335,7 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSelectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.DeleteBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),

@@ -65,7 +65,7 @@ func DataSourceDistribution() *schema.Resource {
 
 func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("id").(string))
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &cloudfront.GetDistributionInput{

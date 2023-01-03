@@ -175,7 +175,7 @@ func testAccCheckEmailIdentityMailFromAttributesExists(name string) resource.Tes
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityMailFromAttributes, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
 
 		out, err := tfsesv2.FindEmailIdentityByID(context.Background(), conn, rs.Primary.ID)
 

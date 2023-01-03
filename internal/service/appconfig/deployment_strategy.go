@@ -76,7 +76,7 @@ func ResourceDeploymentStrategy() *schema.Resource {
 }
 
 func resourceDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -111,7 +111,7 @@ func resourceDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -173,7 +173,7 @@ func resourceDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateInput := &appconfig.UpdateDeploymentStrategyInput{
@@ -218,7 +218,7 @@ func resourceDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceDeploymentStrategyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	input := &appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),

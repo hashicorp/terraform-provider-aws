@@ -1,8 +1,35 @@
-## 4.48.0 (Unreleased)
+## 4.49.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute is no longer deprecated ([#28567](https://github.com/hashicorp/terraform-provider-aws/issues/28567))
 
 FEATURES:
 
-* resource/aws_networkfirewall_rule_group: Add `reference_sets` configuration block ([#27421](https://github.com/hashicorp/terraform-provider-aws/issues/27421))
+* **New Data Source:** `aws_s3control_multi_region_access_point` ([#28373](https://github.com/hashicorp/terraform-provider-aws/issues/28373))
+* **New Resource:** `aws_appsync_type` ([#28437](https://github.com/hashicorp/terraform-provider-aws/issues/28437))
+
+ENHANCEMENTS:
+
+* resource/aws_appflow_connector_profile: Add support for `connector_type` CustomConnector. Add `cluster_identifier`, `database_name`, and `data_api_role_arn` attributes for `redshift` `connection_profile_properties` ([#26766](https://github.com/hashicorp/terraform-provider-aws/issues/26766))
+* resource/aws_appsync_resolver: Add `runtime` and `code` arguments ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
+* resource/aws_appsync_resolver: Add plan time validation for `caching_config.ttl` ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
+* resource/aws_lightsail_instance_public_ports: Add `cidr_list_aliases` argument ([#28376](https://github.com/hashicorp/terraform-provider-aws/issues/28376))
+* resource/aws_s3_access_point: Add `bucket_account_id` argument ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
+* resource/aws_s3control_storage_lens_configuration: Add `advanced_cost_optimization_metrics`, `advanced_data_protection_metrics`, and `detailed_status_code_metrics` arguments to the `storage_lens_configuration.account_level` and `storage_lens_configuration.account_level.bucket_level` configuration blocks ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
+* resource/aws_wafv2_rule_group: Add `rule.action.captcha` argument ([#28435](https://github.com/hashicorp/terraform-provider-aws/issues/28435))
+* resource/aws_wafv2_web_acl: Add `rule.action.challenge` argument ([#28305](https://github.com/hashicorp/terraform-provider-aws/issues/28305))
+
+BUG FIXES:
+
+* data-source/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup` API ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
+* resource/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup`, `TagLogGroup` and `UntagLogGroup` APIs ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
+* resource/aws_lambda_function_url: Fix removal of `cors` configuration block ([#28439](https://github.com/hashicorp/terraform-provider-aws/issues/28439))
+
+## 4.48.0 (December 19, 2022)
+
+FEATURES:
+
 * **New Resource:** `aws_dx_macsec_key_association` ([#26274](https://github.com/hashicorp/terraform-provider-aws/issues/26274))
 
 ENHANCEMENTS:
@@ -10,6 +37,7 @@ ENHANCEMENTS:
 * resource/aws_dx_connection: Add `encryption_mode` and `request_macsec` arguments and `macsec_capable` and `port_encryption_status` attributes in support of [MACsec](https://docs.aws.amazon.com/directconnect/latest/UserGuide/MACsec.html) ([#26274](https://github.com/hashicorp/terraform-provider-aws/issues/26274))
 * resource/aws_dx_connection: Add `skip_destroy` argument ([#26274](https://github.com/hashicorp/terraform-provider-aws/issues/26274))
 * resource/aws_eks_node_group: Add support for `WINDOWS_CORE_2019_x86_64`, `WINDOWS_FULL_2019_x86_64`, `WINDOWS_CORE_2022_x86_64`, and `WINDOWS_FULL_2022_x86_64` `ami_type` values ([#28445](https://github.com/hashicorp/terraform-provider-aws/issues/28445))
+* resource/aws_networkfirewall_rule_group: Add `reference_sets` configuration block ([#28335](https://github.com/hashicorp/terraform-provider-aws/issues/28335))
 * resource/aws_networkmanager_vpc_attachment: Add `options.appliance_mode_support` argument ([#28450](https://github.com/hashicorp/terraform-provider-aws/issues/28450))
 
 BUG FIXES:

@@ -464,7 +464,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 }
 
 func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -608,7 +608,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 }
 
 func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -726,7 +726,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 }
 
 func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if d.HasChangesExcept("elastic_load_balancer", "load_based_auto_scaling", "tags", "tags_all") {
 		input := &opsworks.UpdateLayerInput{
@@ -892,7 +892,7 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 }
 
 func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	log.Printf("[DEBUG] Deleting OpsWorks Layer: %s", d.Id())
 	_, err := conn.DeleteLayerWithContext(ctx, &opsworks.DeleteLayerInput{

@@ -161,7 +161,7 @@ func testAccCheckVocabularyExists(resourceName string, function *connect.Describ
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeVocabularyInput{
 			InstanceId:   aws.String(instanceID),
@@ -185,7 +185,7 @@ func testAccCheckVocabularyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, vocabularyID, err := tfconnect.VocabularyParseID(rs.Primary.ID)
 

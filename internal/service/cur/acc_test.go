@@ -63,7 +63,7 @@ func testAccPreCheck(t *testing.T) {
 		}
 	})
 
-	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
+	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn()
 
 	input := &costandusagereportservice.DescribeReportDefinitionsInput{
 		MaxResults: aws.Int64(5),

@@ -1418,7 +1418,7 @@ func TestAccECSService_executeCommand(t *testing.T) {
 }
 
 func testAccCheckServiceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_service" {
@@ -1450,7 +1450,7 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			var err error

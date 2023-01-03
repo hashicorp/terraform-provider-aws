@@ -65,7 +65,7 @@ func DataSourceCodeSigningConfig() *schema.Resource {
 }
 
 func dataSourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	arn := d.Get("arn").(string)
 

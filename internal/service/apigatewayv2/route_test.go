@@ -479,7 +479,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 }
 
 func testAccCheckRouteDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_route" {
@@ -514,7 +514,7 @@ func testAccCheckRouteExists(n string, vApiId *string, v *apigatewayv2.GetRouteO
 			return fmt.Errorf("No API Gateway v2 route ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{

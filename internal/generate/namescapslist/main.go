@@ -19,9 +19,7 @@ var header string
 var tmpl string
 
 const (
-	filename     = "../../../names/caps.md"
-	capsDataFile = "../../../names/caps.csv"
-	maxBadCaps   = 31
+	maxBadCaps = 31
 )
 
 type CapsDatum struct {
@@ -35,6 +33,10 @@ type TemplateData struct {
 }
 
 func main() {
+	const (
+		filename     = "../../../names/caps.md"
+		capsDataFile = "../../../names/caps.csv"
+	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))

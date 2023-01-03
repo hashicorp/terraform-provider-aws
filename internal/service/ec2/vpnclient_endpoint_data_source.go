@@ -168,7 +168,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 }
 
 func dataSourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}

@@ -49,7 +49,7 @@ func DataSourceRegexPatternSet() *schema.Resource {
 }
 
 func dataSourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	name := d.Get("name").(string)
 
 	var foundRegexPatternSet *wafv2.RegexPatternSetSummary

@@ -47,7 +47,7 @@ func sweepBotAliases(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LexModelsConn
+	conn := client.(*conns.AWSClient).LexModelsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -120,7 +120,7 @@ func sweepBots(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LexModelsConn
+	conn := client.(*conns.AWSClient).LexModelsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -166,7 +166,7 @@ func sweepIntents(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LexModelsConn
+	conn := client.(*conns.AWSClient).LexModelsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -212,7 +212,7 @@ func sweepSlotTypes(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).LexModelsConn
+	conn := client.(*conns.AWSClient).LexModelsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

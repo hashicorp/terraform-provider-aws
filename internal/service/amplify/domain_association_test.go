@@ -162,7 +162,7 @@ func testAccCheckDomainAssociationExists(resourceName string, v *amplify.DomainA
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
 		domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
@@ -177,7 +177,7 @@ func testAccCheckDomainAssociationExists(resourceName string, v *amplify.DomainA
 }
 
 func testAccCheckDomainAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_domain_association" {

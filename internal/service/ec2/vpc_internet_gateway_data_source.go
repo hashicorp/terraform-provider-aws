@@ -58,7 +58,7 @@ func DataSourceInternetGateway() *schema.Resource {
 }
 
 func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")

@@ -311,7 +311,7 @@ func testAccCheckGroupExists(n string, v *cloudwatchlogs.LogGroup) resource.Test
 			return fmt.Errorf("No CloudWatch Logs Log Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 		output, err := tflogs.FindLogGroupByName(context.Background(), conn, rs.Primary.ID)
 
@@ -326,7 +326,7 @@ func testAccCheckGroupExists(n string, v *cloudwatchlogs.LogGroup) resource.Test
 }
 
 func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_group" {
@@ -350,7 +350,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 }
 
 func testAccCheckGroupNoDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_group" {

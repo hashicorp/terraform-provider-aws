@@ -323,8 +323,8 @@ func ResourceLaunchConfiguration() *schema.Resource {
 }
 
 func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if _, ok := d.GetOk("vpc_classic_link_id"); ok {
 		return errors.New(`with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
@@ -445,8 +445,8 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	lc, err := FindLaunchConfigurationByName(autoscalingconn, d.Id())
 
@@ -533,7 +533,7 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout,

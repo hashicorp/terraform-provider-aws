@@ -64,7 +64,7 @@ func testAccCheckEncryptionConfigExists(n string, EncryptionConfig *xray.Encrypt
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
 		config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 

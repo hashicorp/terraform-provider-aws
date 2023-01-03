@@ -62,7 +62,7 @@ func testAccAccountAlias_basic(t *testing.T) {
 }
 
 func testAccCheckAccountAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_alias" {
@@ -96,7 +96,7 @@ func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		params := &iam.ListAccountAliasesInput{}
 
 		resp, err := conn.ListAccountAliases(params)

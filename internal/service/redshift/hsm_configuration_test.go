@@ -111,7 +111,7 @@ func TestAccRedshiftHSMConfiguration_disappears(t *testing.T) {
 }
 
 func testAccCheckHSMConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_hsm_configuration" {
@@ -145,7 +145,7 @@ func testAccCheckHSMConfigurationExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Redshift Hsm Configuration is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		_, err := tfredshift.FindHSMConfigurationByID(conn, rs.Primary.ID)
 

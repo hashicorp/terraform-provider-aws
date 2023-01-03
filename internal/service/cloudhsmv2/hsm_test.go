@@ -206,7 +206,7 @@ resource "aws_cloudhsm_v2_hsm" "test" {
 }
 
 func testAccCheckHSMDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudhsm_v2_hsm" {
@@ -229,7 +229,7 @@ func testAccCheckHSMDestroy(s *terraform.State) error {
 
 func testAccCheckHSMExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn()
 
 		it, ok := s.RootModule().Resources[name]
 		if !ok {

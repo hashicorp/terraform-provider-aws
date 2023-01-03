@@ -86,7 +86,7 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -123,7 +123,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -195,7 +195,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		envID, appID, err := EnvironmentParseID(d.Id())
@@ -239,7 +239,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	envID, appID, err := EnvironmentParseID(d.Id())
 

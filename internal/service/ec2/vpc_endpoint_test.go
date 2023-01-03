@@ -466,7 +466,7 @@ func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 }
 
 func testAccCheckVPCEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint" {
@@ -498,7 +498,7 @@ func testAccCheckVPCEndpointExists(n string, v *ec2.VpcEndpoint) resource.TestCh
 			return fmt.Errorf("No EC2 VPC Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPCEndpointByID(conn, rs.Primary.ID)
 

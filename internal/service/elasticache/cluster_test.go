@@ -1385,7 +1385,7 @@ func testAccCheckClusterRecreated(i, j *elasticache.CacheCluster) resource.TestC
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_cluster" {
@@ -1418,7 +1418,7 @@ func testAccCheckClusterExists(n string, v *elasticache.CacheCluster) resource.T
 			return fmt.Errorf("No ElastiCache Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 		output, err := tfelasticache.FindCacheClusterByID(conn, rs.Primary.ID)
 

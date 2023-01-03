@@ -1,6 +1,7 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -147,7 +148,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 }
 
 func testAccCheckObjectLambdaAccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_object_lambda_access_point" {
@@ -160,7 +161,7 @@ func testAccCheckObjectLambdaAccessPointDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfs3control.FindObjectLambdaAccessPointByAccountIDAndName(conn, accountID, name)
+		_, err = tfs3control.FindObjectLambdaAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -193,9 +194,9 @@ func testAccCheckObjectLambdaAccessPointExists(n string, v *s3control.ObjectLamb
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		output, err := tfs3control.FindObjectLambdaAccessPointByAccountIDAndName(conn, accountID, name)
+		output, err := tfs3control.FindObjectLambdaAccessPointByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if err != nil {
 			return err

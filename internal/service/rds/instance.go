@@ -579,7 +579,7 @@ func ResourceInstance() *schema.Resource {
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1539,7 +1539,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1835,7 +1835,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, sourceARN.Identifier, deadline.remaining(), optFns...)
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(), sourceARN.Identifier, deadline.remaining(), optFns...)
 				if err != nil {
 					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Id(), err)
 				}
@@ -1875,7 +1875,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, meta.(*conns.AWSClient).RDSConn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, meta.(*conns.AWSClient).RDSConn(), d.Get("arn").(string), o, n); err != nil {
 			return errs.AppendErrorf(diags, "updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -2112,7 +2112,7 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, input *rds_sd
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier:   aws.String(d.Id()),

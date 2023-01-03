@@ -827,7 +827,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 }
 
 func testAccCheckRoleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role" {
@@ -861,7 +861,7 @@ func testAccCheckRoleExists(n string, v *iam.Role) resource.TestCheckFunc {
 			return fmt.Errorf("No IAM Role ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		output, err := tfiam.FindRoleByName(conn, rs.Primary.ID)
 
@@ -886,7 +886,7 @@ func testAccAddRolePolicy(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Role name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.PutRolePolicyInput{
 			RoleName: aws.String(rs.Primary.ID),
@@ -924,7 +924,7 @@ func testAccCheckRolePermissionsBoundary(role *iam.Role, expectedPermissionsBoun
 
 func testAccCheckRolePolicyDetachManagedPolicy(role *iam.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		var managedARN string
 		input := &iam.ListAttachedRolePoliciesInput{
@@ -958,7 +958,7 @@ func testAccCheckRolePolicyDetachManagedPolicy(role *iam.Role, policyName string
 
 func testAccCheckRolePolicyAttachManagedPolicy(role *iam.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		var managedARN string
 		input := &iam.ListPoliciesInput{
@@ -994,7 +994,7 @@ func testAccCheckRolePolicyAttachManagedPolicy(role *iam.Role, policyName string
 
 func testAccCheckRolePolicyAddInlinePolicy(role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		_, err := conn.PutRolePolicy(&iam.PutRolePolicyInput{
 			PolicyDocument: aws.String(testAccRolePolicyExtraInlineConfig()),
@@ -1008,7 +1008,7 @@ func testAccCheckRolePolicyAddInlinePolicy(role *iam.Role, inlinePolicy string) 
 
 func testAccCheckRolePolicyRemoveInlinePolicy(role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		_, err := conn.DeleteRolePolicy(&iam.DeleteRolePolicyInput{
 			PolicyName: aws.String(inlinePolicy),

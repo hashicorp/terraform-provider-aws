@@ -218,7 +218,7 @@ func testAccCheckCustomDataIdentifierExists(resourceName string, macie2Session *
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.GetCustomDataIdentifierInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetCustomDataIdentifier(input)
@@ -238,7 +238,7 @@ func testAccCheckCustomDataIdentifierExists(resourceName string, macie2Session *
 }
 
 func testAccCheckCustomDataIdentifierDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_custom_data_identifier" {

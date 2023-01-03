@@ -128,7 +128,7 @@ func testAccCheckThingTypeExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 		input := &iot.ListThingTypesInput{}
 
 		output, err := conn.ListThingTypes(input)
@@ -148,7 +148,7 @@ func testAccCheckThingTypeExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckThingTypeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing_type" {

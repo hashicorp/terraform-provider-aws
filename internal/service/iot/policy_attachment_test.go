@@ -61,7 +61,7 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckPolicyAttchmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_policy_attachment" {
 			continue
@@ -113,7 +113,7 @@ func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 		target := rs.Primary.Attributes["target"]
 		policyName := rs.Primary.Attributes["policy"]
 
@@ -133,7 +133,7 @@ func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
 
 func testAccCheckPolicyAttachmentCertStatus(n string, policies []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		rs, ok := s.RootModule().Resources[n]
 

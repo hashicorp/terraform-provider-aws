@@ -27,7 +27,7 @@ import (
 )
 
 func init() {
-	registerFrameworkResourceFactory(newResourceFramework)
+	_sp.registerFrameworkResourceFactory(newResourceFramework)
 }
 
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -99,7 +99,7 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *resourceFramework) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var plan resourceFrameworkData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -162,7 +162,7 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var state resourceFrameworkData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -192,7 +192,7 @@ func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var plan, state resourceFrameworkData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -264,7 +264,7 @@ func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var state resourceFrameworkData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

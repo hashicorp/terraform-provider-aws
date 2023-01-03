@@ -63,7 +63,7 @@ func ResourceInstanceProfile() *schema.Resource {
 }
 
 func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -106,7 +106,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -151,7 +151,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateInstanceProfileInput{
@@ -197,7 +197,7 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteInstanceProfileInput{
 		Arn: aws.String(d.Id()),

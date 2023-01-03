@@ -443,7 +443,7 @@ func testAccCheckPolicyExists(n string, policy *applicationautoscaling.ScalingPo
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
 		params := &applicationautoscaling.DescribeScalingPoliciesInput{
 			PolicyNames:       []*string{aws.String(rs.Primary.ID)},
 			ResourceId:        aws.String(rs.Primary.Attributes["resource_id"]),
@@ -465,7 +465,7 @@ func testAccCheckPolicyExists(n string, policy *applicationautoscaling.ScalingPo
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		params := applicationautoscaling.DescribeScalingPoliciesInput{

@@ -281,7 +281,7 @@ func TestAccShieldProtection_route53(t *testing.T) {
 }
 
 func testAccCheckProtectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection" {
@@ -317,7 +317,7 @@ func testAccCheckProtectionExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(rs.Primary.ID),
@@ -330,7 +330,7 @@ func testAccCheckProtectionExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 	input := &shield.ListProtectionsInput{}
 

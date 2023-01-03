@@ -86,7 +86,7 @@ func testAccCheckBucketPolicyExists(n string, ci *s3.GetBucketPolicyOutput) reso
 			return fmt.Errorf("no S3 Bucket Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		output, err := tfs3.FindBucketPolicy(context.Background(), conn, rs.Primary.ID)
 		if err != nil {

@@ -170,7 +170,7 @@ func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 }
 
 func testAccCheckPlacementGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_placement_group" {
@@ -204,7 +204,7 @@ func testAccCheckPlacementGroupExists(n string, v *ec2.PlacementGroup) resource.
 			return fmt.Errorf("No EC2 Placement Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindPlacementGroupByName(conn, rs.Primary.ID)
 

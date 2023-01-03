@@ -40,7 +40,7 @@ func DataSourceAuthorizationToken() *schema.Resource {
 }
 
 func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 	params := &ecrpublic.GetAuthorizationTokenInput{}
 
 	out, err := conn.GetAuthorizationToken(params)

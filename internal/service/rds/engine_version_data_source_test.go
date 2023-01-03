@@ -166,7 +166,7 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("mysql"),

@@ -52,7 +52,7 @@ func ResourceZoneAssociation() *schema.Resource {
 }
 
 func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	vpcRegion := meta.(*conns.AWSClient).Region
 	vpcID := d.Get("vpc_id").(string)
@@ -98,7 +98,7 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 
@@ -146,7 +146,7 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 

@@ -37,7 +37,7 @@ func ResourceRegionSettings() *schema.Resource {
 }
 
 func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.UpdateRegionSettingsInput{}
 
@@ -61,7 +61,7 @@ func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRegionSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	output, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
 

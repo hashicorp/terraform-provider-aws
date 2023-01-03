@@ -60,7 +60,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 }
 
 func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -83,7 +83,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.GetLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -158,7 +158,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.DeleteLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),

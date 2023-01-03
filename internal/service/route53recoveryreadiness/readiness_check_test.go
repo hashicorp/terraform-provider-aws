@@ -169,7 +169,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 }
 
 func testAccCheckReadinessCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_readiness_check" {
@@ -196,7 +196,7 @@ func testAccCheckReadinessCheckExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 		input := &route53recoveryreadiness.GetReadinessCheckInput{
 			ReadinessCheckName: aws.String(rs.Primary.ID),

@@ -53,7 +53,7 @@ func ResourceGroupTag() *schema.Resource {
 }
 
 func resourceGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	identifier := d.Get("autoscaling_group_name").(string)
 	tags := d.Get("tag").([]interface{})
@@ -69,7 +69,7 @@ func resourceGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -102,7 +102,7 @@ func resourceGroupTagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -117,7 +117,7 @@ func resourceGroupTagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {

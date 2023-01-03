@@ -223,7 +223,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 }
 
 func testAccCheckLocationNFSDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_nfs" {
@@ -255,7 +255,7 @@ func testAccCheckLocationNFSExists(resourceName string, locationNfs *datasync.De
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 		input := &datasync.DescribeLocationNfsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -278,7 +278,7 @@ func testAccCheckLocationNFSExists(resourceName string, locationNfs *datasync.De
 
 func testAccCheckLocationNFSDisappears(location *datasync.DescribeLocationNfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,

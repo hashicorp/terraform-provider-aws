@@ -137,7 +137,7 @@ func ResourceFunction() *schema.Resource {
 }
 
 func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
 
@@ -188,7 +188,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
@@ -235,7 +235,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
@@ -287,7 +287,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {

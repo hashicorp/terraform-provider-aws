@@ -219,7 +219,7 @@ func testAccCheckPolicyDocument(n, segmentValue string) resource.TestCheckFunc {
 }
 
 func testAccCheckCoreNetworkDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_core_network" {
@@ -253,7 +253,7 @@ func testAccCheckCoreNetworkExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Network Manager Core Network ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		_, err := tfnetworkmanager.FindCoreNetworkByID(context.Background(), conn, rs.Primary.ID)
 

@@ -163,7 +163,7 @@ func testAccCheckLoadBalancerStickinessPolicyExists(n string) resource.TestCheck
 			return errors.New("No LightsailLoadBalancerStickinessPolicy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		out, err := tflightsail.FindLoadBalancerStickinessPolicyById(context.Background(), conn, rs.Primary.ID)
 

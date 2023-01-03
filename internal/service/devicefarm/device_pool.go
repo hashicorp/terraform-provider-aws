@@ -85,7 +85,7 @@ func ResourceDevicePool() *schema.Resource {
 }
 
 func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -124,7 +124,7 @@ func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -178,7 +178,7 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateDevicePoolInput{
@@ -224,7 +224,7 @@ func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteDevicePoolInput{
 		Arn: aws.String(d.Id()),

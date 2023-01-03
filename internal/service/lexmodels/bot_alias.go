@@ -116,7 +116,7 @@ var validBotAliasName = validation.All(
 )
 
 func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
@@ -169,7 +169,7 @@ func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	resp, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(d.Get("bot_name").(string)),
@@ -209,7 +209,7 @@ func resourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	input := &lexmodelbuildingservice.PutBotAliasInput{
 		BotName:    aws.String(d.Get("bot_name").(string)),
@@ -259,7 +259,7 @@ func resourceBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)

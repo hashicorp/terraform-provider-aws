@@ -47,7 +47,7 @@ func DataSourceRepository() *schema.Resource {
 }
 
 func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	repositoryName := d.Get("repository_name").(string)
 	input := &codecommit.GetRepositoryInput{

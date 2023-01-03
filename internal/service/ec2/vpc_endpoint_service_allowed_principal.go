@@ -35,7 +35,7 @@ func ResourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 }
 
 func resourceVPCEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)
@@ -55,7 +55,7 @@ func resourceVPCEndpointServiceAllowedPrincipalCreate(d *schema.ResourceData, me
 }
 
 func resourceVPCEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)
@@ -76,7 +76,7 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta
 }
 
 func resourceVPCEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)

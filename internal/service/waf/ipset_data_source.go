@@ -23,7 +23,7 @@ func DataSourceIPSet() *schema.Resource {
 }
 
 func dataSourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	name := d.Get("name").(string)
 
 	ipsets := make([]*waf.IPSetSummary, 0)

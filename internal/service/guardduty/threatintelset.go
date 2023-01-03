@@ -74,7 +74,7 @@ func ResourceThreatintelset() *schema.Resource {
 }
 
 func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -115,7 +115,7 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -168,7 +168,7 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
 	if err != nil {
@@ -209,7 +209,7 @@ func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
 	if err != nil {
