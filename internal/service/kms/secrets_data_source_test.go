@@ -55,7 +55,7 @@ func TestAccKMSSecretsDataSource_asym(t *testing.T) {
 				Config: testAccSecretsDataSourceConfig_asymkey,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
-					testAccSecretsEncryptDataSourceAsym(&key, plaintext, &encryptedPayload),
+					testAccSecretsEncryptDataSourceAsymmetric(&key, plaintext, &encryptedPayload),
 					// We need to dereference the encryptedPayload in a test Terraform configuration
 					testAccSecretsDecryptDataSourceAsym(t, &key, plaintext, &encryptedPayload),
 				),
@@ -75,18 +75,19 @@ func testAccSecretsEncryptDataSource(key *kms.KeyMetadata, plaintext string, enc
 			},
 		}
 
-		resp, err := conn.Encrypt(input)
+		output, err := conn.Encrypt(input)
+
 		if err != nil {
-			return fmt.Errorf("failed encrypting string: %s", err)
+			return err
 		}
 
-		*encryptedPayload = base64.StdEncoding.EncodeToString(resp.CiphertextBlob)
+		*encryptedPayload = base64.StdEncoding.EncodeToString(output.CiphertextBlob)
 
 		return nil
 	}
 }
 
-func testAccSecretsEncryptDataSourceAsym(key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsEncryptDataSourceAsymmetric(key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
@@ -96,12 +97,13 @@ func testAccSecretsEncryptDataSourceAsym(key *kms.KeyMetadata, plaintext string,
 			EncryptionAlgorithm: aws.String("RSAES_OAEP_SHA_1"),
 		}
 
-		resp, err := conn.Encrypt(input)
+		output, err := conn.Encrypt(input)
+
 		if err != nil {
-			return fmt.Errorf("failed encrypting string: %s", err)
+			return err
 		}
 
-		*encryptedPayload = base64.StdEncoding.EncodeToString(resp.CiphertextBlob)
+		*encryptedPayload = base64.StdEncoding.EncodeToString(output.CiphertextBlob)
 
 		return nil
 	}
@@ -166,7 +168,7 @@ func testAccSecretsDataSourceConfig_secret(payload string) string {
 data "aws_kms_secrets" "test" {
   secret {
     name    = "secret1"
-    payload = %q
+    payload = %[1]q
 
     context = {
       name = "value"
