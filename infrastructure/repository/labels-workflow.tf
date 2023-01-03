@@ -82,6 +82,10 @@ variable "workflow_labels" {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new service."
     },
+    "partner" = {
+      color       = "", # color:aws
+      description = "Contribution from a partner."
+    },
     "pre-service-packages" = {
       color       = "ffec6e", # color:vault
       description = "Includes pre-Service Packages aspects."
