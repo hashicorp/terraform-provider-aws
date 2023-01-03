@@ -10,6 +10,8 @@ description: |-
 
 Provides an EC2 instance state resource. This allows managing an instance power state.
 
+~> **NOTE on Instance State Management:** As terraform currently does not support any method to validate that instance user data has completed applying. Use caution to ensure your instance user data applies successfully on creation before using the `aws_instance_state` resource to stop the instance. 
+
 ## Example Usage
 
 ```terraform
@@ -50,7 +52,7 @@ The following arguments are supported:
 
 * `instance_id` - (Required) The ID of the instance.
 * `state` - (Required) - The state of the instance. Valid Options: `stopped`, `running`.
-* `force` - (Optional) Forces the instances to stop. The instances do not have an opportunity to flush file system caches or file system metadata. If you use this option, you must perform file system check and repair procedures. This option is not recommended for Windows instances.
+* `force` - (Optional) When `true`, forces the instances to stop. The instances do not have an opportunity to flush file system caches or file system metadata. If you use this option, you must perform file system check and repair procedures. This option is not recommended for Windows instances. Defaults to `false`.
 
 ## Attributes Reference
 
