@@ -2964,12 +2964,12 @@ resource "aws_wafv2_web_acl" "test" {
         name        = "AWSManagedRulesATPRuleSet"
         vendor_name = "AWS"
 
-		managed_rule_group_config {
-          login_path     =  "/app-login"
+        managed_rule_group_config {
+          login_path     = "/app-login"
           password_field = "/app-password"
           payload_type   = "JSON"
           username_field = "/app-username"
-		}
+        }
       }
     }
 

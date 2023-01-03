@@ -967,11 +967,9 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					),
 				},
 				"payload_type": {
-					Type:     schema.TypeString,
-					Optional: true,
-					ValidateFunc: validation.All(
-						validation.StringMatch(regexp.MustCompile(`(JSON|FORM_ENCODED)`), "valid values are JSON | FORM_ENCODED"),
-					),
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
 				},
 				"username_field": {
 					Type:     schema.TypeString,
@@ -982,11 +980,9 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					),
 				},
 				"inspection_level": {
-					Type:     schema.TypeString,
-					Optional: true,
-					ValidateFunc: validation.All(
-						validation.StringMatch(regexp.MustCompile(`(COMMON|TARGETED)`), "valid values are COMMON | TARGETED"),
-					),
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
 				},
 			},
 		},
