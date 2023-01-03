@@ -21,7 +21,7 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 
 	// Run a resource test to setup our KMS key
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -46,7 +46,7 @@ func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 
 	// Run a resource test to setup our KMS key
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
