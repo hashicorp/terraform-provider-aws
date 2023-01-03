@@ -162,9 +162,9 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_instance_state" "test" {
-	instance_id = aws_instance.test.id
-	state = %[1]q
-	force = %[2]s
+  instance_id = aws_instance.test.id
+  state       = %[1]q
+  force       = %[2]s
 }
 `, state, force))
 }
