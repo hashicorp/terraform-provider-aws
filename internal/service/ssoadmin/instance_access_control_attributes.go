@@ -2,12 +2,16 @@ package ssoadmin
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -93,24 +97,28 @@ func resourceAccessControlAttributesCreate(d *schema.ResourceData, meta interfac
 func resourceAccessControlAttributesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
-	input := &ssoadmin.DescribeInstanceAccessControlAttributeConfigurationInput{
-		InstanceArn: aws.String(d.Id()),
+	output, err := FindInstanceAttributeControlAttributesByARN(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSO Instance Access Control Attributes %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-	resp, err := conn.DescribeInstanceAccessControlAttributeConfiguration(input)
 
 	if err != nil {
 		return fmt.Errorf("reading SSO Instance Access Control Attributes (%s): %w", d.Id(), err)
 	}
 
 	d.Set("instance_arn", d.Id())
-	if err := d.Set("attribute", flattenAccessControlAttributes(resp.InstanceAccessControlAttributeConfiguration.AccessControlAttributes)); err != nil {
+	if err := d.Set("attribute", flattenAccessControlAttributes(output.InstanceAccessControlAttributeConfiguration.AccessControlAttributes)); err != nil {
 		return fmt.Errorf("setting attribute: %w", err)
 	}
-	d.Set("status", resp.Status)
-	d.Set("status_reason", resp.StatusReason)
+	d.Set("status", output.Status)
+	d.Set("status_reason", output.StatusReason)
 
 	return nil
 }
+
 func resourceAccessControlAttributesUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
@@ -129,6 +137,7 @@ func resourceAccessControlAttributesUpdate(d *schema.ResourceData, meta interfac
 
 	return resourceAccessControlAttributesRead(d, meta)
 }
+
 func resourceAccessControlAttributesDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
@@ -141,6 +150,31 @@ func resourceAccessControlAttributesDelete(d *schema.ResourceData, meta interfac
 	}
 
 	return nil
+}
+
+func FindInstanceAttributeControlAttributesByARN(conn *ssoadmin.SSOAdmin, arn string) (*ssoadmin.DescribeInstanceAccessControlAttributeConfigurationOutput, error) {
+	input := &ssoadmin.DescribeInstanceAccessControlAttributeConfigurationInput{
+		InstanceArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeInstanceAccessControlAttributeConfiguration(input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.InstanceAccessControlAttributeConfiguration == nil || len(output.InstanceAccessControlAttributeConfiguration.AccessControlAttributes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandAccessControlAttributes(d *schema.ResourceData) (attributes []*ssoadmin.AccessControlAttribute) {
