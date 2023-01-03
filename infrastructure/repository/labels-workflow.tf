@@ -83,7 +83,7 @@ variable "workflow_labels" {
       description = "Introduces a new service."
     },
     "partner" = {
-      color       = "", # color:aws
+      color       = "ff9900", # color:aws
       description = "Contribution from a partner."
     },
     "pre-service-packages" = {
@@ -99,8 +99,8 @@ variable "workflow_labels" {
       description = "Proposes new design or functionality."
     },
     "roadmap" = {
-      color       = "844fba", # color:terraform (main)
-      description = "Issue mentioned on the public roadmap.",
+      color       = "d1ebff", # color:terraform accent
+      description = "Issue mentioned on the public roadmap. To be resolved in the current quarter.",
     },
     "question" = {
       color       = "f4ecff", # color:terraform secondary
