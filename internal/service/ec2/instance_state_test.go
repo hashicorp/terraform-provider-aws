@@ -11,10 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2InstanceState_basic(t *testing.T) {
@@ -125,30 +122,6 @@ func testAccCheckInstanceStateExists(n string) resource.TestCheckFunc {
 
 		return nil
 	}
-}
-
-func testAccCheckInstanceStateDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_instance_state" {
-			continue
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
-
-		_, err := tfec2.FindInstanceStateById(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResInstanceState, rs.Primary.ID, errors.New("still exists"))
-	}
-
-	return nil
 }
 
 func testAccInstanceStateConfig_basic(state string, force string) string {
