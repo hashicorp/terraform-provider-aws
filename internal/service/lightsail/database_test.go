@@ -449,7 +449,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_publiclyAccessible(rName, "true"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
@@ -467,7 +467,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_publiclyAccessible(rName, "false"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -493,7 +493,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "true"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "true"),
@@ -511,7 +511,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "false"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "false"),
@@ -821,22 +821,13 @@ func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDatabaseConfigBase() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-`
+func testAccDatabaseConfig_base() string {
+	return acctest.ConfigAvailableAZsNoOptIn()
 }
 
 func testAccDatabaseConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -853,7 +844,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterDatabaseName(rName string, masterDatabaseName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -870,7 +861,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterUsername(rName string, masterUsername string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -887,7 +878,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterPassword(rName string, masterPassword string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -904,7 +895,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_preferredBackupWindow(rName string, preferredBackupWindow string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -923,7 +914,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_preferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name     = %[1]q
@@ -940,9 +931,9 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredMaintenanceWindow))
 }
 
-func testAccDatabaseConfig_publiclyAccessible(rName string, publiclyAccessible string) string {
+func testAccDatabaseConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -952,16 +943,16 @@ resource "aws_lightsail_database" "test" {
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
   bundle_id                = "micro_1_0"
-  publicly_accessible      = %[2]q
+  publicly_accessible      = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
 }
 `, rName, publiclyAccessible))
 }
 
-func testAccDatabaseConfig_backupRetentionEnabled(rName string, backupRetentionEnabled string) string {
+func testAccDatabaseConfig_backupRetentionEnabled(rName string, backupRetentionEnabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -971,7 +962,7 @@ resource "aws_lightsail_database" "test" {
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
   bundle_id                = "micro_1_0"
-  backup_retention_enabled = %[2]q
+  backup_retention_enabled = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
 }
@@ -980,7 +971,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_finalSnapshotName(rName string, sName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -997,7 +988,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -1017,7 +1008,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -1038,7 +1029,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_ha(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
