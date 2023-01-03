@@ -408,3 +408,25 @@ func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *light
 
 	return out.LoadBalancer.HttpsRedirectionEnabled, nil
 }
+
+func FindBucketById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.Bucket, error) {
+	in := &lightsail.GetBucketsInput{BucketName: aws.String(id)}
+	out, err := conn.GetBucketsWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.Buckets) == 0 || out.Buckets[0] == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Buckets[0], nil
+}
