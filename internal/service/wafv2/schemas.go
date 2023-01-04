@@ -841,9 +841,9 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"rule_action_override":      ruleActionOverrideSchema(),
-				"managed_rule_group_config": managedRuleGroupConfigSchema(),
-				"scope_down_statement":      scopeDownStatementSchema(level - 1),
+				"rule_action_override":       ruleActionOverrideSchema(),
+				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
+				"scope_down_statement":       scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -947,7 +947,6 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
-		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"aws_managed_rules_bot_control_rule_set": {
