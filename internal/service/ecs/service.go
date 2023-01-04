@@ -472,10 +472,9 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
-	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
-
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set)),
 		ClientToken:              aws.String(resource.UniqueId()),
@@ -497,15 +496,10 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
-		}
+		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(deploymentMinimumHealthyPercent))
 	} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
-			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
-		}
-
+		input.DeploymentConfiguration.MaximumPercent = aws.Int64(int64(d.Get("deployment_maximum_percent").(int)))
+		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(deploymentMinimumHealthyPercent))
 		input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
 	}
 
