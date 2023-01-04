@@ -6539,3 +6539,42 @@ func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, 
 
 	return nil, &resource.NotFoundError{}
 }
+
+func FindInstanceStateById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
+	in := &ec2.DescribeInstanceStatusInput{
+		InstanceIds:         aws.StringSlice([]string{id}),
+		IncludeAllInstances: aws.Bool(true),
+	}
+
+	out, err := conn.DescribeInstanceStatusWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.InstanceStatuses) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	instanceState := out.InstanceStatuses[0].InstanceState
+
+	if instanceState == nil || aws.StringValue(instanceState.Name) == ec2.InstanceStateNameTerminated {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(out.InstanceStatuses[0].InstanceId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: in,
+		}
+	}
+
+	return instanceState, nil
+}
