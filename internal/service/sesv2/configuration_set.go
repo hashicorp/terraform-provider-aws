@@ -107,7 +107,6 @@ func ResourceConfigurationSet() *schema.Resource {
 						"suppressed_reasons": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[types.SuppressionListReason](),
