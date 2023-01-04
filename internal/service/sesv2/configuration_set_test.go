@@ -209,6 +209,33 @@ func TestAccSESV2ConfigurationSet_suppressedReasons(t *testing.T) {
 	})
 }
 
+func TestAccSESV2ConfigurationSet_suppressedReasonsEmpty(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_suppressedReasonsEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "suppression_options.0.suppressed_reasons.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_configuration_set.test"
@@ -354,6 +381,18 @@ resource "aws_sesv2_configuration_set" "test" {
   }
 }
 `, rName, suppressedReason)
+}
+
+func testAccConfigurationSetConfig_suppressedReasonsEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test" {
+  configuration_set_name = %[1]q
+
+  suppression_options {
+    suppressed_reasons = []
+  }
+}
+`, rName)
 }
 
 func testAccConfigurationSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
