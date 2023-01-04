@@ -124,6 +124,18 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
+### Custom Image
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  environment_variables = {
+    "_CUSTOM_IMAGE" = "node:16",
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
