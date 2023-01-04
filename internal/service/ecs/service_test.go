@@ -36,6 +36,7 @@ func TestAccECSService_basic(t *testing.T) {
 				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 				),
@@ -45,6 +46,7 @@ func TestAccECSService_basic(t *testing.T) {
 				Config: testAccServiceConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 				),
