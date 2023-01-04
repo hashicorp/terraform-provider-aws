@@ -44,6 +44,31 @@ func ResourceService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"alarms": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarm_names": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"rollback": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -79,31 +104,6 @@ func ResourceService() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enable": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"rollback": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"alarms": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alarm_names": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 						"enable": {
 							Type:     schema.TypeBool,
 							Required: true,
@@ -477,19 +477,24 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 
 	input := ecs.CreateServiceInput{
-		ClientToken:          aws.String(resource.UniqueId()),
-		DeploymentController: deploymentController,
-		SchedulingStrategy:   aws.String(schedulingStrategy),
-		ServiceName:          aws.String(d.Get("name").(string)),
-		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
-		EnableExecuteCommand: aws.Bool(d.Get("enable_execute_command").(bool)),
+		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set)),
+		ClientToken:              aws.String(resource.UniqueId()),
+		DeploymentConfiguration:  &ecs.DeploymentConfiguration{},
+		DeploymentController:     deploymentController,
+		EnableECSManagedTags:     aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
+		EnableExecuteCommand:     aws.Bool(d.Get("enable_execute_command").(bool)),
+		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
+		SchedulingStrategy:       aws.String(schedulingStrategy),
+		ServiceName:              aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk("task_definition"); ok {
-		input.TaskDefinition = aws.String(v.(string))
+	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+	if v, ok := d.GetOk("cluster"); ok {
+		input.Cluster = aws.String(v.(string))
+	}
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
 		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
@@ -508,16 +513,12 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("alarms"); ok {
-		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("cluster"); ok {
-		input.Cluster = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("health_check_grace_period_seconds"); ok {
 		input.HealthCheckGracePeriodSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("iam_role"); ok {
+		input.Role = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("launch_type"); ok {
@@ -531,26 +532,10 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v, ok := d.GetOk("propagate_tags"); ok {
-		input.PropagateTags = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("platform_version"); ok {
-		input.PlatformVersion = aws.String(v.(string))
-	}
-
-	input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
-
 	loadBalancers := expandLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
-		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
 		input.LoadBalancers = loadBalancers
 	}
-	if v, ok := d.GetOk("iam_role"); ok {
-		input.Role = aws.String(v.(string))
-	}
-
-	input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 
 	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
@@ -570,6 +555,14 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		input.PlacementConstraints = pc
+	}
+
+	if v, ok := d.GetOk("platform_version"); ok {
+		input.PlatformVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("propagate_tags"); ok {
+		input.PropagateTags = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -599,11 +592,13 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ServiceRegistries = srs
 	}
 
+	if v, ok := d.GetOk("task_definition"); ok {
+		input.TaskDefinition = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS()) // tags field doesn't exist in all partitions
 	}
-
-	log.Printf("[DEBUG] Creating ECS Service: %s", input)
 
 	output, err := serviceCreateWithRetry(conn, input)
 
@@ -616,14 +611,9 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS service (%s): %w", d.Get("name").(string), err)
+		return fmt.Errorf("creating ECS Service (%s): %w", d.Get("name").(string), err)
 	}
 
-	if output == nil || output.Service == nil {
-		return fmt.Errorf("error creating ECS service: empty response")
-	}
-
-	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
 	cluster := d.Get("cluster").(string)
@@ -737,8 +727,12 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
 
-		if err := d.Set("alarms", flattenAlarms(service.DeploymentConfiguration.Alarms)); err != nil {
-			return fmt.Errorf("error setting alarms: %w", err)
+		if service.DeploymentConfiguration.Alarms != nil {
+			if err := d.Set("alarms", []interface{}{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
+				return fmt.Errorf("setting alarms: %w", err)
+			}
+		} else {
+			d.Set("alarms", nil)
 		}
 
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
@@ -874,7 +868,9 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("alarms") {
-			input.DeploymentConfiguration.Alarms = expandAlarms(d.Get("alarms").([]interface{}))
+			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("platform_version") {
@@ -923,7 +919,6 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
 		err := resource.Retry(propagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateService(input)
@@ -1121,12 +1116,10 @@ func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func expandAlarms(tfList []interface{}) *ecs.DeploymentAlarms {
-	if len(tfList) == 0 || tfList[0] == nil {
+func expandAlarms(tfMap map[string]interface{}) *ecs.DeploymentAlarms {
+	if tfMap == nil {
 		return nil
 	}
-
-	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &ecs.DeploymentAlarms{}
 
@@ -1145,9 +1138,9 @@ func expandAlarms(tfList []interface{}) *ecs.DeploymentAlarms {
 	return apiObject
 }
 
-func flattenAlarms(apiObject *ecs.DeploymentAlarms) []interface{} {
+func flattenAlarms(apiObject *ecs.DeploymentAlarms) map[string]interface{} {
 	if apiObject == nil {
-		return []interface{}{}
+		return nil
 	}
 
 	tfMap := map[string]interface{}{}
@@ -1156,10 +1149,15 @@ func flattenAlarms(apiObject *ecs.DeploymentAlarms) []interface{} {
 		tfMap["alarm_names"] = aws.StringValueSlice(v)
 	}
 
-	tfMap["enable"] = aws.BoolValue(apiObject.Enable)
-	tfMap["rollback"] = aws.BoolValue(apiObject.Rollback)
+	if v := apiObject.Enable; v != nil {
+		tfMap["enable"] = aws.BoolValue(v)
+	}
 
-	return []interface{}{tfMap}
+	if v := apiObject.Rollback; v != nil {
+		tfMap["rollback"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
 
 func expandDeploymentController(l []interface{}) *ecs.DeploymentController {
