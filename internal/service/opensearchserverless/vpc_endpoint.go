@@ -110,7 +110,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := findVPCEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] OpenSearchServerless VpcEndpoint (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] OpenSearchServerless VPC Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -165,13 +165,13 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return nil
 	}
 
-	log.Printf("[DEBUG] Updating OpenSearchServerless VpcEndpoint (%s): %#v", d.Id(), in)
+	log.Printf("[DEBUG] Updating OpenSearchServerless VPC Endpoint (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateVpcEndpoint(ctx, in)
 	if err != nil {
 		return create.DiagError(names.OpenSearchServerless, create.ErrActionUpdating, ResNameVPCEndpoint, d.Id(), err)
 	}
 
-	if _, err := waitVPCEndpointUpdated(ctx, conn, string(out.UpdateVpcEndpointDetail.Status), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitVPCEndpointUpdated(ctx, conn, aws.ToString(out.UpdateVpcEndpointDetail.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.OpenSearchServerless, create.ErrActionWaitingForUpdate, ResNameVPCEndpoint, d.Id(), err)
 	}
 
@@ -181,7 +181,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient()
 
-	log.Printf("[INFO] Deleting OpenSearchServerless VpcEndpoint %s", d.Id())
+	log.Printf("[INFO] Deleting OpenSearchServerless VPC Endpoint %s", d.Id())
 
 	_, err := conn.DeleteVpcEndpoint(ctx, &opensearchserverless.DeleteVpcEndpointInput{
 		ClientToken: aws.String(resource.UniqueId()),
