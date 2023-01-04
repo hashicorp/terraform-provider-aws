@@ -10,11 +10,11 @@ FEATURES:
 * **New Resource:** `aws_appsync_type` ([#28437](https://github.com/hashicorp/terraform-provider-aws/issues/28437))
 * **New Resource:** `aws_ec2_instance_state` ([#28639](https://github.com/hashicorp/terraform-provider-aws/issues/28639))
 * **New Resource:** `aws_lightsail_bucket` ([#28585](https://github.com/hashicorp/terraform-provider-aws/issues/28585))
-* **New Resource:** `resource/aws_ssoadmin_instance_access_control_attributes` ([#23317](https://github.com/hashicorp/terraform-provider-aws/issues/23317))
+* **New Resource:** `aws_ssoadmin_instance_access_control_attributes` ([#23317](https://github.com/hashicorp/terraform-provider-aws/issues/23317))
 
 ENHANCEMENTS:
 
-* data/aws_kms_secrets: Add `encryption_algorithm` and `key_id` arguments in support of [asymmetric keys](https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html) ([#21054](https://github.com/hashicorp/terraform-provider-aws/issues/21054))
+* data-source/aws_kms_secrets: Add `encryption_algorithm` and `key_id` arguments in support of [asymmetric keys](https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html) ([#21054](https://github.com/hashicorp/terraform-provider-aws/issues/21054))
 * resource/aws_appflow_connector_profile: Add support for `connector_type` CustomConnector. Add `cluster_identifier`, `database_name`, and `data_api_role_arn` attributes for `redshift` `connection_profile_properties` ([#26766](https://github.com/hashicorp/terraform-provider-aws/issues/26766))
 * resource/aws_appsync_resolver: Add `runtime` and `code` arguments ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
 * resource/aws_appsync_resolver: Add plan time validation for `caching_config.ttl` ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
