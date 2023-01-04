@@ -29,6 +29,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.mongo_role", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.execution", "arn"),
 				),
 			},
 		},
@@ -57,8 +58,29 @@ resource "aws_iam_role" "mongo_role" {
 POLICY
 }
 
+resource "aws_iam_role" "execution" {
+  name = "%[1]s-execution"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
 resource "aws_ecs_task_definition" "mongo" {
   family        = "%[1]s"
+  execution_role_arn = aws_iam_role.execution.arn
   task_role_arn = aws_iam_role.mongo_role.arn
   network_mode  = "bridge"
 

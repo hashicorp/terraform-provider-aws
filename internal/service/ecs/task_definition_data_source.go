@@ -44,6 +44,10 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"execution_role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -74,6 +78,7 @@ func dataSourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("revision", taskDefinition.Revision)
 	d.Set("status", taskDefinition.Status)
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
+	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
 
 	if d.Id() == "" {
 		return fmt.Errorf("task definition %q not found", d.Get("task_definition").(string))

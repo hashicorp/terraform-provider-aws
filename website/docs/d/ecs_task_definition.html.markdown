@@ -71,3 +71,4 @@ In addition to all arguments above, the following attributes are exported:
 * `revision` - Revision of this task definition
 * `status` - Status of this task definition
 * `task_role_arn` - ARN of the IAM role that containers in this task can assume
+* `execution_role_arn` - ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume
