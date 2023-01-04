@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccEC2InstanceState_basic(t *testing.T) {
-	resourceName := "aws_instance_state.test"
+	resourceName := "aws_ec2_instance_state.test"
 	state := "stopped"
 	force := "false"
 
@@ -38,7 +38,7 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 }
 
 func TestAccEC2InstanceState_state(t *testing.T) {
-	resourceName := "aws_instance_state.test"
+	resourceName := "aws_ec2_instance_state.test"
 	stateStopped := "stopped"
 	stateRunning := "running"
 	force := "false"
@@ -74,7 +74,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 	})
 }
 func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
-	resourceName := "aws_instance_state.test"
+	resourceName := "aws_ec2_instance_state.test"
 	parentResourceName := "aws_instance.test"
 	state := "stopped"
 	force := "false"
@@ -134,7 +134,7 @@ resource "aws_instance" "test" {
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 
-resource "aws_instance_state" "test" {
+resource "aws_ec2_instance_state" "test" {
   instance_id = aws_instance.test.id
   state       = %[1]q
   force       = %[2]s

@@ -27,6 +27,12 @@ func ResourceInstanceState() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(1 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"instance_id": {
 				Type:     schema.TypeString,
@@ -51,7 +57,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	instanceId := d.Get("instance_id").(string)
 
-	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, instanceId, InstanceReadyTimeout)
+	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
 
 	if instanceErr != nil {
 		return create.DiagError(names.EC2, create.ErrActionReading, ResInstance, instanceId, instanceErr)
@@ -93,7 +99,7 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, d.Id(), InstanceReadyTimeout)
+	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if instanceErr != nil {
 		return create.DiagError(names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
@@ -112,7 +118,7 @@ func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceInstanceStateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] %s %s deleting an aws_instance_state resource only stops managing instance state, The Instance is left in its current state.: %s", names.EC2, ResInstanceState, d.Id())
+	log.Printf("[DEBUG] %s %s deleting an aws_ec2_instance_state resource only stops managing instance state, The Instance is left in its current state.: %s", names.EC2, ResInstanceState, d.Id())
 
 	return nil
 }
