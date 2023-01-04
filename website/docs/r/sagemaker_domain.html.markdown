@@ -118,10 +118,10 @@ The following arguments are optional:
 * `canvas_app_settings` - (Optional) The Canvas app settings. See [Canvas App Settings](#canvas_app_settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter_server_app_settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel_gateway_app_settings) below.
-* `r_session_app_settings` - (Optional) The RSession app settings. See [RSession App Settings](#rsession_app_settings) below.
+* `r_session_app_settings` - (Optional) The RSession app settings. See [RSession App Settings](#r_session_app_settings) below.
 * `security_groups` - (Optional) A list of security group IDs that will be attached to the user.
 * `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing_settings) below.
-* `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensorboard_app_settings) below.
+* `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensor_board_app_settings) below.
 
 #### canvas_app_settings
 
