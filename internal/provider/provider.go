@@ -2140,6 +2140,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
 			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_instance_access_control_attributes": ssoadmin.ResourceAccessControlAttributes(),
 			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
 			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
 			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
