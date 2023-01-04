@@ -1,6 +1,7 @@
 package lightsail
 
 const (
+	ResBucket                             = "Bucket"
 	ResCertificate                        = "Certificate"
 	ResDatabase                           = "Database"
 	ResDisk                               = "Disk"
