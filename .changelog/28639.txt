@@ -1,3 +1,3 @@
 ```release-note:new-resource
-aws_instance_state
+aws_ec2_instance_state
 ```
