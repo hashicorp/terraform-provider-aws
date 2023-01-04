@@ -84,7 +84,6 @@ func ResourceGroup() *schema.Resource {
 			"desired_capacity_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.StringInSlice(DesiredCapacityType_Values(), false),
 			},
 			"enabled_metrics": {
