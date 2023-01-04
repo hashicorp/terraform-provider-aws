@@ -193,7 +193,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 
 	gateway, err := conn.CreateRestApi(params)
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway: %s", err)
+		return fmt.Errorf("creating API Gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(gateway.Id))
@@ -221,7 +221,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.PutRestApi(input)
 
 		if err != nil {
-			return fmt.Errorf("error creating API Gateway specification: %s", err)
+			return fmt.Errorf("creating API Gateway specification: %s", err)
 		}
 
 		// Using PutRestApi with mode overwrite will remove any configuration
@@ -238,7 +238,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 			_, err := conn.UpdateRestApi(updateInput)
 
 			if err != nil {
-				return fmt.Errorf("error updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
+				return fmt.Errorf("updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
 			}
 		}
 	}
@@ -262,7 +262,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway REST API (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading API Gateway REST API (%s): %s", d.Id(), err)
 	}
 
 	getResourcesInput := &apigateway.GetResourcesInput{
@@ -278,7 +278,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway REST API (%s) resources: %s", d.Id(), err)
+		return fmt.Errorf("reading API Gateway REST API (%s) resources: %s", d.Id(), err)
 	}
 
 	d.Set("name", api.Name)
@@ -294,12 +294,12 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	// I'm not sure why it needs to be wrapped with double quotes first, but it does
 	normalized_policy, err := structure.NormalizeJsonString(`"` + aws.StringValue(api.Policy) + `"`)
 	if err != nil {
-		return fmt.Errorf("error normalizing policy JSON: %w", err)
+		return fmt.Errorf("normalizing policy JSON: %w", err)
 	}
 
 	policy, err := strconv.Unquote(normalized_policy)
 	if err != nil {
-		return fmt.Errorf("error unescaping policy: %s", err)
+		return fmt.Errorf("unescaping policy: %s", err)
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
@@ -331,18 +331,18 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %s", err)
+		return fmt.Errorf("setting endpoint_configuration: %s", err)
 	}
 
 	tags := KeyValueTags(api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	rest_api_arn := arn.ARN{
@@ -601,7 +601,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error updating REST API (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating REST API (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChanges("body", "parameters") {
@@ -628,7 +628,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			output, err := conn.PutRestApi(input)
 
 			if err != nil {
-				return fmt.Errorf("error updating API Gateway specification: %s", err)
+				return fmt.Errorf("updating API Gateway specification: %s", err)
 			}
 
 			// Using PutRestApi with mode overwrite will remove any configuration
@@ -645,7 +645,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 				_, err := conn.UpdateRestApi(updateInput)
 
 				if err != nil {
-					return fmt.Errorf("error updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
+					return fmt.Errorf("updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
 				}
 			}
 		}
@@ -654,7 +654,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -684,7 +684,7 @@ func resourceRestAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting API Gateway (%s): %s", d.Id(), err)
 	}
 
 	return nil

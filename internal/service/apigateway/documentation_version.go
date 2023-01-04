@@ -59,7 +59,7 @@ func resourceDocumentationVersionCreate(d *schema.ResourceData, meta interface{}
 
 	version, err := conn.CreateDocumentationVersion(params)
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Documentation Version: %s", err)
+		return fmt.Errorf("creating API Gateway Documentation Version: %s", err)
 	}
 
 	d.SetId(restApiId + "/" + *version.Version)

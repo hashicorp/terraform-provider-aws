@@ -82,7 +82,7 @@ func resourceDocumentationPartCreate(d *schema.ResourceData, meta interface{}) e
 		RestApiId:  aws.String(apiId),
 	})
 	if err != nil {
-		return fmt.Errorf("reading API Gateway Documentation Part: %w", err)
+		return fmt.Errorf("creating API Gateway Documentation Part: %w", err)
 	}
 	d.SetId(apiId + "/" + aws.StringValue(out.Id))
 
@@ -163,7 +163,10 @@ func resourceDocumentationPartDelete(d *schema.ResourceData, meta interface{}) e
 		DocumentationPartId: aws.String(id),
 		RestApiId:           aws.String(apiId),
 	})
-	return fmt.Errorf("deleting API Gateway Documentation Part (%s): %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("deleting API Gateway Documentation Part (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func expandDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {

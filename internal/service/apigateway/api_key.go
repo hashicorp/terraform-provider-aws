@@ -115,18 +115,18 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return fmt.Errorf("error reading API Gateway API Key (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway API Key (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -143,11 +143,11 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("value", apiKey.Value)
 
 	if err := d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting created_date: %s", err)
+		return fmt.Errorf("setting created_date: %s", err)
 	}
 
 	if err := d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting last_updated_date: %s", err)
+		return fmt.Errorf("setting last_updated_date: %s", err)
 	}
 
 	return nil
@@ -186,7 +186,7 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -214,7 +214,7 @@ func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway API Key (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting API Gateway API Key (%s): %s", d.Id(), err)
 	}
 
 	return nil

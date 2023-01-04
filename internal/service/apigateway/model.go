@@ -111,7 +111,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Model: %s", err)
+		return fmt.Errorf("creating API Gateway Model: %s", err)
 	}
 
 	d.SetId(aws.StringValue(model.Id))
@@ -133,9 +133,8 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Model (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Model (%s): %w", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
 
 	d.Set("content_type", out.ContentType)
 	d.Set("description", out.Description)

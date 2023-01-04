@@ -196,7 +196,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateStage(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway Stage (%s): %w", stageName, err)
+		return fmt.Errorf("creating API Gateway Stage (%s): %w", stageName, err)
 	}
 
 	d.SetId(fmt.Sprintf("ags-%s-%s", respApiId, stageName))
@@ -204,7 +204,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	if waitForCache && aws.StringValue(output.CacheClusterStatus) != apigateway.CacheClusterStatusNotAvailable {
 		_, err := waitStageCacheAvailable(conn, respApiId, stageName)
 		if err != nil {
-			return fmt.Errorf("error waiting for API Gateway Stage (%s) to be available: %w", d.Id(), err)
+			return fmt.Errorf("waiting for API Gateway Stage (%s) to be available: %w", d.Id(), err)
 		}
 	}
 
@@ -235,13 +235,13 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting API Gateway REST API (%s) Stage (%s): %w", restApiId, stageName, err)
+		return fmt.Errorf("getting API Gateway REST API (%s) Stage (%s): %w", restApiId, stageName, err)
 	}
 
 	log.Printf("[DEBUG] Received API Gateway Stage: %s", stage)
 
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
-		return fmt.Errorf("error setting access_log_settings: %s", err)
+		return fmt.Errorf("setting access_log_settings: %s", err)
 	}
 
 	d.Set("client_certificate_id", stage.ClientCertificateId)
@@ -261,18 +261,18 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("web_acl_arn", stage.WebAclArn)
 
 	if err := d.Set("canary_settings", flattenCanarySettings(stage.CanarySettings)); err != nil {
-		return fmt.Errorf("error setting canary_settings: %w", err)
+		return fmt.Errorf("setting canary_settings: %w", err)
 	}
 
 	tags := KeyValueTags(stage.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	stageArn := arn.ARN{
@@ -284,7 +284,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", stageArn)
 
 	if err := d.Set("variables", aws.StringValueMap(stage.Variables)); err != nil {
-		return fmt.Errorf("error setting variables: %s", err)
+		return fmt.Errorf("setting variables: %s", err)
 	}
 
 	d.Set("invoke_url", buildInvokeURL(meta.(*conns.AWSClient), restApiId, stageName))
@@ -316,7 +316,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, stageArn, o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
@@ -426,13 +426,13 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateStage(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating API Gateway Stage (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating API Gateway Stage (%s): %w", d.Id(), err)
 		}
 
 		if waitForCache && aws.StringValue(output.CacheClusterStatus) != apigateway.CacheClusterStatusNotAvailable {
 			_, err := waitStageCacheUpdated(conn, respApiId, stageName)
 			if err != nil {
-				return fmt.Errorf("error waiting for API Gateway Stage (%s) to be updated: %w", d.Id(), err)
+				return fmt.Errorf("waiting for API Gateway Stage (%s) to be updated: %w", d.Id(), err)
 			}
 		}
 	}
@@ -485,7 +485,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway REST API (%s) Stage (%s): %w", d.Get("rest_api_id").(string), d.Get("stage_name").(string), err)
+		return fmt.Errorf("deleting API Gateway REST API (%s) Stage (%s): %w", d.Get("rest_api_id").(string), d.Get("stage_name").(string), err)
 	}
 
 	return nil

@@ -97,7 +97,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 		Variables:        flex.ExpandStringMap(d.Get("variables").(map[string]interface{})),
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Deployment: %w", err)
+		return fmt.Errorf("creating API Gateway Deployment: %w", err)
 	}
 
 	d.SetId(aws.StringValue(deployment.Id))
@@ -121,7 +121,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Deployment (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Deployment (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Deployment: %s", out)
 	d.Set("description", out.Description)
@@ -195,7 +195,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 		stage, err := FindStageByName(conn, restApiId, stageName)
 
 		if err != nil && !tfresource.NotFound(err) {
-			return fmt.Errorf("error getting referenced stage: %w", err)
+			return fmt.Errorf("getting referenced stage: %w", err)
 		}
 
 		if stage != nil && aws.StringValue(stage.DeploymentId) == d.Id() {
@@ -222,7 +222,7 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway Deployment (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting API Gateway Deployment (%s): %w", d.Id(), err)
 	}
 
 	return nil

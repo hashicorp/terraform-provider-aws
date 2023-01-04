@@ -80,7 +80,7 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
@@ -110,7 +110,7 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
@@ -139,7 +139,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
@@ -190,7 +190,7 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
@@ -237,7 +237,7 @@ func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resou
 	}
 }
 
-func testAccCheckBasePathDestroy(name string) resource.TestCheckFunc {
+func testAccCheckBasePathDestroy() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 

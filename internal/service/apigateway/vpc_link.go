@@ -76,7 +76,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.Id))
 
 	if err := waitVPCLinkAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after creation: %w", d.Id(), err)
+		return fmt.Errorf("creating API Gateway VPC Link (%s): waiting for completion: %w", d.Get("name").(string), err)
 	}
 
 	return resourceVPCLinkRead(d, meta)
@@ -105,11 +105,11 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -153,7 +153,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -164,11 +164,11 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateVpcLink(input)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway VPC Link (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating API Gateway VPC Link (%s): %w", d.Id(), err)
 	}
 
 	if err := waitVPCLinkAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) availability after update: %w", d.Id(), err)
+		return fmt.Errorf("updating API Gateway VPC Link (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceVPCLinkRead(d, meta)
@@ -188,11 +188,11 @@ func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway VPC Link (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting API Gateway VPC Link (%s): %w", d.Id(), err)
 	}
 
 	if err := waitVPCLinkDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for API Gateway VPC Link (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("waiting for API Gateway VPC Link (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil

@@ -166,7 +166,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 		q, ok := settings[0].(map[string]interface{})
 
 		if errs := validUsagePlanQuotaSettings(q); len(errs) > 0 {
-			return fmt.Errorf("error validating the quota settings: %v", errs)
+			return fmt.Errorf("validating the quota settings: %v", errs)
 		}
 
 		if !ok {
@@ -186,7 +186,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 
 	up, err := conn.CreateUsagePlan(params)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway Usage Plan: %w", err)
+		return fmt.Errorf("creating API Gateway Usage Plan: %w", err)
 	}
 
 	d.SetId(aws.StringValue(up.Id))
@@ -207,7 +207,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err = conn.UpdateUsagePlan(updateParameters)
 		if err != nil {
-			return fmt.Errorf("error creating the API Gateway Usage Plan product code: %w", err)
+			return fmt.Errorf("creating the API Gateway Usage Plan product code: %w", err)
 		}
 	}
 
@@ -230,18 +230,18 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Usage Plan (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Usage Plan (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(up.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -258,19 +258,19 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 
 	if up.ApiStages != nil {
 		if err := d.Set("api_stages", flattenAPIStages(up.ApiStages)); err != nil {
-			return fmt.Errorf("error setting api_stages error: %w", err)
+			return fmt.Errorf("setting api_stages error: %w", err)
 		}
 	}
 
 	if up.Throttle != nil {
 		if err := d.Set("throttle_settings", flattenThrottleSettings(up.Throttle)); err != nil {
-			return fmt.Errorf("error setting throttle_settings error: %w", err)
+			return fmt.Errorf("setting throttle_settings error: %w", err)
 		}
 	}
 
 	if up.Quota != nil {
 		if err := d.Set("quota_settings", flattenQuotaSettings(up.Quota)); err != nil {
-			return fmt.Errorf("error setting quota_settings error: %w", err)
+			return fmt.Errorf("setting quota_settings error: %w", err)
 		}
 	}
 
@@ -422,7 +422,7 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 			d := diff[0].(map[string]interface{})
 
 			if errors := validUsagePlanQuotaSettings(d); len(errors) > 0 {
-				return fmt.Errorf("Error validating the quota settings: %v", errors)
+				return fmt.Errorf("validating the quota settings: %v", errors)
 			}
 
 			// Handle Replaces
@@ -468,7 +468,7 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
@@ -479,7 +479,7 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateUsagePlan(params)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway Usage Plan: %w", err)
+		return fmt.Errorf("updating API Gateway Usage Plan: %w", err)
 	}
 
 	return resourceUsagePlanRead(d, meta)
@@ -509,7 +509,7 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 			PatchOperations: operations,
 		})
 		if err != nil {
-			return fmt.Errorf("error removing API Stages associated with Usage Plan: %w", err)
+			return fmt.Errorf("removing API Stages associated with Usage Plan: %w", err)
 		}
 	}
 
@@ -524,7 +524,7 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API gateway usage plan: %w", err)
+		return fmt.Errorf("deleting API gateway usage plan: %w", err)
 	}
 
 	return nil

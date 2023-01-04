@@ -69,7 +69,7 @@ func resourceResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Resource: %s", err)
+		return fmt.Errorf("creating API Gateway Resource: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resource.Id))
@@ -92,7 +92,7 @@ func resourceResourceRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Resource (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Resource (%s): %w", d.Id(), err)
 	}
 
 	d.Set("parent_id", resource.ParentId)
@@ -143,7 +143,6 @@ func resourceResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Resource: %s", d.Id())
 
-	log.Printf("[DEBUG] schema is %#v", d)
 	_, err := conn.DeleteResource(&apigateway.DeleteResourceInput{
 		ResourceId: aws.String(d.Id()),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),

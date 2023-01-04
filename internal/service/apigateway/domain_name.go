@@ -238,7 +238,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 
 	domainName, err := conn.CreateDomainName(params)
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Domain Name: %s", err)
+		return fmt.Errorf("creating API Gateway Domain Name: %s", err)
 	}
 
 	d.SetId(aws.StringValue(domainName.DomainName))
@@ -262,18 +262,18 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Domain Name (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Domain Name (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -295,11 +295,11 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ownership_verification_certificate_arn", domainName.OwnershipVerificationCertificateArn)
 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %s", err)
+		return fmt.Errorf("setting endpoint_configuration: %s", err)
 	}
 
 	if err = d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(domainName.MutualTlsAuthentication)); err != nil {
-		return fmt.Errorf("error setting mutual_tls_authentication: %w", err)
+		return fmt.Errorf("setting mutual_tls_authentication: %w", err)
 	}
 
 	d.Set("regional_certificate_arn", domainName.RegionalCertificateArn)
@@ -396,7 +396,7 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 

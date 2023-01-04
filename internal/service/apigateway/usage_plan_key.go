@@ -77,7 +77,7 @@ func resourceUsagePlanKeyCreate(d *schema.ResourceData, meta interface{}) error 
 	up, err := conn.CreateUsagePlanKey(params)
 
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway Usage Plan Key: %w", err)
+		return fmt.Errorf("creating API Gateway Usage Plan Key: %w", err)
 	}
 
 	d.SetId(aws.StringValue(up.Id))
@@ -99,7 +99,7 @@ func resourceUsagePlanKeyRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Usage Plan Key (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Usage Plan Key (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", up.Name)
@@ -121,7 +121,7 @@ func resourceUsagePlanKeyDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting API Gateway usage plan key: %s", err)
+		return fmt.Errorf("deleting API Gateway usage plan key: %s", err)
 	}
 
 	return nil

@@ -117,7 +117,7 @@ func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) erro
 	}, apigateway.ErrCodeConflictException)
 
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Method Response: %s", err)
+		return fmt.Errorf("creating API Gateway Method Response: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("agmr-%s-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string), d.Get("status_code").(string)))
@@ -142,17 +142,17 @@ func resourceMethodResponseRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Method Response (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Method Response (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received API Gateway Method Response: %s", methodResponse)
 
 	if err := d.Set("response_models", aws.StringValueMap(methodResponse.ResponseModels)); err != nil {
-		return fmt.Errorf("error setting response_models: %s", err)
+		return fmt.Errorf("setting response_models: %s", err)
 	}
 
 	if err := d.Set("response_parameters", aws.BoolValueMap(methodResponse.ResponseParameters)); err != nil {
-		return fmt.Errorf("error setting response_parameters: %s", err)
+		return fmt.Errorf("setting response_parameters: %s", err)
 	}
 
 	return nil

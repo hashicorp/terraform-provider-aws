@@ -74,12 +74,14 @@ func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
 		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
+	id := fmt.Sprintf("%s:%s", restApiId, stageName)
+
 	export, err := conn.GetExport(input)
 	if err != nil {
-		return fmt.Errorf("reading API Gateway Export: %w", err)
+		return fmt.Errorf("reading API Gateway Export (%s): %w", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", restApiId, stageName))
+	d.SetId(id)
 	d.Set("body", string(export.Body))
 	d.Set("content_type", export.ContentType)
 	d.Set("content_disposition", export.ContentDisposition)

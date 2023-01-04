@@ -66,9 +66,7 @@ func resourceBasePathMappingCreate(d *schema.ResourceData, meta interface{}) err
 				return resource.NonRetryableError(err)
 			}
 
-			return resource.RetryableError(
-				fmt.Errorf("Error creating Gateway base path mapping: %s", err),
-			)
+			return resource.RetryableError(err)
 		}
 
 		return nil
@@ -79,7 +77,7 @@ func resourceBasePathMappingCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating Gateway base path mapping: %s", err)
+		return fmt.Errorf("creating API Gateway Base Path Mapping: %s", err)
 	}
 
 	id := fmt.Sprintf("%s/%s", d.Get("domain_name").(string), d.Get("base_path").(string))
@@ -117,9 +115,9 @@ func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) err
 		})
 	}
 
-	domainName, basePath, decodeErr := DecodeBasePathMappingID(d.Id())
-	if decodeErr != nil {
-		return decodeErr
+	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
+	if err != nil {
+		return fmt.Errorf("updating API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	input := apigateway.UpdateBasePathMappingInput{
@@ -128,12 +126,12 @@ func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) err
 		PatchOperations: operations,
 	}
 
-	log.Printf("[INFO] Updating API Gateway base path mapping: %s", input)
+	log.Printf("[INFO] Updating API Gateway Base Path Mapping: %s", input)
 
-	_, err := conn.UpdateBasePathMapping(&input)
+	_, err = conn.UpdateBasePathMapping(&input)
 
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway base path mapping failed: %w", err)
+		return fmt.Errorf("updating API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChange("base_path") {
@@ -141,7 +139,7 @@ func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetId(id)
 	}
 
-	log.Printf("[DEBUG] API Gateway base path mapping updated: %s", d.Id())
+	log.Printf("[DEBUG] API Gateway Base Path Mapping updated: %s", d.Id())
 
 	return resourceBasePathMappingRead(d, meta)
 }

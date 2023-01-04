@@ -94,7 +94,7 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error describing API Gateway REST APIs: %w", err)
+		return fmt.Errorf("describing API Gateway REST APIs: %w", err)
 	}
 
 	if len(matchedApis) == 0 {
@@ -127,11 +127,11 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %w", err)
+		return fmt.Errorf("setting endpoint_configuration: %w", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	executionArn := arn.ARN{

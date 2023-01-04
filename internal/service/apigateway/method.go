@@ -154,7 +154,7 @@ func resourceMethodCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.PutMethod(&input)
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Method: %s", err)
+		return fmt.Errorf("creating API Gateway Method: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("agm-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
@@ -178,14 +178,14 @@ func resourceMethodRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Method (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Method (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Method: %s", out)
 
 	d.Set("api_key_required", out.ApiKeyRequired)
 
 	if err := d.Set("authorization_scopes", flex.FlattenStringList(out.AuthorizationScopes)); err != nil {
-		return fmt.Errorf("error setting authorization_scopes: %s", err)
+		return fmt.Errorf("setting authorization_scopes: %s", err)
 	}
 
 	d.Set("authorization", out.AuthorizationType)
@@ -193,11 +193,11 @@ func resourceMethodRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("operation_name", out.OperationName)
 
 	if err := d.Set("request_models", aws.StringValueMap(out.RequestModels)); err != nil {
-		return fmt.Errorf("error setting request_models: %s", err)
+		return fmt.Errorf("setting request_models: %s", err)
 	}
 
 	if err := d.Set("request_parameters", aws.BoolValueMap(out.RequestParameters)); err != nil {
-		return fmt.Errorf("error setting request_parameters: %s", err)
+		return fmt.Errorf("setting request_parameters: %s", err)
 	}
 
 	d.Set("request_validator_id", out.RequestValidatorId)
@@ -208,7 +208,7 @@ func resourceMethodRead(d *schema.ResourceData, meta interface{}) error {
 func resourceMethodUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
+	log.Printf("[DEBUG] Updating API Gateway Method %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
 	if d.HasChange("resource_id") {
 		operations = append(operations, &apigateway.PatchOperation{
