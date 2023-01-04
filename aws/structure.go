@@ -1072,7 +1072,7 @@ func flattenCaseInsensitiveStringSet(list []*string) *schema.Set {
 	return schema.NewSet(hashStringCaseInsensitive, flattenStringList(list))
 }
 
-//Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
+// Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
 func flattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
 	ips := make([]string, 0, len(dtos))
 	for _, v := range dtos {
@@ -1082,7 +1082,7 @@ func flattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePriv
 	return ips
 }
 
-//Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
+// Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
 func flattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
 	for _, v := range dtos {
@@ -1092,7 +1092,7 @@ func flattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	return ids
 }
 
-//Expands an array of IPs into a ec2 Private IP Address Spec
+// Expands an array of IPs into a ec2 Private IP Address Spec
 func expandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
 	dtos := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
 	for i, v := range ips {
@@ -1107,7 +1107,7 @@ func expandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecific
 	return dtos
 }
 
-//Flattens network interface attachment into a map[string]interface
+// Flattens network interface attachment into a map[string]interface
 func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{} {
 	att := make(map[string]interface{})
 	if a.InstanceId != nil {

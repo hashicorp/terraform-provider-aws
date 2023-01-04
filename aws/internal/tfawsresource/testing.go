@@ -20,10 +20,10 @@ const (
 // You may check for unset keys, however this will also match keys set to empty
 // string. Please provide a map with at least 1 non-empty value.
 //
-//   map[string]string{
-//	     "key1": "value",
-//       "key2": "",
-//   }
+//	  map[string]string{
+//		     "key1": "value",
+//	      "key2": "",
+//	  }
 //
 // Use this function over SDK provided TestCheckFunctions when validating a
 // TypeSet where its elements are a nested object with their own attrs/values.

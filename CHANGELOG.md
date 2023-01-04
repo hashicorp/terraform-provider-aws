@@ -1,3 +1,9 @@
+## 2.70.1 (Unreleased)
+
+NOTES:
+
+* provider: Add OpenBSD to list of OSes which the provider is built on ([#28668](https://github.com/hashicorp/terraform-provider-aws/issues/28668))
+
 ## 2.70.1 (December 16, 2021)
 
 BUG FIXES:

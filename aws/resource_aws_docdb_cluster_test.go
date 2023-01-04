@@ -157,8 +157,8 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
-/// This is a regression test to make sure that we always cover the scenario as hightlighted in
-/// https://github.com/hashicorp/terraform/issues/11568
+// / This is a regression test to make sure that we always cover the scenario as hightlighted in
+// / https://github.com/hashicorp/terraform/issues/11568
 func TestAccAWSDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

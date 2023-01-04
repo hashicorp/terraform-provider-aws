@@ -1,38 +1,49 @@
 archives:
   - files:
+      # Ensure only built binary is archived
       - none*
     format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    rlcp: true
 before:
   hooks:
-    - go mod download
+    - 'go mod download'
 builds:
-  - binary: '{{ .ProjectName }}_{{ .Version }}'
+  -
+    # Binary naming only required for Terraform CLI 0.12
+    binary: '{{ .ProjectName }}_{{ .Version }}'
+    env:
+      - CGO_ENABLED=0
     flags:
       - -trimpath
+    goos:
+      - darwin
+      - freebsd
+      - linux
+      - openbsd
+      - windows
     goarch:
       - '386'
       - amd64
       - arm
       - arm64
-    goos:
-      - darwin
-      - freebsd
-      - linux
-      - windows
     ignore:
-      - goarch: '386'
-        goos: darwin
+      - goarch: arm
+        goos: windows
+      - goarch: arm64
+        goos: freebsd
+      - goarch: arm64
+        goos: windows
+      - goarch: arm64
+        goos: openbsd
     ldflags:
-      - -s -w -X aws/version.ProviderVersion={{.Version}}
+      - -s -w -X 'github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}'
     mod_timestamp: '{{ .CommitTimestamp }}'
 changelog:
   skip: true
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
-env:
-  - CGO_ENABLED=0
 release:
   disable: true
 signs:
