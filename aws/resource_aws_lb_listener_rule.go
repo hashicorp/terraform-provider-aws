@@ -486,7 +486,9 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 	}
 }
 
-/* DEPRECATED Backwards compatibility: This primarily exists to set a hash that handles the values to host_header or path_pattern migration.
+/*
+	DEPRECATED Backwards compatibility: This primarily exists to set a hash that handles the values to host_header or path_pattern migration.
+
 Can probably be removed on the next major version of the provider.
 */
 func lbListenerRuleConditionSetHash(v interface{}) int {

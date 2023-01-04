@@ -45,9 +45,9 @@ func HasResourceUniqueIdSuffix(s string) bool {
 // is suitable for custom resource Importer State functions after nil checking
 // to ensure differences are not reported with ImportStateVerify testing, e.g.
 //
-// if namePrefix := naming.NamePrefixFromName(d.Id()); namePrefix != nil {
-//   d.Set("name_prefix", namePrefix)
-// }
+//	if namePrefix := naming.NamePrefixFromName(d.Id()); namePrefix != nil {
+//	  d.Set("name_prefix", namePrefix)
+//	}
 func NamePrefixFromName(name string) *string {
 	if !HasResourceUniqueIdSuffix(name) {
 		return nil

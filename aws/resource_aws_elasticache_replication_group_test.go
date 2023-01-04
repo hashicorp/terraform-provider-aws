@@ -239,7 +239,7 @@ func TestAccAWSElasticacheReplicationGroup_updateNodeSize(t *testing.T) {
 	})
 }
 
-//This is a test to prove that we panic we get in https://github.com/hashicorp/terraform/issues/9097
+// This is a test to prove that we panic we get in https://github.com/hashicorp/terraform/issues/9097
 func TestAccAWSElasticacheReplicationGroup_updateParameterGroup(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	parameterGroupResourceName1 := "aws_elasticache_parameter_group.test.0"
