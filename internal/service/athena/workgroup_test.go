@@ -28,15 +28,18 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.engine_version.0.effective_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "AUTO"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execution_role", ""),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
