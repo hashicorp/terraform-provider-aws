@@ -728,7 +728,7 @@ If this test does fail, the fix for this is generally adding error handling imme
 ```go
 output, err := conn.GetThing(input)
 
-if isAWSErr(err, example.ErrCodeResourceNotFound, "") {
+if !d.IsNewResource() && tfresource.NotFound(err) {
   log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
   d.SetId("")
   return nil
