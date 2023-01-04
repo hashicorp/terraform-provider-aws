@@ -48,17 +48,20 @@ resource "aws_ec2_instance_state" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
 * `instance_id` - (Required) ID of the instance.
 * `state` - (Required) - State of the instance. Valid values are `stopped`, `running`.
+
+The following arguments are optional:
+
 * `force` - (Optional) Whether to request a forced stop when `state` is `stopped`. Otherwise (_i.e._, `state` is `running`), ignored. When an instance is forced to stop, it does not flush file system caches or file system metadata, and you must subsequently perform file system check and repair. Not recommended for Windows instances. Defaults to `false`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the instance. (matches `instance_id`).
+* `id` - ID of the instance (matches `instance_id`).
 
 ## Timeouts
 

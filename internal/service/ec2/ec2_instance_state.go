@@ -34,6 +34,11 @@ func ResourceInstanceState() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"force": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"instance_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -43,11 +48,6 @@ func ResourceInstanceState() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped}, false),
-			},
-			"force": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 	}
