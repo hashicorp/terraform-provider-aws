@@ -130,7 +130,3 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/hashicorp/aws-sdk-go-base/v2 => ../../../../src/github.com/hashicorp/aws-sdk-go-base/
-
-replace github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 => ../../../../src/github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/
