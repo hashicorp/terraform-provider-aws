@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Mark `server_side_encryption_configuration` as Computed in support of [S3 object encryption by default](https://aws.amazon.com/blogs/aws/amazon-s3-encrypts-new-objects-by-default/)
+```
