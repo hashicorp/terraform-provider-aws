@@ -40,7 +40,8 @@ func DataSourceAuthorizationToken() *schema.Resource {
 }
 
 func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := ecrpublic.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion("us-east-1"))
+
 	params := &ecrpublic.GetAuthorizationTokenInput{}
 
 	out, err := conn.GetAuthorizationToken(params)
