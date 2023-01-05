@@ -110,7 +110,7 @@ The following arguments are optional:
 * `cdc_inserts_and_updates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
 * `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
 * `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. (AWS default is `60`.)
-* `cdc_min_file_size` - (Optional) Minimum file size, defined in kilobytes, to reach for a file output. (AWS default is 32 MB.)
+* `cdc_min_file_size` - (Optional) Minimum file size condition as defined in kilobytes to output a file to Amazon S3. (AWS default is 32000 KB.)
 * `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
 * `compression_type` - (Optional) Set to compress target files. Valid values are `GZIP` and `NONE`. Default is `NONE`. (Ignored for source endpoints.)
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Default is `,`.

@@ -461,7 +461,7 @@ func ResourceEndpoint() *schema.Resource {
 						"cdc_min_file_size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      32,
+							Default:      32000,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"cdc_path": {

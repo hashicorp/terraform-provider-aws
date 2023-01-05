@@ -262,6 +262,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_min_file_size", "32000"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
