@@ -1,0 +1,14 @@
+/actionlint
+/actionlint.exe
+/.testtimestamp
+/.staticchecktimestamp
+/env.sh
+/.github/actionlint.yaml
+/.github/actionlint.yml
+/actionlint_fuzz-fuzz.zip
+/corpus
+/crashers
+/man/actionlint.1
+/man/actionlint.1.html
+/playground-dist
+/actionlint-workflow-ast

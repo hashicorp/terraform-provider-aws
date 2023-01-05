@@ -1,0 +1,7 @@
+# https://docs.codecov.com/docs/commit-status#disabling-a-status
+coverage:
+  status:
+    project: off
+    patch: off
+
+comment: false

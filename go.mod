@@ -20,6 +20,7 @@ require (
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
+	github.com/rhysd/actionlint v1.6.22
 	golang.org/x/tools v0.0.0-20200422022333-3d57cf2e726e
 	gopkg.in/yaml.v2 v2.2.8
 )
@@ -119,7 +120,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/complete v1.2.1 // indirect
-	github.com/rhysd/actionlint v1.6.22 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/ryancurrah/gomodguard v1.0.4 // indirect

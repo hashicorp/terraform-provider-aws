@@ -738,6 +738,7 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
 ## explicit; go 1.9
+github.com/mattn/go-runewidth
 # github.com/mitchellh/cli v1.0.0
 ## explicit
 github.com/mitchellh/cli
@@ -805,10 +806,14 @@ github.com/pquerna/otp/hotp
 github.com/pquerna/otp/totp
 # github.com/rhysd/actionlint v1.6.22
 ## explicit; go 1.17
+github.com/rhysd/actionlint
+github.com/rhysd/actionlint/cmd/actionlint
 # github.com/rivo/uniseg v0.2.0
 ## explicit; go 1.12
+github.com/rivo/uniseg
 # github.com/robfig/cron v1.2.0
 ## explicit
+github.com/robfig/cron
 # github.com/ryancurrah/gomodguard v1.0.4
 ## explicit; go 1.14
 github.com/ryancurrah/gomodguard
@@ -963,9 +968,12 @@ golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
 ## explicit
+golang.org/x/sync/errgroup
+golang.org/x/sync/semaphore
 # golang.org/x/sys v0.0.0-20220818161305-2296e01440c6
 ## explicit; go 1.17
 golang.org/x/sys/cpu
+golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
@@ -1133,6 +1141,7 @@ gopkg.in/ini.v1
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
+gopkg.in/yaml.v3
 # honnef.co/go/tools v0.0.1-2019.2.3
 ## explicit; go 1.11
 honnef.co/go/tools/arg
