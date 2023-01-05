@@ -4,6 +4,10 @@ NOTES:
 
 * provider: Add OpenBSD to list of OSes which the provider is built on ([#28668](https://github.com/hashicorp/terraform-provider-aws/issues/28668))
 
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket: Mark `server_side_encryption_configuration` as Computed in support of [S3 object encryption by default](https://aws.amazon.com/blogs/aws/amazon-s3-encrypts-new-objects-by-default/) ([#28703](https://github.com/terraform-providers/terraform-provider-aws/issues/28703))
+
 ## 2.70.1 (December 16, 2021)
 
 BUG FIXES:
