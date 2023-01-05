@@ -93,6 +93,11 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 		}
 
 		for _, v := range page.Budgets {
+
+			if !strings.HasPrefix(v.BudgetName, "tf-acc") {
+				continue
+			}
+
 			r := ResourceBudget()
 			d := r.Data(nil)
 			d.SetId(BudgetCreateResourceID(accountID, aws.StringValue(v.BudgetName)))
