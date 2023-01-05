@@ -103,6 +103,35 @@ func TestAccElastiCacheUserGroupAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheUserGroupAssociation_multiple(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName1 := "aws_elasticache_user_group_association.test1"
+	resourceName2 := "aws_elasticache_user_group_association.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserGroupAssociationConfig_preMultiple(rName),
+			},
+			{
+				Config: testAccUserGroupAssociationConfig_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupAssociationExists(resourceName1),
+					testAccCheckUserGroupAssociationExists(resourceName2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserGroupAssociationDestroy(s *terraform.State) error {
 	return testAccCheckUserGroupAssociationDestroyWithProvider(s, acctest.Provider)
 }
@@ -263,6 +292,44 @@ resource "aws_elasticache_user" "test3" {
 }
 
 resource "aws_elasticache_user_group_association" "test" {
+  user_group_id = aws_elasticache_user_group.test.user_group_id
+  user_id       = aws_elasticache_user.test3.user_id
+}
+`, rName))
+}
+
+func testAccUserGroupAssociationConfig_preMultiple(rName string) string {
+	return acctest.ConfigCompose(
+		testAccUserGroupAssociationBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_user" "test3" {
+  user_id       = "%[1]s-3"
+  user_name     = "username2"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+`, rName))
+}
+
+func testAccUserGroupAssociationConfig_multiple(rName string) string {
+	return acctest.ConfigCompose(
+		testAccUserGroupAssociationBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_user" "test3" {
+  user_id       = "%[1]s-3"
+  user_name     = "username2"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group_association" "test1" {
+  user_group_id = aws_elasticache_user_group.test.user_group_id
+  user_id       = aws_elasticache_user.test2.user_id
+}
+
+resource "aws_elasticache_user_group_association" "test2" {
   user_group_id = aws_elasticache_user_group.test.user_group_id
   user_id       = aws_elasticache_user.test3.user_id
 }
