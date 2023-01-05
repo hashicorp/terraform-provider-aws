@@ -1,4 +1,5 @@
-## 3.76.1 (Unreleased)
+## 3.76.2 (Unreleased)
+## 3.76.1 (January 05, 2023)
 
 ENHANCEMENTS:
 
