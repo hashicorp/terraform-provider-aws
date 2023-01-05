@@ -24,6 +24,7 @@ const (
 	ErrActionWaitingForCreation   = "waiting for creation"
 	ErrActionWaitingForDeletion   = "waiting for delete"
 	ErrActionWaitingForUpdate     = "waiting for update"
+	ErrActionExpandingResourceId  = "expanding resource id"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings
