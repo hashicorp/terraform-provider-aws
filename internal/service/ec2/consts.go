@@ -276,3 +276,8 @@ func securityGroupRuleType_Values() []string {
 		securityGroupRuleTypeIngress,
 	}
 }
+
+const (
+	ResInstance      = "Instance"
+	ResInstanceState = "Instance State"
+)

@@ -69,6 +69,11 @@ func ResourceWorkGroup() *schema.Resource {
 								},
 							},
 						},
+						"execution_role": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -338,28 +343,32 @@ func expandWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguratio
 
 	configuration := &athena.WorkGroupConfiguration{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"]; ok && v.(int) > 0 {
-		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(int); ok && v > 0 {
+		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["enforce_workgroup_configuration"]; ok {
-		configuration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
+		configuration.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
 	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
-	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
-		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	if v, ok := m["execution_role"].(string); ok && v != "" {
+		configuration.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
+		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
 
 	if v, ok := m["result_configuration"]; ok {
 		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := m["requester_pays_enabled"]; ok {
-		configuration.RequesterPaysEnabled = aws.Bool(v.(bool))
+	if v, ok := m["requester_pays_enabled"].(bool); ok {
+		configuration.RequesterPaysEnabled = aws.Bool(v)
 	}
 
 	return configuration
@@ -390,30 +399,34 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGroupConfi
 
 	configurationUpdates := &athena.WorkGroupConfigurationUpdates{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"]; ok && v.(int) > 0 {
-		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(int); ok && v > 0 {
+		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	} else {
 		configurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
 	}
 
-	if v, ok := m["enforce_workgroup_configuration"]; ok {
-		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
+		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
 	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
-	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
-		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	if v, ok := m["execution_role"].(string); ok && v != "" {
+		configurationUpdates.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
+		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
 
 	if v, ok := m["result_configuration"]; ok {
 		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]interface{}))
 	}
 
-	if v, ok := m["requester_pays_enabled"]; ok {
-		configurationUpdates.RequesterPaysEnabled = aws.Bool(v.(bool))
+	if v, ok := m["requester_pays_enabled"].(bool); ok {
+		configurationUpdates.RequesterPaysEnabled = aws.Bool(v)
 	}
 
 	return configurationUpdates
@@ -512,6 +525,7 @@ func flattenWorkGroupConfiguration(configuration *athena.WorkGroupConfiguration)
 		"bytes_scanned_cutoff_per_query":     aws.Int64Value(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
 		"engine_version":                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                     aws.StringValue(configuration.ExecutionRole),
 		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.BoolValue(configuration.RequesterPaysEnabled),

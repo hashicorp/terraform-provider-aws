@@ -1347,6 +1347,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ec2_client_vpn_route":                             ec2.ResourceClientVPNRoute(),
 			"aws_ec2_fleet":                                        ec2.ResourceFleet(),
 			"aws_ec2_host":                                         ec2.ResourceHost(),
+			"aws_ec2_instance_state":                               ec2.ResourceInstanceState(),
 			"aws_ec2_local_gateway_route":                          ec2.ResourceLocalGatewayRoute(),
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
@@ -2139,6 +2140,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
 			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_instance_access_control_attributes": ssoadmin.ResourceAccessControlAttributes(),
 			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
 			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
 			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),

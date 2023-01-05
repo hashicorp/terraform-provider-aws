@@ -985,8 +985,85 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 	if v, ok := m["version"]; ok && v != "" {
 		r.Version = aws.String(v.(string))
 	}
+	if v, ok := m["managed_rule_group_configs"].([]interface{}); ok && len(v) > 0 {
+		r.ManagedRuleGroupConfigs = expandManagedRuleGroupConfigs(v)
+	}
 
 	return r
+}
+
+func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGroupConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []*wafv2.ManagedRuleGroupConfig
+	for _, item := range tfList {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var r wafv2.ManagedRuleGroupConfig
+		if v, ok := m["aws_managed_rules_bot_rule_set"].([]interface{}); ok && len(v) > 0 {
+			r.AWSManagedRulesBotControlRuleSet = expandManagedRulesBotControlRuleSet(v)
+		}
+		if v, ok := m["login_path"].(string); ok && v != "" {
+			r.LoginPath = aws.String(v)
+		}
+		if v, ok := m["payload_type"].(string); ok && v != "" {
+			r.PayloadType = aws.String(v)
+		}
+		if v, ok := m["password_field"].([]interface{}); ok && len(v) > 0 {
+			r.PasswordField = expandPasswordField(v)
+		}
+		if v, ok := m["username_field"].([]interface{}); ok && len(v) > 0 {
+			r.UsernameField = expandUsernameField(v)
+		}
+
+		out = append(out, &r)
+	}
+
+	return out
+}
+
+func expandPasswordField(tfList []interface{}) *wafv2.PasswordField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.PasswordField{
+		Identifier: aws.String(m["identifier"].(string)),
+	}
+
+	return &out
+}
+
+func expandUsernameField(tfList []interface{}) *wafv2.UsernameField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.UsernameField{
+		Identifier: aws.String(m["identifier"].(string)),
+	}
+
+	return &out
+}
+
+func expandManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesBotControlRuleSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.AWSManagedRulesBotControlRuleSet{
+		InspectionLevel: aws.String(m["inspection_level"].(string)),
+	}
+
+	return &out
 }
 
 func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
@@ -1929,7 +2006,78 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 		tfMap["version"] = aws.StringValue(apiObject.Version)
 	}
 
+	if apiObject.ManagedRuleGroupConfigs != nil {
+		tfMap["managed_rule_group_configs"] = flattenManagedRuleGroupConfigs(apiObject.ManagedRuleGroupConfigs)
+	}
+
 	return []interface{}{tfMap}
+}
+
+func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interface{} {
+	if len(c) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+
+	for _, config := range c {
+		m := make(map[string]interface{})
+		if config.AWSManagedRulesBotControlRuleSet != nil {
+			m["aws_managed_rules_bot_control_rule_set"] = flattenManagedRulesBotControlRuleSet(config.AWSManagedRulesBotControlRuleSet)
+		}
+		if config.LoginPath != nil {
+			m["login_path"] = aws.StringValue(config.LoginPath)
+		}
+		if config.PayloadType != nil {
+			m["payload_type"] = aws.StringValue(config.PayloadType)
+		}
+		if config.PasswordField != nil {
+			m["password_field"] = flattenPasswordField(config.PasswordField)
+		}
+		if config.UsernameField != nil {
+			m["username_field"] = flattenUsernameField(config.UsernameField)
+		}
+
+		out = append(out, m)
+	}
+
+	return out
+}
+
+func flattenPasswordField(apiObject *wafv2.PasswordField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"identifier": aws.StringValue(apiObject.Identifier),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenUsernameField(apiObject *wafv2.UsernameField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"identifier": aws.StringValue(apiObject.Identifier),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenManagedRulesBotControlRuleSet(apiObject *wafv2.AWSManagedRulesBotControlRuleSet) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"inspection_level": aws.StringValue(apiObject.InspectionLevel),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} {

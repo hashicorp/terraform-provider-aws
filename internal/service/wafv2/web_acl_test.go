@@ -607,6 +607,79 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                                                          "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                          "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.login_path":                  "/login",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.1.payload_type":                "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.2.password_field.0.identifier": "/password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.3.username_field.0.identifier": "/username",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfigUpdate(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                                                          "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                          "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.login_path":                  "/app-login",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.1.payload_type":                "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.2.password_field.0.identifier": "/app-password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.3.username_field.0.identifier": "/app-username",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2789,6 +2862,134 @@ resource "aws_wafv2_web_acl" "test" {
       managed_rule_group_statement {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesATPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          login_path = "/login"
+        }
+        managed_rule_group_configs {
+          payload_type = "JSON"
+        }
+        managed_rule_group_configs {
+          password_field {
+            identifier = "/password"
+          }
+        }
+        managed_rule_group_configs {
+          username_field {
+            identifier = "/username"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfigUpdate(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesATPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          login_path = "/app-login"
+        }
+        managed_rule_group_configs {
+          payload_type = "JSON"
+        }
+        managed_rule_group_configs {
+          password_field {
+            identifier = "/app-password"
+          }
+        }
+        managed_rule_group_configs {
+          username_field {
+            identifier = "/app-username"
+          }
+        }
       }
     }
 

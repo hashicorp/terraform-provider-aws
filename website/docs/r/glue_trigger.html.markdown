@@ -109,7 +109,7 @@ The following arguments are supported:
 
 * `actions` – (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
 * `description` – (Optional) A description of the new trigger.
-* `enabled` – (Optional) Start the trigger. Defaults to `true`. Required to be `false` when trigger type is `EVENT`.
+* `enabled` – (Optional) Start the trigger. Defaults to `true`.
 * `name` – (Required) The name of the trigger.
 * `predicate` – (Optional) A predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. See [Predicate](#predicate) Below.
 * `schedule` – (Optional) A cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
