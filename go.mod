@@ -21,6 +21,7 @@ require (
 	github.com/pquerna/otp v1.3.0
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/tools v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -66,7 +67,6 @@ require (
 	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
-	golang.org/x/tools v0.5.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.32.0 // indirect
