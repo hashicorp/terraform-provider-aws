@@ -197,7 +197,7 @@ func testAccCheckNetworkInsightsAnalysisExists(n string) resource.TestCheckFunc 
 			return fmt.Errorf("No EC2 Network Insights Analysis ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err := tfec2.FindNetworkInsightsAnalysisByID(context.Background(), conn, rs.Primary.ID)
 
@@ -206,7 +206,7 @@ func testAccCheckNetworkInsightsAnalysisExists(n string) resource.TestCheckFunc 
 }
 
 func testAccCheckNetworkInsightsAnalysisDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_network_insights_analysis" {

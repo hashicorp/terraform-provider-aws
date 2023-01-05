@@ -232,7 +232,7 @@ func testAccCheckCertificateValidationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no ACM Certificate Validation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 		_, err := tfacm.FindCertificateValidationByARN(context.Background(), conn, rs.Primary.Attributes["certificate_arn"])
 

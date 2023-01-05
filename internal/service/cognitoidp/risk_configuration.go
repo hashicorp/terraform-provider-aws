@@ -271,7 +271,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 }
 
 func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId := d.Get("user_pool_id").(string)
 	id := userPoolId
@@ -308,7 +308,7 @@ func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	riskConfig, err := FindRiskConfigurationById(conn, d.Id())
 
@@ -347,7 +347,7 @@ func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRiskConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {

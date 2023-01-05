@@ -621,3 +621,69 @@ func TestStringToFrameworkWithTransform(t *testing.T) {
 		})
 	}
 }
+
+func TestStringValueToFramework(t *testing.T) {
+	t.Parallel()
+
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
+	type testCase struct {
+		input    custom
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    "TEST",
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    "",
+			expected: types.StringNull(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := StringValueToFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStringValueToFrameworkLegacy(t *testing.T) {
+	t.Parallel()
+
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
+	type testCase struct {
+		input    custom
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    "TEST",
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    "",
+			expected: types.StringValue(""),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := StringValueToFrameworkLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}

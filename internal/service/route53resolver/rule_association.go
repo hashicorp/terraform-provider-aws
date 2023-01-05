@@ -56,7 +56,7 @@ func ResourceRuleAssociation() *schema.Resource {
 }
 
 func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	input := &route53resolver.AssociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
@@ -83,7 +83,7 @@ func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	ruleAssociation, err := FindResolverRuleAssociationByID(ctx, conn, d.Id())
 
@@ -105,7 +105,7 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule Association: %s", d.Id())
 	_, err := conn.DisassociateResolverRuleWithContext(ctx, &route53resolver.DisassociateResolverRuleInput{

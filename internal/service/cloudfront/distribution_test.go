@@ -1385,7 +1385,7 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 }
 
 func testAccCheckDistributionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_distribution" {
@@ -1430,7 +1430,7 @@ func testAccCheckDistributionExists(resourceName string, distribution *cloudfron
 			return fmt.Errorf("Resource ID not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		input := &cloudfront.GetDistributionInput{
 			Id: aws.String(rs.Primary.ID),
@@ -1450,7 +1450,7 @@ func testAccCheckDistributionExists(resourceName string, distribution *cloudfron
 
 func testAccCheckDistributionExistsAPIOnly(distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		input := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,
@@ -1514,7 +1514,7 @@ func testAccCheckDistributionDisabled(distribution *cloudfront.Distribution) res
 // This requires the CloudFront Distribution to previously be disabled and fetches latest ETag automatically.
 func testAccCheckDistributionDisappears(distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,

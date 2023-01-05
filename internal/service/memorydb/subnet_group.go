@@ -20,10 +20,10 @@ import (
 
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSubnetGroupCreate,
-		ReadContext:   resourceSubnetGroupRead,
-		UpdateContext: resourceSubnetGroupUpdate,
-		DeleteContext: resourceSubnetGroupDelete,
+		CreateWithoutTimeout: resourceSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceSubnetGroupRead,
+		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -74,7 +74,7 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,7 +99,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateSubnetGroupInput{
@@ -128,7 +128,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -177,7 +177,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	log.Printf("[DEBUG] Deleting MemoryDB Subnet Group: (%s)", d.Id())
 	_, err := conn.DeleteSubnetGroupWithContext(ctx, &memorydb.DeleteSubnetGroupInput{

@@ -24,10 +24,10 @@ const (
 
 func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceReservedInstanceCreate,
-		ReadContext:   resourceReservedInstanceRead,
-		UpdateContext: resourceReservedInstanceUpdate,
-		DeleteContext: resourceReservedInstanceDelete,
+		CreateWithoutTimeout: resourceReservedInstanceCreate,
+		ReadWithoutTimeout:   resourceReservedInstanceRead,
+		UpdateWithoutTimeout: resourceReservedInstanceUpdate,
+		DeleteWithoutTimeout: resourceReservedInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -126,7 +126,7 @@ func ResourceReservedInstance() *schema.Resource {
 }
 
 func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -161,7 +161,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -214,7 +214,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")

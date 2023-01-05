@@ -109,7 +109,7 @@ func ResourceReplicationTask() *schema.Resource {
 }
 
 func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -164,7 +164,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -222,7 +222,7 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
 		input := &dms.ModifyReplicationTaskInput{
@@ -309,7 +309,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
 		if err := stopReplicationTask(d.Id(), conn); err != nil {

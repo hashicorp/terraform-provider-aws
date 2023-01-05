@@ -54,7 +54,7 @@ const (
 )
 
 func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	registryName := d.Get("registry_name").(string)
 	policy, err := structure.ExpandJsonFromString(d.Get("policy").(string))
@@ -81,7 +81,7 @@ func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	output, err := FindRegistryPolicyByName(ctx, conn, d.Id())
 
@@ -103,7 +103,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	policy, err := structure.ExpandJsonFromString(d.Get("policy").(string))
 
@@ -129,7 +129,7 @@ func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchemasConn
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry Policy (%s)", d.Id())
 	_, err := conn.DeleteResourcePolicyWithContext(ctx, &schemas.DeleteResourcePolicyInput{

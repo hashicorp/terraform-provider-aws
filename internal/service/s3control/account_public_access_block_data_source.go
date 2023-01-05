@@ -2,17 +2,18 @@ package s3control
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DataSourceAccountPublicAccessBlock() *schema.Resource {
+func init() {
+	_sp.registerSDKDataSourceFactory("aws_s3_account_public_access_block", dataSourceAccountPublicAccessBlock)
+}
+
+func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountPublicAccessBlockRead,
 
@@ -43,34 +44,24 @@ func DataSourceAccountPublicAccessBlock() *schema.Resource {
 }
 
 func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 
-	input := &s3control.GetPublicAccessBlockInput{
-		AccountId: aws.String(accountID),
-	}
-
-	log.Printf("[DEBUG] Reading Account access block: %s", input)
-
-	output, err := conn.GetPublicAccessBlock(input)
+	output, err := FindPublicAccessBlockByAccountID(ctx, conn, accountID)
 
 	if err != nil {
-		return diag.Errorf("error reading S3 Account Public Access Block: %s", err)
-	}
-
-	if output == nil || output.PublicAccessBlockConfiguration == nil {
-		return diag.Errorf("error reading S3 Account Public Access Block (%s): missing public access block configuration", accountID)
+		return diag.Errorf("reading S3 Account Public Access Block (%s): %s", accountID, err)
 	}
 
 	d.SetId(accountID)
-	d.Set("block_public_acls", output.PublicAccessBlockConfiguration.BlockPublicAcls)
-	d.Set("block_public_policy", output.PublicAccessBlockConfiguration.BlockPublicPolicy)
-	d.Set("ignore_public_acls", output.PublicAccessBlockConfiguration.IgnorePublicAcls)
-	d.Set("restrict_public_buckets", output.PublicAccessBlockConfiguration.RestrictPublicBuckets)
+	d.Set("block_public_acls", output.BlockPublicAcls)
+	d.Set("block_public_policy", output.BlockPublicPolicy)
+	d.Set("ignore_public_acls", output.IgnorePublicAcls)
+	d.Set("restrict_public_buckets", output.RestrictPublicBuckets)
 
 	return nil
 }

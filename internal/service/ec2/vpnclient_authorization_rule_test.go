@@ -222,7 +222,7 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T) {
 }
 
 func testAccCheckClientVPNAuthorizationRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_authorization_rule" {
@@ -268,7 +268,7 @@ func testAccCheckClientVPNAuthorizationRuleExists(name string, v *ec2.Authorizat
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
 

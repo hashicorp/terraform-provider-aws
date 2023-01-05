@@ -61,7 +61,7 @@ func testAccCheckDestinationPolicyExists(n string, v *string) resource.TestCheck
 			return fmt.Errorf("No CloudWatch Logs Destination Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 		output, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
 

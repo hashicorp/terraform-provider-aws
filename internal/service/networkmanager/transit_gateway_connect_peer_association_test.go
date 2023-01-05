@@ -102,7 +102,7 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 }
 
 func testAccCheckTransitGatewayConnectPeerAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_customer_gateway_association" {
@@ -142,7 +142,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationExists(n string) resource.T
 			return fmt.Errorf("No Network Manager Transit Gateway Connect Peer Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		globalNetworkID, connectPeerARN, err := tfnetworkmanager.TransitGatewayConnectPeerAssociationParseResourceID(rs.Primary.ID)
 

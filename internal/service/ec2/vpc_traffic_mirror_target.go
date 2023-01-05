@@ -79,7 +79,7 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 }
 
 func resourceTrafficMirrorTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -117,7 +117,7 @@ func resourceTrafficMirrorTargetCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceTrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -163,7 +163,7 @@ func resourceTrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceTrafficMirrorTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -177,7 +177,7 @@ func resourceTrafficMirrorTargetUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceTrafficMirrorTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Target: %s", d.Id())
 	_, err := conn.DeleteTrafficMirrorTarget(&ec2.DeleteTrafficMirrorTargetInput{

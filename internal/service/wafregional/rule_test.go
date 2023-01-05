@@ -259,7 +259,7 @@ func computeRulePredicate(dataId **string, negated bool, pType string, idx *int)
 
 func testAccCheckRuleDisappears(v *waf.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := tfwafregional.NewRetryer(conn, region)
@@ -307,7 +307,7 @@ func testAccCheckRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetRule(
 			&waf.GetRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
@@ -341,7 +341,7 @@ func testAccCheckRuleExists(n string, v *waf.Rule) resource.TestCheckFunc {
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetRule(&waf.GetRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})

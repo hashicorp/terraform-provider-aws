@@ -68,7 +68,7 @@ func TestAccRoute53ResolverFirewallConfig_disappears(t *testing.T) {
 }
 
 func testAccCheckFirewallConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_firewall_config" {
@@ -106,7 +106,7 @@ func testAccCheckFirewallConfigExists(n string, v *route53resolver.FirewallConfi
 			return fmt.Errorf("No Route53 Resolver Firewall Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 		output, err := tfroute53resolver.FindFirewallConfigByID(context.Background(), conn, rs.Primary.ID)
 

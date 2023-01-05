@@ -477,7 +477,7 @@ func testAccCheckContainerServiceDeploymentVersionExists(resourceName string) re
 			return fmt.Errorf("no Lightsail Container Service Deployment Version ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		serviceName, version, err := tflightsail.ContainerServiceDeploymentVersionParseResourceID(rs.Primary.ID)
 		if err != nil {

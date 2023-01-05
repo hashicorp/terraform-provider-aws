@@ -69,7 +69,7 @@ func ResourceXSSMatchSet() *schema.Resource {
 }
 
 func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get("name").(string))
 
@@ -99,7 +99,7 @@ func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
@@ -133,7 +133,7 @@ func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChange("xss_match_tuples") {
 		o, n := d.GetChange("xss_match_tuples")
@@ -149,7 +149,7 @@ func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldTuples := d.Get("xss_match_tuples").(*schema.Set).List()
 	if len(oldTuples) > 0 {

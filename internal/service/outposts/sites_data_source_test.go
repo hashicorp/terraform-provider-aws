@@ -46,7 +46,7 @@ func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckSites(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListSitesInput{}
 

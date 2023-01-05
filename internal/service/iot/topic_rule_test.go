@@ -1538,7 +1538,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 }
 
 func testAccCheckTopicRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_topic_rule" {
@@ -1572,7 +1572,7 @@ func testAccCheckTopicRuleExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No IoT Topic Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		_, err := tfiot.FindTopicRuleByName(conn, rs.Primary.ID)
 

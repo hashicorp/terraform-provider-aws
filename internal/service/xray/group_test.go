@@ -175,7 +175,7 @@ func testAccCheckGroupExists(n string, Group *xray.Group) resource.TestCheckFunc
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Group ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
 		input := &xray.GetGroupInput{
 			GroupARN: aws.String(rs.Primary.ID),
@@ -199,7 +199,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
 		input := &xray.GetGroupInput{
 			GroupARN: aws.String(rs.Primary.ID),

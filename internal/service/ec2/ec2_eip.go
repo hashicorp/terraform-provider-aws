@@ -127,7 +127,7 @@ func ResourceEIP() *schema.Resource {
 }
 
 func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -192,7 +192,7 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -258,7 +258,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChanges("associate_with_private_ip", "instance", "network_interface") {
 		o, n := d.GetChange("instance")
@@ -296,7 +296,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// If we are attached to an instance or interface, detach first.
 	if associationID := d.Get("association_id").(string); associationID != "" || d.Get("instance").(string) != "" {

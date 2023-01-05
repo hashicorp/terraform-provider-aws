@@ -104,7 +104,7 @@ func ResourceServerCertificate() *schema.Resource {
 }
 
 func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -172,7 +172,7 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -225,7 +225,7 @@ func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -247,7 +247,7 @@ func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	log.Printf("[INFO] Deleting IAM Server Certificate: %s", d.Id())
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
@@ -257,7 +257,7 @@ func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == iam.ErrCodeDeleteConflictException && strings.Contains(awsErr.Message(), "currently in use by arn") {
-					currentlyInUseBy(awsErr.Message(), meta.(*conns.AWSClient).ELBConn)
+					currentlyInUseBy(awsErr.Message(), meta.(*conns.AWSClient).ELBConn())
 					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
 					return resource.RetryableError(err)
 				}

@@ -54,7 +54,7 @@ func ResourceClientCertificate() *schema.Resource {
 }
 
 func resourceClientCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -77,7 +77,7 @@ func resourceClientCertificateCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -122,7 +122,7 @@ func resourceClientCertificateRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClientCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	operations := make([]*apigateway.PatchOperation, 0)
 	if d.HasChange("description") {
@@ -155,7 +155,7 @@ func resourceClientCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceClientCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Client Certificate: %s", d.Id())
 	input := apigateway.DeleteClientCertificateInput{
 		ClientCertificateId: aws.String(d.Id()),

@@ -90,7 +90,7 @@ func TestAccVPCEndpointSubnetAssociation_multiple(t *testing.T) {
 }
 
 func testAccCheckVPCEndpointSubnetAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_endpoint_subnet_association" {
@@ -124,7 +124,7 @@ func testAccCheckVPCEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		out, err := tfec2.FindVPCEndpointByID(conn, rs.Primary.Attributes["vpc_endpoint_id"])
 

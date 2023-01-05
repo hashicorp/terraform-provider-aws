@@ -93,7 +93,7 @@ func ResourceEventSubscription() *schema.Resource {
 }
 
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -134,7 +134,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -181,7 +181,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
 		input := &docdb.ModifyEventSubscriptionInput{
@@ -270,7 +270,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	log.Printf("[DEBUG] Deleting DocDB Event Subscription: %s", d.Id())
 	_, err := conn.DeleteEventSubscription(&docdb.DeleteEventSubscriptionInput{

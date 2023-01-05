@@ -53,7 +53,7 @@ func ResourceTemplate() *schema.Resource {
 	}
 }
 func resourceTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	templateName := d.Get("name").(string)
 
@@ -88,7 +88,7 @@ func resourceTemplateCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 	input := ses.GetTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}
@@ -122,7 +122,7 @@ func resourceTemplateRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	templateName := d.Id()
 
@@ -156,7 +156,7 @@ func resourceTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 	input := ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}

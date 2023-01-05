@@ -53,7 +53,7 @@ func ResourceConditionalForwarder() *schema.Resource {
 }
 
 func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
@@ -76,7 +76,7 @@ func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
@@ -113,7 +113,7 @@ func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
@@ -136,7 +136,7 @@ func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {

@@ -96,7 +96,7 @@ func ResourceNamespace() *schema.Resource {
 }
 
 func resourceNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -146,7 +146,7 @@ func resourceNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -198,7 +198,7 @@ func resourceNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshiftserverless.UpdateNamespaceInput{
@@ -249,7 +249,7 @@ func resourceNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(10*time.Minute,

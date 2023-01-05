@@ -57,7 +57,7 @@ func ResourceClusterIAMRoles() *schema.Resource {
 }
 
 func resourceClusterIAMRolesCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	clusterID := d.Get("cluster_identifier").(string)
 	input := &redshift.ModifyClusterIamRolesInput{
@@ -89,7 +89,7 @@ func resourceClusterIAMRolesCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterIAMRolesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	rsc, err := FindClusterByID(conn, d.Id())
 
@@ -117,7 +117,7 @@ func resourceClusterIAMRolesRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceClusterIAMRolesUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	o, n := d.GetChange("iam_role_arns")
 	if o == nil {
@@ -153,7 +153,7 @@ func resourceClusterIAMRolesUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterIAMRolesDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	input := &redshift.ModifyClusterIamRolesInput{
 		ClusterIdentifier: aws.String(d.Id()),

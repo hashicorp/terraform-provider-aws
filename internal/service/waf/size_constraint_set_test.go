@@ -201,7 +201,7 @@ func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 
 func testAccCheckSizeConstraintSetDisappears(v *waf.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -251,7 +251,7 @@ func testAccCheckSizeConstraintSetExists(n string, v *waf.SizeConstraintSet) res
 			return fmt.Errorf("No WAF SizeConstraintSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetSizeConstraintSet(&waf.GetSizeConstraintSetInput{
 			SizeConstraintSetId: aws.String(rs.Primary.ID),
 		})
@@ -275,7 +275,7 @@ func testAccCheckSizeConstraintSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetSizeConstraintSet(
 			&waf.GetSizeConstraintSetInput{
 				SizeConstraintSetId: aws.String(rs.Primary.ID),

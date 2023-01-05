@@ -294,7 +294,7 @@ const (
 )
 
 func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -340,7 +340,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -406,7 +406,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -441,7 +441,7 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	log.Printf("[INFO] Deleting FSx FileCache %s", d.Id())
 
 	_, err := conn.DeleteFileCacheWithContext(ctx, &fsx.DeleteFileCacheInput{

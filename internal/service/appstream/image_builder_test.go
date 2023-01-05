@@ -203,7 +203,7 @@ func testAccCheckImageBuilderExists(resourceName string) resource.TestCheckFunc 
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 		imageBuilder, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
 
@@ -220,7 +220,7 @@ func testAccCheckImageBuilderExists(resourceName string) resource.TestCheckFunc 
 }
 
 func testAccCheckImageBuilderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_image_builder" {

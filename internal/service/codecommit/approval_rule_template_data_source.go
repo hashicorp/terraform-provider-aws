@@ -54,7 +54,7 @@ func DataSourceApprovalRuleTemplate() *schema.Resource {
 }
 
 func dataSourceApprovalRuleTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	templateName := d.Get("name").(string)
 	input := &codecommit.GetApprovalRuleTemplateInput{

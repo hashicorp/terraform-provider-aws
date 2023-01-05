@@ -69,7 +69,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 }
 
 func resourceHostedConfigurationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID := d.Get("application_id").(string)
 	profileID := d.Get("configuration_profile_id").(string)
@@ -97,7 +97,7 @@ func resourceHostedConfigurationVersionCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 
@@ -148,7 +148,7 @@ func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceHostedConfigurationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 

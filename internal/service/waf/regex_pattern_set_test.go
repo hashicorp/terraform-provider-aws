@@ -159,7 +159,7 @@ func testAccRegexPatternSet_disappears(t *testing.T) {
 
 func testAccCheckRegexPatternSetDisappears(set *waf.RegexPatternSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -208,7 +208,7 @@ func testAccCheckRegexPatternSetExists(n string, v *waf.RegexPatternSet) resourc
 			return fmt.Errorf("No WAF Regex Pattern Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetRegexPatternSet(&waf.GetRegexPatternSetInput{
 			RegexPatternSetId: aws.String(rs.Primary.ID),
 		})
@@ -232,7 +232,7 @@ func testAccCheckRegexPatternSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetRegexPatternSet(&waf.GetRegexPatternSetInput{
 			RegexPatternSetId: aws.String(rs.Primary.ID),
 		})

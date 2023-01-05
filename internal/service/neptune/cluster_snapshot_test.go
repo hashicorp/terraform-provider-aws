@@ -55,7 +55,7 @@ func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 }
 
 func testAccCheckClusterSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster_snapshot" {
@@ -93,7 +93,7 @@ func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *n
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 		input := &neptune.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),

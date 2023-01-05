@@ -2107,7 +2107,7 @@ func testAccCheckRouteExists(n string, v *ec2.Route) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var route *ec2.Route
 		var err error
@@ -2135,7 +2135,7 @@ func testAccCheckRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {

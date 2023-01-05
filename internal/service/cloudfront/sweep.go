@@ -94,7 +94,7 @@ func sweepCachePolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListCachePoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
@@ -153,7 +153,7 @@ func sweepDistributions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListDistributionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -210,7 +210,7 @@ func sweepFunctions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListFunctionsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -269,7 +269,7 @@ func sweepKeyGroup(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	var sweeperErrs *multierror.Error
 
 	input := &cloudfront.ListKeyGroupsInput{}
@@ -328,7 +328,7 @@ func sweepMonitoringSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	var sweeperErrs *multierror.Error
 
 	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
@@ -376,7 +376,7 @@ func sweepRealtimeLogsConfig(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListRealtimeLogConfigsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -423,7 +423,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListFieldLevelEncryptionConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -480,7 +480,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListFieldLevelEncryptionProfilesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -537,7 +537,7 @@ func sweepOriginRequestPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListOriginRequestPoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
@@ -596,7 +596,7 @@ func sweepResponseHeadersPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListResponseHeadersPoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
@@ -655,7 +655,7 @@ func sweepOriginAccessControls(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudFrontConn
+	conn := client.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.ListOriginAccessControlsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

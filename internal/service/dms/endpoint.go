@@ -461,7 +461,7 @@ func ResourceEndpoint() *schema.Resource {
 						"cdc_min_file_size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      32,
+							Default:      32000,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"cdc_path": {
@@ -559,6 +559,12 @@ func ResourceEndpoint() *schema.Resource {
 							Default:  "",
 						},
 						"ignore_headers_row": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntInSlice([]int{0, 1}),
+							Description:  "This setting has no effect, is deprecated, and will be removed in a future version",
+						},
+						"ignore_header_rows": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      0,
@@ -677,7 +683,7 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -910,7 +916,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -953,7 +959,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -1279,7 +1285,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpoint(&dms.DeleteEndpointInput{

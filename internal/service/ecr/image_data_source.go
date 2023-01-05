@@ -52,7 +52,7 @@ func DataSourceImage() *schema.Resource {
 }
 
 func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	params := &ecr.DescribeImagesInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),

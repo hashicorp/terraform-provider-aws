@@ -64,7 +64,7 @@ func ResourceResourceShare() *schema.Resource {
 }
 
 func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,7 +99,7 @@ func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -156,7 +156,7 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	if d.HasChanges("name", "allow_external_principals") {
 		input := &ram.UpdateResourceShareInput{
@@ -185,7 +185,7 @@ func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	log.Printf("[DEBUG] Deleting RAM Resource Share: %s", d.Id())
 	_, err := conn.DeleteResourceShare(&ram.DeleteResourceShareInput{

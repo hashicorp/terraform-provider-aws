@@ -368,7 +368,7 @@ func TestAccWAFIPSet_ipv6(t *testing.T) {
 
 func testAccCheckIPSetDisappears(v *waf.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -414,7 +414,7 @@ func testAccCheckIPSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetIPSet(
 			&waf.GetIPSetInput{
 				IPSetId: aws.String(rs.Primary.ID),
@@ -448,7 +448,7 @@ func testAccCheckIPSetExists(n string, v *waf.IPSet) resource.TestCheckFunc {
 			return fmt.Errorf("No WAF IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetIPSet(&waf.GetIPSetInput{
 			IPSetId: aws.String(rs.Primary.ID),
 		})

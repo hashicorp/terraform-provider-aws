@@ -102,7 +102,7 @@ func DataSourceWorkspace() *schema.Resource {
 }
 
 func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)

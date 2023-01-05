@@ -27,7 +27,7 @@ func sweepBrokers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &mq.ListBrokersInput{MaxResults: aws.Int64(100)}
-	conn := client.(*conns.AWSClient).MQConn
+	conn := client.(*conns.AWSClient).MQConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListBrokersPages(input, func(page *mq.ListBrokersResponse, lastPage bool) bool {

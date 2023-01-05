@@ -47,7 +47,7 @@ func ResourceRestAPIPolicy() *schema.Resource {
 }
 
 func resourceRestAPIPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Setting API Gateway REST API Policy: %s", restApiId)
@@ -83,7 +83,7 @@ func resourceRestAPIPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRestAPIPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway REST API Policy %s", d.Id())
 
@@ -123,7 +123,7 @@ func resourceRestAPIPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRestAPIPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Deleting API Gateway REST API Policy: %s", restApiId)

@@ -384,7 +384,7 @@ func testAccFileCache_tags(t *testing.T) {
 // helper functions
 
 func testAccCheckFileCacheDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -419,7 +419,7 @@ func testAccCheckFileCacheExists(name string, filecache *fsx.DescribeFileCachesO
 			return create.Error(names.FSx, create.ErrActionCheckingExistence, tffsx.ResNameFileCache, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 		ctx := context.Background()
 
 		resp, err := conn.DescribeFileCachesWithContext(ctx, &fsx.DescribeFileCachesInput{

@@ -85,7 +85,7 @@ func ResourceCodeSigningConfig() *schema.Resource {
 }
 
 func resourceCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Creating Lambda code signing config")
 
@@ -116,7 +116,7 @@ func resourceCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	configOutput, err := conn.GetCodeSigningConfig(&lambda.GetCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
@@ -165,7 +165,7 @@ func resourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	configInput := &lambda.UpdateCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
@@ -202,7 +202,7 @@ func resourceCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceCodeSigningConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	_, err := conn.DeleteCodeSigningConfig(&lambda.DeleteCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),

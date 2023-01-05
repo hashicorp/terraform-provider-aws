@@ -2590,7 +2590,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 
 					id := aws.StringValue(group.GroupId)
 
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 					match, err := tfec2.FindSecurityGroupByID(context.Background(), conn, id)
 					if tfresource.NotFound(err) {
@@ -2803,7 +2803,7 @@ func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckF
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		// cycle from primary to secondary
 		perm1 := cycleIPPermForGroup(aws.StringValue(secondary.GroupId))
@@ -2843,7 +2843,7 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 		for _, sg := range []*ec2.SecurityGroup{primary, secondary} {
 			var err error
 			if sg.IpPermissions != nil {
@@ -2873,7 +2873,7 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 }
 
 func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_security_group" {
@@ -2907,7 +2907,7 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 			return fmt.Errorf("No VPC Security Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindSecurityGroupByID(context.Background(), conn, rs.Primary.ID)
 
@@ -2951,7 +2951,7 @@ func testAccCheckSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngres
 }
 
 func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressCount int) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	group, err := tfec2.FindSecurityGroupByID(context.Background(), conn, id)
 	if tfresource.NotFound(err) {

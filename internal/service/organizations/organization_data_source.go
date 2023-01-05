@@ -143,7 +143,7 @@ func DataSourceOrganization() *schema.Resource {
 }
 
 func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 	if err != nil {

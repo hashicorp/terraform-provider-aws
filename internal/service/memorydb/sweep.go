@@ -67,7 +67,7 @@ func sweepACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeACLsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -116,7 +116,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -159,7 +159,7 @@ func sweepParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -208,7 +208,7 @@ func sweepSnapshots(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -251,7 +251,7 @@ func sweepSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -300,7 +300,7 @@ func sweepUsers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn
+	conn := client.(*conns.AWSClient).MemoryDBConn()
 	input := &memorydb.DescribeUsersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

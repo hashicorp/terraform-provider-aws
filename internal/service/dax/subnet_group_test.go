@@ -51,7 +51,7 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 }
 
 func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_subnet_group" {
@@ -78,7 +78,7 @@ func testAccCheckSubnetGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 		_, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},

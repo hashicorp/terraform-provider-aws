@@ -196,7 +196,7 @@ func TestAccSageMakerImage_disappears(t *testing.T) {
 }
 
 func testAccCheckImageDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_image" {
@@ -232,7 +232,7 @@ func testAccCheckImageExists(n string, image *sagemaker.DescribeImageOutput) res
 			return fmt.Errorf("No sagmaker Image ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		resp, err := tfsagemaker.FindImageByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

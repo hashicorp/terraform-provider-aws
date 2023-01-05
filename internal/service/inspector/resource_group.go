@@ -32,7 +32,7 @@ func ResourceResourceGroup() *schema.Resource {
 }
 
 func resourceResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	req := &inspector.CreateResourceGroupInput{
 		ResourceGroupTags: expandResourceGroupTags(d.Get("tags").(map[string]interface{})),
@@ -50,7 +50,7 @@ func resourceResourceGroupCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	resp, err := conn.DescribeResourceGroups(&inspector.DescribeResourceGroupsInput{
 		ResourceGroupArns: aws.StringSlice([]string{d.Id()}),

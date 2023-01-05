@@ -52,7 +52,7 @@ func ResourceEnvironmentMembership() *schema.Resource {
 }
 
 func resourceEnvironmentMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 
 	envId := d.Get("environment_id").(string)
 	userArn := d.Get("user_arn").(string)
@@ -74,7 +74,7 @@ func resourceEnvironmentMembershipCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceEnvironmentMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 
 	envId, userArn, err := DecodeEnviornmentMemberId(d.Id())
 	if err != nil {
@@ -102,7 +102,7 @@ func resourceEnvironmentMembershipRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceEnvironmentMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 
 	input := cloud9.UpdateEnvironmentMembershipInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
@@ -121,7 +121,7 @@ func resourceEnvironmentMembershipUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceEnvironmentMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 
 	_, err := conn.DeleteEnvironmentMembership(&cloud9.DeleteEnvironmentMembershipInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),

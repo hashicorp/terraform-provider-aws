@@ -34,7 +34,7 @@ func DataSourceUserPools() *schema.Resource {
 }
 
 func dataSourceUserPoolsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	output, err := findUserPoolDescriptionTypes(conn)
 

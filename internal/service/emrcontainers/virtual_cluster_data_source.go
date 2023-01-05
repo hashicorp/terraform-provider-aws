@@ -77,7 +77,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 }
 
 func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("virtual_cluster_id").(string)

@@ -90,7 +90,7 @@ func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) 
 }
 
 func testAccOrderableClusterPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{
 		MaxRecords: aws.Int64(20),

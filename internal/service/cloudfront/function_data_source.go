@@ -66,7 +66,7 @@ func DataSourceFunction() *schema.Resource {
 }
 
 func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	stage := d.Get("stage").(string)

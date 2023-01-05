@@ -103,7 +103,7 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -133,7 +133,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -197,7 +197,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		catalogID, connectionName, err := DecodeConnectionID(d.Id())
@@ -229,7 +229,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {

@@ -426,7 +426,7 @@ const (
 )
 
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -504,7 +504,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 
@@ -560,7 +560,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	in := &scheduler.UpdateScheduleInput{
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
@@ -610,7 +610,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 

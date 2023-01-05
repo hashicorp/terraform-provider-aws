@@ -324,7 +324,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 }
 
 func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	input := &lambda.CreateEventSourceMappingInput{
@@ -468,7 +468,7 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(conn, d.Id())
 
@@ -563,7 +563,7 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Updating Lambda Event Source Mapping: %s", d.Id())
 
@@ -662,7 +662,7 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
 

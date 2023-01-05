@@ -71,7 +71,7 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 }
 
 func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
 	policyName := tfMap["name"].(string)
@@ -105,7 +105,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 }
 
 func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 
@@ -135,7 +135,7 @@ func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta in
 }
 
 func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 

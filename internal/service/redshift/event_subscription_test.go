@@ -219,7 +219,7 @@ func testAccCheckEventSubscriptionExists(n string, v *redshift.EventSubscription
 			return fmt.Errorf("No Redshift Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		out, err := tfredshift.FindEventSubscriptionByName(conn, rs.Primary.ID)
 
@@ -234,7 +234,7 @@ func testAccCheckEventSubscriptionExists(n string, v *redshift.EventSubscription
 }
 
 func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_event_subscription" {

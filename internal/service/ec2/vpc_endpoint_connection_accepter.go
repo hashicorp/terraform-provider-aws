@@ -43,7 +43,7 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 }
 
 func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
@@ -72,7 +72,7 @@ func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta in
 }
 
 func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 
@@ -100,7 +100,7 @@ func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta inte
 }
 
 func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 

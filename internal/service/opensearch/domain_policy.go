@@ -47,7 +47,7 @@ func ResourceDomainPolicy() *schema.Resource {
 }
 
 func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 
@@ -75,7 +75,7 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 	domainName := d.Get("domain_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
@@ -102,7 +102,7 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+	conn := meta.(*conns.AWSClient).OpenSearchConn()
 
 	_, err := conn.UpdateDomainConfig(&opensearchservice.UpdateDomainConfigInput{
 		DomainName:     aws.String(d.Get("domain_name").(string)),

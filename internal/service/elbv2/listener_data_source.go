@@ -271,7 +271,7 @@ func DataSourceListener() *schema.Resource {
 }
 
 func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &elbv2.DescribeListenersInput{}

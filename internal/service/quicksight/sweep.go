@@ -30,7 +30,7 @@ func sweepsDataSource(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).QuickSightConn
+	conn := client.(*conns.AWSClient).QuickSightConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

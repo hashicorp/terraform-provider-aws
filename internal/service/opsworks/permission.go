@@ -62,7 +62,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
@@ -108,7 +108,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),

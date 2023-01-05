@@ -109,7 +109,7 @@ func ResourceGatewayAssociation() *schema.Resource {
 }
 
 func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	var associationID string
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
@@ -169,7 +169,7 @@ func resourceGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceGatewayAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
@@ -200,7 +200,7 @@ func resourceGatewayAssociationRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 	input := &directconnect.UpdateDirectConnectGatewayAssociationInput{
@@ -233,7 +233,7 @@ func resourceGatewayAssociationUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	associationID := d.Get("dx_gateway_association_id").(string)
 
@@ -258,7 +258,7 @@ func resourceGatewayAssociationDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceGatewayAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	parts := strings.Split(d.Id(), "/")
 

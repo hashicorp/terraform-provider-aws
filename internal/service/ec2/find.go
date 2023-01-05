@@ -869,8 +869,22 @@ func FindHost(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	return host, nil
 }
 
-func FindImage(conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error) {
-	output, err := conn.DescribeImages(input)
+func FindImages(conn *ec2.EC2, input *ec2.DescribeImagesInput) ([]*ec2.Image, error) {
+	var output []*ec2.Image
+
+	err := conn.DescribeImagesPages(input, func(page *ec2.DescribeImagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Images {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound) {
 		return nil, &resource.NotFoundError{
@@ -883,15 +897,25 @@ func FindImage(conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error
 		return nil, err
 	}
 
-	if output == nil || len(output.Images) == 0 || output.Images[0] == nil {
+	return output, nil
+}
+
+func FindImage(conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error) {
+	output, err := FindImages(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.Images); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.Images[0], nil
+	return output[0], nil
 }
 
 func FindImageByID(conn *ec2.EC2, id string) (*ec2.Image, error) {
@@ -6514,4 +6538,43 @@ func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, 
 	}
 
 	return nil, &resource.NotFoundError{}
+}
+
+func FindInstanceStateById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
+	in := &ec2.DescribeInstanceStatusInput{
+		InstanceIds:         aws.StringSlice([]string{id}),
+		IncludeAllInstances: aws.Bool(true),
+	}
+
+	out, err := conn.DescribeInstanceStatusWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.InstanceStatuses) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	instanceState := out.InstanceStatuses[0].InstanceState
+
+	if instanceState == nil || aws.StringValue(instanceState.Name) == ec2.InstanceStateNameTerminated {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(out.InstanceStatuses[0].InstanceId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: in,
+		}
+	}
+
+	return instanceState, nil
 }

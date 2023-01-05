@@ -736,6 +736,9 @@ service/nimble:
 service/opensearch:
   - 'internal/service/opensearch/**/*'
   - 'website/**/opensearch_*'
+service/opensearchserverless:
+  - 'internal/service/opensearchserverless/**/*'
+  - 'website/**/opensearchserverless_*'
 service/opsworks:
   - 'internal/service/opsworks/**/*'
   - 'website/**/opsworks_*'
@@ -772,6 +775,9 @@ service/pinpointemail:
 service/pinpointsmsvoice:
   - 'internal/service/pinpointsmsvoice/**/*'
   - 'website/**/pinpointsmsvoice_*'
+service/pipes:
+  - 'internal/service/pipes/**/*'
+  - 'website/**/pipes_*'
 service/polly:
   - 'internal/service/polly/**/*'
   - 'website/**/polly_*'

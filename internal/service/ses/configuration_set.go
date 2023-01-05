@@ -84,7 +84,7 @@ func ResourceConfigurationSet() *schema.Resource {
 }
 
 func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configurationSetName := d.Get("name").(string)
 
@@ -153,7 +153,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
@@ -204,7 +204,7 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	if d.HasChange("delivery_options") {
 		input := &ses.PutConfigurationSetDeliveryOptionsInput{
@@ -258,7 +258,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceConfigurationSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())
 	input := &ses.DeleteConfigurationSetInput{

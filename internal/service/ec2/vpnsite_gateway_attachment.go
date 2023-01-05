@@ -34,7 +34,7 @@ func ResourceVPNGatewayAttachment() *schema.Resource {
 }
 
 func resourceVPNGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcID := d.Get("vpc_id").(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
@@ -62,7 +62,7 @@ func resourceVPNGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceVPNGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcID := d.Get("vpc_id").(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
@@ -83,7 +83,7 @@ func resourceVPNGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceVPNGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcID := d.Get("vpc_id").(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)

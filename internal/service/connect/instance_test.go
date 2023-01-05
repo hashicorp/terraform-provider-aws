@@ -140,7 +140,7 @@ func testAccCheckInstanceExists(resourceName string, instance *connect.DescribeI
 			return fmt.Errorf("Connect instance ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		input := &connect.DescribeInstanceInput{
 			InstanceId: aws.String(rs.Primary.ID),
@@ -166,7 +166,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID := rs.Primary.ID
 

@@ -148,7 +148,7 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 }
 
 func testAccCheckInternetGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_internet_gateway" {
@@ -182,7 +182,7 @@ func testAccCheckInternetGatewayExists(n string, v *ec2.InternetGateway) resourc
 			return fmt.Errorf("No EC2 Internet Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindInternetGatewayByID(conn, rs.Primary.ID)
 

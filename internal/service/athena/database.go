@@ -101,7 +101,7 @@ func ResourceDatabase() *schema.Resource {
 }
 
 func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	name := d.Get("name").(string)
 	var queryString bytes.Buffer
@@ -148,7 +148,7 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.GetDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -176,7 +176,7 @@ func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
 	if d.Get("force_destroy").(bool) {

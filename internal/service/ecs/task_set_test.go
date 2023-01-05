@@ -482,7 +482,7 @@ resource "aws_ecs_task_set" "test" {
 
 func testAccTaskSetConfig_capacityProviderStrategy(rName string, weight, base int) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderBaseConfig(rName),
+		testAccCapacityProviderConfig_base(rName),
 		testAccTaskSetBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
@@ -989,7 +989,7 @@ func testAccCheckTaskSetExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
 
@@ -1018,7 +1018,7 @@ func testAccCheckTaskSetExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckTaskSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_task_set" {

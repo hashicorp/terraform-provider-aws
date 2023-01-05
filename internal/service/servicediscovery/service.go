@@ -141,7 +141,7 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -188,7 +188,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -252,7 +252,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicediscovery.UpdateServiceInput{
@@ -295,7 +295,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 
 	if d.Get("force_destroy").(bool) {
 		input := &servicediscovery.ListInstancesInput{

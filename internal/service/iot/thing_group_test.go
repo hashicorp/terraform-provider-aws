@@ -211,7 +211,7 @@ func testAccCheckThingGroupExists(n string, v *iot.DescribeThingGroupOutput) res
 			return fmt.Errorf("No IoT Thing Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		output, err := tfiot.FindThingGroupByName(conn, rs.Primary.ID)
 
@@ -226,7 +226,7 @@ func testAccCheckThingGroupExists(n string, v *iot.DescribeThingGroupOutput) res
 }
 
 func testAccCheckThingGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing_group" {

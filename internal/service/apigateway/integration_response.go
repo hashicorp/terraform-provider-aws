@@ -89,7 +89,7 @@ func ResourceIntegrationResponse() *schema.Resource {
 }
 
 func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	templates := make(map[string]string)
 	for k, v := range d.Get("response_templates").(map[string]interface{}) {
@@ -133,7 +133,7 @@ func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Integration Response %s", d.Id())
 	integrationResponse, err := conn.GetIntegrationResponse(&apigateway.GetIntegrationResponseInput{
@@ -174,7 +174,7 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
 
 	_, err := conn.DeleteIntegrationResponse(&apigateway.DeleteIntegrationResponseInput{

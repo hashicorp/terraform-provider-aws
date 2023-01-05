@@ -204,7 +204,7 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 }
 
 func testAccCheckTableReplicaDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
 	for _, rs := range s.RootModule().Resources {
@@ -270,7 +270,7 @@ func testAccCheckTableReplicaExists(n string) resource.TestCheckFunc {
 			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
 		tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
 		if err != nil {

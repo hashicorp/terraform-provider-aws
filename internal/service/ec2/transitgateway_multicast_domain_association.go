@@ -48,7 +48,7 @@ func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	attachmentID := d.Get("transit_gateway_attachment_id").(string)
@@ -77,7 +77,7 @@ func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context,
 }
 
 func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	multicastDomainID, attachmentID, subnetID, err := TransitGatewayMulticastDomainAssociationParseResourceID(d.Id())
 
@@ -105,7 +105,7 @@ func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d
 }
 
 func resourceTransitGatewayMulticastDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	multicastDomainID, attachmentID, subnetID, err := TransitGatewayMulticastDomainAssociationParseResourceID(d.Id())
 

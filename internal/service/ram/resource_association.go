@@ -42,7 +42,7 @@ func ResourceResourceAssociation() *schema.Resource {
 }
 
 func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 	resourceARN := d.Get("resource_arn").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 
@@ -68,7 +68,7 @@ func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
@@ -98,7 +98,7 @@ func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {

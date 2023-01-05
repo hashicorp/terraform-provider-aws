@@ -102,7 +102,7 @@ func ResourceRule() *schema.Resource {
 }
 
 func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -153,7 +153,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -226,7 +226,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	_, ruleName, err := RuleParseResourceID(d.Id())
 
@@ -283,7 +283,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 

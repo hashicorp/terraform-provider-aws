@@ -66,7 +66,7 @@ func ResourceOpenzfsSnapshot() *schema.Resource {
 }
 
 func resourceOpenzfsSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -96,7 +96,7 @@ func resourceOpenzfsSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceOpenzfsSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -140,7 +140,7 @@ func resourceOpenzfsSnapshotRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceOpenzfsSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -175,7 +175,7 @@ func resourceOpenzfsSnapshotUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceOpenzfsSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	request := &fsx.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),

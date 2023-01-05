@@ -88,7 +88,7 @@ func ResourceScript() *schema.Resource {
 }
 
 func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -143,7 +143,7 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScriptRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -189,7 +189,7 @@ func resourceScriptRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		log.Printf("[INFO] Updating GameLift Script: %s", d.Id())
@@ -242,7 +242,7 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScriptDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Deleting GameLift Script: %s", d.Id())
 	_, err := conn.DeleteScript(&gamelift.DeleteScriptInput{

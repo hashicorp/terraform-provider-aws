@@ -614,7 +614,7 @@ func testAccUserPoolClientImportStateIDFunc(resourceName string) resource.Import
 			return "", errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
 		clientId := rs.Primary.ID
 
@@ -629,7 +629,7 @@ func testAccUserPoolClientImportStateIDFunc(resourceName string) resource.Import
 }
 
 func testAccCheckUserPoolClientDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_client" {
@@ -660,7 +660,7 @@ func testAccCheckUserPoolClientExists(name string, client *cognitoidentityprovid
 			return errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		resp, err := tfcognitoidp.FindCognitoUserPoolClient(conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
 		if err != nil {
@@ -908,7 +908,7 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 
 func testAccPreCheckPinpointApp(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	input := &pinpoint.GetAppsInput{}
 

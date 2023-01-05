@@ -79,7 +79,7 @@ func TestAccRedshiftServerlessSnapshot_disappears(t *testing.T) {
 }
 
 func testAccCheckSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshiftserverless_snapshot" {
@@ -112,7 +112,7 @@ func testAccCheckSnapshotExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Redshift Serverless Snapshot is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
 		_, err := tfredshiftserverless.FindSnapshotByName(conn, rs.Primary.ID)
 

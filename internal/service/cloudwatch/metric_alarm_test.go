@@ -559,7 +559,7 @@ func testAccCheckMetricAlarmExists(n string, alarm *cloudwatch.MetricAlarm) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 		resp, err := tfcloudwatch.FindMetricAlarmByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -574,7 +574,7 @@ func testAccCheckMetricAlarmExists(n string, alarm *cloudwatch.MetricAlarm) reso
 }
 
 func testAccCheckMetricAlarmDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_metric_alarm" {

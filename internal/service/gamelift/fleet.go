@@ -235,7 +235,7 @@ func ResourceFleet() *schema.Resource {
 }
 
 func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -319,7 +319,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -397,7 +397,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Updating GameLift Fleet: %s", d.Id())
 
@@ -452,7 +452,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Deleting GameLift Fleet: %s", d.Id())
 	// It can take ~ 1 hr as GameLift will keep retrying on errors like

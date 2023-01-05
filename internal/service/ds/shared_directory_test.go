@@ -59,7 +59,7 @@ func testAccCheckSharedDirectoryExists(n string, v *directoryservice.SharedDirec
 			return fmt.Errorf("No Directory Service Shared Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 		output, err := tfds.FindSharedDirectory(context.Background(), conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
@@ -74,7 +74,7 @@ func testAccCheckSharedDirectoryExists(n string, v *directoryservice.SharedDirec
 }
 
 func testAccCheckSharedDirectoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_shared_directory" {

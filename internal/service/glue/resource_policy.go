@@ -46,7 +46,7 @@ func ResourceResourcePolicy() *schema.Resource {
 
 func resourceResourcePolicyPut(condition string) func(d *schema.ResourceData, meta interface{}) error {
 	return func(d *schema.ResourceData, meta interface{}) error {
-		conn := meta.(*conns.AWSClient).GlueConn
+		conn := meta.(*conns.AWSClient).GlueConn()
 
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -73,7 +73,7 @@ func resourceResourcePolicyPut(condition string) func(d *schema.ResourceData, me
 }
 
 func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
@@ -101,7 +101,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	_, err := conn.DeleteResourcePolicy(&glue.DeleteResourcePolicyInput{})
 	if err != nil {

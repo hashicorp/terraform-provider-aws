@@ -38,7 +38,7 @@ func ResourceNetworkACL() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).EC2Conn
+				conn := meta.(*conns.AWSClient).EC2Conn()
 
 				nacl, err := FindNetworkACLByID(conn, d.Id())
 
@@ -148,7 +148,7 @@ var networkACLRuleNestedBlock = &schema.Resource{
 }
 
 func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -174,7 +174,7 @@ func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -250,7 +250,7 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if err := modifyNetworkACLAttributesOnUpdate(conn, d, true); err != nil {
 		return err
@@ -260,7 +260,7 @@ func resourceNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Delete all NACL/Subnet associations, even if they are managed via aws_network_acl_association resources.
 	nacl, err := FindNetworkACLByID(conn, d.Id())

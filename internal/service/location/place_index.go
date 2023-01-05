@@ -77,7 +77,7 @@ func ResourcePlaceIndex() *schema.Resource {
 }
 
 func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -119,7 +119,7 @@ func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -172,7 +172,7 @@ func resourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePlaceIndexUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	if d.HasChanges("data_source_configuration", "description") {
 		input := &locationservice.UpdatePlaceIndexInput{
@@ -208,7 +208,7 @@ func resourcePlaceIndexUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePlaceIndexDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	input := &locationservice.DeletePlaceIndexInput{
 		IndexName: aws.String(d.Id()),

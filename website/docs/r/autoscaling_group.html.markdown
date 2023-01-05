@@ -405,6 +405,7 @@ The following arguments are supported:
 * `desired_capacity` - (Optional) Number of Amazon EC2 instances that
     should be running in the group. (See also [Waiting for
     Capacity](#waiting-for-capacity) below.)
+* `desired_capacity_type` - (Optional) The unit of measurement for the value specified for `desired_capacity`. Supported for attribute-based instance type selection only. Valid values: `"units"`, `"vcpu"`, `"memory-mib"`.
 * `force_delete` - (Optional) Allows deleting the Auto Scaling Group without waiting
    for all instances in the pool to terminate.  You can force an Auto Scaling Group to delete
    even if it's in the process of scaling a resource. Normally, Terraform

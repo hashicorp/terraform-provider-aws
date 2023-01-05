@@ -85,7 +85,7 @@ func ResourceDeployment() *schema.Resource {
 }
 
 func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
 
@@ -107,7 +107,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Deployment %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
@@ -161,7 +161,7 @@ func resourceDeploymentUpdateOperations(d *schema.ResourceData) []*apigateway.Pa
 }
 
 func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
 
@@ -178,7 +178,7 @@ func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 
 	// If the stage has been updated to point at a different deployment, then

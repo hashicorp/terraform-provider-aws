@@ -71,7 +71,7 @@ func ResourceSSLNegotiationPolicy() *schema.Resource {
 }
 
 func resourceSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	// Provision the SSLNegotiationPolicy
 	lbspOpts := &elb.CreateLoadBalancerPolicyInput{
@@ -110,7 +110,7 @@ func resourceSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, lbPort, policyName, err := SSLNegotiationPolicyParseID(d.Id())
 	if err != nil {
@@ -163,7 +163,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, _, policyName, err := SSLNegotiationPolicyParseID(d.Id())
 	if err != nil {

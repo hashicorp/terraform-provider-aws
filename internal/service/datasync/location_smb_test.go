@@ -136,7 +136,7 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 }
 
 func testAccCheckLocationSMBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_smb" {
@@ -168,7 +168,7 @@ func testAccCheckLocationSMBExists(resourceName string, locationSmb *datasync.De
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 		input := &datasync.DescribeLocationSmbInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -191,7 +191,7 @@ func testAccCheckLocationSMBExists(resourceName string, locationSmb *datasync.De
 
 func testAccCheckLocationSMBDisappears(location *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,

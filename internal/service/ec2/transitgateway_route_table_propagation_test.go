@@ -86,7 +86,7 @@ func testAccCheckTransitGatewayRouteTablePropagationExists(n string, v *ec2.Tran
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
@@ -101,7 +101,7 @@ func testAccCheckTransitGatewayRouteTablePropagationExists(n string, v *ec2.Tran
 }
 
 func testAccCheckTransitGatewayRouteTablePropagationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route_table_propagation" {

@@ -98,7 +98,7 @@ func ResourceEnvironmentEC2() *schema.Resource {
 }
 
 func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -165,7 +165,7 @@ func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -210,7 +210,7 @@ func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceEnvironmentEC2Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := cloud9.UpdateEnvironmentInput{
@@ -240,7 +240,7 @@ func resourceEnvironmentEC2Update(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEnvironmentEC2Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+	conn := meta.(*conns.AWSClient).Cloud9Conn()
 
 	log.Printf("[INFO] Deleting Cloud9 EC2 Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironment(&cloud9.DeleteEnvironmentInput{

@@ -43,7 +43,7 @@ func ResourceDocumentationVersion() *schema.Resource {
 }
 
 func resourceDocumentationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	restApiId := d.Get("rest_api_id").(string)
 
@@ -68,7 +68,7 @@ func resourceDocumentationVersionCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceDocumentationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Reading API Gateway Documentation Version %s", d.Id())
 
 	apiId, docVersion, err := DecodeDocumentationVersionID(d.Id())
@@ -97,7 +97,7 @@ func resourceDocumentationVersionRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceDocumentationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Updating API Gateway Documentation Version %s", d.Id())
 
 	_, err := conn.UpdateDocumentationVersion(&apigateway.UpdateDocumentationVersionInput{
@@ -120,7 +120,7 @@ func resourceDocumentationVersionUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceDocumentationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Documentation Version: %s", d.Id())
 
 	_, err := conn.DeleteDocumentationVersion(&apigateway.DeleteDocumentationVersionInput{

@@ -71,7 +71,7 @@ func ResourceSQLInjectionMatchSet() *schema.Resource {
 }
 
 func resourceSQLInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
@@ -95,7 +95,7 @@ func resourceSQLInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceSQLInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	log.Printf("[INFO] Reading Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
@@ -118,7 +118,7 @@ func resourceSQLInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSQLInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("sql_injection_match_tuple") {
@@ -136,7 +136,7 @@ func resourceSQLInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	oldTuples := d.Get("sql_injection_match_tuple").(*schema.Set).List()

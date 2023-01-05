@@ -116,6 +116,28 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 2,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -123,7 +145,7 @@ func ResourceWorkspace() *schema.Resource {
 }
 
 func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -167,6 +189,10 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkspaceRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("vpc_configuration"); ok {
+		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating Grafana Workspace: %s", input)
 	output, err := conn.CreateWorkspace(input)
 
@@ -184,7 +210,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -224,6 +250,10 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
 
+	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
+		return fmt.Errorf("error setting vpc_configuration: %w", err)
+	}
+
 	tags := KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -239,7 +269,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
@@ -309,7 +339,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspace(&managedgrafana.DeleteWorkspaceInput{
@@ -329,4 +359,40 @@ func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandVPCConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration {
+	if len(cfg) < 1 {
+		return nil
+	}
+
+	conf := cfg[0].(map[string]interface{})
+
+	out := managedgrafana.VpcConfiguration{}
+
+	if v, ok := conf["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.SecurityGroupIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := conf["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.SubnetIds = flex.ExpandStringSet(v)
+	}
+
+	return &out
+}
+
+func flattenVPCConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if rs.SecurityGroupIds != nil {
+		m["security_group_ids"] = flex.FlattenStringSet(rs.SecurityGroupIds)
+	}
+	if rs.SubnetIds != nil {
+		m["subnet_ids"] = flex.FlattenStringSet(rs.SubnetIds)
+	}
+
+	return []interface{}{m}
 }

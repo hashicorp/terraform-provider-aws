@@ -66,7 +66,7 @@ func ResourceXSSMatchSet() *schema.Resource {
 }
 
 func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating regional WAF XSS Match Set: %s", d.Get("name").(string))
@@ -98,7 +98,7 @@ func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	log.Printf("[INFO] Reading regional WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
@@ -126,7 +126,7 @@ func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("xss_match_tuple") {
@@ -143,7 +143,7 @@ func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	if v, ok := d.GetOk("xss_match_tuple"); ok {

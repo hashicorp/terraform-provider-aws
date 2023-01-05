@@ -48,7 +48,7 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmPublicVirtualInterfaceInput{
@@ -79,7 +79,7 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, 
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -138,7 +138,7 @@ func resourceHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceData, 
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

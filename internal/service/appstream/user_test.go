@@ -142,7 +142,7 @@ func testAccCheckUserExists(resourceName string, appStreamUser *appstream.User) 
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 		userName, authType, err := tfappstream.DecodeUserID(rs.Primary.ID)
 		if err != nil {
@@ -164,7 +164,7 @@ func testAccCheckUserExists(resourceName string, appStreamUser *appstream.User) 
 }
 
 func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_user" {

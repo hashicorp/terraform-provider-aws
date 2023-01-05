@@ -81,7 +81,7 @@ func testAccCheckUserPolicyAttachmentExists(n string, c int, out *iam.ListAttach
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		user := rs.Primary.Attributes["user"]
 
 		attachedPolicies, err := conn.ListAttachedUserPolicies(&iam.ListAttachedUserPoliciesInput{

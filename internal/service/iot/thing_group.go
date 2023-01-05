@@ -121,7 +121,7 @@ const (
 )
 
 func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -155,7 +155,7 @@ func resourceThingGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -216,7 +216,7 @@ func resourceThingGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.UpdateThingGroupInput{
@@ -257,7 +257,7 @@ func resourceThingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
 	_, err := tfresource.RetryWhen(thingGroupDeleteTimeout,
