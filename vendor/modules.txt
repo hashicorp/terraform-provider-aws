@@ -381,8 +381,8 @@ github.com/client9/misspell/cmd/misspell
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/fatih/color v1.7.0
-## explicit
+# github.com/fatih/color v1.13.0
+## explicit; go 1.13
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 ## explicit
@@ -521,7 +521,7 @@ github.com/golangci/revgrep
 # github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4
 ## explicit
 github.com/golangci/unconvert
-# github.com/google/go-cmp v0.3.1
+# github.com/google/go-cmp v0.5.6
 ## explicit; go 1.8
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
@@ -730,12 +730,15 @@ github.com/maratori/testpackage/pkg/testpackage
 # github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb
 ## explicit; go 1.13
 github.com/matoous/godox
-# github.com/mattn/go-colorable v0.1.4
-## explicit
+# github.com/mattn/go-colorable v0.1.13
+## explicit; go 1.15
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.10
-## explicit; go 1.14
+# github.com/mattn/go-isatty v0.0.16
+## explicit; go 1.15
 github.com/mattn/go-isatty
+# github.com/mattn/go-runewidth v0.0.13
+## explicit; go 1.9
+github.com/mattn/go-runewidth
 # github.com/mitchellh/cli v1.0.0
 ## explicit
 github.com/mitchellh/cli
@@ -801,6 +804,16 @@ github.com/posener/complete/match
 github.com/pquerna/otp
 github.com/pquerna/otp/hotp
 github.com/pquerna/otp/totp
+# github.com/rhysd/actionlint v1.6.22
+## explicit; go 1.17
+github.com/rhysd/actionlint
+github.com/rhysd/actionlint/cmd/actionlint
+# github.com/rivo/uniseg v0.2.0
+## explicit; go 1.12
+github.com/rivo/uniseg
+# github.com/robfig/cron v1.2.0
+## explicit
+github.com/robfig/cron
 # github.com/ryancurrah/gomodguard v1.0.4
 ## explicit; go 1.14
 github.com/ryancurrah/gomodguard
@@ -953,9 +966,15 @@ golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527
-## explicit; go 1.12
+# golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
+## explicit
+golang.org/x/sync/errgroup
+golang.org/x/sync/semaphore
+# golang.org/x/sys v0.0.0-20220818161305-2296e01440c6
+## explicit; go 1.17
 golang.org/x/sys/cpu
+golang.org/x/sys/execabs
+golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
 ## explicit
@@ -1120,6 +1139,9 @@ gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.2.8
 ## explicit
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3
 # honnef.co/go/tools v0.0.1-2019.2.3
 ## explicit; go 1.11
 honnef.co/go/tools/arg

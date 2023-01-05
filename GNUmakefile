@@ -137,6 +137,7 @@ tools:
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	GO111MODULE=on go install github.com/katbyte/terrafmt
+	GO111MODULE=on go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

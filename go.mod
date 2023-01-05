@@ -20,6 +20,7 @@ require (
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
+	github.com/rhysd/actionlint v1.6.22
 	golang.org/x/tools v0.0.0-20200422022333-3d57cf2e726e
 	gopkg.in/yaml.v2 v2.2.8
 )
@@ -42,7 +43,7 @@ require (
 	github.com/bombsimon/wsl/v3 v3.0.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fatih/color v1.7.0 // indirect
+	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/go-critic/go-critic v0.4.1 // indirect
 	github.com/go-lintpack/lintpack v0.5.2 // indirect
@@ -72,7 +73,7 @@ require (
 	github.com/golangci/prealloc v0.0.0-20180630174525-215b22d4de21 // indirect
 	github.com/golangci/revgrep v0.0.0-20180526074752-d9c87f5ffaf0 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
-	github.com/google/go-cmp v0.3.1 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/gookit/color v1.1.7 // indirect
@@ -102,8 +103,9 @@ require (
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/maratori/testpackage v1.0.1 // indirect
 	github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb // indirect
-	github.com/mattn/go-colorable v0.1.4 // indirect
-	github.com/mattn/go-isatty v0.0.10 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/cli v1.0.0 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
@@ -118,6 +120,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/complete v1.2.1 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/robfig/cron v1.2.0 // indirect
 	github.com/ryancurrah/gomodguard v1.0.4 // indirect
 	github.com/securego/gosec v0.0.0-20200316084457-7da9f46445fd // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
@@ -148,7 +152,8 @@ require (
 	golang.org/x/mod v0.2.0 // indirect
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
+	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
+	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	google.golang.org/api v0.9.0 // indirect
@@ -156,6 +161,7 @@ require (
 	google.golang.org/genproto v0.0.0-20200310143817-43be25429f5a // indirect
 	google.golang.org/grpc v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
