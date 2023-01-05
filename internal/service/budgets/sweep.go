@@ -6,6 +6,7 @@ package budgets
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
@@ -94,7 +95,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 
 		for _, v := range page.Budgets {
 			// skip budgets we have configured to track our spend
-			if !strings.HasPrefix(v.BudgetName, "tf-acc") {
+			if !strings.HasPrefix(*v.BudgetName, "tf-acc") {
 				continue
 			}
 
