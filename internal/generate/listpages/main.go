@@ -31,6 +31,7 @@ var (
 	outputPaginator = flag.String("OutputPaginator", "", "name of the output pagination token field")
 	paginator       = flag.String("Paginator", "NextToken", "name of the pagination token field")
 	export          = flag.Bool("Export", false, "whether to export the list functions")
+	contextOnly     = flag.Bool("ContextOnly", false, "whether to only generate Context-aware functions")
 )
 
 func usage() {
@@ -84,6 +85,7 @@ func main() {
 		tmpl:            template.Must(template.New("function").Parse(functionTemplate)),
 		inputPaginator:  *inputPaginator,
 		outputPaginator: *outputPaginator,
+		contextOnly:     *contextOnly,
 	}
 
 	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%s", awsService)
@@ -125,6 +127,7 @@ type Generator struct {
 	tmpl            *template.Template
 	inputPaginator  string
 	outputPaginator string
+	contextOnly     bool
 }
 
 func (g *Generator) Printf(format string, args ...interface{}) {
@@ -183,12 +186,12 @@ type FuncSpec struct {
 	ResultType      string
 	InputPaginator  string
 	OutputPaginator string
+	ContextOnly     bool
 }
 
 func (g *Generator) generateFunction(functionName, awsService string, export bool) {
 	var function *ast.FuncDecl
 
-	// TODO: check if a Pages() function has been defined
 	for _, file := range g.pkg.files {
 		if file.file != nil {
 			for _, decl := range file.file.Decls {
@@ -223,6 +226,7 @@ func (g *Generator) generateFunction(functionName, awsService string, export boo
 		ResultType:      g.expandTypeField(function.Type.Results), // Assumes we can take the first return parameter
 		InputPaginator:  g.inputPaginator,
 		OutputPaginator: g.outputPaginator,
+		ContextOnly:     g.contextOnly,
 	}
 
 	err := g.tmpl.Execute(&g.buf, funcSpec)
