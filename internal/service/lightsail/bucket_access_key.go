@@ -85,7 +85,7 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 
 	idParts := []string{d.Get("bucket_name").(string), *out.AccessKey.AccessKeyId}
 	d.SetId(flex.FlattenResourceId(idParts))
-	d.Set("secret_access_key", *out.AccessKey.SecretAccessKey)
+	d.Set("secret_access_key", out.AccessKey.SecretAccessKey)
 
 	return resourceBucketAccessKeyRead(ctx, d, meta)
 }
