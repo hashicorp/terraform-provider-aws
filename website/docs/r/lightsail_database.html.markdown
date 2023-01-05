@@ -103,7 +103,7 @@ resource "aws_lightsail_database" "test" {
 The following arguments are supported:
 
 * `name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
-* `availability_zone` - (Required) The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
+* `availability_zone` - The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
 * `master_database_name` - (Required) The name of the master database created when the Lightsail database resource is created.
 * `master_password` - (Sensitive) The password for the master user of your new database. The password can include any printable ASCII character except "/", """, or "@".
 * `master_username` - The master user name for your new database.

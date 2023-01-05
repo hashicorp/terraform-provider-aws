@@ -38,7 +38,7 @@ const (
 	EuWest3RegionID      = "eu-west-3"      // Europe (Paris).
 	MeCentral1RegionID   = "me-central-1"   // Middle East (UAE).
 	MeSouth1RegionID     = "me-south-1"     // Middle East (Bahrain).
-	SaEast1RegionID      = "sa-east-1"      // South America (São Paulo).
+	SaEast1RegionID      = "sa-east-1"      // South America (Sao Paulo).
 	UsEast1RegionID      = "us-east-1"      // US East (N. Virginia).
 	UsEast2RegionID      = "us-east-2"      // US East (Ohio).
 	UsWest1RegionID      = "us-west-1"      // US West (N. California).
@@ -206,7 +206,7 @@ var awsPartition = partition{
 			Description: "Middle East (Bahrain)",
 		},
 		"sa-east-1": region{
-			Description: "South America (São Paulo)",
+			Description: "South America (Sao Paulo)",
 		},
 		"us-east-1": region{
 			Description: "US East (N. Virginia)",
@@ -13906,6 +13906,9 @@ var awsPartition = partition{
 		},
 		"kendra": service{
 			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "ap-south-1",
+				}: endpoint{},
 				endpointKey{
 					Region: "ap-southeast-1",
 				}: endpoint{},
@@ -33209,6 +33212,16 @@ var awsusgovPartition = partition{
 						Region: "us-gov-west-1",
 					},
 				},
+			},
+		},
+		"pi": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-east-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
 			},
 		},
 		"pinpoint": service{

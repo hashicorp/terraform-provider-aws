@@ -82,9 +82,9 @@ func ResourceGroup() *schema.Resource {
 				Computed: true,
 			},
 			"desired_capacity_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(DesiredCapacityType_Values(), false),
 			},
 			"enabled_metrics": {
 				Type:     schema.TypeSet,
@@ -884,10 +884,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createInput.CapacityRebalance = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("desired_capacity_type"); ok {
-		createInput.DesiredCapacityType = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("context"); ok {
 		createInput.Context = aws.String(v.(string))
 	}
@@ -898,6 +894,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("default_instance_warmup"); ok {
 		createInput.DefaultInstanceWarmup = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("desired_capacity_type"); ok {
+		createInput.DesiredCapacityType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("health_check_type"); ok {
@@ -956,7 +956,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createInput.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Creating Auto Scaling Group: %s", createInput)
 	_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateAutoScalingGroup(createInput)

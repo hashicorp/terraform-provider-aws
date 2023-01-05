@@ -1347,6 +1347,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ec2_client_vpn_route":                             ec2.ResourceClientVPNRoute(),
 			"aws_ec2_fleet":                                        ec2.ResourceFleet(),
 			"aws_ec2_host":                                         ec2.ResourceHost(),
+			"aws_ec2_instance_state":                               ec2.ResourceInstanceState(),
 			"aws_ec2_local_gateway_route":                          ec2.ResourceLocalGatewayRoute(),
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
@@ -1733,6 +1734,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_bucket":                               lightsail.ResourceBucket(),
 			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
