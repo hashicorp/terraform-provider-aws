@@ -69,18 +69,18 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	out, err := conn.CreateBucketAccessKeyWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string), err)
 	}
 
 	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("name").(string), errors.New("No operations found for request"))
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string), errors.New("No operations found for request"))
 	}
 
 	op := out.Operations[0]
 
 	err = waitOperation(conn, op.Id)
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("name").(string), errors.New("Error waiting for request operation"))
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string), errors.New("Error waiting for request operation"))
 	}
 
 	idParts := []string{d.Get("bucket_name").(string), *out.AccessKey.AccessKeyId}
