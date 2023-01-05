@@ -9,6 +9,7 @@ FEATURES:
 * **New Data Source:** `aws_s3control_multi_region_access_point` ([#28373](https://github.com/hashicorp/terraform-provider-aws/issues/28373))
 * **New Resource:** `aws_appsync_type` ([#28437](https://github.com/hashicorp/terraform-provider-aws/issues/28437))
 * **New Resource:** `aws_auditmanager_assessment` ([#28643](https://github.com/hashicorp/terraform-provider-aws/issues/28643))
+* **New Resource:** `aws_auditmanager_assessment_report` ([#28663](https://github.com/hashicorp/terraform-provider-aws/issues/28663))
 * **New Resource:** `aws_ec2_instance_state` ([#28639](https://github.com/hashicorp/terraform-provider-aws/issues/28639))
 * **New Resource:** `aws_lightsail_bucket` ([#28585](https://github.com/hashicorp/terraform-provider-aws/issues/28585))
 * **New Resource:** `aws_ssoadmin_instance_access_control_attributes` ([#23317](https://github.com/hashicorp/terraform-provider-aws/issues/23317))
@@ -19,12 +20,15 @@ ENHANCEMENTS:
 * resource/aws_appflow_connector_profile: Add support for `connector_type` CustomConnector. Add `cluster_identifier`, `database_name`, and `data_api_role_arn` attributes for `redshift` `connection_profile_properties` ([#26766](https://github.com/hashicorp/terraform-provider-aws/issues/26766))
 * resource/aws_appsync_resolver: Add `runtime` and `code` arguments ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
 * resource/aws_appsync_resolver: Add plan time validation for `caching_config.ttl` ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
+* resource/aws_athena_workgroup: Add `configuration.execution_role` argument ([#28420](https://github.com/hashicorp/terraform-provider-aws/issues/28420))
+* resource/aws_ecs_service: Add `alarms` argument ([#28521](https://github.com/hashicorp/terraform-provider-aws/issues/28521))
 * resource/aws_lightsail_instance: Add `add_on` configuration block. ([#28602](https://github.com/hashicorp/terraform-provider-aws/issues/28602))
 * resource/aws_lightsail_instance_public_ports: Add `cidr_list_aliases` argument ([#28376](https://github.com/hashicorp/terraform-provider-aws/issues/28376))
 * resource/aws_s3_access_point: Add `bucket_account_id` argument ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
 * resource/aws_s3control_storage_lens_configuration: Add `advanced_cost_optimization_metrics`, `advanced_data_protection_metrics`, and `detailed_status_code_metrics` arguments to the `storage_lens_configuration.account_level` and `storage_lens_configuration.account_level.bucket_level` configuration blocks ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
 * resource/aws_wafv2_rule_group: Add `rule.action.captcha` argument ([#28435](https://github.com/hashicorp/terraform-provider-aws/issues/28435))
 * resource/aws_wafv2_web_acl: Add `rule.action.challenge` argument ([#28305](https://github.com/hashicorp/terraform-provider-aws/issues/28305))
+* resource/aws_wafv2_web_acl: Add support for ManagedRuleGroupConfig ([#28594](https://github.com/hashicorp/terraform-provider-aws/issues/28594))
 
 BUG FIXES:
 
