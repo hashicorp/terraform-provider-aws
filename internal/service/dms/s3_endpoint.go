@@ -2,6 +2,7 @@ package dms
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -338,6 +339,8 @@ func resourceS3EndpointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input.S3Settings = s3Settings(d, d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget)
 
+	input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
+
 	log.Println("[DEBUG] DMS create endpoint:", input)
 
 	var out *dms.CreateEndpointOutput
@@ -508,6 +511,8 @@ func resourceS3EndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		) {
 			input.S3Settings = s3Settings(d, d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget)
 			input.ServiceAccessRoleArn = aws.String(d.Get("service_access_role_arn").(string))
+
+			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 		}
 
 		log.Println("[DEBUG] DMS update endpoint:", input)
@@ -734,4 +739,11 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	return s3s
+}
+
+func extraConnectionAnomalies(d *schema.ResourceData) *string {
+	// not all attributes work in the data structures and must be passed via ex conn attr
+
+	// add a loop if this becomes more than one
+	return aws.String(fmt.Sprintf("%s=%s", "CdcPath", d.Get("cdc_path").(string)))
 }
