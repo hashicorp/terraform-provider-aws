@@ -50,7 +50,7 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_deprecated(rName),
@@ -94,7 +94,7 @@ func TestAccBudgetsBudget_Name_generated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_nameGenerated(),
@@ -137,7 +137,7 @@ func TestAccBudgetsBudget_namePrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_namePrefix("tf-acc-test-prefix-"),
@@ -175,7 +175,7 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_deprecated(rName),
@@ -198,7 +198,7 @@ func TestAccBudgetsBudget_autoAdjustDataForecast(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_autoAdjustDataForecast(rName),
@@ -231,7 +231,7 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_autoAdjustDataHistorical(rName),
@@ -295,7 +295,7 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_costTypes(rName, startDate1, endDate1),
@@ -393,7 +393,7 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_notifications(rName, emailAddress1, emailAddress2),
@@ -474,7 +474,7 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetDestroy,
+		CheckDestroy:             testAccCheckBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_plannedLimits(rName, config1),
@@ -542,7 +542,7 @@ func testAccBudgetExists(resourceName string, v *budgets.Budget) resource.TestCh
 	}
 }
 
-func testAccBudgetDestroy(s *terraform.State) error {
+func testAccCheckBudgetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn()
 
 	for _, rs := range s.RootModule().Resources {

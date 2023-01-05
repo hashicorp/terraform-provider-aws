@@ -26,7 +26,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccUserGroupMembershipDestroy,
+		CheckDestroy:             testAccCheckUserGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			// simplest test
 			{
@@ -110,7 +110,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	})
 }
 
-func testAccUserGroupMembershipDestroy(s *terraform.State) error {
+func testAccCheckUserGroupMembershipDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {

@@ -34,7 +34,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccRegistryScanningConfigurationDestroy,
+		CheckDestroy:             testAccCheckRegistryScanningConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
@@ -62,7 +62,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccRegistryScanningConfigurationDestroy,
+		CheckDestroy:             testAccCheckRegistryScanningConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryScanningConfigurationConfig_oneRule(),
@@ -111,7 +111,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 	})
 }
 
-func testAccRegistryScanningConfigurationDestroy(s *terraform.State) error {
+func testAccCheckRegistryScanningConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 	for _, rs := range s.RootModule().Resources {
