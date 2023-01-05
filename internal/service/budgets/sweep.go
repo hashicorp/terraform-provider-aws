@@ -93,7 +93,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 		}
 
 		for _, v := range page.Budgets {
-
+			// skip budgets we have configured to track our spend
 			if !strings.HasPrefix(v.BudgetName, "tf-acc") {
 				continue
 			}
