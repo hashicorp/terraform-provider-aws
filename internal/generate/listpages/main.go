@@ -1,5 +1,5 @@
-//go:build ignore
-// +build ignore
+//go:build generate
+// +build generate
 
 package main
 
@@ -134,7 +134,7 @@ func (g *Generator) printHeader(headerInfo HeaderInfo) {
 
 func (g *Generator) parsePackage(sourcePackage string) {
 	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedSyntax,
+		Mode: packages.NeedName | packages.NeedTypes | packages.NeedSyntax,
 	}
 	pkgs, err := packages.Load(cfg, sourcePackage)
 	if err != nil {
