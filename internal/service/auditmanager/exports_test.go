@@ -4,6 +4,7 @@ package auditmanager
 var (
 	ResourceAccountRegistration = newResourceAccountRegistration
 	ResourceAssessment          = newResourceAssessment
+	ResourceAssessmentReport    = newResourceAssessmentReport
 	ResourceControl             = newResourceControl
 	ResourceFramework           = newResourceFramework
 )
