@@ -405,7 +405,7 @@ The following arguments are supported:
 * `desired_capacity` - (Optional) Number of Amazon EC2 instances that
     should be running in the group. (See also [Waiting for
     Capacity](#waiting-for-capacity) below.)
-* `desired_capacity_type` - (Optional) specify the desired capacity type 
+* `desired_capacity_type` - (Optional) specify the desired capacity type
     when you use attribute-based instance type selection. The allowed values are
     `units`, `vcpu`, and  `memory-mib`. Default: `units`, meaning number of instances.
 * `force_delete` - (Optional) Allows deleting the Auto Scaling Group without waiting
