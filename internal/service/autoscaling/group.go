@@ -904,10 +904,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createInput.DefaultInstanceWarmup = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("desired_capacity_type"); ok {
-		createInput.DesiredCapacityType = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("health_check_type"); ok {
 		createInput.HealthCheckType = aws.String(v.(string))
 	}
@@ -1232,6 +1228,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("desired_capacity_type") {
 			input.DesiredCapacityType = aws.String(d.Get("desired_capacity_type").(string))
+			shouldWaitForCapacity = true
 		}
 
 		if d.HasChange("health_check_grace_period") {
