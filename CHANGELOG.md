@@ -1,4 +1,9 @@
 ## 3.76.1 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket: Mark `server_side_encryption_configuration` as Computed in support of [S3 object encryption by default](https://aws.amazon.com/blogs/aws/amazon-s3-encrypts-new-objects-by-default/) ([#28702](https://github.com/terraform-providers/terraform-provider-aws/issues/28702))
+
 ## 3.76.0 (December 15, 2022)
 
 NOTES:
