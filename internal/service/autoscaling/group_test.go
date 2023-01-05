@@ -3162,6 +3162,35 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
+func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_desiredCapacityTypeUnits(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsDesiredCapacityTypeUnits(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity_type", "units"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "1"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
 func testAccCheckGroupExists(n string, v *autoscaling.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -5043,4 +5072,42 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, instanceRequirements))
+}
+
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsDesiredCapacityTypeUnits(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, "t3.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones    = [data.aws_availability_zones.available.names[0]]
+  desired_capacity      = 1
+  desired_capacity_type = "units"
+  max_size              = 1
+  min_size              = 1
+  name                  = %[1]q
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.test.id
+      }
+
+      override {
+        instance_requirements {
+          memory_mib {
+            min = 500
+          }
+
+          vcpu_count {
+            min = 1
+          }
+        }
+      }
+    }
+
+    instances_distribution {
+      on_demand_percentage_above_base_capacity = 50
+      spot_allocation_strategy                 = "capacity-optimized"
+    }
+  }
+}
+`, rName))
 }

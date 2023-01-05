@@ -867,12 +867,20 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		if desiredCapacity > 0 {
 			updateInput.DesiredCapacity = aws.Int64(int64(desiredCapacity))
 		}
+
+		if v, ok := d.GetOk("desired_capacity_type"); ok {
+			updateInput.DesiredCapacityType = aws.String(v.(string))
+		}
 	} else {
 		createInput.MaxSize = aws.Int64(int64(maxSize))
 		createInput.MinSize = aws.Int64(int64(minSize))
 
 		if desiredCapacity > 0 {
 			createInput.DesiredCapacity = aws.Int64(int64(desiredCapacity))
+		}
+
+		if v, ok := d.GetOk("desired_capacity_type"); ok {
+			createInput.DesiredCapacityType = aws.String(v.(string))
 		}
 	}
 
