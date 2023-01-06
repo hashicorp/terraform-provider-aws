@@ -86,7 +86,7 @@ func ResourceTableReplica() *schema.Resource {
 }
 
 func resourceTableReplicaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
@@ -180,7 +180,7 @@ func resourceTableReplicaRead(d *schema.ResourceData, meta interface{}) error {
 	// * kms_key_arn
 	// * read_capacity_override
 	// * table_class_override
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
@@ -260,7 +260,7 @@ func resourceTableReplicaReadReplica(d *schema.ResourceData, meta interface{}) e
 	// * arn
 	// * point_in_time_recovery
 	// * tags
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName, _, err := TableReplicaParseID(d.Id())
 	if err != nil {
@@ -335,7 +335,7 @@ func resourceTableReplicaUpdate(d *schema.ResourceData, meta interface{}) error 
 	// * kms_key_arn
 	// * read_capacity_override
 	// * table_class_override
-	repConn := meta.(*conns.AWSClient).DynamoDBConn
+	repConn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
@@ -439,7 +439,7 @@ func resourceTableReplicaDelete(d *schema.ResourceData, meta interface{}) error 
 		return create.Error(names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
 	}
 
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 

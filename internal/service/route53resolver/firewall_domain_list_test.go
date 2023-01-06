@@ -165,7 +165,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 }
 
 func testAccCheckFirewallDomainListDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_firewall_domain_list" {
@@ -199,7 +199,7 @@ func testAccCheckFirewallDomainListExists(n string, v *route53resolver.FirewallD
 			return fmt.Errorf("No Route53 Resolver Firewall Domain List ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 		output, err := tfroute53resolver.FindFirewallDomainListByID(context.Background(), conn, rs.Primary.ID)
 

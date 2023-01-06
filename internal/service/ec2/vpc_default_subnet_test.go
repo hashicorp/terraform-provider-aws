@@ -18,7 +18,7 @@ import (
 )
 
 func testAccPreCheckDefaultSubnetExists(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -40,7 +40,7 @@ func testAccPreCheckDefaultSubnetExists(t *testing.T) {
 }
 
 func testAccPreCheckDefaultSubnetNotFound(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -325,7 +325,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 // It verifies that the default subnet still exists.
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyExists(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_subnet" {
@@ -346,7 +346,7 @@ func testAccCheckDefaultSubnetDestroyExists(s *terraform.State) error {
 // It verifies that the default subnet does not exist.
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyNotFound(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_subnet" {
@@ -370,7 +370,7 @@ func testAccCheckDefaultSubnetDestroyNotFound(s *terraform.State) error {
 }
 
 func testAccCreateMissingDefaultSubnets() error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	output, err := conn.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.BuildAttributeFilterList(

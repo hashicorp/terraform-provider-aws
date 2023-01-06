@@ -2555,7 +2555,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 		return validateError
 	}
 
-	conn := meta.(*conns.AWSClient).FirehoseConn
+	conn := meta.(*conns.AWSClient).FirehoseConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -2715,7 +2715,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 		return validateError
 	}
 
-	conn := meta.(*conns.AWSClient).FirehoseConn
+	conn := meta.(*conns.AWSClient).FirehoseConn()
 
 	sn := d.Get("name").(string)
 
@@ -2854,7 +2854,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FirehoseConn
+	conn := meta.(*conns.AWSClient).FirehoseConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -2898,7 +2898,7 @@ func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDeliveryStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FirehoseConn
+	conn := meta.(*conns.AWSClient).FirehoseConn()
 
 	sn := d.Get("name").(string)
 	log.Printf("[DEBUG] Deleting Kinesis Firehose Delivery Stream: (%s)", sn)

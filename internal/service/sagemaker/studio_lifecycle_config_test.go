@@ -115,7 +115,7 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 }
 
 func testAccCheckStudioLifecycleDestroyConfig(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_studio_lifecycle_config" {
@@ -149,7 +149,7 @@ func testAccCheckStudioLifecycleExistsConfig(n string, config *sagemaker.Describ
 			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		output, err := tfsagemaker.FindStudioLifecycleConfigByName(conn, rs.Primary.ID)
 

@@ -85,7 +85,7 @@ func DataSourceSigningProfile() *schema.Resource {
 }
 
 func dataSourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	profileName := d.Get("name").(string)

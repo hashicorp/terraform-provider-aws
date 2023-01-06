@@ -101,7 +101,7 @@ func testAccCheckUserInGroupExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		groupName := rs.Primary.Attributes["group_name"]
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
@@ -122,7 +122,7 @@ func testAccCheckUserInGroupExists(resourceName string) resource.TestCheckFunc {
 }
 
 func testAccCheckUserInGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_in_group" {

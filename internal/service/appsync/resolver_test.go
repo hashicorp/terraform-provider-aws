@@ -36,6 +36,36 @@ func testAccResolver_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
 					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccResolver_code(t *testing.T) {
+	var resolver1 appsync.Resolver
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	resourceName := "aws_appsync_resolver.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResolverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResolverConfig_code(rName, "test-fixtures/test-code.js"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResolverExists(resourceName, &resolver1),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
 				),
 			},
 			{
@@ -318,7 +348,7 @@ func testAccResolver_caching(t *testing.T) {
 }
 
 func testAccCheckResolverDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_resolver" {
 			continue
@@ -365,7 +395,7 @@ func testAccCheckResolverExists(name string, resolver *appsync.Resolver) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
 		input := &appsync.GetResolverInput{
 			ApiId:     aws.String(apiID),
@@ -852,4 +882,37 @@ EOF
 EOF
 }
 `, rName)
+}
+
+func testAccResolverConfig_code(rName, code string) string {
+	return testAccResolverConfig_base(rName) + fmt.Sprintf(`
+resource "aws_appsync_function" "test" {
+  api_id      = aws_appsync_graphql_api.test.id
+  data_source = aws_appsync_datasource.test.name
+  name        = %[1]q
+  code        = file("%[2]s")
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+}
+
+resource "aws_appsync_resolver" "test" {
+  api_id = aws_appsync_graphql_api.test.id
+  field  = "singlePost"
+  type   = "Query"
+  code   = file("%[2]s")
+  kind   = "PIPELINE"
+
+  pipeline_config {
+    functions = [aws_appsync_function.test.function_id]
+  }
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+}
+`, rName, code)
 }

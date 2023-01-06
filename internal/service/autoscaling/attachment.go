@@ -48,7 +48,7 @@ func ResourceAttachment() *schema.Resource {
 }
 
 func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
@@ -99,7 +99,7 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	var err error
@@ -131,7 +131,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {

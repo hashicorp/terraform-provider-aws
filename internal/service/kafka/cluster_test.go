@@ -1207,7 +1207,7 @@ func testAccCheckResourceAttrIsSortedCSV(resourceName, attributeName string) res
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_cluster" {
@@ -1241,7 +1241,7 @@ func testAccCheckClusterExists(n string, v *kafka.ClusterInfo) resource.TestChec
 			return fmt.Errorf("No MSK Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 		output, err := tfkafka.FindClusterByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -1276,7 +1276,7 @@ func testAccCheckClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheckFun
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.ListClustersInput{}
 

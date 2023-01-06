@@ -49,7 +49,7 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 }
 
 func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -98,7 +98,7 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -128,7 +128,7 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 // resourceAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
 func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),

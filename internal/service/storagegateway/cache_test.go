@@ -137,7 +137,7 @@ func testAccCheckCacheExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(rs.Primary.ID)
 		if err != nil {

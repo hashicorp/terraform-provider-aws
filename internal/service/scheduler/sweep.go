@@ -38,7 +38,7 @@ func sweepScheduleGroups(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SchedulerClient
+	conn := client.(*conns.AWSClient).SchedulerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -87,7 +87,7 @@ func sweepSchedules(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SchedulerClient
+	conn := client.(*conns.AWSClient).SchedulerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

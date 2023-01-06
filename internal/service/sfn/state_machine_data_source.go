@@ -45,7 +45,7 @@ func DataSourceStateMachine() *schema.Resource {
 }
 
 func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	name := d.Get("name").(string)
 	var arns []string

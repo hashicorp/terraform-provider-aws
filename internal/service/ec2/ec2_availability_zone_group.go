@@ -40,7 +40,7 @@ func ResourceAvailabilityZoneGroup() *schema.Resource {
 }
 
 func resourceAvailabilityZoneGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	groupName := d.Get("group_name").(string)
 	availabilityZone, err := FindAvailabilityZoneGroupByName(conn, groupName)
@@ -61,7 +61,7 @@ func resourceAvailabilityZoneGroupCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAvailabilityZoneGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	availabilityZone, err := FindAvailabilityZoneGroupByName(conn, d.Id())
 
@@ -80,7 +80,7 @@ func resourceAvailabilityZoneGroupRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAvailabilityZoneGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if err := modifyAvailabilityZoneOptInStatus(conn, d.Id(), d.Get("opt_in_status").(string)); err != nil {
 		return err

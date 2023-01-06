@@ -48,7 +48,7 @@ func DataSourceConfiguration() *schema.Resource {
 }
 
 func dataSourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	listConfigurationsInput := &kafka.ListConfigurationsInput{}
 

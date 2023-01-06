@@ -445,7 +445,7 @@ func testAccCheckZoneDestroy(s *terraform.State) error {
 }
 
 func testAccCheckZoneDestroyProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).Route53Conn
+	conn := provider.Meta().(*conns.AWSClient).Route53Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_zone" {
@@ -475,7 +475,7 @@ func testAccCreateRandomRecordsInZoneID(zone *route53.GetHostedZoneOutput, recor
 func testAccCreateRandomRecordsInZoneIdProvider(providerF func() *schema.Provider, zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := provider.Meta().(*conns.AWSClient).Route53Conn()
 
 		var changes []*route53.Change
 		if recordsCount > 100 {
@@ -528,7 +528,7 @@ func testAccCheckZoneExistsProvider(n string, v *route53.GetHostedZoneOutput, pr
 			return fmt.Errorf("No Route53 Hosted Zone ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).Route53Conn
+		conn := providerF().Meta().(*conns.AWSClient).Route53Conn()
 
 		output, err := tfroute53.FindHostedZoneByID(conn, rs.Primary.ID)
 

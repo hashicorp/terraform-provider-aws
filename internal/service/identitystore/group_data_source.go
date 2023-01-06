@@ -19,7 +19,7 @@ import (
 
 func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"alternate_identifier": {
@@ -140,7 +140,7 @@ const (
 )
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	identityStoreId := d.Get("identity_store_id").(string)
 

@@ -111,7 +111,7 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 }
 
 func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("name").(string)
 
@@ -159,7 +159,7 @@ func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	pack, err := DescribeOrganizationConformancePack(conn, d.Id())
 
@@ -200,7 +200,7 @@ func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interf
 }
 
 func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
@@ -244,7 +244,7 @@ func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.DeleteOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),

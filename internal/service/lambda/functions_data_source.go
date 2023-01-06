@@ -36,7 +36,7 @@ func DataSourceFunctions() *schema.Resource {
 }
 
 func dataSourceFunctionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	input := &lambda.ListFunctionsInput{}
 

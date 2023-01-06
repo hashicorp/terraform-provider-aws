@@ -451,7 +451,7 @@ func testAccCheckStackExists(n string, stack *cloudformation.Stack) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 		params := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(rs.Primary.ID),
 		}
@@ -470,7 +470,7 @@ func testAccCheckStackExists(n string, stack *cloudformation.Stack) resource.Tes
 }
 
 func testAccCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack" {
@@ -499,7 +499,7 @@ func testAccCheckDestroy(s *terraform.State) error {
 
 func testAccCheckStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 		input := &cloudformation.DeleteStackInput{
 			StackName: stack.StackName,

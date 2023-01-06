@@ -36,7 +36,7 @@ func DataSourceQueue() *schema.Resource {
 }
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)

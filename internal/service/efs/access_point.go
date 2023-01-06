@@ -123,7 +123,7 @@ func ResourceAccessPoint() *schema.Resource {
 }
 
 func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -159,7 +159,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -173,7 +173,7 @@ func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -233,7 +233,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	log.Printf("[DEBUG] Deleting EFS access point %q", d.Id())
 	_, err := conn.DeleteAccessPoint(&efs.DeleteAccessPointInput{

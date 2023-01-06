@@ -152,7 +152,7 @@ func ResourceRestAPI() *schema.Resource {
 }
 
 func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway")
@@ -246,7 +246,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -465,7 +465,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 }
 
 func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -669,7 +669,7 @@ func modeConfigOrDefault(d *schema.ResourceData) string {
 }
 
 func resourceRestAPIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := &apigateway.DeleteRestApiInput{
 		RestApiId: aws.String(d.Id()),

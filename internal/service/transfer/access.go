@@ -119,7 +119,7 @@ func ResourceAccess() *schema.Resource {
 }
 
 func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
@@ -172,7 +172,7 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -219,7 +219,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -273,7 +273,7 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 

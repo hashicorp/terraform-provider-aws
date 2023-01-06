@@ -179,7 +179,7 @@ func testAccCheckProvisioningTemplateExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No IoT Provisioning Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		_, err := tfiot.FindProvisioningTemplateByName(context.Background(), conn, rs.Primary.ID)
 
@@ -188,7 +188,7 @@ func testAccCheckProvisioningTemplateExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckProvisioningTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_provisioning_template" {
@@ -213,7 +213,7 @@ func testAccCheckProvisioningTemplateDestroy(s *terraform.State) error {
 
 func testAccCheckProvisioningTemplateNumVersions(name string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		var got int
 		err := conn.ListProvisioningTemplateVersionsPages(

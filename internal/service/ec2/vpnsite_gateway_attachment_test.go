@@ -69,7 +69,7 @@ func testAccCheckVPNGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 			return fmt.Errorf("No EC2 VPN Gateway Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPNGatewayVPCAttachment(conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
 
@@ -84,7 +84,7 @@ func testAccCheckVPNGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 }
 
 func testAccCheckVPNGatewayAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway_attachment" {

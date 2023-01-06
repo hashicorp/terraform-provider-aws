@@ -211,7 +211,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 }
 
 func testAccCheckRecordingConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -247,7 +247,7 @@ func testAccCheckRecordingConfigurationExists(name string, recordingconfiguratio
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNameRecordingConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 		ctx := context.Background()
 		resp, err := tfivs.FindRecordingConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -272,7 +272,7 @@ func testAccCheckRecordingConfigurationRecreated(before, after *ivs.RecordingCon
 }
 
 func testAccRecordingConfigurationPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 	ctx := context.Background()
 
 	input := &ivs.ListRecordingConfigurationsInput{}

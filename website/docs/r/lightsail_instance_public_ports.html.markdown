@@ -53,6 +53,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cidrs` - (Optional) Set of CIDR blocks.
+* `cidr_list_aliases` - (Optional) Set of CIDR aliases that define access for a preconfigured range of IP addresses.
 
 ## Attributes Reference
 

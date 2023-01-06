@@ -92,7 +92,7 @@ func ResourceReplicaKey() *schema.Resource {
 }
 
 func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -173,7 +173,7 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -235,7 +235,7 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
@@ -279,7 +279,7 @@ func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

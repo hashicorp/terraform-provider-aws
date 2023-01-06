@@ -155,7 +155,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 }
 
 func testAccCheckAccountSettingDefaultDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_account_setting_default" {

@@ -315,7 +315,7 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -599,7 +599,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	var targetGroup *elbv2.TargetGroup
 
@@ -653,7 +653,7 @@ func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	if d.HasChange("health_check") {
 		var params *elbv2.ModifyTargetGroupInput
@@ -870,7 +870,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	input := &elbv2.DeleteTargetGroupInput{
 		TargetGroupArn: aws.String(d.Id()),
@@ -963,7 +963,7 @@ func TargetGroupSuffixFromARN(arn *string) string {
 
 // flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
 func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

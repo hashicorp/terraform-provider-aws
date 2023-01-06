@@ -215,7 +215,7 @@ func testAccCheckUserHierarchyStructureExists(resourceName string, function *con
 		}
 		instanceID := rs.Primary.ID
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeUserHierarchyStructureInput{
 			InstanceId: aws.String(instanceID),
@@ -238,7 +238,7 @@ func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID := rs.Primary.ID
 

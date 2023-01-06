@@ -412,7 +412,7 @@ func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Grafana Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
 		_, err := tfgrafana.FindWorkspaceByID(conn, rs.Primary.ID)
 
@@ -421,7 +421,7 @@ func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckWorkspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_grafana_workspace" {

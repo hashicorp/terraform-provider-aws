@@ -45,7 +45,7 @@ func ResourceBucketPolicy() *schema.Resource {
 }
 
 func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 
@@ -85,7 +85,7 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	log.Printf("[DEBUG] S3 bucket policy, read for bucket: %s", d.Id())
 	pol, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
@@ -127,7 +127,7 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 

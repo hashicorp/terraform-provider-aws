@@ -77,7 +77,7 @@ func ResourceGameSessionQueue() *schema.Resource {
 }
 
 func resourceGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -105,7 +105,7 @@ func resourceGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceGameSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -194,7 +194,7 @@ func flattenPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.PlayerLatenc
 }
 
 func resourceGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Updating GameLift Session Queue: %s", d.Id())
 
@@ -227,7 +227,7 @@ func resourceGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceGameSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	log.Printf("[INFO] Deleting GameLift Session Queue: %s", d.Id())
 	_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
 		Name: aws.String(d.Id()),

@@ -35,7 +35,7 @@ func ResourceVPNConnectionRoute() *schema.Resource {
 }
 
 func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionID := d.Get("vpn_connection_id").(string)
@@ -62,7 +62,7 @@ func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 
@@ -89,7 +89,7 @@ func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVPNConnectionRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 

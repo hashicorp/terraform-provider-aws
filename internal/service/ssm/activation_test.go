@@ -173,7 +173,7 @@ func testAccCheckActivationExists(n string, ssmActivation *ssm.Activation) resou
 			return fmt.Errorf("No SSM Activation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		resp, err := conn.DescribeActivations(&ssm.DescribeActivationsInput{
 			Filters: []*ssm.DescribeActivationsFilter{
@@ -199,7 +199,7 @@ func testAccCheckActivationExists(n string, ssmActivation *ssm.Activation) resou
 
 func testAccCheckActivationDisappears(a *ssm.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		input := &ssm.DeleteActivationInput{ActivationId: a.ActivationId}
 		_, err := conn.DeleteActivation(input)
@@ -211,7 +211,7 @@ func testAccCheckActivationDisappears(a *ssm.Activation) resource.TestCheckFunc 
 }
 
 func testAccCheckActivationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_activation" {

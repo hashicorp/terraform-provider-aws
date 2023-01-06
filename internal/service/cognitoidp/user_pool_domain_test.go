@@ -120,7 +120,7 @@ func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
 			return errors.New("No Cognito User Pool Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		_, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
 			Domain: aws.String(rs.Primary.ID),
@@ -131,7 +131,7 @@ func testAccCheckUserPoolDomainExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckUserPoolDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user_pool_domain" {

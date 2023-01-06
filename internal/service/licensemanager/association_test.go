@@ -81,14 +81,14 @@ func testAccCheckAssociationExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
 
 		return tflicensemanager.FindAssociation(context.Background(), conn, resourceARN, licenseConfigurationARN)
 	}
 }
 
 func testAccCheckAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_licensemanager_association" {

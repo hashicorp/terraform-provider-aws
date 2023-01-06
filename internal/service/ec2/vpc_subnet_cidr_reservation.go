@@ -68,7 +68,7 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 }
 
 func resourceSubnetCIDRReservationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.CreateSubnetCidrReservationInput{
 		Cidr:            aws.String(d.Get("cidr_block").(string)),
@@ -93,7 +93,7 @@ func resourceSubnetCIDRReservationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceSubnetCIDRReservationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	output, err := FindSubnetCIDRReservationBySubnetIDAndReservationID(conn, d.Get("subnet_id").(string), d.Id())
 
@@ -117,7 +117,7 @@ func resourceSubnetCIDRReservationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceSubnetCIDRReservationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 Subnet CIDR Reservation: %s", d.Id())
 	_, err := conn.DeleteSubnetCidrReservation(&ec2.DeleteSubnetCidrReservationInput{

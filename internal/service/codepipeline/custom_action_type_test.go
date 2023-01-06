@@ -215,7 +215,7 @@ func testAccCheckCustomActionTypeExists(n string, v *codepipeline.ActionType) re
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
 
 		output, err := tfcodepipeline.FindCustomActionTypeByThreePartKey(context.Background(), conn, category, provider, version)
 
@@ -230,7 +230,7 @@ func testAccCheckCustomActionTypeExists(n string, v *codepipeline.ActionType) re
 }
 
 func testAccCheckCustomActionTypeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codepipeline_custom_action_type" {

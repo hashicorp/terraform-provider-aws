@@ -319,7 +319,7 @@ func ResourceScalingPlan() *schema.Resource {
 }
 
 func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
@@ -349,7 +349,7 @@ func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
@@ -384,7 +384,7 @@ func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
@@ -416,7 +416,7 @@ func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 

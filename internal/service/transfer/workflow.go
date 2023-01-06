@@ -438,7 +438,7 @@ func ResourceWorkflow() *schema.Resource {
 }
 
 func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -473,7 +473,7 @@ func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -515,7 +515,7 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -528,7 +528,7 @@ func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	log.Printf("[DEBUG] Deleting Transfer Workflow: (%s)", d.Id())
 	_, err := conn.DeleteWorkflow(&transfer.DeleteWorkflowInput{

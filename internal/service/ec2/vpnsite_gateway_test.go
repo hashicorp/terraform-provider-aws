@@ -284,7 +284,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 }
 
 func testAccCheckVPNGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway" {
@@ -318,7 +318,7 @@ func testAccCheckVPNGatewayExists(n string, v *ec2.VpnGateway) resource.TestChec
 			return fmt.Errorf("No EC2 VPN Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPNGatewayByID(conn, rs.Primary.ID)
 

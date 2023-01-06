@@ -183,7 +183,7 @@ func ResourceBranch() *schema.Resource {
 }
 
 func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -266,7 +266,7 @@ func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -324,7 +324,7 @@ func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := BranchParseResourceID(d.Id())
@@ -416,7 +416,7 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBranchDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 

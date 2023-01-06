@@ -189,7 +189,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 }
 
 func testAccCheckDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination" {
@@ -222,7 +222,7 @@ func testAccCheckDestinationExists(n string, v *cloudwatchlogs.Destination) reso
 			return fmt.Errorf("No CloudWatch Logs Destination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 		output, err := tflogs.FindDestinationByName(context.Background(), conn, rs.Primary.ID)
 

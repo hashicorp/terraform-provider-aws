@@ -75,7 +75,7 @@ func ResourceAccountAssignment() *schema.Resource {
 }
 
 func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -126,7 +126,7 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
@@ -173,7 +173,7 @@ func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {

@@ -125,7 +125,7 @@ func DataSourceReplicationGroup() *schema.Resource {
 }
 
 func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	groupID := d.Get("replication_group_id").(string)
 

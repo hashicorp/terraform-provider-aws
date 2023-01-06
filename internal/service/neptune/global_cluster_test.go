@@ -304,7 +304,7 @@ func testAccCheckGlobalClusterExists(resourceName string, globalCluster *neptune
 			return fmt.Errorf("no Neptune Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 		cluster, err := tfneptune.FindGlobalClusterById(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
@@ -326,7 +326,7 @@ func testAccCheckGlobalClusterExists(resourceName string, globalCluster *neptune
 }
 
 func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_global_cluster" {
@@ -355,7 +355,7 @@ func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
 
 func testAccCheckGlobalClusterDisappears(globalCluster *neptune.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 		input := &neptune.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
@@ -392,7 +392,7 @@ func testAccCheckGlobalClusterRecreated(i, j *neptune.GlobalCluster) resource.Te
 }
 
 func testAccPreCheckGlobalCluster(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeGlobalClustersInput{}
 

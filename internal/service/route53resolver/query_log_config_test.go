@@ -129,7 +129,7 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 }
 
 func testAccCheckQueryLogConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_query_log_config" {
@@ -163,7 +163,7 @@ func testAccCheckQueryLogConfigExists(n string, v *route53resolver.ResolverQuery
 			return fmt.Errorf("No Route53 Resolver Query Log Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 		output, err := tfroute53resolver.FindResolverQueryLogConfigByID(context.Background(), conn, rs.Primary.ID)
 

@@ -125,7 +125,7 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 }
 
 func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.OriginRequestPolicyConfig{
@@ -165,7 +165,7 @@ func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	output, err := FindOriginRequestPolicyByID(conn, d.Id())
 
@@ -209,7 +209,7 @@ func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateOriginRequestPolicy.html:
@@ -252,7 +252,7 @@ func resourceOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceOriginRequestPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: (%s)", d.Id())
 	_, err := conn.DeleteOriginRequestPolicy(&cloudfront.DeleteOriginRequestPolicyInput{

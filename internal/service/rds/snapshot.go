@@ -118,7 +118,7 @@ func ResourceSnapshot() *schema.Resource {
 }
 
 func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	dBInstanceIdentifier := d.Get("db_instance_identifier").(string)
@@ -154,7 +154,7 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -216,7 +216,7 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[DEBUG] Deleting RDS DB Snapshot: %s", d.Id())
 	_, err := conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
@@ -235,7 +235,7 @@ func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -251,7 +251,7 @@ func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceSnapshotStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).RDSConn
+		conn := meta.(*conns.AWSClient).RDSConn()
 
 		opts := &rds.DescribeDBSnapshotsInput{
 			DBSnapshotIdentifier: aws.String(d.Id()),

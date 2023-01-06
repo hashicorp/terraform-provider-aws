@@ -56,7 +56,7 @@ func sweepRateBasedRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn
+	conn := client.(*conns.AWSClient).WAFRegionalConn()
 
 	input := &waf.ListRateBasedRulesInput{}
 
@@ -149,7 +149,7 @@ func sweepRegexMatchSet(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn
+	conn := client.(*conns.AWSClient).WAFRegionalConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -195,7 +195,7 @@ func sweepRuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn
+	conn := client.(*conns.AWSClient).WAFRegionalConn()
 
 	req := &waf.ListRuleGroupsInput{}
 	resp, err := conn.ListRuleGroups(req)
@@ -234,7 +234,7 @@ func sweepRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn
+	conn := client.(*conns.AWSClient).WAFRegionalConn()
 
 	input := &waf.ListRulesInput{}
 
@@ -326,7 +326,7 @@ func sweepWebACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn
+	conn := client.(*conns.AWSClient).WAFRegionalConn()
 
 	input := &waf.ListWebACLsInput{}
 

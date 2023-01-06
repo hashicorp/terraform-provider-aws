@@ -42,7 +42,7 @@ func sweepReplicationInstances(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DMSConn
+	conn := client.(*conns.AWSClient).DMSConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -82,7 +82,7 @@ func sweepReplicationTasks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DMSConn
+	conn := client.(*conns.AWSClient).DMSConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -125,7 +125,7 @@ func sweepEndpoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DMSConn
+	conn := client.(*conns.AWSClient).DMSConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

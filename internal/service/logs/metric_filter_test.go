@@ -197,7 +197,7 @@ func testAccCheckMetricFilterExists(n string, v *cloudwatchlogs.MetricFilter) re
 			return fmt.Errorf("No CloudWatch Logs Metric Filter ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 		output, err := tflogs.FindMetricFilterByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
@@ -212,7 +212,7 @@ func testAccCheckMetricFilterExists(n string, v *cloudwatchlogs.MetricFilter) re
 }
 
 func testAccCheckMetricFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_metric_filter" {

@@ -836,7 +836,7 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 }
 
 func testAccCheckGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_gateway" {
@@ -866,7 +866,7 @@ func testAccCheckGatewayExists(resourceName string, gateway *storagegateway.Desc
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 		output, err := tfstoragegateway.FindGatewayByARN(conn, rs.Primary.ID)
 

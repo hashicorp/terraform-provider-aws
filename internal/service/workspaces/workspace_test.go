@@ -326,7 +326,7 @@ func testAccWorkspace_timeout(t *testing.T) {
 }
 
 func testAccCheckWorkspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_workspaces_workspace" {
@@ -360,7 +360,7 @@ func testAccCheckWorkspaceExists(n string, v *workspaces.Workspace) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
 
 		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: []*string{aws.String(rs.Primary.ID)},

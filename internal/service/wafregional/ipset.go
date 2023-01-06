@@ -57,7 +57,7 @@ func ResourceIPSet() *schema.Resource {
 }
 
 func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	wr := NewRetryer(conn, region)
@@ -77,7 +77,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	params := &waf.GetIPSetInput{
 		IPSetId: aws.String(d.Id()),
@@ -124,7 +124,7 @@ func flattenIPSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
 }
 
 func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("ip_set_descriptor") {
@@ -140,7 +140,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	oldD := d.Get("ip_set_descriptor").(*schema.Set).List()

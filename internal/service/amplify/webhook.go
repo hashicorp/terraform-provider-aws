@@ -58,7 +58,7 @@ func ResourceWebhook() *schema.Resource {
 }
 
 func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	input := &amplify.CreateWebhookInput{
 		AppId:      aws.String(d.Get("app_id").(string)),
@@ -82,7 +82,7 @@ func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	webhook, err := FindWebhookByID(conn, d.Id())
 
@@ -120,7 +120,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	input := &amplify.UpdateWebhookInput{
 		WebhookId: aws.String(d.Id()),
@@ -145,7 +145,7 @@ func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	log.Printf("[DEBUG] Deleting Amplify Webhook: %s", d.Id())
 	_, err := conn.DeleteWebhook(&amplify.DeleteWebhookInput{

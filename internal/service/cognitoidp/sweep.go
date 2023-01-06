@@ -34,7 +34,7 @@ func sweepUserPoolDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CognitoIDPConn
+	conn := client.(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(50),
@@ -86,7 +86,7 @@ func sweepUserPools(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).CognitoIDPConn
+	conn := client.(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(50),

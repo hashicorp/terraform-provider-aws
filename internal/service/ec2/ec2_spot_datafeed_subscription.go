@@ -36,7 +36,7 @@ func ResourceSpotDataFeedSubscription() *schema.Resource {
 }
 
 func resourceSpotDataFeedSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	params := &ec2.CreateSpotDatafeedSubscriptionInput{
 		Bucket: aws.String(d.Get("bucket").(string)),
@@ -58,7 +58,7 @@ func resourceSpotDataFeedSubscriptionCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	resp, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
 
@@ -89,7 +89,7 @@ func resourceSpotDataFeedSubscriptionRead(d *schema.ResourceData, meta interface
 }
 
 func resourceSpotDataFeedSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting Spot Datafeed Subscription")
 	_, err := conn.DeleteSpotDatafeedSubscription(&ec2.DeleteSpotDatafeedSubscriptionInput{})

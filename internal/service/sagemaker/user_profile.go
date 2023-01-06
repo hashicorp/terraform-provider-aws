@@ -366,7 +366,7 @@ func ResourceUserProfile() *schema.Resource {
 }
 
 func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -413,7 +413,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -465,7 +465,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("user_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -500,7 +500,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	userProfileName := d.Get("user_profile_name").(string)
 	domainID := d.Get("domain_id").(string)

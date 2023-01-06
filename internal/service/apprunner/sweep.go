@@ -42,7 +42,7 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
+	conn := client.(*conns.AWSClient).AppRunnerConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	ctx := context.Background()
 	var errs *multierror.Error
@@ -107,7 +107,7 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
+	conn := client.(*conns.AWSClient).AppRunnerConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	ctx := context.Background()
 
@@ -168,7 +168,7 @@ func sweepServices(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
+	conn := client.(*conns.AWSClient).AppRunnerConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	ctx := context.Background()
 	var errs *multierror.Error

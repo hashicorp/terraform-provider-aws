@@ -30,7 +30,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 }
 
 func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	input := &securityhub.UpdateOrganizationConfigurationInput{
 		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
@@ -48,7 +48,7 @@ func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	output, err := conn.DescribeOrganizationConfiguration(&securityhub.DescribeOrganizationConfigurationInput{})
 

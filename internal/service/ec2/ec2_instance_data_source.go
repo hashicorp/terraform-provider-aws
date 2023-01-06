@@ -387,7 +387,7 @@ func DataSourceInstance() *schema.Resource {
 
 // dataSourceInstanceRead performs the instanceID lookup
 func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Build up search parameters

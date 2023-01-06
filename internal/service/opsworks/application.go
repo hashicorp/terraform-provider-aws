@@ -254,7 +254,7 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribeAppsInput{
 		AppIds: []*string{
@@ -301,7 +301,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
@@ -334,7 +334,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
@@ -366,7 +366,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DeleteAppInput{
 		AppId: aws.String(d.Id()),

@@ -77,7 +77,7 @@ func DataSourceZone() *schema.Resource {
 }
 
 func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name, nameExists := d.GetOk("name")

@@ -191,7 +191,7 @@ func TestAccRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 }
 
 func testAccCheckCellDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_cell" {
@@ -219,7 +219,7 @@ func testAccCheckCellExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 		input := &route53recoveryreadiness.GetCellInput{
 			CellName: aws.String(rs.Primary.ID),
@@ -232,7 +232,7 @@ func testAccCheckCellExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
 
 	input := &route53recoveryreadiness.ListCellsInput{}
 

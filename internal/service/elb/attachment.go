@@ -37,7 +37,7 @@ func ResourceAttachment() *schema.Resource {
 }
 
 func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbName := d.Get("elb").(string)
 
 	instance := d.Get("instance").(string)
@@ -76,7 +76,7 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbName := d.Get("elb").(string)
 
 	// only add the instance that was previously defined for this resource
@@ -120,7 +120,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbName := d.Get("elb").(string)
 
 	instance := d.Get("instance").(string)

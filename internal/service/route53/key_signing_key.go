@@ -100,7 +100,7 @@ func ResourceKeySigningKey() *schema.Resource {
 }
 
 func resourceKeySigningKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
 	name := d.Get("name").(string)
@@ -139,7 +139,7 @@ func resourceKeySigningKeyCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceKeySigningKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	hostedZoneID, name, err := KeySigningKeyParseResourceID(d.Id())
 
@@ -194,7 +194,7 @@ func resourceKeySigningKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeySigningKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	if d.HasChange("status") {
 		status := d.Get("status").(string)
@@ -247,7 +247,7 @@ func resourceKeySigningKeyUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceKeySigningKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	status := d.Get("status").(string)
 

@@ -188,7 +188,7 @@ func testAccCheckScalingScheduleExists(n string, v *autoscaling.ScheduledUpdateG
 			return fmt.Errorf("No Auto Scaling Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		output, err := tfautoscaling.FindScheduledUpdateGroupAction(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
@@ -203,7 +203,7 @@ func testAccCheckScalingScheduleExists(n string, v *autoscaling.ScheduledUpdateG
 }
 
 func testAccCheckScheduleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_schedule" {

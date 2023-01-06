@@ -55,7 +55,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 }
 
 func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
@@ -85,7 +85,7 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	arn := d.Get("policy_arn").(string)
 	name := d.Get("name").(string)
 
@@ -138,7 +138,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 func resourcePolicyAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	name := d.Get("name").(string)
 	var userErr, roleErr, groupErr error
 
@@ -158,7 +158,7 @@ func resourcePolicyAttachmentUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	name := d.Get("name").(string)
 	arn := d.Get("policy_arn").(string)
 	users := flex.ExpandStringSet(d.Get("users").(*schema.Set))

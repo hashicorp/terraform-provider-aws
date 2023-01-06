@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
 }
 
 // newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.
@@ -62,7 +62,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	conn := d.Meta().STSConn
+	conn := d.Meta().STSConn()
 
 	output, err := FindCallerIdentity(ctx, conn)
 

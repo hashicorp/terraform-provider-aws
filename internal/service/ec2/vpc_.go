@@ -175,7 +175,7 @@ func ResourceVPC() *schema.Resource {
 }
 
 func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -259,7 +259,7 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -403,7 +403,7 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("enable_dns_hostnames") {
 		if err := modifyVPCDNSHostnames(conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
@@ -485,7 +485,7 @@ func resourceVPCUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),

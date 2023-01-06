@@ -39,7 +39,7 @@ func DataSourceSite() *schema.Resource {
 }
 
 func dataSourceSiteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListSitesInput{}
 

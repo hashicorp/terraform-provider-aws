@@ -222,7 +222,7 @@ func testAccCheckPhoneNumberExists(resourceName string, function *connect.Descri
 			return fmt.Errorf("Connect Phone Number ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribePhoneNumberInput{
 			PhoneNumberId: aws.String(rs.Primary.ID),
@@ -245,7 +245,7 @@ func testAccCheckPhoneNumberDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribePhoneNumberInput{
 			PhoneNumberId: aws.String(rs.Primary.ID),

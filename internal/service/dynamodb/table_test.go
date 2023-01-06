@@ -2112,7 +2112,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 }
 
 func testAccCheckTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_table" {
@@ -2146,7 +2146,7 @@ func testAccCheckInitialTableExists(n string, v *dynamodb.TableDescription) reso
 			return fmt.Errorf("No DynamoDB Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
 		output, err := tfdynamodb.FindTableByName(conn, rs.Primary.ID)
 
@@ -2181,7 +2181,7 @@ func testAccCheckReplicaHasTags(n string, region string, count int) resource.Tes
 			return fmt.Errorf("no DynamoDB table name specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
 
 		if aws.StringValue(conn.Config.Region) != region {

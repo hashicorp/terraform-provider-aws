@@ -24,7 +24,7 @@ import (
 func TestAccLightsailDatabase_basic(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -73,10 +73,10 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameTooShort := "s"
 	rNameTooLong := fmt.Sprintf("%s-%s", rName, sdkacctest.RandString(255))
 	rNameContainsUnderscore := fmt.Sprintf("%s-%s", rName, "_test")
@@ -135,9 +135,9 @@ func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	dbName := "randomdatabasename"
 	dbNameTooShort := ""
@@ -201,9 +201,9 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
+func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	username := "username1"
 	usernameTooShort := ""
@@ -272,8 +272,8 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+func TestAccLightsailDatabase_masterPassword(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	password := "testpassword"
 	passwordTooShort := "short"
 	passwordTooLong := fmt.Sprintf("%s-%s", password, sdkacctest.RandString(128))
@@ -320,9 +320,9 @@ func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
+func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	backupWindowInvalidHour := "25:30-10:00"
 	backupWindowInvalidMinute := "10:00-10:70"
@@ -374,9 +374,9 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
+func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	maintenanceWindowInvalidDay := "tuesday:04:30-tue:05:00"
 	maintenanceWindowInvalidHour := "tue:04:30-tue:30:00"
@@ -433,9 +433,9 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
+func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -449,7 +449,7 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_publiclyAccessible(rName, "true"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
@@ -467,7 +467,7 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_publiclyAccessible(rName, "false"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -477,9 +477,9 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
+func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -493,7 +493,7 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "true"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "true"),
@@ -511,7 +511,7 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "false"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "false"),
@@ -521,9 +521,9 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
+func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	sName := fmt.Sprintf("%s-snapshot", rName)
 	sNameTooShort := "s"
@@ -578,9 +578,9 @@ func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_Tags(t *testing.T) {
+func TestAccLightsailDatabase_tags(t *testing.T) {
 	var db1, db2, db3 lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -633,14 +633,53 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 	})
 }
 
+func TestAccLightsailDatabase_ha(t *testing.T) {
+	var db lightsail.RelationalDatabase
+	resourceName := "aws_lightsail_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_ha(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDatabaseExists(resourceName, &db),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_1_0"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"master_password",
+					"skip_final_snapshot",
+					"final_snapshot_name",
+				},
+			},
+		},
+	})
+}
+
 func TestAccLightsailDatabase_disappears(t *testing.T) {
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Database
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := conn.DeleteRelationalDatabase(&lightsail.DeleteRelationalDatabaseInput{
 			RelationalDatabaseName: aws.String(rName),
@@ -689,7 +728,7 @@ func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) res
 			return errors.New("No Lightsail Database ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		params := lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: aws.String(rs.Primary.ID),
@@ -710,7 +749,7 @@ func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) res
 }
 
 func testAccCheckDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_database" {
@@ -740,7 +779,7 @@ func testAccCheckDatabaseDestroy(s *terraform.State) error {
 }
 
 func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_database" {
@@ -782,22 +821,13 @@ func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDatabaseConfigBase() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-`
+func testAccDatabaseConfig_base() string {
+	return acctest.ConfigAvailableAZsNoOptIn()
 }
 
 func testAccDatabaseConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -814,7 +844,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterDatabaseName(rName string, masterDatabaseName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -831,7 +861,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterUsername(rName string, masterUsername string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -848,7 +878,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterPassword(rName string, masterPassword string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -865,7 +895,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_preferredBackupWindow(rName string, preferredBackupWindow string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -884,7 +914,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_preferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name     = %[1]q
@@ -901,9 +931,9 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredMaintenanceWindow))
 }
 
-func testAccDatabaseConfig_publiclyAccessible(rName string, publiclyAccessible string) string {
+func testAccDatabaseConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -913,16 +943,16 @@ resource "aws_lightsail_database" "test" {
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
   bundle_id                = "micro_1_0"
-  publicly_accessible      = %[2]q
+  publicly_accessible      = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
 }
 `, rName, publiclyAccessible))
 }
 
-func testAccDatabaseConfig_backupRetentionEnabled(rName string, backupRetentionEnabled string) string {
+func testAccDatabaseConfig_backupRetentionEnabled(rName string, backupRetentionEnabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -932,7 +962,7 @@ resource "aws_lightsail_database" "test" {
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
   bundle_id                = "micro_1_0"
-  backup_retention_enabled = %[2]q
+  backup_retention_enabled = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
 }
@@ -941,7 +971,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_finalSnapshotName(rName string, sName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -958,7 +988,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -978,7 +1008,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -995,4 +1025,20 @@ resource "aws_lightsail_database" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDatabaseConfig_ha(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDatabaseConfig_base(),
+		fmt.Sprintf(`	
+resource "aws_lightsail_database" "test" {
+  relational_database_name = %[1]q
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_ha_1_0"
+  skip_final_snapshot      = true
+}
+`, rName))
 }

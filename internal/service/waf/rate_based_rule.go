@@ -81,7 +81,7 @@ func ResourceRateBasedRule() *schema.Resource {
 }
 
 func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -120,7 +120,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -184,7 +184,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChanges("predicates", "rate_limit") {
 		o, n := d.GetChange("predicates")
@@ -209,7 +209,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {

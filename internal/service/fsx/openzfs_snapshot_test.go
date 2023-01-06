@@ -223,7 +223,7 @@ func testAccCheckOpenzfsSnapshotExists(resourceName string, fs *fsx.Snapshot) re
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 		output, err := tffsx.FindSnapshotByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -241,7 +241,7 @@ func testAccCheckOpenzfsSnapshotExists(resourceName string, fs *fsx.Snapshot) re
 }
 
 func testAccCheckOpenzfsSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_openzfs_snapshot" {

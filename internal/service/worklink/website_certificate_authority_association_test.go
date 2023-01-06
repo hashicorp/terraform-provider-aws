@@ -103,7 +103,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_disappears(t *testing
 }
 
 func testAccCheckWebsiteCertificateAuthorityAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_worklink_website_certificate_authority_association" {
@@ -139,7 +139,7 @@ func testAccCheckWebsiteCertificateAuthorityAssociationDisappears(resourceName s
 			return fmt.Errorf("No resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
 		fleetArn, websiteCaID, err := tfworklink.DecodeWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -184,7 +184,7 @@ func testAccCheckWebsiteCertificateAuthorityAssociationExists(n string) resource
 			return fmt.Errorf("WorkLink Fleet ARN is missing, should be set.")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkLinkConn()
 		fleetArn, websiteCaID, err := tfworklink.DecodeWebsiteCertificateAuthorityAssociationResourceID(rs.Primary.ID)
 		if err != nil {
 			return err

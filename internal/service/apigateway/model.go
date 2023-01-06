@@ -32,7 +32,7 @@ func ResourceModel() *schema.Resource {
 				d.Set("name", name)
 				d.Set("rest_api_id", restApiID)
 
-				conn := meta.(*conns.AWSClient).APIGatewayConn
+				conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 				output, err := conn.GetModel(&apigateway.GetModelInput{
 					ModelName: aws.String(name),
@@ -88,7 +88,7 @@ func ResourceModel() *schema.Resource {
 }
 
 func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Creating API Gateway Model")
 
 	var description *string
@@ -120,7 +120,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	out, err := conn.GetModel(&apigateway.GetModelInput{
@@ -145,7 +145,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -178,7 +178,7 @@ func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
 	input := &apigateway.DeleteModelInput{
 		ModelName: aws.String(d.Get("name").(string)),

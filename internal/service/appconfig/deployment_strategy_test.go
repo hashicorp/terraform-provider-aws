@@ -193,7 +193,7 @@ func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 }
 
 func testAccCheckDeploymentStrategyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_deployment_strategy" {
@@ -233,7 +233,7 @@ func testAccCheckDeploymentStrategyExists(resourceName string) resource.TestChec
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		input := &appconfig.GetDeploymentStrategyInput{
 			DeploymentStrategyId: aws.String(rs.Primary.ID),

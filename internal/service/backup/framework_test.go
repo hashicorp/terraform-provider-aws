@@ -489,7 +489,7 @@ func testAccFramework_disappears(t *testing.T) {
 }
 
 func testAccFrameworkPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 	_, err := conn.ListFrameworks(&backup.ListFrameworksInput{})
 
@@ -503,7 +503,7 @@ func testAccFrameworkPreCheck(t *testing.T) {
 }
 
 func testAccCheckFrameworkDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_framework" {
 			continue
@@ -533,7 +533,7 @@ func testAccCheckFrameworkExists(name string, framework *backup.DescribeFramewor
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 		input := &backup.DescribeFrameworkInput{
 			FrameworkName: aws.String(rs.Primary.ID),
 		}

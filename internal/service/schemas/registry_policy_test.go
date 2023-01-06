@@ -126,7 +126,7 @@ func testAccCheckRegistryPolicyExists(name string, v *schemas.GetResourcePolicyO
 			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 		output, err := tfschemas.FindRegistryPolicyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
@@ -139,7 +139,7 @@ func testAccCheckRegistryPolicyExists(name string, v *schemas.GetResourcePolicyO
 }
 
 func testAccCheckRegistryPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_registry_policy" {
@@ -196,7 +196,7 @@ func testAccCheckRegistryPolicy(name string, expectedSid string) resource.TestCh
 			]
 		}`, expectedSid, partition, region, account_id, rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 		policy, err := tfschemas.FindRegistryPolicyByName(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err

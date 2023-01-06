@@ -84,7 +84,7 @@ func testAccDomainServiceAccessPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No CloudSearch Domain Service Access Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
 
 		_, err := tfcloudsearch.FindAccessPolicyByName(conn, rs.Primary.ID)
 
@@ -98,7 +98,7 @@ func testAccDomainServiceAccessPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
 
 		_, err := tfcloudsearch.FindAccessPolicyByName(conn, rs.Primary.ID)
 

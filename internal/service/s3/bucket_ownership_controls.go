@@ -52,7 +52,7 @@ func ResourceBucketOwnershipControls() *schema.Resource {
 }
 
 func resourceBucketOwnershipControlsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 
@@ -75,7 +75,7 @@ func resourceBucketOwnershipControlsCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceBucketOwnershipControlsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.GetBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
@@ -117,7 +117,7 @@ func resourceBucketOwnershipControlsRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceBucketOwnershipControlsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
@@ -136,7 +136,7 @@ func resourceBucketOwnershipControlsUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceBucketOwnershipControlsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.DeleteBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),

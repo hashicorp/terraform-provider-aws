@@ -339,7 +339,7 @@ func DataSourceDomain() *schema.Resource {
 }
 
 func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))

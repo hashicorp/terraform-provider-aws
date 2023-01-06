@@ -100,7 +100,7 @@ func ResourceLocationNFS() *schema.Resource {
 }
 
 func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -127,7 +127,7 @@ func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -188,7 +188,7 @@ func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationNfsInput{
@@ -219,7 +219,7 @@ func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationNFSDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

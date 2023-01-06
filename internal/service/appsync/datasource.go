@@ -236,7 +236,7 @@ func ResourceDataSource() *schema.Resource {
 }
 
 func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 	region := meta.(*conns.AWSClient).Region
 
 	input := &appsync.CreateDataSourceInput{
@@ -284,7 +284,7 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, name, err := DecodeID(d.Id())
 
@@ -341,7 +341,7 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 	region := meta.(*conns.AWSClient).Region
 
 	apiID, name, err := DecodeID(d.Id())
@@ -392,7 +392,7 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, name, err := DecodeID(d.Id())
 

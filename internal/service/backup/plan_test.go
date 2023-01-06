@@ -644,7 +644,7 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 }
 
 func testAccCheckPlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_plan" {
 			continue
@@ -668,7 +668,7 @@ func testAccCheckPlanDestroy(s *terraform.State) error {
 
 func testAccCheckPlanExists(name string, plan *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

@@ -121,7 +121,7 @@ func TestAccLocationTrackerAssociation_disappears(t *testing.T) {
 }
 
 func testAccCheckTrackerAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_location_tracker_association" {
@@ -166,7 +166,7 @@ func testAccCheckTrackerAssociationExists(name string) resource.TestCheckFunc {
 			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameTrackerAssociation, name, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(context.Background(), conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 

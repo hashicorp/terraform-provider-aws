@@ -53,7 +53,7 @@ func ResourceActionTarget() *schema.Resource {
 }
 
 func resourceActionTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	description := d.Get("description").(string)
 	name := d.Get("name").(string)
 	identifier := d.Get("identifier").(string)
@@ -86,7 +86,7 @@ func resourceActionTargetParseIdentifier(identifier string) (string, error) {
 }
 
 func resourceActionTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	log.Printf("[DEBUG] Reading Security Hub custom action targets to find %s", d.Id())
 
@@ -117,7 +117,7 @@ func resourceActionTargetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceActionTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	input := &securityhub.UpdateActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
@@ -153,7 +153,7 @@ func ActionTargetCheckExists(conn *securityhub.SecurityHub, actionTargetArn stri
 }
 
 func resourceActionTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Printf("[DEBUG] Deleting Security Hub custom action target %s", d.Id())
 
 	_, err := conn.DeleteActionTarget(&securityhub.DeleteActionTargetInput{

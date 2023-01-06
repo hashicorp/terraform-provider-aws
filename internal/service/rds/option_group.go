@@ -130,7 +130,7 @@ func ResourceOptionGroup() *schema.Resource {
 }
 
 func resourceOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -167,7 +167,7 @@ func resourceOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -242,7 +242,7 @@ func optionInList(optionName string, list []*string) bool {
 }
 
 func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	if d.HasChange("option") {
 		o, n := d.GetChange("option")
 		if o == nil {
@@ -316,7 +316,7 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOptionGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	deleteOpts := &rds.DeleteOptionGroupInput{
 		OptionGroupName: aws.String(d.Id()),

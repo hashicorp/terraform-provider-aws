@@ -739,7 +739,7 @@ func testAccCheckAddonExists(ctx context.Context, n string, v *eks.Addon) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 		output, err := tfeks.FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
@@ -755,7 +755,7 @@ func testAccCheckAddonExists(ctx context.Context, n string, v *eks.Addon) resour
 
 func testAccCheckAddonDestroy(s *terraform.State) error {
 	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_addon" {
@@ -785,7 +785,7 @@ func testAccCheckAddonDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAddon(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 	input := &eks.DescribeAddonVersionsInput{}
 
@@ -802,7 +802,7 @@ func testAccPreCheckAddon(t *testing.T) {
 
 func testAccCheckAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 		return tfeks.UpdateTags(conn, aws.StringValue(addon.AddonArn), oldTags, newTags)
 	}

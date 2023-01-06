@@ -240,7 +240,7 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 }
 
 func testAccCheckAccessPointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_access_point" {
 			continue
@@ -279,7 +279,7 @@ func testAccCheckAccessPointExists(resourceID string, mount *efs.AccessPointDesc
 			return fmt.Errorf("Not found: %s", resourceID)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 		mt, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
 			AccessPointId: aws.String(fs.Primary.ID),
 		})

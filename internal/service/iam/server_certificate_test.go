@@ -236,7 +236,7 @@ func testAccCheckCertExists(n string, cert *iam.ServerCertificate) resource.Test
 			return fmt.Errorf("No Server Cert ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		describeOpts := &iam.GetServerCertificateInput{
 			ServerCertificateName: aws.String(rs.Primary.Attributes["name"]),
 		}
@@ -252,7 +252,7 @@ func testAccCheckCertExists(n string, cert *iam.ServerCertificate) resource.Test
 }
 
 func testAccCheckServerCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_server_certificate" {

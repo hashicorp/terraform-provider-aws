@@ -162,7 +162,7 @@ func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
 }
 
 func testAccCheckFileSystemPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_file_system_policy" {
@@ -196,7 +196,7 @@ func testAccCheckFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPolic
 			return fmt.Errorf("No EFS File System Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 
 		output, err := tfefs.FindFileSystemPolicyByID(conn, rs.Primary.ID)
 

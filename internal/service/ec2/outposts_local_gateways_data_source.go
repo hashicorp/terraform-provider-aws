@@ -32,7 +32,7 @@ func DataSourceLocalGateways() *schema.Resource {
 }
 
 func dataSourceLocalGatewaysRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeLocalGatewaysInput{}
 

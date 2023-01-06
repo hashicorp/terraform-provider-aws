@@ -784,7 +784,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 }
 
 func testAccCheckTaskDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_task" {
@@ -814,7 +814,7 @@ func testAccCheckTaskExists(resourceName string, task *datasync.DescribeTaskOutp
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 		output, err := tfdatasync.FindTaskByARN(conn, rs.Primary.ID)
 
@@ -844,7 +844,7 @@ func testAccCheckTaskNotRecreated(i, j *datasync.DescribeTaskOutput) resource.Te
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListTasksInput{
 		MaxResults: aws.Int64(1),

@@ -26,7 +26,7 @@ func virtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*direct
 }
 
 func virtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	if d.HasChange("mtu") {
 		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
@@ -64,7 +64,7 @@ func virtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func virtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	log.Printf("[DEBUG] Deleting Direct Connect virtual interface: %s", d.Id())
 	_, err := conn.DeleteVirtualInterface(&directconnect.DeleteVirtualInterfaceInput{

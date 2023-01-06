@@ -213,7 +213,7 @@ func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resou
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		domainName, basePath, err := tfapigateway.DecodeBasePathMappingID(rs.Primary.ID)
 		if err != nil {
@@ -237,7 +237,7 @@ func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resou
 
 func testAccCheckBasePathDestroy(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_base_path_mapping" {

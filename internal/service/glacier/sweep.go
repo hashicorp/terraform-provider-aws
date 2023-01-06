@@ -27,7 +27,7 @@ func sweepVaults(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).GlacierConn
+	conn := client.(*conns.AWSClient).GlacierConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListVaultsPages(&glacier.ListVaultsInput{}, func(page *glacier.ListVaultsOutput, lastPage bool) bool {

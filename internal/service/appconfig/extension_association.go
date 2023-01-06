@@ -59,7 +59,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 }
 
 func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	in := appconfig.CreateExtensionAssociationInput{
 		ExtensionIdentifier: aws.String(d.Get("extension_arn").(string)),
@@ -86,7 +86,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	out, err := FindExtensionAssociationById(ctx, conn, d.Id())
 
@@ -110,7 +110,7 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	requestUpdate := false
 
 	in := &appconfig.UpdateExtensionAssociationInput{
@@ -138,7 +138,7 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	_, err := conn.DeleteExtensionAssociationWithContext(ctx, &appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
