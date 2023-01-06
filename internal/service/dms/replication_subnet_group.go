@@ -133,7 +133,7 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 		},
 	})
 	if err != nil {
-		return err
+		return create.Error(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 	if len(response.ReplicationSubnetGroups) == 0 {
 		d.SetId("")
@@ -153,24 +153,24 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 
 	err = resourceReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
 	if err != nil {
-		return err
+		return create.Error(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
+		return create.Error(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return create.SettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return create.SettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags_all", err)
 	}
 
 	return nil
@@ -195,7 +195,7 @@ func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Replication Subnet Group (%s) tags: %s", arn, err)
+			return create.Error(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
 		}
 	}
 
@@ -203,7 +203,7 @@ func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface
 
 	_, err := conn.ModifyReplicationSubnetGroup(request)
 	if err != nil {
-		return err
+		return create.Error(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
 	return resourceReplicationSubnetGroupRead(d, meta)
@@ -219,7 +219,7 @@ func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] DMS delete replication subnet group: %#v", request)
 
 	_, err := conn.DeleteReplicationSubnetGroup(request)
-	return err
+	return create.Error(names.DMS, create.ErrActionDeleting, ResNameReplicationSubnetGroup, d.Id(), err)
 }
 
 func resourceReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
