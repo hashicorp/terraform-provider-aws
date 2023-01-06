@@ -119,6 +119,7 @@ func ResourcePolicy() *schema.Resource {
 			},
 			"target_tracking_scaling_policy_configuration": {
 				Type:     schema.TypeList,
+				MinItems: 1,
 				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -212,14 +213,11 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
-	params, err := getPutScalingPolicyInput(d)
-	if err != nil {
-		return create.Error(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
-	}
+	params := getPutScalingPolicyInput(d)
 
 	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)
 	var resp *applicationautoscaling.PutScalingPolicyOutput
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
@@ -310,12 +308,8 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
-	params, inputErr := getPutScalingPolicyInput(d)
-	if inputErr != nil {
-		return inputErr
-	}
+	params := getPutScalingPolicyInput(d)
 
-	log.Printf("[DEBUG] Application Autoscaling Update Scaling Policy: %#v", params)
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
@@ -538,7 +532,7 @@ func expandPredefinedMetricSpecification(configured []interface{}) *applicationa
 	return spec
 }
 
-func getPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.PutScalingPolicyInput, error) {
+func getPutScalingPolicyInput(d *schema.ResourceData) applicationautoscaling.PutScalingPolicyInput {
 	var params = applicationautoscaling.PutScalingPolicyInput{
 		PolicyName: aws.String(d.Get("name").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -562,38 +556,37 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.Pu
 
 	if l, ok := d.GetOk("target_tracking_scaling_policy_configuration"); ok {
 		v := l.([]interface{})
-		if len(v) < 1 {
-			return params, fmt.Errorf("empty target_tracking_scaling_policy_configuration block")
-		}
-		ttspCfg := v[0].(map[string]interface{})
-		cfg := &applicationautoscaling.TargetTrackingScalingPolicyConfiguration{
-			TargetValue: aws.Float64(ttspCfg["target_value"].(float64)),
-		}
+		if len(v) == 1 {
+			ttspCfg := v[0].(map[string]interface{})
+			cfg := &applicationautoscaling.TargetTrackingScalingPolicyConfiguration{
+				TargetValue: aws.Float64(ttspCfg["target_value"].(float64)),
+			}
 
-		if v, ok := ttspCfg["scale_in_cooldown"]; ok {
-			cfg.ScaleInCooldown = aws.Int64(int64(v.(int)))
-		}
+			if v, ok := ttspCfg["scale_in_cooldown"]; ok {
+				cfg.ScaleInCooldown = aws.Int64(int64(v.(int)))
+			}
 
-		if v, ok := ttspCfg["scale_out_cooldown"]; ok {
-			cfg.ScaleOutCooldown = aws.Int64(int64(v.(int)))
-		}
+			if v, ok := ttspCfg["scale_out_cooldown"]; ok {
+				cfg.ScaleOutCooldown = aws.Int64(int64(v.(int)))
+			}
 
-		if v, ok := ttspCfg["disable_scale_in"]; ok {
-			cfg.DisableScaleIn = aws.Bool(v.(bool))
-		}
+			if v, ok := ttspCfg["disable_scale_in"]; ok {
+				cfg.DisableScaleIn = aws.Bool(v.(bool))
+			}
 
-		if v, ok := ttspCfg["customized_metric_specification"].([]interface{}); ok && len(v) > 0 {
-			cfg.CustomizedMetricSpecification = expandCustomizedMetricSpecification(v)
-		}
+			if v, ok := ttspCfg["customized_metric_specification"].([]interface{}); ok && len(v) > 0 {
+				cfg.CustomizedMetricSpecification = expandCustomizedMetricSpecification(v)
+			}
 
-		if v, ok := ttspCfg["predefined_metric_specification"].([]interface{}); ok && len(v) > 0 {
-			cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
-		}
+			if v, ok := ttspCfg["predefined_metric_specification"].([]interface{}); ok && len(v) > 0 {
+				cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
+			}
 
-		params.TargetTrackingScalingPolicyConfiguration = cfg
+			params.TargetTrackingScalingPolicyConfiguration = cfg
+		}
 	}
 
-	return params, nil
+	return params
 }
 
 func getPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {

@@ -125,7 +125,7 @@ func sweepRegistries(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepSchemas(region string) error {
+func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)

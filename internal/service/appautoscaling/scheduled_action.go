@@ -241,7 +241,6 @@ func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) err
 	_, err := conn.DeleteScheduledAction(input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
-			log.Printf("[WARN] Application Auto Scaling scheduled action (%s) not found, removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("deleting Application Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
