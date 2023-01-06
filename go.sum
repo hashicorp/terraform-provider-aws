@@ -92,8 +92,8 @@ github.com/aws/aws-sdk-go-v2/service/route53domains v1.13.0 h1:0isIvtqn8syj503AE
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.13.0/go.mod h1:TTvu6PV1OnaZWl5QWRgpP1iH79bEESwPnCNya1sDqyM=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.28.2 h1:HILTJewyveEWszPKAN3C3gALrs2x13tCIN3BZZrUgkE=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.28.2/go.mod h1:4DfdtJVYJj82pZdBoOwyA87ocrDYfQgAgbW6e17Xr2U=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.3 h1:y06COYMS5OWfEv31VWaOCgTXsfWEZydwqqGvTkvl9nc=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.3/go.mod h1:ZnD5i/e5nCIh1w3ivCfifQ5r4PLh3aOCElnOrZz+WnQ=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.0 h1:4AYYktQrNoGvQS7hm6SYTUYIbFC/T23I54Dx8KIM5AY=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.0/go.mod h1:ZnD5i/e5nCIh1w3ivCfifQ5r4PLh3aOCElnOrZz+WnQ=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.3 h1:JK8OY6BvODGFdv1B01s3kTjdJWoCQQUIItcEJCZEbwo=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.3/go.mod h1:Q+I4FY+sxSWRVgbNXULzRnK+REDSF8oXzY5Eya/Y33c=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.33.4 h1:s8o8aN6cOaYQ6oJ4D7DMV98iyNhkiY1PDFSk5uSbqF8=

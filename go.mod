@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.14
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.28.2
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.3
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.19.2
