@@ -3,6 +3,7 @@ package dms
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -11,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceReplicationSubnetGroup() *schema.Resource {
@@ -23,6 +26,12 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 		Read:   resourceReplicationSubnetGroupRead,
 		Update: resourceReplicationSubnetGroupUpdate,
 		Delete: resourceReplicationSubnetGroupDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -47,6 +56,7 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+				MinItems: 2,
 				Required: true,
 			},
 			"tags":     tftags.TagsSchema(),
@@ -60,6 +70,10 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
+
+const (
+	ResNameReplicationSubnetGroup = "Replication Subnet Group"
+)
 
 func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn()
@@ -93,8 +107,12 @@ func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface
 		_, err = conn.CreateReplicationSubnetGroup(request)
 
 		if err != nil {
-			return err
+			return create.Error(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
 		}
+	}
+
+	if err != nil {
+		return create.Error(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
 	}
 
 	d.SetId(d.Get("replication_subnet_group_id").(string))
