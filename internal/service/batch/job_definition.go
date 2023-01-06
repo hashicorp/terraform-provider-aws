@@ -310,6 +310,7 @@ func resourceJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn()
 
+	log.Printf("[DEBUG] Deleting Batch Job Definition: %s", d.Id())
 	_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{
 		JobDefinition: aws.String(d.Id()),
 	})

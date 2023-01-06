@@ -225,13 +225,13 @@ func resourceJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn()
 	name := d.Get("name").(string)
 
-	log.Printf("[DEBUG] Disabling Batch Job Queue %s", name)
+	log.Printf("[DEBUG] Disabling Batch Job Queue: %s", name)
 	err := DisableJobQueue(name, conn)
 	if err != nil {
 		return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Batch Job Queue %s", name)
+	log.Printf("[DEBUG] Deleting Batch Job Queue: %s", name)
 	err = DeleteJobQueue(name, conn)
 	if err != nil {
 		return fmt.Errorf("error deleting Batch Job Queue (%s): %s", name, err)
