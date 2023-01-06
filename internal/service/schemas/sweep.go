@@ -25,18 +25,28 @@ func init() {
 	resource.AddTestSweepers("aws_schemas_registry", &resource.Sweeper{
 		Name: "aws_schemas_registry",
 		F:    sweepRegistries,
+		Dependencies: []string{
+			"aws_schemas_schema",
+		},
+	})
+
+	resource.AddTestSweepers("aws_schemas_schema", &resource.Sweeper{
+		Name: "aws_schemas_registry",
+		F:    sweepSchemas,
 	})
 }
 
 func sweepDiscoverers(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).SchemasConn()
-	input := &schemas.ListDiscoverersInput{}
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	input := &schemas.ListDiscoverersInput{}
 	err = conn.ListDiscoverersPages(input, func(page *schemas.ListDiscoverersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -46,13 +56,8 @@ func sweepDiscoverers(region string) error {
 			r := ResourceDiscoverer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(discoverer.DiscovererId))
-			err = r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -62,9 +67,12 @@ func sweepDiscoverers(region string) error {
 		log.Printf("[WARN] Skipping EventBridge Schemas Discoverer sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Discoverers: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing EventBridge Schemas Discoverers: %w", err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping EventBridge Schemas Discoverers: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -73,12 +81,61 @@ func sweepDiscoverers(region string) error {
 func sweepRegistries(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).SchemasConn()
-	input := &schemas.ListRegistriesInput{}
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	input := &schemas.ListRegistriesInput{}
+	err = conn.ListRegistriesPages(input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, registry := range page.Registries {
+			registryName := aws.StringValue(registry.RegistryName)
+			if strings.HasPrefix(registryName, "aws.") {
+				continue
+			}
+
+			r := ResourceRegistry()
+			d := r.Data(nil)
+			d.SetId(registryName)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Schemas Registry sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing EventBridge Schemas Registries: %w", err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Schemas Registries: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepSchemas(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).SchemasConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	input := &schemas.ListRegistriesInput{}
 	err = conn.ListRegistriesPages(input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -99,41 +156,21 @@ func sweepRegistries(region string) error {
 				for _, schema := range page.Schemas {
 					schemaName := aws.StringValue(schema.SchemaName)
 					if strings.HasPrefix(schemaName, "aws.") {
+						log.Printf("[DEBUG] skipping EventBridge Schema (%s): managed by AWS", schemaName)
 						continue
 					}
 
 					r := ResourceSchema()
 					d := r.Data(nil)
 					d.SetId(SchemaCreateResourceID(schemaName, registryName))
-					err = r.Delete(d, client)
 
-					if err != nil {
-						log.Printf("[ERROR] %s", err)
-						sweeperErrs = multierror.Append(sweeperErrs, err)
-						continue
-					}
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
 			})
-
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Schemas: %w", err))
-			}
-
-			if strings.HasPrefix(registryName, "aws.") {
-				continue
-			}
-
-			r := ResourceRegistry()
-			d := r.Data(nil)
-			d.SetId(registryName)
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing EventBridge Schemas Schemas from Registry %q: %w", registryName, err))
 			}
 		}
 
@@ -141,12 +178,15 @@ func sweepRegistries(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EventBridge Schemas Registry sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping EventBridge Schemas Schemas sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Registries: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing EventBridge Schemas Schemas (%s): %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Schemas Schemas (%s): %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

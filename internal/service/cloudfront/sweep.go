@@ -211,9 +211,10 @@ func sweepFunctions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn()
-	input := &cloudfront.ListFunctionsInput{}
 	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &cloudfront.ListFunctionsInput{}
 	err = ListFunctionsPages(conn, input, func(page *cloudfront.ListFunctionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -240,13 +241,7 @@ func sweepFunctions(region string) error {
 			d.SetId(name)
 			d.Set("etag", output.ETag)
 
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -256,9 +251,12 @@ func sweepFunctions(region string) error {
 		log.Printf("[WARN] Skipping CloudFront Function sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFront Functions: %w", err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CloudFront Functions: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -377,9 +375,10 @@ func sweepRealtimeLogsConfig(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn()
-	input := &cloudfront.ListRealtimeLogConfigsInput{}
 	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &cloudfront.ListRealtimeLogConfigsInput{}
 	for {
 		output, err := conn.ListRealtimeLogConfigs(input)
 
@@ -400,19 +399,18 @@ func sweepRealtimeLogsConfig(region string) error {
 			r := ResourceRealtimeLogConfig()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		if aws.StringValue(output.RealtimeLogConfigs.NextMarker) == "" {
 			break
 		}
 		input.Marker = output.RealtimeLogConfigs.NextMarker
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CloudFront Real-time Log Configs: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

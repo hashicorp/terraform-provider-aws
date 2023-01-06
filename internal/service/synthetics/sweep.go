@@ -33,9 +33,11 @@ func sweepCanaries(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SyntheticsConn()
-	input := &synthetics.DescribeCanariesInput{}
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	input := &synthetics.DescribeCanariesInput{}
 	for {
 		output, err := conn.DescribeCanaries(input)
 		if sweep.SkipSweepError(err) {
@@ -53,19 +55,18 @@ func sweepCanaries(region string) error {
 			r := ResourceCanary()
 			d := r.Data(nil)
 			d.SetId(name)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		if aws.StringValue(output.NextToken) == "" {
 			break
 		}
 		input.NextToken = output.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Synthetics Canaries: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

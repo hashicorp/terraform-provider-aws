@@ -173,9 +173,10 @@ func sweepBuses(region string) error {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).EventsConn()
-	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &eventbridge.ListEventBusesInput{}
 	err = listEventBusesPages(conn, input, func(page *eventbridge.ListEventBusesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -190,13 +191,8 @@ func sweepBuses(region string) error {
 			r := ResourceBus()
 			d := r.Data(nil)
 			d.SetId(name)
-			err = r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -206,9 +202,12 @@ func sweepBuses(region string) error {
 		log.Printf("[WARN] Skipping EventBridge event bus sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses: %w", err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Event Buses: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

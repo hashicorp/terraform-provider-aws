@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -54,18 +54,19 @@ func sweepKeys(region string) error {
 			}
 
 			if aws.StringValue(key.KeyManager) == kms.KeyManagerTypeAws {
-				// Skip (default) keys which are managed by AWS
+				log.Printf("[DEBUG] Skipping KMS Key (%s): managed by AWS", keyID)
 				continue
 			}
 			if aws.StringValue(key.KeyState) == kms.KeyStatePendingDeletion {
-				// Skip keys which are already scheduled for deletion
+				log.Printf("[DEBUG] Skipping KMS Key (%s): pending deletion", keyID)
 				continue
 			}
 
 			r := ResourceKey()
 			d := r.Data(nil)
 			d.SetId(keyID)
-			d.Set("deletion_window_in_days", 7)
+			d.Set("key_id", keyID)
+			d.Set("deletion_window_in_days", "7")
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

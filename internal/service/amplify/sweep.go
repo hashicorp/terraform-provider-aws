@@ -27,18 +27,18 @@ func sweepApps(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).AmplifyConn()
-	input := &amplify.ListAppsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &amplify.ListAppsInput{}
 	err = listAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.Apps {
+		for _, app := range page.Apps {
 			r := ResourceApp()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.AppId))
+			d.SetId(aws.StringValue(app.AppId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -50,9 +50,8 @@ func sweepApps(region string) error {
 		log.Printf("[WARN] Skipping Amplify App sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
-		return fmt.Errorf("error listing Amplify Apps (%s): %w", region, err)
+		return fmt.Errorf("error listing Amplify Apps: %w", err)
 	}
 
 	err = sweep.SweepOrchestrator(sweepResources)

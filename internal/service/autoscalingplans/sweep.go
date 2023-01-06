@@ -41,7 +41,7 @@ func sweepScalingPlans(region string) error {
 
 			r := ResourceScalingPlan()
 			d := r.Data(nil)
-			d.SetId("????????????????") // ID not used in Delete.
+			d.SetId("unused")
 			d.Set("name", scalingPlanName)
 			d.Set("scaling_plan_version", scalingPlanVersion)
 

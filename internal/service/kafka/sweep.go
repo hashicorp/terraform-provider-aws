@@ -80,10 +80,11 @@ func sweepConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	input := &kafka.ListConfigurationsInput{}
 	conn := client.(*conns.AWSClient).KafkaConn()
+
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &kafka.ListConfigurationsInput{}
 	err = conn.ListConfigurationsPages(input, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -104,7 +105,6 @@ func sweepConfigurations(region string) error {
 		log.Printf("[WARN] Skipping MSK Configuration sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
 		return fmt.Errorf("error listing MSK Configurations (%s): %w", region, err)
 	}

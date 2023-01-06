@@ -83,18 +83,18 @@ func sweepDomainNames(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
-	input := &apigatewayv2.GetDomainNamesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &apigatewayv2.GetDomainNamesInput{}
 	err = getDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.Items {
+		for _, domainName := range page.Items {
 			r := ResourceDomainName()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DomainName))
+			d.SetId(aws.StringValue(domainName.DomainName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -106,7 +106,6 @@ func sweepDomainNames(region string) error {
 		log.Printf("[WARN] Skipping API Gateway v2 Domain Name sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
 		return fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err)
 	}

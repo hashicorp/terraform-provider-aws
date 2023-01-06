@@ -29,9 +29,11 @@ func sweepApplication(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).KinesisAnalyticsV2Conn()
-	input := &kinesisanalyticsv2.ListApplicationsInput{}
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	input := &kinesisanalyticsv2.ListApplicationsInput{}
 	err = listApplicationsPages(conn, input, func(page *kinesisanalyticsv2.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -55,13 +57,8 @@ func sweepApplication(region string) error {
 			d.SetId(arn)
 			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
 			d.Set("name", name)
-			err = r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -71,9 +68,12 @@ func sweepApplication(region string) error {
 		log.Printf("[WARN] Skipping Kinesis Analytics v2 Application sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Kinesis Analytics v2 Applications: %w", err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Kinesis Analytics v2 Applications: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

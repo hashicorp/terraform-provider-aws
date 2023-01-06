@@ -199,6 +199,8 @@ func sweepQueryLogs(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).Route53Conn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, lastPage bool) bool {
@@ -212,13 +214,8 @@ func sweepQueryLogs(region string) error {
 			r := ResourceQueryLog()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
-			if err != nil {
-				sweeperErr := fmt.Errorf("deleting Route53 query logging configuration (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -231,6 +228,10 @@ func sweepQueryLogs(region string) error {
 	}
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving Route53 query logging configurations: %w", err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Route53 query logging configurations: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

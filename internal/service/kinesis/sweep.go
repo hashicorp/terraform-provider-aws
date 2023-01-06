@@ -26,10 +26,10 @@ func sweepStreams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	input := &kinesis.ListStreamsInput{}
 	conn := client.(*conns.AWSClient).KinesisConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &kinesis.ListStreamsInput{}
 	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -52,7 +52,6 @@ func sweepStreams(region string) error {
 		log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
 		return fmt.Errorf("error listing Kinesis Streams (%s): %w", region, err)
 	}

@@ -54,12 +54,13 @@ func sweepComputeEnvironments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	input := &batch.DescribeComputeEnvironmentsInput{}
 	conn := client.(*conns.AWSClient).BatchConn()
 	iamconn := client.(*conns.AWSClient).IAMConn()
+
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &batch.DescribeComputeEnvironmentsInput{}
 	err = conn.DescribeComputeEnvironmentsPages(input, func(page *batch.DescribeComputeEnvironmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -156,6 +157,10 @@ func sweepComputeEnvironments(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments (%s): %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

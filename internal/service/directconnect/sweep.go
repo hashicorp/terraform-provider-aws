@@ -59,13 +59,13 @@ func init() {
 
 func sweepConnections(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*conns.AWSClient).DirectConnectConn()
 
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &directconnect.DescribeConnectionsInput{}
@@ -101,14 +101,11 @@ func sweepConnections(region string) error {
 		d := r.Data(nil)
 		d.SetId(id)
 
-		err = r.Delete(d, client)
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
 
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Direct Connect Connection (%s): %w", id, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Connection: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -392,13 +389,13 @@ func sweepGateways(region string) error {
 
 func sweepLags(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*conns.AWSClient).DirectConnectConn()
 
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &directconnect.DescribeLagsInput{}
@@ -434,14 +431,11 @@ func sweepLags(region string) error {
 		d := r.Data(nil)
 		d.SetId(id)
 
-		err = r.Delete(d, client)
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
 
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Direct Connect LAG (%s): %w", id, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect LAG: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

@@ -86,6 +86,9 @@ func sweepCatalogDatabases(region string) error {
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
 
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
 	input := &glue.GetDatabasesInput{}
 	err = conn.GetDatabasesPages(input, func(page *glue.GetDatabasesOutput, lastPage bool) bool {
 		if len(page.DatabaseList) == 0 {
@@ -99,14 +102,11 @@ func sweepCatalogDatabases(region string) error {
 
 			r := ResourceCatalogDatabase()
 			d := r.Data(nil)
-			d.SetId("???")
+			d.SetId("unused")
 			d.Set("name", name)
 			d.Set("catalog_id", database.CatalogId)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Catalog Database %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -118,7 +118,11 @@ func sweepCatalogDatabases(region string) error {
 		return fmt.Errorf("Error retrieving Glue Catalog Databases: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Catalog Databases: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepClassifiers(region string) error {
@@ -127,6 +131,9 @@ func sweepClassifiers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetClassifiersInput{}
 	err = conn.GetClassifiersPages(input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
@@ -155,10 +162,7 @@ func sweepClassifiers(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Classifier %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -170,7 +174,11 @@ func sweepClassifiers(region string) error {
 		return fmt.Errorf("Error retrieving Glue Classifiers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Classifiers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepConnections(region string) error {
@@ -180,6 +188,9 @@ func sweepConnections(region string) error {
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
 	catalogID := client.(*conns.AWSClient).AccountID
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetConnectionsInput{
 		CatalogId: aws.String(catalogID),
@@ -197,10 +208,7 @@ func sweepConnections(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -212,7 +220,11 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("Error retrieving Glue Connections: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepCrawlers(region string) error {
@@ -221,6 +233,9 @@ func sweepCrawlers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	input := &glue.GetCrawlersInput{}
 	err = conn.GetCrawlersPages(input, func(page *glue.GetCrawlersOutput, lastPage bool) bool {
@@ -235,10 +250,7 @@ func sweepCrawlers(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Crawler %s: %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -250,7 +262,11 @@ func sweepCrawlers(region string) error {
 		return fmt.Errorf("Error retrieving Glue Crawlers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepDevEndpoints(region string) error {
@@ -351,6 +367,8 @@ func sweepMLTransforms(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &glue.GetMLTransformsInput{}
@@ -366,13 +384,8 @@ func sweepMLTransforms(region string) error {
 			r := ResourceMLTransform()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -380,9 +393,12 @@ func sweepMLTransforms(region string) error {
 		log.Printf("[WARN] Skipping Glue ML Transforms sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glue ML Transforms: %w", err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue ML Transforms: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -394,6 +410,9 @@ func sweepRegistry(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 	if err != nil {
@@ -410,12 +429,14 @@ func sweepRegistry(region string) error {
 		d := r.Data(nil)
 		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Registry %s: %s", arn, err)
-		}
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
-	return nil
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Registry: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepSchema(region string) error {
@@ -424,6 +445,9 @@ func sweepSchema(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
 	if err != nil {
@@ -440,12 +464,14 @@ func sweepSchema(region string) error {
 		d := r.Data(nil)
 		d.SetId(arn)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Glue Schema %s: %s", arn, err)
-		}
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
-	return nil
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway VPC Links: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepSecurityConfigurations(region string) error {
@@ -496,6 +522,9 @@ func sweepTriggers(region string) error {
 	}
 	conn := client.(*conns.AWSClient).GlueConn()
 
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
 	input := &glue.GetTriggersInput{}
 	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
 		if page == nil || len(page.Triggers) == 0 {
@@ -509,10 +538,8 @@ func sweepTriggers(region string) error {
 			r := ResourceTrigger()
 			d := r.Data(nil)
 			d.SetId(name)
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Trigger %s: %s", name, err)
-			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -524,7 +551,11 @@ func sweepTriggers(region string) error {
 		return fmt.Errorf("Error retrieving Glue Triggers: %s", err)
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Glue Triggers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepWorkflow(region string) error {
