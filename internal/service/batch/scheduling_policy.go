@@ -22,9 +22,11 @@ func ResourceSchedulingPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceSchedulingPolicyRead,
 		UpdateWithoutTimeout: resourceSchedulingPolicyUpdate,
 		DeleteWithoutTimeout: resourceSchedulingPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -108,7 +110,6 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Batch Scheduling Policy %s", input)
 	output, err := conn.CreateSchedulingPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -193,6 +194,7 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).BatchConn()
 
+	log.Printf("[DEBUG] Deleting Batch Scheduling Policy: %s", d.Id())
 	_, err := conn.DeleteSchedulingPolicyWithContext(ctx, &batch.DeleteSchedulingPolicyInput{
 		Arn: aws.String(d.Id()),
 	})
