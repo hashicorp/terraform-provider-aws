@@ -1,4 +1,9 @@
 ## 2.70.3 (Unreleased)
+
+BUG FIXES:
+
+* provider: Fix Terraform v0.12 `failed to find installed plugin version 2.70.2` error ([#28739](https://github.com/hashicorp/terraform-provider-aws/issues/28739))
+
 ## 2.70.2 (January 05, 2023)
 
 NOTES:
