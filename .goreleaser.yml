@@ -10,8 +10,8 @@ before:
     - 'go mod download'
 builds:
   -
-    # Binary naming only required for Terraform CLI 0.12
-    binary: '{{ .ProjectName }}_{{ .Version }}'
+    # _x4 suffix required for Terraform CLI < 0.12
+    binary: '{{ .ProjectName }}_{{ .Version }}_x4'
     env:
       - CGO_ENABLED=0
     flags:
@@ -45,13 +45,11 @@ checksum:
 publishers:
   - checksum: true
     # Terraform CLI 0.10 - 0.11 perform discovery via HTTP headers on releases.hashicorp.com
-    # For providers which have existed since those CLI versions, exclude
-    # discovery by setting the protocol version headers to 5.
     env:
       - HC_RELEASES_HOST={{ .Env.HC_RELEASES_HOST }}
       - HC_RELEASES_KEY={{ .Env.HC_RELEASES_KEY }}
     cmd: |
-      hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} -file={{ .ArtifactPath }}={{ .ArtifactName }} -header=x-terraform-protocol-version=5 -header=x-terraform-protocol-versions=5.0
+      hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} -file={{ .ArtifactPath }}={{ .ArtifactName }} -header=x-terraform-protocol-version=4 -header=x-terraform-protocol-versions=4.0,5.0
     name: upload
     signature: true
 release:
