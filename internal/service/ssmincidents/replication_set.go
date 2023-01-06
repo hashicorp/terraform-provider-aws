@@ -1,7 +1,6 @@
 package ssmincidents
 
 import (
-	// goimports -w <file> fixes these imports.
 	"context"
 	"errors"
 	"fmt"
@@ -22,6 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	ResNameReplicationSet = "Replication Set"
+)
+
 func ResourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSetCreate,
@@ -30,8 +33,8 @@ func ResourceReplicationSet() *schema.Resource {
 		DeleteWithoutTimeout: resourceReplicationSetDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(40 * time.Minute), //TODO: recommend customer to set this higher if required
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(40 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
@@ -40,29 +43,95 @@ func ResourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"regions": { // maps each region to an optional SseKmsKeyId, "" represents no customer managed key
-				Type:     schema.TypeString,
+			"region": {
+				Type:     schema.TypeSet,
 				Required: true,
-				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"kms_key_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "DefaultKey",
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status_update_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status_message": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			// all other computed fields in alphabetic order
+			"created_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deletion_protected": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"last_modified_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_modified_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+
+		Importer: &schema.ResourceImporter{
+
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				conn := meta.(*conns.AWSClient).SSMIncidentsClient()
+
+				arn, err := getReplicationSetArn(ctx, conn, meta)
+
+				if err != nil {
+					return nil, err
+				}
+
+				d.SetId(arn)
+
+				if diagErr := GetSetResourceTags(ctx, d, meta, conn, ResNameReplicationSet); diagErr != nil {
+					return nil, fmt.Errorf("tags could not be imported")
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-const (
-	ResNameReplicationSet = "Replication Set"
-)
-
 func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	conn := meta.(*conns.AWSClient).SSMIncidentsClient
+	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	in := &ssmincidents.CreateReplicationSetInput{
-		Regions:     expandRegions(d.Get("regions").(map[string]string)),
+		Regions:     expandRegions(d.Get("region").(*schema.Set).List()),
 		ClientToken: aws.String(GenerateClientToken()),
 	}
 
@@ -93,7 +162,7 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	conn := meta.(*conns.AWSClient).SSMIncidentsClient
+	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	out, err := FindReplicationSetByID(ctx, conn, d.Id())
 
@@ -108,26 +177,19 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("arn", out.Arn)
+	d.Set("created_by", out.CreatedBy)
+	d.Set("created_time", out.CreatedTime.String())
+	d.Set("deletion_protected", out.DeletionProtected)
+	d.Set("last_modified_by", out.LastModifiedBy)
+	d.Set("last_modified_time", out.LastModifiedTime.String())
+	d.Set("status", out.Status)
 
-	if err := d.Set("regions", flattenRegions(out.RegionMap)); err != nil {
+	if err := d.Set("region", flattenRegions(out.RegionMap)); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
+	if diagErr := GetSetResourceTags(ctx, d, meta, conn, ResNameReplicationSet); diagErr != nil {
+		return diagErr
 	}
 
 	return nil
@@ -135,21 +197,36 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	conn := meta.(*conns.AWSClient).SSMIncidentsClient
+	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
-	if d.HasChanges("regions") {
+	if d.HasChanges("region") {
 
-		diagErr := updateRegions(ctx, conn, d)
-		if diagErr != nil {
-			return diagErr
+		in := &ssmincidents.UpdateReplicationSetInput{
+			Arn:         aws.String(d.Id()),
+			ClientToken: aws.String(GenerateClientToken()),
+		}
+
+		if err := updateRegionsInput(conn, d, in); err != nil {
+			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
+		}
+
+		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet (%s): %#v", d.Id(), in)
+		_, err := conn.UpdateReplicationSet(ctx, in)
+		if err != nil {
+			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
+		}
+
+		if _, err := waitReplicationSetUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(), err)
 		}
 	}
 
-	if d.HasChanges("tags_all") {
+	// tags can have a change without tags_all having a change when value of tag is ""
+	if d.HasChanges("tags_all", "tags") {
 
-		o, n := d.GetChange("tags_all")
+		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
 
-		if err := updateTags(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateResourceTags(ctx, conn, d); err != nil {
 			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 
@@ -160,7 +237,7 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	conn := meta.(*conns.AWSClient).SSMIncidentsClient
+	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	log.Printf("[INFO] Deleting SSMIncidents ReplicationSet %s", d.Id())
 
@@ -200,13 +277,10 @@ func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, i
 	return nil, err
 }
 
-// we finish wait once we receive status is Updating/Deleting since update/Deletion can potentially take very long (5 mins-24 hrs)
-// so sometimes there is inconsistency between terraform state and reality
-// this behaviour is noted in documentation
 func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, id string, timeout time.Duration) (*types.ReplicationSet, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.ReplicationSetStatusActive)},
-		Target:  []string{string(types.ReplicationSetStatusUpdating)},
+		Pending: []string{string(types.ReplicationSetStatusUpdating)},
+		Target:  []string{string(types.ReplicationSetStatusActive)},
 		Refresh: statusReplicationSet(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -221,8 +295,8 @@ func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, i
 
 func waitReplicationSetDeleted(ctx context.Context, conn *ssmincidents.Client, id string, timeout time.Duration) (*types.ReplicationSet, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.ReplicationSetStatusActive)},
-		Target:  []string{string(types.ReplicationSetStatusDeleting)},
+		Pending: []string{string(types.ReplicationSetStatusDeleting)},
+		Target:  []string{},
 		Refresh: statusReplicationSet(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -250,187 +324,73 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, id str
 	}
 }
 
-func expandRegions(regions map[string]string) map[string]types.RegionMapInputValue {
+func regionListToMap(list []interface{}) map[string]map[string]interface{} {
 
-	ret := make(map[string]types.RegionMapInputValue)
-	for k, v := range regions {
-		input := types.RegionMapInputValue{}
+	ret := make(map[string]map[string]interface{})
+	for _, val := range list {
 
-		if v != "" {
-			input.SseKmsKeyId = aws.String(v)
-		}
-
-		ret[k] = input
+		curr := val.(map[string]interface{})
+		regionName := curr["name"].(string)
+		delete(curr, "name")
+		ret[regionName] = curr
 	}
 
 	return ret
 }
 
-func flattenRegions(regions map[string]types.RegionInfo) map[string]string {
+// updates UpdateReplicationSetInput to include any required actions
+// invalid updates return errors from AWS Api
+func updateRegionsInput(conn *ssmincidents.Client, d *schema.ResourceData, in *ssmincidents.UpdateReplicationSetInput) error {
 
-	ret := make(map[string]string)
-	for k, v := range regions {
+	o, n := d.GetChange("region")
+	oldRegions := regionListToMap(o.(*schema.Set).List())
+	newRegions := regionListToMap(n.(*schema.Set).List())
 
-		if v.SseKmsKeyId == nil {
-			ret[k] = ""
-		} else {
-			ret[k] = aws.ToString(v.SseKmsKeyId)
-		}
-	}
+	for region, oldVal := range oldRegions {
 
-	return ret
-}
-
-// makes api call for updating a single region
-func updateRegion(ctx context.Context, conn *ssmincidents.Client, d *schema.ResourceData, action types.UpdateReplicationSetAction) diag.Diagnostics {
-
-	in := &ssmincidents.UpdateReplicationSetInput{
-		Arn:         aws.String(d.Id()),
-		ClientToken: aws.String(GenerateClientToken()),
-	}
-
-	in.Actions = append(in.Actions, action)
-
-	log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateReplicationSet(ctx, in)
-	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
-	}
-
-	if _, err := waitReplicationSetUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(), err)
-	}
-
-	return nil
-
-}
-
-// performs all updates to regions field
-func updateRegions(ctx context.Context, conn *ssmincidents.Client, d *schema.ResourceData) diag.Diagnostics {
-
-	o, n := d.GetChange("regions")
-	oldRegions := o.(map[string]string)
-	newRegions := n.(map[string]string)
-
-	if !UpdateRegionsIsValid(newRegions) {
-		return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(),
-			fmt.Errorf("expected all regions to either have a customer managed key or none of the regions to have a key"))
-	}
-
-	// api call only accepts one region update at a time, so we split an update into multiple api calls
-	// if a region has changed only its cmk, we must delete and recreate it
-	// what if last region? == TODO == figure out this
-	//todo: think of other edge cases
-	// 1 region -> 3 (now we cannot add all in one go, we just add first one
-	// what if we add random combinations with changing keys or some weird shit)
-	// changing all from non-cmk to cmk or vice versa, cannot just destroy all of them at once
-	// 100% need to make this logic testable
-
-	for region, oldcmk := range oldRegions {
-		if newcmk, ok := newRegions[region]; !ok || oldcmk != newcmk {
+		if newVal, ok := newRegions[region]; !ok {
 			// this region has been destroyed
-			in := &types.UpdateReplicationSetActionMemberDeleteRegionAction{
+
+			action := &types.UpdateReplicationSetActionMemberDeleteRegionAction{
 				Value: types.DeleteRegionAction{
 					RegionName: aws.String(region),
 				},
 			}
 
-			diagErr := updateRegion(ctx, conn, d, in)
+			in.Actions = append(in.Actions, action)
+		} else {
+			oldcmk := oldVal["kms_key_arn"].(string)
+			newcmk := newVal["kms_key_arn"].(string)
 
-			if diagErr != nil {
-				return diagErr
+			if oldcmk != newcmk {
+				return fmt.Errorf("error: modifying the KMS key of a region must be split into two separate updates")
 			}
+
 		}
+
 	}
 
-	for region, newcmk := range newRegions {
+	for region, newVal := range newRegions {
 
-		if oldcmk, ok := oldRegions[region]; !ok || oldcmk != newcmk {
+		if _, ok := oldRegions[region]; !ok {
+			newcmk := newVal["kms_key_arn"].(string)
+
 			// this region is newly created
 
-			in := &types.UpdateReplicationSetActionMemberAddRegionAction{
+			action := &types.UpdateReplicationSetActionMemberAddRegionAction{
 				Value: types.AddRegionAction{
 					RegionName: aws.String(region),
 				},
 			}
 
-			if newcmk != "" {
-				in.Value.SseKmsKeyId = aws.String(newcmk)
+			if newcmk != "DefaultKey" {
+				action.Value.SseKmsKeyId = aws.String(newcmk)
 			}
 
-			diagErr := updateRegion(ctx, conn, d, in)
-
-			if diagErr != nil {
-				return diagErr
-			}
+			in.Actions = append(in.Actions, action)
 		}
 	}
 
 	return nil
 
-}
-
-// valid if all region values are "" or all have customer managed keys
-// invalid if some regions with empty value and others with proper key
-func UpdateRegionsIsValid(newRegions map[string]string) bool {
-
-	s := "INVALIDREGION"
-
-	for _, v := range newRegions {
-		if s == "INVALIDREGION" {
-			s = v
-		} else if s == "" && v != "" || s != "" && v == "" {
-			return false
-		}
-	}
-
-	return true
-}
-
-func updateTags(ctx context.Context, conn *ssmincidents.Client, arn string, oldTagsMap interface{}, newTagsMap interface{}) error {
-
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &ssmincidents.UntagResourceInput{
-			ResourceArn: aws.String(arn),
-			TagKeys:     removedTags.Keys(),
-		}
-		_, err := conn.UntagResource(ctx, input)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &ssmincidents.TagResourceInput{
-			ResourceArn: aws.String(arn),
-			Tags:        updatedTags.IgnoreAWS().Map(),
-		}
-
-		_, err := conn.TagResource(ctx, input)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-
-}
-
-func ListTags(ctx context.Context, conn *ssmincidents.Client, arn string) (tftags.KeyValueTags, error) {
-	input := &ssmincidents.ListTagsForResourceInput{
-		ResourceArn: aws.String(arn),
-	}
-
-	output, err := conn.ListTagsForResource(ctx, input)
-
-	if err != nil {
-		return tftags.New(nil), err
-	}
-
-	return tftags.New(output.Tags), nil
 }

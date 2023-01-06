@@ -20,11 +20,9 @@ Terraform resource for managing an AWS SSM Incident Manager Incidents Replicatio
 Creating a new Replication Set:
 
 ```terraform
-resource "aws_ssmincidents_replication_set" "test" {
-    regions = {
-        us-west-2 = ""
-        ap-south-1 = ""
-
+resource "aws_ssmincidents_replication_set" "replicationSetName" {
+    region {
+        name = "us-west-2"
     }
 
     tags = {
@@ -33,70 +31,88 @@ resource "aws_ssmincidents_replication_set" "test" {
 }
 ```
 
-Adding a region (make sure only one new region is added):
+Adding a region (make sure only one new region is added at once):
 
 ```terraform
-resource "aws_ssmincidents_replication_set" "test" {
-    regions = {
-        us-west-2 = ""
-        ap-south-1 = ""
-        ap-southeast-2 = ""
+resource "aws_ssmincidents_replication_set" "replicationSetName" {
+    region {
+        name = "us-west-2"
+    }
+
+    region {
+        name = "ap-southeast-2"
     }
 }
 ```
 
-Deleting a region (make sure only one region is deleted):
+Deleting a region (make sure only one region is deleted at once):
 
 ```terraform
-resource "aws_ssmincidents_replication_set" "test" {
-    regions = {
-        us-west-2 = ""
-        ap-southeast-2 = ""
+resource "aws_ssmincidents_replication_set" "replicationSetName" {
+    region {
+        name = "us-west-2"
     }
 }
 ```
+
 
 ## Argument Reference
 
-The following arguments are required:
+~> **NOTE:** The region specified by the provider must be one of the regions within the Replication Set at all times. Make sure to keep this in mind when performing complex update operations.
 
-~> **NOTE:** The region specified by the provider must be one of the regions within the Replication Set at all times. Make sure to keep this in mind when performing complex update operations,
-
-~> **NOTE:** After creation, regions can only be added or deleted one at a time. Examples above demonstrate how to account for this behaviour.
+~> **NOTE:** After creation, regions can only be added or deleted one at a time.
 
 ~> **NOTE:** Changing the Customer Managed Key for a single region requires us to first delete that region then recreate it with an updated Customer Managed Key in separate terraform apply operations. Performing this when the Replication Set contains only one region requires deleting the Replication Set. This can be done by commenting out the Replication Set, running Terraform Apply and recreating the Replication Set with the new correct KMS keys.
 
-~> **NOTE:** Either all regions must have a Customer Managed Key or None. Changing from using the default keys to customer managed keys or vice versa requires the Replication Set and all associated data to be destroyed and recreated.
+~> **NOTE:** Either all regions must have a Customer Managed KMS key or None. Changing from using the default keys to customer managed keys or vice versa requires the Replication Set and all associated data to be destroyed and recreated.
 
-* `regions` - (Required) Regions in the replication Set. Each region must have a KMS encryption key which is optionally customer managed. A key value of `""` represents using a default AWS owned key to manage your resources. 
+~> **NOTE:** If possible, create all KMS keys used by a Replication Set in the same or previous `terraform apply` command compared to when the Replication Set is created. If this is not possible and you want to delete a Replication Set, make sure to delete the Replication Set first in its own `terraform apply` command before deleting the KMS keys used by that Replication Set in a separate `Terraform apply` command. This minimises the likelihood that a KMS Key which is used by a Replication Set is accidentally deleted before attempting to delete the Replication Set, which will result in an error. If this error occurs, the deleted KMS Key must be manually re-enabled via the AWS Console before the Replication Set can be successfully deleted.
+
+The `region` configuration block is required and supports the following arguments:
+
+* `name` - (Required) name of region.
+* `kms_key_arn` - (Optional) ARN of KMS Encryption Key. If this is not provided, AWS will manage your KMS keys for you and this will be denoted with a default value of `DefaultKey`.
+
 
 The following arguments are optional:
 
 * `tags` - (Optional) Tags associated with the Replication Set.
   
-Details for region and tag constraints can be found [here](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
+More details for maximum number of regions and tag value constraints can be found [here](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Replication Set.
-* `tags_all` - List of all tags including both the resource and provider level tags.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `created_by` - Who created the Replication Set.
+* `created_time` - When the Replication Set was created.
+* `deletion_protected` - If enabled, the last region in a Replication Set cannot be deleted.
+* `last_modified_by` - Who last modified the Replication Set.
+* `last_modified_time` - When the Replication Set was last modified
+* `status` - Overall status of a replication Set. The status will be one of: `ACTIVE`, `CREATING`, `UPDATING`, `DELETING` or `FAILED`. 
+
+In addition to the arguments above, The `region` configuration block exports the following attributes for each region:
+* `status` - Region Status.
+* `status_update_time` - Last time Region Status was updated. 
+* `status_message` - More information about the status of a region. 
+
 
 ## Timeouts
 
-~> **NOTE:** For extreme use cases with very large amounts of response plans and data, update and delete operations may take up to a few hours. It is highly recommended that custom timeouts are configured in these circumstances
+~> **NOTE:** Update and Delete operations on Replication Sets with large amounts of response plans and data take longer to complete. It is highly recommended that custom timeouts are configured in these circumstances.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`) The expected time to create a new Replication Set with one Region is up to 5 minutes. Expect creation to take up to an additional 20-30 minutes for each additional region.
-* `update` - (Default `40m`) Expect each update operation to take up to 20-30 minutes.
-* `delete` - (Default `40m`) Expect deleting the Replication Set to take up to 20-30 minutes.
+* `create` - (Default `60m`) This operation will take additional time for each extra region in the created Replication Set beyond the first.
+* `update` - (Default `40m`)
+* `delete` - (Default `40m`)
 
 ## Import
 
-SSM Incident Manager Incidents Replication Set can be imported 
+SSM Incident Manager Incidents Replication Set can be imported using this command:
 
 ```
-$ terraform import aws_ssmincidents_replication_set.example import
+$ terraform import aws_ssmincidents_replication_set.replicationSetName import
 ```
