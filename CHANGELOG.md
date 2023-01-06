@@ -1,7 +1,9 @@
-## 4.49.0 (Unreleased)
+## 4.50.0 (Unreleased)
+## 4.49.0 (January  5, 2023)
 
 NOTES:
 
+* resource/aws_dms_endpoint: For `s3_settings` `cdc_min_file_size`, AWS changed the multiplier to kilobytes instead of megabytes. In other words, prior to the change, a value of `32` represented 32 MiB. After the change, a value of `32` represents 32 KB. Change your configuration accordingly. ([#28578](https://github.com/hashicorp/terraform-provider-aws/issues/28578))
 * resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute is no longer deprecated ([#28567](https://github.com/hashicorp/terraform-provider-aws/issues/28567))
 
 FEATURES:
@@ -9,27 +11,36 @@ FEATURES:
 * **New Data Source:** `aws_s3control_multi_region_access_point` ([#28373](https://github.com/hashicorp/terraform-provider-aws/issues/28373))
 * **New Resource:** `aws_appsync_type` ([#28437](https://github.com/hashicorp/terraform-provider-aws/issues/28437))
 * **New Resource:** `aws_auditmanager_assessment` ([#28643](https://github.com/hashicorp/terraform-provider-aws/issues/28643))
+* **New Resource:** `aws_auditmanager_assessment_report` ([#28663](https://github.com/hashicorp/terraform-provider-aws/issues/28663))
 * **New Resource:** `aws_ec2_instance_state` ([#28639](https://github.com/hashicorp/terraform-provider-aws/issues/28639))
 * **New Resource:** `aws_lightsail_bucket` ([#28585](https://github.com/hashicorp/terraform-provider-aws/issues/28585))
 * **New Resource:** `aws_ssoadmin_instance_access_control_attributes` ([#23317](https://github.com/hashicorp/terraform-provider-aws/issues/23317))
 
 ENHANCEMENTS:
 
+* data-source/aws_autoscaling_group: Add `desired_capacity_type` attribute ([#28658](https://github.com/hashicorp/terraform-provider-aws/issues/28658))
 * data-source/aws_kms_secrets: Add `encryption_algorithm` and `key_id` arguments in support of [asymmetric keys](https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html) ([#21054](https://github.com/hashicorp/terraform-provider-aws/issues/21054))
 * resource/aws_appflow_connector_profile: Add support for `connector_type` CustomConnector. Add `cluster_identifier`, `database_name`, and `data_api_role_arn` attributes for `redshift` `connection_profile_properties` ([#26766](https://github.com/hashicorp/terraform-provider-aws/issues/26766))
 * resource/aws_appsync_resolver: Add `runtime` and `code` arguments ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
 * resource/aws_appsync_resolver: Add plan time validation for `caching_config.ttl` ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
+* resource/aws_athena_workgroup: Add `configuration.execution_role` argument ([#28420](https://github.com/hashicorp/terraform-provider-aws/issues/28420))
+* resource/aws_autoscaling_group: Add `desired_capacity_type` argument ([#28658](https://github.com/hashicorp/terraform-provider-aws/issues/28658))
+* resource/aws_dms_endpoint: Change `s3_settings` `cdc_min_file_size` default to 32000 in order to align with AWS's change from megabytes to kilobytes for this setting ([#28578](https://github.com/hashicorp/terraform-provider-aws/issues/28578))
+* resource/aws_ecs_service: Add `alarms` argument ([#28521](https://github.com/hashicorp/terraform-provider-aws/issues/28521))
 * resource/aws_lightsail_instance: Add `add_on` configuration block. ([#28602](https://github.com/hashicorp/terraform-provider-aws/issues/28602))
 * resource/aws_lightsail_instance_public_ports: Add `cidr_list_aliases` argument ([#28376](https://github.com/hashicorp/terraform-provider-aws/issues/28376))
 * resource/aws_s3_access_point: Add `bucket_account_id` argument ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
 * resource/aws_s3control_storage_lens_configuration: Add `advanced_cost_optimization_metrics`, `advanced_data_protection_metrics`, and `detailed_status_code_metrics` arguments to the `storage_lens_configuration.account_level` and `storage_lens_configuration.account_level.bucket_level` configuration blocks ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
 * resource/aws_wafv2_rule_group: Add `rule.action.captcha` argument ([#28435](https://github.com/hashicorp/terraform-provider-aws/issues/28435))
 * resource/aws_wafv2_web_acl: Add `rule.action.challenge` argument ([#28305](https://github.com/hashicorp/terraform-provider-aws/issues/28305))
+* resource/aws_wafv2_web_acl: Add support for ManagedRuleGroupConfig ([#28594](https://github.com/hashicorp/terraform-provider-aws/issues/28594))
 
 BUG FIXES:
 
 * data-source/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup` API ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
 * resource/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup`, `TagLogGroup` and `UntagLogGroup` APIs ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
+* resource/aws_dms_endpoint: Add s3 setting `ignore_header_rows` and deprecate misspelled `ignore_headers_row`. ([#28579](https://github.com/hashicorp/terraform-provider-aws/issues/28579))
+* resource/aws_elasticache_user_group_association: Retry on `InvalidUserGroupState` errors to handle concurrent updates ([#28689](https://github.com/hashicorp/terraform-provider-aws/issues/28689))
 * resource/aws_lambda_function_url: Fix removal of `cors` configuration block ([#28439](https://github.com/hashicorp/terraform-provider-aws/issues/28439))
 * resource/aws_lightsail_database: The `availability_zone` attribute is now optional/computed to support HA `bundle_id`s ([#28590](https://github.com/hashicorp/terraform-provider-aws/issues/28590))
 * resource/aws_lightsail_disk_attachment: Resolves a panic when an attachment fails and attempts to display the error returned by AWS. ([#28593](https://github.com/hashicorp/terraform-provider-aws/issues/28593))
