@@ -82,16 +82,16 @@ func (d *fileDestination) Write(body []byte) error {
 }
 
 func (d *fileDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
-	body, err := parseTemplate(templateName, templateBody, templateData)
+	unformattedBody, err := parseTemplate(templateName, templateBody, templateData)
 
 	if err != nil {
 		return err
 	}
 
-	body, err = d.formatter(body)
+	body, err := d.formatter(unformattedBody)
 
 	if err != nil {
-		return fmt.Errorf("formatting parsed template: %w", err)
+		return fmt.Errorf("formatting parsed template:\n%s\n%w", unformattedBody, err)
 	}
 
 	return d.Write(body)

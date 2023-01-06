@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 )
 
 require (
@@ -112,7 +113,6 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
 	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167 // indirect
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
