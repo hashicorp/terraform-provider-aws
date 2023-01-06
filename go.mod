@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.3
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.4
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.19.2
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.24.0
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
