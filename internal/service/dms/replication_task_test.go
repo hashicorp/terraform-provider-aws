@@ -137,6 +137,8 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
+	//https://github.com/hashicorp/terraform-provider-aws/issues/28277
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),

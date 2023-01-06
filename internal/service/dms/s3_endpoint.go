@@ -744,6 +744,10 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 func extraConnectionAnomalies(d *schema.ResourceData) *string {
 	// not all attributes work in the data structures and must be passed via ex conn attr
 
-	// add a loop if this becomes more than one
-	return aws.String(fmt.Sprintf("%s=%s", "CdcPath", d.Get("cdc_path").(string)))
+	// add a loop to compose the string of ;-sep pairs, if this becomes more than one
+	if v, ok := d.GetOk("cdc_path"); ok {
+		return aws.String(fmt.Sprintf("%s=%s", "CdcPath", v.(string)))
+	}
+
+	return nil
 }
