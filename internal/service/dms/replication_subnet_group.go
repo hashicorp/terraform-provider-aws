@@ -132,9 +132,17 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 			},
 		},
 	})
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return create.Error(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
+
 	if len(response.ReplicationSubnetGroups) == 0 {
 		d.SetId("")
 		return nil
@@ -219,7 +227,12 @@ func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] DMS delete replication subnet group: %#v", request)
 
 	_, err := conn.DeleteReplicationSubnetGroup(request)
-	return create.Error(names.DMS, create.ErrActionDeleting, ResNameReplicationSubnetGroup, d.Id(), err)
+
+	if err != nil {
+		return create.Error(names.DMS, create.ErrActionDeleting, ResNameReplicationSubnetGroup, d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
