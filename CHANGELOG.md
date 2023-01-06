@@ -1,4 +1,5 @@
-## 2.70.4 (Unreleased)
+## 2.70.5 (Unreleased)
+## 2.70.4 (January 06, 2023)
 
 BUG FIXES:
 
