@@ -1,23 +1,20 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"flag"
 	"fmt"
-	"go/format"
 	"io"
 	"os"
 	"path"
 	"sort"
 	"strings"
-	"text/template"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw/naming"
-	"github.com/mitchellh/cli"
 )
 
 // TODO
@@ -48,30 +45,29 @@ func main() {
 	name := args[1]
 	outputFilename := args[2]
 
-	ui := &cli.BasicUi{
-		Reader:      os.Stdin,
-		Writer:      os.Stdout,
-		ErrorWriter: os.Stderr,
-	}
+	// ui := &cli.BasicUi{
+	// 	Reader:      os.Stdin,
+	// 	Writer:      os.Stdout,
+	// 	ErrorWriter: os.Stderr,
+	// }
+	g := common.NewGenerator()
 	migrator := &migrator{
+		Generator:   g,
 		Name:        name,
 		PackageName: packageName,
-		Ui:          ui,
 	}
 
 	p, err := provider.New(context.Background())
 
 	if err != nil {
-		ui.Error(err.Error())
-		os.Exit(1)
+		g.Fatalf(err.Error())
 	}
 
 	if v := *dataSourceType; v != "" {
 		resource, ok := p.DataSourcesMap[v]
 
 		if !ok {
-			ui.Error(fmt.Sprintf("data source type %s not found", v))
-			os.Exit(2)
+			g.Fatalf("data source type %s not found", v)
 		}
 
 		migrator.IsDataSource = true
@@ -82,8 +78,7 @@ func main() {
 		resource, ok := p.ResourcesMap[v]
 
 		if !ok {
-			ui.Error(fmt.Sprintf("resource type %s not found", v))
-			os.Exit(2)
+			g.Fatalf("resource type %s not found", v)
 		}
 
 		migrator.Resource = resource
@@ -92,19 +87,18 @@ func main() {
 	}
 
 	if err := migrator.migrate(outputFilename); err != nil {
-		ui.Error(fmt.Sprintf("error migrating Terraform %s schema: %s", *resourceType, err))
-		os.Exit(1)
+		g.Fatalf("error migrating Terraform %s schema: %s", *resourceType, err)
 	}
 }
 
 type migrator struct {
+	Generator    *common.Generator
 	IsDataSource bool
 	Name         string
 	PackageName  string
 	Resource     *schema.Resource
 	Template     string
 	TFTypeName   string
-	Ui           cli.Ui
 }
 
 // migrate generates an identical schema into the specified output file.
@@ -125,55 +119,19 @@ func (m *migrator) migrate(outputFilename string) error {
 		return err
 	}
 
-	return m.applyTemplate(outputFilename, templateData)
-}
+	d := m.Generator.NewGoFileDestination(outputFilename)
 
-func (m *migrator) applyTemplate(filename string, templateData *templateData) error {
-	tmpl, err := template.New("schema").Parse(m.Template)
-
-	if err != nil {
-		return fmt.Errorf("parsing schema template: %w", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tmpl.Execute(&buffer, templateData)
-
-	if err != nil {
-		return fmt.Errorf("executing template: %w", err)
-	}
-
-	generatedFileContents, err := format.Source(buffer.Bytes())
-
-	if err != nil {
-		m.infof("%s", buffer.String())
-		return fmt.Errorf("formatting generated source code: %w", err)
-	}
-
-	f, err := os.Create(filename)
-
-	if err != nil {
-		return fmt.Errorf("creating file (%s): %w", filename, err)
-	}
-
-	defer f.Close()
-
-	_, err = f.Write(generatedFileContents)
-
-	if err != nil {
-		return fmt.Errorf("writing to file (%s): %w", filename, err)
-	}
-
-	return nil
+	return d.WriteTemplate("schema", m.Template, templateData)
 }
 
 func (m *migrator) generateTemplateData() (*templateData, error) {
 	sbSchema := strings.Builder{}
 	sbStruct := strings.Builder{}
 	emitter := &emitter{
+		Generator:    m.Generator,
 		IsDataSource: m.IsDataSource,
 		SchemaWriter: &sbSchema,
 		StructWriter: &sbStruct,
-		Ui:           m.Ui,
 	}
 
 	err := emitter.emitSchemaForResource(m.Resource)
@@ -199,10 +157,11 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 }
 
 func (m *migrator) infof(format string, a ...interface{}) {
-	m.Ui.Info(fmt.Sprintf(format, a...))
+	m.Generator.Infof(format, a...)
 }
 
 type emitter struct {
+	Generator                    *common.Generator
 	HasTopLevelTagsAllMap        bool
 	HasTopLevelTagsMap           bool
 	ImportFrameworkAttr          bool
@@ -210,7 +169,6 @@ type emitter struct {
 	IsDataSource                 bool
 	SchemaWriter                 io.Writer
 	StructWriter                 io.Writer
-	Ui                           cli.Ui
 }
 
 // emitSchemaForResource generates the Plugin Framework code for a Plugin SDK Resource and emits the generated code to the emitter's Writer.
@@ -740,7 +698,7 @@ func (e *emitter) emitComputedOnlyBlockProperty(path []string, property *schema.
 
 // warnf emits a formatted warning message to the UI.
 func (e *emitter) warnf(format string, a ...interface{}) {
-	e.Ui.Warn(fmt.Sprintf(format, a...))
+	e.Generator.Warnf(format, a...)
 }
 
 // fprintf writes a formatted string to a Writer.

@@ -126,3 +126,7 @@ func (g *Generator) Fatalf(format string, a ...interface{}) {
 func (g *Generator) Infof(format string, a ...interface{}) {
 	g.ui.Info(fmt.Sprintf(format, a...))
 }
+
+func (g *Generator) Warnf(format string, a ...interface{}) {
+	g.ui.Warn(fmt.Sprintf(format, a...))
+}

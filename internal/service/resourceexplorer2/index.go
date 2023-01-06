@@ -89,8 +89,9 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	createTimeout, d := data.Timeouts.Create(ctx, r.defaultCreateTimeout)
-	response.Diagnostics.Append(d...)
+	createTimeout, diags := data.Timeouts.Create(ctx, r.defaultCreateTimeout)
+	response.Diagnostics.Append(diags...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -211,8 +212,9 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		return
 	}
 
-	updateTimeout, d := new.Timeouts.Update(ctx, r.defaultUpdateTimeout)
-	response.Diagnostics.Append(d...)
+	updateTimeout, diags := new.Timeouts.Update(ctx, r.defaultUpdateTimeout)
+	response.Diagnostics.Append(diags...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -260,8 +262,9 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	deleteTimeout, d := data.Timeouts.Delete(ctx, r.defaultDeleteTimeout)
-	response.Diagnostics.Append(d...)
+	deleteTimeout, diags := data.Timeouts.Delete(ctx, r.defaultDeleteTimeout)
+	response.Diagnostics.Append(diags...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}

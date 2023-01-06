@@ -34,8 +34,8 @@ func (d *dataSource{{ .Name }}) Metadata(_ context.Context, request datasource.M
 }
 
 // Schema returns the schema for this data source.
-func (d *dataSource{{ .Name }}) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-    resp.Schema = {{ .Schema }}
+func (d *dataSource{{ .Name }}) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+    response.Schema = {{ .Schema }}
 }
 
 // Read is called when the provider must read data source values in order to update state.

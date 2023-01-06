@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
-	github.com/mitchellh/cli v1.1.5
 )
 
 require (
@@ -94,6 +93,7 @@ require (
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mitchellh/cli v1.1.5 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
