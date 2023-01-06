@@ -1,4 +1,5 @@
-## 2.70.1 (Unreleased)
+## 2.70.3 (Unreleased)
+## 2.70.2 (January 05, 2023)
 
 NOTES:
 
