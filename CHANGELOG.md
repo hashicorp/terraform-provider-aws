@@ -1,4 +1,9 @@
 ## 2.70.4 (Unreleased)
+
+BUG FIXES:
+
+* provider: Fix Terraform v0.12 `incompatible provider version` error with provider v2.70.3 ([#28743](https://github.com/hashicorp/terraform-provider-aws/issues/28743))
+
 ## 2.70.3 (January 06, 2023)
 
 BUG FIXES:
