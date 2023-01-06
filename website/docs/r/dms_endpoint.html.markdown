@@ -199,6 +199,13 @@ In addition to all arguments above, the following attributes are exported:
 * `endpoint_arn` - ARN for the endpoint.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 Endpoints can be imported using the `endpoint_id`, e.g.,

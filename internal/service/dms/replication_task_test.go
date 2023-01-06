@@ -489,7 +489,7 @@ resource "aws_subnet" "test2" {
   }
 }
 
-resource "aws_default_security_group" "test" {
+resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -548,7 +548,7 @@ resource "aws_rds_cluster" "test1" {
   master_username                 = "tftest"
   master_password                 = "mustbeeightcharaters"
   skip_final_snapshot             = true
-  vpc_security_group_ids          = [aws_default_security_group.test.id]
+  vpc_security_group_ids          = [aws_security_group.test.id]
   db_subnet_group_name            = aws_db_subnet_group.test.name
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
 }
@@ -570,7 +570,7 @@ resource "aws_rds_cluster" "test2" {
   master_username        = "tftest"
   master_password        = "mustbeeightcharaters"
   skip_final_snapshot    = true
-  vpc_security_group_ids = [aws_default_security_group.test.id]
+  vpc_security_group_ids = [aws_security_group.test.id]
   db_subnet_group_name   = aws_db_subnet_group.test.name
 }
 
@@ -619,7 +619,7 @@ resource "aws_dms_replication_instance" "test" {
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-  vpc_security_group_ids       = [aws_default_security_group.test.id]
+  vpc_security_group_ids       = [aws_security_group.test.id]
 }
 
 resource "aws_dms_replication_task" "test" {

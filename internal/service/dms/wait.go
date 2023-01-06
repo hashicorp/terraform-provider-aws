@@ -91,7 +91,7 @@ func waitReplicationTaskRunning(conn *dms.DatabaseMigrationService, id string) e
 
 func waitReplicationTaskStopped(conn *dms.DatabaseMigrationService, id string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{replicationTaskStatusStopping},
+		Pending:    []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:     []string{replicationTaskStatusStopped},
 		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    replicationTaskRunningTimeout,
