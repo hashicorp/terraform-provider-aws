@@ -11,7 +11,7 @@ before:
 builds:
   -
     # _x4 suffix required for Terraform CLI < 0.12
-    binary: '{{ .ProjectName }}_{{ .Version }}_x4'
+    binary: '{{ .ProjectName }}_v{{ .Version }}_x4'
     env:
       - CGO_ENABLED=0
     flags:
