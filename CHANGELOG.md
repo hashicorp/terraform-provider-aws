@@ -1,4 +1,10 @@
 ## 4.50.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_dms_replication_task: Fix error with `cdc_path` when used with `aws_dms_s3_endpoint` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
+* resource/aws_dms_s3_endpoint: Fix error with `cdc_path` when used with `aws_dms_replication_task` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
+
 ## 4.49.0 (January  5, 2023)
 
 NOTES:
