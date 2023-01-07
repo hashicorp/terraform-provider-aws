@@ -1532,6 +1532,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
 
 			"aws_evidently_feature": evidently.ResourceFeature(),
+			"aws_evidently_launch":  evidently.ResourceLaunch(),
 			"aws_evidently_project": evidently.ResourceProject(),
 			"aws_evidently_segment": evidently.ResourceSegment(),
 
