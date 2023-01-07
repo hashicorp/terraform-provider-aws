@@ -381,16 +381,16 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("setting scheduled_splits_config: %s", err)
 	}
 
-	d.Set("arn", aws.StringValue(launch.Arn))
+	d.Set("arn", launch.Arn)
 	d.Set("created_time", aws.TimeValue(launch.CreatedTime).Format(time.RFC3339))
-	d.Set("description", aws.StringValue(launch.Description))
+	d.Set("description", launch.Description)
 	d.Set("last_updated_time", aws.TimeValue(launch.LastUpdatedTime).Format(time.RFC3339))
-	d.Set("name", aws.StringValue(launch.Name))
-	d.Set("project", aws.StringValue(launch.Project))
-	d.Set("randomization_salt", aws.StringValue(launch.RandomizationSalt))
-	d.Set("status", aws.StringValue(launch.Status))
-	d.Set("status_reason", aws.StringValue(launch.StatusReason))
-	d.Set("type", aws.StringValue(launch.Type))
+	d.Set("name", launch.Name)
+	d.Set("project", launch.Project)
+	d.Set("randomization_salt", launch.RandomizationSalt)
+	d.Set("status", launch.Status)
+	d.Set("status_reason", launch.StatusReason)
+	d.Set("type", launch.Type)
 
 	tags := KeyValueTags(launch.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
