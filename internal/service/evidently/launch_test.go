@@ -284,6 +284,49 @@ func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
+	var launch cloudwatchevidently.Launch
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05Z")
+	originalRandomizationSalt := "original randomization salt"
+	updatedRandomizationSalt := "updated randomization salt"
+	resourceName := "aws_evidently_launch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfig_randomizationSalt(rName, rName2, rName3, startTime, originalRandomizationSalt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "randomization_salt", originalRandomizationSalt),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchConfig_randomizationSalt(rName, rName2, rName3, startTime, updatedRandomizationSalt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "randomization_salt", updatedRandomizationSalt),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	var launch cloudwatchevidently.Launch
 
@@ -752,6 +795,33 @@ resource "aws_evidently_launch" "test" {
   }
 }
 `, rName3, startTime))
+}
+
+func testAccLaunchConfig_randomizationSalt(rName, rName2, rName3, startTime, randomizationSalt string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name               = %[1]q
+  project            = aws_evidently_project.test.name
+  randomization_salt = %[3]q
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 0
+      }
+      start_time = %[2]q
+    }
+  }
+}
+`, rName3, startTime, randomizationSalt))
 }
 
 func testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, tag, value string) string {
