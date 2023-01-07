@@ -159,10 +159,19 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
 
-	err = resourceReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
-	if err != nil {
-		return create.Error(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
+	group := response.ReplicationSubnetGroups[0]
+
+	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
+
+	subnet_ids := []string{}
+	for _, subnet := range group.Subnets {
+		subnet_ids = append(subnet_ids, aws.StringValue(subnet.SubnetIdentifier))
 	}
+
+	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
+	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
+	d.Set("subnet_ids", subnet_ids)
+	d.Set("vpc_id", group.VpcId)
 
 	tags, err := ListTags(conn, arn)
 
@@ -231,22 +240,6 @@ func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return create.Error(names.DMS, create.ErrActionDeleting, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
-
-	return nil
-}
-
-func resourceReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
-	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
-
-	subnet_ids := []string{}
-	for _, subnet := range group.Subnets {
-		subnet_ids = append(subnet_ids, aws.StringValue(subnet.SubnetIdentifier))
-	}
-
-	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
-	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
-	d.Set("subnet_ids", subnet_ids)
-	d.Set("vpc_id", group.VpcId)
 
 	return nil
 }
