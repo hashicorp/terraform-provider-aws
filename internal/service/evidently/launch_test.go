@@ -416,6 +416,115 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t *testing.T) {
+	var launch cloudwatchevidently.Launch
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName5 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName6 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05Z")
+	resourceName := "aws_evidently_launch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfig_scheduledSplitsConfigStepsOneSegmentOverrideConfig(rName, rName2, rName3, rName4, rName5, rName6, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation1", "20000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchConfig_scheduledSplitsConfigStepsTwoSegmentOverridesConfig(rName, rName2, rName3, rName4, rName5, rName6, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test3", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation2", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.evaluation_order", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.segment", "aws_evidently_segment.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation1", "40000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation2", "30000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
+				),
+			},
+			{
+				Config: testAccLaunchConfig_scheduledSplitsConfigStepsThreeSegmentOverridesConfig(rName, rName2, rName3, rName4, rName5, rName6, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation2", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.evaluation_order", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.segment", "aws_evidently_segment.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation1", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation2", "70000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.evaluation_order", "4"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.segment", "aws_evidently_segment.test3", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.weights.Variation1", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.2.weights.Variation2", "90000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
+				),
+			},
+			{
+				Config: testAccLaunchConfig_scheduledSplitsConfigStepsOneSegmentOverrideConfig(rName, rName2, rName3, rName4, rName5, rName6, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation1", "20000"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	var launch cloudwatchevidently.Launch
 
@@ -1001,6 +1110,180 @@ resource "aws_evidently_launch" "test" {
   }
 }
 `, rName3, startTime, startTime2, startTime3))
+}
+
+func testAccLaunchConfigSegmentOverridesBase(rName, rName2, rName3 string) string {
+	return fmt.Sprintf(`
+resource "aws_evidently_segment" "test" {
+  name    = %[1]q
+  pattern = "{\"Price\":[{\"numeric\":[\">\",10,\"<=\",20]}]}"
+}
+
+resource "aws_evidently_segment" "test2" {
+  name    = %[2]q
+  pattern = "{\"Price\":[{\"numeric\":[\">\",10,\"<=\",20]}]}"
+}
+
+resource "aws_evidently_segment" "test3" {
+  name    = %[3]q
+  pattern = "{\"Price\":[{\"numeric\":[\">\",10,\"<=\",20]}]}"
+}
+`, rName, rName2, rName3)
+}
+
+func testAccLaunchConfig_scheduledSplitsConfigStepsOneSegmentOverrideConfig(rName, rName2, rName3, rName4, rName5, rName6, startTime string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		testAccLaunchConfigSegmentOverridesBase(rName3, rName4, rName5),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 0
+      }
+
+      segment_overrides {
+        evaluation_order = 1
+        segment          = aws_evidently_segment.test.name
+
+        weights = {
+          "Variation1" = 20000
+        }
+      }
+
+      start_time = %[2]q
+    }
+  }
+}
+`, rName6, startTime))
+}
+
+func testAccLaunchConfig_scheduledSplitsConfigStepsTwoSegmentOverridesConfig(rName, rName2, rName3, rName4, rName5, rName6, startTime string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		testAccLaunchConfigSegmentOverridesBase(rName3, rName4, rName5),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation2"
+    variation = "Variation2"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 0
+        "Variation2" = 0
+      }
+
+      segment_overrides {
+        evaluation_order = 1
+        segment          = aws_evidently_segment.test3.name
+
+        weights = {
+          "Variation2" = 10000
+        }
+      }
+
+      segment_overrides {
+        evaluation_order = 2
+        segment          = aws_evidently_segment.test2.name
+
+        weights = {
+          "Variation1" = 40000
+          "Variation2" = 30000
+        }
+      }
+
+      start_time = %[2]q
+    }
+  }
+}
+`, rName6, startTime))
+}
+
+func testAccLaunchConfig_scheduledSplitsConfigStepsThreeSegmentOverridesConfig(rName, rName2, rName3, rName4, rName5, rName6, startTime string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		testAccLaunchConfigSegmentOverridesBase(rName3, rName4, rName5),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation2"
+    variation = "Variation2"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 0
+        "Variation2" = 0
+      }
+
+      segment_overrides {
+        evaluation_order = 1
+        segment          = aws_evidently_segment.test.name
+
+        weights = {
+          "Variation2" = 5000
+        }
+      }
+
+      segment_overrides {
+        evaluation_order = 3
+        segment          = aws_evidently_segment.test2.name
+
+        weights = {
+          "Variation1" = 60000
+          "Variation2" = 70000
+        }
+      }
+
+      segment_overrides {
+        evaluation_order = 4
+        segment          = aws_evidently_segment.test3.name
+
+        weights = {
+          "Variation1" = 10000
+          "Variation2" = 90000
+        }
+      }
+
+      start_time = %[2]q
+    }
+  }
+}
+`, rName6, startTime))
 }
 
 func testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, tag, value string) string {
