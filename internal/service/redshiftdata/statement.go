@@ -30,7 +30,7 @@ func ResourceStatement() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cluster_identifier": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"database": {
@@ -84,6 +84,11 @@ func ResourceStatement() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"workgroup_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -92,10 +97,13 @@ func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftDataConn()
 
 	input := &redshiftdataapiservice.ExecuteStatementInput{
-		ClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
-		Database:          aws.String(d.Get("database").(string)),
-		Sql:               aws.String(d.Get("sql").(string)),
-		WithEvent:         aws.Bool(d.Get("with_event").(bool)),
+		Database:  aws.String(d.Get("database").(string)),
+		Sql:       aws.String(d.Get("sql").(string)),
+		WithEvent: aws.Bool(d.Get("with_event").(bool)),
+	}
+
+	if v, ok := d.GetOk("cluster_identifier"); ok {
+		input.ClusterIdentifier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("db_user"); ok {
@@ -112,6 +120,10 @@ func resourceStatementCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("statement_name"); ok {
 		input.StatementName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("workgroup_name"); ok {
+		input.WorkgroupName = aws.String(v.(string))
 	}
 
 	output, err := conn.ExecuteStatement(input)
@@ -149,6 +161,7 @@ func resourceStatementRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
 	d.Set("sql", sub.QueryString)
+	d.Set("workgroup_name", sub.WorkgroupName)
 
 	if err := d.Set("parameters", flattenParameters(sub.QueryParameters)); err != nil {
 		return fmt.Errorf("setting parameters: %w", err)

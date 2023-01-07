@@ -68,6 +68,36 @@ func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeSta
 	}
 }
 
+func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
+	var v redshiftdataapiservice.DescribeStatementOutput
+	resourceName := "aws_redshiftdata_statement.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStatementConfig_workgroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStatementExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "workgroup_name", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
+					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"database", "db_user"},
+			},
+		},
+	})
+}
+
 func testAccStatementConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
@@ -89,4 +119,23 @@ resource "aws_redshiftdata_statement" "test" {
   sql                = "CREATE GROUP group_name;"
 }
 `, rName))
+}
+
+func testAccStatementConfig_workgroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+	namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+	namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+	workgroup_name = %[1]q
+}
+
+resource "aws_redshiftdata_statement" "test" {
+  workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
+  database       = "dev"
+  sql            = "CREATE GROUP group_name;"
+}
+`, rName)
 }
