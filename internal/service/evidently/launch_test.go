@@ -69,6 +69,33 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyLaunch_disappears(t *testing.T) {
+	var launch cloudwatchevidently.Launch
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05Z")
+	resourceName := "aws_evidently_launch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevidently.ResourceLaunch(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckLaunchDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn()
 	for _, rs := range s.RootModule().Resources {
