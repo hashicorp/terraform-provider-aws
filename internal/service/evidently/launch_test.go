@@ -112,6 +112,89 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
+	var launch cloudwatchevidently.Launch
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName5 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05Z")
+	resourceName := "aws_evidently_launch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "groups.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchConfig_twoGroups(rName, rName2, rName3, rName4, rName5, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.description", "first-group-add-desc"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1UpdatedName"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
+					resource.TestCheckResourceAttr(resourceName, "groups.1.description", "second-group"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.1.feature", "aws_evidently_feature.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "groups.1.name", "Variation2OriginalName"),
+					resource.TestCheckResourceAttr(resourceName, "groups.1.variation", "Variation2"),
+				),
+			},
+			{
+				Config: testAccLaunchConfig_threeGroups(rName, rName2, rName3, rName4, rName5, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "groups.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.description", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
+					resource.TestCheckResourceAttr(resourceName, "groups.1.description", "second-group-update-desc"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.1.feature", "aws_evidently_feature.test2", "name"),
+					resource.TestCheckResourceAttr(resourceName, "groups.1.name", "Variation2UpdatedName"),
+					resource.TestCheckResourceAttr(resourceName, "groups.1.variation", "Variation2a"),
+					resource.TestCheckResourceAttr(resourceName, "groups.2.description", "third-group"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.2.feature", "aws_evidently_feature.test3", "name"),
+					resource.TestCheckResourceAttr(resourceName, "groups.2.name", "Variation3OriginalName"),
+					resource.TestCheckResourceAttr(resourceName, "groups.2.variation", "Variation3"),
+				),
+			},
+			{
+				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "groups.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
+					resource.TestCheckResourceAttr(resourceName, "groups.0.variation", "Variation1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	var launch cloudwatchevidently.Launch
 
@@ -330,6 +413,120 @@ resource "aws_evidently_launch" "test" {
   }
 }
 `, rName3, startTime, description))
+}
+
+func testAccLaunchConfigGroupsBase(rName, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_evidently_feature" "test2" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  variations {
+    name = "Variation2"
+    value {
+      string_value = "test2"
+    }
+  }
+
+  variations {
+    name = "Variation2a"
+    value {
+      string_value = "test2a"
+    }
+  }
+}
+
+resource "aws_evidently_feature" "test3" {
+  name    = %[2]q
+  project = aws_evidently_project.test.name
+
+  variations {
+    name = "Variation3"
+    value {
+      string_value = "test3"
+    }
+  }
+}
+`, rName, rName2)
+}
+
+func testAccLaunchConfig_twoGroups(rName, rName2, rName3, rName4, rName5, startTime string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		testAccLaunchConfigGroupsBase(rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature     = aws_evidently_feature.test.name
+    name        = "Variation1UpdatedName"
+    variation   = "Variation1"
+    description = "first-group-add-desc"
+  }
+
+  groups {
+    feature     = aws_evidently_feature.test2.name
+    name        = "Variation2OriginalName"
+    variation   = "Variation2"
+    description = "second-group"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1UpdatedName"  = 0
+        "Variation2OriginalName" = 0
+      }
+      start_time = %[2]q
+    }
+  }
+}
+`, rName5, startTime))
+}
+
+func testAccLaunchConfig_threeGroups(rName, rName2, rName3, rName4, rName5, startTime string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		testAccLaunchConfigGroupsBase(rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  groups {
+    feature     = aws_evidently_feature.test2.name
+    name        = "Variation2UpdatedName"
+    variation   = "Variation2a"
+    description = "second-group-update-desc"
+  }
+
+  groups {
+    feature     = aws_evidently_feature.test3.name
+    name        = "Variation3OriginalName"
+    variation   = "Variation3"
+    description = "third-group"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1"             = 0
+        "Variation2UpdatedName"  = 0
+        "Variation3OriginalName" = 0
+      }
+      start_time = %[2]q
+    }
+  }
+}
+`, rName5, startTime))
 }
 
 func testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, tag, value string) string {
