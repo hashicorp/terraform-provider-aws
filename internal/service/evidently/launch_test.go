@@ -327,6 +327,95 @@ func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
+	var launch cloudwatchevidently.Launch
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime1 := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05Z")
+	startTime2 := time.Now().AddDate(0, 0, 3).Format("2006-01-02T15:04:05Z")
+	startTime3 := time.Now().AddDate(0, 0, 4).Format("2006-01-02T15:04:05Z")
+	startTime4 := time.Now().AddDate(0, 0, 5).Format("2006-01-02T15:04:05Z")
+	startTime5 := time.Now().AddDate(0, 0, 6).Format("2006-01-02T15:04:05Z")
+	resourceName := "aws_evidently_launch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchConfig_scheduledSplitsConfigTwoStepsConfig(rName, rName2, rName3, startTime2, startTime3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "15"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation2", "10"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime2),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.group_weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.group_weights.Variation1", "20"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.group_weights.Variation2", "25"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.start_time", startTime3),
+				),
+			},
+			{
+				Config: testAccLaunchConfig_scheduledSplitsConfigThreeStepsConfig(rName, rName2, rName3, startTime3, startTime4, startTime5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "60"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation2", "65"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime3),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.group_weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.group_weights.Variation1", "11"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.group_weights.Variation2", "12"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.1.start_time", startTime4),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.2.group_weights.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.2.group_weights.Variation1", "44"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.2.group_weights.Variation2", "40"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.2.start_time", startTime5),
+				),
+			},
+			{
+				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime1),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	var launch cloudwatchevidently.Launch
 
@@ -822,6 +911,96 @@ resource "aws_evidently_launch" "test" {
   }
 }
 `, rName3, startTime, randomizationSalt))
+}
+
+func testAccLaunchConfig_scheduledSplitsConfigTwoStepsConfig(rName, rName2, rName3, startTime, startTime2 string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation2"
+    variation = "Variation2"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 15
+        "Variation2" = 10
+      }
+      start_time = %[2]q
+    }
+
+    steps {
+      group_weights = {
+        "Variation1" = 20
+        "Variation2" = 25
+      }
+      start_time = %[3]q
+    }
+  }
+}
+`, rName3, startTime, startTime2))
+}
+
+func testAccLaunchConfig_scheduledSplitsConfigThreeStepsConfig(rName, rName2, rName3, startTime, startTime2, startTime3 string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation2"
+    variation = "Variation2"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 60
+        "Variation2" = 65
+      }
+      start_time = %[2]q
+    }
+
+    steps {
+      group_weights = {
+        "Variation1" = 11
+        "Variation2" = 12
+      }
+      start_time = %[3]q
+    }
+
+    steps {
+      group_weights = {
+        "Variation1" = 44
+        "Variation2" = 40
+      }
+      start_time = %[4]q
+    }
+  }
+}
+`, rName3, startTime, startTime2, startTime3))
 }
 
 func testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, tag, value string) string {
