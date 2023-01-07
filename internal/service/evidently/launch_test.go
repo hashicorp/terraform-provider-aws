@@ -69,6 +69,58 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyLaunch_tags(t *testing.T) {
+	var launch cloudwatchevidently.Launch
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05Z")
+	resourceName := "aws_evidently_launch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchConfig_tags2(rName, rName2, rName3, startTime, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 	var launch cloudwatchevidently.Launch
 
@@ -208,4 +260,65 @@ resource "aws_evidently_launch" "test" {
   }
 }
 `, rName3, startTime))
+}
+
+func testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, tag, value string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 0
+      }
+      start_time = %[2]q
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName3, startTime, tag, value))
+}
+
+func testAccLaunchConfig_tags2(rName, rName2, rName3, startTime, tag1, value1, tag2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 0
+      }
+      start_time = %[2]q
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName3, startTime, tag1, value1, tag2, value2))
 }
