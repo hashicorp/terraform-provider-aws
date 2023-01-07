@@ -124,12 +124,12 @@ resource "aws_redshiftdata_statement" "test" {
 func testAccStatementConfig_workgroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
-	namespace_name = %[1]q
+  namespace_name = %[1]q
 }
 
 resource "aws_redshiftserverless_workgroup" "test" {
-	namespace_name = aws_redshiftserverless_namespace.test.namespace_name
-	workgroup_name = %[1]q
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
 }
 
 resource "aws_redshiftdata_statement" "test" {
