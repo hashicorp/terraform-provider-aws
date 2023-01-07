@@ -25,6 +25,7 @@ func ResourceLaunch() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceLaunchCreate,
 		ReadContext:   resourceLaunchRead,
+		UpdateContext: resourceLaunchUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -400,6 +401,45 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return nil
+}
+
+func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
+
+	if d.HasChanges("description", "groups", "metric_monitors", "randomization_salt", "scheduled_splits_config") {
+		name := d.Get("name").(string)
+		project := d.Get("project").(string)
+
+		input := &cloudwatchevidently.UpdateLaunchInput{
+			Description:           aws.String(d.Get("description").(string)),
+			Groups:                expandGroups(d.Get("groups").([]interface{})),
+			Launch:                aws.String(name),
+			Project:               aws.String(project),
+			MetricMonitors:        expandMetricMonitors(d.Get("metric_monitors").([]interface{})),
+			RandomizationSalt:     aws.String(d.Get("randomization_salt").(string)),
+			ScheduledSplitsConfig: expandScheduledSplitsConfig(d.Get("scheduled_splits_config").([]interface{})),
+		}
+
+		_, err := conn.UpdateLaunchWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
+		}
+
+		if _, err := waitLaunchUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for CloudWatch Evidently Launch (%s) for Project (%s) update: %s", name, project, err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating tags: %s", err)
+		}
+	}
+
+	return resourceLaunchRead(ctx, d, meta)
 }
 
 func LaunchParseID(id string) (string, string, error) {
