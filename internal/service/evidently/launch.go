@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -26,6 +27,7 @@ func ResourceLaunch() *schema.Resource {
 		CreateContext: resourceLaunchCreate,
 		ReadContext:   resourceLaunchRead,
 		UpdateContext: resourceLaunchUpdate,
+		DeleteContext: resourceLaunchDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -440,6 +442,33 @@ func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return resourceLaunchRead(ctx, d, meta)
+}
+
+func resourceLaunchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
+
+	name := d.Get("name").(string)
+	project := d.Get("project").(string)
+
+	log.Printf("[DEBUG] Deleting CloudWatch Evidently Launch: %s", d.Id())
+	_, err := conn.DeleteLaunchWithContext(ctx, &cloudwatchevidently.DeleteLaunchInput{
+		Launch:  aws.String(name),
+		Project: aws.String(project),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
+	}
+
+	if _, err := waitLaunchDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for CloudWatch Evidently Launch (%s) for Project (%s) deletion: %s", name, project, err)
+	}
+
+	return nil
 }
 
 func LaunchParseID(id string) (string, string, error) {
