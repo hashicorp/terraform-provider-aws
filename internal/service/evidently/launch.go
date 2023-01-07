@@ -24,10 +24,10 @@ import (
 
 func ResourceLaunch() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceLaunchCreate,
-		ReadContext:   resourceLaunchRead,
-		UpdateContext: resourceLaunchUpdate,
-		DeleteContext: resourceLaunchDelete,
+		CreateWithoutTimeout: resourceLaunchCreate,
+		ReadWithoutTimeout:   resourceLaunchRead,
+		UpdateWithoutTimeout: resourceLaunchUpdate,
+		DeleteWithoutTimeout: resourceLaunchDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
