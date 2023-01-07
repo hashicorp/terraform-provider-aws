@@ -22,7 +22,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDomainServiceAccessPolicyDestroy,
+		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
@@ -48,7 +48,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudsearch.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDomainServiceAccessPolicyDestroy,
+		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
@@ -92,7 +92,7 @@ func testAccDomainServiceAccessPolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDomainServiceAccessPolicyDestroy(s *terraform.State) error {
+func testAccCheckDomainServiceAccessPolicyDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudsearch_domain_service_access_policy" {
 			continue

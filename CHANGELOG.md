@@ -1,4 +1,10 @@
 ## 4.50.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_dms_replication_task: Fix error with `cdc_path` when used with `aws_dms_s3_endpoint` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
+* resource/aws_dms_s3_endpoint: Fix error with `cdc_path` when used with `aws_dms_replication_task` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
+
 ## 4.49.0 (January  5, 2023)
 
 NOTES:
@@ -2177,6 +2183,12 @@ BUG FIXES:
 * resource/aws_vpc_ipam: Correct update of `description` ([#22863](https://github.com/hashicorp/terraform-provider-aws/issues/22863))
 * resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 * resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
+
+## 3.76.1 (January 05, 2023)
+
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket: Mark `server_side_encryption_configuration` as Computed in support of [S3 object encryption by default](https://aws.amazon.com/blogs/aws/amazon-s3-encrypts-new-objects-by-default/) ([#28702](https://github.com/terraform-providers/terraform-provider-aws/issues/28702))
 
 ## 3.76.0 (December 15, 2022)
 
@@ -5362,5 +5374,5 @@ BUG FIXES
 
 For information on prior major releases, see their changelogs:
 
-* [3.74 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/3.x/CHANGELOG.md)
+* [3.76 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/3.x/CHANGELOG.md)
 * [2.70 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/2.x/CHANGELOG.md)

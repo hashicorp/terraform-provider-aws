@@ -26,7 +26,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy:             testAccCheckSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName),
@@ -51,7 +51,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy:             testAccCheckSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName),
@@ -72,7 +72,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_snapshotOwnerExpectError(t *tes
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy:             testAccCheckSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSSnapshotCreateVolumePermissionConfig_snapshotOwner(rName),
@@ -82,7 +82,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_snapshotOwnerExpectError(t *tes
 	})
 }
 
-func testAccSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
+func testAccCheckSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {

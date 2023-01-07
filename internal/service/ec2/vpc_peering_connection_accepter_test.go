@@ -24,7 +24,7 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy:             testAccCheckVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_sameRegionSameAccount(rName),
@@ -81,7 +81,7 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy:      testAccCheckVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_differentRegionSameAccount(rName),
@@ -125,7 +125,7 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy:             testAccCheckVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_sameRegionDifferentAccount(rName),
@@ -162,7 +162,7 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *test
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy:             testAccCheckVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_differentRegionDifferentAccount(rName),
@@ -183,7 +183,7 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *test
 	})
 }
 
-func testAccVPCPeeringConnectionAccepterDestroy(s *terraform.State) error {
+func testAccCheckVPCPeeringConnectionAccepterDestroy(s *terraform.State) error {
 	// We don't destroy the underlying VPC Peering Connection.
 	return nil
 }
