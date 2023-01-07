@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +23,8 @@ import (
 
 func ResourceLaunch() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceLaunchRead,
+		CreateContext: resourceLaunchCreate,
+		ReadContext:   resourceLaunchRead,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -285,6 +287,58 @@ func ResourceLaunch() *schema.Resource {
 	}
 }
 
+func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+	project := d.Get("project").(string)
+
+	input := &cloudwatchevidently.CreateLaunchInput{
+		Name:    aws.String(name),
+		Project: aws.String(project),
+		Groups:  expandGroups(d.Get("groups").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("metric_monitors"); ok {
+		input.MetricMonitors = expandMetricMonitors(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("randomization_salt"); ok {
+		input.RandomizationSalt = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("scheduled_splits_config"); ok {
+		input.ScheduledSplitsConfig = expandScheduledSplitsConfig(v.([]interface{}))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating CloudWatch Evidently Launch: %s", input)
+	output, err := conn.CreateLaunchWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("creating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
+	}
+
+	// the GetLaunch API call uses the Launch name and Project ARN
+	// concat Launch name and Project Name or ARN to be used in Read for imports
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Launch.Name), aws.StringValue(output.Launch.Project)))
+
+	if _, err := waitLaunchCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for CloudWatch Evidently Launch (%s) for Project (%s) creation: %s", name, project, err)
+	}
+
+	return resourceLaunchRead(ctx, d, meta)
+}
+
 func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -356,6 +410,129 @@ func LaunchParseID(id string) (string, string, error) {
 	}
 
 	return launchName, projectNameOrARN, nil
+}
+
+func expandGroups(tfMaps []interface{}) []*cloudwatchevidently.LaunchGroupConfig {
+	apiObjects := make([]*cloudwatchevidently.LaunchGroupConfig, 0, len(tfMaps))
+
+	for _, tfMap := range tfMaps {
+		apiObjects = append(apiObjects, expandGroup(tfMap.(map[string]interface{})))
+	}
+
+	return apiObjects
+}
+
+func expandGroup(tfMap map[string]interface{}) *cloudwatchevidently.LaunchGroupConfig {
+	apiObject := &cloudwatchevidently.LaunchGroupConfig{
+		Feature:   aws.String(tfMap["feature"].(string)),
+		Name:      aws.String(tfMap["name"].(string)),
+		Variation: aws.String(tfMap["variation"].(string)),
+	}
+
+	if v, ok := tfMap["description"]; ok {
+		apiObject.Description = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
+func expandMetricMonitors(tfMaps []interface{}) []*cloudwatchevidently.MetricMonitorConfig {
+	apiObjects := make([]*cloudwatchevidently.MetricMonitorConfig, 0, len(tfMaps))
+
+	for _, tfMap := range tfMaps {
+		apiObjects = append(apiObjects, expandMetricMonitor(tfMap.(map[string]interface{})))
+	}
+
+	return apiObjects
+}
+
+func expandMetricMonitor(tfMap map[string]interface{}) *cloudwatchevidently.MetricMonitorConfig {
+	apiObject := &cloudwatchevidently.MetricMonitorConfig{
+		MetricDefinition: expandMetricDefinition(tfMap["metric_definition"].([]interface{})),
+	}
+
+	return apiObject
+}
+
+func expandMetricDefinition(tfList []interface{}) *cloudwatchevidently.MetricDefinitionConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &cloudwatchevidently.MetricDefinitionConfig{
+		EntityIdKey: aws.String(tfMap["entity_id_key"].(string)),
+		Name:        aws.String(tfMap["name"].(string)),
+		ValueKey:    aws.String(tfMap["value_key"].(string)),
+	}
+
+	if v, ok := tfMap["event_pattern"]; ok && v != "" {
+		apiObject.EventPattern = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["unit_label"]; ok && v != "" {
+		apiObject.UnitLabel = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
+func expandScheduledSplitsConfig(tfList []interface{}) *cloudwatchevidently.ScheduledSplitsLaunchConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &cloudwatchevidently.ScheduledSplitsLaunchConfig{
+		Steps: expandSteps(tfMap["steps"].([]interface{})),
+	}
+
+	return apiObject
+}
+
+func expandSteps(tfMaps []interface{}) []*cloudwatchevidently.ScheduledSplitConfig {
+	apiObjects := make([]*cloudwatchevidently.ScheduledSplitConfig, 0, len(tfMaps))
+
+	for _, tfMap := range tfMaps {
+		apiObjects = append(apiObjects, expandStep(tfMap.(map[string]interface{})))
+	}
+
+	return apiObjects
+}
+
+func expandStep(tfMap map[string]interface{}) *cloudwatchevidently.ScheduledSplitConfig {
+	t, _ := time.Parse(time.RFC3339, tfMap["start_time"].(string))
+	startTime := aws.Time(t)
+
+	apiObject := &cloudwatchevidently.ScheduledSplitConfig{
+		GroupWeights:     flex.ExpandInt64Map(tfMap["group_weights"].(map[string]interface{})),
+		SegmentOverrides: expandSegmentOverrides(tfMap["segment_overrides"].([]interface{})),
+		StartTime:        startTime,
+	}
+
+	return apiObject
+}
+
+func expandSegmentOverrides(tfMaps []interface{}) []*cloudwatchevidently.SegmentOverride {
+	apiObjects := make([]*cloudwatchevidently.SegmentOverride, 0, len(tfMaps))
+
+	for _, tfMap := range tfMaps {
+		apiObjects = append(apiObjects, expandSegmentOverride(tfMap.(map[string]interface{})))
+	}
+
+	return apiObjects
+}
+
+func expandSegmentOverride(tfMap map[string]interface{}) *cloudwatchevidently.SegmentOverride {
+	apiObject := &cloudwatchevidently.SegmentOverride{
+		EvaluationOrder: aws.Int64(int64(tfMap["evaluation_order"].(int))),
+		Segment:         aws.String(tfMap["segment"].(string)),
+		Weights:         flex.ExpandInt64Map(tfMap["weights"].(map[string]interface{})),
+	}
+
+	return apiObject
 }
 
 func flattenExecution(apiObjects *cloudwatchevidently.LaunchExecution) []interface{} {

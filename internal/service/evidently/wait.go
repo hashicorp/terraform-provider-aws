@@ -59,6 +59,23 @@ func waitFeatureDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatc
 	return nil, err
 }
 
+func waitLaunchCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Launch, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{cloudwatchevidently.LaunchStatusCreated},
+		Refresh: statusLaunch(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+
+	if output, ok := outputRaw.(*cloudwatchevidently.Launch); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitProjectCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
