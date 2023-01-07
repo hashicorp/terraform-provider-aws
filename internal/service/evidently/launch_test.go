@@ -69,6 +69,49 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
+	var launch cloudwatchevidently.Launch
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05Z")
+	originalDescription := "original description"
+	updatedDescription := "updated description"
+	resourceName := "aws_evidently_launch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfig_description(rName, rName2, rName3, startTime, originalDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchConfig_description(rName, rName2, rName3, startTime, updatedDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchExists(resourceName, &launch),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	var launch cloudwatchevidently.Launch
 
@@ -260,6 +303,33 @@ resource "aws_evidently_launch" "test" {
   }
 }
 `, rName3, startTime))
+}
+
+func testAccLaunchConfig_description(rName, rName2, rName3, startTime, description string) string {
+	return acctest.ConfigCompose(
+		testAccLaunchConfigBase(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_evidently_launch" "test" {
+  name        = %[1]q
+  project     = aws_evidently_project.test.name
+  description = %[3]q
+
+  groups {
+    feature   = aws_evidently_feature.test.name
+    name      = "Variation1"
+    variation = "Variation1"
+  }
+
+  scheduled_splits_config {
+    steps {
+      group_weights = {
+        "Variation1" = 0
+      }
+      start_time = %[2]q
+    }
+  }
+}
+`, rName3, startTime, description))
 }
 
 func testAccLaunchConfig_tags1(rName, rName2, rName3, startTime, tag, value string) string {
