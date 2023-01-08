@@ -307,7 +307,7 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	isComputedOnly := property.Computed && !property.Optional
 	isTopLevelAttribute := len(path) == 1
 	var planModifiers []string
-	var fwPlanModifierPackage, fwPlanModifierType string
+	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType string
 
 	// At this point we are emitting code for the values of a schema.Schema's Attributes (map[string]schema.Attribute).
 	switch v := property.Type; v {
@@ -387,6 +387,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 			fwPlanModifierPackage = "listplanmodifier"
 			fwPlanModifierType = "List"
+			fwValidatorsPackage = "listvalidator"
+			fwValidatorType = "List"
 
 		case schema.TypeMap:
 			aggregateSchemaFactory = "schema.MapAttribute{"
@@ -398,6 +400,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 			fwPlanModifierPackage = "mapplanmodifier"
 			fwPlanModifierType = "Map"
+			fwValidatorsPackage = "mapvalidator"
+			fwValidatorType = "Map"
 
 		case schema.TypeSet:
 			aggregateSchemaFactory = "schema.SetAttribute{"
@@ -409,6 +413,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 			fwPlanModifierPackage = "setplanmodifier"
 			fwPlanModifierType = "Set"
+			fwValidatorsPackage = "setvalidator"
+			fwValidatorType = "Set"
 		}
 
 		switch v := property.Elem.(type) {
@@ -510,6 +516,19 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "},\n")
 	}
 
+	if maxItems, minItems := property.MaxItems, property.MinItems; maxItems > 0 || minItems > 0 && fwValidatorsPackage != "" && fwValidatorType != "" {
+		e.FrameworkValidatorsPackages = append(e.FrameworkValidatorsPackages, fwValidatorsPackage)
+
+		fprintf(e.SchemaWriter, "Validators:[]validator.%s{\n", fwValidatorType)
+		if minItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtLeast(%d),\n", fwValidatorsPackage, minItems)
+		}
+		if maxItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
 	// Features that we can't (yet) migrate:
 
 	if def := property.Default; def != nil {
@@ -604,6 +623,14 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 		property.MinItems = 0
 	}
 
+	if description := property.Description; description != "" {
+		fprintf(e.SchemaWriter, "Description:%q,\n", description)
+	}
+
+	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
+		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
 	if maxItems, minItems := property.MaxItems, property.MinItems; maxItems > 0 || minItems > 0 && fwValidatorsPackage != "" && fwValidatorType != "" {
 		e.FrameworkValidatorsPackages = append(e.FrameworkValidatorsPackages, fwValidatorsPackage)
 
@@ -615,14 +642,6 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
 		}
 		fprintf(e.SchemaWriter, "},\n")
-	}
-
-	if description := property.Description; description != "" {
-		fprintf(e.SchemaWriter, "Description:%q,\n", description)
-	}
-
-	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
-		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
 	if def := property.Default; def != nil {
