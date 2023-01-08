@@ -159,6 +159,11 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 			templateData.FrameworkPlanModifierPackages = append(templateData.FrameworkPlanModifierPackages, v)
 		}
 	}
+	for _, v := range emitter.FrameworkValidatorsPackages {
+		if !slices.Contains(templateData.FrameworkValidatorsPackages, v) {
+			templateData.FrameworkValidatorsPackages = append(templateData.FrameworkValidatorsPackages, v)
+		}
+	}
 
 	return templateData, nil
 }
@@ -170,6 +175,7 @@ func (m *migrator) infof(format string, a ...interface{}) {
 type emitter struct {
 	Generator                     *common.Generator
 	FrameworkPlanModifierPackages []string // Package names for any terraform-plugin-framework plan modifiers. May contain duplicates.
+	FrameworkValidatorsPackages   []string // Package names for any terraform-plugin-framework-validators validators. May contain duplicates.
 	HasTopLevelTagsAllMap         bool
 	HasTopLevelTagsMap            bool
 	ImportFrameworkAttr           bool
@@ -532,6 +538,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 // emitBlockProperty generates the Plugin Framework code for a Plugin SDK Block's property
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) error {
+	var fwValidatorsPackage, fwValidatorType string
+
 	// At this point we are emitting code for the values of a schema.Block or Schema's Blocks (map[string]schema.Block).
 	switch v := property.Type; v {
 	//
@@ -540,6 +548,9 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 	case schema.TypeList:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
+			fwValidatorsPackage = "listvalidator"
+			fwValidatorType = "List"
+
 			fprintf(e.SchemaWriter, "schema.ListNestedBlock{\n")
 			fprintf(e.SchemaWriter, "NestedObject:schema.NestedBlockObject{\n")
 
@@ -549,6 +560,8 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 				return err
 			}
 
+			fprintf(e.SchemaWriter, "},\n")
+
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("(Block) list of %T", v))
 		}
@@ -556,6 +569,9 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 	case schema.TypeSet:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
+			fwValidatorsPackage = "setvalidator"
+			fwValidatorType = "Set"
+
 			fprintf(e.SchemaWriter, "schema.SetNestedBlock{\n")
 			fprintf(e.SchemaWriter, "NestedObject:schema.NestedBlockObject{\n")
 
@@ -564,6 +580,8 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 			if err != nil {
 				return err
 			}
+
+			fprintf(e.SchemaWriter, "},\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("(Block) set of %T", v))
@@ -586,12 +604,17 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 		property.MinItems = 0
 	}
 
-	if maxItems := property.MaxItems; maxItems > 0 {
-		fprintf(e.SchemaWriter, "MaxItems:%d,\n", maxItems)
-	}
+	if maxItems, minItems := property.MaxItems, property.MinItems; maxItems > 0 || minItems > 0 && fwValidatorsPackage != "" && fwValidatorType != "" {
+		e.FrameworkValidatorsPackages = append(e.FrameworkValidatorsPackages, fwValidatorsPackage)
 
-	if minItems := property.MinItems; minItems > 0 {
-		fprintf(e.SchemaWriter, "MinItems:%d,\n", minItems)
+		fprintf(e.SchemaWriter, "Validators:[]validator.%s{\n", fwValidatorType)
+		if minItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtLeast(%d),\n", fwValidatorsPackage, minItems)
+		}
+		if maxItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
+		}
+		fprintf(e.SchemaWriter, "},\n")
 	}
 
 	if description := property.Description; description != "" {
@@ -786,6 +809,7 @@ type templateData struct {
 	EmitResourceModifyPlan        bool
 	EmitResourceUpdateSkeleton    bool
 	FrameworkPlanModifierPackages []string
+	FrameworkValidatorsPackages   []string
 	ImportFrameworkAttr           bool
 	ImportProviderFrameworkTypes  bool
 	Name                          string // e.g. Instance
