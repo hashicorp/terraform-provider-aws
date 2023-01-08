@@ -464,7 +464,7 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 				return err
 			}
 
-			fprintf(e.SchemaWriter, "},\n")
+			fprintf(e.SchemaWriter, ",\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %T", typeName, v))
