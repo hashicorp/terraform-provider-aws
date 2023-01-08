@@ -498,6 +498,19 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
+	if maxItems, minItems := property.MaxItems, property.MinItems; maxItems > 0 || minItems > 0 && fwValidatorsPackage != "" && fwValidatorType != "" {
+		e.FrameworkValidatorsPackages = append(e.FrameworkValidatorsPackages, fwValidatorsPackage)
+
+		fprintf(e.SchemaWriter, "Validators:[]validator.%s{\n", fwValidatorType)
+		if minItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtLeast(%d),\n", fwValidatorsPackage, minItems)
+		}
+		if maxItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
 	if attributeName == "id" && isTopLevelAttribute && !e.IsDataSource {
 		planModifiers = append(planModifiers, fmt.Sprintf("%s.UseStateForUnknown()", fwPlanModifierPackage))
 		e.FrameworkPlanModifierPackages = append(e.FrameworkPlanModifierPackages, fwPlanModifierPackage)
@@ -512,19 +525,6 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "PlanModifiers:[]planmodifier.%s{\n", fwPlanModifierType)
 		for _, planModifier := range planModifiers {
 			fprintf(e.SchemaWriter, "%s,\n", planModifier)
-		}
-		fprintf(e.SchemaWriter, "},\n")
-	}
-
-	if maxItems, minItems := property.MaxItems, property.MinItems; maxItems > 0 || minItems > 0 && fwValidatorsPackage != "" && fwValidatorType != "" {
-		e.FrameworkValidatorsPackages = append(e.FrameworkValidatorsPackages, fwValidatorsPackage)
-
-		fprintf(e.SchemaWriter, "Validators:[]validator.%s{\n", fwValidatorType)
-		if minItems > 0 {
-			fprintf(e.SchemaWriter, "%s.SizeAtLeast(%d),\n", fwValidatorsPackage, minItems)
-		}
-		if maxItems > 0 {
-			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
 		}
 		fprintf(e.SchemaWriter, "},\n")
 	}
@@ -557,7 +557,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 // emitBlockProperty generates the Plugin Framework code for a Plugin SDK Block's property
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) error {
-	var fwValidatorsPackage, fwValidatorType string
+	var planModifiers []string
+	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType string
 
 	// At this point we are emitting code for the values of a schema.Block or Schema's Blocks (map[string]schema.Block).
 	switch v := property.Type; v {
@@ -567,6 +568,8 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 	case schema.TypeList:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
+			fwPlanModifierPackage = "listplanmodifier"
+			fwPlanModifierType = "List"
 			fwValidatorsPackage = "listvalidator"
 			fwValidatorType = "List"
 
@@ -588,6 +591,8 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 	case schema.TypeSet:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
+			fwPlanModifierPackage = "setplanmodifier"
+			fwPlanModifierType = "Set"
 			fwValidatorsPackage = "setvalidator"
 			fwValidatorType = "Set"
 
@@ -640,6 +645,19 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 		}
 		if maxItems > 0 {
 			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
+	if property.ForceNew {
+		planModifiers = append(planModifiers, fmt.Sprintf("%s.RequiresReplace()", fwPlanModifierPackage))
+		e.FrameworkPlanModifierPackages = append(e.FrameworkPlanModifierPackages, fwPlanModifierPackage)
+	}
+
+	if len(planModifiers) > 0 {
+		fprintf(e.SchemaWriter, "PlanModifiers:[]planmodifier.%s{\n", fwPlanModifierType)
+		for _, planModifier := range planModifiers {
+			fprintf(e.SchemaWriter, "%s,\n", planModifier)
 		}
 		fprintf(e.SchemaWriter, "},\n")
 	}
