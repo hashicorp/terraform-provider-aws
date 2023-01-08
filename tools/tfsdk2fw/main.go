@@ -164,6 +164,11 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 			templateData.FrameworkValidatorsPackages = append(templateData.FrameworkValidatorsPackages, v)
 		}
 	}
+	for _, v := range emitter.ProviderPlanModifierPackages {
+		if !slices.Contains(templateData.ProviderPlanModifierPackages, v) {
+			templateData.ProviderPlanModifierPackages = append(templateData.ProviderPlanModifierPackages, v)
+		}
+	}
 
 	return templateData, nil
 }
@@ -181,6 +186,7 @@ type emitter struct {
 	ImportFrameworkAttr           bool
 	ImportProviderFrameworkTypes  bool
 	IsDataSource                  bool
+	ProviderPlanModifierPackages  []string // Package names for any provider plan modifiers. May contain duplicates.
 	SchemaWriter                  io.Writer
 	StructWriter                  io.Writer
 }
@@ -307,7 +313,7 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	isComputedOnly := property.Computed && !property.Optional
 	isTopLevelAttribute := len(path) == 1
 	var planModifiers []string
-	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType string
+	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType, providerPlanModifierPackage string
 
 	// At this point we are emitting code for the values of a schema.Schema's Attributes (map[string]schema.Attribute).
 	switch v := property.Type; v {
@@ -521,6 +527,23 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		e.FrameworkPlanModifierPackages = append(e.FrameworkPlanModifierPackages, fwPlanModifierPackage)
 	}
 
+	if def := property.Default; def != nil {
+		switch v := def.(type) {
+		case bool:
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+		case int:
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+		case float64:
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+		case string:
+			providerPlanModifierPackage = "stringplanmodifier"
+			planModifiers = append(planModifiers, fmt.Sprintf("fw%s.StringDefaultValue(%q)", providerPlanModifierPackage, v))
+			e.ProviderPlanModifierPackages = append(e.ProviderPlanModifierPackages, providerPlanModifierPackage)
+		default:
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+		}
+	}
+
 	if len(planModifiers) > 0 {
 		fprintf(e.SchemaWriter, "PlanModifiers:[]planmodifier.%s{\n", fwPlanModifierType)
 		for _, planModifier := range planModifiers {
@@ -530,20 +553,6 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	}
 
 	// Features that we can't (yet) migrate:
-
-	if def := property.Default; def != nil {
-		switch def.(type) {
-		case bool:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		case int:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		case float64:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		case string:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		default:
-		}
-	}
 
 	if property.ValidateFunc != nil || property.ValidateDiagFunc != nil {
 		fprintf(e.SchemaWriter, "// TODO Validate,\n")
@@ -851,6 +860,7 @@ type templateData struct {
 	ImportProviderFrameworkTypes  bool
 	Name                          string // e.g. Instance
 	PackageName                   string // e.g. ec2
+	ProviderPlanModifierPackages  []string
 	Schema                        string
 	Struct                        string
 	TFTypeName                    string // e.g. aws_instance
