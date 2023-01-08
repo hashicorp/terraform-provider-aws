@@ -9,18 +9,18 @@ import (
 )
 
 type stringDefaultValue struct {
-	DefaultValue types.String
+	defaultValue string
 }
 
 // StringDefaultValue return a string plan modifier that sets the specified value if the planned value is Null.
-func StringDefaultValue(s types.String) planmodifier.String {
+func StringDefaultValue(s string) planmodifier.String {
 	return stringDefaultValue{
-		DefaultValue: s,
+		defaultValue: s,
 	}
 }
 
 func (m stringDefaultValue) Description(context.Context) string {
-	return fmt.Sprintf("If value is not configured, defaults to %s", m.DefaultValue)
+	return fmt.Sprintf("If value is not configured, defaults to %s", m.defaultValue)
 }
 
 func (m stringDefaultValue) MarkdownDescription(ctx context.Context) string {
@@ -39,5 +39,5 @@ func (m stringDefaultValue) PlanModifyString(ctx context.Context, req planmodifi
 		return
 	}
 
-	resp.PlanValue = m.DefaultValue
+	resp.PlanValue = types.StringValue(m.defaultValue)
 }
