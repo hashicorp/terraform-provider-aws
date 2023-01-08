@@ -45,14 +45,12 @@ func DataSourceCertificateAuthority() *schema.Resource {
 			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
 			"revocation_configuration": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
 						"crl_configuration": {
 							Type:     schema.TypeList,
-							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -82,7 +80,6 @@ func DataSourceCertificateAuthority() *schema.Resource {
 						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
 						"ocsp_configuration": {
 							Type:     schema.TypeList,
-							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
