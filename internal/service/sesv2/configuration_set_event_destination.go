@@ -569,11 +569,6 @@ func expandCloudWatchDimensionConfiguration(tfMap map[string]interface{}) types.
 	return a
 }
 
-type ConfigurationSetEventDestinationID struct {
-	ConfigurationSetName string
-	EventDestinationName string
-}
-
 func FormatConfigurationSetEventDestinationID(configurationSetName, eventDestinationName string) string {
 	return fmt.Sprintf("%s|%s", configurationSetName, eventDestinationName)
 }
