@@ -57,7 +57,7 @@ func (r *resourceAssessment) Metadata(_ context.Context, request resource.Metada
 func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttribute(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
