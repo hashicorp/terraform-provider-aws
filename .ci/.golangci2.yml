@@ -62,6 +62,10 @@ linters-settings:
           - validation.*
           # Terraform Plugin Framework
           - int64validator.*
+          - SetDefaultCreateTimeout
+          - SetDefaultReadTimeout
+          - SetDefaultUpdateTimeout
+          - SetDefaultDeleteTimeout
           # Go
           - make
           - strconv.FormatFloat
