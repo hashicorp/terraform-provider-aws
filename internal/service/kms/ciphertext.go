@@ -2,6 +2,7 @@ package kms
 
 import (
 	"encoding/base64"
+	"fmt"
 	"log"
 	"time"
 
@@ -53,6 +54,7 @@ func resourceCiphertextCreate(d *schema.ResourceData, meta interface{}) error {
 	//lintignore:R017 // Allow legacy unstable ID usage in managed resource
 	d.SetId(time.Now().UTC().String())
 
+	keyID := d.Get("key_id").(string)
 	req := &kms.EncryptInput{
 		KeyId:     aws.String(d.Get("key_id").(string)),
 		Plaintext: []byte(d.Get("plaintext").(string)),
@@ -62,10 +64,10 @@ func resourceCiphertextCreate(d *schema.ResourceData, meta interface{}) error {
 		req.EncryptionContext = flex.ExpandStringMap(ec.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] KMS encrypt for key: %s", d.Get("key_id").(string))
+	log.Printf("[DEBUG] KMS encrypting with KMS Key: %s", keyID)
 	resp, err := conn.Encrypt(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("encrypting with KMS Key (%s): %w", keyID, err)
 	}
 
 	d.Set("ciphertext_blob", base64.StdEncoding.EncodeToString(resp.CiphertextBlob))
