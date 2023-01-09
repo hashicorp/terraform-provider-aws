@@ -21,6 +21,8 @@ import (
 )
 
 func TestParseEngineVersion(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName           string
 		InputEngineVersion string
@@ -51,7 +53,10 @@ func TestParseEngineVersion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			engineType, semver, err := tfopensearch.ParseEngineVersion(testCase.InputEngineVersion)
 
 			if err == nil && testCase.ExpectError {
