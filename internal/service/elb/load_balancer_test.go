@@ -735,6 +735,8 @@ func TestAccELBLoadBalancer_desyncMitigationMode_update(t *testing.T) {
 
 // Unit test for listeners hash
 func TestLoadBalancerListenerHash(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		Left  map[string]interface{}
 		Right map[string]interface{}
@@ -767,6 +769,8 @@ func TestLoadBalancerListenerHash(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotBeginWithHyphen(t *testing.T) {
+	t.Parallel()
+
 	var n = "-Testing123"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -776,6 +780,8 @@ func TestValidLoadBalancerNameCannotBeginWithHyphen(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCanBeAnEmptyString(t *testing.T) {
+	t.Parallel()
+
 	var n = ""
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -785,6 +791,8 @@ func TestValidLoadBalancerNameCanBeAnEmptyString(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotBeLongerThan32Characters(t *testing.T) {
+	t.Parallel()
+
 	var n = "Testing123dddddddddddddddddddvvvv"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -794,6 +802,8 @@ func TestValidLoadBalancerNameCannotBeLongerThan32Characters(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotHaveSpecialCharacters(t *testing.T) {
+	t.Parallel()
+
 	var n = "Testing123%%"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -803,6 +813,8 @@ func TestValidLoadBalancerNameCannotHaveSpecialCharacters(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotEndWithHyphen(t *testing.T) {
+	t.Parallel()
+
 	var n = "Testing123-"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -812,6 +824,8 @@ func TestValidLoadBalancerNameCannotEndWithHyphen(t *testing.T) {
 }
 
 func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
+	t.Parallel()
+
 	type testCases struct {
 		Value    int
 		ErrCount int
@@ -841,6 +855,8 @@ func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
 }
 
 func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
+	t.Parallel()
+
 	type testCase struct {
 		Value    string
 		ErrCount int
