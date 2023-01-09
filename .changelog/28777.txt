@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_role: Improve refresh to avoid unneccessary diffs in `assume_role_policy`
+```
