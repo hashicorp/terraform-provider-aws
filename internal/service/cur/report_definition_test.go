@@ -496,6 +496,8 @@ resource "aws_cur_report_definition" "test" {
 }
 
 func TestCheckDefinitionPropertyCombination(t *testing.T) {
+	t.Parallel()
+
 	type propertyCombinationTestCase struct {
 		additionalArtifacts []string
 		compression         string
@@ -691,7 +693,10 @@ func TestCheckDefinitionPropertyCombination(t *testing.T) {
 	}
 
 	for name, tCase := range testCases {
+		tCase := tCase
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			err := tfcur.CheckReportDefinitionPropertyCombination(
 				tCase.additionalArtifacts,
 				tCase.compression,
