@@ -2411,6 +2411,8 @@ func TestAccS3Bucket_Web_routingRules(t *testing.T) {
 }
 
 func TestBucketName(t *testing.T) {
+	t.Parallel()
+
 	validDnsNames := []string{
 		"foobar",
 		"foo.bar",
@@ -2473,6 +2475,8 @@ func TestBucketName(t *testing.T) {
 }
 
 func TestBucketRegionalDomainName(t *testing.T) {
+	t.Parallel()
+
 	const bucket = "bucket-name"
 
 	var testCases = []struct {
@@ -2527,6 +2531,8 @@ func TestBucketRegionalDomainName(t *testing.T) {
 }
 
 func TestWebsiteEndpoint(t *testing.T) {
+	t.Parallel()
+
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	testCases := []struct {
 		TestingClient      *conns.AWSClient
