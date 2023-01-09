@@ -31,6 +31,8 @@ func init() {
 //	What is here was dangerous and repulsive to us. This message is a warning about danger."
 //	--  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
 func TestAccClientVPNEndpoint_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
 			"basic":                        testAccClientVPNEndpoint_basic,
@@ -71,7 +73,6 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 		},
 	}
 
-	t.Parallel()
 	for group, m := range testCases {
 		m := m
 		for name, tc := range m {

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestWaitUntil(t *testing.T) {
+func TestWaitUntil(t *testing.T) { //nolint:tparallel
 	t.Parallel()
 
 	var retryCount int32

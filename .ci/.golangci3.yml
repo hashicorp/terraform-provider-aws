@@ -4,6 +4,9 @@ issues:
         - paralleltest
       # TODO For TestAccXYZ_serial, I *think* we can add t.Parallel() at the top level.
       text: "(Function|Range statement for test) TestAcc"
+    - linters:
+        - tparallel
+      text: "TestAcc"
   max-per-linter: 0
   max-same-issues: 0
 
