@@ -7,7 +7,7 @@ linters:
   disable-all: true
   enable:
     - durationcheck
-    # - paralleltest
+    - paralleltest
     - predeclared
     - tenv
 
