@@ -157,8 +157,12 @@ func PointersMapToStringList(pointers map[string]*string) map[string]interface{}
 func ExpandResourceId(id string, partCount int) ([]string, error) {
 	idParts := strings.Split(id, ResourceIdSeparator)
 
+	if len(idParts) <= 1 {
+		return nil, fmt.Errorf("unexpected format for ID (%v), expected more than one part", idParts)
+	}
+
 	if len(idParts) != partCount {
-		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected (%[2]q) parts separated by (%[3]s)", id, partCount, ResourceIdSeparator)
+		return nil, fmt.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
 	}
 
 	var emptyPart bool
@@ -171,14 +175,35 @@ func ExpandResourceId(id string, partCount int) ([]string, error) {
 	}
 
 	if emptyPart {
-		return nil, fmt.Errorf("unexpected format for ID. the following id parts indexes are blank (%v)", emptyParts)
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
 	}
 
 	return idParts, nil
 }
 
-// Takes a list of the resource attributes as strings used to construct the unique Id
-// Returns a string of resource attributes separated by the ResourceIdSeparator constant
-func FlattenResourceId(idParts []string) string {
-	return strings.Join(idParts, ResourceIdSeparator)
+// Takes a list of the resource attributes as strings used to construct the unique Id and an expected number of Id Parts
+// Returns a string of resource attributes separated by the ResourceIdSeparator constant or an error message if the id parts do not parse properly
+func FlattenResourceId(idParts []string, partCount int) (string, error) {
+	if len(idParts) <= 1 {
+		return "", fmt.Errorf("unexpected format for ID parts (%v), expected more than one part", idParts)
+	}
+
+	if len(idParts) != partCount {
+		return "", fmt.Errorf("unexpected format for ID parts (%v), expected (%d) parts", idParts, partCount)
+	}
+
+	var emptyPart bool
+	emptyParts := make([]int, 0, len(idParts))
+	for index, part := range idParts {
+		if part == "" {
+			emptyPart = true
+			emptyParts = append(emptyParts, index)
+		}
+	}
+
+	if emptyPart {
+		return "", fmt.Errorf("unexpected format for ID parts (%v), the following id parts indexes are blank (%v)", idParts, emptyParts)
+	}
+
+	return strings.Join(idParts, ResourceIdSeparator), nil
 }
