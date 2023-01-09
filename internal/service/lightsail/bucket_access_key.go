@@ -84,7 +84,13 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	idParts := []string{d.Get("bucket_name").(string), *out.AccessKey.AccessKeyId}
-	d.SetId(flex.FlattenResourceId(idParts))
+	id, err := flex.FlattenResourceId(idParts, BucketAccessKeyIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketAccessKey, d.Get("bucket_name").(string), err)
+	}
+
+	d.SetId(id)
 	d.Set("secret_access_key", out.AccessKey.SecretAccessKey)
 
 	return resourceBucketAccessKeyRead(ctx, d, meta)
