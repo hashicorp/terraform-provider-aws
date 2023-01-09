@@ -10,6 +10,8 @@ import (
 )
 
 func TestWaitUntil(t *testing.T) {
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -49,7 +51,7 @@ func TestWaitUntil(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 

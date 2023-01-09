@@ -14,6 +14,8 @@ import (
 )
 
 func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -60,7 +62,8 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -76,6 +79,8 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 }
 
 func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -122,7 +127,8 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -138,6 +144,8 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 }
 
 func TestRetryWhenNewResourceNotFound(t *testing.T) {
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -209,7 +217,8 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -225,6 +234,8 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 }
 
 func TestRetryWhenNotFound(t *testing.T) {
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -271,7 +282,8 @@ func TestRetryWhenNotFound(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -287,6 +299,8 @@ func TestRetryWhenNotFound(t *testing.T) {
 }
 
 func TestRetryUntilNotFound(t *testing.T) {
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -333,7 +347,8 @@ func TestRetryUntilNotFound(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
@@ -372,6 +387,8 @@ func TestRetryContext_error(t *testing.T) {
 }
 
 func TestOptionsApply(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		options  tfresource.Options
 		expected resource.StateChangeConf
@@ -423,7 +440,10 @@ func TestOptionsApply(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
+		testCase := testCase
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			conf := resource.StateChangeConf{}
 
 			testCase.options.Apply(&conf)
