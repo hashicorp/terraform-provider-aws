@@ -2,11 +2,14 @@ package framework
 
 import (
 	"context"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -81,4 +84,74 @@ func (d *DataSourceWithConfigure) Configure(_ context.Context, request datasourc
 	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
 		d.meta = v
 	}
+}
+
+// WithTimeouts is intended to be embedded in resource which use the special "timeouts" nested block.
+// See https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts.
+type WithTimeouts struct {
+	DefaultCreateTimeout, DefaultReadTimeout, DefaultUpdateTimeout, DefaultDeleteTimeout time.Duration
+}
+
+// CreateTimeout returns any configured Create timeout value or the default value.
+func (w *WithTimeouts) CreateTimeout(ctx context.Context, timeouts timeouts.Value) time.Duration {
+	timeout, diags := timeouts.Create(ctx, w.DefaultCreateTimeout)
+
+	if errors := diags.Errors(); len(errors) > 0 {
+		tflog.Warn(ctx, "reading configured Create timeout", map[string]interface{}{
+			"summary": errors[0].Summary(),
+			"detail":  errors[0].Detail(),
+		})
+
+		return w.DefaultCreateTimeout
+	}
+
+	return timeout
+}
+
+// ReadTimeout returns any configured Read timeout value or the default value.
+func (w *WithTimeouts) ReadTimeout(ctx context.Context, timeouts timeouts.Value) time.Duration {
+	timeout, diags := timeouts.Read(ctx, w.DefaultReadTimeout)
+
+	if errors := diags.Errors(); len(errors) > 0 {
+		tflog.Warn(ctx, "reading configured Read timeout", map[string]interface{}{
+			"summary": errors[0].Summary(),
+			"detail":  errors[0].Detail(),
+		})
+
+		return w.DefaultReadTimeout
+	}
+
+	return timeout
+}
+
+// UpdateTimeout returns any configured Update timeout value or the default value.
+func (w *WithTimeouts) UpdateTimeout(ctx context.Context, timeouts timeouts.Value) time.Duration {
+	timeout, diags := timeouts.Update(ctx, w.DefaultUpdateTimeout)
+
+	if errors := diags.Errors(); len(errors) > 0 {
+		tflog.Warn(ctx, "reading configured Update timeout", map[string]interface{}{
+			"summary": errors[0].Summary(),
+			"detail":  errors[0].Detail(),
+		})
+
+		return w.DefaultUpdateTimeout
+	}
+
+	return timeout
+}
+
+// DeleteTimeout returns any configured Delete timeout value or the default value.
+func (w *WithTimeouts) DeleteTimeout(ctx context.Context, timeouts timeouts.Value) time.Duration {
+	timeout, diags := timeouts.Delete(ctx, w.DefaultDeleteTimeout)
+
+	if errors := diags.Errors(); len(errors) > 0 {
+		tflog.Warn(ctx, "reading configured Delete timeout", map[string]interface{}{
+			"summary": errors[0].Summary(),
+			"detail":  errors[0].Detail(),
+		})
+
+		return w.DefaultDeleteTimeout
+	}
+
+	return timeout
 }

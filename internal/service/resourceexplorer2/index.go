@@ -33,18 +33,17 @@ func init() {
 
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceIndex{
-		defaultCreateTimeout: 2 * time.Hour,
-		defaultUpdateTimeout: 2 * time.Hour,
-		defaultDeleteTimeout: 10 * time.Minute,
+		WithTimeouts: framework.WithTimeouts{
+			DefaultCreateTimeout: 2 * time.Hour,
+			DefaultUpdateTimeout: 2 * time.Hour,
+			DefaultDeleteTimeout: 10 * time.Minute,
+		},
 	}, nil
 }
 
 type resourceIndex struct {
 	framework.ResourceWithConfigure
-
-	defaultCreateTimeout time.Duration
-	defaultUpdateTimeout time.Duration
-	defaultDeleteTimeout time.Duration
+	framework.WithTimeouts
 }
 
 func (r *resourceIndex) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -89,13 +88,6 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	createTimeout, diags := data.Timeouts.Create(ctx, r.defaultCreateTimeout)
-	response.Diagnostics.Append(diags...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	conn := r.Meta().ResourceExplorer2Client()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
@@ -120,6 +112,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	arn := aws.ToString(output.Arn)
 	data.ID = types.StringValue(arn)
 
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	if _, err := waitIndexCreated(ctx, conn, createTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) create", data.ID.ValueString()), err.Error())
 
@@ -212,13 +205,6 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		return
 	}
 
-	updateTimeout, diags := new.Timeouts.Update(ctx, r.defaultUpdateTimeout)
-	response.Diagnostics.Append(diags...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	conn := r.Meta().ResourceExplorer2Client()
 
 	if !new.Type.Equal(old.Type) {
@@ -235,6 +221,7 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 			return
 		}
 
+		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 		if _, err := waitIndexUpdated(ctx, conn, updateTimeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", new.ID.ValueString()), err.Error())
 
@@ -262,13 +249,6 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	deleteTimeout, diags := data.Timeouts.Delete(ctx, r.defaultDeleteTimeout)
-	response.Diagnostics.Append(diags...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	conn := r.Meta().ResourceExplorer2Client()
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
@@ -284,6 +264,7 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	if _, err := waitIndexDeleted(ctx, conn, deleteTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) delete", data.ID.ValueString()), err.Error())
 
