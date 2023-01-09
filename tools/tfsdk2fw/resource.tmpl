@@ -4,6 +4,7 @@ package {{ .PackageName }}
 
 import (
 	"context"
+	{{if .HasTimeouts }}"time"{{- end}}
 
 	{{if .HasTimeouts }}"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"{{- end}}
 	{{range .FrameworkValidatorsPackages }}
@@ -35,12 +36,27 @@ func init() {
 func newResource{{ .Name }}(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resource{{ .Name }}{}
 	r.SetMigratedFromPluginSDK(true)
+{{- if gt .DefaultCreateTimeout 0 }}
+	r.SetDefaultCreateTimeout({{ .DefaultCreateTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
+{{- if gt .DefaultReadTimeout 0 }}
+	r.SetDefaultReadTimeout({{ .DefaultReadTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
+{{- if gt .DefaultUpdateTimeout 0 }}
+	r.SetDefaultUpdateTimeout({{ .DefaultUpdateTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
+{{- if gt .DefaultDeleteTimeout 0 }}
+	r.SetDefaultDeleteTimeout({{ .DefaultDeleteTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
+{{- end}}
 
 	return r, nil
 }
 
 type resource{{ .Name }} struct {
 	framework.ResourceWithConfigure
+{{- if .HasTimeouts }}
+	framework.WithTimeouts
+{{- end}}
 }
 
 // Metadata should return the full name of the resource, such as
@@ -51,7 +67,28 @@ func (r *resource{{ .Name }}) Metadata(_ context.Context, request resource.Metad
 
 // Schema returns the schema for this resource.
 func (r *resource{{ .Name }}) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-    response.Schema = {{ .Schema }}
+	s := {{ .Schema }}
+{{if .HasTimeouts }}
+	if s.Blocks == nil {
+		s.Blocks = make(map[string]schema.Block)
+	}
+	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
+	{{- if gt .DefaultCreateTimeout 0 }}
+		Create: true,
+	{{- end}}
+	{{- if gt .DefaultReadTimeout 0 }}
+		Read: true,
+	{{- end}}
+	{{- if gt .DefaultUpdateTimeout 0 }}
+		Update: true,
+	{{- end}}
+	{{- if gt .DefaultDeleteTimeout 0 }}
+		Delete: true,
+	{{- end}}
+	})
+{{- end}}
+
+    response.Schema = s
 }
 
 // Create is called when the provider must create a new resource.
@@ -64,6 +101,10 @@ func (r *resource{{ .Name }}) Create(ctx context.Context, request resource.Creat
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+{{- if gt .DefaultCreateTimeout 0 }}
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+{{- end}}
 
 	data.ID = types.StringValue("TODO")
 
@@ -80,6 +121,10 @@ func (r *resource{{ .Name }}) Read(ctx context.Context, request resource.ReadReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+{{- if gt .DefaultReadTimeout 0 }}
+	readTimeout := r.ReadTimeout(ctx, data.Timeouts)
+{{- end}}
 
     response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -101,6 +146,10 @@ func (r *resource{{ .Name }}) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
+{{- if gt .DefaultUpdateTimeout 0 }}
+	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+{{- end}}
+
     response.Diagnostics.Append(response.State.Set(ctx, &new)...){{- else}}// Noop.{{- end}}
 }
 
@@ -117,6 +166,10 @@ func (r *resource{{ .Name }}) Delete(ctx context.Context, request resource.Delet
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+{{- if gt .DefaultDeleteTimeout 0 }}
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+{{- end}}
 
 	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
 		"id": data.ID.ValueString(),
@@ -158,5 +211,6 @@ func (r *resource{{ .Name }}) ModifyPlan(ctx context.Context, request resource.M
 {{- end}}
 
 type resource{{ .Name }}Data struct {
-    {{ .Struct }}
+	{{ .Struct }}
+	{{if .HasTimeouts }}Timeouts timeouts.Value `tfsdk:"timeouts"`{{- end}}
 }

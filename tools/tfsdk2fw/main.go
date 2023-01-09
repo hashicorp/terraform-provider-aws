@@ -142,6 +142,10 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	}
 
 	templateData := &templateData{
+		DefaultCreateTimeout:         emitter.DefaultCreateTimeout,
+		DefaultReadTimeout:           emitter.DefaultReadTimeout,
+		DefaultUpdateTimeout:         emitter.DefaultUpdateTimeout,
+		DefaultDeleteTimeout:         emitter.DefaultDeleteTimeout,
 		EmitResourceImportState:      m.Resource.Importer != nil,
 		EmitResourceModifyPlan:       !m.IsDataSource && emitter.HasTopLevelTagsAllMap && emitter.HasTopLevelTagsMap,
 		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
@@ -179,6 +183,10 @@ func (m *migrator) infof(format string, a ...interface{}) {
 }
 
 type emitter struct {
+	DefaultCreateTimeout          int64
+	DefaultReadTimeout            int64
+	DefaultUpdateTimeout          int64
+	DefaultDeleteTimeout          int64
 	Generator                     *common.Generator
 	FrameworkPlanModifierPackages []string // Package names for any terraform-plugin-framework plan modifiers. May contain duplicates.
 	FrameworkValidatorsPackages   []string // Package names for any terraform-plugin-framework-validators validators. May contain duplicates.
@@ -202,6 +210,23 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 			Type:     schema.TypeString,
 			Optional: e.IsDataSource,
 			Computed: true,
+		}
+	}
+
+	if v := resource.Timeouts; v != nil {
+		e.HasTimeouts = true
+
+		if v := v.Create; v != nil {
+			e.DefaultCreateTimeout = int64(*v)
+		}
+		if v := v.Read; v != nil {
+			e.DefaultReadTimeout = int64(*v)
+		}
+		if v := v.Update; v != nil {
+			e.DefaultUpdateTimeout = int64(*v)
+		}
+		if v := v.Delete; v != nil {
+			e.DefaultDeleteTimeout = int64(*v)
 		}
 	}
 
@@ -854,6 +879,10 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
+	DefaultCreateTimeout          int64
+	DefaultReadTimeout            int64
+	DefaultUpdateTimeout          int64
+	DefaultDeleteTimeout          int64
 	EmitResourceImportState       bool
 	EmitResourceModifyPlan        bool
 	EmitResourceUpdateSkeleton    bool
