@@ -97,6 +97,8 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 }
 
 func TestDecodePlatformApplicationID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input            string
 		ExpectedArn      string
