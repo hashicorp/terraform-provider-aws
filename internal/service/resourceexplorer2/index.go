@@ -32,13 +32,12 @@ func init() {
 }
 
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceIndex{
-		WithTimeouts: framework.WithTimeouts{
-			DefaultCreateTimeout: 2 * time.Hour,
-			DefaultUpdateTimeout: 2 * time.Hour,
-			DefaultDeleteTimeout: 10 * time.Minute,
-		},
-	}, nil
+	r := &resourceIndex{}
+	r.SetDefaultCreateTimeout(2 * time.Hour)
+	r.SetDefaultUpdateTimeout(2 * time.Hour)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
+	return r, nil
 }
 
 type resourceIndex struct {
