@@ -411,6 +411,8 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 }
 
 func TestExpandSelfServicePermissions(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.SelfservicePermissions
@@ -450,6 +452,8 @@ func TestExpandSelfServicePermissions(t *testing.T) {
 }
 
 func TestFlattenSelfServicePermissions(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    *workspaces.SelfservicePermissions
 		expected []interface{}
@@ -489,6 +493,8 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 }
 
 func TestExpandWorkspaceAccessProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.WorkspaceAccessProperties
@@ -534,6 +540,8 @@ func TestExpandWorkspaceAccessProperties(t *testing.T) {
 }
 
 func TestFlattenWorkspaceAccessProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    *workspaces.WorkspaceAccessProperties
 		expected []interface{}
@@ -579,6 +587,8 @@ func TestFlattenWorkspaceAccessProperties(t *testing.T) {
 }
 
 func TestExpandWorkspaceCreationProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.WorkspaceCreationProperties
@@ -637,6 +647,8 @@ func TestExpandWorkspaceCreationProperties(t *testing.T) {
 }
 
 func TestFlattenWorkspaceCreationProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    *workspaces.DefaultWorkspaceCreationProperties
 		expected []interface{}
