@@ -62,7 +62,7 @@ func ResourceIPSet() *schema.Resource {
 }
 
 func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -89,7 +89,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	params := &waf.GetIPSetInput{
 		IPSetId: aws.String(d.Id()),
@@ -132,7 +132,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChange("ip_set_descriptors") {
 		o, n := d.GetChange("ip_set_descriptors")
@@ -148,7 +148,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldDescriptors := d.Get("ip_set_descriptors").(*schema.Set).List()
 

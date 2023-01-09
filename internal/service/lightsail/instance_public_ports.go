@@ -46,6 +46,14 @@ func ResourceInstancePublicPorts() *schema.Resource {
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
+						"cidr_list_aliases": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"from_port": {
 							Type:         schema.TypeInt,
 							Required:     true,
@@ -82,7 +90,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 }
 
 func resourceInstancePublicPortsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	var portInfos []*lightsail.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
@@ -111,7 +119,7 @@ func resourceInstancePublicPortsCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceInstancePublicPortsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.GetInstancePortStatesInput{
 		InstanceName: aws.String(d.Get("instance_name").(string)),
@@ -143,7 +151,7 @@ func resourceInstancePublicPortsRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceInstancePublicPortsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	var err *multierror.Error
 
@@ -183,6 +191,10 @@ func expandPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 
 	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Cidrs = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["cidr_list_aliases"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.CidrListAliases = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["ipv6_cidrs"].(*schema.Set); ok && v.Len() > 0 {
@@ -231,6 +243,10 @@ func flattenInstancePortState(apiObject *lightsail.InstancePortState) map[string
 
 	if v := apiObject.Cidrs; v != nil {
 		tfMap["cidrs"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.CidrListAliases; v != nil {
+		tfMap["cidr_list_aliases"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.Ipv6Cidrs; v != nil {

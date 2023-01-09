@@ -34,7 +34,7 @@ func DataSourceDomainIdentity() *schema.Resource {
 }
 
 func dataSourceDomainIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Get("domain").(string)
 	d.SetId(domainName)

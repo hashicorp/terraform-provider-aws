@@ -123,6 +123,7 @@ func TestAccRDSInstance_identifierPrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 				},
 			},
@@ -157,6 +158,7 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 				},
 			},
@@ -314,6 +316,7 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"engine_version",
 					"password",
 				},
@@ -779,7 +782,7 @@ func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -920,6 +923,7 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 				},
 			},
@@ -939,6 +943,7 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 				},
 			},
@@ -976,6 +981,7 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 				},
 			},
@@ -1012,6 +1018,7 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 				},
 			},
@@ -1984,6 +1991,7 @@ func TestAccRDSInstance_S3Import_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 				},
 			},
@@ -2064,6 +2072,7 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"snapshot_identifier",
 				},
@@ -2101,6 +2110,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"snapshot_identifier",
 				},
@@ -2843,6 +2853,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"snapshot_identifier",
 				},
 			},
@@ -2883,6 +2894,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"snapshot_identifier",
 				},
 			},
@@ -3647,6 +3659,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -3690,6 +3703,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -3735,6 +3749,7 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -3788,6 +3803,7 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -4143,6 +4159,7 @@ func TestAccRDSInstance_CoIPEnabled_disabledToEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -4182,6 +4199,7 @@ func TestAccRDSInstance_CoIPEnabled_enabledToDisabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -5008,7 +5026,7 @@ func TestAccRDSInstance_storageTypePostgres(t *testing.T) {
 }
 
 func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -5043,7 +5061,7 @@ func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
 
 func testAccCheckInstanceDestroy(s *terraform.State) error {
 	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -5149,7 +5167,7 @@ func testAccCheckInstanceReplicaAttributes(source, replica *rds.DBInstance) reso
 // The snapshot is deleted.
 func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -5202,7 +5220,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 // - No DBSnapshot has been produced
 func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -5274,7 +5292,7 @@ func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckF
 			return fmt.Errorf("No RDS DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 

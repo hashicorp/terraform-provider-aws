@@ -852,7 +852,7 @@ func testAccCheckFirewallPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 
 		_, err := tfnetworkfirewall.FindFirewallPolicyByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -881,7 +881,7 @@ func testAccCheckFirewallPolicyExists(n string, v *networkfirewall.DescribeFirew
 			return fmt.Errorf("No NetworkFirewall Firewall Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 
 		output, err := tfnetworkfirewall.FindFirewallPolicyByARN(context.Background(), conn, rs.Primary.ID)
 

@@ -52,7 +52,7 @@ func ResourceImageVersion() *schema.Resource {
 }
 
 func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageVersionInput{
@@ -75,7 +75,7 @@ func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	image, err := FindImageVersionByName(conn, d.Id())
 	if err != nil {
@@ -98,7 +98,7 @@ func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImageVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(d.Id()),

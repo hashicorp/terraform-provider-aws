@@ -86,7 +86,7 @@ func ResourceServiceAction() *schema.Resource {
 }
 
 func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreateServiceActionInput{
 		IdempotencyToken: aws.String(resource.UniqueId()),
@@ -138,7 +138,7 @@ func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceServiceActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	output, err := WaitServiceActionReady(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -171,7 +171,7 @@ func resourceServiceActionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdateServiceActionInput{
 		Id: aws.String(d.Id()),
@@ -219,7 +219,7 @@ func resourceServiceActionUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceServiceActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeleteServiceActionInput{
 		Id: aws.String(d.Id()),

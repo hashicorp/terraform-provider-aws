@@ -101,7 +101,7 @@ func testAccCheckClusterActivityStreamExistsProvider(resourceName string, dbClus
 		}
 
 		ctx := context.Background()
-		conn := provider.Meta().(*conns.AWSClient).RDSConn
+		conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
 		response, err := tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
 
@@ -146,7 +146,7 @@ func testAccCheckClusterActivityStreamDestroy(s *terraform.State) error {
 
 func testAccCheckClusterActivityStreamDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	ctx := context.Background()
-	conn := provider.Meta().(*conns.AWSClient).RDSConn
+	conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_activity_stream" {

@@ -77,7 +77,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 }
 
 func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -108,7 +108,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 }
 
 func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -146,7 +146,7 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 }
 
 func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -160,7 +160,7 @@ func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.
 }
 
 func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	groups, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),

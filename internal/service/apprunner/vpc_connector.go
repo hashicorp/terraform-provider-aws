@@ -69,7 +69,7 @@ func ResourceVPCConnector() *schema.Resource {
 }
 
 func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -100,7 +100,7 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -145,7 +145,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -159,7 +159,7 @@ func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	log.Printf("[DEBUG] Deleting App Runner VPC Connector: %s", d.Id())
 	_, err := conn.DeleteVpcConnectorWithContext(ctx, &apprunner.DeleteVpcConnectorInput{

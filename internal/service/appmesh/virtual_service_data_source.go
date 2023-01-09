@@ -100,7 +100,7 @@ func DataSourceVirtualService() *schema.Resource {
 }
 
 func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeVirtualServiceInput{

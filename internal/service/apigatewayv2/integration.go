@@ -170,7 +170,7 @@ func ResourceIntegration() *schema.Resource {
 }
 
 func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.CreateIntegrationInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
@@ -237,7 +237,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
@@ -286,7 +286,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.UpdateIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
@@ -392,7 +392,7 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration (%s)", d.Id())
 	_, err := conn.DeleteIntegration(&apigatewayv2.DeleteIntegrationInput{
@@ -418,7 +418,7 @@ func resourceIntegrationImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	apiId := parts[0]
 	integrationId := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(apiId),

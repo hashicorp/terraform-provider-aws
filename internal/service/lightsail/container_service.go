@@ -21,10 +21,10 @@ import (
 
 func ResourceContainerService() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContainerServiceCreate,
-		ReadContext:   resourceContainerServiceRead,
-		UpdateContext: resourceContainerServiceUpdate,
-		DeleteContext: resourceContainerServiceDelete,
+		CreateWithoutTimeout: resourceContainerServiceCreate,
+		ReadWithoutTimeout:   resourceContainerServiceRead,
+		UpdateWithoutTimeout: resourceContainerServiceUpdate,
+		DeleteWithoutTimeout: resourceContainerServiceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -162,7 +162,7 @@ func ResourceContainerService() *schema.Resource {
 }
 
 func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	serviceName := d.Get("name").(string)
@@ -217,7 +217,7 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -267,7 +267,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		publicDomainNames, _ := containerServicePublicDomainNamesChanged(d)
@@ -308,7 +308,7 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceContainerServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.DeleteContainerServiceInput{
 		ServiceName: aws.String(d.Id()),

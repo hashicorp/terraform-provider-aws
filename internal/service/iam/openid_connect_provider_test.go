@@ -130,7 +130,7 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 }
 
 func testAccCheckOpenIDConnectProviderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_openid_connect_provider" {
@@ -168,7 +168,7 @@ func testAccCheckOpenIDConnectProvider(id string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		_, err := conn.GetOpenIDConnectProvider(&iam.GetOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(rs.Primary.ID),
 		})

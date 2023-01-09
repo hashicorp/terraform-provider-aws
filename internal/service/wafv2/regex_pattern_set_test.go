@@ -218,7 +218,7 @@ func testAccCheckRegexPatternSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		_, err := tfwafv2.FindRegexPatternSetByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
@@ -247,7 +247,7 @@ func testAccCheckRegexPatternSetExists(n string, v *wafv2.RegexPatternSet) resou
 			return fmt.Errorf("No WAFv2 RegexPatternSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		output, err := tfwafv2.FindRegexPatternSetByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 

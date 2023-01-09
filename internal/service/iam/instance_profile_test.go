@@ -211,7 +211,7 @@ func testAccCheckInstanceProfileGeneratedNamePrefix(resource, prefix string) res
 }
 
 func testAccCheckInstanceProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_instance_profile" {
@@ -247,7 +247,7 @@ func testAccCheckInstanceProfileExists(n string, res *iam.GetInstanceProfileOutp
 			return fmt.Errorf("No Instance Profile name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		resp, err := conn.GetInstanceProfile(&iam.GetInstanceProfileInput{
 			InstanceProfileName: aws.String(rs.Primary.ID),

@@ -151,7 +151,7 @@ func ResourceFlowLog() *schema.Resource {
 }
 
 func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -246,7 +246,7 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -316,7 +316,7 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -329,7 +329,7 @@ func resourceLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting Flow Log: %s", d.Id())
 	output, err := conn.DeleteFlowLogs(&ec2.DeleteFlowLogsInput{

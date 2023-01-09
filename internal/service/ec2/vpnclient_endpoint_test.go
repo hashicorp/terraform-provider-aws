@@ -710,7 +710,7 @@ func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 }
 
 func testAccCheckClientVPNEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_client_vpn_endpoint" {
@@ -743,7 +743,7 @@ func testAccCheckClientVPNEndpointExists(name string, v *ec2.ClientVpnEndpoint) 
 			return fmt.Errorf("No EC2 Client VPN Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindClientVPNEndpointByID(conn, rs.Primary.ID)
 

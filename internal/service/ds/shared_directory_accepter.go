@@ -23,9 +23,9 @@ const (
 
 func ResourceSharedDirectoryAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSharedDirectoryAccepterCreate,
-		ReadContext:   resourceSharedDirectoryAccepterRead,
-		DeleteContext: resourceSharedDirectoryAccepterDelete,
+		CreateWithoutTimeout: resourceSharedDirectoryAccepterCreate,
+		ReadWithoutTimeout:   resourceSharedDirectoryAccepterRead,
+		DeleteWithoutTimeout: resourceSharedDirectoryAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -63,7 +63,7 @@ func ResourceSharedDirectoryAccepter() *schema.Resource {
 }
 
 func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	input := directoryservice.AcceptSharedDirectoryInput{
 		SharedDirectoryId: aws.String(d.Get("shared_directory_id").(string)),
@@ -95,7 +95,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	dir, err := FindDirectoryByID(conn, d.Id())
 
@@ -112,7 +112,7 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {

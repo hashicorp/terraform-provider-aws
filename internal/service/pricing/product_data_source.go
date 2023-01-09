@@ -46,7 +46,7 @@ func DataSourceProduct() *schema.Resource {
 }
 
 func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PricingConn
+	conn := meta.(*conns.AWSClient).PricingConn()
 
 	params := &pricing.GetProductsInput{
 		ServiceCode: aws.String(d.Get("service_code").(string)),

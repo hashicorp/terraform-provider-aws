@@ -67,7 +67,7 @@ func testAccAPICache_disappears(t *testing.T) {
 }
 
 func testAccCheckAPICacheDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_api_cache" {
 			continue
@@ -93,7 +93,7 @@ func testAccCheckAPICacheExists(resourceName string, apiCache *appsync.ApiCache)
 			return fmt.Errorf("Appsync Api Cache Not found in state: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 		cache, err := tfappsync.FindAPICacheByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err

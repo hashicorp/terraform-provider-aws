@@ -138,7 +138,7 @@ func testAccCheckTargetGroupAttachmentDisappears(n string) resource.TestCheckFun
 			return fmt.Errorf("Attachment not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
 		target := &elbv2.TargetDescription{
@@ -176,7 +176,7 @@ func testAccCheckTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
 			return errors.New("No Target Group Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 		_, hasPort := rs.Primary.Attributes["port"]
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
@@ -207,7 +207,7 @@ func testAccCheckTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckTargetGroupAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {

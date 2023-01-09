@@ -124,7 +124,7 @@ func ResourceFilter() *schema.Resource {
 }
 
 func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -158,7 +158,7 @@ func resourceFilterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -229,7 +229,7 @@ func resourceFilterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	if d.HasChanges("action", "description", "finding_criteria", "rank") {
 		input := guardduty.UpdateFilterInput{
@@ -266,7 +266,7 @@ func resourceFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorId := d.Get("detector_id").(string)
 	name := d.Get("name").(string)

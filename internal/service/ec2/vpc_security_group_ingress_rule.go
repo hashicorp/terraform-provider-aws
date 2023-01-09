@@ -27,7 +27,7 @@ import (
 )
 
 func init() {
-	//registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
+	// _sp.registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
 }
 
 // newResourceSecurityGroupIngressRule instantiates a new Resource for the aws_vpc_security_group_ingress_rule resource.
@@ -67,7 +67,7 @@ func (r *resourceSecurityGroupIngressRule) Delete(ctx context.Context, request r
 }
 
 func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -84,7 +84,7 @@ func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
 		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -95,7 +95,7 @@ func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
 }
@@ -191,7 +191,7 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 		return
 	}
 
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	if !new.CIDRIPv4.Equal(old.CIDRIPv4) ||
 		!new.CIDRIPv6.Equal(old.CIDRIPv6) ||
@@ -311,7 +311,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 
 	data.ID = types.StringValue(securityGroupRuleID)
 
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))

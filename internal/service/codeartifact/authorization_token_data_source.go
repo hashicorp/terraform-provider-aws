@@ -49,7 +49,7 @@ func DataSourceAuthorizationToken() *schema.Resource {
 }
 
 func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	domain := d.Get("domain").(string)
 	domainOwner := meta.(*conns.AWSClient).AccountID
 	params := &codeartifact.GetAuthorizationTokenInput{

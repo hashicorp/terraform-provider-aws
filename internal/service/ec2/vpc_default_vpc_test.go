@@ -327,7 +327,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 // testAccCheckDefaultVPCDestroyExists runs after all resources are destroyed.
 // It verifies that the default VPC still exists.
 func testAccCheckDefaultVPCDestroyExists(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_vpc" {
@@ -348,7 +348,7 @@ func testAccCheckDefaultVPCDestroyExists(s *terraform.State) error {
 // It verifies that the default VPC does not exist.
 // A new default VPC is then created.
 func testAccCheckDefaultVPCDestroyNotFound(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_vpc" {
@@ -386,7 +386,7 @@ func testAccCheckDefaultVPCEmpty(v *ec2.Vpc) resource.TestCheckFunc {
 
 // testAccEmptyDefaultVPC empties a default VPC so that it can be deleted.
 func testAccEmptyDefaultVPC(vpcID string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	// Delete the default IGW.
 	igw, err := tfec2.FindInternetGateway(conn, &ec2.DescribeInternetGatewaysInput{

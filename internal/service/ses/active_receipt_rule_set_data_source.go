@@ -29,7 +29,7 @@ func DataSourceActiveReceiptRuleSet() *schema.Resource {
 }
 
 func dataSourceActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	data, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 

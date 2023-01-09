@@ -167,7 +167,7 @@ func ResourceRouteTable() *schema.Resource {
 }
 
 func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -213,7 +213,7 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -270,7 +270,7 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("propagating_vgws") {
 		o, n := d.GetChange("propagating_vgws")
@@ -368,7 +368,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTable, err := FindRouteTableByID(conn, d.Id())
 

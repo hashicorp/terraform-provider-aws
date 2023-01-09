@@ -382,7 +382,7 @@ func ResourceConnector() *schema.Resource {
 }
 
 func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateConnectorInput{
@@ -428,7 +428,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	connector, err := FindConnectorByARN(ctx, conn, d.Id())
 
@@ -499,7 +499,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	input := &kafkaconnect.UpdateConnectorInput{
 		Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
@@ -524,7 +524,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	log.Printf("[DEBUG] Deleting MSK Connect Connector: %s", d.Id())
 	_, err := conn.DeleteConnectorWithContext(ctx, &kafkaconnect.DeleteConnectorInput{

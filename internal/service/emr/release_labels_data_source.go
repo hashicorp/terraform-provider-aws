@@ -44,7 +44,7 @@ func DataSourceReleaseLabels() *schema.Resource {
 }
 
 func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	input := &emr.ListReleaseLabelsInput{}
 

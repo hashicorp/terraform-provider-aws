@@ -38,7 +38,7 @@ func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 }
 
 func resourceNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
@@ -86,7 +86,7 @@ func resourceNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta int
 }
 
 func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
@@ -113,7 +113,7 @@ func resourceNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta inter
 }
 
 func resourceNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
@@ -177,7 +177,7 @@ func resourceNetworkInterfaceSGAttachmentImport(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Importing network interface security group association, Interface: %s, Security Group: %s", networkInterfaceID, securityGroupID)
 
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
 

@@ -260,7 +260,7 @@ func ResourceUserPoolClient() *schema.Resource {
 }
 
 func resourceUserPoolClientCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.CreateUserPoolClientInput{
 		ClientName: aws.String(d.Get("name").(string)),
@@ -361,7 +361,7 @@ func resourceUserPoolClientCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolClient, err := FindCognitoUserPoolClient(conn, d.Get("user_pool_id").(string), d.Id())
 
@@ -408,7 +408,7 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
 		ClientId:              aws.String(d.Id()),
@@ -505,7 +505,7 @@ func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceUserPoolClientDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.DeleteUserPoolClientInput{
 		ClientId:   aws.String(d.Id()),

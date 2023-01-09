@@ -387,7 +387,7 @@ func TestAccECSCluster_configuration(t *testing.T) {
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_cluster" {
@@ -415,7 +415,7 @@ func testAccCheckClusterExists(resourceName string, cluster *ecs.Cluster) resour
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 		c, err := tfecs.FindClusterByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
@@ -483,7 +483,7 @@ resource "aws_ecs_cluster" "test" {
 }
 
 func testAccClusterCapacityProviderConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 

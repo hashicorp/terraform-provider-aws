@@ -119,7 +119,7 @@ func ResourceExtension() *schema.Resource {
 }
 
 func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -153,7 +153,7 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -197,7 +197,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	requestUpdate := false
 
 	in := &appconfig.UpdateExtensionInput{
@@ -235,7 +235,7 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	_, err := conn.DeleteExtensionWithContext(ctx, &appconfig.DeleteExtensionInput{
 		ExtensionIdentifier: aws.String(d.Id()),

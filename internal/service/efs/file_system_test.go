@@ -379,7 +379,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 }
 
 func testAccCheckFileSystemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_file_system" {
 			continue
@@ -411,7 +411,7 @@ func testAccCheckFileSystem(n string, v *efs.FileSystemDescription) resource.Tes
 			return fmt.Errorf("No EFS file system ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
 
 		output, err := tfefs.FindFileSystemByID(context.Background(), conn, rs.Primary.ID)
 

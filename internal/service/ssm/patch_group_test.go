@@ -80,7 +80,7 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 }
 
 func testAccCheckPatchGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_patch_group" {
@@ -122,7 +122,7 @@ func testAccCheckPatchGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		group, err := tfssm.FindPatchGroup(conn, patchGroup, baselineId)
 

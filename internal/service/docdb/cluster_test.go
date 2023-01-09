@@ -818,7 +818,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterDestroyProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).DocDBConn
+	conn := provider.Meta().(*conns.AWSClient).DocDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_cluster" {
@@ -865,7 +865,7 @@ func testAccCheckClusterExistsProvider(n string, v *docdb.DBCluster, providerF f
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := provider.Meta().(*conns.AWSClient).DocDBConn()
 		resp, err := conn.DescribeDBClusters(&docdb.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -906,7 +906,7 @@ func testAccCheckClusterSnapshot(rInt int) resource.TestCheckFunc {
 			snapshot_identifier := fmt.Sprintf("tf-acctest-docdbcluster-snapshot-%d", rInt)
 
 			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.DocDBConn
+			conn := awsClient.DocDBConn()
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(

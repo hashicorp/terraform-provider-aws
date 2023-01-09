@@ -55,7 +55,7 @@ func ResourceModelPackageGroup() *schema.Resource {
 }
 
 func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -87,7 +87,7 @@ func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -127,7 +127,7 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -141,7 +141,7 @@ func resourceModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceModelPackageGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(d.Id()),

@@ -37,7 +37,7 @@ func DataSourceWebACL() *schema.Resource {
 }
 
 func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	name := d.Get("name").(string)
 
 	var foundWebACL *wafv2.WebACLSummary

@@ -77,7 +77,7 @@ func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
 }
 
 func testAccCheckConnectionAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_connection_association" {
@@ -102,7 +102,7 @@ func testAccCheckConnectionAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

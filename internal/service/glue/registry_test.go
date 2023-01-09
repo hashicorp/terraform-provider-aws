@@ -151,7 +151,7 @@ func TestAccGlueRegistry_disappears(t *testing.T) {
 }
 
 func testAccPreCheckRegistry(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
@@ -176,7 +176,7 @@ func testAccCheckRegistryExists(resourceName string, registry *glue.GetRegistryO
 			return fmt.Errorf("No Glue Registry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		output, err := tfglue.FindRegistryByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -201,7 +201,7 @@ func testAccCheckRegistryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		output, err := tfglue.FindRegistryByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {

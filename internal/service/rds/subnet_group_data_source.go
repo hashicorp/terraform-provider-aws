@@ -47,7 +47,7 @@ func DataSourceSubnetGroup() *schema.Resource {
 }
 
 func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	v, err := FindDBSubnetGroupByName(conn, d.Get("name").(string))
 

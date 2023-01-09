@@ -69,7 +69,7 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 }
 
 func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	input := &ec2.AssociateClientVpnTargetNetworkInput{
@@ -111,7 +111,7 @@ func resourceClientVPNNetworkAssociationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	network, err := FindClientVPNNetworkAssociationByIDs(conn, d.Id(), endpointID)
@@ -137,7 +137,7 @@ func resourceClientVPNNetworkAssociationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceClientVPNNetworkAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("security_groups") {
 		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
@@ -155,7 +155,7 @@ func resourceClientVPNNetworkAssociationUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceClientVPNNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 

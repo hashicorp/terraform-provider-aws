@@ -112,7 +112,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 }
 
 func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -157,7 +157,7 @@ func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface
 }
 
 func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -226,7 +226,7 @@ func resourcePublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface
 }
 
 func resourcePublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

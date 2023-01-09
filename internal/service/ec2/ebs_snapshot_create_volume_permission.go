@@ -44,7 +44,7 @@ func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 }
 
 func resourceSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	snapshotID := d.Get("snapshot_id").(string)
 	accountID := d.Get("account_id").(string)
@@ -80,7 +80,7 @@ func resourceSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta i
 }
 
 func resourceSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
@@ -104,7 +104,7 @@ func resourceSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta int
 }
 
 func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
@@ -145,7 +145,7 @@ func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta i
 func resourceSnapshotCreateVolumePermissionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
 		if snapshotID := diff.Get("snapshot_id").(string); snapshotID != "" {
-			conn := meta.(*conns.AWSClient).EC2Conn
+			conn := meta.(*conns.AWSClient).EC2Conn()
 
 			snapshot, err := FindSnapshotByID(conn, snapshotID)
 

@@ -421,7 +421,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 }
 
 func testAccCheckDirectoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_directory" {
@@ -455,7 +455,7 @@ func testAccCheckDirectoryExists(n string, v *directoryservice.DirectoryDescript
 			return fmt.Errorf("No Directory Service Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
 		output, err := tfds.FindDirectoryByID(conn, rs.Primary.ID)
 

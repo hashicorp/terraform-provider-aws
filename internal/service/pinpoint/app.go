@@ -149,7 +149,7 @@ func ResourceApp() *schema.Resource {
 }
 
 func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -187,7 +187,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
@@ -232,7 +232,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -300,7 +300,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
 	_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{

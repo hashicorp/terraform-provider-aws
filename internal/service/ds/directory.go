@@ -192,7 +192,7 @@ func ResourceDirectory() *schema.Resource {
 }
 
 func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -324,7 +324,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -396,7 +396,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	if d.HasChange("desired_number_of_domain_controllers") {
 		if err := updateNumberOfDomainControllers(conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -428,7 +428,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {

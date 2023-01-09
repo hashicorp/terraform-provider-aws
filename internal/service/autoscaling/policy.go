@@ -413,7 +413,7 @@ func customizedMetricDataQuerySchema() *schema.Schema {
 }
 
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	name := d.Get("name").(string)
 	input, err := getPutScalingPolicyInput(d)
@@ -435,7 +435,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	p, err := FindScalingPolicy(conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -477,7 +477,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	input, err := getPutScalingPolicyInput(d)
 
@@ -496,7 +496,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
 	_, err := conn.DeletePolicy(&autoscaling.DeletePolicyInput{

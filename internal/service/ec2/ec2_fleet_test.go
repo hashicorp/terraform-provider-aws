@@ -2653,7 +2653,7 @@ func testAccCheckFleetHistory(resourceName string, errorMsg string) resource.Tes
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		input := &ec2.DescribeFleetHistoryInput{
 			FleetId:   aws.String(rs.Primary.ID),
@@ -2698,7 +2698,7 @@ func testAccCheckFleetExists(n string, v *ec2.FleetData) resource.TestCheckFunc 
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindFleetByID(conn, rs.Primary.ID)
 
@@ -2713,7 +2713,7 @@ func testAccCheckFleetExists(n string, v *ec2.FleetData) resource.TestCheckFunc 
 }
 
 func testAccCheckFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_fleet" {
@@ -2757,7 +2757,7 @@ func testAccCheckFleetRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
 }
 
 func testAccPreCheckFleet(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeFleetsInput{
 		MaxResults: aws.Int64(1),

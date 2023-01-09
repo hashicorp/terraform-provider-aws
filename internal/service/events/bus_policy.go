@@ -52,7 +52,7 @@ func ResourceBusPolicy() *schema.Resource {
 }
 
 func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Get("event_bus_name").(string)
 
@@ -80,7 +80,7 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
@@ -151,7 +151,7 @@ func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, err
 }
 
 func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
@@ -176,7 +176,7 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 	removeAllPermissions := true

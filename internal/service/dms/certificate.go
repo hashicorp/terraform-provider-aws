@@ -64,7 +64,7 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	certificateID := d.Get("certificate_id").(string)
@@ -105,7 +105,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -163,7 +163,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChange("tags_all") {
 		arn := d.Get("certificate_arn").(string)
@@ -178,7 +178,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),

@@ -57,7 +57,7 @@ func DataSourceRandomPassword() *schema.Resource {
 }
 
 func dataSourceRandomPasswordRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	var excludeCharacters string
 	if v, ok := d.GetOk("exclude_characters"); ok {

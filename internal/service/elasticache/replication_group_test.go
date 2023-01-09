@@ -1519,7 +1519,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 			{
 				PreConfig: func() {
 					// Ensure that primary is on the node we are trying to delete
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 					timeout := 40 * time.Minute
 
 					if err := resourceReplicationGroupSetPrimaryClusterID(conn, rName, formatReplicationGroupClusterID(rName, 3), timeout); err != nil {
@@ -1570,7 +1570,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 			{
 				PreConfig: func() {
 					// Ensure that primary is on the node we are trying to delete
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 					timeout := 40 * time.Minute
 
 					// Must disable automatic failover first
@@ -1632,7 +1632,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 			{
 				PreConfig: func() {
 					// Ensure that primary is on the node we are trying to delete
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 					timeout := 40 * time.Minute
 
 					// Must disable automatic failover first
@@ -1689,7 +1689,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -1739,7 +1739,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -1789,7 +1789,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -1839,7 +1839,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -2545,7 +2545,7 @@ func testAccCheckReplicationGroupExists(n string, v *elasticache.ReplicationGrou
 			return fmt.Errorf("No replication group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 		rg, err := tfelasticache.FindReplicationGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache error: %w", err)
@@ -2558,7 +2558,7 @@ func testAccCheckReplicationGroupExists(n string, v *elasticache.ReplicationGrou
 }
 
 func testAccCheckReplicationGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_replication_group" {
@@ -2578,7 +2578,7 @@ func testAccCheckReplicationGroupDestroy(s *terraform.State) error {
 
 func testAccCheckReplicationGroupParameterGroup(rg *elasticache.ReplicationGroup, pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 		cacheCluster := rg.NodeGroups[0].NodeGroupMembers[0]
 		cluster, err := tfelasticache.FindCacheClusterByID(conn, aws.StringValue(cacheCluster.CacheClusterId))
@@ -2601,7 +2601,7 @@ func testAccCheckReplicationGroupParameterGroup(rg *elasticache.ReplicationGroup
 
 func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 		paramGroupName := aws.StringValue(pg.CacheParameterGroupName)
 
@@ -2623,7 +2623,7 @@ func testAccCheckReplicationGroupUserGroup(resourceName, userGroupID string) res
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 		rg, err := tfelasticache.FindReplicationGroupByID(conn, rs.Primary.ID)
 
 		if err != nil {

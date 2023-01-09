@@ -114,7 +114,7 @@ func testAccCheckEnvironmentMemberExists(n string, res *cloud9.EnvironmentMember
 			return fmt.Errorf("No Cloud9 Environment Member ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
 		envId, userArn, err := tfcloud9.DecodeEnviornmentMemberId(rs.Primary.ID)
 		if err != nil {
@@ -133,7 +133,7 @@ func testAccCheckEnvironmentMemberExists(n string, res *cloud9.EnvironmentMember
 }
 
 func testAccCheckEnvironmentMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloud9_environment_membership" {

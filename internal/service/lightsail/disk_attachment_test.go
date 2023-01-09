@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lightsail"
@@ -24,6 +25,7 @@ func TestAccLightsailDiskAttachment_basic(t *testing.T) {
 	dName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	diskPath := "/dev/xvdf"
+	diskPathBad := "/jenkins-home"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,6 +45,10 @@ func TestAccLightsailDiskAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disk_path", diskPath),
 					resource.TestCheckResourceAttr(resourceName, "instance_name", liName),
 				),
+			},
+			{
+				Config:      testAccDiskAttachmentConfig_basic(dName, liName, diskPathBad),
+				ExpectError: regexp.MustCompile(`The disk path is invalid. You must specify a valid disk path.`),
 			},
 		},
 	})
@@ -88,7 +94,7 @@ func testAccCheckDiskAttachmentExists(n string, disk lightsail.Disk) resource.Te
 			return errors.New("No LightsailDiskAttachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		out, err := tflightsail.FindDiskAttachmentById(context.Background(), conn, rs.Primary.ID)
 
@@ -112,7 +118,7 @@ func testAccCheckDiskAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindDiskAttachmentById(context.Background(), conn, rs.Primary.ID)
 
@@ -149,7 +155,7 @@ resource "aws_lightsail_disk" "test" {
 resource "aws_lightsail_instance" "test" {
   name              = %[2]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 

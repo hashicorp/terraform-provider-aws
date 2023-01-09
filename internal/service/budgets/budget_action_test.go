@@ -25,7 +25,7 @@ func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetActionDestroy,
+		CheckDestroy:             testAccCheckBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName),
@@ -65,7 +65,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccBudgetActionDestroy,
+		CheckDestroy:             testAccCheckBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName),
@@ -90,7 +90,7 @@ func testAccBudgetActionExists(resourceName string, config *budgets.Action) reso
 			return fmt.Errorf("No Budget Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn()
 
 		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
 
@@ -110,8 +110,8 @@ func testAccBudgetActionExists(resourceName string, config *budgets.Action) reso
 	}
 }
 
-func testAccBudgetActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn
+func testAccCheckBudgetActionDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget_action" {

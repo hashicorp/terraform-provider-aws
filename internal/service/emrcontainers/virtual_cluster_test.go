@@ -164,7 +164,7 @@ func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster)
 			return fmt.Errorf("No EMR Containers Virtual Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn()
 
 		output, err := tfemrcontainers.FindVirtualClusterByID(context.Background(), conn, rs.Primary.ID)
 
@@ -179,7 +179,7 @@ func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster)
 }
 
 func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emrcontainers_virtual_cluster" {

@@ -58,7 +58,7 @@ func ResourceVPNGateway() *schema.Resource {
 }
 
 func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -97,7 +97,7 @@ func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -152,7 +152,7 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
@@ -182,7 +182,7 @@ func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := detachVPNGatewayFromVPC(conn, d.Id(), v.(string)); err != nil {

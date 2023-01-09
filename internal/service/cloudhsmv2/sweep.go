@@ -32,7 +32,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudHSMV2Conn
+	conn := client.(*conns.AWSClient).CloudHSMV2Conn()
 	input := &cloudhsmv2.DescribeClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -78,7 +78,7 @@ func sweepHSMs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudHSMV2Conn
+	conn := client.(*conns.AWSClient).CloudHSMV2Conn()
 	input := &cloudhsmv2.DescribeClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

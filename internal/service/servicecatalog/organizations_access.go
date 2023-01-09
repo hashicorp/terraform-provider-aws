@@ -31,7 +31,7 @@ func ResourceOrganizationsAccess() *schema.Resource {
 }
 
 func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
@@ -58,7 +58,7 @@ func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	output, err := WaitOrganizationsAccessStable(conn, d.Timeout(schema.TimeoutRead))
 
@@ -87,7 +87,7 @@ func resourceOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceOrganizationsAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite

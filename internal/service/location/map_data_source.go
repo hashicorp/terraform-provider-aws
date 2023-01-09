@@ -55,7 +55,7 @@ func DataSourceMap() *schema.Resource {
 }
 
 func dataSourceMapRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	input := &locationservice.DescribeMapInput{}
 

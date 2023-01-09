@@ -40,7 +40,7 @@ func ResourceLoggingOptions() *schema.Resource {
 }
 
 func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	input := &iot.SetV2LoggingOptionsInput{}
 
@@ -73,7 +73,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	output, err := conn.GetV2LoggingOptionsWithContext(ctx, &iot.GetV2LoggingOptionsInput{})
 

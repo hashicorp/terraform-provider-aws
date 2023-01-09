@@ -279,7 +279,7 @@ func TestAccCloudFrontFunction_Update_comment(t *testing.T) {
 }
 
 func testAccCheckFunctionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_function" {
@@ -313,7 +313,7 @@ func testAccCheckFunctionExists(n string, v *cloudfront.DescribeFunctionOutput) 
 			return fmt.Errorf("CloudFront Function ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		output, err := tfcloudfront.FindFunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 

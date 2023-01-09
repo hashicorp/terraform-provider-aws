@@ -15,7 +15,7 @@ import (
 
 func DataSourceQueue() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceQueueRead,
+		ReadWithoutTimeout: dataSourceQueueRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -80,7 +80,7 @@ func DataSourceQueue() *schema.Resource {
 }
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)

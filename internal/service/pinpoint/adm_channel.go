@@ -47,7 +47,7 @@ func ResourceADMChannel() *schema.Resource {
 }
 
 func resourceADMChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -73,7 +73,7 @@ func resourceADMChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceADMChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint ADM Channel for application %s", d.Id())
 
@@ -98,7 +98,7 @@ func resourceADMChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceADMChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Pinpoint Delete ADM Channel: %s", d.Id())
 	_, err := conn.DeleteAdmChannel(&pinpoint.DeleteAdmChannelInput{

@@ -68,7 +68,7 @@ func ResourceUpload() *schema.Resource {
 }
 
 func resourceUploadCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.CreateUploadInput{
 		Name:       aws.String(d.Get("name").(string)),
@@ -93,7 +93,7 @@ func resourceUploadCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	upload, err := FindUploadByARN(conn, d.Id())
 
@@ -127,7 +127,7 @@ func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUploadUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.UpdateUploadInput{
 		Arn: aws.String(d.Id()),
@@ -151,7 +151,7 @@ func resourceUploadUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUploadDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteUploadInput{
 		Arn: aws.String(d.Id()),

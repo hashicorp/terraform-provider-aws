@@ -176,7 +176,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 }
 
 func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -243,7 +243,7 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -337,7 +337,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -409,7 +409,7 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
 	output, err := conn.DeleteVpcEndpoints(&ec2.DeleteVpcEndpointsInput{

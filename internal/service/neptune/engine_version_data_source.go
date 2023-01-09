@@ -84,7 +84,7 @@ func DataSourceEngineVersion() *schema.Resource {
 }
 
 func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeDBEngineVersionsInput{}
 

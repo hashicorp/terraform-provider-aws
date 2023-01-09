@@ -98,7 +98,7 @@ func ResourceParameterGroup() *schema.Resource {
 }
 
 func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -133,7 +133,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -258,7 +258,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 const maxParamModifyChunk = 20
 
 func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -356,6 +356,8 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	deleteOpts := rds_sdkv2.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
+
+	log.Printf("[DEBUG] Deleting RDS DB Parameter Group: %s", d.Id())
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(ctx, &deleteOpts)
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {

@@ -80,7 +80,7 @@ func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MSK Connect Worker Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
 		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(context.Background(), conn, rs.Primary.ID)
 

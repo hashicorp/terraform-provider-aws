@@ -47,7 +47,7 @@ func DataSourceLedger() *schema.Resource {
 }
 
 func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)

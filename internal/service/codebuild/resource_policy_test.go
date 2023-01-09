@@ -91,7 +91,7 @@ func TestAccCodeBuildResourcePolicy_disappears_resource(t *testing.T) {
 }
 
 func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_resource_policy" {
@@ -121,7 +121,7 @@ func testAccCheckResourcePolicyExists(name string, policy *codebuild.GetResource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 		resp, err := tfcodebuild.FindResourcePolicyByARN(conn, rs.Primary.ID)
 		if err != nil {

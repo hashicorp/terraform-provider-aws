@@ -181,7 +181,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 }
 
 func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{}
 

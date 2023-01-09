@@ -136,7 +136,7 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No MSK Connect Custom Plugin ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
 		_, err := tfkafkaconnect.FindCustomPluginByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -145,7 +145,7 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckCustomPluginDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mskconnect_custom_plugin" {

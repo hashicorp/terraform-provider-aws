@@ -45,7 +45,7 @@ func ResourceVPCAssociationAuthorization() *schema.Resource {
 }
 
 func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
@@ -72,7 +72,7 @@ func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
@@ -121,7 +121,7 @@ func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {

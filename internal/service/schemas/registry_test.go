@@ -154,7 +154,7 @@ func TestAccSchemasRegistry_tags(t *testing.T) {
 }
 
 func testAccCheckRegistryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_schemas_registry" {
@@ -188,7 +188,7 @@ func testAccCheckRegistryExists(n string, v *schemas.DescribeRegistryOutput) res
 			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
 		output, err := tfschemas.FindRegistryByName(conn, rs.Primary.ID)
 

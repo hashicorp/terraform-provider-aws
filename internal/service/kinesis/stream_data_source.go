@@ -68,7 +68,7 @@ func DataSourceStream() *schema.Resource {
 }
 
 func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Get("name").(string)
 

@@ -40,7 +40,7 @@ func DataSourceRoles() *schema.Resource {
 }
 
 func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.ListRolesInput{}
 

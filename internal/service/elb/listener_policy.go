@@ -42,7 +42,7 @@ func ResourceListenerPolicy() *schema.Resource {
 }
 
 func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName := d.Get("load_balancer_name")
 
@@ -66,7 +66,7 @@ func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 
@@ -113,7 +113,7 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceListenerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 

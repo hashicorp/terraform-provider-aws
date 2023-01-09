@@ -119,7 +119,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 }
 
 func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
@@ -139,7 +139,7 @@ func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -175,7 +175,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
 	err := DeleteSecurityConfiguration(conn, d.Id())

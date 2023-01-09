@@ -126,7 +126,7 @@ func testAccVirtualRouter_tags(t *testing.T) {
 }
 
 func testAccCheckVirtualRouterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_virtual_router" {
@@ -151,7 +151,7 @@ func testAccCheckVirtualRouterDestroy(s *terraform.State) error {
 
 func testAccCheckVirtualRouterExists(name string, v *appmesh.VirtualRouterData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

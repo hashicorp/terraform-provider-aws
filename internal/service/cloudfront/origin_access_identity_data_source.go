@@ -49,7 +49,7 @@ func DataSourceOriginAccessIdentity() *schema.Resource {
 }
 
 func dataSourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	id := d.Get("id").(string)
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(id),

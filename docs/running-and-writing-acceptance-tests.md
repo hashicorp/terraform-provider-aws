@@ -250,7 +250,7 @@ When executing the test, the following steps are taken for each `TestStep`:
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
         params := cloudwatch.GetDashboardInput{
           DashboardName: aws.String(rs.Primary.ID),
         }
@@ -286,7 +286,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```go
     func testAccCheckDashboardDestroy(s *terraform.State) error {
-      conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+      conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
       for _, rs := range s.RootModule().Resources {
         if rs.Type != "aws_cloudwatch_dashboard" {
@@ -604,7 +604,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 }
 
 func testAccPreCheckExample(t *testing.T) {
-  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn
+  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn()
 	input := &example.ListThingsInput{}
 	_, err := conn.ListThings(input)
 	if testAccPreCheckSkipError(err) {
@@ -728,7 +728,7 @@ If this test does fail, the fix for this is generally adding error handling imme
 ```go
 output, err := conn.GetThing(input)
 
-if isAWSErr(err, example.ErrCodeResourceNotFound, "") {
+if !d.IsNewResource() && tfresource.NotFound(err) {
   log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
   d.SetId("")
   return nil
@@ -1218,7 +1218,7 @@ func sweepThings(region string) error {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn
+  conn := client.(*conns.AWSClient).ExampleConn()
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1284,7 +1284,7 @@ func sweepThings(region string) error {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn
+  conn := client.(*conns.AWSClient).ExampleConn()
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 

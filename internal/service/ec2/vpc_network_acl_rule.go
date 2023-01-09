@@ -114,7 +114,7 @@ func ResourceNetworkACLRule() *schema.Resource {
 }
 
 func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	protocol := d.Get("protocol").(string)
 	protocolNumber, err := networkACLProtocolNumber(protocol)
@@ -169,7 +169,7 @@ func resourceNetworkACLRuleCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	egress := d.Get("egress").(bool)
 	naclID := d.Get("network_acl_id").(string)
@@ -223,7 +223,7 @@ func resourceNetworkACLRuleRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceNetworkACLRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 Network ACL Rule: %s", d.Id())
 	_, err := conn.DeleteNetworkAclEntry(&ec2.DeleteNetworkAclEntryInput{

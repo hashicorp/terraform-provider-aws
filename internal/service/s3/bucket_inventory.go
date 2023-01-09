@@ -175,7 +175,7 @@ func ResourceBucketInventory() *schema.Resource {
 }
 
 func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -252,7 +252,7 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
@@ -283,7 +283,7 @@ func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {

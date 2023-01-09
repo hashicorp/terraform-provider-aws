@@ -74,7 +74,7 @@ func DataSourceBundle() *schema.Resource {
 }
 
 func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	var bundle *workspaces.WorkspaceBundle
 

@@ -155,7 +155,7 @@ func ResourceAPI() *schema.Resource {
 }
 
 func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	if body, ok := d.GetOk("body"); ok {
@@ -219,7 +219,7 @@ func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -274,7 +274,7 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -332,7 +332,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	deleteCorsConfiguration := false
 	if d.HasChange("cors_configuration") {
@@ -403,9 +403,9 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
 	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
 	})

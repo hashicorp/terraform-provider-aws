@@ -18,13 +18,15 @@ import (
 
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSchedulingPolicyCreate,
-		ReadContext:   resourceSchedulingPolicyRead,
-		UpdateContext: resourceSchedulingPolicyUpdate,
-		DeleteContext: resourceSchedulingPolicyDelete,
+		CreateWithoutTimeout: resourceSchedulingPolicyCreate,
+		ReadWithoutTimeout:   resourceSchedulingPolicyRead,
+		UpdateWithoutTimeout: resourceSchedulingPolicyUpdate,
+		DeleteWithoutTimeout: resourceSchedulingPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -91,7 +93,7 @@ func ResourceSchedulingPolicy() *schema.Resource {
 }
 
 func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -108,7 +110,6 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Batch Scheduling Policy %s", input)
 	output, err := conn.CreateSchedulingPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -127,7 +128,7 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -163,7 +164,7 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	input := &batch.UpdateSchedulingPolicyInput{
 		Arn: aws.String(d.Id()),
@@ -191,8 +192,9 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
+	log.Printf("[DEBUG] Deleting Batch Scheduling Policy: %s", d.Id())
 	_, err := conn.DeleteSchedulingPolicyWithContext(ctx, &batch.DeleteSchedulingPolicyInput{
 		Arn: aws.String(d.Id()),
 	})

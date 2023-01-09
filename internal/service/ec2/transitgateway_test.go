@@ -608,7 +608,7 @@ func testAccCheckTransitGatewayExists(n string, v *ec2.TransitGateway) resource.
 			return fmt.Errorf("No EC2 Transit Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTransitGatewayByID(conn, rs.Primary.ID)
 
@@ -623,7 +623,7 @@ func testAccCheckTransitGatewayExists(n string, v *ec2.TransitGateway) resource.
 }
 
 func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway" {
@@ -674,7 +674,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 			return errors.New("EC2 Transit Gateway Association Default Route Table empty")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
@@ -702,7 +702,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 			return nil
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
@@ -734,7 +734,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 			return errors.New("EC2 Transit Gateway Propagation Default Route Table empty")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
@@ -762,7 +762,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagat
 			return nil
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
@@ -787,7 +787,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagat
 }
 
 func testAccPreCheckTransitGateway(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeTransitGatewaysInput{
 		MaxResults: aws.Int64(5),
@@ -805,7 +805,7 @@ func testAccPreCheckTransitGateway(t *testing.T) {
 }
 
 func testAccPreCheckTransitGatewayConnect(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeTransitGatewayConnectsInput{
 		MaxResults: aws.Int64(5),
@@ -823,7 +823,7 @@ func testAccPreCheckTransitGatewayConnect(t *testing.T) {
 }
 
 func testAccPreCheckTransitGatewayVPCAttachment(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
 		MaxResults: aws.Int64(5),

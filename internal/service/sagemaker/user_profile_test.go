@@ -8,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccUserProfile_basic(t *testing.T) {
@@ -319,7 +319,7 @@ func testAccUserProfile_disappears(t *testing.T) {
 }
 
 func testAccCheckUserProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_user_profile" {
@@ -331,7 +331,7 @@ func testAccCheckUserProfileDestroy(s *terraform.State) error {
 
 		userProfile, err := tfsagemaker.FindUserProfileByName(conn, domainID, userProfileName)
 
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -359,7 +359,7 @@ func testAccCheckUserProfileExists(n string, userProfile *sagemaker.DescribeUser
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]

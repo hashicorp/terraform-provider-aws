@@ -63,7 +63,7 @@ func ResourceBucketMetric() *schema.Resource {
 }
 
 func resourceBucketMetricPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -113,7 +113,7 @@ func resourceBucketMetricPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
@@ -144,7 +144,7 @@ func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {

@@ -416,7 +416,7 @@ func testAccCheckUserExists(resourceName string, function *connect.DescribeUserO
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeUserInput{
 			UserId:     aws.String(userID),
@@ -440,7 +440,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, userID, err := tfconnect.UserParseID(rs.Primary.ID)
 

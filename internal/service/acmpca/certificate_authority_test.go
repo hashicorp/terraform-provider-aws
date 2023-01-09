@@ -729,7 +729,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 }
 
 func testAccCheckCertificateAuthorityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate_authority" {

@@ -37,7 +37,7 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 }
 
 func dataSourceOutpostInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.GetOutpostInstanceTypesInput{
 		OutpostId: aws.String(d.Get("arn").(string)), // Accepts both ARN and ID; prefer ARN which is more common

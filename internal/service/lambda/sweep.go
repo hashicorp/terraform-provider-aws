@@ -36,7 +36,7 @@ func sweepFunctions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LambdaConn
+	conn := client.(*conns.AWSClient).LambdaConn()
 	input := &lambda.ListFunctionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -80,7 +80,7 @@ func sweepLayerVersions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).LambdaConn
+	conn := client.(*conns.AWSClient).LambdaConn()
 	input := &lambda.ListLayersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

@@ -115,7 +115,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 }
 
 func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get("name").(string)
 
@@ -159,7 +159,7 @@ func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
@@ -201,7 +201,7 @@ func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
@@ -255,7 +255,7 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
 	_, err := conn.DeleteDatabase(&glue.DeleteDatabaseInput{

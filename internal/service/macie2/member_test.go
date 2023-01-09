@@ -333,7 +333,7 @@ func testAccCheckMemberExists(resourceName string, macie2Session *macie2.GetMemb
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetMember(input)
@@ -353,7 +353,7 @@ func testAccCheckMemberExists(resourceName string, macie2Session *macie2.GetMemb
 }
 
 func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_member" {

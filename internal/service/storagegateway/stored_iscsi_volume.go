@@ -120,7 +120,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 }
 
 func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -163,7 +163,7 @@ func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceStorediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -176,7 +176,7 @@ func resourceStorediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -252,7 +252,7 @@ func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceStorediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.DeleteVolumeInput{
 		VolumeARN: aws.String(d.Id()),

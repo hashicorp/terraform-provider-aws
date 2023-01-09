@@ -153,7 +153,7 @@ func ResourceNotebookInstance() *schema.Resource {
 }
 
 func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -227,7 +227,7 @@ func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNotebookInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -286,7 +286,7 @@ func resourceNotebookInstanceRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -429,7 +429,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	notebook, err := FindNotebookInstanceByName(conn, d.Id())
 

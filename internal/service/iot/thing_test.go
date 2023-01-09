@@ -122,7 +122,7 @@ func testAccCheckThingExists(n string, v *iot.DescribeThingOutput) resource.Test
 			return fmt.Errorf("No IoT Thing ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		output, err := tfiot.FindThingByName(conn, rs.Primary.ID)
 
@@ -137,7 +137,7 @@ func testAccCheckThingExists(n string, v *iot.DescribeThingOutput) resource.Test
 }
 
 func testAccCheckThingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing" {

@@ -51,7 +51,7 @@ func ResourceContainer() *schema.Resource {
 }
 
 func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -88,7 +88,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -131,7 +131,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -146,7 +146,7 @@ func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.DeleteContainerInput{
 		ContainerName: aws.String(d.Id()),

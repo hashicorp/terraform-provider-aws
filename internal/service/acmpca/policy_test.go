@@ -39,7 +39,7 @@ func TestAccACMPCAPolicy_Basic(t *testing.T) {
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_policy" {
@@ -73,7 +73,7 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ACM PCA Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 		_, err := tfacmpca.FindPolicyByARN(conn, rs.Primary.ID)
 
