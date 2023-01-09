@@ -402,7 +402,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("user_settings") {
-		input.UserSettings = expandUserSettings(d.Get("user_settings").([]interface{}))
+		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
 	resp, err := conn.UpdateStack(input)
