@@ -18,6 +18,8 @@ import (
 )
 
 func TestClusterIDRegionFromARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName       string
 		Input          string
@@ -70,7 +72,10 @@ func TestClusterIDRegionFromARN(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotID, gotRegion, gotErr := tfrds.ClusterIDRegionFromARN(testCase.Input)
 
 			if gotErr != nil && !testCase.ExpectedErr {
