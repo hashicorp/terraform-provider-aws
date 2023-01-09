@@ -475,11 +475,11 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
-		req.IpDiscovery = aws.String(v.(string))
+		params.IpDiscovery = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("network_type"); ok {
-		req.NetworkType = aws.String(v.(string))
+		params.NetworkType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("port"); ok {
