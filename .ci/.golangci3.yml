@@ -9,7 +9,7 @@ linters:
     - durationcheck
     # - paralleltest
     - predeclared
-    # - tenv
+    - tenv
 
 linters-settings:
   predeclared:
