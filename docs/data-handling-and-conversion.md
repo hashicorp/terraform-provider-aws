@@ -65,7 +65,7 @@ To further understand the necessary data conversions used throughout the Terrafo
 | `list` | `[]*T` | `TypeList` (`[]interface{}` of `T`)<br/>`TypeSet` (`*schema.Set` of `T`) | `list(any)`<br/>`set(any)` |
 | `map` | `map[T1]*T2` | `TypeMap` (`map[string]interface{}`) | `map(any)` |
 | `string` | `*string` | `TypeString` (`string`) | `string` |
-| `structure` | `struct` | `TypeList` (`[]interface{}` of `map[string]interface{}`) | `list(object(any))` |
+| `structure` | `struct` | `TypeList` (`[]interface{}` of `map[string]interface{}`) with `MaxItems: 1` | `list(object(any))` |
 | `timestamp` | `*time.Time` | `TypeString` (typically RFC3339 formatted) | `string` |
 
 <!-- markdownlint-enable no-inline-html --->
