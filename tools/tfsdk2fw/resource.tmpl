@@ -34,7 +34,7 @@ func init() {
 // newResource{{ .Name }} instantiates a new Resource for the {{ .TFTypeName }} resource.
 func newResource{{ .Name }}(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resource{{ .Name }}{}
-	r.Migrated = true
+	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }

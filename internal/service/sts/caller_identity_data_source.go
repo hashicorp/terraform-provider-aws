@@ -18,7 +18,7 @@ func init() {
 // newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.
 func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceCallerIdentity{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

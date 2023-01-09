@@ -17,7 +17,7 @@ func init() {
 // newDataSourceBillingServiceAccount instantiates a new DataSource for the aws_billing_service_account data source.
 func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceBillingServiceAccount{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

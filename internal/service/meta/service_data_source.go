@@ -20,7 +20,7 @@ func init() {
 // newDataSourceService instantiates a new DataSource for the aws_service data source.
 func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceService{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

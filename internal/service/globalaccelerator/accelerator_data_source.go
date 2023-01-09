@@ -23,7 +23,7 @@ func init() {
 // newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceAccelerator{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

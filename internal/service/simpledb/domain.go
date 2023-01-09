@@ -28,7 +28,7 @@ func init() {
 // newResourceDomain instantiates a new Resource for the aws_simpledb_domain resource.
 func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDomain{}
-	r.Migrated = true
+	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }

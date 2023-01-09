@@ -27,7 +27,7 @@ func init() {
 // newDataSourceIPRanges instantiates a new DataSource for the aws_ip_ranges data source.
 func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceIPRanges{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

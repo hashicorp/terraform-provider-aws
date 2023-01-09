@@ -20,7 +20,7 @@ func init() {
 // newDataSourceDefaultTags instantiates a new DataSource for the aws_default_tags data source.
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDefaultTags{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

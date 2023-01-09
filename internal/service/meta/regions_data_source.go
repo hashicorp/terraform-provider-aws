@@ -20,7 +20,7 @@ func init() {
 // newDataSourceRegions instantiates a new DataSource for the aws_regions data source.
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

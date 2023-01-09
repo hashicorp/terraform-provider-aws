@@ -16,7 +16,7 @@ func init() {
 // newDataSourcePartition instantiates a new DataSource for the aws_partition data source.
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourcePartition{}
-	d.Migrated = true
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
