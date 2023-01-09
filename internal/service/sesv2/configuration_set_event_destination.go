@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -49,6 +50,12 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.kinesis_firehose_destination",
+								"event_destination.0.pinpoint_destination",
+								"event_destination.0.sns_destination",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dimension_configuration": {
@@ -57,16 +64,19 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"default_dimension_value": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 256),
 												},
 												"dimension_name": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 256),
 												},
 												"dimension_value_source": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.DimensionValueSource](),
 												},
 											},
 										},
@@ -82,6 +92,12 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.kinesis_firehose_destination",
+								"event_destination.0.pinpoint_destination",
+								"event_destination.0.sns_destination",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delivery_stream_arn": {
@@ -100,12 +116,21 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 						"matching_event_types": {
 							Type:     schema.TypeList,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[types.EventType](),
+							},
 						},
 						"pinpoint_destination": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.kinesis_firehose_destination",
+								"event_destination.0.pinpoint_destination",
+								"event_destination.0.sns_destination",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"application_arn": {
@@ -120,6 +145,12 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.kinesis_firehose_destination",
+								"event_destination.0.pinpoint_destination",
+								"event_destination.0.sns_destination",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"topic_arn": {
