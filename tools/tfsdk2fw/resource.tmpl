@@ -5,6 +5,7 @@ package {{ .PackageName }}
 import (
 	"context"
 
+	{{if .HasTimeouts }}"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"{{- end}}
 	{{range .FrameworkValidatorsPackages }}
 	"github.com/hashicorp/terraform-plugin-framework-validators/{{ . }}"
 	{{- end}}

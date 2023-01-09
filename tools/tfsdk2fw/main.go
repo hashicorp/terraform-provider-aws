@@ -145,6 +145,7 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 		EmitResourceImportState:      m.Resource.Importer != nil,
 		EmitResourceModifyPlan:       !m.IsDataSource && emitter.HasTopLevelTagsAllMap && emitter.HasTopLevelTagsMap,
 		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
+		HasTimeouts:                  emitter.HasTimeouts,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
 		Name:                         m.Name,
@@ -181,6 +182,7 @@ type emitter struct {
 	Generator                     *common.Generator
 	FrameworkPlanModifierPackages []string // Package names for any terraform-plugin-framework plan modifiers. May contain duplicates.
 	FrameworkValidatorsPackages   []string // Package names for any terraform-plugin-framework-validators validators. May contain duplicates.
+	HasTimeouts                   bool
 	HasTopLevelTagsAllMap         bool
 	HasTopLevelTagsMap            bool
 	ImportFrameworkAttr           bool
@@ -857,6 +859,7 @@ type templateData struct {
 	EmitResourceUpdateSkeleton    bool
 	FrameworkPlanModifierPackages []string
 	FrameworkValidatorsPackages   []string
+	HasTimeouts                   bool
 	ImportFrameworkAttr           bool
 	ImportProviderFrameworkTypes  bool
 	Name                          string // e.g. Instance
