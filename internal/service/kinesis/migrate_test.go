@@ -37,6 +37,8 @@ func testResourceStreamStateDataV1() map[string]interface{} {
 }
 
 func TestStreamStateUpgradeV0(t *testing.T) {
+	t.Parallel()
+
 	expected := testResourceStreamStateDataV1()
 	actual, err := tfkinesis.StreamStateUpgradeV0(context.Background(), testResourceStreamStateDataV0(), nil)
 	if err != nil {
