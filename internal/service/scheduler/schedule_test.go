@@ -22,6 +22,8 @@ import (
 )
 
 func TestResourceScheduleIDFromARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		ARN   string
 		ID    string
@@ -67,6 +69,8 @@ func TestResourceScheduleIDFromARN(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.ARN, func(t *testing.T) {
+			t.Parallel()
+
 			id, err := tfscheduler.ResourceScheduleIDFromARN(tc.ARN)
 
 			if tc.Fails {
@@ -87,6 +91,8 @@ func TestResourceScheduleIDFromARN(t *testing.T) {
 }
 
 func TestResourceScheduleParseID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		ID           string
 		GroupName    string
@@ -146,6 +152,8 @@ func TestResourceScheduleParseID(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.ID, func(t *testing.T) {
+			t.Parallel()
+
 			groupName, scheduleName, err := tfscheduler.ResourceScheduleParseID(tc.ID)
 
 			if tc.Fails {
