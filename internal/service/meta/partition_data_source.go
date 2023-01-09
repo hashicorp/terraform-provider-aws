@@ -15,7 +15,10 @@ func init() {
 
 // newDataSourcePartition instantiates a new DataSource for the aws_partition data source.
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePartition{}, nil
+	d := &dataSourcePartition{}
+	d.Migrated = true
+
+	return d, nil
 }
 
 type dataSourcePartition struct {

@@ -19,7 +19,10 @@ func init() {
 
 // newDataSource{{ .Name }} instantiates a new DataSource for the {{ .TFTypeName }} data source.
 func newDataSource{{ .Name }}(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSource{{ .Name }}{}, nil
+	d := &dataSource{{ .Name }}{}
+	d.Migrated = true
+
+	return d, nil
 }
 
 type dataSource{{ .Name }} struct {

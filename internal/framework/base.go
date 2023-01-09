@@ -20,9 +20,14 @@ func (w *withMeta) Meta() *conns.AWSClient {
 	return w.meta
 }
 
+type withMigratedFlag struct {
+	Migrated bool // Whether or not the resource (or data source) has been migrated from terraform-plugin-sdk.
+}
+
 // ResourceWithConfigure is a structure to be embedded within a Resource that implements the ResourceWithConfigure interface.
 type ResourceWithConfigure struct {
 	withMeta
+	withMigratedFlag
 }
 
 // Configure enables provider-level data or clients to be set in the
@@ -66,6 +71,7 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 // DataSourceWithConfigure is a structure to be embedded within a DataSource that implements the DataSourceWithConfigure interface.
 type DataSourceWithConfigure struct {
 	withMeta
+	withMigratedFlag
 }
 
 // Configure enables provider-level data or clients to be set in the
