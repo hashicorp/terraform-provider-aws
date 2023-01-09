@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidResolverName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
