@@ -1756,6 +1756,8 @@ func TestAccDeployDeploymentGroup_ECS_blueGreen(t *testing.T) {
 }
 
 func TestDeploymentGroup_buildTriggerConfigs(t *testing.T) {
+	t.Parallel()
+
 	input := []interface{}{
 		map[string]interface{}{
 			"trigger_events": schema.NewSet(schema.HashString, []interface{}{
@@ -1785,6 +1787,8 @@ func TestDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 }
 
 func TestDeploymentGroup_triggerConfigsToMap(t *testing.T) {
+	t.Parallel()
+
 	input := []*codedeploy.TriggerConfig{
 		{
 			TriggerEvents: []*string{
@@ -1830,6 +1834,8 @@ func TestDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 }
 
 func TestDeploymentGroup_buildAutoRollbackConfig(t *testing.T) {
+	t.Parallel()
+
 	input := []interface{}{
 		map[string]interface{}{
 			"events": schema.NewSet(schema.HashString, []interface{}{
@@ -1855,6 +1861,8 @@ func TestDeploymentGroup_buildAutoRollbackConfig(t *testing.T) {
 }
 
 func TestDeploymentGroup_autoRollbackConfigToMap(t *testing.T) {
+	t.Parallel()
+
 	input := &codedeploy.AutoRollbackConfiguration{
 		Events: []*string{
 			aws.String("DEPLOYMENT_FAILURE"),
@@ -1892,6 +1900,8 @@ func TestDeploymentGroup_autoRollbackConfigToMap(t *testing.T) {
 }
 
 func TestDeploymentGroup_expandDeploymentStyle(t *testing.T) {
+	t.Parallel()
+
 	input := []interface{}{
 		map[string]interface{}{
 			"deployment_option": "WITH_TRAFFIC_CONTROL",
@@ -1913,6 +1923,8 @@ func TestDeploymentGroup_expandDeploymentStyle(t *testing.T) {
 }
 
 func TestDeploymentGroup_flattenDeploymentStyle(t *testing.T) {
+	t.Parallel()
+
 	expected := map[string]interface{}{
 		"deployment_option": "WITHOUT_TRAFFIC_CONTROL",
 		"deployment_type":   "IN_PLACE",
@@ -1942,6 +1954,8 @@ func TestDeploymentGroup_flattenDeploymentStyle(t *testing.T) {
 }
 
 func TestDeploymentGroup_expandLoadBalancerInfo(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Input    []interface{}
 		Expected *codedeploy.LoadBalancerInfo
@@ -1986,6 +2000,8 @@ func TestDeploymentGroup_expandLoadBalancerInfo(t *testing.T) {
 }
 
 func TestDeploymentGroup_flattenLoadBalancerInfo(t *testing.T) {
+	t.Parallel()
+
 	input := &codedeploy.LoadBalancerInfo{
 		TargetGroupInfoList: []*codedeploy.TargetGroupInfo{
 			{
@@ -2025,6 +2041,8 @@ func TestDeploymentGroup_flattenLoadBalancerInfo(t *testing.T) {
 }
 
 func TestDeploymentGroup_expandBlueGreenDeploymentConfig(t *testing.T) {
+	t.Parallel()
+
 	input := []interface{}{
 		map[string]interface{}{
 			"deployment_ready_option": []interface{}{
@@ -2074,6 +2092,8 @@ func TestDeploymentGroup_expandBlueGreenDeploymentConfig(t *testing.T) {
 }
 
 func TestDeploymentGroup_flattenBlueGreenDeploymentConfig(t *testing.T) {
+	t.Parallel()
+
 	input := &codedeploy.BlueGreenDeploymentConfiguration{
 		DeploymentReadyOption: &codedeploy.DeploymentReadyOption{
 			ActionOnTimeout:   aws.String("STOP_DEPLOYMENT"),
@@ -2146,6 +2166,8 @@ func TestDeploymentGroup_flattenBlueGreenDeploymentConfig(t *testing.T) {
 }
 
 func TestDeploymentGroup_buildAlarmConfig(t *testing.T) {
+	t.Parallel()
+
 	input := []interface{}{
 		map[string]interface{}{
 			"alarms": schema.NewSet(schema.HashString, []interface{}{
@@ -2175,6 +2197,8 @@ func TestDeploymentGroup_buildAlarmConfig(t *testing.T) {
 }
 
 func TestDeploymentGroup_alarmConfigToMap(t *testing.T) {
+	t.Parallel()
+
 	input := &codedeploy.AlarmConfiguration{
 		Alarms: []*codedeploy.Alarm{
 			{
