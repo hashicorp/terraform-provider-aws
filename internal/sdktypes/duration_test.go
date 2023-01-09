@@ -7,6 +7,8 @@ import (
 )
 
 func TestDuration(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		val           string
 		expectNull    bool
@@ -55,6 +57,8 @@ func TestDuration(t *testing.T) {
 }
 
 func TestValidationDuration(t *testing.T) {
+	t.Parallel()
+
 	runTestCases(t, map[string]testCase{
 		"valid": {
 			val: "1h2m3s",
