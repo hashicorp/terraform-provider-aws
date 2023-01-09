@@ -27,12 +27,12 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
     cloud_watch_destination {
       dimension_configuration {
         default_dimension_value = "example"
-        dimension_name = "example"
-        dimension_value_source = "MESSAGE_TAG"
+        dimension_name          = "example"
+        dimension_value_source  = "MESSAGE_TAG"
       }
     }
 
-    enabled = true
+    enabled              = true
     matching_event_types = ["SEND"]
   }
 }
@@ -54,7 +54,7 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
       application_arn = aws_pinpoint_app.example.arn
     }
 
-    enabled = true
+    enabled              = true
     matching_event_types = ["SEND"]
   }
 }
@@ -74,10 +74,10 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
   event_destination {
     kinesis_firehose_destination {
       delivery_stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
-      iam_role_arn = aws_iam_role.example.arn
+      iam_role_arn        = aws_iam_role.example.arn
     }
 
-    enabled = true
+    enabled              = true
     matching_event_types = ["SEND"]
   }
 }
@@ -99,7 +99,7 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
       topic_arn = aws_sns_topic.example.arn
     }
 
-    enabled = true
+    enabled              = true
     matching_event_types = ["SEND"]
   }
 }
@@ -124,7 +124,7 @@ The following arguments are optional:
 * `cloud_watch_destination` - (Optional) An object that defines an Amazon CloudWatch destination for email events. See [cloud_watch_destination](#cloud_watch_destination) below
 * `enabled` - (Optional) When the event destination is enabled, the specified event types are sent to the destinations. Default: `false`.
 * `kinesis_firehose_destination` - (Optional) An object that defines an Amazon Kinesis Data Firehose destination for email events. See [kinesis_firehose_destination](#kinesis_firehose_destination) below.
-* `pinpoint_destiantion` - (Optional) An object that defines an Amazon Pinpoint project destination for email events. See [pinpoint_destination](#pinpoint_destination) below.
+* `pinpoint_destination` - (Optional) An object that defines an Amazon Pinpoint project destination for email events. See [pinpoint_destination](#pinpoint_destination) below.
 * `sns_destination` - (Optional) An object that defines an Amazon SNS destination for email events. See [sns_destination](#sns_destination) below.
 
 ### cloud_watch_destination
