@@ -1,0 +1,21 @@
+issues:
+  exclude-rules:
+  max-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    # - durationcheck
+    # - paralleltest
+    - predeclared
+    # - tenv
+
+linters-settings:
+  predeclared:
+    ignore: cap,close,copy,delete,len,new
+
+run:
+  timeout: 75m
+  skip-dirs:
+    - .ci/providerlint/vendor
