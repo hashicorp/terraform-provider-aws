@@ -65,7 +65,7 @@ func TestDefaultValue(t *testing.T) {
 			response := planmodifier.StringResponse{
 				PlanValue: request.PlanValue,
 			}
-			StringDefaultValue(test.defaultValue).PlanModifyString(ctx, request, &response)
+			DefaultValue(test.defaultValue).PlanModifyString(ctx, request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

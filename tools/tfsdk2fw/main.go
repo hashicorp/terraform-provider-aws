@@ -537,7 +537,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 		case string:
 			providerPlanModifierPackage = "stringplanmodifier"
-			planModifiers = append(planModifiers, fmt.Sprintf("fw%s.StringDefaultValue(%q)", providerPlanModifierPackage, v))
+			// Alias the provider plan modifier package name with an "fw" prefix. See also resource.tmpl.
+			planModifiers = append(planModifiers, fmt.Sprintf("fw%s.DefaultValue(%q)", providerPlanModifierPackage, v))
 			e.ProviderPlanModifierPackages = append(e.ProviderPlanModifierPackages, providerPlanModifierPackage)
 		default:
 			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
