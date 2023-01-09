@@ -132,6 +132,12 @@ func ResourceService() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -169,6 +175,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("namespace_id"); ok {
 		input.NamespaceId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("type"); ok {
+		input.Type = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -230,6 +240,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("name", service.Name)
 	d.Set("namespace_id", service.NamespaceId)
+	d.Set("type", service.Type)
 
 	tags, err := ListTagsWithContext(ctx, conn, arn)
 
