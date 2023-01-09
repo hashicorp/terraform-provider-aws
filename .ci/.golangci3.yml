@@ -1,5 +1,9 @@
 issues:
   exclude-rules:
+    - linters:
+        - paralleltest
+      # TODO For TestAccXYZ_serial, I *think* we can add t.Parallel() at the top level.
+      text: "(Function|Range statement for test) TestAcc"
   max-per-linter: 0
   max-same-issues: 0
 
