@@ -10,6 +10,34 @@ import (
 
 // Terraform Plugin Framework variants of standard flatteners and expanders.
 
+func ExpandFrameworkStringList(ctx context.Context, list types.List) []*string {
+	if list.IsNull() || list.IsUnknown() {
+		return nil
+	}
+
+	var vl []*string
+
+	if list.ElementsAs(ctx, &vl, false).HasError() {
+		return nil
+	}
+
+	return vl
+}
+
+func ExpandFrameworkStringValueList(ctx context.Context, list types.List) []string {
+	if list.IsNull() || list.IsUnknown() {
+		return nil
+	}
+
+	var vl []string
+
+	if list.ElementsAs(ctx, &vl, false).HasError() {
+		return nil
+	}
+
+	return vl
+}
+
 func ExpandFrameworkStringSet(ctx context.Context, set types.Set) []*string {
 	if set.IsNull() || set.IsUnknown() {
 		return nil
