@@ -1209,7 +1209,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, ErrCodeNotImplemented) {
 		return fmt.Errorf("getting S3 Bucket (%s) Lifecycle Configuration: %w", d.Id(), err)
 	}
 
@@ -1238,7 +1238,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, ErrCodeNotImplemented) {
 		return fmt.Errorf("getting S3 Bucket replication: %w", err)
 	}
 
