@@ -2194,6 +2194,28 @@ func FindSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.EC2,
 	return FindSecurityGroupRules(ctx, conn, input)
 }
 
+func FindSpotDatafeedSubscription(conn *ec2.EC2) (*ec2.SpotDatafeedSubscription, error) {
+	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
+	output, err := conn.DescribeSpotDatafeedSubscription(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SpotDatafeedSubscription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SpotDatafeedSubscription, nil
+}
+
 func FindSpotFleetInstances(conn *ec2.EC2, input *ec2.DescribeSpotFleetInstancesInput) ([]*ec2.ActiveInstance, error) {
 	var output []*ec2.ActiveInstance
 
@@ -2973,6 +2995,76 @@ func FindVPCEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
 
 	// Eventual consistency check.
 	if aws.StringValue(output.VpcEndpointId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVPCConnectionNotification(conn *ec2.EC2, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) (*ec2.ConnectionNotification, error) {
+	output, err := FindVPCConnectionNotifications(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindVPCConnectionNotifications(conn *ec2.EC2, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) ([]*ec2.ConnectionNotification, error) {
+	var output []*ec2.ConnectionNotification
+
+	err := conn.DescribeVpcEndpointConnectionNotificationsPages(input, func(page *ec2.DescribeVpcEndpointConnectionNotificationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ConnectionNotificationSet {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindVPCConnectionNotificationByID(conn *ec2.EC2, id string) (*ec2.ConnectionNotification, error) {
+	input := &ec2.DescribeVpcEndpointConnectionNotificationsInput{
+		ConnectionNotificationId: aws.String(id),
+	}
+
+	output, err := FindVPCConnectionNotification(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ConnectionNotificationId) != id {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}

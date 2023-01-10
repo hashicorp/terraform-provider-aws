@@ -12,19 +12,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2SpotDatafeedSubscription_serial(t *testing.T) {
-	cases := map[string]func(t *testing.T){
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
 		"basic":      testAccSpotDatafeedSubscription_basic,
 		"disappears": testAccSpotDatafeedSubscription_disappears,
 	}
 
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccSpotDatafeedSubscription_basic(t *testing.T) {
@@ -76,7 +75,7 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSpotDatafeedSubscriptionExists(n string, subscription *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
+func testAccCheckSpotDatafeedSubscriptionExists(n string, v *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -84,17 +83,18 @@ func testAccCheckSpotDatafeedSubscriptionExists(n string, subscription *ec2.Spot
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No policy ID is set")
+			return fmt.Errorf("No EC2 Spot Datafeed Subscription ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		resp, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
+		output, err := tfec2.FindSpotDatafeedSubscription(conn)
+
 		if err != nil {
 			return err
 		}
 
-		*subscription = *resp.SpotDatafeedSubscription
+		*v = *output
 
 		return nil
 	}
@@ -108,15 +108,17 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
+		_, err := tfec2.FindSpotDatafeedSubscription(conn)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotDatafeedNotFound) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error describing EC2 Spot Datafeed Subscription: %w", err)
+			return err
 		}
+
+		return fmt.Errorf("EC2 Spot Datafeed Subscription %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -125,9 +127,7 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 func testAccPreCheckSpotDatafeedSubscription(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
-
-	_, err := conn.DescribeSpotDatafeedSubscription(input)
+	_, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

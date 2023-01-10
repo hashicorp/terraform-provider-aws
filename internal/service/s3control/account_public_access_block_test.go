@@ -18,6 +18,8 @@ import (
 // S3 account-level settings must run serialized
 // for TeamCity environment
 func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"PublicAccessBlock": {
 			"basic":                 testAccAccountPublicAccessBlock_basic,
@@ -31,19 +33,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-					// Explicitly sleep between tests for eventual consistency
-					time.Sleep(5 * time.Second)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 5*time.Second)
 }
 
 func testAccAccountPublicAccessBlock_basic(t *testing.T) {

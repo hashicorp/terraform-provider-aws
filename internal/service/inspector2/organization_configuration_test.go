@@ -20,18 +20,15 @@ import (
 )
 
 func TestAccInspector2OrganizationConfiguration_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccOrganizationConfiguration_basic,
 		"disappears": testAccOrganizationConfiguration_disappears,
 		"ec2ECR":     testAccOrganizationConfiguration_ec2ECR,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccOrganizationConfiguration_basic(t *testing.T) {

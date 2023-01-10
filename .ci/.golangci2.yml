@@ -2,7 +2,7 @@ issues:
   exclude-rules:
     - linters:
         - paralleltest
-      text: "(Function|Range statement for test) TestAcc"
+      text: "Function TestAcc"
     - linters:
         - tparallel
       text: "TestAcc"
