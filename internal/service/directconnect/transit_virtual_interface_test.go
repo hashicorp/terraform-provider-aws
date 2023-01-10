@@ -16,18 +16,15 @@ import (
 )
 
 func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":    testAccTransitVirtualInterface_basic,
 		"tags":     testAccTransitVirtualInterface_tags,
 		"sitelink": testAccTransitVirtualInterface_siteLink,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccTransitVirtualInterface_basic(t *testing.T) {
