@@ -474,7 +474,7 @@ func resourceRecordCreate(d *schema.ResourceData, meta interface{}) error {
 
 	respRaw, err := ChangeRecordSet(conn, req)
 	if err != nil {
-		return fmt.Errorf("[ERR]: Error building changeset: %w", err)
+		return fmt.Errorf("creating Route 53 Record (%s): updating record set: %w", d.Id(), err)
 	}
 
 	changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
@@ -493,11 +493,13 @@ func resourceRecordCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err = WaitForRecordSetToSync(conn, CleanChangeID(aws.StringValue(changeInfo.Id)))
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Route 53 Record (%s): updating record set: wating for completion: %w", d.Id(), err)
 	}
 
-	_, err = findRecord(d, meta)
-	return err
+	if _, err := findRecord(d, meta); err != nil {
+		return fmt.Errorf("creating Route 53 Record (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func ChangeRecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
@@ -568,7 +570,7 @@ func resourceRecordRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		default:
-			return err
+			return fmt.Errorf("reading Route 53 Record (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -765,7 +767,7 @@ func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
 		case errNoHostedZoneFound, errNoRecordsFound:
 			return nil
 		default:
-			return err
+			return fmt.Errorf("deleting Route 53 Record (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -789,7 +791,7 @@ func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
 
 	respRaw, err := DeleteRecordSet(conn, req)
 	if err != nil {
-		return fmt.Errorf("[ERR]: Error building changeset: %w", err)
+		return fmt.Errorf("deleting Route 53 Record (%s): deleting record set: %w", d.Id(), err)
 	}
 
 	changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
@@ -798,8 +800,10 @@ func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	err = WaitForRecordSetToSync(conn, CleanChangeID(aws.StringValue(changeInfo.Id)))
-	return err
+	if err := WaitForRecordSetToSync(conn, CleanChangeID(aws.StringValue(changeInfo.Id))); err != nil {
+		return fmt.Errorf("deleting Route 53 Record (%s): deleting record set: waiting for completion: %w", d.Id(), err)
+	}
+	return nil
 }
 
 func DeleteRecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
