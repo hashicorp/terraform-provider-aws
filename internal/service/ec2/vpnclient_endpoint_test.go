@@ -73,7 +73,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
+	for group, m := range testCases { //nolint:paralleltest
 		m := m
 		for name, tc := range m {
 			tc := tc
