@@ -1,5 +1,9 @@
 ## 4.50.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_service_discovery_service: Add `type` argument ([#28778](https://github.com/hashicorp/terraform-provider-aws/issues/28778))
+
 BUG FIXES:
 
 * resource/aws_appstream_stack: Fix panic on user_settings update ([#28766](https://github.com/hashicorp/terraform-provider-aws/issues/28766))
