@@ -22,15 +22,47 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStatementConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStatementExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
+					resource.TestCheckResourceAttr(resourceName, "workgroup_name", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"database", "db_user"},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
+	var v redshiftdataapiservice.DescribeStatementOutput
+	resourceName := "aws_redshiftdata_statement.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStatementConfig_workgroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStatementExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", ""),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
+					resource.TestCheckResourceAttrPair(resourceName, "workgroup_name", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
 				),
 			},
 			{
@@ -66,36 +98,6 @@ func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeSta
 
 		return nil
 	}
-}
-
-func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
-	var v redshiftdataapiservice.DescribeStatementOutput
-	resourceName := "aws_redshiftdata_statement.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStatementConfig_workgroup(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStatementExists(resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "workgroup_name", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
-					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"database", "db_user"},
-			},
-		},
-	})
 }
 
 func testAccStatementConfig_basic(rName string) string {
