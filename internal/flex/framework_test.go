@@ -117,6 +117,14 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 		expected map[string]string
 	}
 	tests := map[string]testCase{
+		"null": {
+			input:    types.MapNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.MapUnknown(types.StringType),
+			expected: nil,
+		},
 		"two elements": {
 			input: types.MapValueMust(types.StringType, map[string]attr.Value{
 				"one": types.StringValue("GET"),
