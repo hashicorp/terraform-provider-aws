@@ -126,7 +126,7 @@ func resourceAPNSVoIPSandboxChannelRead(d *schema.ResourceData, meta interface{}
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint APNs Voip Sandbox Channel for application %s not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint APNs Voip Sandbox Channel for application %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
