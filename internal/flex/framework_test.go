@@ -259,6 +259,45 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 	}
 }
 
+func TestFlattenFrameworkStringList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []*string
+		expected types.List
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []*string{aws.String("GET"), aws.String("HEAD")},
+			expected: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []*string{},
+			expected: types.ListNull(types.StringType),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.ListNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenFrameworkStringList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkStringListLegacy(t *testing.T) {
 	t.Parallel()
 
@@ -298,6 +337,45 @@ func TestFlattenFrameworkStringListLegacy(t *testing.T) {
 	}
 }
 
+func TestFlattenFrameworkStringValueList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []string
+		expected types.List
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []string{"GET", "HEAD"},
+			expected: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []string{},
+			expected: types.ListNull(types.StringType),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.ListNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenFrameworkStringValueList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkStringValueListLegacy(t *testing.T) {
 	t.Parallel()
 
@@ -329,6 +407,45 @@ func TestFlattenFrameworkStringValueListLegacy(t *testing.T) {
 			t.Parallel()
 
 			got := FlattenFrameworkStringValueListLegacy(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkStringValueSet(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []string
+		expected types.Set
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []string{"GET", "HEAD"},
+			expected: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []string{},
+			expected: types.SetNull(types.StringType),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.SetNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := FlattenFrameworkStringValueSet(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

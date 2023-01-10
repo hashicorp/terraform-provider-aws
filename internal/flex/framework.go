@@ -80,6 +80,24 @@ func ExpandFrameworkStringValueMap(ctx context.Context, set types.Map) map[strin
 	return m
 }
 
+// FlattenFrameworkStringList converts a slice of string pointers to a framework List value.
+//
+// A nil slice is converted to a null List.
+// An empty slice is converted to a null List.
+func FlattenFrameworkStringList(_ context.Context, vs []*string) types.List {
+	if len(vs) == 0 {
+		return types.ListNull(types.StringType)
+	}
+
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.StringValue(aws.ToString(v))
+	}
+
+	return types.ListValueMust(types.StringType, elems)
+}
+
 // FlattenFrameworkStringListLegacy is the Plugin Framework variant of FlattenStringList.
 // A nil slice is converted to an empty (non-null) List.
 func FlattenFrameworkStringListLegacy(_ context.Context, vs []*string) types.List {
@@ -87,6 +105,24 @@ func FlattenFrameworkStringListLegacy(_ context.Context, vs []*string) types.Lis
 
 	for i, v := range vs {
 		elems[i] = types.StringValue(aws.ToString(v))
+	}
+
+	return types.ListValueMust(types.StringType, elems)
+}
+
+// FlattenFrameworkStringValueList converts a slice of string values to a framework List value.
+//
+// A nil slice is converted to a null List.
+// An empty slice is converted to a null List.
+func FlattenFrameworkStringValueList(_ context.Context, vs []string) types.List {
+	if len(vs) == 0 {
+		return types.ListNull(types.StringType)
+	}
+
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.StringValue(v)
 	}
 
 	return types.ListValueMust(types.StringType, elems)
@@ -102,6 +138,24 @@ func FlattenFrameworkStringValueListLegacy(_ context.Context, vs []string) types
 	}
 
 	return types.ListValueMust(types.StringType, elems)
+}
+
+// FlattenFrameworkStringValueSet converts a slice of string values to a framework Set value.
+//
+// A nil slice is converted to a null Set.
+// An empty slice is converted to a null Set.
+func FlattenFrameworkStringValueSet(_ context.Context, vs []string) types.Set {
+	if len(vs) == 0 {
+		return types.SetNull(types.StringType)
+	}
+
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.StringValue(v)
+	}
+
+	return types.SetValueMust(types.StringType, elems)
 }
 
 // FlattenFrameworkStringValueSetLegacy is the Plugin Framework variant of FlattenStringValueSet.
