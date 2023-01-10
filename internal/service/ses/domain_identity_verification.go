@@ -99,12 +99,11 @@ func resourceDomainIdentityVerificationRead(d *schema.ResourceData, meta interfa
 
 	att, err := getIdentityVerificationAttributes(conn, domainName)
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
+		return fmt.Errorf("reading SES Domain Identity Verification (%s): %w", domainName, err)
 	}
 
 	if att == nil {
-		log.Printf("[WARN] Domain not listed in response when fetching verification attributes for %s", d.Id())
+		log.Printf("[WARN] SES Domain Identity Verification (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
