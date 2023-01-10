@@ -19,6 +19,8 @@ import (
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
 func TestAccWAFRegionalRegexPatternSet_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":          testAccRegexPatternSet_basic,
 		"changePatterns": testAccRegexPatternSet_changePatterns,
@@ -26,12 +28,7 @@ func TestAccWAFRegionalRegexPatternSet_serial(t *testing.T) {
 		"disappears":     testAccRegexPatternSet_disappears,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccRegexPatternSet_basic(t *testing.T) {
