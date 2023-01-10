@@ -4,33 +4,33 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.171
+	github.com/aws/aws-sdk-go v1.44.176
 	github.com/aws/aws-sdk-go-v2 v1.17.3
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.21
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.21.2
-	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.10.21
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.17.3
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.19.0
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.0
+	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.18.0
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.77.0
-	github.com/aws/aws-sdk-go-v2/service/fis v1.13.5
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.10
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.10.0
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.2.1
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.36.3
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.0.3
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.0.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.1.0
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.14
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.13.0
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.28.2
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.0.3
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.15.3
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.4
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.19.2
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/fis v1.14.0
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.0
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.0
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.0
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.28.0
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.0
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.1.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.39.0
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.0
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.0
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.0
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.29.0
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.0
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.0
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.0
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -79,11 +79,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.27 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.18.25 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.19.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.21 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.11.27 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.17.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.12.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.18.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

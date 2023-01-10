@@ -73,11 +73,11 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 	out, err := conn.CreateExtensionAssociationWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("name").(string), err)
+		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("name").(string), errors.New("No Extension Association returned with create request."))
+		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), errors.New("No Extension Association returned with create request."))
 	}
 
 	d.SetId(aws.StringValue(out.Id))
@@ -126,11 +126,11 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 		out, err := conn.UpdateExtensionAssociationWithContext(ctx, in)
 
 		if err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Get("name").(string), err)
+			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), err)
 		}
 
 		if out == nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Get("name").(string), errors.New("No ExtensionAssociation returned with update request."))
+			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), errors.New("No ExtensionAssociation returned with update request."))
 		}
 	}
 

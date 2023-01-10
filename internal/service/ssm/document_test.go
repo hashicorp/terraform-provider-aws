@@ -572,6 +572,8 @@ func TestAccSSMDocument_disappears(t *testing.T) {
 }
 
 func TestValidateDocumentPermissions(t *testing.T) {
+	t.Parallel()
+
 	validValues := []map[string]interface{}{
 		{
 			"type":        "Share",

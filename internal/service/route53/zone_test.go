@@ -19,6 +19,8 @@ import (
 )
 
 func TestCleanZoneID(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input, Output string
 	}{
@@ -36,6 +38,8 @@ func TestCleanZoneID(t *testing.T) {
 }
 
 func TestCleanChangeID(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input, Output string
 	}{
@@ -53,6 +57,8 @@ func TestCleanChangeID(t *testing.T) {
 }
 
 func TestTrimTrailingPeriod(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input  interface{}
 		Output string

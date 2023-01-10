@@ -21,6 +21,8 @@ import (
 )
 
 func TestProvider(t *testing.T) {
+	t.Parallel()
+
 	p, err := provider.New(context.Background())
 
 	if err != nil {
@@ -35,6 +37,8 @@ func TestProvider(t *testing.T) {
 }
 
 func TestReverseDNS(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		input    string
@@ -68,7 +72,10 @@ func TestReverseDNS(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			if got, want := conns.ReverseDNS(testCase.input), testCase.expected; got != want {
 				t.Errorf("got: %s, expected: %s", got, want)
 			}

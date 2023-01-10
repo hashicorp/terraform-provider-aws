@@ -24,6 +24,8 @@ import (
 )
 
 func TestProtocolStateFunc(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    interface{}
 		expected string
@@ -86,6 +88,8 @@ func TestProtocolStateFunc(t *testing.T) {
 }
 
 func TestProtocolForValue(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    string
 		expected string
@@ -169,6 +173,8 @@ func calcSecurityGroupChecksum(rules []interface{}) int {
 }
 
 func TestSecurityGroupExpandCollapseRules(t *testing.T) {
+	t.Parallel()
+
 	expected_compact_list := []interface{}{
 		map[string]interface{}{
 			"protocol":    "tcp",
@@ -367,6 +373,8 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 }
 
 func TestSecurityGroupIPPermGather(t *testing.T) {
+	t.Parallel()
+
 	raw := []*ec2.IpPermission{
 		{
 			IpProtocol: aws.String("tcp"),
@@ -480,6 +488,8 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 }
 
 func TestExpandIPPerms(t *testing.T) {
+	t.Parallel()
+
 	hash := schema.HashString
 
 	expanded := []interface{}{
@@ -595,6 +605,8 @@ func TestExpandIPPerms(t *testing.T) {
 }
 
 func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
+	t.Parallel()
+
 	hash := schema.HashString
 
 	expanded := []interface{}{
@@ -687,6 +699,8 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 }
 
 func TestExpandIPPerms_AllProtocol(t *testing.T) {
+	t.Parallel()
+
 	hash := schema.HashString
 
 	expanded := []interface{}{
@@ -779,6 +793,8 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 }
 
 func TestExpandIPPerms_nonVPC(t *testing.T) {
+	t.Parallel()
+
 	hash := schema.HashString
 
 	expanded := []interface{}{
@@ -877,6 +893,8 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 }
 
 func TestFlattenSecurityGroups(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		ownerId  *string
 		pairs    []*ec2.UserIdGroupPair

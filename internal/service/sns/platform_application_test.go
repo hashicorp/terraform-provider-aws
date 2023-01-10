@@ -97,6 +97,8 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 }
 
 func TestDecodePlatformApplicationID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input            string
 		ExpectedArn      string
@@ -310,7 +312,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
 
-	for _, platform := range platforms {
+	for _, platform := range platforms { //nolint:paralleltest
 		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 		platformPrincipalCheck := resource.TestCheckNoResourceAttr(resourceName, "platform_principal")
 		if platform.Principal != "" {
@@ -363,8 +365,10 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 		},
 	}
 
-	for _, platform := range platforms {
+	for _, platform := range platforms { //nolint:paralleltest
 		t.Run(platform.Name, func(*testing.T) {
+			t.Parallel()
+
 			for _, tc := range testCases {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
@@ -411,7 +415,7 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 	applePlatformBundleId := "com.bundle.name"
 	updatedApplePlatformBundleId := "com.bundle2.name2"
 
-	for _, platform := range platforms {
+	for _, platform := range platforms { //nolint:paralleltest
 		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 		t.Run(platform.Name, func(*testing.T) {

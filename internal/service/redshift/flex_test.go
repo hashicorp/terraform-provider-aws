@@ -9,6 +9,8 @@ import (
 )
 
 func TestExpandParameters(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":  "character_set_client",
@@ -31,6 +33,8 @@ func TestExpandParameters(t *testing.T) {
 }
 
 func TestFlattenParameters(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input  []*redshift.Parameter
 		Output []map[string]interface{}

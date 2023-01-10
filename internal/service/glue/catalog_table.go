@@ -348,7 +348,7 @@ func ResourceCatalogTable() *schema.Resource {
 	}
 }
 
-func ReadTableID(id string) (catalogID string, dbName string, name string, error error) {
+func ReadTableID(id string) (string, string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 3 {
 		return "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name, received: %s", id)

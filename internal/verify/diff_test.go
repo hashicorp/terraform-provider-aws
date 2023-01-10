@@ -9,6 +9,8 @@ import (
 )
 
 func TestSuppressEquivalentRoundedTime(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		old        string
 		new        string
@@ -60,6 +62,8 @@ func TestSuppressEquivalentRoundedTime(t *testing.T) {
 }
 
 func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		old        string
 		new        string
@@ -101,6 +105,8 @@ func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
 }
 
 func TestDiffStringMaps(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Old, New                  map[string]interface{}
 		Create, Remove, Unchanged map[string]interface{}

@@ -19,6 +19,8 @@ import (
 )
 
 func TestDataSourcePermissionsDiff(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name            string
 		oldPermissions  []interface{}
@@ -211,7 +213,10 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			toGrant, toRevoke := tfquicksight.DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
 			if !reflect.DeepEqual(toGrant, testCase.expectedGrants) {
 				t.Fatalf("Expected: %v, got: %v", testCase.expectedGrants, toGrant)

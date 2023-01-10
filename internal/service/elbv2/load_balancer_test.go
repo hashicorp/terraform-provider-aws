@@ -31,6 +31,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestLBCloudWatchSuffixFromARN(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name   string
 		arn    *string

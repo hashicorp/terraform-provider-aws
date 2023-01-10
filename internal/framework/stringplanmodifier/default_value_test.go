@@ -16,7 +16,7 @@ func TestDefaultValue(t *testing.T) {
 	type testCase struct {
 		plannedValue  types.String
 		currentValue  types.String
-		defaultValue  types.String
+		defaultValue  string
 		expectedValue types.String
 		expectError   bool
 	}
@@ -24,31 +24,31 @@ func TestDefaultValue(t *testing.T) {
 		"non-default non-Null string": {
 			plannedValue:  types.StringValue("gamma"),
 			currentValue:  types.StringValue("beta"),
-			defaultValue:  types.StringValue("alpha"),
+			defaultValue:  "alpha",
 			expectedValue: types.StringValue("gamma"),
 		},
 		"non-default non-Null string, current Null": {
 			plannedValue:  types.StringValue("gamma"),
 			currentValue:  types.StringNull(),
-			defaultValue:  types.StringValue("alpha"),
+			defaultValue:  "alpha",
 			expectedValue: types.StringValue("gamma"),
 		},
 		"non-default Null string, current Null": {
 			plannedValue:  types.StringNull(),
 			currentValue:  types.StringValue("beta"),
-			defaultValue:  types.StringValue("alpha"),
+			defaultValue:  "alpha",
 			expectedValue: types.StringValue("alpha"),
 		},
 		"default string": {
 			plannedValue:  types.StringNull(),
 			currentValue:  types.StringValue("alpha"),
-			defaultValue:  types.StringValue("alpha"),
+			defaultValue:  "alpha",
 			expectedValue: types.StringValue("alpha"),
 		},
 		"default string on create": {
 			plannedValue:  types.StringNull(),
 			currentValue:  types.StringNull(),
-			defaultValue:  types.StringValue("alpha"),
+			defaultValue:  "alpha",
 			expectedValue: types.StringValue("alpha"),
 		},
 	}
@@ -56,6 +56,8 @@ func TestDefaultValue(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.Background()
 			request := planmodifier.StringRequest{
 				Path:       path.Root("test"),
@@ -65,7 +67,7 @@ func TestDefaultValue(t *testing.T) {
 			response := planmodifier.StringResponse{
 				PlanValue: request.PlanValue,
 			}
-			StringDefaultValue(test.defaultValue).PlanModifyString(ctx, request, &response)
+			DefaultValue(test.defaultValue).PlanModifyString(ctx, request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

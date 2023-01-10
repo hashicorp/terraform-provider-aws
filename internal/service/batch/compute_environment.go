@@ -427,7 +427,7 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn()
 
-	log.Printf("[DEBUG] Disabling Batch Compute Environment (%s)", d.Id())
+	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
 	{
 		input := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
@@ -443,7 +443,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting Batch Compute Environment (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Batch Compute Environment: %s", d.Id())
 	{
 		input := &batch.DeleteComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),

@@ -3,6 +3,7 @@ package dms
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -11,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceReplicationSubnetGroup() *schema.Resource {
@@ -23,6 +26,12 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 		Read:   resourceReplicationSubnetGroupRead,
 		Update: resourceReplicationSubnetGroupUpdate,
 		Delete: resourceReplicationSubnetGroupDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -47,6 +56,7 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+				MinItems: 2,
 				Required: true,
 			},
 			"tags":     tftags.TagsSchema(),
@@ -60,6 +70,10 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
+
+const (
+	ResNameReplicationSubnetGroup = "Replication Subnet Group"
+)
 
 func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn()
@@ -93,8 +107,12 @@ func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface
 		_, err = conn.CreateReplicationSubnetGroup(request)
 
 		if err != nil {
-			return err
+			return create.Error(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
 		}
+	}
+
+	if err != nil {
+		return create.Error(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
 	}
 
 	d.SetId(d.Get("replication_subnet_group_id").(string))
@@ -114,9 +132,17 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 			},
 		},
 	})
-	if err != nil {
-		return err
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return create.Error(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
+	}
+
 	if len(response.ReplicationSubnetGroups) == 0 {
 		d.SetId("")
 		return nil
@@ -133,26 +159,35 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
 
-	err = resourceReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
-	if err != nil {
-		return err
+	group := response.ReplicationSubnetGroups[0]
+
+	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
+
+	subnet_ids := []string{}
+	for _, subnet := range group.Subnets {
+		subnet_ids = append(subnet_ids, aws.StringValue(subnet.SubnetIdentifier))
 	}
+
+	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
+	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
+	d.Set("subnet_ids", subnet_ids)
+	d.Set("vpc_id", group.VpcId)
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
+		return create.Error(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return create.SettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return create.SettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags_all", err)
 	}
 
 	return nil
@@ -177,7 +212,7 @@ func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Replication Subnet Group (%s) tags: %s", arn, err)
+			return create.Error(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
 		}
 	}
 
@@ -185,7 +220,7 @@ func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface
 
 	_, err := conn.ModifyReplicationSubnetGroup(request)
 	if err != nil {
-		return err
+		return create.Error(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
 	return resourceReplicationSubnetGroupRead(d, meta)
@@ -201,21 +236,10 @@ func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] DMS delete replication subnet group: %#v", request)
 
 	_, err := conn.DeleteReplicationSubnetGroup(request)
-	return err
-}
 
-func resourceReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
-	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
-
-	subnet_ids := []string{}
-	for _, subnet := range group.Subnets {
-		subnet_ids = append(subnet_ids, aws.StringValue(subnet.SubnetIdentifier))
+	if err != nil {
+		return create.Error(names.DMS, create.ErrActionDeleting, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
-
-	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
-	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
-	d.Set("subnet_ids", subnet_ids)
-	d.Set("vpc_id", group.VpcId)
 
 	return nil
 }

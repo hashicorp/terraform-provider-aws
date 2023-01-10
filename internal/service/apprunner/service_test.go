@@ -311,6 +311,7 @@ func TestAccAppRunnerService_ImageRepository_networkConfiguration(t *testing.T) 
 
 func TestAccAppRunnerService_ImageRepository_observabilityConfiguration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_service.test"
 	observabilityConfigurationResourceName := "aws_apprunner_observability_configuration.test"
 
@@ -333,6 +334,14 @@ func TestAccAppRunnerService_ImageRepository_observabilityConfiguration(t *testi
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServiceConfig_ImageRepository_observabilityConfiguration_disabled(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration.0.observability_enabled", "false"),
+				),
 			},
 		},
 	})
@@ -731,6 +740,34 @@ resource "aws_apprunner_observability_configuration" "test" {
 
   trace_configuration {
     vendor = "AWSXRAY"
+  }
+}
+`, rName)
+}
+
+func testAccServiceConfig_ImageRepository_observabilityConfiguration_disabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  health_check_configuration {
+    healthy_threshold = 2
+    timeout           = 5
+  }
+
+  observability_configuration {
+    observability_enabled = false
+  }
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
   }
 }
 `, rName)
