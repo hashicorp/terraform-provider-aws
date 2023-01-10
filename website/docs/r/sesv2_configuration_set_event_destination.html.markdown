@@ -50,8 +50,9 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
   event_destination_name = "example"
 
   event_destination {
-    pinpoint_destination {
-      application_arn = aws_pinpoint_app.example.arn
+    kinesis_firehose_destination {
+      delivery_stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
+      iam_role_arn        = aws_iam_role.example.arn
     }
 
     enabled              = true
@@ -72,9 +73,8 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
   event_destination_name = "example"
 
   event_destination {
-    kinesis_firehose_destination {
-      delivery_stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
-      iam_role_arn        = aws_iam_role.example.arn
+    pinpoint_destination {
+      application_arn = aws_pinpoint_app.example.arn
     }
 
     enabled              = true
