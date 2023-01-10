@@ -51,7 +51,7 @@ func ResourceVPCConnector() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_connector_name": {
 				Type:         schema.TypeString,
