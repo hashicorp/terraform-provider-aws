@@ -130,7 +130,7 @@ func resourceBucketIntelligentTieringConfigurationRead(d *schema.ResourceData, m
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
 	}
 
 	output, err := FindBucketIntelligentTieringConfiguration(conn, bucketName, configurationName)
@@ -142,7 +142,7 @@ func resourceBucketIntelligentTieringConfigurationRead(d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("bucket", bucketName)
@@ -168,7 +168,7 @@ func resourceBucketIntelligentTieringConfigurationDelete(d *schema.ResourceData,
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Intelligent-Tiering Configuration: (%s)", d.Id())
@@ -182,7 +182,7 @@ func resourceBucketIntelligentTieringConfigurationDelete(d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting S3 Intelligent-Tiering Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
