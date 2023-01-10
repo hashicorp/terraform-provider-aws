@@ -39,11 +39,12 @@ func ResourceVaultLock() *schema.Resource {
 				Default:  false,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ForceNew:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
