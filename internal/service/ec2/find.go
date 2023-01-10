@@ -2194,6 +2194,28 @@ func FindSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.EC2,
 	return FindSecurityGroupRules(ctx, conn, input)
 }
 
+func FindSpotDatafeedSubscription(conn *ec2.EC2) (*ec2.SpotDatafeedSubscription, error) {
+	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
+	output, err := conn.DescribeSpotDatafeedSubscription(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SpotDatafeedSubscription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SpotDatafeedSubscription, nil
+}
+
 func FindSpotFleetInstances(conn *ec2.EC2, input *ec2.DescribeSpotFleetInstancesInput) ([]*ec2.ActiveInstance, error) {
 	var output []*ec2.ActiveInstance
 
