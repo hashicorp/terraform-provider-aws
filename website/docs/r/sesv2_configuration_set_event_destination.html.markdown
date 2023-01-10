@@ -162,6 +162,8 @@ The following arguments are required:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `id` - A pipe-delimited string combining `configuration_set_name` and `event_destination_name`.
 
 ## Import
