@@ -102,6 +102,9 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 		}
 	}
 
+	// TODO What about resources implemented using terraform-plugin-framework?
+	// TODO They are not registered with the primary provider server.
+
 	return output
 }
 
