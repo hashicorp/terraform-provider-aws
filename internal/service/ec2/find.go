@@ -3003,6 +3003,76 @@ func FindVPCEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
 	return output, nil
 }
 
+func FindVPCConnectionNotification(conn *ec2.EC2, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) (*ec2.ConnectionNotification, error) {
+	output, err := FindVPCConnectionNotifications(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindVPCConnectionNotifications(conn *ec2.EC2, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) ([]*ec2.ConnectionNotification, error) {
+	var output []*ec2.ConnectionNotification
+
+	err := conn.DescribeVpcEndpointConnectionNotificationsPages(input, func(page *ec2.DescribeVpcEndpointConnectionNotificationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ConnectionNotificationSet {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindVPCConnectionNotificationByID(conn *ec2.EC2, id string) (*ec2.ConnectionNotification, error) {
+	input := &ec2.DescribeVpcEndpointConnectionNotificationsInput{
+		ConnectionNotificationId: aws.String(id),
+	}
+
+	output, err := FindVPCConnectionNotification(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ConnectionNotificationId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindVPCEndpointServiceConfiguration(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) (*ec2.ServiceConfiguration, error) {
 	output, err := FindVPCEndpointServiceConfigurations(conn, input)
 
