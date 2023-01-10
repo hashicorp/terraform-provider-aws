@@ -1,13 +1,43 @@
 ## 4.50.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_redshiftdata_statement: Add `workgroup_name` argument ([#28751](https://github.com/hashicorp/terraform-provider-aws/issues/28751))
+* resource/aws_service_discovery_service: Add `type` argument ([#28778](https://github.com/hashicorp/terraform-provider-aws/issues/28778))
+
 BUG FIXES:
 
+* resource/aws_acmpca_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28788](https://github.com/hashicorp/terraform-provider-aws/issues/28788))
+* resource/aws_api_gateway_rest_api: Improve refresh to avoid unnecessary diffs in `policy` ([#28789](https://github.com/hashicorp/terraform-provider-aws/issues/28789))
+* resource/aws_api_gateway_rest_api_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28789](https://github.com/hashicorp/terraform-provider-aws/issues/28789))
+* resource/aws_apprunner_service: `observability_configuration_arn` is optional ([#28620](https://github.com/hashicorp/terraform-provider-aws/issues/28620))
+* resource/aws_apprunner_vpc_connector: Fix `default_tags` not handled correctly ([#28736](https://github.com/hashicorp/terraform-provider-aws/issues/28736))
 * resource/aws_appstream_stack: Fix panic on user_settings update ([#28766](https://github.com/hashicorp/terraform-provider-aws/issues/28766))
 * resource/aws_appstream_stack: Prevent unnecessary replacements on update ([#28766](https://github.com/hashicorp/terraform-provider-aws/issues/28766))
+* resource/aws_backup_vault_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28791](https://github.com/hashicorp/terraform-provider-aws/issues/28791))
+* resource/aws_cloudsearch_domain_service_access_policy: Improve refresh to avoid unnecessary diffs in `access_policy` ([#28792](https://github.com/hashicorp/terraform-provider-aws/issues/28792))
+* resource/aws_cloudwatch_event_bus_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28802](https://github.com/hashicorp/terraform-provider-aws/issues/28802))
+* resource/aws_codeartifact_domain_permissions_policy: Improve refresh to avoid unnecessary diffs in `policy_document` ([#28794](https://github.com/hashicorp/terraform-provider-aws/issues/28794))
+* resource/aws_codeartifact_repository_permissions_policy: Improve refresh to avoid unnecessary diffs in `policy_document` ([#28794](https://github.com/hashicorp/terraform-provider-aws/issues/28794))
+* resource/aws_codebuild_resource_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28796](https://github.com/hashicorp/terraform-provider-aws/issues/28796))
 * resource/aws_dms_replication_subnet_group: Fix error ("Provider produced inconsistent result") when an error is encountered during creation ([#28748](https://github.com/hashicorp/terraform-provider-aws/issues/28748))
 * resource/aws_dms_replication_task: Allow updates to `aws_dms_replication_task` even when `migration_type` and `table_mappings` have not changed ([#28047](https://github.com/hashicorp/terraform-provider-aws/issues/28047))
 * resource/aws_dms_replication_task: Fix error with `cdc_path` when used with `aws_dms_s3_endpoint` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
 * resource/aws_dms_s3_endpoint: Fix error with `cdc_path` when used with `aws_dms_replication_task` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
+* resource/aws_ecr_registry_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
+* resource/aws_ecr_repository_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
+* resource/aws_ecrpublic_repository_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
+* resource/aws_efs_file_system_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28800](https://github.com/hashicorp/terraform-provider-aws/issues/28800))
+* resource/aws_glacier_vault: Improve refresh to avoid unnecessary diffs in `access_policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
+* resource/aws_glacier_vault_lock: Improve refresh to avoid unnecessary diffs in `policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
+* resource/aws_glue_resource_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28807](https://github.com/hashicorp/terraform-provider-aws/issues/28807))
+* resource/aws_iam_group_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_role: Improve refresh to avoid unnecessary diffs in `assume_role_policy` and `inline_policy` `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_role_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_vpc_endpoint: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
+* resource/aws_vpc_endpoint_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
 
 ## 4.49.0 (January  5, 2023)
 

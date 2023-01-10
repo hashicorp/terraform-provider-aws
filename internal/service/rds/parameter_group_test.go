@@ -753,6 +753,8 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 }
 
 func TestDBParameterModifyChunk(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Name              string
 		ChunkSize         int

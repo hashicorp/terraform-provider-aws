@@ -376,6 +376,8 @@ resource "aws_organizations_organization" "test" {
 }
 
 func TestFlattenRoots(t *testing.T) {
+	t.Parallel()
+
 	roots := []*organizations.Root{
 		{
 			Name: aws.String("Root1"),

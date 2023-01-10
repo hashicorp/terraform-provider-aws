@@ -408,6 +408,8 @@ resource "aws_memorydb_parameter_group" "test" {
 
 // TestParameterChanges was copy-pasted from the ElastiCache implementation.
 func TestParameterChanges(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Name                string
 		Old                 *schema.Set

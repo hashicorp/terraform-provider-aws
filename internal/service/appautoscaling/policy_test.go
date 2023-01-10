@@ -18,6 +18,8 @@ import (
 )
 
 func TestValidatePolicyImportInput(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		input         string
 		errorExpected bool

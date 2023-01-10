@@ -51,7 +51,7 @@ func ResourceVPCConnector() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_connector_name": {
 				Type:         schema.TypeString,
@@ -137,7 +137,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("setting tags: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return diag.Errorf("setting tags_all: %s", err)
 	}
 

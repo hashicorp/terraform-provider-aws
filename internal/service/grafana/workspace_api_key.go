@@ -80,14 +80,14 @@ func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) err
 func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 
-	workspaceID, keyName, error := WorkspaceAPIKeyParseResourceID(d.Id())
+	workspaceID, keyName, err := WorkspaceAPIKeyParseResourceID(d.Id())
 
-	if error != nil {
-		return error
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace API Key: %s", d.Id())
-	_, err := conn.DeleteWorkspaceApiKey(&managedgrafana.DeleteWorkspaceApiKeyInput{
+	_, err = conn.DeleteWorkspaceApiKey(&managedgrafana.DeleteWorkspaceApiKeyInput{
 		KeyName:     aws.String(keyName),
 		WorkspaceId: aws.String(workspaceID),
 	})

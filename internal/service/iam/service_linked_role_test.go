@@ -16,6 +16,8 @@ import (
 )
 
 func TestDecodeServiceLinkedRoleID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input        string
 		ServiceName  string

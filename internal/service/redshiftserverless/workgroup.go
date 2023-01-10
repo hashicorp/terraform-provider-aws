@@ -116,14 +116,14 @@ func ResourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"publicly_accessible": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"namespace_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"publicly_accessible": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
@@ -227,14 +227,14 @@ func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	arn := aws.StringValue(out.WorkgroupArn)
 	d.Set("arn", arn)
-	d.Set("namespace_name", out.NamespaceName)
-	d.Set("workgroup_name", out.WorkgroupName)
-	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("base_capacity", out.BaseCapacity)
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
+	d.Set("namespace_name", out.NamespaceName)
 	d.Set("publicly_accessible", out.PubliclyAccessible)
 	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
 	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
+	d.Set("workgroup_id", out.WorkgroupId)
+	d.Set("workgroup_name", out.WorkgroupName)
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return fmt.Errorf("setting config_parameter: %w", err)
 	}

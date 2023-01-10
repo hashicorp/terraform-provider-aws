@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestExpandEndpoints(t *testing.T) {
+func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	oldEnv := stashEnv()
 	defer popEnv(oldEnv)
 
@@ -32,7 +32,7 @@ func TestExpandEndpoints(t *testing.T) {
 	}
 }
 
-func TestEndpointMultipleKeys(t *testing.T) {
+func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 	testcases := []struct {
 		endpoints        map[string]string
 		expectedService  string
@@ -89,7 +89,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 	}
 }
 
-func TestEndpointEnvVarPrecedence(t *testing.T) {
+func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 	testcases := []struct {
 		endpoints        map[string]string
 		envvars          map[string]string

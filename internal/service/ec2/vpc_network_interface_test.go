@@ -21,6 +21,8 @@ import (
 )
 
 func TestFlattenGroupIdentifiers(t *testing.T) {
+	t.Parallel()
+
 	expanded := []*ec2.GroupIdentifier{
 		{GroupId: aws.String("sg-001")},
 		{GroupId: aws.String("sg-002")},

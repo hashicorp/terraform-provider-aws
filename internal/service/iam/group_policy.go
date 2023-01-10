@@ -31,10 +31,11 @@ func ResourceGroupPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 			},
 			"name": {
 				Type:          schema.TypeString,

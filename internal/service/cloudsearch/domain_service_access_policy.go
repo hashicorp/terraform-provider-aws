@@ -34,10 +34,11 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json

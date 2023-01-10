@@ -566,6 +566,8 @@ resource "aws_elasticache_parameter_group" "test" {
 }
 
 func TestFlattenParameters(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input  []*elasticache.Parameter
 		Output []map[string]interface{}
@@ -595,6 +597,8 @@ func TestFlattenParameters(t *testing.T) {
 }
 
 func TestExpandParameters(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":         "activerehashing",
@@ -618,6 +622,8 @@ func TestExpandParameters(t *testing.T) {
 }
 
 func TestParameterChanges(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Name                string
 		Old                 *schema.Set
