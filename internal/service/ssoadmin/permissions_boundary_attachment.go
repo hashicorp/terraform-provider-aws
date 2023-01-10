@@ -113,7 +113,7 @@ func resourcePermissionsBoundaryAttachmentCreate(d *schema.ResourceData, meta in
 
 	// After the policy has been attached to the permission set, provision in all accounts that use this permission set.
 	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", permissionSetARN, err)
 	}
 
 	return resourcePermissionsBoundaryAttachmentRead(d, meta)
@@ -125,7 +125,7 @@ func resourcePermissionsBoundaryAttachmentRead(d *schema.ResourceData, meta inte
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SSO Permissions Boundary Attachment (%s): %w", d.Id(), err)
 	}
 
 	policy, err := FindPermissionsBoundary(conn, permissionSetARN, instanceARN)
@@ -155,7 +155,7 @@ func resourcePermissionsBoundaryAttachmentDelete(d *schema.ResourceData, meta in
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting SSO Permissions Boundary Attachment (%s): %w", d.Id(), err)
 	}
 
 	input := &ssoadmin.DeletePermissionsBoundaryFromPermissionSetInput{
@@ -178,7 +178,7 @@ func resourcePermissionsBoundaryAttachmentDelete(d *schema.ResourceData, meta in
 
 	// After the policy has been detached from the permission set, provision in all accounts that use this permission set.
 	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", permissionSetARN, err)
 	}
 
 	return nil
