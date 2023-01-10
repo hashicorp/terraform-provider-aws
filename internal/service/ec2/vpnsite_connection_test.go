@@ -38,6 +38,8 @@ type TunnelOptions struct {
 }
 
 func TestXmlConfigToTunnelInfo(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name                  string
 		XML                   string
@@ -127,8 +129,9 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 
 	for _, testCase := range testCases {
 		testCase := testCase
-
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			tunnelInfo, err := tfec2.CustomerGatewayConfigurationToTunnelInfo(testCase.XML, testCase.Tunnel1PreSharedKey, testCase.Tunnel1InsideCidr, testCase.Tunnel1InsideIpv6Cidr)
 
 			if err == nil && testCase.ExpectError {

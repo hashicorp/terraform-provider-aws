@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidIdentifier(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"a",
 		"hello-world",

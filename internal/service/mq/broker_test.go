@@ -20,6 +20,8 @@ import (
 )
 
 func TestValidateBrokerName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"ValidName",
 		"V_-dN01e",
@@ -51,6 +53,8 @@ func TestValidateBrokerName(t *testing.T) {
 }
 
 func TestBrokerPasswordValidation(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -99,6 +103,8 @@ func TestBrokerPasswordValidation(t *testing.T) {
 }
 
 func TestDiffUsers(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		OldUsers []interface{}
 		NewUsers []interface{}

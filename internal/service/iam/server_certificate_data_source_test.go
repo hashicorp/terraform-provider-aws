@@ -16,6 +16,8 @@ import (
 )
 
 func TestResourceSortByExpirationDate(t *testing.T) {
+	t.Parallel()
+
 	certs := []*iam.ServerCertificateMetadata{
 		{
 			ServerCertificateName: aws.String("oldest"),

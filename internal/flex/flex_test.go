@@ -8,6 +8,8 @@ import (
 )
 
 func TestExpandStringList(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{"us-east-1a", "us-east-1b"} //lintignore:AWSAT003
 	stringList := ExpandStringList(expanded)
 	expected := []*string{
@@ -24,6 +26,8 @@ func TestExpandStringList(t *testing.T) {
 }
 
 func TestExpandStringListEmptyItems(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{"foo", "bar", "", "baz"}
 	stringList := ExpandStringList(expanded)
 	expected := []*string{

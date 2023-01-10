@@ -18,6 +18,8 @@ import (
 )
 
 func TestTimePeriodSecondsFromString(t *testing.T) {
+	t.Parallel()
+
 	seconds, err := tfbudgets.TimePeriodSecondsFromString("2020-03-01_00:00")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
@@ -30,6 +32,8 @@ func TestTimePeriodSecondsFromString(t *testing.T) {
 }
 
 func TestTimePeriodSecondsToString(t *testing.T) {
+	t.Parallel()
+
 	ts, err := tfbudgets.TimePeriodSecondsToString("1583020800")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)

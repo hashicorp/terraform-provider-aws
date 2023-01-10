@@ -18,6 +18,8 @@ import (
 )
 
 func TestLBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name   string
 		arn    *string
@@ -49,6 +51,8 @@ func TestLBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
 }
 
 func TestALBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name   string
 		arn    *string

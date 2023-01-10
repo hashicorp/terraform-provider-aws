@@ -43,6 +43,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestFetchRootDevice(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		label  string
 		images []*ec2.Image
@@ -86,10 +88,12 @@ func TestFetchRootDevice(t *testing.T) {
 		t.Errorf("Error new session: %s", err)
 	}
 
-	conn := ec2.New(sess)
-
 	for _, tc := range cases {
+		tc := tc
 		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
+			t.Parallel()
+
+			conn := ec2.New(sess)
 			conn.Handlers.Clear()
 			conn.Handlers.Send.PushBack(func(r *request.Request) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
@@ -104,6 +108,8 @@ func TestFetchRootDevice(t *testing.T) {
 }
 
 func TestParseInstanceType(t *testing.T) {
+	t.Parallel()
+
 	invalidInstanceTypes := []string{
 		"",
 		"abc",
@@ -4820,6 +4826,8 @@ func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 }
 
 func TestInstanceHostIDSchema(t *testing.T) {
+	t.Parallel()
+
 	actualSchema := tfec2.ResourceInstance().Schema["host_id"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeString,
@@ -4836,6 +4844,8 @@ func TestInstanceHostIDSchema(t *testing.T) {
 }
 
 func TestInstanceCPUCoreCountSchema(t *testing.T) {
+	t.Parallel()
+
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
@@ -4852,6 +4862,8 @@ func TestInstanceCPUCoreCountSchema(t *testing.T) {
 }
 
 func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
+	t.Parallel()
+
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,

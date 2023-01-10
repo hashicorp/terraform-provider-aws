@@ -7,6 +7,8 @@ import (
 )
 
 func TestLooksLikeJSONString(t *testing.T) {
+	t.Parallel()
+
 	looksLikeJSON := ` {"abc":"1"} `
 	doesNotLookLikeJSON := `abc: 1`
 
@@ -19,6 +21,8 @@ func TestLooksLikeJSONString(t *testing.T) {
 }
 
 func TestJSONBytesEqualQuotedAndUnquoted(t *testing.T) {
+	t.Parallel()
+
 	unquoted := `{"test": "test"}`
 	quoted := "{\"test\": \"test\"}"
 
@@ -35,6 +39,8 @@ func TestJSONBytesEqualQuotedAndUnquoted(t *testing.T) {
 }
 
 func TestJSONBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
+	t.Parallel()
+
 	noWhitespace := `{"test":"test"}`
 	whitespace := `
 {
@@ -57,6 +63,8 @@ func TestJSONBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
 }
 
 func TestSecondJSONUnlessEquivalent(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name      string
 		oldPolicy string
@@ -359,6 +367,8 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
 }
 
 func TestNormalizeJSONOrYAMLString(t *testing.T) {
+	t.Parallel()
+
 	var err error
 	var actual string
 
@@ -383,6 +393,8 @@ func TestNormalizeJSONOrYAMLString(t *testing.T) {
 }
 
 func TestSuppressEquivalentJSONDiffsWhitespaceAndNoWhitespace(t *testing.T) {
+	t.Parallel()
+
 	d := new(schema.ResourceData)
 
 	noWhitespace := `{"test":"test"}`
@@ -407,6 +419,8 @@ func TestSuppressEquivalentJSONDiffsWhitespaceAndNoWhitespace(t *testing.T) {
 }
 
 func TestSuppressEquivalentJSONOrYAMLDiffs(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		description string
 		equivalent  bool

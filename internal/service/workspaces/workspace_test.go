@@ -619,6 +619,8 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func TestExpandWorkspaceProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.WorkspaceProperties
@@ -658,6 +660,8 @@ func TestExpandWorkspaceProperties(t *testing.T) {
 }
 
 func TestFlattenWorkspaceProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    *workspaces.WorkspaceProperties
 		expected []map[string]interface{}

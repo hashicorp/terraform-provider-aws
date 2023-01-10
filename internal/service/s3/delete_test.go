@@ -16,6 +16,8 @@ var bucket = flag.String("b", "", "bucket")
 var force = flag.Bool("f", false, "force")
 
 func TestEmptyBucket(t *testing.T) {
+	t.Parallel()
+
 	if *bucket == "" {
 		t.Skip("bucket not specified")
 	}
@@ -34,6 +36,8 @@ func TestEmptyBucket(t *testing.T) {
 }
 
 func TestDeleteAllObjectVersions(t *testing.T) {
+	t.Parallel()
+
 	if *bucket == "" {
 		t.Skip("bucket not specified")
 	}
