@@ -56,7 +56,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 			"action_plan_title": schema.StringAttribute{
 				Optional: true,
 			},
-			"arn": framework.ARNAttribute(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
 			},

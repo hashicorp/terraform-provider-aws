@@ -25,10 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var (
-	flagDiffUserSettings = false
-)
-
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -91,15 +87,11 @@ func ResourceStack() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 			"embed_host_domains": {
@@ -184,7 +176,7 @@ func ResourceStack() *schema.Resource {
 				},
 				Set: userSettingsHash,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
@@ -406,7 +398,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("user_settings") {
-		input.UserSettings = expandUserSettings(d.Get("user_settings").([]interface{}))
+		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
 	resp, err := conn.UpdateStack(input)
@@ -711,6 +703,7 @@ func flattenUserSettings(apiObjects []*appstream.UserSetting) []map[string]inter
 }
 
 func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceData) bool {
+	flagDiffUserSettings := false
 	count := len(d.Get("user_settings").(*schema.Set).List())
 	defaultCount := len(appstream.Action_Values())
 
