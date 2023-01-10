@@ -124,8 +124,7 @@ func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tf
 	return factories
 }
 
-func factoriesInit(t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
-	ctx := context.Background()
+func factoriesInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -153,7 +152,7 @@ func factoriesInit(t *testing.T, providers *[]*schema.Provider, providerNames []
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
 func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(t, providers, []string{
+	return factoriesInit(context.Background(), t, providers, []string{
 		ProviderName,
 		ProviderNameAlternate,
 	})
