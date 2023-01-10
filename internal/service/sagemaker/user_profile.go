@@ -400,13 +400,13 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	userProfileArn := aws.StringValue(output.UserProfileArn)
 	domainID, userProfileName, err := decodeUserProfileName(userProfileArn)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating SageMaker User Profile: %w", err)
 	}
 
 	d.SetId(userProfileArn)
 
 	if _, err := WaitUserProfileInService(conn, domainID, userProfileName); err != nil {
-		return fmt.Errorf("waiting for SageMaker User Profile (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("creating SageMaker User Profile (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceUserProfileRead(d, meta)
@@ -419,7 +419,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 
 	domainID, userProfileName, err := decodeUserProfileName(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
 	userProfile, err := FindUserProfileByName(conn, domainID, userProfileName)

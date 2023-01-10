@@ -236,7 +236,7 @@ func resourceSpaceRead(d *schema.ResourceData, meta interface{}) error {
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SageMaker Space (%s): %w", d.Id(), err)
 	}
 
 	Space, err := FindSpaceByName(conn, domainID, name)

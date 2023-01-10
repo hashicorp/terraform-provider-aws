@@ -88,7 +88,7 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 
 	policyToSet, err := verify.PolicyToSet(d.Get("resource_policy").(string), aws.StringValue(mpg.ResourcePolicy))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("resource_policy", policyToSet)
