@@ -49,7 +49,7 @@ func (r *resourceFramework) Metadata(_ context.Context, request resource.Metadat
 func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttribute(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Optional: true,
 			},
