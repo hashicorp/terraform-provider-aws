@@ -75,7 +75,9 @@ func Skip(t *testing.T, message string) {
 //
 // Use other ProviderFactories functions, such as FactoriesAlternate,
 // for tests requiring special provider configurations.
-var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+var (
+	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error) = protoV5ProviderFactoriesInit(context.Background(), ProviderName)
+)
 
 // Provider is the "main" provider instance
 //
@@ -100,18 +102,14 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
-	// Always allocate a new provider instance each invocation, otherwise gRPC
-	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProtoV5ProviderFactories = protoV5ProviderFactoriesInit(ProviderName)
 }
 
-func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
 		factories[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, _, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 			if err != nil {
 				return nil, err
@@ -159,7 +157,7 @@ func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]
 }
 
 func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
-	return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+	return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate)
 }
 
 // ProtoV5FactoriesAlternateAccountAndAlternateRegion creates ProtoV5ProviderFactories for cross-account and cross-region configurations
@@ -168,6 +166,7 @@ func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.Provid
 // and ConfigAlternateAccountAndAlternateRegionProvider.
 func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	return protoV5ProviderFactoriesInit(
+		context.Background(),
 		ProviderName,
 		ProviderNameAlternateAccountAlternateRegion,
 		ProviderNameAlternateAccountSameRegion,
@@ -181,9 +180,9 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string
 func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
 	switch n {
 	case 2:
-		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate)
 	case 3:
-		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate, ProviderNameThird)
+		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate, ProviderNameThird)
 	default:
 		t.Fatalf("invalid number of Region configurations: %d", n)
 	}
