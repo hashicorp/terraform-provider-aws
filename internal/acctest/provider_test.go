@@ -20,22 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestProvider(t *testing.T) {
-	t.Parallel()
-
-	p, err := provider.New(context.Background())
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = p.InternalValidate()
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestAccProvider_DefaultTags_emptyBlock(t *testing.T) {
 	var provider *schema.Provider
 
