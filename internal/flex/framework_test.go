@@ -19,6 +19,14 @@ func TestExpandFrameworkStringSet(t *testing.T) {
 		expected []*string
 	}
 	tests := map[string]testCase{
+		"null": {
+			input:    types.SetNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.SetUnknown(types.StringType),
+			expected: nil,
+		},
 		"two elements": {
 			input: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
@@ -60,6 +68,14 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 		expected []string
 	}
 	tests := map[string]testCase{
+		"null": {
+			input:    types.SetNull(types.StringType),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.SetUnknown(types.StringType),
+			expected: nil,
+		},
 		"two elements": {
 			input: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
