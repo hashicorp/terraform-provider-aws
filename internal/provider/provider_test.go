@@ -1,12 +1,29 @@
 package provider
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestProvider(t *testing.T) {
+	t.Parallel()
+
+	p, err := New(context.Background())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = p.InternalValidate()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	oldEnv := stashEnv()
