@@ -436,9 +436,9 @@ resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 
   vdm_options {
-	dashboard_options {
-	  engagement_metrics = %[2]q
-	}
+    dashboard_options {
+      engagement_metrics = %[2]q
+    }
   }
 }
 `, rName, engagementMetrics)
@@ -450,9 +450,9 @@ resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 
   vdm_options {
-	guardian_options {
-	  optimized_shared_delivery = %[2]q
-	}
+    guardian_options {
+      optimized_shared_delivery = %[2]q
+    }
   }
 }
 `, rName, optimizedSharedDelivery)
