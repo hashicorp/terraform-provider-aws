@@ -88,7 +88,7 @@ func resourceResourceShareAccepterCreate(d *schema.ResourceData, meta interface{
 	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating RAM Resource Share Accepter: %w", err)
 	}
 
 	if invitation == nil || aws.StringValue(invitation.ResourceShareInvitationArn) == "" {
