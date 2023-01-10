@@ -143,7 +143,7 @@ func resourceSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Snapshot Copy Grant (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Snapshot Copy Grant (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -166,13 +166,14 @@ func resourceSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) e
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Snapshot Copy Grant (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Checking if grant is deleted: %s", grantName)
-	err = WaitForSnapshotCopyGrantToBeDeleted(conn, grantName)
+	if err := WaitForSnapshotCopyGrantToBeDeleted(conn, grantName); err != nil {
+		return fmt.Errorf("deleting Redshift Snapshot Copy Grant (%s): waiting for completion: %s", d.Id(), err)
+	}
 
-	return err
+	return nil
 }
 
 // Used by the tests as well
