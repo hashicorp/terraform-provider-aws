@@ -273,7 +273,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("describing OpsWorks Application (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading OpsWorks Application (%s): %w", d.Id(), err)
 	}
 
 	app := resp.Apps[0]
@@ -287,11 +287,11 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_ssl", app.EnableSsl)
 	err = resourceSetApplicationSSL(d, app.SslConfiguration)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading OpsWorks Application (%s): setting ssl_configuration: %w", d.Id(), err)
 	}
 	err = resourceSetApplicationSource(d, app.AppSource)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading OpsWorks Application (%s): setting app_source: %w", d.Id(), err)
 	}
 	resourceSetApplicationsDataSource(d, app.DataSources)
 	resourceSetApplicationEnvironmentVariable(d, app.Environment)
@@ -305,7 +305,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating OpsWorks Application: %s", err)
 	}
 
 	req := &opsworks.CreateAppInput{
@@ -325,7 +325,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.CreateApp(req)
 	if err != nil {
-		return fmt.Errorf("Error creating OpsWorks application: %s", err)
+		return fmt.Errorf("creating OpsWorks Application: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.AppId))
@@ -338,7 +338,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating OpsWorks Application (%s): %s", d.Id(), err)
 	}
 
 	req := &opsworks.UpdateAppInput{
@@ -355,11 +355,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		Attributes:       resourceApplicationAttributes(d),
 	}
 
-	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
+	log.Printf("[DEBUG] Updating OpsWorks Application: %s", d.Id())
 
 	_, err = conn.UpdateApp(req)
 	if err != nil {
-		return fmt.Errorf("Error updating OpsWorks app: %s", err)
+		return fmt.Errorf("updating OpsWorks Application (%s): %s", d.Id(), err)
 	}
 
 	return resourceApplicationRead(d, meta)
@@ -377,11 +377,10 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteApp(req)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		log.Printf("[DEBUG] OpsWorks Application (%s) not found to delete; removed from state", d.Id())
 		return nil
 	}
 
-	return err
+	return fmt.Errorf("deleting OpsWorks Application (%s): %s", d.Id(), err)
 }
 
 func resourceFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVariable) *opsworks.EnvironmentVariable {
