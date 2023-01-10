@@ -46,6 +46,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "DNS_HTTP"),
 				),
 			},
 			{
@@ -71,6 +72,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "DNS_HTTP"),
 				),
 			},
 		},
@@ -145,7 +147,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryService_private_http(t *testing.T) {
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -175,7 +177,7 @@ func TestAccServiceDiscoveryService_private_http(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryService_http(t *testing.T) {
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,7 +206,7 @@ func TestAccServiceDiscoveryService_http(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryService_disappears(t *testing.T) {
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -226,7 +228,7 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryService_tags(t *testing.T) {
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
