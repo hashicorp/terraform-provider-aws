@@ -259,7 +259,7 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 	}
 }
 
-func TestFlattenFrameworkStringList(t *testing.T) {
+func TestFlattenFrameworkStringListLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -289,7 +289,7 @@ func TestFlattenFrameworkStringList(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := FlattenFrameworkStringList(context.Background(), test.input)
+			got := FlattenFrameworkStringListLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -298,7 +298,7 @@ func TestFlattenFrameworkStringList(t *testing.T) {
 	}
 }
 
-func TestFlattenFrameworkStringValueList(t *testing.T) {
+func TestFlattenFrameworkStringValueListLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -328,7 +328,7 @@ func TestFlattenFrameworkStringValueList(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := FlattenFrameworkStringValueList(context.Background(), test.input)
+			got := FlattenFrameworkStringValueListLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -337,7 +337,7 @@ func TestFlattenFrameworkStringValueList(t *testing.T) {
 	}
 }
 
-func TestFlattenFrameworkStringValueSet(t *testing.T) {
+func TestFlattenFrameworkStringValueSetLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -367,7 +367,7 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := FlattenFrameworkStringValueSet(context.Background(), test.input)
+			got := FlattenFrameworkStringValueSetLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
@@ -376,7 +376,7 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	}
 }
 
-func TestFlattenFrameworkStringValueMap(t *testing.T) {
+func TestFlattenFrameworkStringValueMapLegacy(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -409,7 +409,7 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := FlattenFrameworkStringValueMap(context.Background(), test.input)
+			got := FlattenFrameworkStringValueMapLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

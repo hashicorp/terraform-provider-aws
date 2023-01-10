@@ -89,7 +89,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	data.ID = types.StringValue(d.Meta().Partition)
-	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
+	data.Names = flex.FlattenFrameworkStringValueSetLegacy(ctx, names)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
