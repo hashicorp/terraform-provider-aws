@@ -162,12 +162,12 @@ The following arguments are required:
 
 ## Attributes Reference
 
-No additional attributes are exported.
+* `id` - A pipe-delimited string combining `configuration_set_name` and `event_destination_name`.
 
 ## Import
 
-SESv2 (Simple Email V2) Configuration Set Event Destination can be imported using the `configuration_set_name|event_destination_name`, e.g.,
+SESv2 (Simple Email V2) Configuration Set Event Destination can be imported using the `id` (`configuration_set_name|event_destination_name`), e.g.,
 
 ```
-$ terraform import aws_sesv2_configuration_set_event_destination.example configuration_set_name|event_destination_name
+$ terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
 ```
