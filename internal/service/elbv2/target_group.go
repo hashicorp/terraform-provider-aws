@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -21,6 +22,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )
 
 func ResourceTargetGroup() *schema.Resource {
@@ -870,6 +875,9 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+	const (
+		targetGroupDeleteTimeout = 2 * time.Minute
+	)
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	input := &elbv2.DeleteTargetGroupInput{
