@@ -82,8 +82,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.0 h1:YV0wCFyqoWv5
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.0/go.mod h1:rO7YPEn0bTBM/4SvjspJSZz/EgOawgUnNqZlvN4dXNw=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.1.0 h1:R5uogA6B13eaTgXcqVEh4+uzuKH+GBhUBdY9qjfHjGI=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.1.0/go.mod h1:IoNBKgOeaqkD/L5DEXSLvc1yG8vV1RSMrbiaGYYpNgg=
-github.com/aws/aws-sdk-go-v2/service/rds v1.39.0 h1:SnusHwHQWMZxlS5gvRfzsg1Odq7gWl3STP4aUIqzRGE=
-github.com/aws/aws-sdk-go-v2/service/rds v1.39.0/go.mod h1:Ume9NHqT871hUdxIRojWtWsPFyCswQmSjHHhyGot7v0=
+github.com/aws/aws-sdk-go-v2/service/rds v1.40.0 h1:heJr38jKwCDwSKTVcy5LQ8sWecMoEHTTugJ0PAKERBA=
+github.com/aws/aws-sdk-go-v2/service/rds v1.40.0/go.mod h1:Ume9NHqT871hUdxIRojWtWsPFyCswQmSjHHhyGot7v0=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.0 h1:hUfHW8E+i8YMsgCRYL7g9+8HMIky2a93UwmX2RdvYW4=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.0/go.mod h1:lUeyleY1tUUKDjP6TwzgNp4sXV9EVtfdNMeJX/1eh94=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.0 h1:ecjuaA9b39mhLGohBk03bYMi+RLZGOC96h0UdpCxsGw=
