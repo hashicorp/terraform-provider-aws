@@ -213,7 +213,10 @@ func resourceBuildDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
 		BuildId: aws.String(d.Id()),
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("deleting GameLift Build Client (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func expandStorageLocation(cfg []interface{}) *gamelift.S3Location {
