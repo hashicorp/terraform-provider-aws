@@ -35,4 +35,3 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arns` - Set of Load Balancer ARNs.
-
