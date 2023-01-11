@@ -1,11 +1,12 @@
 package lightsail
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -43,13 +44,12 @@ func resourceStaticIPCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Allocating Lightsail Static IP: %q", name)
-	out, err := conn.AllocateStaticIp(&lightsail.AllocateStaticIpInput{
+	_, err := conn.AllocateStaticIp(&lightsail.AllocateStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Lightsail Static IP: %w", err)
 	}
-	log.Printf("[INFO] Lightsail Static IP allocated: %s", *out)
 
 	d.SetId(name)
 
@@ -65,16 +65,13 @@ func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail Static IP (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			log.Printf("[WARN] Lightsail Static IP (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lightsail Static IP (%s):%w", d.Id(), err)
 	}
-	log.Printf("[INFO] Received Lightsail Static IP: %s", *out)
 
 	d.Set("arn", out.StaticIp.Arn)
 	d.Set("ip_address", out.StaticIp.IpAddress)
@@ -88,12 +85,11 @@ func resourceStaticIPDelete(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Lightsail Static IP: %q", name)
-	out, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
+	_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lightsail Static IP (%s):%w", d.Id(), err)
 	}
-	log.Printf("[INFO] Deleted Lightsail Static IP: %s", *out)
 	return nil
 }
