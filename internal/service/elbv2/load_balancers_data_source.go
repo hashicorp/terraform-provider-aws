@@ -23,7 +23,7 @@ func DataSourceLoadBalancers() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchema(),
 		},
 	}
 }
