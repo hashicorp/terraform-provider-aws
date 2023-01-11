@@ -1069,7 +1069,7 @@ To convert to serialized (one test at a time) acceptance testing:
 
 ```go
 func TestAccExampleThing_serial(t *testing.T) {
-  t.Parallel()
+	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Thing": {
