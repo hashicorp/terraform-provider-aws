@@ -122,7 +122,7 @@ func testAccCheckTransitGatewayMulticastGroupMemberExists(n string, v *ec2.Trans
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTransitGatewayMulticastGroupMemberByThreePartKey(conn, multicastDomainID, groupIPAddress, eniID)
 
@@ -137,7 +137,7 @@ func testAccCheckTransitGatewayMulticastGroupMemberExists(n string, v *ec2.Trans
 }
 
 func testAccCheckTransitGatewayMulticastGroupMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_multicast_group_member" {

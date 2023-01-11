@@ -42,7 +42,7 @@ func ResourceResource() *schema.Resource {
 }
 
 func resourceResourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.RegisterResourceInput{
@@ -68,7 +68,7 @@ func resourceResourceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DescribeResourceInput{
@@ -101,7 +101,7 @@ func resourceResourceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DeregisterResourceInput{

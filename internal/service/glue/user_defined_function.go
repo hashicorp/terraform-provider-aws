@@ -89,7 +89,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 }
 
 func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	funcName := d.Get("name").(string)
@@ -111,7 +111,7 @@ func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
@@ -133,7 +133,7 @@ func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
@@ -148,7 +148,6 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 	out, err := conn.GetUserDefinedFunction(input)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue User Defined Function (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -186,7 +185,7 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
 		return err
@@ -213,7 +212,6 @@ func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err
 }
 
 func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
-
 	udf := &glue.UserDefinedFunctionInput{
 		ClassName:    aws.String(d.Get("class_name").(string)),
 		FunctionName: aws.String(d.Get("name").(string)),

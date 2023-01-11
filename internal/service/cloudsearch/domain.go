@@ -170,7 +170,7 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	name := d.Get("name").(string)
 	input := cloudsearch.CreateDomainInput{
@@ -257,7 +257,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	domainStatus, err := FindDomainStatusByName(conn, d.Id())
 
@@ -332,7 +332,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 	requiresIndexDocuments := false
 
 	if d.HasChange("scaling_parameters") {
@@ -462,7 +462,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
 	_, err := conn.DeleteDomain(&cloudsearch.DeleteDomainInput{

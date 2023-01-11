@@ -179,7 +179,7 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 		policy, err := tfnetworkfirewall.FindResourcePolicy(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -206,7 +206,7 @@ func testAccCheckResourcePolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No NetworkFirewall Resource Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
 		policy, err := tfnetworkfirewall.FindResourcePolicy(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -217,7 +217,6 @@ func testAccCheckResourcePolicyExists(n string) resource.TestCheckFunc {
 		}
 
 		return nil
-
 	}
 }
 

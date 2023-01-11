@@ -2440,6 +2440,8 @@ func TestAccCodeBuildProject_SecondarySources_codeCommit(t *testing.T) {
 }
 
 func TestProject_nameValidation(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -2562,7 +2564,7 @@ func testAccCheckProjectExists(n string, project *codebuild.Project) resource.Te
 			return fmt.Errorf("No CodeBuild Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 		output, err := tfcodebuild.FindProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
@@ -2580,7 +2582,7 @@ func testAccCheckProjectExists(n string, project *codebuild.Project) resource.Te
 }
 
 func testAccCheckProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_project" {
@@ -2613,7 +2615,7 @@ func testAccCheckProjectCertificate(project *codebuild.Project, expectedCertific
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 	_, err := tfcodebuild.FindProjectByARN(conn, "tf-acc-test-precheck")
 

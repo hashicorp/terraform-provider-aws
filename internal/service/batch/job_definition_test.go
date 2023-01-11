@@ -380,7 +380,7 @@ func testAccCheckJobDefinitionExists(n string, jd *batch.JobDefinition) resource
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 
 		jobDefinition, err := tfbatch.FindJobDefinitionByARN(conn, rs.Primary.ID)
 
@@ -432,7 +432,7 @@ func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDe
 }
 
 func testAccCheckJobDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_job_definition" {

@@ -66,7 +66,7 @@ var resourceUserGroupPendingStates = []string{
 }
 
 func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -131,7 +131,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -159,7 +159,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	// tags not supported in all partitions
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache User Group (%s): %s", aws.StringValue(resp.ARN), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache User Group (%s): %s", aws.StringValue(resp.ARN), err)
 	}
 
 	if tags != nil {
@@ -179,7 +179,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	hasChange := false
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -243,7 +243,7 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	input := &elasticache.DeleteUserGroupInput{
 		UserGroupId: aws.String(d.Id()),

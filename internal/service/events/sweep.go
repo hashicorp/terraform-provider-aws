@@ -72,7 +72,7 @@ func sweepAPIDestination(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn
+	conn := client.(*conns.AWSClient).EventsConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -122,7 +122,7 @@ func sweepArchives(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn
+	conn := client.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.ListArchivesInput{}
 
@@ -172,7 +172,7 @@ func sweepBuses(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn
+	conn := client.(*conns.AWSClient).EventsConn()
 	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -219,7 +219,7 @@ func sweepConnection(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn
+	conn := client.(*conns.AWSClient).EventsConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -266,7 +266,7 @@ func sweepPermissions(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn
+	conn := client.(*conns.AWSClient).EventsConn()
 
 	output, err := conn.DescribeEventBus(&eventbridge.DescribeEventBusInput{})
 	if err != nil {
@@ -310,7 +310,7 @@ func sweepRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn
+	conn := client.(*conns.AWSClient).EventsConn()
 	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -379,7 +379,7 @@ func sweepTargets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn
+	conn := client.(*conns.AWSClient).EventsConn()
 	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 

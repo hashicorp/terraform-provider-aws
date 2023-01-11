@@ -516,7 +516,7 @@ func testAccCheckDataRepositoryAssociationExists(resourceName string, assoc *fsx
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 		association, err := tffsx.FindDataRepositoryAssociationByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -534,7 +534,7 @@ func testAccCheckDataRepositoryAssociationExists(resourceName string, assoc *fsx
 }
 
 func testAccCheckDataRepositoryAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_lustre_file_system" {

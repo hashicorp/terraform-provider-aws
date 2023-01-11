@@ -166,7 +166,6 @@ func ExpandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 		}
 
 		attributes = append(attributes, a)
-
 	}
 
 	return attributes

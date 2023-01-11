@@ -21,7 +21,7 @@ type queueAttributeHandler struct {
 }
 
 func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
 	attrValue, err := structure.NormalizeJsonString(d.Get(h.SchemaKey).(string))
 
@@ -55,7 +55,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 }
 
 func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
 	outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
 		return FindQueueAttributeByURL(ctx, conn, d.Id(), h.AttributeName)
@@ -84,7 +84,7 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 }
 
 func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 
 	log.Printf("[DEBUG] Deleting SQS Queue (%s) attribute: %s", d.Id(), h.AttributeName)
 	attributes := map[string]string{

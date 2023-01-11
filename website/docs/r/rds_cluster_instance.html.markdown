@@ -116,13 +116,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `90m`)
-restoring from Snapshots
 - `update` - (Default `90m`)
 - `delete` - (Default `90m`)
-the time required to take snapshots
 
 ## Import
 

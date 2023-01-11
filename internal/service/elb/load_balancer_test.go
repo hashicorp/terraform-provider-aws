@@ -324,8 +324,8 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 
 func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := fmt.Sprintf("tf-acctest-%s", sdkacctest.RandString(10))
 	resourceName := "aws_elb.test"
 
@@ -501,7 +501,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener removal
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 					input := &elb.DeleteLoadBalancerListenersInput{
 						LoadBalancerName:  conf.LoadBalancerName,
 						LoadBalancerPorts: []*int64{aws.Int64(80)},
@@ -525,7 +525,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener addition
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 					input := &elb.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
@@ -735,6 +735,8 @@ func TestAccELBLoadBalancer_desyncMitigationMode_update(t *testing.T) {
 
 // Unit test for listeners hash
 func TestLoadBalancerListenerHash(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		Left  map[string]interface{}
 		Right map[string]interface{}
@@ -767,6 +769,8 @@ func TestLoadBalancerListenerHash(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotBeginWithHyphen(t *testing.T) {
+	t.Parallel()
+
 	var n = "-Testing123"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -776,6 +780,8 @@ func TestValidLoadBalancerNameCannotBeginWithHyphen(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCanBeAnEmptyString(t *testing.T) {
+	t.Parallel()
+
 	var n = ""
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -785,6 +791,8 @@ func TestValidLoadBalancerNameCanBeAnEmptyString(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotBeLongerThan32Characters(t *testing.T) {
+	t.Parallel()
+
 	var n = "Testing123dddddddddddddddddddvvvv"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -794,6 +802,8 @@ func TestValidLoadBalancerNameCannotBeLongerThan32Characters(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotHaveSpecialCharacters(t *testing.T) {
+	t.Parallel()
+
 	var n = "Testing123%%"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -803,6 +813,8 @@ func TestValidLoadBalancerNameCannotHaveSpecialCharacters(t *testing.T) {
 }
 
 func TestValidLoadBalancerNameCannotEndWithHyphen(t *testing.T) {
+	t.Parallel()
+
 	var n = "Testing123-"
 	_, errors := tfelb.ValidName(n, "SampleKey")
 
@@ -812,6 +824,8 @@ func TestValidLoadBalancerNameCannotEndWithHyphen(t *testing.T) {
 }
 
 func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
+	t.Parallel()
+
 	type testCases struct {
 		Value    int
 		ErrCount int
@@ -838,10 +852,11 @@ func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
 	}
-
 }
 
 func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
+	t.Parallel()
+
 	type testCase struct {
 		Value    string
 		ErrCount int
@@ -939,7 +954,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 }
 
 func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" {
@@ -973,7 +988,7 @@ func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
 
 func testAccCheckLoadBalancerDisappears(loadBalancer *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		input := elb.DeleteLoadBalancerInput{
 			LoadBalancerName: loadBalancer.LoadBalancerName,
@@ -1019,7 +1034,7 @@ func testAccCheckLoadBalancerExists(n string, res *elb.LoadBalancerDescription) 
 			return fmt.Errorf("No ELB ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		describe, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},

@@ -325,7 +325,7 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 }
 
 func testAccCheckNetworkACLRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_acl_rule" {
@@ -364,7 +364,7 @@ func testAccCheckNetworkACLRuleDestroy(s *terraform.State) error {
 
 func testAccCheckNetworkACLRuleExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

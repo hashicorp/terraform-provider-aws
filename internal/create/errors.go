@@ -57,6 +57,15 @@ func DiagError(service, action, resource, id string, gotError error) diag.Diagno
 	}
 }
 
+func DiagErrorMessage(service, action, resource, id, message string) diag.Diagnostics {
+	return diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  ProblemStandardMessage(service, action, resource, id, fmt.Errorf(message)),
+		},
+	}
+}
+
 // ErrorSetting returns an errors.Error with a standardized error message when setting
 // arguments and attributes values.
 func SettingError(service, resource, id, argument string, gotError error) error {

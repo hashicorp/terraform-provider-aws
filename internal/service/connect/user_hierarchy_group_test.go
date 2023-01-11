@@ -198,7 +198,7 @@ func testAccCheckUserHierarchyGroupExists(resourceName string, function *connect
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeUserHierarchyGroupInput{
 			HierarchyGroupId: aws.String(userHierarchyGroupID),
@@ -222,7 +222,7 @@ func testAccCheckUserHierarchyGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, userHierarchyGroupID, err := tfconnect.UserHierarchyGroupParseID(rs.Primary.ID)
 

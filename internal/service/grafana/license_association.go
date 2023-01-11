@@ -54,7 +54,7 @@ func ResourceLicenseAssociation() *schema.Resource {
 }
 
 func resourceLicenseAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	input := &managedgrafana.AssociateLicenseInput{
 		LicenseType: aws.String(d.Get("license_type").(string)),
@@ -78,7 +78,7 @@ func resourceLicenseAssociationCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceLicenseAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	workspace, err := FindLicensedWorkspaceByID(conn, d.Id())
 
@@ -108,7 +108,7 @@ func resourceLicenseAssociationRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceLicenseAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	log.Printf("[DEBUG] Deleting Grafana License Association: %s", d.Id())
 	_, err := conn.DisassociateLicense(&managedgrafana.DisassociateLicenseInput{

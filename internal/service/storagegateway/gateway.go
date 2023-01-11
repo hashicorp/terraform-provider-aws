@@ -266,7 +266,7 @@ func ResourceGateway() *schema.Resource {
 }
 
 func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
@@ -297,7 +297,6 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
 			response, err = client.Do(request)
 
 			if err != nil {
@@ -479,7 +478,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -648,7 +647,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
@@ -684,7 +683,6 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := expandGatewayDomain(d.Get("smb_active_directory_settings").([]interface{}), d.Id())
 		domainName := aws.StringValue(input.DomainName)
 
-		log.Printf("[DEBUG] Joining Storage Gateway to Active Directory domain: %s", input)
 		_, err := conn.JoinDomain(input)
 
 		if err != nil {
@@ -702,7 +700,6 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			Password:   aws.String(d.Get("smb_guest_password").(string)),
 		}
 
-		log.Printf("[DEBUG] Setting Storage Gateway SMB guest password: %s", input)
 		_, err := conn.SetSMBGuestPassword(input)
 
 		if err != nil {
@@ -799,7 +796,7 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", d.Id())
 	_, err := conn.DeleteGateway(&storagegateway.DeleteGatewayInput{

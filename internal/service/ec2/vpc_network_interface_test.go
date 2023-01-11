@@ -20,6 +20,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func TestFlattenGroupIdentifiers(t *testing.T) {
+	t.Parallel()
+
+	expanded := []*ec2.GroupIdentifier{
+		{GroupId: aws.String("sg-001")},
+		{GroupId: aws.String("sg-002")},
+	}
+
+	result := tfec2.FlattenGroupIdentifiers(expanded)
+
+	if len(result) != 2 {
+		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
+	}
+
+	if result[0] != "sg-001" {
+		t.Fatalf("expected id to be sg-001, but was %s", result[0])
+	}
+
+	if result[1] != "sg-002" {
+		t.Fatalf("expected id to be sg-002, but was %s", result[1])
+	}
+}
+
 func TestAccVPCNetworkInterface_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
@@ -961,7 +984,7 @@ func testAccCheckENIExists(n string, v *ec2.NetworkInterface) resource.TestCheck
 			return fmt.Errorf("No EC2 Network Interface ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindNetworkInterfaceByID(conn, rs.Primary.ID)
 
@@ -976,7 +999,7 @@ func testAccCheckENIExists(n string, v *ec2.NetworkInterface) resource.TestCheck
 }
 
 func testAccCheckENIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_interface" {
@@ -1012,7 +1035,7 @@ func testAccCheckENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface)
 			NetworkInterfaceId: conf.NetworkInterfaceId,
 		}
 
-		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn.AttachNetworkInterface(input)
+		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn().AttachNetworkInterface(input)
 
 		if err != nil {
 			return fmt.Errorf("error attaching ENI: %w", err)

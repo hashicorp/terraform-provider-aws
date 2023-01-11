@@ -44,6 +44,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 				),
@@ -391,7 +392,7 @@ func testAccCheckCapacityReservationExists(n string, v *ec2.CapacityReservation)
 			return fmt.Errorf("No EC2 Capacity Reservation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindCapacityReservationByID(conn, rs.Primary.ID)
 
@@ -406,7 +407,7 @@ func testAccCheckCapacityReservationExists(n string, v *ec2.CapacityReservation)
 }
 
 func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_capacity_reservation" {
@@ -427,11 +428,10 @@ func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccPreCheckCapacityReservation(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeCapacityReservationsInput{
 		MaxResults: aws.Int64(1),

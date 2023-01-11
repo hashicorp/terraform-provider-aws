@@ -52,7 +52,7 @@ func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 }
 
 func resourceNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -88,7 +88,7 @@ func resourceNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData
 }
 
 func resourceNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	request := &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
@@ -128,7 +128,7 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, 
 }
 
 func resourceNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Get("name").(string)),
@@ -152,7 +152,7 @@ func resourceNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData
 }
 
 func resourceNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deleteOpts := &sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
@@ -161,7 +161,6 @@ func resourceNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData
 
 	_, err := conn.DeleteNotebookInstanceLifecycleConfig(deleteOpts)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			return nil
 		}

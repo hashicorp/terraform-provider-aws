@@ -30,10 +30,11 @@ func ResourceUserPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -58,7 +59,7 @@ func ResourceUserPolicy() *schema.Resource {
 }
 
 func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.PutUserPolicyInput{
 		UserName:       aws.String(d.Get("user").(string)),
@@ -90,7 +91,7 @@ func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
@@ -158,7 +159,7 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {

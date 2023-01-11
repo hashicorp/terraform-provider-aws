@@ -81,6 +81,11 @@ func ResourceGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"desired_capacity_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(DesiredCapacityType_Values(), false),
+			},
 			"enabled_metrics": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -834,7 +839,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	createInput := &autoscaling.CreateAutoScalingGroupInput{
@@ -862,12 +867,20 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		if desiredCapacity > 0 {
 			updateInput.DesiredCapacity = aws.Int64(int64(desiredCapacity))
 		}
+
+		if v, ok := d.GetOk("desired_capacity_type"); ok {
+			updateInput.DesiredCapacityType = aws.String(v.(string))
+		}
 	} else {
 		createInput.MaxSize = aws.Int64(int64(maxSize))
 		createInput.MinSize = aws.Int64(int64(minSize))
 
 		if desiredCapacity > 0 {
 			createInput.DesiredCapacity = aws.Int64(int64(desiredCapacity))
+		}
+
+		if v, ok := d.GetOk("desired_capacity_type"); ok {
+			createInput.DesiredCapacityType = aws.String(v.(string))
 		}
 	}
 
@@ -947,7 +960,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createInput.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Creating Auto Scaling Group: %s", createInput)
 	_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateAutoScalingGroup(createInput)
@@ -1006,7 +1018,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				return nil
 			}
 
-			if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn, meta.(*conns.AWSClient).ELBV2Conn, d.Id(), f, v); err != nil {
+			if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, v); err != nil {
 				return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
 			}
 		}
@@ -1051,7 +1063,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	g, err := FindGroupByName(conn, d.Id())
@@ -1073,6 +1085,8 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
 	d.Set("desired_capacity", g.DesiredCapacity)
+	d.Set("desired_capacity_type", g.DesiredCapacityType)
+
 	if len(g.EnabledMetrics) > 0 {
 		d.Set("enabled_metrics", flattenEnabledMetrics(g.EnabledMetrics))
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
@@ -1160,7 +1174,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	var shouldWaitForCapacity bool
 	var shouldRefreshInstances bool
@@ -1209,6 +1223,11 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("desired_capacity") {
 			input.DesiredCapacity = aws.Int64(int64(d.Get("desired_capacity").(int)))
+			shouldWaitForCapacity = true
+		}
+
+		if d.HasChange("desired_capacity_type") {
+			input.DesiredCapacityType = aws.String(d.Get("desired_capacity_type").(string))
 			shouldWaitForCapacity = true
 		}
 
@@ -1404,7 +1423,6 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("waiting for Auto Scaling Group (%s) target groups removed: %s", d.Id(), err)
 				}
 			}
-
 		}
 
 		if add := flex.ExpandStringSet(ns.Difference(os)); len(add) > 0 {
@@ -1507,7 +1525,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					return nil
 				}
 
-				if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn, meta.(*conns.AWSClient).ELBV2Conn, d.Id(), f, v); err != nil {
+				if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, v); err != nil {
 					return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
 				}
 			}
@@ -1595,7 +1613,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	forceDeleteGroup := d.Get("force_delete").(bool)
 	forceDeleteWarmPool := forceDeleteGroup || d.Get("force_delete_warm_pool").(bool)

@@ -58,7 +58,7 @@ func DataSourceClusterCredentials() *schema.Resource {
 }
 
 func dataSourceClusterCredentialsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	clusterID := d.Get("cluster_identifier").(string)
 	input := &redshift.GetClusterCredentialsInput{

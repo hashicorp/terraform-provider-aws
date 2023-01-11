@@ -18,12 +18,20 @@
             {{- end }}
             {{- if eq .ServiceAlias "CE" }}
             - pattern-not-regex: ource
+            - pattern-not-regex: ServicePackage
             {{- end }}
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
             {{- end }}
             {{- if eq .ServiceAlias "CloudTrail" }}
             - pattern-not-regex: ^testAccCloudTrailConfig_.*
+            {{- end }}
+            {{- if eq .ServiceAlias "RAM" }}
+            - pattern-not-regex: Framework
+            {{- end }}
+            {{- if eq .ServiceAlias "SSM" }}
+            - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
+            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
             {{- end }}
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
@@ -76,6 +84,9 @@
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "CE" }}
+            - pattern-not-regex: ServicePackage
+            {{- end }}
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
             {{- end }}

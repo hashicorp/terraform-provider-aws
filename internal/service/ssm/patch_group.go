@@ -43,7 +43,7 @@ func ResourcePatchGroup() *schema.Resource {
 }
 
 func resourcePatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	baselineId := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
@@ -64,7 +64,7 @@ func resourcePatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
@@ -96,11 +96,10 @@ func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("patch_group", group.PatchGroup)
 
 	return nil
-
 }
 
 func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {

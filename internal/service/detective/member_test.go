@@ -132,7 +132,7 @@ func testAccCheckMemberExists(resourceName string, detectiveSession *detective.M
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
 
 		graphArn, accountId, err := tfdetective.DecodeMemberID(rs.Primary.ID)
 		if err != nil {
@@ -155,7 +155,7 @@ func testAccCheckMemberExists(resourceName string, detectiveSession *detective.M
 }
 
 func testAccCheckMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_detective_member" {
@@ -182,7 +182,6 @@ func testAccCheckMemberDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccMemberConfig_basic(email string) string {

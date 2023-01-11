@@ -194,7 +194,7 @@ func ResourceDocument() *schema.Resource {
 }
 
 func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -255,7 +255,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -343,7 +343,6 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 
 	params := make([]map[string]interface{}, 0)
 	for i := 0; i < len(doc.Parameters); i++ {
-
 		dp := doc.Parameters[i]
 		param := make(map[string]interface{})
 
@@ -385,7 +384,7 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	// Validates permissions keys, if set, to be type and account_ids
 	// since ValidateFunc validates only the value not the key.
@@ -433,7 +432,7 @@ func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	if err := deleteDocumentPermissions(d, meta); err != nil {
 		return err
@@ -483,11 +482,10 @@ func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 		results = append(results, s)
 	}
 	return results
-
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
 
@@ -530,14 +528,13 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 		if err := modifyDocumentPermissions(conn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
 			return fmt.Errorf("error modifying SSM document permissions: %s", err)
 		}
-
 	}
 
 	return nil
 }
 
 func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Getting permissions for document: %s", d.Id())
 
@@ -576,7 +573,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 }
 
 func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
@@ -585,7 +582,6 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 	accountIdsToRemove := make([]interface{}, 0)
 
 	if permission["account_ids"] != nil {
-
 		if v, ok := permission["account_ids"]; ok && v.(string) != "" {
 			parts := strings.Split(v.(string), ",")
 			accountIdsToRemove = make([]interface{}, len(parts))
@@ -597,16 +593,13 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 		if err := modifyDocumentPermissions(conn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
 			return fmt.Errorf("error removing SSM document permissions: %s", err)
 		}
-
 	}
 
 	return nil
 }
 
 func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []interface{}, accountIdstoRemove []interface{}) error {
-
 	if accountIdsToAdd != nil {
-
 		accountIdsToAddBatch := make([]string, 0, documentPermissionsBatchLimit)
 		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdsToAdd {
@@ -631,7 +624,6 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 	}
 
 	if accountIdstoRemove != nil {
-
 		accountIdsToRemoveBatch := make([]string, 0, documentPermissionsBatchLimit)
 		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdstoRemove {
@@ -653,7 +645,6 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 				return err
 			}
 		}
-
 	}
 
 	return nil
@@ -685,7 +676,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 
 	newDefaultVersion := d.Get("default_version").(string)
 
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	updated, err := conn.UpdateDocument(updateDocInput)
 
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDuplicateDocumentContent) {

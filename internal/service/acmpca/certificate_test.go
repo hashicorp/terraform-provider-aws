@@ -106,7 +106,7 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -148,7 +148,7 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Format(time.RFC3339)
 
@@ -191,7 +191,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
-	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(4096, csrDomain)
+	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
 	later := time.Now().Add(time.Minute * 10).Unix()
 
@@ -231,7 +231,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 }
 
 func testAccCheckCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate" {
@@ -270,7 +270,7 @@ func testAccCheckCertificateExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 		input := &acmpca.GetCertificateInput{
 			CertificateArn:          aws.String(rs.Primary.ID),
 			CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),
@@ -454,6 +454,8 @@ data "aws_partition" "current" {}
 }
 
 func TestValidateTemplateARN(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"arn:aws:acm-pca:::template/EndEntityCertificate/V1",                     // lintignore:AWSAT005
 		"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen0/V1",        // lintignore:AWSAT005
@@ -483,6 +485,8 @@ func TestValidateTemplateARN(t *testing.T) {
 }
 
 func TestExpandValidityValue(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Type     string
 		Value    string
@@ -516,5 +520,4 @@ func TestExpandValidityValue(t *testing.T) {
 			t.Errorf("%s, %q: expected %d, got %d", testcase.Type, testcase.Value, testcase.Expected, i)
 		}
 	}
-
 }

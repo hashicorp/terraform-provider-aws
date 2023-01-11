@@ -78,7 +78,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 }
 
 func resourceVPCIPv6CIDRBlockAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcID := d.Get("vpc_id").(string)
 	input := &ec2.AssociateVpcCidrBlockInput{
@@ -116,7 +116,7 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceVPCIPv6CIDRBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcIpv6CidrBlockAssociation, vpc, err := FindVPCIPv6CIDRBlockAssociationByID(conn, d.Id())
 
@@ -137,7 +137,7 @@ func resourceVPCIPv6CIDRBlockAssociationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceVPCIPv6CIDRBlockAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting VPC IPv6 CIDR Block Association: %s", d.Id())
 	_, err := conn.DisassociateVpcCidrBlock(&ec2.DisassociateVpcCidrBlockInput{

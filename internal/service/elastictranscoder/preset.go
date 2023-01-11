@@ -500,7 +500,7 @@ func ResourcePreset() *schema.Resource {
 }
 
 func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
@@ -746,7 +746,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 }
 
 func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	resp, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
 		Id: aws.String(d.Id()),
@@ -909,7 +909,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 }
 
 func resourcePresetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Preset: %s", d.Id())
 	_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{

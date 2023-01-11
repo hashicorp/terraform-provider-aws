@@ -92,7 +92,7 @@ func ResourceHost() *schema.Resource {
 }
 
 func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateHostInput{
@@ -119,7 +119,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	output, err := FindHostByARN(conn, d.Id())
 
@@ -144,7 +144,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	if d.HasChanges("provider_endpoint", "vpc_configuration") {
 		input := &codestarconnections.UpdateHostInput{
@@ -168,7 +168,7 @@ func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Host: %s", d.Id())
 	_, err := conn.DeleteHost(&codestarconnections.DeleteHostInput{

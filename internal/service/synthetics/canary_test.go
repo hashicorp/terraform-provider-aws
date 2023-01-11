@@ -546,7 +546,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 }
 
 func testAccCheckCanaryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_synthetics_canary" {
@@ -580,7 +580,7 @@ func testAccCheckCanaryExists(n string, canary *synthetics.Canary) resource.Test
 			return fmt.Errorf("No Synthetics Canary ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
 
 		output, err := tfsynthetics.FindCanaryByName(conn, rs.Primary.ID)
 
@@ -598,7 +598,6 @@ func testAccCheckCanaryIsUpdated(first, second *synthetics.Canary) resource.Test
 	return func(s *terraform.State) error {
 		if !second.Timeline.LastModified.After(*first.Timeline.LastModified) {
 			return fmt.Errorf("synthetics Canary not updated")
-
 		}
 
 		return nil
@@ -609,7 +608,6 @@ func testAccCheckCanaryIsStartedAfter(first, second *synthetics.Canary) resource
 	return func(s *terraform.State) error {
 		if !second.Timeline.LastStarted.After(*first.Timeline.LastStarted) {
 			return fmt.Errorf("synthetics Canary not updated")
-
 		}
 
 		return nil

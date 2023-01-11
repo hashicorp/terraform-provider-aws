@@ -200,15 +200,14 @@ func testAccCheckPublishingDestinationExists(name string) resource.TestCheckFunc
 			DestinationId: aws.String(destination_id),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 		_, err := conn.DescribePublishingDestination(input)
 		return err
 	}
 }
 
 func testAccCheckPublishingDestinationDestroy(s *terraform.State) error {
-
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_publishing_destination" {

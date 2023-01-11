@@ -11,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 )
 
 func testAccInvitationAccepter_basic(t *testing.T) {
 	resourceName := "aws_macie2_invitation_accepter.member"
-	email := conns.SkipIfEnvVarEmpty(t, EnvVarPrincipalEmail, EnvVarPrincipalEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarPrincipalEmail, envVarPrincipalEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -53,7 +54,7 @@ func testAccCheckInvitationAccepterExists(resourceName string) resource.TestChec
 			return fmt.Errorf("resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 		input := &macie2.GetAdministratorAccountInput{}
 		output, err := conn.GetAdministratorAccount(input)
 
@@ -70,7 +71,7 @@ func testAccCheckInvitationAccepterExists(resourceName string) resource.TestChec
 }
 
 func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_invitation_accepter" {
@@ -89,11 +90,9 @@ func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("macie InvitationAccepter %q still exists", rs.Primary.ID)
-
 	}
 
 	return nil
-
 }
 
 func testAccInvitationAccepterConfig_basic(email string) string {

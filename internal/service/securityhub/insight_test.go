@@ -437,7 +437,7 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 }
 
 func testAccCheckInsightDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_insight" {
@@ -471,7 +471,7 @@ func testAccCheckInsightExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		insight, err := tfsecurityhub.FindInsight(context.Background(), conn, rs.Primary.ID)
 

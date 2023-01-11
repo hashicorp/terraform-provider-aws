@@ -21,8 +21,10 @@ resource "aws_batch_job_definition" "test" {
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",
-	"memory": 1024,
-	"vcpus": 1,
+	"resourceRequirements": [
+    {"type": "VCPU", "value": "0.25"},
+    {"type": "MEMORY", "value": "512"}
+  ],
 	"volumes": [
       {
         "host": {
@@ -103,9 +105,13 @@ CONTAINER_PROPERTIES
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
 * `name` - (Required) Specifies the name of the job definition.
+* `type` - (Required) The type of job definition. Must be `container`.
+
+The following arguments are optional:
+
 * `container_properties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `container`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
@@ -115,27 +121,22 @@ The following arguments are supported:
     Maximum number of `retry_strategy` is `1`.  Defined below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
-* `type` - (Required) The type of job definition.  Must be `container`.
 
-## retry_strategy
-
-`retry_strategy` supports the following:
+### retry_strategy
 
 * `attempts` - (Optional) The number of times to move a job to the `RUNNABLE` status. You may specify between `1` and `10` attempts.
 * `evaluate_on_exit` - (Optional) The [evaluate on exit](#evaluate_on_exit) conditions under which the job should be retried or failed. If this parameter is specified, then the `attempts` parameter must also be specified. You may specify up to 5 configuration blocks.
 
-## timeout
-
-`timeout` supports the following:
-
-* `attempt_duration_seconds` - (Optional) The time duration in seconds after which AWS Batch terminates your jobs if they have not finished. The minimum value for the timeout is `60` seconds.
-
-### evaluate_on_exit
+#### evaluate_on_exit
 
 * `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `RETRY`, `EXIT`.
 * `on_exit_code` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
 * `on_reason` - (Optional) A glob pattern to match against the reason returned for a job.
 * `on_status_reason` - (Optional) A glob pattern to match against the status reason returned for a job.
+  
+### timeout
+
+* `attempt_duration_seconds` - (Optional) The time duration in seconds after which AWS Batch terminates your jobs if they have not finished. The minimum value for the timeout is `60` seconds.
 
 ## Attributes Reference
 

@@ -24,7 +24,7 @@ func DataSourceAccountAlias() *schema.Resource {
 }
 
 func dataSourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	log.Printf("[DEBUG] Reading IAM Account Aliases.")
 

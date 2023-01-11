@@ -17,18 +17,15 @@ import (
 )
 
 func TestAccNetworkManagerTransitGatewayConnectPeerAssociation_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":                  testAccTransitGatewayConnectPeerAssociation_basic,
 		"disappears":             testAccTransitGatewayConnectPeerAssociation_disappears,
 		"disappears_ConnectPeer": testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
@@ -102,7 +99,7 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 }
 
 func testAccCheckTransitGatewayConnectPeerAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_customer_gateway_association" {
@@ -142,7 +139,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationExists(n string) resource.T
 			return fmt.Errorf("No Network Manager Transit Gateway Connect Peer Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		globalNetworkID, connectPeerARN, err := tfnetworkmanager.TransitGatewayConnectPeerAssociationParseResourceID(rs.Primary.ID)
 

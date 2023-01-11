@@ -268,7 +268,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 }
 
 func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -374,7 +374,7 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -467,7 +467,7 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -549,14 +549,13 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 				return fmt.Errorf("error waiting for FSx OpenZFS Root Volume (%s) update: %w", d.Get("root_volume_id").(string), err)
 			}
 		}
-
 	}
 
 	return resourceOpenzfsFileSystemRead(d, meta)
 }
 
 func resourceOpenzfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{
@@ -677,7 +676,6 @@ func expandOpenzfsUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUserOrGrou
 	}
 
 	return quotas
-
 }
 
 func expandOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
@@ -700,7 +698,6 @@ func expandOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUse
 	}
 
 	return &out
-
 }
 
 func expandOpenzfsNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
@@ -714,7 +711,6 @@ func expandOpenzfsNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	}
 
 	return exports
-
 }
 
 func expandOpenzfsNFSExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
@@ -738,7 +734,6 @@ func expandOpenzfsClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientCo
 	}
 
 	return configurations
-
 }
 
 func expandOpenzfsClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {

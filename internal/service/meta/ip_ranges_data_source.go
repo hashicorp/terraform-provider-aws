@@ -1,177 +1,217 @@
 package meta
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/go-cleanhttp"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"golang.org/x/exp/slices"
 )
 
-type dataSourceAwsIPRangesResult struct {
-	CreateDate   string
-	Prefixes     []dataSourceAwsIPRangesPrefix
-	Ipv6Prefixes []dataSourceAwsIPRangesIpv6Prefix `json:"ipv6_prefixes"`
-	SyncToken    string
+func init() {
+	_sp.registerFrameworkDataSourceFactory(newDataSourceIPRanges)
 }
 
-type dataSourceAwsIPRangesPrefix struct {
-	IpPrefix string `json:"ip_prefix"`
-	Region   string
-	Service  string
+// newDataSourceIPRanges instantiates a new DataSource for the aws_ip_ranges data source.
+func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSourceIPRanges{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
-type dataSourceAwsIPRangesIpv6Prefix struct {
-	Ipv6Prefix string `json:"ipv6_prefix"`
-	Region     string
-	Service    string
+type dataSourceIPRanges struct {
+	framework.DataSourceWithConfigure
 }
 
-func DataSourceIPRanges() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceIPRangesRead,
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSourceIPRanges) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_ip_ranges"
+}
 
-		Schema: map[string]*schema.Schema{
-			"cidr_blocks": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+// Schema returns the schema for this data source.
+func (d *dataSourceIPRanges) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"cidr_blocks": schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
-			"create_date": {
-				Type:     schema.TypeString,
+			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-			"ipv6_cidr_blocks": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"regions": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"id": schema.StringAttribute{
 				Optional: true,
-			},
-			"services": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"sync_token": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"url": {
-				Type:     schema.TypeString,
+			"ipv6_cidr_blocks": schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+			},
+			"regions": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+			},
+			"services": schema.SetAttribute{
+				ElementType: types.StringType,
+				Required:    true,
+			},
+			"sync_token": schema.Int64Attribute{
+				Computed: true,
+			},
+			"url": schema.StringAttribute{
 				Optional: true,
-				Default:  "https://ip-ranges.amazonaws.com/ip-ranges.json",
 			},
 		},
 	}
 }
 
-func dataSourceIPRangesRead(d *schema.ResourceData, meta interface{}) error {
+// Read is called when the provider must read data source values in order to update state.
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceIPRangesData
 
-	conn := cleanhttp.DefaultClient()
-	url := d.Get("url").(string)
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
-	log.Printf("[DEBUG] Reading IP ranges from %s", url)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	res, err := conn.Get(url)
+	var url string
+
+	if data.URL.IsNull() {
+		// Data sources make no use of AttributePlanModifiers to set default values.
+		url = "https://ip-ranges.amazonaws.com/ip-ranges.json"
+	} else {
+		url = data.URL.ValueString()
+	}
+
+	bytes, err := readAll(ctx, url)
 
 	if err != nil {
-		return fmt.Errorf("Error listing IP ranges from (%s): %w", url, err)
+		response.Diagnostics.AddError("downloading IP ranges", err.Error())
+
+		return
 	}
 
-	defer res.Body.Close()
+	ipRanges := new(ipRanges)
 
-	data, err := io.ReadAll(res.Body)
+	if err := json.Unmarshal(bytes, ipRanges); err != nil {
+		response.Diagnostics.AddError("parsing JSON", err.Error())
+
+		return
+	}
+
+	syncToken, err := strconv.Atoi(ipRanges.SyncToken)
 
 	if err != nil {
-		return fmt.Errorf("Error reading response body from (%s): %w", url, err)
+		response.Diagnostics.AddError("parsing SyncToken", err.Error())
+
+		return
 	}
 
-	result := new(dataSourceAwsIPRangesResult)
-
-	if err := json.Unmarshal(data, result); err != nil {
-		return fmt.Errorf("Error parsing result from (%s): %w", url, err)
-	}
-
-	if err := d.Set("create_date", result.CreateDate); err != nil {
-		return fmt.Errorf("Error setting create date: %w", err)
-	}
-
-	syncToken, err := strconv.Atoi(result.SyncToken)
-
-	if err != nil {
-		return fmt.Errorf("Error while converting sync token: %w", err)
-	}
-
-	d.SetId(result.SyncToken)
-
-	if err := d.Set("sync_token", syncToken); err != nil {
-		return fmt.Errorf("Error setting sync token: %w", err)
-	}
-
-	get := func(key string) *schema.Set {
-
-		set := d.Get(key).(*schema.Set)
-
-		for _, e := range set.List() {
-
-			s := e.(string)
-
-			set.Remove(s)
-			set.Add(strings.ToLower(s))
-
-		}
-
-		return set
-
-	}
-
-	var (
-		regions        = get("regions")
-		services       = get("services")
-		noRegionFilter = regions.Len() == 0
-		ipPrefixes     []string
-		ipv6Prefixes   []string
-	)
-
+	regions := tfslices.ApplyToAll(flex.ExpandFrameworkStringValueSet(ctx, data.Regions), strings.ToLower)
+	services := tfslices.ApplyToAll(flex.ExpandFrameworkStringValueSet(ctx, data.Services), strings.ToLower)
 	matchFilter := func(region, service string) bool {
-		matchRegion := noRegionFilter || regions.Contains(strings.ToLower(region))
-		matchService := services.Contains(strings.ToLower(service))
+		matchRegion := len(regions) == 0 || slices.Contains(regions, strings.ToLower(region))
+		matchService := slices.Contains(services, strings.ToLower(service))
+
 		return matchRegion && matchService
 	}
 
-	for _, e := range result.Prefixes {
-		if matchFilter(e.Region, e.Service) {
-			ipPrefixes = append(ipPrefixes, e.IpPrefix)
+	var ipv4Prefixes []string
+
+	for _, v := range ipRanges.IPv4Prefixes {
+		if matchFilter(v.Region, v.Service) {
+			ipv4Prefixes = append(ipv4Prefixes, v.Prefix)
 		}
 	}
 
-	for _, e := range result.Ipv6Prefixes {
-		if matchFilter(e.Region, e.Service) {
-			ipv6Prefixes = append(ipv6Prefixes, e.Ipv6Prefix)
+	sort.Strings(ipv4Prefixes)
+
+	var ipv6Prefixes []string
+
+	for _, v := range ipRanges.IPv6Prefixes {
+		if matchFilter(v.Region, v.Service) {
+			ipv6Prefixes = append(ipv6Prefixes, v.Prefix)
 		}
-	}
-
-	sort.Strings(ipPrefixes)
-
-	if err := d.Set("cidr_blocks", ipPrefixes); err != nil {
-		return fmt.Errorf("Error setting cidr_blocks: %w", err)
 	}
 
 	sort.Strings(ipv6Prefixes)
 
-	if err := d.Set("ipv6_cidr_blocks", ipv6Prefixes); err != nil {
-		return fmt.Errorf("Error setting ipv6_cidr_blocks: %w", err)
+	data.CreateDate = types.StringValue(ipRanges.CreateDate)
+	data.ID = types.StringValue(ipRanges.SyncToken)
+	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueListLegacy(ctx, ipv4Prefixes)
+	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueListLegacy(ctx, ipv6Prefixes)
+	data.SyncToken = types.Int64Value(int64(syncToken))
+	data.URL = types.StringValue(url)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type dataSourceIPRangesData struct {
+	CreateDate     types.String `tfsdk:"create_date"`
+	ID             types.String `tfsdk:"id"`
+	IPv4CIDRBlocks types.List   `tfsdk:"cidr_blocks"`
+	IPv6CIDRBlocks types.List   `tfsdk:"ipv6_cidr_blocks"`
+	Regions        types.Set    `tfsdk:"regions"`
+	Services       types.Set    `tfsdk:"services"`
+	SyncToken      types.Int64  `tfsdk:"sync_token"`
+	URL            types.String `tfsdk:"url"`
+}
+
+func readAll(ctx context.Context, url string) ([]byte, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	response, err := cleanhttp.DefaultClient().Do(request)
 
+	if err != nil {
+		return nil, fmt.Errorf("HTTP GET (%s): %w", url, err)
+	}
+
+	defer response.Body.Close()
+
+	bytes, err := io.ReadAll(response.Body)
+
+	if err != nil {
+		return nil, fmt.Errorf("reading response body (%s): %w", url, err)
+	}
+
+	return bytes, nil
+}
+
+type ipRanges struct {
+	CreateDate   string
+	IPv4Prefixes []ipv4Prefix `json:"prefixes"`
+	IPv6Prefixes []ipv6Prefix `json:"ipv6_prefixes"`
+	SyncToken    string
+}
+
+type ipv4Prefix struct {
+	Prefix  string `json:"ip_prefix"`
+	Region  string
+	Service string
+}
+
+type ipv6Prefix struct {
+	Prefix  string `json:"ipv6_prefix"`
+	Region  string
+	Service string
 }

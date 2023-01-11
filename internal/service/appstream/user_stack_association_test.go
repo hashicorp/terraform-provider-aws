@@ -120,7 +120,7 @@ func testAccCheckUserStackAssociationExists(resourceName string) resource.TestCh
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 		userName, authType, stackName, err := tfappstream.DecodeUserStackAssociationID(rs.Primary.ID)
 		if err != nil {
@@ -146,7 +146,7 @@ func testAccCheckUserStackAssociationExists(resourceName string) resource.TestCh
 }
 
 func testAccCheckUserStackAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_user_stack_association" {

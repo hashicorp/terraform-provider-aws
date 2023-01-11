@@ -103,7 +103,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 }
 
 func testAccCheckFieldLevelEncryptionConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_field_level_encryption_config" {
@@ -137,7 +137,7 @@ func testAccCheckFieldLevelEncryptionConfigExists(r string, v *cloudfront.GetFie
 			return fmt.Errorf("No CloudFront Field-level Encryption Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		output, err := tfcloudfront.FindFieldLevelEncryptionConfigByID(conn, rs.Primary.ID)
 

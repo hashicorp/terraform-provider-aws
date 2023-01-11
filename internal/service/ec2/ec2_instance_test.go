@@ -43,6 +43,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestFetchRootDevice(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		label  string
 		images []*ec2.Image
@@ -86,10 +88,12 @@ func TestFetchRootDevice(t *testing.T) {
 		t.Errorf("Error new session: %s", err)
 	}
 
-	conn := ec2.New(sess)
-
 	for _, tc := range cases {
+		tc := tc
 		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
+			t.Parallel()
+
+			conn := ec2.New(sess)
 			conn.Handlers.Clear()
 			conn.Handlers.Send.PushBack(func(r *request.Request) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
@@ -104,6 +108,8 @@ func TestFetchRootDevice(t *testing.T) {
 }
 
 func TestParseInstanceType(t *testing.T) {
+	t.Parallel()
+
 	invalidInstanceTypes := []string{
 		"",
 		"abc",
@@ -3357,6 +3363,30 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_LaunchTemplate_withIAMInstanceProfile(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_templateWithIAMInstanceProfile(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_instance_profile", launchTemplateResourceName, "iam_instance_profile.0.name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4704,7 +4734,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_instance" {
@@ -4742,7 +4772,7 @@ func testAccCheckInstanceExistsWithProvider(n string, v *ec2.Instance, providerF
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindInstanceByID(conn, rs.Primary.ID)
 
@@ -4758,7 +4788,7 @@ func testAccCheckInstanceExistsWithProvider(n string, v *ec2.Instance, providerF
 
 func testAccCheckStopInstance(v *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		return tfec2.StopInstance(conn, aws.StringValue(v.InstanceId), 10*time.Minute)
 	}
@@ -4766,8 +4796,7 @@ func testAccCheckStopInstance(v *ec2.Instance) resource.TestCheckFunc {
 
 func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := client.EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		for _, v := range instance.BlockDeviceMappings {
 			if v.Ebs != nil && v.Ebs.VolumeId != nil {
@@ -4786,7 +4815,7 @@ func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 				d.Set("instance_id", instanceID)
 				d.Set("volume_id", volumeID)
 
-				if err := r.Delete(d, client); err != nil {
+				if err := acctest.DeleteResource(r, d, acctest.Provider.Meta()); err != nil {
 					return err
 				}
 			}
@@ -4797,6 +4826,8 @@ func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 }
 
 func TestInstanceHostIDSchema(t *testing.T) {
+	t.Parallel()
+
 	actualSchema := tfec2.ResourceInstance().Schema["host_id"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeString,
@@ -4813,6 +4844,8 @@ func TestInstanceHostIDSchema(t *testing.T) {
 }
 
 func TestInstanceCPUCoreCountSchema(t *testing.T) {
+	t.Parallel()
+
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
@@ -4829,6 +4862,8 @@ func TestInstanceCPUCoreCountSchema(t *testing.T) {
 }
 
 func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
+	t.Parallel()
+
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
@@ -4846,7 +4881,7 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 		_, err := conn.CreateTags(&ec2.CreateTagsInput{
 			Resources: []*string{instance.InstanceId},
 			Tags: []*ec2.Tag{
@@ -4873,7 +4908,7 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(t *testing.T) {
 
 // defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
 func defaultVPC(t *testing.T) string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	output, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
 		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
@@ -4902,7 +4937,7 @@ func hasDefaultVPC(t *testing.T) bool {
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
 func defaultSubnetCount(t *testing.T) int {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -7975,6 +8010,61 @@ resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+}
+
+resource "aws_instance" "test" {
+  launch_template {
+    name = aws_launch_template.test.name
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_templateWithIAMInstanceProfile(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+}
+
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.test.name
+  }
 }
 
 resource "aws_instance" "test" {

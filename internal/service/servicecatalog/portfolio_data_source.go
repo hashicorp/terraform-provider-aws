@@ -58,7 +58,7 @@ func DataSourcePortfolio() *schema.Resource {
 }
 
 func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DescribePortfolioInput{
 		Id: aws.String(d.Get("id").(string)),

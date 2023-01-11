@@ -26,7 +26,7 @@ resource "aws_identitystore_group" "this" {
 
 The following arguments are required:
 
-* `identity_store_id` - (Required) The globally unique identifier for the identity store..
+* `identity_store_id` - (Required) The globally unique identifier for the identity store.
 
 The following arguments are optional:
 
@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
 * `update` - (Default `180m`)

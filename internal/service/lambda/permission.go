@@ -105,7 +105,7 @@ func ResourcePermission() *schema.Resource {
 }
 
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
@@ -165,7 +165,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout,
@@ -233,7 +233,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 
@@ -331,7 +331,6 @@ func FindPolicyStatementByTwoPartKey(conn *lambda.Lambda, functionName, statemen
 }
 
 func FindPolicyStatementByID(policy *Policy, id string) (*PolicyStatement, error) {
-
 	log.Printf("[DEBUG] Received %d statements in Lambda policy: %s", len(policy.Statement), policy.Statement)
 	for _, statement := range policy.Statement {
 		if statement.Sid == id {
@@ -385,7 +384,7 @@ func resourcePermissionImport(d *schema.ResourceData, meta interface{}) ([]*sche
 	statementId := idParts[1]
 	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
 
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	getFunctionOutput, err := conn.GetFunction(input)
 	if err != nil {
 		return nil, err

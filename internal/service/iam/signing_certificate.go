@@ -52,7 +52,7 @@ func ResourceSigningCertificate() *schema.Resource {
 }
 
 func resourceSigningCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	createOpts := &iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
@@ -86,7 +86,7 @@ func resourceSigningCertificateCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
@@ -118,7 +118,7 @@ func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
@@ -140,7 +140,7 @@ func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSigningCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	log.Printf("[INFO] Deleting IAM Signing Certificate: %s", d.Id())
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())

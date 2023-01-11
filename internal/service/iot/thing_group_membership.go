@@ -44,7 +44,7 @@ func ResourceThingGroupMembership() *schema.Resource {
 }
 
 func resourceThingGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	thingGroupName := d.Get("thing_group_name").(string)
 	thingName := d.Get("thing_name").(string)
@@ -70,7 +70,7 @@ func resourceThingGroupMembershipCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceThingGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 
@@ -97,7 +97,7 @@ func resourceThingGroupMembershipRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceThingGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 

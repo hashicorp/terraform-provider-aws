@@ -66,7 +66,7 @@ func ResourceSecretVersion() *schema.Resource {
 }
 
 func resourceSecretVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.PutSecretValueInput{
@@ -108,7 +108,7 @@ func resourceSecretVersionCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
@@ -180,7 +180,7 @@ func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
@@ -229,7 +229,7 @@ func resourceSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecretVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {

@@ -242,7 +242,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 }
 
 func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
@@ -328,7 +328,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -419,7 +419,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
 		var adminContact, registrantContact, techContact *types.ContactDetail

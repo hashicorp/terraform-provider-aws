@@ -39,7 +39,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 
 				applicationName := idParts[0]
 				deploymentGroupName := idParts[1]
-				conn := meta.(*conns.AWSClient).DeployConn
+				conn := meta.(*conns.AWSClient).DeployConn()
 
 				input := &codedeploy.GetDeploymentGroupInput{
 					ApplicationName:     aws.String(applicationName),
@@ -485,7 +485,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 }
 
 func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	// required fields
@@ -585,7 +585,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -695,7 +695,7 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
@@ -821,7 +821,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
 	_, err := conn.DeleteDeploymentGroup(&codedeploy.DeleteDeploymentGroupInput{
@@ -1397,7 +1397,6 @@ func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []in
 // FlattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
 // into a []map[string]interface{} list containing a single item
 func FlattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
-
 	if config == nil {
 		return nil
 	}

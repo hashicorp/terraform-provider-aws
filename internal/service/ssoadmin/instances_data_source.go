@@ -29,7 +29,7 @@ func DataSourceInstances() *schema.Resource {
 }
 
 func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	output, err := findInstanceMetadatas(conn)
 

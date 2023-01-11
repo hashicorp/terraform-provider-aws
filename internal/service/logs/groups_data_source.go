@@ -1,17 +1,22 @@
 package logs
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceGroups() *schema.Resource {
+func init() {
+	_sp.registerSDKDataSourceFactory("aws_cloudwatch_log_groups", dataSourceGroups)
+}
+
+func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupsRead,
+		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -32,8 +37,8 @@ func DataSourceGroups() *schema.Resource {
 	}
 }
 
-func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
+func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
 
@@ -41,27 +46,27 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 		input.LogGroupNamePrefix = aws.String(v.(string))
 	}
 
-	var results []*cloudwatchlogs.LogGroup
+	var output []*cloudwatchlogs.LogGroup
 
-	err := conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
+	err := conn.DescribeLogGroupsPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		results = append(results, page.LogGroups...)
+		output = append(output, page.LogGroups...)
 
 		return !lastPage
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading CloudWatch Log Groups: %w", err)
+		return diag.Errorf("reading CloudWatch Log Groups: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	var arns, logGroupNames []string
 
-	for _, r := range results {
+	for _, r := range output {
 		arns = append(arns, TrimLogGroupARNWildcardSuffix(aws.StringValue(r.Arn)))
 		logGroupNames = append(logGroupNames, aws.StringValue(r.LogGroupName))
 	}

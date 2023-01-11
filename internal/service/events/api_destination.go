@@ -68,7 +68,7 @@ func ResourceAPIDestination() *schema.Resource {
 }
 
 func resourceAPIDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.CreateApiDestinationInput{}
 
@@ -104,7 +104,7 @@ func resourceAPIDestinationCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.DescribeApiDestinationInput{
 		Name: aws.String(d.Id()),
@@ -132,7 +132,7 @@ func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAPIDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.UpdateApiDestinationInput{}
 
@@ -164,7 +164,7 @@ func resourceAPIDestinationUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAPIDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	log.Printf("[INFO] Deleting EventBridge API Destination (%s)", d.Id())
 	input := &eventbridge.DeleteApiDestinationInput{

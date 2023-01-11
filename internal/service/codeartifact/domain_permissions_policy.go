@@ -39,10 +39,11 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy_document": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -62,7 +63,7 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 }
 
 func resourceDomainPermissionsPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Print("[DEBUG] Creating CodeArtifact Domain Permissions Policy")
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
@@ -95,7 +96,7 @@ func resourceDomainPermissionsPolicyPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Printf("[DEBUG] Reading CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
@@ -140,7 +141,7 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())

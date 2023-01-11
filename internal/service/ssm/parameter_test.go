@@ -288,7 +288,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 			{
 
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 					input := &ssm.PutParameterInput{
 						Name:  aws.String(fmt.Sprintf("%s-%s", "test_parameter", name)),
@@ -763,6 +763,35 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) { //nosemgrep:ci.ssm-in-func-name
+	var param ssm.Parameter
+	webhookName := sdkacctest.RandString(16)
+	rName := fmt.Sprintf("/d9d01087-4a3f-49e0-b0b4-d568d7826553/ssm/integrations/webhook/%s", webhookName)
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_dataTypeSSMIntegration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ssm:integration"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
 func TestAccSSMParameter_Secure_key(t *testing.T) {
 	var param ssm.Parameter
 	randString := sdkacctest.RandString(10)
@@ -855,7 +884,7 @@ func testAccCheckParameterExists(n string, param *ssm.Parameter) resource.TestCh
 			return fmt.Errorf("No SSM Parameter ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		paramInput := &ssm.GetParametersInput{
 			Names: []*string{
@@ -880,7 +909,7 @@ func testAccCheckParameterExists(n string, param *ssm.Parameter) resource.TestCh
 }
 
 func testAccCheckParameterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_parameter" {
@@ -964,6 +993,18 @@ resource "aws_ssm_parameter" "test" {
   data_type = "aws:ec2:image"
   type      = "String"
   value     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+}
+`, rName))
+}
+
+func testAccParameterConfig_dataTypeSSMIntegration(rName string) string { // nosemgrep:ci.ssm-in-func-name
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name      = %[1]q
+  data_type = "aws:ssm:integration"
+  type      = "SecureString"
+  value     = "{\"description\": \"My first webhook integration for Automation.\", \"url\": \"https://example.com\"}"
 }
 `, rName))
 }
@@ -1087,6 +1128,8 @@ resource "aws_kms_alias" "test_alias" {
 }
 
 func TestParameterShouldUpdate(t *testing.T) {
+	t.Parallel()
+
 	data := tfssm.ResourceParameter().TestResourceData()
 	failure := false
 

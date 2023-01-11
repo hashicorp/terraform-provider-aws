@@ -26,7 +26,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccUserGroupMembershipDestroy,
+		CheckDestroy:             testAccCheckUserGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			// simplest test
 			{
@@ -110,8 +110,8 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	})
 }
 
-func testAccUserGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckUserGroupMembershipDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "aws_iam_user_group_membership" {
@@ -142,7 +142,7 @@ func testAccUserGroupMembershipDestroy(s *terraform.State) error {
 
 func testAccUserGroupMembershipCheckGroupListForUser(userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		// get list of groups for user
 		userGroupList, err := conn.ListGroupsForUser(&iam.ListGroupsForUserInput{

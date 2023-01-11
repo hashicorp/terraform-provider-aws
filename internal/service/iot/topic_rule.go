@@ -1160,7 +1160,7 @@ var timestreamDimensionResource *schema.Resource = &schema.Resource{
 }
 
 func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1188,7 +1188,7 @@ func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1312,7 +1312,7 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.ReplaceTopicRuleInput{
@@ -1340,7 +1340,7 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[INFO] Deleting IoT Topic Rule: %s", d.Id())
 	_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
@@ -2146,7 +2146,6 @@ func expandTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 					}
 
 					iotErrorAction = &iot.Action{CloudwatchAlarm: action}
-
 				}
 			case "cloudwatch_logs":
 				for _, tfMapRaw := range v.([]interface{}) {

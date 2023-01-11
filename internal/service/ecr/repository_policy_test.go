@@ -159,7 +159,7 @@ func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
 }
 
 func testAccCheckRepositoryPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_repository_policy" {

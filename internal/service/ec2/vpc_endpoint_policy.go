@@ -27,11 +27,12 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -52,7 +53,7 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 }
 
 func resourceVPCEndpointPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	req := &ec2.ModifyVpcEndpointInput{
@@ -86,7 +87,7 @@ func resourceVPCEndpointPolicyPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVPCEndpointPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpce, err := FindVPCEndpointByID(conn, d.Id())
 
@@ -119,7 +120,7 @@ func resourceVPCEndpointPolicyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceVPCEndpointPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	req := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId: aws.String(d.Id()),

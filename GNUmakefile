@@ -2,6 +2,7 @@ SWEEP               ?= us-west-2,us-east-1,us-east-2
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
+SVC_DIR             ?= ./internal/service
 TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
@@ -65,6 +66,7 @@ gen:
 	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
 	rm -f internal/conns/*_gen.go
+	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
@@ -98,9 +100,25 @@ testacc: fmtcheck
 	fi
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
+testacc-lint:
+	@echo "Checking acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+    | sort -u \
+    | xargs -I {} terrafmt diff --check --fmtcompat {}
+
+testacc-lint-fix:
+	@echo "Fixing acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+	| sort -u \
+	| xargs -I {} terrafmt fmt  --fmtcompat {}
+
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+
+fumpt:
+	@echo "==> Fixing source code with gofumpt..."
+	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -156,8 +174,8 @@ gh-workflows-lint:
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint -c .ci/.golangci.yml run ./$(PKG_NAME)/...
-	@golangci-lint -c .ci/.golangci2.yml run ./$(PKG_NAME)/...
+	@golangci-lint run --config .ci/.golangci.yml ./$(PKG_NAME)/...
+	@golangci-lint run --config .ci/.golangci2.yml ./$(PKG_NAME)/...
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -200,6 +218,7 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -251,6 +270,7 @@ semall:
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/acctest/ \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
     	--config 'r/dgryski.semgrep-go.marshaljson' \
@@ -267,4 +287,36 @@ tfsdk2fw:
 yamllint:
 	@yamllint .
 
-.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw
+.PHONY: \
+	build \
+	gen \
+	sweep \
+	test \
+	testacc \
+	testacc-lint \
+	testacc-lint-fix \
+	fmt \
+	fumpt \
+	fmtcheck \
+	gencheck \
+	generate-changelog \
+	depscheck \
+	docs-lint \
+	docs-lint-fix \
+	docscheck \
+	lint \
+	gh-workflows-lint \
+	golangci-lint \
+	providerlint \
+	importlint \
+	tools \
+	test-compile \
+	website-link-check \
+	website-link-check-ghrc \
+	website-lint \
+	website-lint-fix \
+	semgrep \
+	semall \
+	skaff \
+	tfsdk2fw \
+	yamllint

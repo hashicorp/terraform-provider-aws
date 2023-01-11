@@ -50,7 +50,7 @@ func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// If the TGW attachment is already associated with a TGW route table, disassociate it to prevent errors like
 	// "IncorrectState: Cannot have both PolicyTableAssociation and RouteTableAssociation on the same TransitGateway Attachment".
@@ -102,7 +102,7 @@ func resourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, 
 }
 
 func resourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
 
@@ -131,7 +131,7 @@ func resourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, me
 }
 
 func resourceTransitGatewayPolicyTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
 

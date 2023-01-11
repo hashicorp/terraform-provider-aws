@@ -99,7 +99,7 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 }
 
 func testAccCheckArchiveDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_event_archive" {
@@ -127,7 +127,7 @@ func testAccCheckArchiveExists(n string, v *eventbridge.DescribeArchiveOutput) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 		params := eventbridge.DescribeArchiveInput{
 			ArchiveName: aws.String(rs.Primary.ID),
 		}

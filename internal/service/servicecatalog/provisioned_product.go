@@ -254,7 +254,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 }
 
 func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -356,7 +356,7 @@ func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -476,7 +476,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
 		UpdateToken:          aws.String(resource.UniqueId()),
@@ -554,7 +554,7 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceProvisionedProductDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.TerminateProvisionedProductInput{
 		TerminateToken:       aws.String(resource.UniqueId()),

@@ -653,6 +653,7 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					testAccCheckQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "300"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
 				),
 			},
 			{
@@ -666,6 +667,50 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					testAccCheckQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccQueueConfig_managedEncryption(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSQSQueue_managedEncryption(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_managedEncryption(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccQueueConfig_managedEncryption(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
 				),
 			},
 			{
@@ -769,7 +814,7 @@ func testAccCheckQueueExists(resourceName string, v *map[string]string) resource
 			return fmt.Errorf("No SQS Queue URL is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn()
 
 		output, err := tfsqs.FindQueueAttributesByURL(context.Background(), conn, rs.Primary.ID)
 
@@ -784,7 +829,7 @@ func testAccCheckQueueExists(resourceName string, v *map[string]string) resource
 }
 
 func testAccCheckQueueDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sqs_queue" {

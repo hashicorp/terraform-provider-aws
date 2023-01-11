@@ -17,9 +17,9 @@ import (
 
 func ResourceClusterActivityStream() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterActivityStreamCreate,
-		ReadContext:   resourceClusterActivityStreamRead,
-		DeleteContext: resourceClusterActivityStreamDelete,
+		CreateWithoutTimeout: resourceClusterActivityStreamCreate,
+		ReadWithoutTimeout:   resourceClusterActivityStreamRead,
+		DeleteWithoutTimeout: resourceClusterActivityStreamDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -57,7 +57,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 }
 
 func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	resourceArn := d.Get("resource_arn").(string)
 
@@ -71,9 +71,9 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] RDS Cluster start activity stream input: %s", startActivityStreamInput)
 
-	resp, err := conn.StartActivityStream(startActivityStreamInput)
+	resp, err := conn.StartActivityStreamWithContext(ctx, startActivityStreamInput)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating RDS Cluster Activity Stream: %s", err))
+		return diag.FromErr(fmt.Errorf("creating RDS Cluster Activity Stream: %s", err))
 	}
 
 	log.Printf("[DEBUG]: RDS Cluster start activity stream response: %s", resp)
@@ -89,10 +89,10 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[DEBUG] Finding DB Cluster (%s)", d.Id())
-	resp, err := FindDBClusterWithActivityStream(conn, d.Id())
+	resp, err := FindDBClusterWithActivityStream(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
@@ -101,7 +101,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error describing RDS Cluster (%s): %s", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("describing RDS Cluster (%s): %s", d.Id(), err))
 	}
 
 	d.Set("resource_arn", resp.DBClusterArn)
@@ -113,7 +113,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	stopActivityStreamInput := &rds.StopActivityStreamInput{
 		ApplyImmediately: aws.Bool(true),
@@ -122,9 +122,9 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] RDS Cluster stop activity stream input: %s", stopActivityStreamInput)
 
-	resp, err := conn.StopActivityStream(stopActivityStreamInput)
+	resp, err := conn.StopActivityStreamWithContext(ctx, stopActivityStreamInput)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error stopping RDS Cluster Activity Stream: %w", err))
+		return diag.FromErr(fmt.Errorf("stopping RDS Cluster Activity Stream: %w", err))
 	}
 
 	log.Printf("[DEBUG] RDS Cluster stop activity stream response: %s", resp)

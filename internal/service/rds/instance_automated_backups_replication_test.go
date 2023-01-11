@@ -220,7 +220,7 @@ func testAccCheckInstanceAutomatedBackupsReplicationExist(n string) resource.Tes
 			return fmt.Errorf("No RDS instance automated backups replication ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(conn, rs.Primary.ID)
 
@@ -229,7 +229,7 @@ func testAccCheckInstanceAutomatedBackupsReplicationExist(n string) resource.Tes
 }
 
 func testAccCheckInstanceAutomatedBackupsReplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance_automated_backups_replication" {

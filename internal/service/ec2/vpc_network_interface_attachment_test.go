@@ -32,6 +32,11 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

@@ -54,7 +54,7 @@ func ResourceLFTag() *schema.Resource {
 }
 
 func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	tagKey := d.Get("key").(string)
 	tagValues := d.Get("values").(*schema.Set)
@@ -83,7 +83,7 @@ func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
@@ -116,7 +116,7 @@ func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
@@ -151,7 +151,7 @@ func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {

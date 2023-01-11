@@ -135,7 +135,7 @@ func testAccCheckKeyPairExists(n string, res *lightsail.KeyPair) resource.TestCh
 			return errors.New("No LightsailKeyPair set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
@@ -159,7 +159,7 @@ func testAccCheckKeyPairDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),

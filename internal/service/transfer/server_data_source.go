@@ -79,7 +79,7 @@ func DataSourceServer() *schema.Resource {
 }
 
 func dataSourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID := d.Get("server_id").(string)
 

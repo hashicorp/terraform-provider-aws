@@ -90,7 +90,7 @@ func ResourcePermissionSet() *schema.Resource {
 }
 
 func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -133,7 +133,7 @@ func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -191,7 +191,7 @@ func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -243,7 +243,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourcePermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {

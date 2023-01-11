@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -38,7 +39,7 @@ func sweepTables(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DynamoDBConn
+	conn := client.(*conns.AWSClient).DynamoDBConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -108,7 +109,7 @@ func sweepBackups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).DynamoDBConn
+	conn := client.(*conns.AWSClient).DynamoDBConn()
 	sweepables := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -161,11 +162,11 @@ type backupSweeper struct {
 	arn  *string
 }
 
-func (bs backupSweeper) Delete(ctx context.Context, rc sweep.RetryConfig) error {
+func (bs backupSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	input := &dynamodb.DeleteBackupInput{
 		BackupArn: bs.arn,
 	}
-	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		_, err := bs.conn.DeleteBackupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeBackupNotFoundException) {
 			return nil
@@ -178,7 +179,7 @@ func (bs backupSweeper) Delete(ctx context.Context, rc sweep.RetryConfig) error 
 		}
 
 		return nil
-	})
+	}, optFns...)
 	if tfresource.TimedOut(err) {
 		_, err = bs.conn.DeleteBackupWithContext(ctx, input)
 	}

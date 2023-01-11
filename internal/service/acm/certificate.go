@@ -118,6 +118,14 @@ func ResourceCertificate() *schema.Resource {
 				ValidateDiagFunc: validateHybridDuration,
 				ConflictsWith:    []string{"certificate_body", "certificate_chain", "private_key", "validation_method"},
 			},
+			"key_algorithm": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringInSlice(acm.KeyAlgorithm_Values(), false),
+				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -319,7 +327,7 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -339,6 +347,10 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("certificate_authority_arn"); ok {
 			input.CertificateAuthorityArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("key_algorithm"); ok {
+			input.KeyAlgorithm = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -402,7 +414,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -426,6 +438,18 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("early_renewal_duration", d.Get("early_renewal_duration"))
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
 		return diag.Errorf("setting domain_validation_options: %s", err)
+	}
+	if certificate.KeyAlgorithm != nil {
+		keyAlgorithmValue := certificate.KeyAlgorithm
+		// ACM DescribeCertificate returns hyphenated string values instead of underscore separated
+		// This sets the value to the string in the ACM SDK (i.e. underscore separated)
+		for _, v := range acm.KeyAlgorithm_Values() {
+			if strings.ReplaceAll(aws.StringValue(keyAlgorithmValue), "-", "_") == strings.ReplaceAll(v, "-", "_") {
+				keyAlgorithmValue = aws.String(v)
+				break
+			}
+		}
+		d.Set("key_algorithm", keyAlgorithmValue)
 	}
 	if certificate.NotAfter != nil {
 		d.Set("not_after", aws.TimeValue(certificate.NotAfter).Format(time.RFC3339))
@@ -481,7 +505,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
@@ -533,7 +557,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, certificateCrossServicePropagationTimeout,

@@ -2,6 +2,7 @@ package elb
 
 import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -272,7 +273,7 @@ func ResourceLoadBalancer() *schema.Resource {
 }
 
 func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -349,7 +350,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -383,7 +384,7 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
-	return flattenLoadBalancerEResource(d, meta.(*conns.AWSClient).EC2Conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
+	return flattenLoadBalancerEResource(d, meta.(*conns.AWSClient).EC2Conn(), elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig)
 }
 
 // flattenLoadBalancerEResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
@@ -421,7 +422,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(context.TODO(), ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
@@ -495,7 +496,7 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 }
 
 func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
@@ -809,7 +810,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*conns.AWSClient).ELBConn
+	elbconn := meta.(*conns.AWSClient).ELBConn()
 
 	log.Printf("[INFO] Deleting ELB: %s", d.Id())
 
@@ -823,7 +824,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 
 	name := d.Get("name").(string)
 
-	err := CleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn, name)
+	err := CleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn(), name)
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
 	}
@@ -917,7 +918,6 @@ func ValidHeathCheckTarget(v interface{}, k string) (ws []string, errors []error
 				"than 1024 characters in the Health Check target: %s",
 				k, value))
 		}
-
 	}
 
 	return ws, errors

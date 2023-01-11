@@ -125,7 +125,7 @@ func ResourceGrant() *schema.Resource {
 }
 
 func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	keyId := d.Get("key_id").(string)
 
 	input := kms.CreateGrantInput{
@@ -187,7 +187,7 @@ func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGrantRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	keyId, grantId, err := decodeGrantID(d.Id())
 	if err != nil {
@@ -247,7 +247,7 @@ func resourceGrantRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	keyId, grantId, decodeErr := decodeGrantID(d.Id())
 	if decodeErr != nil {
@@ -361,7 +361,6 @@ func WaitForGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error 
 // Use a marker to iterate over all grants in "pages"
 // NB: This function only retries on AWS Errors
 func findGrantByID(conn *kms.KMS, keyId string, grantId string, marker *string) (*kms.GrantListEntry, error) {
-
 	input := kms.ListGrantsInput{
 		KeyId:  aws.String(keyId),
 		Limit:  aws.Int64(100),
@@ -429,7 +428,6 @@ func grantConstraintsIsValid(constraints *schema.Set) bool {
 	}
 
 	return constraintCount <= 1
-
 }
 
 func expandGrantConstraints(configured *schema.Set) *kms.GrantConstraints {

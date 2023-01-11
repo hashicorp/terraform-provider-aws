@@ -25,6 +25,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 		Read:   resourceComputeEnvironmentRead,
 		Update: resourceComputeEnvironmentUpdate,
 		Delete: resourceComputeEnvironmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -165,7 +166,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"spot_iam_fleet_role": {
@@ -195,6 +196,28 @@ func ResourceComputeEnvironment() *schema.Resource {
 			"ecs_cluster_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"eks_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"eks_cluster_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"kubernetes_namespace": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"service_role": {
 				Type:         schema.TypeString,
@@ -235,7 +258,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 }
 
 func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -250,6 +273,10 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 
 	if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ComputeResources = expandComputeResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("eks_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EksConfiguration = expandEKSConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -277,7 +304,7 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -313,6 +340,14 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("compute_resources", nil)
 	}
 
+	if computeEnvironment.EksConfiguration != nil {
+		if err := d.Set("eks_configuration", []interface{}{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
+			return fmt.Errorf("error setting eks_configuration: %w", err)
+		}
+	} else {
+		d.Set("eks_configuration", nil)
+	}
+
 	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -328,7 +363,7 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &batch.UpdateComputeEnvironmentInput{
@@ -390,9 +425,9 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
-	log.Printf("[DEBUG] Disabling Batch Compute Environment (%s)", d.Id())
+	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
 	{
 		input := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
@@ -404,11 +439,11 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if _, err := waitComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("error waiting for Batch Compute Environment (%s) disable: %w", d.Id(), err)
+			log.Printf("[WARN] error waiting for Batch Compute Environment (%s) disable: %s", d.Id(), err)
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting Batch Compute Environment (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Batch Compute Environment: %s", d.Id())
 	{
 		input := &batch.DeleteComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
@@ -536,6 +571,24 @@ func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource 
 
 	if computeResourceType != "" {
 		apiObject.Type = aws.String(computeResourceType)
+	}
+
+	return apiObject
+}
+
+func expandEKSConfiguration(tfMap map[string]interface{}) *batch.EksConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &batch.EksConfiguration{}
+
+	if v, ok := tfMap["eks_cluster_arn"].(string); ok && v != "" {
+		apiObject.EksClusterArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["kubernetes_namespace"].(string); ok && v != "" {
+		apiObject.KubernetesNamespace = aws.String(v)
 	}
 
 	return apiObject
@@ -676,6 +729,24 @@ func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interfa
 
 	if v := apiObject.Type; v != nil {
 		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEKSConfiguration(apiObject *batch.EksConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EksClusterArn; v != nil {
+		tfMap["eks_cluster_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.KubernetesNamespace; v != nil {
+		tfMap["kubernetes_namespace"] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -36,7 +36,7 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 }
 
 func testAccCheckTriggerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codecommit_trigger" {
@@ -71,7 +71,7 @@ func testAccCheckTriggerExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
 		out, err := conn.GetRepositoryTriggers(&codecommit.GetRepositoryTriggersInput{
 			RepositoryName: aws.String(rs.Primary.ID),
 		})

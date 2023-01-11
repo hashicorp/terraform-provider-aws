@@ -31,9 +31,8 @@ const (
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAMICreate,
-		// The Read, Update and Delete operations are shared with aws_ami_copy
-		// and aws_ami_from_instance, since they differ only in how the image
-		// is created.
+		// The Read, Update and Delete operations are shared with aws_ami_copy and aws_ami_from_instance,
+		// since they differ only in how the image is created.
 		Read:   resourceAMIRead,
 		Update: resourceAMIUpdate,
 		Delete: resourceAMIDelete,
@@ -48,6 +47,7 @@ func ResourceAMI() *schema.Resource {
 			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
+		// Keep in sync with aws_ami_copy's and aws_ami_from_instance's schemas.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:         schema.TypeString,
@@ -284,7 +284,7 @@ func ResourceAMI() *schema.Resource {
 }
 
 func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -380,7 +380,7 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -467,7 +467,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -500,7 +500,7 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
 	_, err := conn.DeregisterImage(&ec2.DeregisterImageInput{

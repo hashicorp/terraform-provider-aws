@@ -14,7 +14,6 @@ Creates a WAFv2 Web ACL resource.
 
 This resource is based on `aws_wafv2_rule_group`, check the documentation of the `aws_wafv2_rule_group` resource to see examples of the various available statements.
 
-
 ### Managed Rule
 
 ```terraform
@@ -40,11 +39,19 @@ resource "aws_wafv2_web_acl" "example" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "SizeRestrictions_QUERYSTRING"
         }
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "NoUserAgent_HEADER"
         }
 
@@ -311,6 +318,7 @@ The `action` block supports the following arguments:
 * `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
 * `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
 * `captcha` - (Optional) Instructs AWS WAF to run a Captcha check against the web request. See [Captcha](#captcha) below for details.
+* `challenge` - (Optional) Instructs AWS WAF to run a check against the request to verify that the request is coming from a legitimate client session. See [Challenge](#challenge) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
 
 ### Override Action
@@ -337,6 +345,12 @@ The `block` block supports the following arguments:
 ### Captcha
 
 The `captcha` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Challenge
+
+The `challenge` block supports the following arguments:
 
 * `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
 
@@ -449,8 +463,10 @@ You can't nest a `managed_rule_group_statement`, for example for use inside a `n
 
 The `managed_rule_group_statement` block supports the following arguments:
 
-* `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
+* `excluded_rule` - (Optional, **Deprecated**) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details. Use `rule_action_override` instead. (See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_ManagedRuleGroupStatement.html#WAF-Type-ManagedRuleGroupStatement-ExcludedRules))
 * `name` - (Required) Name of the managed rule group.
+* `rule_action_override` - (Optional) Action settings to use in the place of the rule actions that are configured inside the rule group. You specify one override for each rule whose action you want to change. See [Rule Action Override](#rule-action-override) below for details.
+* `managed_rule_group_configs`- (Optional) Additional information that's used by a managed rule group. Only one rule attribute is allowed in each config. See [Managed Rule Group Configs](#managed-rule-group-configs) for more details
 * `scope_down_statement` - Narrows the scope of the statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 * `vendor_name` - (Required) Name of the managed rule group vendor.
 * `version` - (Optional) Version of the managed rule group. You can set `Version_1.0` or `Version_1.1` etc. If you want to use the default version, do not set anything.
@@ -561,6 +577,35 @@ The `excluded_rule` block supports the following arguments:
 
 * `name` - (Required) Name of the rule to exclude. If the rule group is managed by AWS, see the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the appropriate rule group in use.
 
+### Rule Action Override
+
+The `rule_action_override` block supports the following arguments:
+
+* `action_to_use` - (Required) Override action to use, in place of the configured action of the rule in the rule group. See [Action](#action) below for details.
+* `name` - (Required) Name of the rule to override. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the appropriate rule group in use.
+
+### Managed Rule Group Configs
+
+The `managed_rule_group_configs` block support the following arguments:
+
+* `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [AWS Managed Rules Bot Control Rule Set](#managed-rules-bot-control-rule-set) for more details
+* `login_path` - (Optional) The path of the login endpoint for your application.
+* `password_field` - (Optional) Details about your login page password field. See [Password Field](#password-field) for more details.
+* `payload_type`- (Optional) The payload type for your login endpoint, either JSON or form encoded.
+* `username_field` - (Optional) Details about your login page username field. See [Username Field](#username-field) for more details.
+
+### Managed Rules Bot Control Rule Set
+
+* `inspection_level` - (Optional) The inspection level to use for the Bot Control rule group.
+
+### Password Field
+
+* `identifier` - (Optional) The name of the password field.
+
+### Username Field
+
+* `identifier` - (Optional) The name of the username field.
+
 ### Field to Match
 
 The part of a web request that you want AWS WAF to inspect. Include the single `field_to_match` type that you want to inspect, with additional specifications as needed, according to the type. You specify a single request component in `field_to_match` for each rule statement that requires it. To inspect more than one component of a web request, create a separate rule statement for each component. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-fields.html#waf-rule-statement-request-component) for more details.
@@ -657,7 +702,6 @@ The `text_transformation` block supports the following arguments:
 
 * `priority` - (Required) Relative processing order for multiple transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before inspecting the transformed content.
 * `type` - (Required) Transformation to apply, please refer to the Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
-
 
 ### Visibility Configuration
 

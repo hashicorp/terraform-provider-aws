@@ -52,7 +52,7 @@ func ResourceSecretPolicy() *schema.Resource {
 }
 
 func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -97,7 +97,7 @@ func resourceSecretPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
@@ -140,7 +140,7 @@ func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	if d.HasChanges("policy", "block_public_policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -177,7 +177,7 @@ func resourceSecretPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSecretPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.DeleteResourcePolicyInput{
 		SecretId: aws.String(d.Id()),

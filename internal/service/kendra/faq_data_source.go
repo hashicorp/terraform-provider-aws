@@ -17,7 +17,7 @@ import (
 
 func DataSourceFaq() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFaqRead,
+		ReadWithoutTimeout: dataSourceFaqRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -100,7 +100,7 @@ func DataSourceFaq() *schema.Resource {
 }
 
 func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("faq_id").(string)

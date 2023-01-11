@@ -82,7 +82,7 @@ func ResourcePermission() *schema.Resource {
 }
 
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
@@ -109,7 +109,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -206,7 +206,7 @@ func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID 
 }
 
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -229,7 +229,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -368,7 +368,6 @@ func (c *PermissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
 
 func FindPermissionPolicyStatementByID(policy *PermissionPolicyDoc, id string) (
 	*PermissionPolicyStatement, error) {
-
 	log.Printf("[DEBUG] Finding statement (%s) in EventBridge permission policy: %s", id, policy)
 	for _, statement := range policy.Statements {
 		if statement.Sid == id {

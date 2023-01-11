@@ -119,7 +119,7 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 }
 
 func testAccCheckVirtualMFADeviceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_virtual_mfa_device" {
@@ -135,7 +135,6 @@ func testAccCheckVirtualMFADeviceDestroy(s *terraform.State) error {
 		if output != nil {
 			return fmt.Errorf("IAM Virtual MFA Device (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 
 	return nil
@@ -152,7 +151,7 @@ func testAccCheckVirtualMFADeviceExists(n string, res *iam.VirtualMFADevice) res
 			return errors.New("No Virtual MFA Device name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		output, err := tfiam.FindVirtualMFADevice(conn, rs.Primary.ID)
 		if err != nil {

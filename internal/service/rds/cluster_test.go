@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -2130,14 +2131,15 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).RDSConn
+	ctx := context.Background()
+	conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster" {
 			continue
 		}
 
-		_, err := tfrds.FindDBClusterByID(conn, rs.Primary.ID)
+		_, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -2154,7 +2156,8 @@ func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema
 }
 
 func testAccCheckClusterDestroyWithFinalSnapshot(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	ctx := context.Background()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster" {
@@ -2176,7 +2179,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfrds.FindDBClusterByID(conn, rs.Primary.ID)
+		_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -2207,9 +2210,10 @@ func testAccCheckClusterExistsWithProvider(n string, v *rds.DBCluster, providerF
 			return fmt.Errorf("No RDS Cluster ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).RDSConn
+		ctx := context.Background()
+		conn := providerF().Meta().(*conns.AWSClient).RDSConn()
 
-		output, err := tfrds.FindDBClusterByID(conn, rs.Primary.ID)
+		output, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

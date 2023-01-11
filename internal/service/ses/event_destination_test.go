@@ -103,7 +103,7 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckEventDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
@@ -125,11 +125,9 @@ func testAccCheckEventDestinationDestroy(s *terraform.State) error {
 		if found {
 			return fmt.Errorf("The configuration set still exists")
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resource.TestCheckFunc {
@@ -143,7 +141,7 @@ func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resou
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
 			ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),

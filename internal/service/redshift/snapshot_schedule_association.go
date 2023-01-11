@@ -14,7 +14,6 @@ import (
 )
 
 func ResourceSnapshotScheduleAssociation() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceSnapshotScheduleAssociationCreate,
 		Read:   resourceSnapshotScheduleAssociationRead,
@@ -39,7 +38,7 @@ func ResourceSnapshotScheduleAssociation() *schema.Resource {
 }
 
 func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	clusterIdentifier := d.Get("cluster_identifier").(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
 
@@ -63,7 +62,7 @@ func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	scheduleIdentifier, assoicatedCluster, err := FindScheduleAssociationById(conn, d.Id())
 
@@ -83,7 +82,7 @@ func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)

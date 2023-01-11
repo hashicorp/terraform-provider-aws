@@ -128,9 +128,9 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed: true,
 			},
 			"transit_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpn_gateway_id"},
 			},
 			"transport_transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
@@ -608,9 +608,9 @@ func ResourceVPNConnection() *schema.Resource {
 				},
 			},
 			"vpn_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"transit_gateway_id"},
 			},
 		},
 
@@ -661,7 +661,7 @@ var (
 )
 
 func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -698,7 +698,7 @@ func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -845,7 +845,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
@@ -940,7 +940,7 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
 	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{

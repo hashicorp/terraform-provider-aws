@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +17,8 @@ import (
 )
 
 func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
+	dataSourceName := "data.aws_ip_ranges.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
@@ -24,11 +27,28 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccIPRangesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
-					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
-					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
-					resource.TestCheckResourceAttr("data.aws_ip_ranges.none", "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_ip_ranges.none", "ipv6_cidr_blocks.#", "0"),
+					testAccIPRangesCheckAttributes(dataSourceName),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "cidr_blocks"),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "ipv6_cidr_blocks"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMetaIPRangesDataSource_none(t *testing.T) {
+	dataSourceName := "data.aws_ip_ranges.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPRangesDataSourceConfig_none,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_blocks.#", "0"),
 				),
 			},
 		},
@@ -36,6 +56,8 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaIPRangesDataSource_url(t *testing.T) {
+	dataSourceName := "data.aws_ip_ranges.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
@@ -44,9 +66,29 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 			{
 				Config: testAccIPRangesDataSourceConfig_url,
 				Check: resource.ComposeTestCheckFunc(
-					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
-					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
-					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "ipv6_cidr_blocks"),
+					testAccIPRangesCheckAttributes(dataSourceName),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "cidr_blocks"),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "ipv6_cidr_blocks"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMetaIPRangesDataSource_uppercase(t *testing.T) {
+	dataSourceName := "data.aws_ip_ranges.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPRangesDataSourceConfig_uppercase,
+				Check: resource.ComposeTestCheckFunc(
+					testAccIPRangesCheckAttributes(dataSourceName),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "cidr_blocks"),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "ipv6_cidr_blocks"),
 				),
 			},
 		},
@@ -55,7 +97,6 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 
 func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		r := s.RootModule().Resources[n]
 		a := r.Primary.Attributes
 
@@ -84,27 +125,22 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 		)
 
 		for k, v := range a {
-
 			if regionMember.MatchString(k) {
-
 				// lintignore:AWSAT003
-				if !(v == "eu-west-1" || v == "eu-central-1") {
+				if v := strings.ToLower(v); !(v == "eu-west-1" || v == "eu-central-1") {
 					return fmt.Errorf("unexpected region %s", v)
 				}
 
 				regions = regions + 1
-
 			}
 
 			if serviceMember.MatchString(k) {
-
-				if v != "ec2" {
+				if v := strings.ToLower(v); !(v == "ec2" || v == "amazon") {
 					return fmt.Errorf("unexpected service %s", v)
 				}
 
 				services = services + 1
 			}
-
 		}
 
 		if regions != 2 {
@@ -161,12 +197,14 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 
 // lintignore:AWSAT003
 const testAccIPRangesDataSourceConfig_basic = `
-data "aws_ip_ranges" "some" {
+data "aws_ip_ranges" "test" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
 }
+`
 
-data "aws_ip_ranges" "none" {
+const testAccIPRangesDataSourceConfig_none = `
+data "aws_ip_ranges" "test" {
   regions  = ["mars-1"]
   services = ["blueorigin"]
 }
@@ -174,9 +212,17 @@ data "aws_ip_ranges" "none" {
 
 // lintignore:AWSAT003
 const testAccIPRangesDataSourceConfig_url = `
-data "aws_ip_ranges" "some" {
+data "aws_ip_ranges" "test" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
   url      = "https://ip-ranges.amazonaws.com/ip-ranges.json"
+}
+`
+
+// lintignore:AWSAT003
+const testAccIPRangesDataSourceConfig_uppercase = `
+data "aws_ip_ranges" "test" {
+  regions  = ["EU-WEST-1", "EU-CENTRAL-1"]
+  services = ["AMAZON"]
 }
 `

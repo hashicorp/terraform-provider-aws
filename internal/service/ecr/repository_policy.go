@@ -33,10 +33,15 @@ func ResourceRepositoryPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"registry_id": {
 				Type:     schema.TypeString,
@@ -47,7 +52,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 }
 
 func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -90,7 +95,7 @@ func resourceRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.GetRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -165,7 +170,7 @@ func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	_, err := conn.DeleteRepositoryPolicy(&ecr.DeleteRepositoryPolicyInput{
 		RepositoryName: aws.String(d.Id()),

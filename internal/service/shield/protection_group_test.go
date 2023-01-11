@@ -287,7 +287,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 }
 
 func testAccCheckProtectionGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection_group" {
@@ -323,7 +323,7 @@ func testAccCheckProtectionGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 		input := &shield.DescribeProtectionGroupInput{
 			ProtectionGroupId: aws.String(rs.Primary.ID),

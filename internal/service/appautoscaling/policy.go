@@ -210,7 +210,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	params, err := getPutScalingPolicyInput(d)
 	if err != nil {
@@ -308,7 +308,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	params, inputErr := getPutScalingPolicyInput(d)
 	if inputErr != nil {
@@ -340,7 +340,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 	p, err := getPolicy(d, meta)
 	if err != nil {
 		return create.Error(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
@@ -404,7 +404,6 @@ func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 }
 
 func ValidPolicyImportInput(id string) ([]string, error) {
-
 	idParts := strings.Split(id, "/")
 	if len(idParts) < 4 {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
@@ -429,7 +428,6 @@ func ValidPolicyImportInput(id string) ([]string, error) {
 		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
 		scalableDimension = idParts[len(idParts)-2]
 		policyName = idParts[len(idParts)-1]
-
 	}
 
 	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
@@ -599,7 +597,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.Pu
 }
 
 func getPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
 		PolicyNames:       []*string{aws.String(d.Get("name").(string))},

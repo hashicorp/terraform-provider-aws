@@ -48,7 +48,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 }
 
 func testAccCheckParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dax_parameter_group" {
@@ -75,7 +75,7 @@ func testAccCheckParameterGroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
 
 		_, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},

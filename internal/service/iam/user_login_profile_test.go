@@ -22,6 +22,8 @@ import (
 )
 
 func TestGeneratePassword(t *testing.T) {
+	t.Parallel()
+
 	p, err := tfiam.GeneratePassword(6)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -40,6 +42,8 @@ func TestGeneratePassword(t *testing.T) {
 }
 
 func TestPasswordPolicyCheck(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		pass  string
 		valid bool
@@ -54,7 +58,10 @@ func TestPasswordPolicyCheck(t *testing.T) {
 		{pass: "ABCD1#", valid: false},
 		{pass: "abCD11#$", valid: true},
 	} {
+		tc := tc
 		t.Run(tc.pass, func(t *testing.T) {
+			t.Parallel()
+
 			valid := tfiam.CheckPwdPolicy([]byte(tc.pass))
 			if valid != tc.valid {
 				t.Fatalf("expected %q to be valid==%t, got %t", tc.pass, tc.valid, valid)
@@ -269,7 +276,7 @@ func TestAccIAMUserLoginProfile_disappears(t *testing.T) {
 }
 
 func testAccCheckUserLoginProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_login_profile" {
@@ -365,7 +372,7 @@ func testAccCheckUserLoginProfileExists(n string, res *iam.GetLoginProfileOutput
 			return errors.New("No UserName is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		resp, err := conn.GetLoginProfile(&iam.GetLoginProfileInput{
 			UserName: aws.String(rs.Primary.ID),
 		})

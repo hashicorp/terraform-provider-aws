@@ -18,7 +18,7 @@ const (
 	lagDeletedTimeout              = 10 * time.Minute
 )
 
-func waitConnectionConfirmed(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+func waitConnectionConfirmed(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateRequested},
 		Target:  []string{directconnect.ConnectionStateAvailable},

@@ -45,7 +45,6 @@ The following arguments are supported:
 several valid keys, for a full reference, check out
 [describe-snapshots in the AWS CLI reference][1].
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -68,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
 

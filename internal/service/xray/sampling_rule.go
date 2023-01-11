@@ -102,7 +102,7 @@ func ResourceSamplingRule() *schema.Resource {
 }
 
 func resourceSamplingRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -140,7 +140,7 @@ func resourceSamplingRuleCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSamplingRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -191,7 +191,7 @@ func resourceSamplingRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSamplingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -239,7 +239,7 @@ func resourceSamplingRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceSamplingRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	log.Printf("[INFO] Deleting XRay Sampling Rule: %s", d.Id())
 

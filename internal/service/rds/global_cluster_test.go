@@ -18,6 +18,8 @@ import (
 )
 
 func TestClusterIDRegionFromARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName       string
 		Input          string
@@ -70,7 +72,10 @@ func TestClusterIDRegionFromARN(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotID, gotRegion, gotErr := tfrds.ClusterIDRegionFromARN(testCase.Input)
 
 			if gotErr != nil && !testCase.ExpectedErr {
@@ -575,7 +580,7 @@ func testAccCheckGlobalClusterExists(resourceName string, globalCluster *rds.Glo
 			return fmt.Errorf("No RDS Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		cluster, err := tfrds.DescribeGlobalCluster(conn, rs.Primary.ID)
 
@@ -598,7 +603,7 @@ func testAccCheckGlobalClusterExists(resourceName string, globalCluster *rds.Glo
 }
 
 func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_global_cluster" {
@@ -627,7 +632,7 @@ func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
 
 func testAccCheckGlobalClusterDisappears(globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		input := &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
@@ -664,7 +669,7 @@ func testAccCheckGlobalClusterRecreated(i, j *rds.GlobalCluster) resource.TestCh
 }
 
 func testAccPreCheckGlobalCluster(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeGlobalClustersInput{}
 

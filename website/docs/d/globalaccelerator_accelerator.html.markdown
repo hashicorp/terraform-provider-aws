@@ -36,7 +36,7 @@ The following arguments are supported:
 * `arn` - (Optional) Full ARN of the Global Accelerator.
 * `name` - (Optional) Unique name of the Global Accelerator.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence.
 
 ## Attributes Reference
 

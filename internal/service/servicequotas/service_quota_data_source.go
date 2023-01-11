@@ -60,7 +60,7 @@ func DataSourceServiceQuota() *schema.Resource {
 }
 
 func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
 
 	quotaCode := d.Get("quota_code").(string)
 	quotaName := d.Get("quota_name").(string)

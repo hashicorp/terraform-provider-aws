@@ -47,7 +47,7 @@ func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 }
 
 func resourceLocalGatewayRouteTableVPCAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -73,7 +73,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(d *schema.ResourceData, 
 }
 
 func resourceLocalGatewayRouteTableVPCAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -115,7 +115,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(d *schema.ResourceData, me
 }
 
 func resourceLocalGatewayRouteTableVPCAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -129,7 +129,7 @@ func resourceLocalGatewayRouteTableVPCAssociationUpdate(d *schema.ResourceData, 
 }
 
 func resourceLocalGatewayRouteTableVPCAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DeleteLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableVpcAssociationId: aws.String(d.Id()),

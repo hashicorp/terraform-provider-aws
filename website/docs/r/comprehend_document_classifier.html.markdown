@@ -125,7 +125,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_comprehend_document_classifier` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_comprehend_document_classifier` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
 * `create` - (Optional, Default: `60m`)
 * `update` - (Optional, Default: `60m`)

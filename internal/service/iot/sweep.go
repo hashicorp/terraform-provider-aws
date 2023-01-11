@@ -85,7 +85,7 @@ func sweepCertifcates(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -131,7 +131,7 @@ func sweepPolicyAttachments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -197,7 +197,7 @@ func sweepPolicies(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -243,7 +243,7 @@ func sweepRoleAliases(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -289,7 +289,7 @@ func sweepThingPrincipalAttachments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -355,7 +355,7 @@ func sweepThings(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -401,7 +401,7 @@ func sweepThingTypes(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -445,7 +445,7 @@ func sweepTopicRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	input := &iot.ListTopicRulesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -492,7 +492,7 @@ func sweepThingGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	input := &iot.ListThingGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -535,7 +535,7 @@ func sweepTopicRuleDestinations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.(*conns.AWSClient).IoTConn()
 	input := &iot.ListTopicRuleDestinationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

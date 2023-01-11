@@ -17,7 +17,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 // testAccErrorCheckSkip skips AppStream tests that have error messages indicating unsupported features
@@ -306,7 +305,7 @@ func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Flee
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 		resp, err := conn.DescribeFleets(&appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
@@ -324,7 +323,7 @@ func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Flee
 }
 
 func testAccCheckFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_fleet" {
@@ -399,7 +398,7 @@ resource "aws_appstream_fleet" "test" {
   stream_view                        = "DESKTOP"
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType))
@@ -437,7 +436,7 @@ resource "aws_appstream_fleet" "test" {
   max_user_duration_in_seconds       = 1000
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType, displayName))
@@ -479,7 +478,7 @@ resource "aws_appstream_fleet" "test" {
   }
 
   vpc_config {
-    subnet_ids = aws_subnet.test.*.id
+    subnet_ids = aws_subnet.test[*].id
   }
 }
 `, name, description, fleetType, instanceType, displayName))

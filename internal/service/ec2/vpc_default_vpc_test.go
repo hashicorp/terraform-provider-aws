@@ -18,6 +18,8 @@ import (
 )
 
 func TestAccVPCDefaultVPCAndSubnet_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"VPC": {
 			"existing.basic":                        testAccDefaultVPC_Existing_basic,
@@ -37,17 +39,7 @@ func TestAccVPCDefaultVPCAndSubnet_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccPreCheckDefaultVPCExists(t *testing.T) {
@@ -107,6 +99,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -154,6 +147,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -228,6 +222,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -275,6 +270,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
@@ -323,7 +319,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 // testAccCheckDefaultVPCDestroyExists runs after all resources are destroyed.
 // It verifies that the default VPC still exists.
 func testAccCheckDefaultVPCDestroyExists(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_vpc" {
@@ -344,7 +340,7 @@ func testAccCheckDefaultVPCDestroyExists(s *terraform.State) error {
 // It verifies that the default VPC does not exist.
 // A new default VPC is then created.
 func testAccCheckDefaultVPCDestroyNotFound(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_vpc" {
@@ -382,7 +378,7 @@ func testAccCheckDefaultVPCEmpty(v *ec2.Vpc) resource.TestCheckFunc {
 
 // testAccEmptyDefaultVPC empties a default VPC so that it can be deleted.
 func testAccEmptyDefaultVPC(vpcID string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	// Delete the default IGW.
 	igw, err := tfec2.FindInternetGateway(conn, &ec2.DescribeInternetGatewaysInput{

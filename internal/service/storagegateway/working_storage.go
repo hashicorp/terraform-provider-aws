@@ -39,7 +39,7 @@ func ResourceWorkingStorage() *schema.Resource {
 }
 
 func resourceWorkingStorageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -61,7 +61,7 @@ func resourceWorkingStorageCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceWorkingStorageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	gatewayARN, diskID, err := DecodeWorkingStorageID(d.Id())
 	if err != nil {

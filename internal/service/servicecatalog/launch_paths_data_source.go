@@ -68,7 +68,7 @@ func DataSourceLaunchPaths() *schema.Resource {
 }
 
 func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	summaries, err := WaitLaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))

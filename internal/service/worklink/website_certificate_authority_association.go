@@ -50,7 +50,7 @@ func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 }
 
 func resourceWebsiteCertificateAuthorityAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkLinkConn
+	conn := meta.(*conns.AWSClient).WorkLinkConn()
 
 	input := &worklink.AssociateWebsiteCertificateAuthorityInput{
 		FleetArn:    aws.String(d.Get("fleet_arn").(string)),
@@ -72,7 +72,7 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(d *schema.ResourceData
 }
 
 func resourceWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkLinkConn
+	conn := meta.(*conns.AWSClient).WorkLinkConn()
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
@@ -103,7 +103,7 @@ func resourceWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, 
 }
 
 func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkLinkConn
+	conn := meta.(*conns.AWSClient).WorkLinkConn()
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {

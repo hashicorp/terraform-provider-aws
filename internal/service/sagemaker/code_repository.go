@@ -74,7 +74,7 @@ func ResourceCodeRepository() *schema.Resource {
 }
 
 func resourceCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("code_repository_name").(string)
@@ -100,7 +100,7 @@ func resourceCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -112,7 +112,6 @@ func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error 
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker code repository (%s): %w", d.Id(), err)
-
 	}
 
 	arn := aws.StringValue(codeRepository.CodeRepositoryArn)
@@ -143,7 +142,7 @@ func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -170,7 +169,7 @@ func resourceCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceCodeRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteCodeRepositoryInput{
 		CodeRepositoryName: aws.String(d.Id()),

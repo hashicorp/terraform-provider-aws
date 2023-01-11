@@ -188,7 +188,7 @@ func testAccCheckProjectTestGridProjectExists(n string, v *devicefarm.TestGridPr
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 		resp, err := tfdevicefarm.FindTestGridProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -204,7 +204,7 @@ func testAccCheckProjectTestGridProjectExists(n string, v *devicefarm.TestGridPr
 }
 
 func testAccCheckProjectTestGridProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_devicefarm_test_grid_project" {
@@ -269,8 +269,8 @@ resource "aws_devicefarm_test_grid_project" "test" {
 
   vpc_config {
     vpc_id             = aws_vpc.test.id
-    subnet_ids         = aws_subnet.test.*.id
-    security_group_ids = aws_security_group.test.*.id
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
 }
 `, rName))

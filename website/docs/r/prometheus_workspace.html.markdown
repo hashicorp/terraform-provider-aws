@@ -10,27 +10,45 @@ description: |-
 
 Manages an Amazon Managed Service for Prometheus (AMP) Workspace.
 
-~> **NOTE:** This AWS functionality is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
-
 ## Example Usage
 
 ```terraform
-resource "aws_prometheus_workspace" "demo" {
-  alias = "prometheus-test"
+resource "aws_prometheus_workspace" "example" {
+  alias = "example"
 
   tags = {
     Environment = "production"
-    Owner       = "abhi"
+  }
+}
+```
+
+### CloudWatch Logging
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example"
+}
+
+resource "aws_prometheus_workspace" "example" {
+  logging_configuration {
+    log_group_arn = "${aws_cloudwatch_log_group.example.arn}:*"
   }
 }
 ```
 
 ## Argument Reference
 
-The following argument is supported:
+The following arguments are supported:
 
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
+* `logging_configuration` - (Optional) Logging configuration for the workspace. See [Logging Configuration](#logging-configuration) below for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Logging Configuration
+
+The `logging_configuration` block supports the following arguments:
+
+* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist.
 
 ## Attributes Reference
 

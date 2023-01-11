@@ -12,7 +12,6 @@ Creates a new Amazon Redshift security group. You use security groups to control
 
 !> **WARNING:** With the retirement of EC2-Classic the `aws_redshift_security_group` resource has been deprecated and will be removed in a future version. Any existing resources can be removed from [Terraform state](https://www.terraform.io/language/state) using the [`terraform state rm`](https://www.terraform.io/cli/commands/state/rm#command-state-rm) command.
 
-
 ## Example Usage
 
 ```terraform

@@ -64,7 +64,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 }
 
 func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetNetworkCIDR := d.Get("target_network_cidr").(string)
@@ -107,7 +107,7 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 
@@ -137,7 +137,7 @@ func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 

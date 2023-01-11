@@ -55,7 +55,7 @@ const (
 )
 
 func resourceIPAMOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	adminAccountID := d.Get("delegated_admin_account_id").(string)
 
@@ -78,7 +78,7 @@ func resourceIPAMOrganizationAdminAccountCreate(d *schema.ResourceData, meta int
 }
 
 func resourceIPAMOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	org_conn := meta.(*conns.AWSClient).OrganizationsConn
+	org_conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(IPAMServicePrincipal),
@@ -108,7 +108,7 @@ func resourceIPAMOrganizationAdminAccountRead(d *schema.ResourceData, meta inter
 }
 
 func resourceIPAMOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DisableIpamOrganizationAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Id()),

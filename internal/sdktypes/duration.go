@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	awsdiag "github.com/hashicorp/terraform-provider-aws/internal/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 const (
@@ -34,16 +34,16 @@ func (d Duration) Value() (time.Duration, bool, error) {
 func ValidateDuration(i any, path cty.Path) diag.Diagnostics {
 	v, ok := i.(string)
 	if !ok {
-		return diag.Diagnostics{awsdiag.NewIncorrectValueTypeAttributeError(path, "string")}
+		return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
 	}
 
 	duration, err := time.ParseDuration(v)
 	if err != nil {
-		return diag.Diagnostics{awsdiag.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
+		return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
 	}
 
 	if duration < 0 {
-		return diag.Diagnostics{awsdiag.NewInvalidValueAttributeError(path, "Must be greater than zero")}
+		return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, "Must be greater than zero")}
 	}
 
 	return nil

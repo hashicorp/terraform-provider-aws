@@ -109,7 +109,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 }
 
 func resourcePoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -144,7 +144,7 @@ func resourcePoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
 	ip, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
@@ -174,7 +174,7 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourcePoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
@@ -217,7 +217,7 @@ func resourcePoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourcePoolRolesAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
 	_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{

@@ -122,7 +122,7 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationExists(resourceName string)
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		association, err := tfec2.GetLocalGatewayRouteTableVPCAssociation(conn, rs.Primary.ID)
 
@@ -143,7 +143,7 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationExists(resourceName string)
 }
 
 func testAccCheckLocalGatewayRouteTableVPCAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_local_gateway_route_table_vpc_association" {

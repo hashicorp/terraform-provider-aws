@@ -262,7 +262,7 @@ func ResourceCanary() *schema.Resource {
 }
 
 func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SyntheticsConn
+	conn := meta.(*conns.AWSClient).SyntheticsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -355,7 +355,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SyntheticsConn
+	conn := meta.(*conns.AWSClient).SyntheticsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -430,7 +430,7 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SyntheticsConn
+	conn := meta.(*conns.AWSClient).SyntheticsConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
@@ -544,7 +544,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SyntheticsConn
+	conn := meta.(*conns.AWSClient).SyntheticsConn()
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
 		if err := stopCanary(d.Id(), conn); err != nil {

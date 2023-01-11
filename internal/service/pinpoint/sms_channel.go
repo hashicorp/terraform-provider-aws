@@ -53,7 +53,7 @@ func ResourceSMSChannel() *schema.Resource {
 }
 
 func resourceSMSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -85,7 +85,7 @@ func resourceSMSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSMSChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint SMS Channel  for application %s", d.Id())
 
@@ -113,7 +113,7 @@ func resourceSMSChannelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSMSChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint SMS Channel for application %s", d.Id())
 	_, err := conn.DeleteSmsChannel(&pinpoint.DeleteSmsChannelInput{

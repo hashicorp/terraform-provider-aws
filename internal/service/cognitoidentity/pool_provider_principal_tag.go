@@ -57,7 +57,7 @@ func ResourcePoolProviderPrincipalTag() *schema.Resource {
 }
 
 func resourcePoolProviderPrincipalTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Print("[DEBUG] Creating Cognito Identity Provider Principal Tags")
 
 	providerName := d.Get("identity_provider_name").(string)
@@ -87,7 +87,7 @@ func resourcePoolProviderPrincipalTagCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Printf("[DEBUG] Reading Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
@@ -123,7 +123,7 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 }
 
 func resourcePoolProviderPrincipalTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Print("[DEBUG] Updating Cognito Identity Provider Principal Tags")
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
@@ -150,7 +150,7 @@ func resourcePoolProviderPrincipalTagUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())

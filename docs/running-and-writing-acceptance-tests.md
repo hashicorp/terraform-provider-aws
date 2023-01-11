@@ -250,7 +250,7 @@ When executing the test, the following steps are taken for each `TestStep`:
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
         params := cloudwatch.GetDashboardInput{
           DashboardName: aws.String(rs.Primary.ID),
         }
@@ -286,7 +286,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```go
     func testAccCheckDashboardDestroy(s *terraform.State) error {
-      conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+      conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
       for _, rs := range s.RootModule().Resources {
         if rs.Type != "aws_cloudwatch_dashboard" {
@@ -604,7 +604,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 }
 
 func testAccPreCheckExample(t *testing.T) {
-  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn
+  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn()
 	input := &example.ListThingsInput{}
 	_, err := conn.ListThings(input)
 	if testAccPreCheckSkipError(err) {
@@ -728,7 +728,7 @@ If this test does fail, the fix for this is generally adding error handling imme
 ```go
 output, err := conn.GetThing(input)
 
-if isAWSErr(err, example.ErrCodeResourceNotFound, "") {
+if !d.IsNewResource() && tfresource.NotFound(err) {
   log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
   d.SetId("")
   return nil
@@ -1000,7 +1000,7 @@ func testAccPreCheckPricing(t *testing.T) {
     if diags != nil && diags.HasError() {
       for _, d := range diags {
         if d.Severity == diag.Error {
-          t.Fatalf("error configuring Pricing provider: %s", d.Summary)
+          t.Fatalf("configuring Pricing provider: %s", d.Summary)
         }
       }
     }
@@ -1063,32 +1063,24 @@ When encountering these types of components, the acceptance testing can be setup
 
 To convert to serialized (one test at a time) acceptance testing:
 
-- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testAccSageMakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
+- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
     - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
 - Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be setup like the following:
 
 ```go
 func TestAccExampleThing_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Thing": {
-			"basic":        testAccExampleThing_basic,
-			"disappears":   testAccExampleThing_disappears,
+			"basic":        testAccThing_basic,
+			"disappears":   testAccThing_disappears,
 			// ... potentially other resource tests ...
 		},
 		// ... potentially other top level resource test groups ...
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 ```
 
@@ -1179,12 +1171,21 @@ To run sweepers with an assumed role, use the following additional environment v
 
 ### Sweeper Checklists
 
-- __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be swept, at `internal/sweep/sweep_test.go`.
 - __Add Resource Sweeper Implementation__: See [Writing Test Sweepers](#writing-test-sweepers).
+- __Add Service To Sweeper List__: Once a `sweep.go` file is present in the service subdirectory, run `make gen` to regenerate the list of imports in `internal/sweep/sweep_test.go`.
 
 ### Writing Test Sweepers
 
-The first step is to initialize the resource into the test sweeper framework:
+Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
+
+```go
+//go:build sweep
+// +build sweep
+
+package example
+```
+
+Next, initialize the resource into the test sweeper framework:
 
 ```go
 func init() {
@@ -1206,10 +1207,10 @@ func sweepThings(region string) error {
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
-    return fmt.Errorf("error getting client: %w", err)
+    return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn
+  conn := client.(*conns.AWSClient).ExampleConn()
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1236,7 +1237,7 @@ func sweepThings(region string) error {
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
-        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
@@ -1249,11 +1250,11 @@ func sweepThings(region string) error {
   })
 
   if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("listing Example Thing for %s: %w", region, err))
   }
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
   }
 
   if sweep.SkipSweepError(err) {
@@ -1272,10 +1273,10 @@ func sweepThings(region string) error {
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
-    return fmt.Errorf("error getting client: %w", err)
+    return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn
+  conn := client.(*conns.AWSClient).ExampleConn()
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1300,7 +1301,7 @@ func sweepThings(region string) error {
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
-        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
@@ -1317,7 +1318,7 @@ func sweepThings(region string) error {
   }
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
   }
 
   if sweep.SkipSweepError(err) {
@@ -1569,7 +1570,6 @@ POLICY
     - `acctest.CheckResourceAttrRegionalARNAccountID()` verifies than an ARN matches a specific account ID and the current region of the test execution with an exact resource value
     - `acctest.CheckResourceAttrGlobalARNAccountID()` verifies than an ARN matches a specific account ID with an exact resource value
 
-
 Here's an example of using `aws_partition` and `data.aws_partition.current.partition`:
 
 ```terraform
@@ -1633,7 +1633,7 @@ func TestAccKeyPair_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := acctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
-		t.Fatalf("error generating random SSH key: %s", err)
+		t.Fatalf("generating random SSH key: %s", err)
 	}
 
   resource.ParallelTest(t, resource.TestCase{

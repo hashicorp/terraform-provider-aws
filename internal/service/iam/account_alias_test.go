@@ -13,6 +13,8 @@ import (
 )
 
 func TestAccIAMAccountAlias_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
 			"basic": testAccAccountAliasDataSource_basic,
@@ -22,17 +24,7 @@ func TestAccIAMAccountAlias_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccAccountAlias_basic(t *testing.T) {
@@ -62,7 +54,7 @@ func testAccAccountAlias_basic(t *testing.T) {
 }
 
 func testAccCheckAccountAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_alias" {
@@ -87,7 +79,6 @@ func testAccCheckAccountAliasDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
@@ -97,7 +88,7 @@ func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		params := &iam.ListAccountAliasesInput{}
 
 		resp, err := conn.ListAccountAliases(params)

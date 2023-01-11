@@ -133,7 +133,7 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `75m`)
 - `update` - (Default `75m`)

@@ -138,7 +138,7 @@ func ResourceBucketNotification() *schema.Resource {
 }
 
 func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 
 	// EventBridge
@@ -354,7 +354,7 @@ func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceBucketNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	i := &s3.PutBucketNotificationConfigurationInput{
 		Bucket:                    aws.String(d.Id()),
@@ -372,7 +372,7 @@ func resourceBucketNotificationDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceBucketNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	notificationConfigs, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 		Bucket: aws.String(d.Id()),

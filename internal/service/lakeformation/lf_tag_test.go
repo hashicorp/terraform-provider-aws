@@ -108,7 +108,7 @@ func testAccLFTag_values(t *testing.T) {
 }
 
 func testAccCheckLFTagsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_lf_tag" {
@@ -162,7 +162,7 @@ func testAccCheckLFTagExists(name string) resource.TestCheckFunc {
 			TagKey:    aws.String(tagKey),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 		_, err = conn.GetLFTag(input)
 
 		return err

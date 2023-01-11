@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_lb_target_group: Don't force recreation on `health_check` attribute changes
+```
+
+```release-note:bug
+resource/aws_lb_target_group: Allow `interval` to be updated for TCP health checks
+```
+
+```release-note:bug
+resource/aws_lb_target_group: Allow `timeout` to be set for TCP health checks
+```
+
+```release-note:bug
+resource/aws_lb_target_group: Allow `healthy_threshold` and `unhealthy_threshold` to be set to different values for TCP health checks.
+```

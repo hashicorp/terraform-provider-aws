@@ -415,7 +415,7 @@ func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
 }
 
 func testAccCheckClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_parameter_group" {
@@ -459,7 +459,7 @@ func testAccCheckClusterParameterNotUserDefined(n, paramName string) resource.Te
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		opts := rds.DescribeDBClusterParametersInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
@@ -497,7 +497,7 @@ func testAccCheckClusterParameterGroupAttributes(v *rds.DBClusterParameterGroup,
 
 func testAccClusterParameterGroupDisappears(v *rds.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 		opts := &rds.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: v.DBClusterParameterGroupName,
 		}
@@ -534,7 +534,7 @@ func testAccCheckClusterParameterGroupExists(n string, v *rds.DBClusterParameter
 			return errors.New("No DB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		opts := rds.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
