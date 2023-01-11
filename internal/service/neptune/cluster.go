@@ -435,14 +435,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
+		return fmt.Errorf("creating Neptune Cluster (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok {
 		for _, role := range v.(*schema.Set).List() {
-			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
+			err := addIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Neptune Cluster (%s): adding IAM Role (%s): %w", d.Id(), role.(string), err)
 			}
 		}
 	}
@@ -468,7 +468,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 		log.Printf("[DEBUG] Error describing Neptune Cluster (%s) when waiting: %s", d.Id(), err)
-		return err
+		return fmt.Errorf("reading Neptune Cluster (%s): %w", d.Id(), err)
 	}
 
 	var dbc *neptune.DBCluster
@@ -752,16 +752,16 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		enableRoles := ns.Difference(os)
 
 		for _, role := range enableRoles.List() {
-			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
+			err := addIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
-				return err
+				return fmt.Errorf("updating Neptune Cluster (%s): adding IAM Role (%s): %w", d.Id(), role.(string), err)
 			}
 		}
 
 		for _, role := range removeRoles.List() {
 			err := removeIAMRoleFromCluster(d.Id(), role.(string), conn)
 			if err != nil {
-				return err
+				return fmt.Errorf("updating Neptune Cluster (%s): removing IAM Role (%s): %w", d.Id(), role.(string), err)
 			}
 		}
 	}
@@ -848,7 +848,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func setIAMRoleToCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
+func addIAMRoleToCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
 	params := &neptune.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),

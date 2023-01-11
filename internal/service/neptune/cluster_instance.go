@@ -242,8 +242,6 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		createOpts.PreferredMaintenanceWindow = aws.String(attr.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Neptune Instance: %s", createOpts)
-
 	var resp *neptune.CreateDBInstanceOutput
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
@@ -260,7 +258,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		resp, err = conn.CreateDBInstance(createOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("creating Neptune Instance: %s", err)
+		return fmt.Errorf("creating Neptune Cluster Instance: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
@@ -277,7 +275,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Neptune Cluster Instance: waiting for completion: %s", err)
 	}
 
 	return resourceClusterInstanceRead(d, meta)
@@ -286,7 +284,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	db, err := resourceInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn())
 	if err != nil {
-		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	if db == nil {
@@ -418,9 +416,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		requestUpdate = true
 	}
 
-	log.Printf("[DEBUG] Send Neptune Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
-		log.Printf("[DEBUG] Neptune Instance Modification request: %#v", req)
 		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 			if err != nil {
@@ -435,7 +431,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 			_, err = conn.ModifyDBInstance(req)
 		}
 		if err != nil {
-			return fmt.Errorf("Error modifying Neptune Instance %s: %s", d.Id(), err)
+			return fmt.Errorf("updating Neptune Cluster Instance (%s): %s", d.Id(), err)
 		}
 
 		stateConf := &resource.StateChangeConf{
@@ -450,7 +446,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		// Wait, catching any errors
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Neptune Cluster Instance (%s): waiting for completion: %s", d.Id(), err)
 		}
 	}
 
@@ -472,12 +468,11 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 
 	opts := neptune.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
-	log.Printf("[DEBUG] Neptune Cluster Instance destroy configuration: %s", opts)
 	if _, err := conn.DeleteDBInstance(&opts); err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("deleting Neptune cluster instance %q: %s", d.Id(), err)
+		return fmt.Errorf("deleting Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	log.Println("[INFO] Waiting for Neptune Cluster Instance to be destroyed")
@@ -491,7 +486,7 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	_, err := stateConf.WaitForState()
-	return err
+	return fmt.Errorf("deleting Neptune Cluster Instance (%s): waiting for completion: %s", d.Id(), err)
 }
 
 var resourceClusterInstanceCreateUpdatePendingStates = []string{
@@ -520,7 +515,6 @@ func resourceInstanceStateRefreshFunc(id string, conn *neptune.Neptune) resource
 		v, err := resourceInstanceRetrieve(id, conn)
 
 		if err != nil {
-			log.Printf("Error on retrieving Neptune Instance when waiting: %s", err)
 			return nil, "", err
 		}
 
@@ -529,7 +523,7 @@ func resourceInstanceStateRefreshFunc(id string, conn *neptune.Neptune) resource
 		}
 
 		if v.DBInstanceStatus != nil {
-			log.Printf("[DEBUG] Neptune Instance status for instance %s: %s", id, aws.StringValue(v.DBInstanceStatus))
+			log.Printf("[DEBUG] Neptune Cluster Instance status for instance %s: %s", id, aws.StringValue(v.DBInstanceStatus))
 		}
 
 		return v, aws.StringValue(v.DBInstanceStatus), nil
@@ -541,14 +535,12 @@ func resourceInstanceRetrieve(id string, conn *neptune.Neptune) (*neptune.DBInst
 		DBInstanceIdentifier: aws.String(id),
 	}
 
-	log.Printf("[DEBUG] Neptune Instance describe configuration: %#v", opts)
-
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("Error retrieving Neptune Instances: %s", err)
+		return nil, err
 	}
 
 	if len(resp.DBInstances) != 1 ||
