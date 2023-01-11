@@ -8,8 +8,6 @@ description: |-
 
 # Data Source: aws_lbs
 
-~> **Note:** `aws_albs` is known as `aws_lbs`. The functionality is identical.
-
 Use this data source to get a list of Load Balancer ARNs matching the specified criteria. Useful for passing to other
 resources.
 

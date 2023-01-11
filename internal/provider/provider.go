@@ -651,7 +651,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_alb":               elbv2.DataSourceLoadBalancer(),
-			"aws_albs":              elbv2.DataSourceLoadBalancers(),
 			"aws_alb_listener":      elbv2.DataSourceListener(),
 			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":                elbv2.DataSourceLoadBalancer(),
