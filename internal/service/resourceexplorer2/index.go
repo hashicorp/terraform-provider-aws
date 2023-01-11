@@ -141,7 +141,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 	// Set values for unknowns.
 	data.ARN = types.StringValue(arn)
-	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -182,9 +182,9 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		data.Tags = tftags.Null
 	} else {
-		data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
+		data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
 	}
-	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
