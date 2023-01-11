@@ -98,7 +98,7 @@ func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interfac
 
 	serviceName, userName, credID, err := DecodeServiceSpecificCredentialId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Service Specific Credential (%s): %w", d.Id(), err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
@@ -112,7 +112,7 @@ func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Service Specific Credential (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Service Specific Credential (%s): %w", d.Id(), err)
 	}
 
 	cred := outputRaw.(*iam.ServiceSpecificCredentialMetadata)
