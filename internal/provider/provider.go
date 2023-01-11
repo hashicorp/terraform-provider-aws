@@ -2296,9 +2296,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	provider.SetMeta(&conns.AWSClient{
-		ServicePackages: servicePackages,
-	})
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta.ServicePackages = servicePackages
+	provider.SetMeta(meta)
 
 	return provider, nil
 }
