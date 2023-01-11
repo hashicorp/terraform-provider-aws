@@ -168,8 +168,8 @@ func LegacyPolicyNormalize(policy interface{}) (string, error) {
 	return n, nil
 }
 
-// PolicyToSet returns the existing policy if the new policy is equivalent.
-// Otherwise, it returns the new policy. Either policy is normalized.
+// LegacyPolicyToSet returns the existing policy if the new policy is equivalent.
+// Otherwise, it returns the new policy. Either policy is legacy normalized.
 func LegacyPolicyToSet(exist, new string) (string, error) {
 	policyToSet, err := SecondJSONUnlessEquivalent(exist, new)
 	if err != nil {

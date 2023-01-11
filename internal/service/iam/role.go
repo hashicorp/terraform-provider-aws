@@ -859,7 +859,7 @@ func readRoleInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePo
 			return nil, err
 		}
 
-		p, err := structure.NormalizeJsonString(policy)
+		p, err := verify.LegacyPolicyNormalize(policy)
 		if err != nil {
 			return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
 		}
