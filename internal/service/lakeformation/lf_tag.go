@@ -74,7 +74,7 @@ func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.CreateLFTag(input)
 	if err != nil {
-		return fmt.Errorf("error creating Lake Formation LF-Tag: %w", err)
+		return fmt.Errorf("creating Lake Formation LF-Tag: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, tagKey))
@@ -87,7 +87,7 @@ func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
 	input := &lakeformation.GetLFTagInput{
@@ -105,7 +105,7 @@ func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation LF-Tag: %s", err.Error())
+		return fmt.Errorf("reading Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
 	d.Set("key", output.TagKey)
@@ -120,7 +120,7 @@ func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Lake Formation LF-Tag (%s): %w", d.Id(), err)
 	}
 
 	o, n := d.GetChange("values")
@@ -144,7 +144,7 @@ func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.UpdateLFTag(input)
 	if err != nil {
-		return fmt.Errorf("error updating Lake Formation LF-Tag (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating Lake Formation LF-Tag (%s): %w", d.Id(), err)
 	}
 
 	return resourceLFTagRead(d, meta)
@@ -155,7 +155,7 @@ func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lake Formation LF-Tag (%s): %w", d.Id(), err)
 	}
 
 	input := &lakeformation.DeleteLFTagInput{
@@ -165,7 +165,7 @@ func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteLFTag(input)
 	if err != nil {
-		return fmt.Errorf("error deleting Lake Formation LF-Tag (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Lake Formation LF-Tag (%s): %w", d.Id(), err)
 	}
 
 	return nil
