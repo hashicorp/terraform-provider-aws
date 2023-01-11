@@ -89,7 +89,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IoT Policy (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading IoT Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", out.PolicyArn)
@@ -98,7 +98,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(out.PolicyDocument))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IoT Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
