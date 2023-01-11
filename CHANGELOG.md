@@ -1,5 +1,9 @@
 ## 4.50.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_sesv2_configuration_set_event_destination` ([#27565](https://github.com/hashicorp/terraform-provider-aws/issues/27565))
+
 ENHANCEMENTS:
 
 * resource/aws_redshiftdata_statement: Add `workgroup_name` argument ([#28751](https://github.com/hashicorp/terraform-provider-aws/issues/28751))
