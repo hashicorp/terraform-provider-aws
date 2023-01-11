@@ -747,12 +747,12 @@ func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDes
 	}
 
 	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
-		return fmt.Errorf("error setting server_side_encryption: %s", err)
+		return fmt.Errorf("setting server_side_encryption: %s", err)
 	}
 
 	if s.Source != nil {
 		if err := d.Set("kinesis_source_configuration", flattenSourceConfiguration(s.Source.KinesisStreamSourceDescription)); err != nil {
-			return fmt.Errorf("error setting kinesis_source_configuration: %s", err)
+			return fmt.Errorf("setting kinesis_source_configuration: %s", err)
 		}
 	}
 
@@ -762,45 +762,45 @@ func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDes
 			d.Set("destination", destinationTypeRedshift)
 			configuredPassword := d.Get("redshift_configuration.0.password").(string)
 			if err := d.Set("redshift_configuration", flattenRedshiftConfiguration(destination.RedshiftDestinationDescription, configuredPassword)); err != nil {
-				return fmt.Errorf("error setting redshift_configuration: %s", err)
+				return fmt.Errorf("setting redshift_configuration: %s", err)
 			}
 			if err := d.Set("s3_configuration", flattenS3Configuration(destination.RedshiftDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("error setting s3_configuration: %s", err)
+				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else if destination.ElasticsearchDestinationDescription != nil {
 			d.Set("destination", destinationTypeElasticsearch)
 			if err := d.Set("elasticsearch_configuration", flattenElasticsearchConfiguration(destination.ElasticsearchDestinationDescription)); err != nil {
-				return fmt.Errorf("error setting elasticsearch_configuration: %s", err)
+				return fmt.Errorf("setting elasticsearch_configuration: %s", err)
 			}
 			if err := d.Set("s3_configuration", flattenS3Configuration(destination.ElasticsearchDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("error setting s3_configuration: %s", err)
+				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else if destination.SplunkDestinationDescription != nil {
 			d.Set("destination", destinationTypeSplunk)
 			if err := d.Set("splunk_configuration", flattenSplunkConfiguration(destination.SplunkDestinationDescription)); err != nil {
-				return fmt.Errorf("error setting splunk_configuration: %s", err)
+				return fmt.Errorf("setting splunk_configuration: %s", err)
 			}
 			if err := d.Set("s3_configuration", flattenS3Configuration(destination.SplunkDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("error setting s3_configuration: %s", err)
+				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else if destination.HttpEndpointDestinationDescription != nil {
 			d.Set("destination", destinationTypeHTTPEndpoint)
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
-				return fmt.Errorf("error setting http_endpoint_configuration: %s", err)
+				return fmt.Errorf("setting http_endpoint_configuration: %s", err)
 			}
 			if err := d.Set("s3_configuration", flattenS3Configuration(destination.HttpEndpointDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("error setting s3_configuration: %s", err)
+				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else if d.Get("destination").(string) == destinationTypeS3 {
 			d.Set("destination", destinationTypeS3)
 			if err := d.Set("s3_configuration", flattenS3Configuration(destination.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("error setting s3_configuration: %s", err)
+				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else {
 			d.Set("destination", destinationTypeExtendedS3)
 			if err := d.Set("extended_s3_configuration", flattenExtendedS3Configuration(destination.ExtendedS3DestinationDescription)); err != nil {
-				return fmt.Errorf("error setting extended_s3_configuration: %s", err)
+				return fmt.Errorf("setting extended_s3_configuration: %s", err)
 			}
 		}
 		d.Set("destination_id", destination.DestinationId)
@@ -2116,7 +2116,7 @@ func extractPrefixConfiguration(s3 map[string]interface{}) *string {
 func createRedshiftConfig(d *schema.ResourceData, s3Config *firehose.S3DestinationConfiguration) (*firehose.RedshiftDestinationConfiguration, error) {
 	redshiftRaw, ok := d.GetOk("redshift_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading Redshift Configuration for Kinesis Firehose: redshift_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("redshift_configuration", destinationTypeRedshift)
 	}
 	rl := redshiftRaw.([]interface{})
 
@@ -2149,7 +2149,7 @@ func createRedshiftConfig(d *schema.ResourceData, s3Config *firehose.S3Destinati
 func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.RedshiftDestinationUpdate, error) {
 	redshiftRaw, ok := d.GetOk("redshift_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading Redshift Configuration for Kinesis Firehose: redshift_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("redshift_configuration", destinationTypeRedshift)
 	}
 	rl := redshiftRaw.([]interface{})
 
@@ -2185,10 +2185,14 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 	return configuration, nil
 }
 
+func elasticsearchDestinationRequiredParamErr(param, destination string) error {
+	return fmt.Errorf(`%q is required when "destination" is %q`, param, destination)
+}
+
 func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3DestinationConfiguration) (*firehose.ElasticsearchDestinationConfiguration, error) {
 	esConfig, ok := d.GetOk("elasticsearch_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading Elasticsearch Configuration for Kinesis Firehose: elasticsearch_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("elasticsearch_configuration", destinationTypeElasticsearch)
 	}
 	esList := esConfig.([]interface{})
 
@@ -2236,7 +2240,7 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.ElasticsearchDestinationUpdate, error) {
 	esConfig, ok := d.GetOk("elasticsearch_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading Elasticsearch Configuration for Kinesis Firehose: elasticsearch_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("elasticsearch_configuration", destinationTypeElasticsearch)
 	}
 	esList := esConfig.([]interface{})
 
@@ -2277,7 +2281,7 @@ func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3Dest
 func createSplunkConfig(d *schema.ResourceData, s3Config *firehose.S3DestinationConfiguration) (*firehose.SplunkDestinationConfiguration, error) {
 	splunkRaw, ok := d.GetOk("splunk_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading Splunk Configuration for Kinesis Firehose: splunk_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("splunk_configuration", destinationTypeSplunk)
 	}
 	sl := splunkRaw.([]interface{})
 
@@ -2309,7 +2313,7 @@ func createSplunkConfig(d *schema.ResourceData, s3Config *firehose.S3Destination
 func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.SplunkDestinationUpdate, error) {
 	splunkRaw, ok := d.GetOk("splunk_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading Splunk Configuration for Kinesis Firehose: splunk_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("splunk_configuration", destinationTypeSplunk)
 	}
 	sl := splunkRaw.([]interface{})
 
@@ -2341,7 +2345,7 @@ func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3Destination
 func createHTTPEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3DestinationConfiguration) (*firehose.HttpEndpointDestinationConfiguration, error) {
 	HttpEndpointRaw, ok := d.GetOk("http_endpoint_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading HTTP Endpoint Configuration for Kinesis Firehose: http_endpoint_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("http_endpoint_configuration", destinationTypeHTTPEndpoint)
 	}
 	sl := HttpEndpointRaw.([]interface{})
 
@@ -2386,7 +2390,7 @@ func createHTTPEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3Desti
 func updateHTTPEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.HttpEndpointDestinationUpdate, error) {
 	HttpEndpointRaw, ok := d.GetOk("http_endpoint_configuration")
 	if !ok {
-		return nil, fmt.Errorf("Error loading  HTTP Endpoint Configuration for Kinesis Firehose: http_endpoint_configuration not found")
+		return nil, elasticsearchDestinationRequiredParamErr("http_endpoint_configuration", destinationTypeHTTPEndpoint)
 	}
 	sl := HttpEndpointRaw.([]interface{})
 
@@ -2584,25 +2588,25 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 		} else if d.Get("destination").(string) == destinationTypeElasticsearch {
 			esConfig, err := createElasticsearchConfig(d, s3Config)
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Kinesis Firehose Delivery Stream: %s", err)
 			}
 			createInput.ElasticsearchDestinationConfiguration = esConfig
 		} else if d.Get("destination").(string) == destinationTypeRedshift {
 			rc, err := createRedshiftConfig(d, s3Config)
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Kinesis Firehose Delivery Stream: %s", err)
 			}
 			createInput.RedshiftDestinationConfiguration = rc
 		} else if d.Get("destination").(string) == destinationTypeSplunk {
 			rc, err := createSplunkConfig(d, s3Config)
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Kinesis Firehose Delivery Stream: %s", err)
 			}
 			createInput.SplunkDestinationConfiguration = rc
 		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 			rc, err := createHTTPEndpointConfig(d, s3Config)
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Kinesis Firehose Delivery Stream: %s", err)
 			}
 			createInput.HttpEndpointDestinationConfiguration = rc
 		}
@@ -2646,13 +2650,13 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 		_, err = conn.CreateDeliveryStream(createInput)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
+		return fmt.Errorf("creating Kinesis Firehose Delivery Stream: %s", err)
 	}
 
 	s, err := waitDeliveryStreamCreated(conn, sn)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) create: %w", sn, err)
+		return fmt.Errorf("creating Kinesis Firehose Delivery Stream: waiting for completion: %s", err)
 	}
 
 	d.SetId(aws.StringValue(s.DeliveryStreamARN))
@@ -2737,7 +2741,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 			} else if d.Get("destination").(string) == destinationTypeElasticsearch {
 				esUpdate, err := updateElasticsearchConfig(d, s3Config)
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.ElasticsearchDestinationUpdate = esUpdate
 			} else if d.Get("destination").(string) == destinationTypeRedshift {
@@ -2749,19 +2753,19 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 				}
 				rc, err := updateRedshiftConfig(d, s3Config)
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.RedshiftDestinationUpdate = rc
 			} else if d.Get("destination").(string) == destinationTypeSplunk {
 				rc, err := updateSplunkConfig(d, s3Config)
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.SplunkDestinationUpdate = rc
 			} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 				rc, err := updateHTTPEndpointConfig(d, s3Config)
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.HttpEndpointDestinationUpdate = rc
 			}
@@ -2803,9 +2807,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if err != nil {
-			return fmt.Errorf(
-				"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
-				sn, err)
+			return fmt.Errorf("updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 		}
 	}
 
@@ -2813,7 +2815,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, sn, o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Firehose Delivery Stream (%s) tags: %s", sn, err)
+			return fmt.Errorf("updating Kinesis Firehose Delivery Stream (%s): updating tags: %s", sn, err)
 		}
 	}
 
@@ -2868,19 +2870,16 @@ func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Firehose Delivery Stream (%s): %w", sn, err)
+		return fmt.Errorf("reading Kinesis Firehose Delivery Stream (%s): %w", sn, err)
 	}
 
-	err = flattenDeliveryStream(d, s)
-
-	if err != nil {
-		return err
+	if err := flattenDeliveryStream(d, s); err != nil {
+		return fmt.Errorf("reading Kinesis Firehose Delivery Stream (%s): %w", sn, err)
 	}
 
 	tags, err := ListTags(conn, sn)
-
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %w", sn, err)
+		return fmt.Errorf("reading Kinesis Firehose Delivery Stream (%s): listing tags: %w", sn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
