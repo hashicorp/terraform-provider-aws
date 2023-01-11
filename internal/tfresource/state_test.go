@@ -12,31 +12,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FailedStateRefreshFunc() resource.StateRefreshFunc {
+func failedStateRefreshFunc() resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		return nil, "", errors.New("failed")
 	}
 }
 
-func TimeoutStateRefreshFunc() resource.StateRefreshFunc {
+func timeoutStateRefreshFunc() resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		time.Sleep(100 * time.Second)
 		return nil, "", errors.New("failed")
 	}
 }
 
-func SuccessfulStateRefreshFunc() resource.StateRefreshFunc {
+func successfulStateRefreshFunc() resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		return struct{}{}, "running", nil
 	}
 }
 
-type StateGenerator struct {
+type stateGenerator struct {
 	position      int
 	stateSequence []string
 }
 
-func (r *StateGenerator) NextState() (int, string, error) {
+func (r *stateGenerator) NextState() (int, string, error) {
 	p, v := r.position, ""
 	if len(r.stateSequence)-1 >= p {
 		v = r.stateSequence[p]
@@ -49,14 +49,14 @@ func (r *StateGenerator) NextState() (int, string, error) {
 	return p, v, nil
 }
 
-func NewStateGenerator(sequence []string) *StateGenerator {
-	r := &StateGenerator{}
+func newStateGenerator(sequence []string) *stateGenerator {
+	r := &stateGenerator{}
 	r.stateSequence = sequence
 
 	return r
 }
 
-func InconsistentStateRefreshFunc() resource.StateRefreshFunc {
+func inconsistentStateRefreshFunc() resource.StateRefreshFunc {
 	sequence := []string{
 		"done", "replicating",
 		"done", "done", "done",
@@ -64,7 +64,7 @@ func InconsistentStateRefreshFunc() resource.StateRefreshFunc {
 		"done", "done", "done",
 	}
 
-	r := NewStateGenerator(sequence)
+	r := newStateGenerator(sequence)
 
 	return func() (interface{}, string, error) {
 		idx, s, err := r.NextState()
@@ -76,12 +76,12 @@ func InconsistentStateRefreshFunc() resource.StateRefreshFunc {
 	}
 }
 
-func UnknownPendingStateRefreshFunc() resource.StateRefreshFunc {
+func unknownPendingStateRefreshFunc() resource.StateRefreshFunc {
 	sequence := []string{
 		"unknown1", "unknown2", "done",
 	}
 
-	r := NewStateGenerator(sequence)
+	r := newStateGenerator(sequence)
 
 	return func() (interface{}, string, error) {
 		idx, s, err := r.NextState()
@@ -94,16 +94,18 @@ func UnknownPendingStateRefreshFunc() resource.StateRefreshFunc {
 }
 
 func TestWaitForState_inconsistent_positive(t *testing.T) {
+	t.Parallel()
+
 	conf := &tfresource.StateChangeConf{
 		Pending:                   []string{"replicating"},
 		Target:                    []string{"done"},
-		Refresh:                   InconsistentStateRefreshFunc(),
+		Refresh:                   inconsistentStateRefreshFunc(),
 		Timeout:                   90 * time.Millisecond,
 		PollInterval:              10 * time.Millisecond,
 		ContinuousTargetOccurence: 3,
 	}
 
-	idx, err := conf.WaitForState()
+	idx, err := conf.WaitForStateContext(context.Background())
 
 	if err != nil {
 		t.Fatalf("err: %s", err)
@@ -115,8 +117,10 @@ func TestWaitForState_inconsistent_positive(t *testing.T) {
 }
 
 func TestWaitForState_inconsistent_negative(t *testing.T) {
+	t.Parallel()
+
 	refreshCount := int64(0)
-	f := InconsistentStateRefreshFunc()
+	f := inconsistentStateRefreshFunc()
 	refresh := func() (interface{}, string, error) {
 		atomic.AddInt64(&refreshCount, 1)
 		return f()
@@ -131,7 +135,7 @@ func TestWaitForState_inconsistent_negative(t *testing.T) {
 		ContinuousTargetOccurence: 4,
 	}
 
-	_, err := conf.WaitForState()
+	_, err := conf.WaitForStateContext(context.Background())
 
 	if err == nil {
 		t.Fatal("Expected timeout error. No error returned.")
@@ -151,6 +155,8 @@ func TestWaitForState_inconsistent_negative(t *testing.T) {
 }
 
 func TestWaitForState_timeout(t *testing.T) {
+	t.Parallel()
+
 	old := tfresource.RefreshGracePeriod
 	tfresource.RefreshGracePeriod = 5 * time.Millisecond
 	defer func() {
@@ -160,11 +166,11 @@ func TestWaitForState_timeout(t *testing.T) {
 	conf := &tfresource.StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{"running"},
-		Refresh: TimeoutStateRefreshFunc(),
+		Refresh: timeoutStateRefreshFunc(),
 		Timeout: 1 * time.Millisecond,
 	}
 
-	obj, err := conf.WaitForState()
+	obj, err := conf.WaitForStateContext(context.Background())
 
 	if err == nil {
 		t.Fatal("Expected timeout error. No error returned.")
@@ -183,6 +189,8 @@ func TestWaitForState_timeout(t *testing.T) {
 // Make sure a timeout actually cancels the refresh goroutine and waits for its
 // return.
 func TestWaitForState_cancel(t *testing.T) {
+	t.Parallel()
+
 	// make this refresh func block until we cancel it
 	cancel := make(chan struct{})
 	refresh := func() (interface{}, string, error) {
@@ -203,7 +211,7 @@ func TestWaitForState_cancel(t *testing.T) {
 	waitDone := make(chan struct{})
 	go func() {
 		defer close(waitDone)
-		obj, err = conf.WaitForState()
+		obj, err = conf.WaitForStateContext(context.Background())
 	}()
 
 	// make sure WaitForState is blocked
@@ -237,14 +245,16 @@ func TestWaitForState_cancel(t *testing.T) {
 }
 
 func TestWaitForState_success(t *testing.T) {
+	t.Parallel()
+
 	conf := &tfresource.StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{"running"},
-		Refresh: SuccessfulStateRefreshFunc(),
+		Refresh: successfulStateRefreshFunc(),
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState()
+	obj, err := conf.WaitForStateContext(context.Background())
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -254,13 +264,15 @@ func TestWaitForState_success(t *testing.T) {
 }
 
 func TestWaitForState_successUnknownPending(t *testing.T) {
+	t.Parallel()
+
 	conf := &tfresource.StateChangeConf{
 		Target:  []string{"done"},
-		Refresh: UnknownPendingStateRefreshFunc(),
+		Refresh: unknownPendingStateRefreshFunc(),
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState()
+	obj, err := conf.WaitForStateContext(context.Background())
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -270,6 +282,8 @@ func TestWaitForState_successUnknownPending(t *testing.T) {
 }
 
 func TestWaitForState_successEmpty(t *testing.T) {
+	t.Parallel()
+
 	conf := &tfresource.StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{},
@@ -279,7 +293,7 @@ func TestWaitForState_successEmpty(t *testing.T) {
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState()
+	obj, err := conf.WaitForStateContext(context.Background())
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -289,6 +303,8 @@ func TestWaitForState_successEmpty(t *testing.T) {
 }
 
 func TestWaitForState_failureEmpty(t *testing.T) {
+	t.Parallel()
+
 	conf := &tfresource.StateChangeConf{
 		Pending:        []string{"pending", "incomplete"},
 		Target:         []string{},
@@ -300,7 +316,7 @@ func TestWaitForState_failureEmpty(t *testing.T) {
 		Timeout:      100 * time.Millisecond,
 	}
 
-	_, err := conf.WaitForState()
+	_, err := conf.WaitForStateContext(context.Background())
 	if err == nil {
 		t.Fatal("Expected timeout error. Got none.")
 	}
@@ -311,14 +327,16 @@ func TestWaitForState_failureEmpty(t *testing.T) {
 }
 
 func TestWaitForState_failure(t *testing.T) {
+	t.Parallel()
+
 	conf := &tfresource.StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{"running"},
-		Refresh: FailedStateRefreshFunc(),
+		Refresh: failedStateRefreshFunc(),
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState()
+	obj, err := conf.WaitForStateContext(context.Background())
 	if err == nil {
 		t.Fatal("Expected error. No error returned.")
 	}
@@ -332,6 +350,8 @@ func TestWaitForState_failure(t *testing.T) {
 }
 
 func TestWaitForStateContext_cancel(t *testing.T) {
+	t.Parallel()
+
 	// make this refresh func block until we cancel it
 	ctx, cancel := context.WithCancel(context.Background())
 	refresh := func() (interface{}, string, error) {
