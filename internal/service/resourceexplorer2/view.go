@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -60,26 +58,12 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(64),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]+$`), `can include letters, digits, and the dash (-) character`),
-				},
-			},
-			"name_prefix": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthAtMost(64 - sdkresource.UniqueIDSuffixLength),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
@@ -132,12 +116,11 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
-	name := create.Name(data.Name.ValueString(), data.NamePrefix.ValueString())
 	input := &resourceexplorer2.CreateViewInput{
 		ClientToken:        aws.String(sdkresource.UniqueId()),
 		Filters:            r.expandSearchFilter(ctx, data.Filters),
 		IncludedProperties: r.expandIncludedProperties(ctx, data.IncludedProperties),
-		ViewName:           aws.String(name),
+		ViewName:           aws.String(data.Name.ValueString()),
 	}
 
 	if len(tags) > 0 {
@@ -156,8 +139,6 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 	arn := aws.ToString(output.View.ViewArn)
 	data.ARN = types.StringValue(arn)
 	data.ID = types.StringValue(arn)
-	data.Name = types.StringValue(name)
-	data.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(name))
 	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -215,7 +196,6 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 
 	name := parts[1]
 	data.Name = types.StringValue(name)
-	data.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(name))
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
@@ -310,15 +290,6 @@ func (r *resourceView) ImportState(ctx context.Context, request resource.ImportS
 
 func (r *resourceView) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
-}
-
-func (r *resourceView) ConfigValidators(context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.Conflicting(
-			path.MatchRoot("name"),
-			path.MatchRoot("name_prefix"),
-		),
-	}
 }
 
 func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List) *awstypes.SearchFilter {
@@ -422,7 +393,6 @@ type resourceViewData struct {
 	ID                 types.String `tfsdk:"id"`
 	IncludedProperties types.List   `tfsdk:"included_property"`
 	Name               types.String `tfsdk:"name"`
-	NamePrefix         types.String `tfsdk:"name_prefix"`
 	Tags               types.Map    `tfsdk:"tags"`
 	TagsAll            types.Map    `tfsdk:"tags_all"`
 }
