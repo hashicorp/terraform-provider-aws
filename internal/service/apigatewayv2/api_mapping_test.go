@@ -20,6 +20,8 @@ import (
 
 // These tests need to be serialized, else resources get orphaned after "TooManyRequests" errors.
 func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
+	t.Parallel()
+
 	var certificateArn string
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,7 +38,7 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 		"disappears":    testAccAPIMapping_disappears,
 		"ApiMappingKey": testAccAPIMapping_key,
 	}
-	for name, tc := range testCases {
+	for name, tc := range testCases { //nolint:paralleltest
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			tc(t, rName, &certificateArn)

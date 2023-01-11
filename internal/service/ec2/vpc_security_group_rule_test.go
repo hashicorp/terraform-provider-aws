@@ -17,6 +17,8 @@ import (
 )
 
 func TestSecurityGroupRuleCreateID(t *testing.T) {
+	t.Parallel()
+
 	simple := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
 		FromPort:   aws.Int64(80),

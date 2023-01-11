@@ -262,6 +262,8 @@ resource "aws_iam_access_key" "test" {
 }
 
 func TestSESSMTPPasswordFromSecretKeySigV4(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Region   string
 		Input    string

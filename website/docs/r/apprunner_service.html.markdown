@@ -198,8 +198,8 @@ The `egress_configuration` block supports the following argument:
 
 The `observability_configuration` block supports the following arguments:
 
-* `observability_configuration_arn` - (Required) ARN of the observability configuration that is associated with the service.
 * `observability_enabled` - (Required) When `true`, an observability configuration resource is associated with the service.
+* `observability_configuration_arn` - (Optional) ARN of the observability configuration that is associated with the service. Specified only when `observability_enabled` is `true`.
 
 ### Code Repository
 

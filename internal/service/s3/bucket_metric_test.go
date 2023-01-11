@@ -21,6 +21,8 @@ import (
 )
 
 func TestExpandMetricsFilter(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Config                  map[string]interface{}
 		ExpectedS3MetricsFilter *s3.MetricsFilter
@@ -134,6 +136,8 @@ func TestExpandMetricsFilter(t *testing.T) {
 }
 
 func TestFlattenMetricsFilter(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		S3MetricsFilter *s3.MetricsFilter
 		ExpectedConfig  map[string]interface{}
@@ -236,6 +240,8 @@ func TestFlattenMetricsFilter(t *testing.T) {
 }
 
 func TestBucketMetricParseID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"foo:bar",
 		"my-bucket:entire-bucket",

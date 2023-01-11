@@ -7,6 +7,8 @@ import (
 )
 
 func TestSubdirectoryFromLocationURI(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName             string
 		InputURI             string
@@ -156,7 +158,10 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfdatasync.SubdirectoryFromLocationURI(testCase.InputURI)
 
 			if err == nil && testCase.ExpectedError {

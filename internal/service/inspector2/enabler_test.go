@@ -18,18 +18,15 @@ import (
 )
 
 func TestAccInspector2Enabler_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccEnabler_basic,
 		"accountID":  testAccEnabler_accountID,
 		"disappears": testAccEnabler_disappears,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccEnabler_basic(t *testing.T) {

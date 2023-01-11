@@ -23,6 +23,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
 // SageMaker Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			"basic":                 testAccApp_basic,
@@ -99,15 +101,5 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

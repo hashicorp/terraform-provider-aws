@@ -21,6 +21,8 @@ import (
 )
 
 func TestSuppressEquivalentTopicSubscriptionDeliveryPolicy(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		old        string
 		new        string

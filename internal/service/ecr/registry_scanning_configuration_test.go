@@ -12,18 +12,14 @@ import (
 )
 
 func TestAccECRScanningConfiguration_serial(t *testing.T) {
-	testFuncs := map[string]func(t *testing.T){
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
 		"basic":  testAccRegistryScanningConfiguration_basic,
 		"update": testAccRegistryScanningConfiguration_update,
 	}
 
-	for name, testFunc := range testFuncs {
-		testFunc := testFunc
-
-		t.Run(name, func(t *testing.T) {
-			testFunc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccRegistryScanningConfiguration_basic(t *testing.T) {

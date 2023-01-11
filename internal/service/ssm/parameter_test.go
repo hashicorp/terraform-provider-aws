@@ -1128,6 +1128,8 @@ resource "aws_kms_alias" "test_alias" {
 }
 
 func TestParameterShouldUpdate(t *testing.T) {
+	t.Parallel()
+
 	data := tfssm.ResourceParameter().TestResourceData()
 	failure := false
 

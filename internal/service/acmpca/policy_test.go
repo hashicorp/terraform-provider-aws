@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccACMPCAPolicy_Basic(t *testing.T) {
+func TestAccACMPCAPolicy_basic(t *testing.T) {
 	resourceName := "aws_acmpca_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
