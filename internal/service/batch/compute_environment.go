@@ -258,7 +258,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 }
 
 func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -304,7 +304,7 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -363,7 +363,7 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &batch.UpdateComputeEnvironmentInput{
@@ -425,9 +425,9 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
-	log.Printf("[DEBUG] Disabling Batch Compute Environment (%s)", d.Id())
+	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
 	{
 		input := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
@@ -443,7 +443,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting Batch Compute Environment (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Batch Compute Environment: %s", d.Id())
 	{
 		input := &batch.DeleteComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),

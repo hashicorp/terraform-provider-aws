@@ -414,7 +414,7 @@ func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*sch
 }
 
 func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	createOpts := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -436,7 +436,7 @@ func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -465,7 +465,7 @@ func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	describeOpts := &ses.DescribeReceiptRuleInput{
@@ -653,7 +653,7 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	deleteOpts := &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),

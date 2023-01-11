@@ -11,18 +11,15 @@ import (
 )
 
 func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":              testAccDefaultVPCDHCPOptions_basic,
 		"owner":              testAccDefaultVPCDHCPOptions_owner,
 		"v4.20.0_regression": testAccDefaultVPCDHCPOptions_v420Regression,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {

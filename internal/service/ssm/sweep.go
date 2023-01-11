@@ -122,7 +122,7 @@ func sweepMaintenanceWindows(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn
+	conn := client.(*conns.AWSClient).SSMConn()
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -221,7 +221,7 @@ func sweepResourceDataSyncs(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn
+	conn := client.(*conns.AWSClient).SSMConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

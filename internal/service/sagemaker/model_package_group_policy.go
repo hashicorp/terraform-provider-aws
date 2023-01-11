@@ -46,7 +46,7 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 }
 
 func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("resource_policy").(string))
 
@@ -71,7 +71,7 @@ func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	mpg, err := FindModelPackageGroupPolicyByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -98,7 +98,7 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(d.Id()),

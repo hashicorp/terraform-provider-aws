@@ -189,7 +189,7 @@ func ResourceHealthCheck() *schema.Resource {
 }
 
 func resourceHealthCheckCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -304,7 +304,7 @@ func resourceHealthCheckCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHealthCheckRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -377,7 +377,7 @@ func resourceHealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHealthCheckUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateHealthCheck := &route53.UpdateHealthCheckInput{
@@ -464,7 +464,7 @@ func resourceHealthCheckUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceHealthCheckDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	log.Printf("[DEBUG] Deleting Route53 Health Check: %s", d.Id())
 	_, err := conn.DeleteHealthCheck(&route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})

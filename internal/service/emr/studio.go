@@ -109,7 +109,7 @@ func ResourceStudio() *schema.Resource {
 }
 
 func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -172,7 +172,7 @@ func resourceStudioCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStudioUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emr.UpdateStudioInput{
@@ -208,7 +208,7 @@ func resourceStudioUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStudioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -253,7 +253,7 @@ func resourceStudioRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStudioDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	request := &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),

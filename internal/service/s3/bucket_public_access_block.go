@@ -59,7 +59,7 @@ func ResourceBucketPublicAccessBlock() *schema.Resource {
 }
 
 func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 
 	input := &s3.PutPublicAccessBlockInput{
@@ -98,7 +98,7 @@ func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.GetPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -159,7 +159,7 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.PutPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -191,7 +191,7 @@ func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceBucketPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.DeletePublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),

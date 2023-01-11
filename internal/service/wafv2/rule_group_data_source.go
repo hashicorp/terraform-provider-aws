@@ -37,7 +37,7 @@ func DataSourceRuleGroup() *schema.Resource {
 }
 
 func dataSourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	name := d.Get("name").(string)
 
 	var foundRuleGroup *wafv2.RuleGroupSummary

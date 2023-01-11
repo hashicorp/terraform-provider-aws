@@ -119,7 +119,7 @@ func testAccCheckDashboardExists(n string, dashboard *cloudwatch.GetDashboardOut
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}
@@ -136,7 +136,7 @@ func testAccCheckDashboardExists(n string, dashboard *cloudwatch.GetDashboardOut
 }
 
 func testAccCheckDashboardDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_dashboard" {
@@ -161,7 +161,7 @@ func testAccCheckDashboardDestroy(s *terraform.State) error {
 
 func testAccCheckDashboardDestroyPrevious(dashboardName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(dashboardName),
@@ -248,7 +248,7 @@ func testAccCheckDashboardBodyIsExpected(resourceName, expected string) resource
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}

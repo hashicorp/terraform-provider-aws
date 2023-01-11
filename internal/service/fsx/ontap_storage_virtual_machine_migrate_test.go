@@ -22,6 +22,8 @@ func testOntapStorageVirtualMachineStateDataV1() map[string]interface{} {
 }
 
 func TestOntapStorageVirtualMachineStateUpgradeV0(t *testing.T) {
+	t.Parallel()
+
 	expected := testOntapStorageVirtualMachineStateDataV1()
 	actual, err := tffsx.ResourceOntapStorageVirtualMachineStateUpgradeV0(context.Background(), testOntapStorageVirtualMachineStateDataV0(), nil)
 

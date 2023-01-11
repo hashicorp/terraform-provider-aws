@@ -28,6 +28,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccCloudTrail_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Trail": {
 			"basic":                 testAcc_basic,
@@ -48,17 +50,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAcc_basic(t *testing.T) {
@@ -765,7 +757,7 @@ func testAccCheckExists(n string, trail *cloudtrail.Trail) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 		params := cloudtrail.DescribeTrailsInput{
 			TrailNameList: []*string{aws.String(rs.Primary.ID)},
 		}
@@ -789,7 +781,7 @@ func testAccCheckLoggingEnabled(n string, desired bool) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 		params := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
 		}
@@ -840,7 +832,7 @@ func testAccCheckLogValidationEnabled(n string, desired bool, trail *cloudtrail.
 }
 
 func testAccCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudtrail" {
@@ -866,7 +858,7 @@ func testAccCheckDestroy(s *terraform.State) error {
 
 func testAccCheckLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 		input := cloudtrail.ListTagsInput{
 			ResourceIdList: []*string{trail.TrailARN},
 		}

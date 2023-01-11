@@ -194,7 +194,7 @@ func ResourceDocument() *schema.Resource {
 }
 
 func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -255,7 +255,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -384,7 +384,7 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	// Validates permissions keys, if set, to be type and account_ids
 	// since ValidateFunc validates only the value not the key.
@@ -432,7 +432,7 @@ func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	if err := deleteDocumentPermissions(d, meta); err != nil {
 		return err
@@ -485,7 +485,7 @@ func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
 
@@ -534,7 +534,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Getting permissions for document: %s", d.Id())
 
@@ -573,7 +573,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 }
 
 func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
@@ -676,7 +676,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 
 	newDefaultVersion := d.Get("default_version").(string)
 
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 	updated, err := conn.UpdateDocument(updateDocInput)
 
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDuplicateDocumentContent) {

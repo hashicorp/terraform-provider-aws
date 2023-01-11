@@ -61,7 +61,7 @@ func ResourceIPGroup() *schema.Resource {
 }
 
 func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -83,7 +83,7 @@ func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -134,7 +134,7 @@ func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	if d.HasChange("rules") {
 		rules := d.Get("rules").(*schema.Set).List()
@@ -160,7 +160,7 @@ func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	var found bool
 	var sweeperErrs *multierror.Error

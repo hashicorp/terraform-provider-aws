@@ -125,7 +125,7 @@ func ResourceProxy() *schema.Resource {
 }
 
 func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -171,7 +171,7 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -220,7 +220,7 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
@@ -269,19 +269,19 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RDS DB Proxy: %s", d.Id())
 	_, err := conn.DeleteDBProxy(&rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return fmt.Errorf("deleting RDS DB Proxy (%s): %w", d.Id(), err)
-	}
-
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting RDS DB Proxy (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitDBProxyDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {

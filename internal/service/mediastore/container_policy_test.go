@@ -53,7 +53,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckContainerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_store_container_policy" {
@@ -90,7 +90,7 @@ func testAccCheckContainerPolicyExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
 
 		input := &mediastore.GetContainerPolicyInput{
 			ContainerName: aws.String(rs.Primary.ID),

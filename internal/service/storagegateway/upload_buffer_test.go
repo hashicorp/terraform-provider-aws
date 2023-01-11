@@ -15,6 +15,8 @@ import (
 )
 
 func TestDecodeUploadBufferID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input              string
 		ExpectedGatewayARN string
@@ -142,7 +144,7 @@ func testAccCheckUploadBufferExists(resourceName string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 		gatewayARN, diskID, err := tfstoragegateway.DecodeUploadBufferID(rs.Primary.ID)
 		if err != nil {

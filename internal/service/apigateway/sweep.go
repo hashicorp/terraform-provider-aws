@@ -57,7 +57,7 @@ func sweepRestAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayConn
+	conn := client.(*conns.AWSClient).APIGatewayConn()
 
 	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, item := range page.Items {
@@ -99,7 +99,7 @@ func sweepVPCLinks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayConn
+	conn := client.(*conns.AWSClient).APIGatewayConn()
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -138,7 +138,7 @@ func sweepClientCertificates(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).APIGatewayConn
+	conn := client.(*conns.AWSClient).APIGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -182,7 +182,7 @@ func sweepUsagePlans(region string) error {
 
 	log.Printf("[INFO] Sweeping API Gateway Usage Plans for %s", region)
 
-	conn := client.(*conns.AWSClient).APIGatewayConn
+	conn := client.(*conns.AWSClient).APIGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -229,7 +229,7 @@ func sweepAPIKeys(region string) error {
 
 	log.Printf("[INFO] Sweeping API Gateway API Keys for %s", region)
 
-	conn := client.(*conns.AWSClient).APIGatewayConn
+	conn := client.(*conns.AWSClient).APIGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -275,7 +275,7 @@ func sweepDomainNames(region string) error {
 
 	log.Printf("[INFO] Sweeping API Gateway Domain Names for %s", region)
 
-	conn := client.(*conns.AWSClient).APIGatewayConn
+	conn := client.(*conns.AWSClient).APIGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

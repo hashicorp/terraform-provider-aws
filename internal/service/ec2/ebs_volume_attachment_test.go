@@ -79,7 +79,7 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	stopInstance := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		err := tfec2.StopInstance(conn, aws.StringValue(i.InstanceId), 10*time.Minute)
 
@@ -233,7 +233,7 @@ func testAccCheckVolumeAttachmentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No EBS Volume Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err := tfec2.FindEBSVolumeAttachment(conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes["instance_id"], rs.Primary.Attributes["device_name"])
 
@@ -242,7 +242,7 @@ func testAccCheckVolumeAttachmentExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_volume_attachment" {

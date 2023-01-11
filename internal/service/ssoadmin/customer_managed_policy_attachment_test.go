@@ -172,7 +172,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_multipleManagedPolicies(t *t
 }
 
 func testAccCheckCustomerManagedPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_customer_managed_policy_attachment" {
@@ -218,7 +218,7 @@ func testAccCheckCustomerManagedPolicyAttachmentExists(n string) resource.TestCh
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 		_, err = tfssoadmin.FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetARN, instanceARN)
 

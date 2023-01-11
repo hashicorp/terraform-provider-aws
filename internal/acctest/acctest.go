@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -75,7 +76,9 @@ func Skip(t *testing.T, message string) {
 //
 // Use other ProviderFactories functions, such as FactoriesAlternate,
 // for tests requiring special provider configurations.
-var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+var (
+	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error) = protoV5ProviderFactoriesInit(context.Background(), ProviderName)
+)
 
 // Provider is the "main" provider instance
 //
@@ -100,18 +103,14 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
-	// Always allocate a new provider instance each invocation, otherwise gRPC
-	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProtoV5ProviderFactories = protoV5ProviderFactoriesInit(ProviderName)
 }
 
-func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
 		factories[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, _, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 			if err != nil {
 				return nil, err
@@ -124,8 +123,7 @@ func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tf
 	return factories
 }
 
-func factoriesInit(t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
-	ctx := context.Background()
+func factoriesInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -153,14 +151,14 @@ func factoriesInit(t *testing.T, providers *[]*schema.Provider, providerNames []
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
 func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(t, providers, []string{
+	return factoriesInit(context.Background(), t, providers, []string{
 		ProviderName,
 		ProviderNameAlternate,
 	})
 }
 
 func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
-	return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+	return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate)
 }
 
 // ProtoV5FactoriesAlternateAccountAndAlternateRegion creates ProtoV5ProviderFactories for cross-account and cross-region configurations
@@ -169,6 +167,7 @@ func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.Provid
 // and ConfigAlternateAccountAndAlternateRegionProvider.
 func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	return protoV5ProviderFactoriesInit(
+		context.Background(),
 		ProviderName,
 		ProviderNameAlternateAccountAlternateRegion,
 		ProviderNameAlternateAccountSameRegion,
@@ -182,9 +181,9 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string
 func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
 	switch n {
 	case 2:
-		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate)
 	case 3:
-		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate, ProviderNameThird)
+		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate, ProviderNameThird)
 	default:
 		t.Fatalf("invalid number of Region configurations: %d", n)
 	}
@@ -220,7 +219,8 @@ func PreCheck(t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
-		err := Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
+		err := sdkdiag.DiagnosticsError(Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil)))
+
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -753,7 +753,7 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 }
 
 func PreCheckOrganizationsAccount(t *testing.T) {
-	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		return
@@ -767,7 +767,7 @@ func PreCheckOrganizationsAccount(t *testing.T) {
 }
 
 func PreCheckOrganizationsEnabled(t *testing.T) {
-	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
@@ -779,13 +779,13 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 }
 
 func PreCheckOrganizationManagementAccount(t *testing.T) {
-	organization, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+	organization, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(context.Background(), Provider.Meta().(*conns.AWSClient).STSConn)
+	callerIdentity, err := tfsts.FindCallerIdentity(context.Background(), Provider.Meta().(*conns.AWSClient).STSConn())
 
 	if err != nil {
 		t.Fatalf("error getting current identity: %s", err)
@@ -797,7 +797,7 @@ func PreCheckOrganizationManagementAccount(t *testing.T) {
 }
 
 func PreCheckSSOAdminInstances(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 	input := &ssoadmin.ListInstancesInput{}
 	var instances []*ssoadmin.InstanceMetadata
 
@@ -825,7 +825,7 @@ func PreCheckSSOAdminInstances(t *testing.T) {
 }
 
 func PreCheckHasIAMRole(t *testing.T, roleName string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
@@ -844,7 +844,7 @@ func PreCheckHasIAMRole(t *testing.T, roleName string) {
 }
 
 func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
@@ -1349,7 +1349,7 @@ func RandomEmailAddress(domainName string) string {
 }
 
 func PreCheckOutpostsOutposts(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn
+	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListOutpostsInput{}
 
@@ -1418,7 +1418,7 @@ func ACMCertificateRandomSubDomain(rootDomain string) string {
 
 func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeRoot {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
@@ -1484,7 +1484,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 
 func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthority, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeSubordinate {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
@@ -1553,7 +1553,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 
 func CheckACMPCACertificateAuthorityDisableCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 		_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: certificateAuthority.Arn,
@@ -1575,7 +1575,7 @@ func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpc
 			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 		input := &acmpca.DescribeCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(rs.Primary.ID),
@@ -1605,7 +1605,7 @@ func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 }
 
 func PreCheckDirectoryService(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DSConn
+	conn := Provider.Meta().(*conns.AWSClient).DSConn()
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
@@ -1624,7 +1624,7 @@ func PreCheckDirectoryService(t *testing.T) {
 // and we do not have a good read-only way to determine this situation. Here we
 // opt to perform a creation that will fail so we can determine Simple AD support.
 func PreCheckDirectoryServiceSimpleDirectory(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DSConn
+	conn := Provider.Meta().(*conns.AWSClient).DSConn()
 
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
@@ -1986,7 +1986,7 @@ func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 			return fmt.Errorf("no VPC ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
 
@@ -2044,5 +2044,30 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 		}
 
 		return nil
+	}
+}
+
+// RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
+func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T), d time.Duration) {
+	t.Helper()
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+			time.Sleep(d)
+		})
+	}
+}
+
+// RunSerialTests2Levels runs test cases in parallel, optionally sleeping between each.
+func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t *testing.T), d time.Duration) {
+	t.Helper()
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			RunSerialTests1Level(t, m, d)
+		})
 	}
 }

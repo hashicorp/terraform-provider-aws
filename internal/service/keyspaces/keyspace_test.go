@@ -115,7 +115,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 }
 
 func testAccCheckKeyspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_keyspaces_keyspace" {
@@ -149,7 +149,7 @@ func testAccCheckKeyspaceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Keyspaces Keyspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn()
 
 		_, err := tfkeyspaces.FindKeyspaceByName(context.Background(), conn, rs.Primary.Attributes["name"])
 

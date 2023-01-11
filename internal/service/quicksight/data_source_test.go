@@ -19,6 +19,8 @@ import (
 )
 
 func TestDataSourcePermissionsDiff(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name            string
 		oldPermissions  []interface{}
@@ -211,7 +213,10 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			toGrant, toRevoke := tfquicksight.DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
 			if !reflect.DeepEqual(toGrant, testCase.expectedGrants) {
 				t.Fatalf("Expected: %v, got: %v", testCase.expectedGrants, toGrant)
@@ -405,7 +410,7 @@ func testAccCheckDataSourceExists(resourceName string, dataSource *quicksight.Da
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
 
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -429,7 +434,7 @@ func testAccCheckDataSourceExists(resourceName string, dataSource *quicksight.Da
 }
 
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_data_source" {
 			continue

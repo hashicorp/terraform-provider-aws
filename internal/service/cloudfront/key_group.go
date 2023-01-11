@@ -46,7 +46,7 @@ func ResourceKeyGroup() *schema.Resource {
 }
 
 func resourceKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	input := &cloudfront.CreateKeyGroupInput{
 		KeyGroupConfig: expandKeyGroupConfig(d),
@@ -68,7 +68,7 @@ func resourceKeyGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	input := &cloudfront.GetKeyGroupInput{
 		Id: aws.String(d.Id()),
 	}
@@ -98,7 +98,7 @@ func resourceKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
@@ -115,7 +115,7 @@ func resourceKeyGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	input := &cloudfront.DeleteKeyGroupInput{
 		Id:      aws.String(d.Id()),

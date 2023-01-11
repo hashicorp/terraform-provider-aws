@@ -1216,7 +1216,7 @@ func testAccVirtualNode_tags(t *testing.T) {
 }
 
 func testAccCheckVirtualNodeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_virtual_node" {
@@ -1241,7 +1241,7 @@ func testAccCheckVirtualNodeDestroy(s *terraform.State) error {
 
 func testAccCheckVirtualNodeExists(name string, v *appmesh.VirtualNodeData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

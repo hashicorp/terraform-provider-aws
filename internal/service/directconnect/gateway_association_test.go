@@ -352,7 +352,7 @@ func testAccGatewayAssociationImportStateIdFunc(resourceName string) resource.Im
 }
 
 func testAccCheckGatewayAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway_association" {
@@ -385,7 +385,7 @@ func testAccCheckGatewayAssociationExists(name string, ga *directconnect.Gateway
 			return fmt.Errorf("No Direct Connect Gateway Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		output, err := tfdirectconnect.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
 

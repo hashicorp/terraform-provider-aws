@@ -186,7 +186,7 @@ func ResourceOpenzfsVolume() *schema.Resource {
 }
 
 func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -265,7 +265,7 @@ func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -335,7 +335,7 @@ func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -399,7 +399,7 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceOpenzfsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS Volume: %s", d.Id())
 	_, err := conn.DeleteVolume(&fsx.DeleteVolumeInput{

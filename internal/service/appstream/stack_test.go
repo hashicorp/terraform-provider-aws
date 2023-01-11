@@ -110,7 +110,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -313,7 +313,7 @@ func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stac
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 		resp, err := conn.DescribeStacks(&appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
@@ -331,7 +331,7 @@ func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stac
 }
 
 func testAccCheckStackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_stack" {
@@ -380,19 +380,28 @@ resource "aws_appstream_stack" "test" {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
   user_settings {
     action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
+  user_settings {
+    action     = "DOMAIN_PASSWORD_SIGNIN"
+    permission = "ENABLED"
+  }
+  user_settings {
+    action     = "DOMAIN_SMART_CARD_SIGNIN"
+    permission = "DISABLED"
+  }
+  user_settings {
+    action     = "FILE_DOWNLOAD"
+    permission = "ENABLED"
+  }
   user_settings {
     action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "FILE_DOWNLOAD"
+    action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
 
@@ -451,29 +460,28 @@ resource "aws_appstream_stack" "test" {
     action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
   user_settings {
     action     = "CLIPBOARD_COPY_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "FILE_UPLOAD"
+    action     = "DOMAIN_PASSWORD_SIGNIN"
+    permission = "ENABLED"
+  }
+  user_settings {
+    action     = "DOMAIN_SMART_CARD_SIGNIN"
     permission = "DISABLED"
   }
-
   user_settings {
     action     = "FILE_DOWNLOAD"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "PRINTING_TO_LOCAL_DEVICE"
+    action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
-
   user_settings {
-    action     = "DOMAIN_PASSWORD_SIGNIN"
+    action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
 

@@ -217,7 +217,7 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err = tfec2.FindImageLaunchPermission(context.Background(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
@@ -226,7 +226,7 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami_launch_permission" {

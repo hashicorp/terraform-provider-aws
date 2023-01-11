@@ -61,7 +61,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 }
 
 func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.AssociateTagOptionWithResourceInput{
 		ResourceId:  aws.String(d.Get("resource_id").(string)),
@@ -103,7 +103,7 @@ func resourceTagOptionResourceAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 
@@ -141,7 +141,7 @@ func resourceTagOptionResourceAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceTagOptionResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	tagOptionID, resourceID, err := TagOptionResourceAssociationParseID(d.Id())
 

@@ -52,7 +52,7 @@ func ResourceAggregateAuthorization() *schema.Resource {
 }
 
 func resourceAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -76,7 +76,7 @@ func resourceAggregateAuthorizationPut(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -140,7 +140,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -154,7 +154,7 @@ func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {

@@ -144,7 +144,7 @@ func ResourceInsight() *schema.Resource {
 }
 
 func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	name := d.Get("name").(string)
 
@@ -173,7 +173,7 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	insight, err := FindInsight(ctx, conn, d.Id())
 
@@ -207,7 +207,7 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	input := &securityhub.UpdateInsightInput{
 		InsightArn: aws.String(d.Id()),
@@ -235,7 +235,7 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	input := &securityhub.DeleteInsightInput{
 		InsightArn: aws.String(d.Id()),

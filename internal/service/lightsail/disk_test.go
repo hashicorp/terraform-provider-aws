@@ -115,7 +115,7 @@ func testAccCheckDiskExists(n string, disk *lightsail.Disk) resource.TestCheckFu
 			return errors.New("No LightsailDisk ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		resp, err := tflightsail.FindDiskById(context.Background(), conn, rs.Primary.ID)
 
@@ -166,7 +166,7 @@ func testAccCheckDiskDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindDiskById(context.Background(), conn, rs.Primary.ID)
 

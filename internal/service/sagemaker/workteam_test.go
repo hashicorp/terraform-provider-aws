@@ -266,7 +266,7 @@ func testAccWorkteam_disappears(t *testing.T) {
 }
 
 func testAccCheckWorkteamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_workteam" {
@@ -300,7 +300,7 @@ func testAccCheckWorkteamExists(n string, workteam *sagemaker.Workteam) resource
 			return fmt.Errorf("No SageMaker Workteam ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		output, err := tfsagemaker.FindWorkteamByName(conn, rs.Primary.ID)
 

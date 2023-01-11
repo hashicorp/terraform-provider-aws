@@ -71,7 +71,7 @@ func ResourceByteMatchSet() *schema.Resource {
 }
 
 func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
@@ -96,7 +96,7 @@ func resourceByteMatchSetCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
 
@@ -153,7 +153,7 @@ func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 }
 
 func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 	log.Printf("[INFO] Updating ByteMatchSet: %s", d.Get("name").(string))
 
@@ -170,7 +170,7 @@ func resourceByteMatchSetUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceByteMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Deleting ByteMatchSet: %s", d.Get("name").(string))

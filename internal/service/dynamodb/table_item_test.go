@@ -382,7 +382,7 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 }
 
 func testAccCheckTableItemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_table_item" {
@@ -424,7 +424,7 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 			return fmt.Errorf("No DynamoDB table item ID specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
 		attrs := rs.Primary.Attributes
 		attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
@@ -448,7 +448,7 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 
 func testAccCheckTableItemCount(tableName string, count int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 		out, err := conn.Scan(&dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			TableName:      aws.String(tableName),

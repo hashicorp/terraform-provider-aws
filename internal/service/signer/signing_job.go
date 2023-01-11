@@ -196,7 +196,7 @@ func ResourceSigningJob() *schema.Resource {
 }
 
 func resourceSigningJobCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 	profileName := d.Get("profile_name")
 	source := d.Get("source").([]interface{})
 	destination := d.Get("destination").([]interface{})
@@ -232,7 +232,7 @@ func resourceSigningJobCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 	jobId := d.Id()
 
 	describeSigningJobOutput, err := conn.DescribeSigningJob(&signer.DescribeSigningJobInput{

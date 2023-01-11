@@ -31,6 +31,8 @@ func init() {
 //	What is here was dangerous and repulsive to us. This message is a warning about danger."
 //	--  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
 func TestAccClientVPNEndpoint_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
 			"basic":                        testAccClientVPNEndpoint_basic,
@@ -71,8 +73,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 		},
 	}
 
-	t.Parallel()
-	for group, m := range testCases {
+	for group, m := range testCases { //nolint:paralleltest
 		m := m
 		for name, tc := range m {
 			tc := tc
@@ -710,7 +711,7 @@ func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 }
 
 func testAccCheckClientVPNEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_client_vpn_endpoint" {
@@ -743,7 +744,7 @@ func testAccCheckClientVPNEndpointExists(name string, v *ec2.ClientVpnEndpoint) 
 			return fmt.Errorf("No EC2 Client VPN Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindClientVPNEndpointByID(conn, rs.Primary.ID)
 

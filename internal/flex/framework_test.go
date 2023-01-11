@@ -41,6 +41,8 @@ func TestExpandFrameworkStringSet(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := ExpandFrameworkStringSet(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -80,6 +82,8 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := ExpandFrameworkStringValueSet(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -122,6 +126,8 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := ExpandFrameworkStringValueMap(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -159,6 +165,8 @@ func TestFlattenFrameworkStringList(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := FlattenFrameworkStringList(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -196,6 +204,8 @@ func TestFlattenFrameworkStringValueList(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := FlattenFrameworkStringValueList(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -233,6 +243,8 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := FlattenFrameworkStringValueSet(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -273,6 +285,8 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := FlattenFrameworkStringValueMap(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -307,6 +321,8 @@ func TestBoolFromFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := BoolFromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -345,6 +361,8 @@ func TestInt64FromFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := Int64FromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -383,6 +401,8 @@ func TestStringFromFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringFromFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -413,6 +433,8 @@ func TestBoolToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := BoolToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -443,6 +465,8 @@ func TestBoolToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := BoolToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -477,6 +501,8 @@ func TestInt64ToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := Int64ToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -511,6 +537,8 @@ func TestInt64ToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := Int64ToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -545,6 +573,8 @@ func TestStringToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -579,6 +609,8 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -613,6 +645,8 @@ func TestStringToFrameworkWithTransform(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringToFrameworkWithTransform(context.Background(), test.input, strings.ToLower)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -646,6 +680,8 @@ func TestStringValueToFramework(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringValueToFramework(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
@@ -679,6 +715,8 @@ func TestStringValueToFrameworkLegacy(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got := StringValueToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {

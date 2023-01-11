@@ -137,7 +137,7 @@ func testAccCheckActionTargetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Security Hub custom action ARN is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		action, err := tfsecurityhub.ActionTargetCheckExists(conn, rs.Primary.ID)
 
@@ -154,7 +154,7 @@ func testAccCheckActionTargetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckActionTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_action_target" {

@@ -66,7 +66,7 @@ func TestAccServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) 
 }
 
 func testAccCheckTagOptionResourceAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_tag_option_resource_association" {
@@ -107,7 +107,7 @@ func testAccCheckTagOptionResourceAssociationExists(resourceName string) resourc
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		_, err = tfservicecatalog.WaitTagOptionResourceAssociationReady(conn, tagOptionID, resourceID, tfservicecatalog.TagOptionResourceAssociationReadyTimeout)
 

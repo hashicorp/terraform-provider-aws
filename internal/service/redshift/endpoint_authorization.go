@@ -68,7 +68,7 @@ func ResourceEndpointAuthorization() *schema.Resource {
 }
 
 func resourceEndpointAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account := d.Get("account").(string)
 	input := redshift.AuthorizeEndpointAccessInput{
@@ -92,7 +92,7 @@ func resourceEndpointAuthorizationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceEndpointAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	endpoint, err := FindEndpointAuthorizationById(conn, d.Id())
 
@@ -118,7 +118,7 @@ func resourceEndpointAuthorizationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceEndpointAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChanges("vpc_ids") {
 		account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
@@ -161,7 +161,7 @@ func resourceEndpointAuthorizationUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceEndpointAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
 	if err != nil {

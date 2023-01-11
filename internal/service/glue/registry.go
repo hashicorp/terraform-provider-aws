@@ -53,7 +53,7 @@ func ResourceRegistry() *schema.Resource {
 }
 
 func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -77,7 +77,7 @@ func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -123,7 +123,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChanges("description") {
 		input := &glue.UpdateRegistryInput{
@@ -152,7 +152,7 @@ func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())
 	input := &glue.DeleteRegistryInput{

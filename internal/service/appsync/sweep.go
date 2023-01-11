@@ -40,7 +40,7 @@ func sweepGraphQLAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
+	conn := client.(*conns.AWSClient).AppSyncConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -95,7 +95,7 @@ func sweepDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
+	conn := client.(*conns.AWSClient).AppSyncConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -150,7 +150,7 @@ func sweepDomainNameAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
+	conn := client.(*conns.AWSClient).AppSyncConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

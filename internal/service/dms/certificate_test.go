@@ -139,7 +139,7 @@ func testAccCheckCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{
@@ -177,7 +177,7 @@ func testAccCertificateExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		output, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{

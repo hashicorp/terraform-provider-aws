@@ -23,6 +23,8 @@ func init() {
 }
 
 func TestCleanRecordName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input, Output string
 	}{
@@ -42,6 +44,8 @@ func TestCleanRecordName(t *testing.T) {
 }
 
 func TestExpandRecordName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input, Output string
 	}{
@@ -64,6 +68,8 @@ func TestExpandRecordName(t *testing.T) {
 }
 
 func TestNormalizeAliasName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input, Output string
 	}{
@@ -85,6 +91,8 @@ func TestNormalizeAliasName(t *testing.T) {
 }
 
 func TestParseRecordId(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input, Zone, Name, Type, Set string
 	}{
@@ -103,7 +111,10 @@ func TestParseRecordId(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.Input, func(t *testing.T) {
+			t.Parallel()
+
 			parts := tfroute53.ParseRecordID(tc.Input)
 			if parts[0] != tc.Zone {
 				t.Fatalf("input: %s\nzone: %s\nexpected:%s", tc.Input, parts[0], tc.Zone)
@@ -1385,7 +1396,7 @@ func testAccRecordOverwriteExpectErrorCheck(t *testing.T) resource.ErrorCheckFun
 }
 
 func testAccCheckRecordDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_record" {
 			continue
@@ -1428,7 +1439,7 @@ func testAccCheckRecordDestroy(s *terraform.State) error {
 
 func testAccCheckRecordDisappears(zone *route53.GetHostedZoneOutput, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 		input := &route53.ChangeResourceRecordSetsInput{
 			HostedZoneId: zone.HostedZone.Id,
@@ -1463,7 +1474,7 @@ func testAccCheckRecordDisappears(zone *route53.GetHostedZoneOutput, resourceRec
 
 func testAccCheckRecordExists(n string, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -1509,7 +1520,7 @@ func testAccCheckRecordExists(n string, resourceRecordSet *route53.ResourceRecor
 
 func testAccCheckRecordDoesNotExist(zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", zoneResourceName)

@@ -552,7 +552,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 					err := testAccDeleteManagedSecurityGroups(conn, &vpc)
 
@@ -1584,7 +1584,7 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 }
 
 func testAccCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -1618,7 +1618,7 @@ func testAccCheckClusterExists(n string, v *emr.Cluster) resource.TestCheckFunc 
 			return fmt.Errorf("No EMR Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
 		output, err := tfemr.FindClusterByID(conn, rs.Primary.ID)
 

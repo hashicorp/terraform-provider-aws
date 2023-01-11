@@ -43,7 +43,7 @@ func sweepAccelerators(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -86,7 +86,7 @@ func sweepEndpointGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -174,7 +174,7 @@ func sweepListeners(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := client.(*conns.AWSClient).GlobalAcceleratorConn()
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)

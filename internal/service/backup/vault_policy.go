@@ -36,10 +36,11 @@ func ResourceVaultPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -50,7 +51,7 @@ func ResourceVaultPolicy() *schema.Resource {
 }
 
 func resourceVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -76,7 +77,7 @@ func resourceVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	output, err := FindVaultAccessPolicyByName(conn, d.Id())
 
@@ -111,7 +112,7 @@ func resourceVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	log.Printf("[DEBUG] Deleting Backup Vault Policy (%s)", d.Id())
 	_, err := conn.DeleteBackupVaultAccessPolicy(&backup.DeleteBackupVaultAccessPolicyInput{

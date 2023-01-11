@@ -186,7 +186,7 @@ func ResourceClassifier() *schema.Resource {
 }
 
 func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
 	input := &glue.CreateClassifierInput{}
@@ -223,7 +223,7 @@ func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClassifierRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	classifier, err := FindClassifierByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -258,7 +258,7 @@ func resourceClassifierRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	input := &glue.UpdateClassifierInput{}
 
@@ -292,7 +292,7 @@ func resourceClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClassifierDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())
 	err := DeleteClassifier(conn, d.Id())

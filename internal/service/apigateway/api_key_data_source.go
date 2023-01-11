@@ -50,7 +50,7 @@ func DataSourceAPIKey() *schema.Resource {
 }
 
 func dataSourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	apiKey, err := conn.GetApiKey(&apigateway.GetApiKeyInput{

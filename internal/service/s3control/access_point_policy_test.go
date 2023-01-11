@@ -1,6 +1,7 @@
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -136,7 +137,7 @@ func testAccAccessPointPolicyImportStateIdFunc(n string) resource.ImportStateIdF
 }
 
 func testAccCheckAccessPointPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_access_point_policy" {
@@ -149,7 +150,7 @@ func testAccCheckAccessPointPolicyDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -182,9 +183,9 @@ func testAccCheckAccessPointPolicyExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
+		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
 
 		return err
 	}

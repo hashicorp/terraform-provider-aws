@@ -34,7 +34,7 @@ import (
 )
 
 func init() {
-	registerFrameworkResourceFactory(newResourceView)
+	_sp.registerFrameworkResourceFactory(newResourceView)
 }
 
 func newResourceView(context.Context) (resource.ResourceWithConfigure, error) {
@@ -127,7 +127,7 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
@@ -172,7 +172,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
@@ -244,7 +244,7 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 
 	if !new.Filters.Equal(old.Filters) || !new.IncludedProperties.Equal(old.IncludedProperties) {
 		input := &resourceexplorer2.UpdateViewInput{
@@ -288,7 +288,7 @@ func (r *resourceView) Delete(ctx context.Context, request resource.DeleteReques
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client
+	conn := r.Meta().ResourceExplorer2Client()
 
 	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]interface{}{
 		"id": data.ID.ValueString(),

@@ -56,7 +56,7 @@ func resourceAccountSettingDefaultImport(d *schema.ResourceData, meta interface{
 }
 
 func resourceAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -81,7 +81,7 @@ func resourceAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	input := &ecs.ListAccountSettingsInput{
 		Name:              aws.String(d.Get("name").(string)),
@@ -112,7 +112,7 @@ func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAccountSettingDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -133,7 +133,7 @@ func resourceAccountSettingDefaultUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	settingName := d.Get("name").(string)
 

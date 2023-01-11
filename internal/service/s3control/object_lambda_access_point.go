@@ -1,6 +1,7 @@
 package s3control
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,12 +20,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceObjectLambdaAccessPoint() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_s3control_object_lambda_access_point", resourceObjectLambdaAccessPoint)
+}
+
+func resourceObjectLambdaAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceObjectLambdaAccessPointCreate,
-		Read:   resourceObjectLambdaAccessPointRead,
-		Update: resourceObjectLambdaAccessPointUpdate,
-		Delete: resourceObjectLambdaAccessPointDelete,
+		CreateWithoutTimeout: resourceObjectLambdaAccessPointCreate,
+		ReadWithoutTimeout:   resourceObjectLambdaAccessPointRead,
+		UpdateWithoutTimeout: resourceObjectLambdaAccessPointUpdate,
+		DeleteWithoutTimeout: resourceObjectLambdaAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -119,8 +126,8 @@ func ResourceObjectLambdaAccessPoint() *schema.Resource {
 	}
 }
 
-func resourceObjectLambdaAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -138,28 +145,27 @@ func resourceObjectLambdaAccessPointCreate(d *schema.ResourceData, meta interfac
 		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating S3 Object Lambda Access Point: %s", input)
-	_, err := conn.CreateAccessPointForObjectLambda(input)
+	_, err := conn.CreateAccessPointForObjectLambdaWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating S3 Object Lambda Access Point (%s): %w", resourceID, err)
+		return diag.Errorf("creating S3 Object Lambda Access Point (%s): %s", resourceID, err)
 	}
 
 	d.SetId(resourceID)
 
-	return resourceObjectLambdaAccessPointRead(d, meta)
+	return resourceObjectLambdaAccessPointRead(ctx, d, meta)
 }
 
-func resourceObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	output, err := FindObjectLambdaAccessPointByAccountIDAndName(conn, accountID, name)
+	output, err := FindObjectLambdaAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
@@ -168,7 +174,7 @@ func resourceObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Object Lambda Access Point (%s): %w", d.Id(), err)
+		return diag.Errorf("reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
@@ -182,20 +188,20 @@ func resourceObjectLambdaAccessPointRead(d *schema.ResourceData, meta interface{
 	}.String()
 	d.Set("arn", arn)
 	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(output)}); err != nil {
-		return fmt.Errorf("error setting configuration: %w", err)
+		return diag.Errorf("setting configuration: %s", err)
 	}
 	d.Set("name", name)
 
 	return nil
 }
 
-func resourceObjectLambdaAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	input := &s3control.PutAccessPointConfigurationForObjectLambdaInput{
@@ -207,27 +213,26 @@ func resourceObjectLambdaAccessPointUpdate(d *schema.ResourceData, meta interfac
 		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating S3 Object Lambda Access Point: %s", input)
-	_, err = conn.PutAccessPointConfigurationForObjectLambda(input)
+	_, err = conn.PutAccessPointConfigurationForObjectLambdaWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating S3 Object Lambda Access Point (%s): %w", d.Id(), err)
+		return diag.Errorf("updating S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	return resourceObjectLambdaAccessPointRead(d, meta)
+	return resourceObjectLambdaAccessPointRead(ctx, d, meta)
 }
 
-func resourceObjectLambdaAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Object Lambda Access Point: %s", d.Id())
-	_, err = conn.DeleteAccessPointForObjectLambda(&s3control.DeleteAccessPointForObjectLambdaInput{
+	_, err = conn.DeleteAccessPointForObjectLambdaWithContext(ctx, &s3control.DeleteAccessPointForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	})
@@ -237,10 +242,36 @@ func resourceObjectLambdaAccessPointDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Object Lambda Access Point (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindObjectLambdaAccessPointByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaConfiguration, error) {
+	input := &s3control.GetAccessPointConfigurationForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetAccessPointConfigurationForObjectLambdaWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Configuration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Configuration, nil
 }
 
 const objectLambdaAccessPointResourceIDSeparator = ":"

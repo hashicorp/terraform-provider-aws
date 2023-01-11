@@ -281,7 +281,7 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 }
 
 func testAccCheckScheduledActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_scheduled_action" {
@@ -315,7 +315,7 @@ func testAccCheckScheduledActionExists(n string, v *redshift.ScheduledAction) re
 			return fmt.Errorf("No Redshift Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		output, err := tfredshift.FindScheduledActionByName(conn, rs.Primary.ID)
 

@@ -594,7 +594,7 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 }
 
 func testAccCheckIntegrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_integration" {
@@ -620,7 +620,7 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 
 func testAccCheckIntegrationDisappears(apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		_, err := conn.DeleteIntegration(&apigatewayv2.DeleteIntegrationInput{
 			ApiId:         apiId,
@@ -642,7 +642,7 @@ func testAccCheckIntegrationExists(n string, vApiId *string, v *apigatewayv2.Get
 			return fmt.Errorf("No API Gateway v2 integration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{

@@ -59,7 +59,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 }
 
 func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	id := d.Get("firewall_domain_list_id").(string)
 	firewallDomainList, err := FindFirewallDomainListByID(ctx, conn, id)

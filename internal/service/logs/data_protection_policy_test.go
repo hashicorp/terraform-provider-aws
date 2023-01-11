@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -206,7 +207,7 @@ func TestAccLogsDataProtectionPolicy_policyDocument(t *testing.T) {
 }
 
 func testAccCheckDataProtectionPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(tflogs.LogsClient).LogsClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_data_protection_policy" {
@@ -240,7 +241,7 @@ func testAccCheckDataProtectionPolicyExists(n string, v *cloudwatchlogs.GetDataP
 			return fmt.Errorf("No CloudWatch Logs Data Protection Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(tflogs.LogsClient).LogsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient()
 
 		output, err := tflogs.FindDataProtectionPolicyByID(context.Background(), conn, rs.Primary.ID)
 

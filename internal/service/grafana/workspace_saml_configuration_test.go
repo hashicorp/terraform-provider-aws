@@ -156,7 +156,7 @@ func testAccCheckWorkspaceSAMLConfigurationExists(name string) resource.TestChec
 			return fmt.Errorf("No Grafana Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
 		_, err := tfgrafana.FindSamlConfigurationByID(conn, rs.Primary.ID)
 

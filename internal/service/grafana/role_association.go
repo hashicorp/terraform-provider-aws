@@ -50,7 +50,7 @@ func ResourceRoleAssociation() *schema.Resource {
 }
 
 func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	role := d.Get("role").(string)
 	workspaceID := d.Get("workspace_id").(string)
@@ -107,7 +107,7 @@ func populateUpdateInstructions(role string, list []*string, action string, type
 }
 
 func resourceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	roleAssociations, err := FindRoleAssociationsByRoleAndWorkspaceID(conn, d.Get("role").(string), d.Get("workspace_id").(string))
 
@@ -128,7 +128,7 @@ func resourceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
 	if v, ok := d.GetOk("user_ids"); ok && v.(*schema.Set).Len() > 0 {

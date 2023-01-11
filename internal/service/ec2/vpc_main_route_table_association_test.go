@@ -42,7 +42,7 @@ func TestAccVPCMainRouteTableAssociation_basic(t *testing.T) {
 }
 
 func testAccCheckMainRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_main_route_table_association" {
@@ -76,7 +76,7 @@ func testAccCheckMainRouteTableAssociationExists(n string, v *ec2.RouteTableAsso
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		association, err := tfec2.FindMainRouteTableAssociationByID(conn, rs.Primary.ID)
 

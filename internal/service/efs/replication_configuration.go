@@ -93,7 +93,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 }
 
 func resourceReplicationConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	fsID := d.Get("source_file_system_id").(string)
 	input := &efs.CreateReplicationConfigurationInput{
@@ -120,7 +120,7 @@ func resourceReplicationConfigurationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	replication, err := FindReplicationConfigurationByID(conn, d.Id())
 
@@ -159,7 +159,7 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	// Deletion of the replication configuration must be done from the
 	// Region in which the destination file system is located.

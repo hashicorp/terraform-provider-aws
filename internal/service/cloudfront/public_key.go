@@ -64,7 +64,7 @@ func ResourcePublicKey() *schema.Resource {
 }
 
 func resourcePublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -90,7 +90,7 @@ func resourcePublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
 	}
@@ -127,7 +127,7 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
@@ -144,7 +144,7 @@ func resourcePublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	request := &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),

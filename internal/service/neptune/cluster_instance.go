@@ -194,7 +194,7 @@ func ResourceClusterInstance() *schema.Resource {
 }
 
 func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -284,7 +284,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	db, err := resourceInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn)
+	db, err := resourceInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn())
 	if err != nil {
 		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
@@ -299,7 +299,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Cluster identifier is missing from instance (%s)", d.Id())
 	}
 
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -380,7 +380,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	requestUpdate := false
 
 	req := &neptune.ModifyDBInstanceInput{
@@ -466,7 +466,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy: %v", d.Id())
 

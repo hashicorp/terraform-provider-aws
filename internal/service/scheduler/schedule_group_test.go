@@ -218,7 +218,7 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 }
 
 func testAccCheckScheduleGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -254,7 +254,7 @@ func testAccCheckScheduleGroupExists(name string, schedulegroup *scheduler.GetSc
 			return create.Error(names.Scheduler, create.ErrActionCheckingExistence, tfscheduler.ResNameScheduleGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
 		ctx := context.Background()
 		resp, err := conn.GetScheduleGroup(ctx, &scheduler.GetScheduleGroupInput{
 			Name: aws.String(rs.Primary.ID),
@@ -271,7 +271,7 @@ func testAccCheckScheduleGroupExists(name string, schedulegroup *scheduler.GetSc
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
 	ctx := context.Background()
 
 	input := &scheduler.ListScheduleGroupsInput{}

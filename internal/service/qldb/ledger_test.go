@@ -222,7 +222,7 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 }
 
 func testAccCheckLedgerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_qldb_ledger" {
@@ -256,7 +256,7 @@ func testAccCheckLedgerExists(n string, v *qldb.DescribeLedgerOutput) resource.T
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
 
 		output, err := tfqldb.FindLedgerByName(context.Background(), conn, rs.Primary.ID)
 

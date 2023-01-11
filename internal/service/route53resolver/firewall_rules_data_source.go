@@ -88,7 +88,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 }
 
 func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
 	rules, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {

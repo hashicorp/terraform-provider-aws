@@ -201,7 +201,7 @@ func testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint(t *testing.T) {
 }
 
 func testAccCheckClientVPNNetworkAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_network_association" {
@@ -235,7 +235,7 @@ func testAccCheckClientVPNNetworkAssociationExists(name string, v *ec2.TargetNet
 			return fmt.Errorf("No EC2 Client VPN Network Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindClientVPNNetworkAssociationByIDs(conn, rs.Primary.ID, rs.Primary.Attributes["client_vpn_endpoint_id"])
 

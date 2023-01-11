@@ -101,7 +101,7 @@ func ResourceReportDefinition() *schema.Resource {
 }
 
 func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CURConn
+	conn := meta.(*conns.AWSClient).CURConn()
 
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
@@ -159,7 +159,7 @@ func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CURConn
+	conn := meta.(*conns.AWSClient).CURConn()
 
 	reportDefinition, err := FindReportDefinitionByName(conn, d.Id())
 
@@ -204,7 +204,7 @@ func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CURConn
+	conn := meta.(*conns.AWSClient).CURConn()
 
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
@@ -264,9 +264,9 @@ func resourceReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceReportDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CURConn
+	conn := meta.(*conns.AWSClient).CURConn()
 
-	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition: %s", d.Id())
 	_, err := conn.DeleteReportDefinition(&cur.DeleteReportDefinitionInput{
 		ReportName: aws.String(d.Id()),
 	})

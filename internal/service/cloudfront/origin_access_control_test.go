@@ -211,7 +211,7 @@ func TestAccCloudFrontOriginAccessControl_SigningBehavior(t *testing.T) {
 }
 
 func testAccCheckOriginAccessControlDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -246,7 +246,7 @@ func testAccCheckOriginAccessControlExists(name string, originaccesscontrol *clo
 			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameOriginAccessControl, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 		ctx := context.Background()
 		resp, err := conn.GetOriginAccessControlWithContext(ctx, &cloudfront.GetOriginAccessControlInput{
 			Id: aws.String(rs.Primary.ID),
@@ -263,7 +263,7 @@ func testAccCheckOriginAccessControlExists(name string, originaccesscontrol *clo
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 	ctx := context.Background()
 
 	input := &cloudfront.ListOriginAccessControlsInput{}

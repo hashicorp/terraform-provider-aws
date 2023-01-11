@@ -14,12 +14,15 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
 }
 
 // newDataSourceDefaultTags instantiates a new DataSource for the aws_default_tags data source.
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDefaultTags{}, nil
+	d := &dataSourceDefaultTags{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceDefaultTags struct {

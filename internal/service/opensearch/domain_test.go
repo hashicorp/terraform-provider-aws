@@ -21,6 +21,8 @@ import (
 )
 
 func TestParseEngineVersion(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName           string
 		InputEngineVersion string
@@ -51,7 +53,10 @@ func TestParseEngineVersion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			engineType, semver, err := tfopensearch.ParseEngineVersion(testCase.InputEngineVersion)
 
 			if err == nil && testCase.ExpectError {
@@ -447,7 +452,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 			_, err := conn.DeleteDomain(&opensearchservice.DeleteDomainInput{
 				DomainName: aws.String(rName),
 			})
@@ -457,7 +462,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Create duplicate
-					conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 					_, err := conn.CreateDomain(&opensearchservice.CreateDomainInput{
 						DomainName: aws.String(rName),
 						EBSOptions: &opensearchservice.EBSOptions{
@@ -1782,7 +1787,7 @@ func testAccCheckDomainExists(n string, domain *opensearchservice.DomainStatus) 
 			return fmt.Errorf("No OpenSearch Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 		resp, err := tfopensearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
@@ -1802,7 +1807,7 @@ func testAccCheckDomainExists(n string, domain *opensearchservice.DomainStatus) 
 func testAccCheckDomainNotRecreated(domain1, domain2 *opensearchservice.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 
 			ic, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
 				DomainName: domain1.DomainName,
@@ -1839,7 +1844,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 		_, err := tfopensearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 
 		if tfresource.NotFound(err) {
@@ -1869,7 +1874,7 @@ func testAccPreCheckIAMServiceLinkedRole(t *testing.T) {
 }
 
 func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(1),
@@ -1887,7 +1892,7 @@ func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
 }
 
 func testAccCheckELBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" {

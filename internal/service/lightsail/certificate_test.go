@@ -181,7 +181,7 @@ func TestAccLightsailCertificate_disappears(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Certificate
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 		_, err := conn.DeleteCertificate(&lightsail.DeleteCertificateInput{
 			CertificateName: aws.String(rName),
 		})
@@ -224,7 +224,7 @@ func testAccCheckCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindCertificateByName(context.Background(), conn, rs.Primary.ID)
 
@@ -253,7 +253,7 @@ func testAccCheckCertificateExists(n string, certificate *lightsail.Certificate)
 			return errors.New("No Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		respCertificate, err := tflightsail.FindCertificateByName(context.Background(), conn, rs.Primary.ID)
 

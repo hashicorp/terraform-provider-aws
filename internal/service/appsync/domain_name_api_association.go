@@ -36,7 +36,7 @@ func ResourceDomainNameAPIAssociation() *schema.Resource {
 }
 
 func resourceDomainNameAPIAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -58,7 +58,7 @@ func resourceDomainNameAPIAssociationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceDomainNameAPIAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	association, err := FindDomainNameAPIAssociationByID(conn, d.Id())
 	if association == nil && !d.IsNewResource() {
@@ -78,7 +78,7 @@ func resourceDomainNameAPIAssociationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceDomainNameAPIAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -98,7 +98,7 @@ func resourceDomainNameAPIAssociationUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceDomainNameAPIAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.DisassociateApiInput{
 		DomainName: aws.String(d.Id()),

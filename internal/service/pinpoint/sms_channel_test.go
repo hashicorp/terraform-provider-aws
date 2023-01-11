@@ -142,7 +142,7 @@ func testAccCheckSMSChannelExists(n string, channel *pinpoint.SMSChannelResponse
 			return fmt.Errorf("No Pinpoint SMS Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the app exists
 		params := &pinpoint.GetSmsChannelInput{
@@ -182,7 +182,7 @@ resource "aws_pinpoint_sms_channel" "test" {
 }
 
 func testAccCheckSMSChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_sms_channel" {

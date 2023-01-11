@@ -17,12 +17,15 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceAccelerator)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceAccelerator)
 }
 
 // newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAccelerator{}, nil
+	d := &dataSourceAccelerator{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceAccelerator struct {
@@ -99,7 +102,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	conn := d.Meta().GlobalAcceleratorConn
+	conn := d.Meta().GlobalAcceleratorConn()
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator

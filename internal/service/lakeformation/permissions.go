@@ -375,7 +375,7 @@ func ResourcePermissions() *schema.Resource {
 // returns.
 
 func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GrantPermissionsInput{
 		Permissions: flex.ExpandStringList(d.Get("permissions").([]interface{})),
@@ -465,7 +465,7 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
@@ -676,7 +676,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.RevokePermissionsInput{
 		Permissions:                flex.ExpandStringList(d.Get("permissions").([]interface{})),

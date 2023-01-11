@@ -94,7 +94,7 @@ func (m CertificateByExpiration) Less(i, j int) bool {
 }
 
 func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	var matcher = func(cert *iam.ServerCertificateMetadata) bool {
 		return strings.HasPrefix(aws.StringValue(cert.ServerCertificateName), d.Get("name_prefix").(string))

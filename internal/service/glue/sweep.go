@@ -84,7 +84,7 @@ func sweepCatalogDatabases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetDatabasesInput{}
 	err = conn.GetDatabasesPages(input, func(page *glue.GetDatabasesOutput, lastPage bool) bool {
@@ -126,7 +126,7 @@ func sweepClassifiers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetClassifiersInput{}
 	err = conn.GetClassifiersPages(input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
@@ -178,7 +178,7 @@ func sweepConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 	catalogID := client.(*conns.AWSClient).AccountID
 
 	input := &glue.GetConnectionsInput{
@@ -220,7 +220,7 @@ func sweepCrawlers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetCrawlersInput{}
 	err = conn.GetCrawlersPages(input, func(page *glue.GetCrawlersOutput, lastPage bool) bool {
@@ -259,7 +259,7 @@ func sweepDevEndpoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &glue.GetDevEndpointsInput{}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.GetDevEndpointsPages(input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
@@ -308,7 +308,7 @@ func sweepJobs(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &glue.GetJobsInput{}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
@@ -350,7 +350,7 @@ func sweepMLTransforms(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 	var sweeperErrs *multierror.Error
 
 	input := &glue.GetMLTransformsInput{}
@@ -393,7 +393,7 @@ func sweepRegistry(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	listOutput, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 	if err != nil {
@@ -423,7 +423,7 @@ func sweepSchema(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	listOutput, err := conn.ListSchemas(&glue.ListSchemasInput{})
 	if err != nil {
@@ -453,7 +453,7 @@ func sweepSecurityConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetSecurityConfigurationsInput{}
 
@@ -494,7 +494,7 @@ func sweepTriggers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	input := &glue.GetTriggersInput{}
 	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
@@ -532,7 +532,7 @@ func sweepWorkflow(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlueConn
+	conn := client.(*conns.AWSClient).GlueConn()
 
 	listOutput, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 	if err != nil {

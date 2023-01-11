@@ -40,7 +40,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 }
 
 func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	policyID := d.Get("policy_id").(string)
 	targetID := d.Get("target_id").(string)
@@ -64,7 +64,7 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
@@ -90,7 +90,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {

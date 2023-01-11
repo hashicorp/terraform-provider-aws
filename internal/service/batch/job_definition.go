@@ -175,7 +175,7 @@ func ResourceJobDefinition() *schema.Resource {
 }
 
 func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -227,7 +227,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -294,7 +294,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -308,8 +308,9 @@ func resourceJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 
+	log.Printf("[DEBUG] Deleting Batch Job Definition: %s", d.Id())
 	_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{
 		JobDefinition: aws.String(d.Id()),
 	})

@@ -744,7 +744,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 }
 
 func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_launch_configuration" {
@@ -778,7 +778,7 @@ func testAccCheckLaunchConfigurationExists(n string, v *autoscaling.LaunchConfig
 			return fmt.Errorf("No Auto Scaling Launch Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		output, err := tfautoscaling.FindLaunchConfigurationByName(conn, rs.Primary.ID)
 
@@ -803,7 +803,7 @@ func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindImageByID(conn, rs.Primary.ID)
 
@@ -819,7 +819,7 @@ func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 
 func testAccCheckInstanceHasPublicIPAddress(group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		instanceID := aws.StringValue(group.Instances[idx].InstanceId)
 		instance, err := tfec2.FindInstanceByID(conn, instanceID)

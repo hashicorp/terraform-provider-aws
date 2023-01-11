@@ -17,7 +17,7 @@ import (
 )
 
 func testAccCheckTagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dynamodb_tag" {
@@ -52,7 +52,6 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
@@ -63,7 +62,7 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
 		_, err = tfdynamodb.GetTagWithContext(context.Background(), conn, identifier, key)
 

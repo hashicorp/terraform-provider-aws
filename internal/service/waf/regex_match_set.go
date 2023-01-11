@@ -75,7 +75,7 @@ func ResourceRegexMatchSet() *schema.Resource {
 }
 
 func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating WAF Regex Match Set: %s", d.Get("name").(string))
 
@@ -98,7 +98,7 @@ func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading WAF Regex Match Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexMatchSetInput{
 		RegexMatchSetId: aws.String(d.Id()),
@@ -130,7 +130,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Updating WAF Regex Match Set: %s", d.Get("name").(string))
 
@@ -147,7 +147,7 @@ func resourceRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldTuples := d.Get("regex_match_tuple").(*schema.Set).List()
 	if len(oldTuples) > 0 {

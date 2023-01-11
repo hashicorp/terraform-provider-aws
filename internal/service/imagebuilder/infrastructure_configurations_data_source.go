@@ -30,7 +30,7 @@ func DataSourceInfrastructureConfigurations() *schema.Resource {
 }
 
 func dataSourceInfrastructureConfigurationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 

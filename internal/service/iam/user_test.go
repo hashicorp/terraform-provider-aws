@@ -452,7 +452,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 }
 
 func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user" {
@@ -487,7 +487,7 @@ func testAccCheckUserExists(n string, res *iam.GetUserOutput) resource.TestCheck
 			return fmt.Errorf("No User name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		resp, err := conn.GetUser(&iam.GetUserInput{
 			UserName: aws.String(rs.Primary.ID),
@@ -518,7 +518,7 @@ func testAccCheckUserAttributes(user *iam.GetUserOutput, name string, path strin
 
 func testAccCheckUserDisappears(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		userName := aws.StringValue(getUserOutput.User.UserName)
 
@@ -551,7 +551,7 @@ func testAccCheckUserPermissionsBoundary(getUserOutput *iam.GetUserOutput, expec
 
 func testAccCheckUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.CreateAccessKeyInput{
 			UserName: getUserOutput.User.UserName,
@@ -567,7 +567,7 @@ func testAccCheckUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource
 
 func testAccCheckUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		password, err := tfiam.GeneratePassword(32)
 		if err != nil {
 			return err
@@ -587,7 +587,7 @@ func testAccCheckUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resou
 
 func testAccCheckUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
 			Path:                 getUserOutput.User.Path,
@@ -632,7 +632,7 @@ func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.Te
 			return fmt.Errorf("error generating random SSH key: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.UploadSSHPublicKeyInput{
 			UserName:         getUserOutput.User.UserName,
@@ -651,7 +651,7 @@ func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.Te
 // Creates an IAM User Service Specific Credential outside of Terraform to verify that it is deleted when `force_destroy` is set
 func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.CreateServiceSpecificCredentialInput{
 			UserName:    getUserOutput.User.UserName,
@@ -669,7 +669,7 @@ func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput)
 
 func testAccCheckUserUploadSigningCertificate(t *testing.T, getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")

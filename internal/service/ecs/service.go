@@ -44,6 +44,31 @@ func ResourceService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"alarms": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarm_names": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"rollback": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -443,51 +468,51 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
-	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
-
 	input := ecs.CreateServiceInput{
-		ClientToken:          aws.String(resource.UniqueId()),
-		DeploymentController: deploymentController,
-		SchedulingStrategy:   aws.String(schedulingStrategy),
-		ServiceName:          aws.String(d.Get("name").(string)),
-		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
-		EnableExecuteCommand: aws.Bool(d.Get("enable_execute_command").(bool)),
+		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set)),
+		ClientToken:              aws.String(resource.UniqueId()),
+		DeploymentConfiguration:  &ecs.DeploymentConfiguration{},
+		DeploymentController:     deploymentController,
+		EnableECSManagedTags:     aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
+		EnableExecuteCommand:     aws.Bool(d.Get("enable_execute_command").(bool)),
+		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
+		SchedulingStrategy:       aws.String(schedulingStrategy),
+		ServiceName:              aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk("task_definition"); ok {
-		input.TaskDefinition = aws.String(v.(string))
-	}
-
-	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
-		}
-	} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
-			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
-		}
-
-		input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
-	}
-
-	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
-		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
 		input.Cluster = aws.String(v.(string))
 	}
 
+	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
+		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(deploymentMinimumHealthyPercent))
+	} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
+		input.DeploymentConfiguration.MaximumPercent = aws.Int64(int64(d.Get("deployment_maximum_percent").(int)))
+		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(deploymentMinimumHealthyPercent))
+		input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+	}
+
+	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("health_check_grace_period_seconds"); ok {
 		input.HealthCheckGracePeriodSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("iam_role"); ok {
+		input.Role = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("launch_type"); ok {
@@ -501,26 +526,10 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v, ok := d.GetOk("propagate_tags"); ok {
-		input.PropagateTags = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("platform_version"); ok {
-		input.PlatformVersion = aws.String(v.(string))
-	}
-
-	input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
-
 	loadBalancers := expandLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
-		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
 		input.LoadBalancers = loadBalancers
 	}
-	if v, ok := d.GetOk("iam_role"); ok {
-		input.Role = aws.String(v.(string))
-	}
-
-	input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 
 	if v, ok := d.GetOk("ordered_placement_strategy"); ok {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
@@ -540,6 +549,14 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		input.PlacementConstraints = pc
+	}
+
+	if v, ok := d.GetOk("platform_version"); ok {
+		input.PlatformVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("propagate_tags"); ok {
+		input.PropagateTags = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -569,11 +586,13 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ServiceRegistries = srs
 	}
 
+	if v, ok := d.GetOk("task_definition"); ok {
+		input.TaskDefinition = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS()) // tags field doesn't exist in all partitions
 	}
-
-	log.Printf("[DEBUG] Creating ECS Service: %s", input)
 
 	output, err := serviceCreateWithRetry(conn, input)
 
@@ -586,14 +605,9 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS service (%s): %w", d.Get("name").(string), err)
+		return fmt.Errorf("creating ECS Service (%s): %w", d.Get("name").(string), err)
 	}
 
-	if output == nil || output.Service == nil {
-		return fmt.Errorf("error creating ECS service: empty response")
-	}
-
-	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
 	cluster := d.Get("cluster").(string)
@@ -627,7 +641,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -707,6 +721,14 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
 
+		if service.DeploymentConfiguration.Alarms != nil {
+			if err := d.Set("alarms", []interface{}{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
+				return fmt.Errorf("setting alarms: %w", err)
+			}
+		} else {
+			d.Set("alarms", nil)
+		}
+
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
 			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
 				return fmt.Errorf("error setting deployment_circuit_break: %w", err)
@@ -763,7 +785,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateServiceInput{
@@ -774,13 +796,14 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		schedulingStrategy := d.Get("scheduling_strategy").(string)
 
-		if schedulingStrategy == ecs.SchedulingStrategyDaemon {
+		switch schedulingStrategy {
+		case ecs.SchedulingStrategyDaemon:
 			if d.HasChange("deployment_minimum_healthy_percent") {
 				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
 					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
 				}
 			}
-		} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
+		case ecs.SchedulingStrategyReplica:
 			if d.HasChange("desired_count") {
 				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
 			}
@@ -838,6 +861,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		if d.HasChange("alarms") {
+			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
 		if d.HasChange("platform_version") {
 			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
 		}
@@ -884,7 +913,6 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
 		err := resource.Retry(propagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateService(input)
@@ -943,7 +971,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	service, err := FindServiceNoTagsByID(context.TODO(), conn, d.Id(), d.Get("cluster").(string))
 	if tfresource.NotFound(err) {
@@ -1080,6 +1108,50 @@ func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
 		}
 	}
 	return nil
+}
+
+func expandAlarms(tfMap map[string]interface{}) *ecs.DeploymentAlarms {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ecs.DeploymentAlarms{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Rollback = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["alarm_names"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AlarmNames = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
+func flattenAlarms(apiObject *ecs.DeploymentAlarms) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AlarmNames; v != nil {
+		tfMap["alarm_names"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Enable; v != nil {
+		tfMap["enable"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Rollback; v != nil {
+		tfMap["rollback"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
 
 func expandDeploymentController(l []interface{}) *ecs.DeploymentController {
@@ -1287,7 +1359,9 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 
 func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
 	if len(sc) == 0 {
-		return &ecs.ServiceConnectConfiguration{}
+		return &ecs.ServiceConnectConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 	raw := sc[0].(map[string]interface{})
 
@@ -1376,7 +1450,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 		if v, ok := raw["discovery_name"].(string); ok && v != "" {
 			config.DiscoveryName = aws.String(v)
 		}
-		if v, ok := raw["ingress_port_override"].(int); ok {
+		if v, ok := raw["ingress_port_override"].(int); ok && v != 0 {
 			config.IngressPortOverride = aws.Int64(int64(v))
 		}
 		if v, ok := raw["port_name"].(string); ok && v != "" {

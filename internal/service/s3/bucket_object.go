@@ -195,7 +195,7 @@ func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -313,7 +313,7 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 		return resourceBucketObjectUpload(d, meta)
 	}
 
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -380,7 +380,7 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -423,7 +423,7 @@ func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*sc
 }
 
 func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -549,7 +549,7 @@ func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMS
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
-		conn := meta.(*conns.AWSClient).KMSConn
+		conn := meta.(*conns.AWSClient).KMSConn()
 		keyMetadata, err := kms.FindKeyByID(conn, DefaultKMSKeyAlias)
 		if err != nil {
 			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)

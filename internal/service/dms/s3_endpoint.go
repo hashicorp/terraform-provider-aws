@@ -2,6 +2,7 @@ package dms
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -309,7 +310,7 @@ const (
 )
 
 func resourceS3EndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -337,6 +338,8 @@ func resourceS3EndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input.S3Settings = s3Settings(d, d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget)
+
+	input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 
 	log.Println("[DEBUG] DMS create endpoint:", input)
 
@@ -376,7 +379,7 @@ func resourceS3EndpointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceS3EndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -480,7 +483,7 @@ func resourceS3EndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceS3EndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -508,6 +511,8 @@ func resourceS3EndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		) {
 			input.S3Settings = s3Settings(d, d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget)
 			input.ServiceAccessRoleArn = aws.String(d.Get("service_access_role_arn").(string))
+
+			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 		}
 
 		log.Println("[DEBUG] DMS update endpoint:", input)
@@ -548,7 +553,7 @@ func resourceS3EndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceS3EndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpoint(&dms.DeleteEndpointInput{
@@ -734,4 +739,15 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	return s3s
+}
+
+func extraConnectionAnomalies(d *schema.ResourceData) *string {
+	// not all attributes work in the data structures and must be passed via ex conn attr
+
+	// add a loop to compose the string of ;-sep pairs, if this becomes more than one
+	if v, ok := d.GetOk("cdc_path"); ok {
+		return aws.String(fmt.Sprintf("%s=%s", "CdcPath", v.(string)))
+	}
+
+	return nil
 }

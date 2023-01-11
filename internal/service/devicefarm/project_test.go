@@ -194,7 +194,7 @@ func testAccCheckProjectExists(n string, v *devicefarm.Project) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 		resp, err := tfdevicefarm.FindProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -210,7 +210,7 @@ func testAccCheckProjectExists(n string, v *devicefarm.Project) resource.TestChe
 }
 
 func testAccCheckProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_devicefarm_project" {

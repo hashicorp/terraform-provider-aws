@@ -11,6 +11,8 @@ import (
 )
 
 func TestAccTransitGatewayDataSource_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Attachment": {
 			"Filter": testAccTransitGatewayAttachmentDataSource_Filter,
@@ -66,17 +68,7 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccTransitGatewayDataSource_Filter(t *testing.T) {

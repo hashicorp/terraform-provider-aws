@@ -21,6 +21,8 @@ import (
 )
 
 func TestExpandMetricsFilter(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Config                  map[string]interface{}
 		ExpectedS3MetricsFilter *s3.MetricsFilter
@@ -134,6 +136,8 @@ func TestExpandMetricsFilter(t *testing.T) {
 }
 
 func TestFlattenMetricsFilter(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		S3MetricsFilter *s3.MetricsFilter
 		ExpectedConfig  map[string]interface{}
@@ -236,6 +240,8 @@ func TestFlattenMetricsFilter(t *testing.T) {
 }
 
 func TestBucketMetricParseID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"foo:bar",
 		"my-bucket:entire-bucket",
@@ -560,7 +566,7 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 }
 
 func testAccCheckBucketMetricDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_metric" {
@@ -610,7 +616,7 @@ func testAccCheckBucketMetricsExistsConfig(n string, res *s3.MetricsConfiguratio
 			return fmt.Errorf("No S3 bucket metrics configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 		bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 		if err != nil {
 			return err

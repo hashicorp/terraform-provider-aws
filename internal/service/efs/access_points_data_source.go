@@ -35,7 +35,7 @@ func DataSourceAccessPoints() *schema.Resource {
 }
 
 func dataSourceAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	fileSystemID := d.Get("file_system_id").(string)
 	input := &efs.DescribeAccessPointsInput{

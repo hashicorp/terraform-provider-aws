@@ -292,7 +292,7 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 }
 
 func testAccCheckBucketNotificationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_notification" {
@@ -335,7 +335,7 @@ func testAccCheckBucketTopicNotification(n, i, t string, events []string, filter
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		topicArn := s.RootModule().Resources[t].Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
@@ -391,7 +391,7 @@ func testAccCheckBucketTopicNotification(n, i, t string, events []string, filter
 func testAccCheckBucketEventBridgeNotification(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
@@ -417,7 +417,7 @@ func testAccCheckBucketQueueNotification(n, i, t string, events []string, filter
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		queueArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
@@ -474,7 +474,7 @@ func testAccCheckBucketLambdaFunctionConfiguration(n, i, t string, events []stri
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		funcArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{

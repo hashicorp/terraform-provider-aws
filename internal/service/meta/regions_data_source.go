@@ -14,12 +14,15 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceRegions)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceRegions)
 }
 
 // newDataSourceRegions instantiates a new DataSource for the aws_regions data source.
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegions{}, nil
+	d := &dataSourceRegions{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceRegions struct {
@@ -65,7 +68,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	conn := d.Meta().EC2Conn
+	conn := d.Meta().EC2Conn()
 
 	input := &ec2.DescribeRegionsInput{
 		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),

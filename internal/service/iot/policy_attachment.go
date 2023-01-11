@@ -32,7 +32,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 }
 
 func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
@@ -91,7 +91,7 @@ func GetPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Policy,
 }
 
 func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
@@ -114,7 +114,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)

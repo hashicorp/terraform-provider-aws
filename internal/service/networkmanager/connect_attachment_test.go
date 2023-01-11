@@ -163,7 +163,7 @@ func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAtta
 			return fmt.Errorf("No Network Manager Connect Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		output, err := tfnetworkmanager.FindConnectAttachmentByID(context.Background(), conn, rs.Primary.ID)
 
@@ -178,7 +178,7 @@ func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAtta
 }
 
 func testAccCheckConnectAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_connect_attachment" {

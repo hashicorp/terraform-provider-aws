@@ -39,7 +39,7 @@ func ResourceStaticIP() *schema.Resource {
 }
 
 func resourceStaticIPCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Allocating Lightsail Static IP: %q", name)
@@ -57,7 +57,7 @@ func resourceStaticIPCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Reading Lightsail Static IP: %q", name)
@@ -84,7 +84,7 @@ func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStaticIPDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Lightsail Static IP: %q", name)

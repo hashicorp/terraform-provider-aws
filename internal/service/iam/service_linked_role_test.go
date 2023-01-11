@@ -16,6 +16,8 @@ import (
 )
 
 func TestDecodeServiceLinkedRoleID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input        string
 		ServiceName  string
@@ -101,7 +103,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 					r := tfiam.ResourceServiceLinkedRole()
 					d := r.Data(nil)
 					d.SetId(arn)
-					err := r.Delete(d, client)
+					err := acctest.DeleteResource(r, d, client)
 
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
@@ -293,7 +295,7 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 }
 
 func testAccCheckServiceLinkedRoleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_service_linked_role" {
@@ -328,7 +330,7 @@ func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
 		if err != nil {
 			return err

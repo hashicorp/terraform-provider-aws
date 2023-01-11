@@ -77,7 +77,7 @@ func DataSourceMountTarget() *schema.Resource {
 }
 
 func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	input := &efs.DescribeMountTargetsInput{}
 
