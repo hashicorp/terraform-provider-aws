@@ -33,11 +33,9 @@ func testAccView_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "resource-explorer-2", regexp.MustCompile(`view/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "resourcetype:ec2:instance"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "name_prefix"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -110,10 +108,6 @@ resource "aws_resourceexplorer2_index" "test" {
 
 resource "aws_resourceexplorer2_view" "test" {
   name = %[1]q
-
-  filters {
-    filter_string = "resourcetype:ec2:instance"
-  }
 
   depends_on = [aws_resourceexplorer2_index.test]
 }
