@@ -3,6 +3,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -28,4 +29,8 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 
 func (client *AWSClient) S3ConnURICleaningDisabled() *s3.S3 {
 	return client.s3ConnURICleaningDisabled
+}
+
+func (client *AWSClient) SetHTTPClient(httpClient *http.Client) {
+	client.httpClient = httpClient
 }

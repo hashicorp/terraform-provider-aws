@@ -88,6 +88,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
 		IamEndpoint:                   c.Endpoints[names.IAM],
 		Insecure:                      c.Insecure,
+		HTTPClient:                    client.httpClient,
 		HTTPProxy:                     c.HTTPProxy,
 		MaxRetries:                    c.MaxRetries,
 		Profile:                       c.Profile,
