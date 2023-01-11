@@ -339,12 +339,12 @@ resource "aws_iam_group_policy" "test" {
 
   policy = <<EOF
 {
-  "Version": "2012-10-17",
   "Statement": {
     "Effect": "Allow",
     "Action": %[2]q,
     "Resource": "*"
-  }
+  },
+  "Version": "2012-10-17"
 }
 EOF
 }
