@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -218,7 +219,8 @@ func PreCheck(t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
-		err := Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
+		err := sdkdiag.DiagnosticsError(Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil)))
+
 		if err != nil {
 			t.Fatal(err)
 		}
