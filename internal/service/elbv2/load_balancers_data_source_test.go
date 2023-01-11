@@ -48,35 +48,13 @@ func TestAccELBV2LoadBalancersDataSource_basic(t *testing.T) {
 }
 
 func testAccLoadBalancersDataSourceConfig_basic(rName, lbName1, lbName2, tagValue string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = element(var.subnets, count.index)
-  availability_zone = element(data.aws_availability_zones.available.names, count.index)
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test1" {
   name               = %[2]q
   load_balancer_type = "application"
   internal           = true
   subnets            = aws_subnet.test[*].id
+
   tags = {
     "Name"               = %[2]q
     "TfTestingSharedTag" = %[4]q
@@ -88,6 +66,7 @@ resource "aws_lb" "test2" {
   load_balancer_type = "application"
   internal           = true
   subnets            = aws_subnet.test[*].id
+
   tags = {
     "Name"               = %[3]q
     "TfTestingSharedTag" = %[4]q

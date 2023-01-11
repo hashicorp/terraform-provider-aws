@@ -36,16 +36,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var results []*elbv2.LoadBalancer
-	err := conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		results = append(results, page.LoadBalancers...)
-
-		return !lastPage
-	})
+	results, err := FindLoadBalancers(conn, &elbv2.DescribeLoadBalancersInput{})
 
 	if err != nil {
 		return create.DiagError(names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
