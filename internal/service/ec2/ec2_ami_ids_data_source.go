@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"sort"
 	"time"
@@ -25,10 +24,15 @@ func DataSourceAMIIDs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
 			"executable_users": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"filter": DataSourceFiltersSchema(),
+			"ids": {
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name_regex": {
@@ -45,11 +49,6 @@ func DataSourceAMIIDs() *schema.Resource {
 					ValidateFunc: validation.NoZeroValues,
 				},
 			},
-			"ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"sort_ascending": {
 				Type:     schema.TypeBool,
 				Default:  false,
@@ -62,45 +61,45 @@ func DataSourceAMIIDs() *schema.Resource {
 func dataSourceAMIIDsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	params := &ec2.DescribeImagesInput{
+	input := &ec2.DescribeImagesInput{
 		Owners: flex.ExpandStringList(d.Get("owners").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		params.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
-	}
-	if v, ok := d.GetOk("filter"); ok {
-		params.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Reading AMI IDs: %s", params)
-	resp, err := conn.DescribeImages(params)
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+	}
+
+	images, err := FindImages(conn, input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 AMIs: %w", err)
 	}
 
 	var filteredImages []*ec2.Image
-	imageIds := make([]string, 0)
+	imageIDs := make([]string, 0)
 
-	if nameRegex, ok := d.GetOk("name_regex"); ok {
-		r := regexp.MustCompile(nameRegex.(string))
-		for _, image := range resp.Images {
+	if v, ok := d.GetOk("name_regex"); ok {
+		r := regexp.MustCompile(v.(string))
+		for _, image := range images {
+			name := aws.StringValue(image.Name)
+
 			// Check for a very rare case where the response would include no
 			// image name. No name means nothing to attempt a match against,
 			// therefore we are skipping such image.
-			name := aws.StringValue(image.Name)
 			if name == "" {
-				log.Printf("[WARN] Unable to find AMI name to match against "+
-					"for image ID %q owned by %q, nothing to do.",
-					aws.StringValue(image.ImageId), aws.StringValue(image.OwnerId))
 				continue
 			}
+
 			if r.MatchString(name) {
 				filteredImages = append(filteredImages, image)
 			}
 		}
 	} else {
-		filteredImages = resp.Images[:]
+		filteredImages = images[:]
 	}
 
 	sort.Slice(filteredImages, func(i, j int) bool {
@@ -112,11 +111,11 @@ func dataSourceAMIIDsRead(d *schema.ResourceData, meta interface{}) error {
 		return itime.Unix() > jtime.Unix()
 	})
 	for _, image := range filteredImages {
-		imageIds = append(imageIds, *image.ImageId)
+		imageIDs = append(imageIDs, aws.StringValue(image.ImageId))
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(params.String())))
-	d.Set("ids", imageIds)
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
+	d.Set("ids", imageIDs)
 
 	return nil
 }
