@@ -16,6 +16,9 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 			"tags":       testAccIndex_tags,
 			"type":       testAccIndex_type,
 		},
+		"View": {
+			"basic": testAccView_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

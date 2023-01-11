@@ -1,0 +1,121 @@
+package resourceexplorer2_test
+
+import (
+	"context"
+	"fmt"
+	"regexp"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfresourceexplorer2 "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func testAccView_basic(t *testing.T) {
+	var v resourceexplorer2.GetViewOutput
+	resourceName := "aws_resourceexplorer2_view.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "resource-explorer-2", regexp.MustCompile(`view/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "resourcetype:ec2:instance"),
+					resource.TestCheckResourceAttr(resourceName, "included_property.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "name_prefix"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckViewDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_resourceexplorer2_iview" {
+			continue
+		}
+
+		_, err := tfresourceexplorer2.FindViewByARN(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Resource Explorer View %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckViewExists(n string, v *resourceexplorer2.GetViewOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Resource Explorer View ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+
+		output, err := tfresourceexplorer2.FindViewByARN(context.Background(), conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return err
+	}
+}
+
+func testAccViewConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_resourceexplorer2_index" "test" {
+  type = "LOCAL"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_resourceexplorer2_view" "test" {
+  name = %[1]q
+
+  filters {
+    filter_string = "resourcetype:ec2:instance"
+  }
+
+  depends_on = [aws_resourceexplorer2_index.test]
+}
+`, rName)
+}
