@@ -474,6 +474,9 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
+	const (
+		loadBalancerListenerReadTimeout = 2 * time.Minute
+	)
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -566,6 +569,9 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
+	const (
+		loadBalancerListenerUpdateTimeout = 5 * time.Minute
+	)
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -678,6 +684,9 @@ func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func retryListenerCreate(conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (*elbv2.CreateListenerOutput, error) {
+	const (
+		loadBalancerListenerCreateTimeout = 5 * time.Minute
+	)
 	var output *elbv2.CreateListenerOutput
 
 	err := resource.Retry(loadBalancerListenerCreateTimeout, func() *resource.RetryError {

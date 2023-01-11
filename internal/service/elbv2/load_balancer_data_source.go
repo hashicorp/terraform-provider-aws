@@ -25,75 +25,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"arn_suffix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"load_balancer_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"security_groups": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-
-			"subnets": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-
-			"subnet_mapping": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnet_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"outpost_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"allocation_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_ipv4_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipv6_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-
 			"access_logs": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -103,79 +34,131 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"enabled": {
 							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"prefix": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-
-			"enable_deletion_protection": {
-				Type:     schema.TypeBool,
-				Computed: true,
+			"arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
 			},
-
-			"enable_http2": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"enable_waf_fail_open": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"idle_timeout": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"drop_invalid_header_fields": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"preserve_host_header": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"vpc_id": {
+			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"ip_address_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"customer_owned_ipv4_pool": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"desync_mitigation_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"drop_invalid_header_fields": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_cross_zone_load_balancing": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_deletion_protection": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_http2": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_waf_fail_open": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"idle_timeout": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"internal": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"ip_address_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"load_balancer_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"preserve_host_header": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"subnet_mapping": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allocation_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipv6_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"outpost_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"private_ipv4_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"subnet_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"subnets": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -194,20 +177,10 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	var results []*elbv2.LoadBalancer
-
-	err := conn.DescribeLoadBalancersPages(input, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		results = append(results, page.LoadBalancers...)
-
-		return !lastPage
-	})
+	results, err := FindLoadBalancers(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("retrieving LB: %w", err)
+		return fmt.Errorf("reading ELBv2 Load Balancers: %w", err)
 	}
 
 	if len(tagsToMatch) > 0 {
