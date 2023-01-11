@@ -543,10 +543,10 @@ resource "aws_iam_policy" "test" {
   name = %[1]q
 
   policy = jsonencode({
-    Id = %[1]q
+    Id      = %[1]q
     Version = "2012-10-17"
     Statement = [{
-      Sid = "60c9d11f"
+      Sid    = "60c9d11f"
       Effect = "Allow"
       Action = [
         "kms:Describe*",

@@ -1307,7 +1307,7 @@ resource "aws_iam_role" "test" {
   path = "/"
 
   assume_role_policy = jsonencode({
-    Id = %[1]q
+    Id      = %[1]q
     Version = "2012-10-17"
     Statement = [{
       Action = "sts:AssumeRole"
