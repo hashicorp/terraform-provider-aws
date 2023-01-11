@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -77,7 +76,6 @@ func Skip(t *testing.T, message string) {
 // Use other ProviderFactories functions, such as FactoriesAlternate,
 // for tests requiring special provider configurations.
 var (
-	// TODO Convert to function taking testing.T.
 	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error) = protoV5ProviderFactoriesInit(context.Background(), ProviderName)
 )
 
@@ -96,6 +94,15 @@ var Provider *schema.Provider
 // not prevent reconfiguration that may happen should the address of
 // Provider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
+
+func init() {
+	var err error
+	Provider, err = provider.New(context.Background())
+
+	if err != nil {
+		panic(err)
+	}
+}
 
 func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
@@ -195,8 +202,6 @@ func PreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		ctx := context.Background()
-
 		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
 
 		if os.Getenv(envvar.AccessKeyId) != "" {
@@ -213,19 +218,10 @@ func PreCheck(t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
-		p, err := provider.New(ctx)
-
+		err := Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		err = sdkdiag.DiagnosticsError(p.Configure(ctx, terraform.NewResourceConfigRaw(nil)))
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		Provider = p
 	})
 }
 
