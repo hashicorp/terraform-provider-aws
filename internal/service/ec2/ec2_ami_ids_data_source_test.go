@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -59,6 +60,20 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAMIIDDataSource(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Can't find AMI data source: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("AMI data source ID not set")
+		}
+		return nil
+	}
 }
 
 const testAccAMIIdsDataSourceConfig_basic = `
