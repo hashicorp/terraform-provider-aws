@@ -389,7 +389,7 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			t.Logf(" %s stopping VCR recorder", testName)
+			t.Logf("%s stopping VCR recorder", testName)
 			roundTripper := meta.HTTPClient().Transport
 			if v, ok := roundTripper.(*recorder.Recorder); ok {
 				if err := v.Stop(); err != nil {
