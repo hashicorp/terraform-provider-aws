@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_ec2_serial_console_access
+```
+
+```release-note:new-data-source
+aws_ec2_serial_console_access
+```

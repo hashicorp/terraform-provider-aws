@@ -14,7 +14,7 @@ A hosted virtual interface is a virtual interface that is owned by another AWS a
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_hosted_transit_virtual_interface" "example" {
   connection_id = aws_dx_connection.example.id
 
@@ -51,16 +51,15 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_hosted_transit_virtual_interface` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating virtual interface
-- `update` - (Default `10 minutes`) Used for virtual interface modifications
-- `delete` - (Default `10 minutes`) Used for destroying virtual interface
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
-Direct Connect hosted transit virtual interfaces can be imported using the `vif id`, e.g.
+Direct Connect hosted transit virtual interfaces can be imported using the `vif id`, e.g.,
 
 ```
 $ terraform import aws_dx_hosted_transit_virtual_interface.test dxvif-33cc44dd

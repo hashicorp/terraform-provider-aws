@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_virtual_interface_group"
 description: |-
@@ -12,7 +12,7 @@ Provides details about an EC2 Local Gateway Virtual Interface Group. More inform
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ec2_local_gateway_virtual_interface_group" "example" {
   local_gateway_id = data.aws_ec2_local_gateway.example.id
 }
@@ -39,3 +39,9 @@ The `filter` configuration block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `local_gateway_virtual_interface_ids` - Set of EC2 Local Gateway Virtual Interface identifiers.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

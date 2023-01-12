@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_instance_type_offering"
 description: |-
@@ -12,7 +12,7 @@ Information about single EC2 Instance Type Offering.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ec2_instance_type_offering" "example" {
   filter {
     name   = "instance-type"
@@ -42,3 +42,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Instance Type.
 * `instance_type` - EC2 Instance Type.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

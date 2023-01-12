@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_dnssec_config"
 description: |-
@@ -12,7 +12,7 @@ Provides a Route 53 Resolver DNSSEC config resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "example" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
- Route 53 Resolver DNSSEC configs can be imported using the Route 53 Resolver DNSSEC config ID, e.g.
+ Route 53 Resolver DNSSEC configs can be imported using the Route 53 Resolver DNSSEC config ID, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95

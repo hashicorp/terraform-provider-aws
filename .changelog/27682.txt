@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Correct maximum nesting level for `and_statement`, `not_statement`, `or_statement` and `rate_based_statement` 
+```

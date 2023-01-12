@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Support updating `storage_capacity`, `throughput_capacity`, and `disk_iops_configuration`.
+```

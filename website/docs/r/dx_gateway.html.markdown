@@ -12,7 +12,7 @@ Provides a Direct Connect Gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_gateway" "example" {
   name            = "tf-dxg-example"
   amazon_side_asn = "64512"
@@ -35,15 +35,14 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_gateway` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating the gateway
-- `delete` - (Default `10 minutes`) Used for destroying the gateway
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
-Direct Connect Gateways can be imported using the `gateway id`, e.g.
+Direct Connect Gateways can be imported using the `gateway id`, e.g.,
 
 ```
 $ terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45

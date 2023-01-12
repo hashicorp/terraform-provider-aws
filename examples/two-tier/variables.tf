@@ -17,12 +17,12 @@ variable "aws_region" {
   default     = "us-west-2"
 }
 
-# Ubuntu Precise 12.04 LTS (x64)
+# Ubuntu Bionic 18.04 LTS (x64)
 variable "aws_amis" {
   default = {
-    eu-west-1 = "ami-674cbc1e"
-    us-east-1 = "ami-1d4e7a66"
-    us-west-1 = "ami-969ab1f6"
-    us-west-2 = "ami-8803e0f0"
+    eu-west-1 = "ami-0c259a97cbf621daf"
+    us-east-1 = "ami-04751c628226b9b59"
+    us-west-1 = "ami-0558dde970ca91ee5"
+    us-west-2 = "ami-0bdef2eb518663879"
   }
 }

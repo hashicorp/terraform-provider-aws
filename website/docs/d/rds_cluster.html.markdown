@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster"
 description: |-
@@ -12,7 +12,7 @@ Provides information about an RDS cluster.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_rds_cluster" "clusterName" {
   cluster_identifier = "clusterName"
 }
@@ -22,7 +22,7 @@ data "aws_rds_cluster" "clusterName" {
 
 The following arguments are supported:
 
-* `cluster_identifier` - (Required) The cluster identifier of the RDS cluster.
+* `cluster_identifier` - (Required) Cluster identifier of the RDS cluster.
 
 ## Attributes Reference
 

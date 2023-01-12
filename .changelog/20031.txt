@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_cognito_user_pool_client: Retry on `ConcurrentModificationException`
+```
+
+```release-note:bug
+resource/aws_cognito_user_pool_client: Allow the `default_redirect_uri` argument value to be an empty string
+```
+
+```release-note:enhancement
+resource/aws_cognito_user_pool_client: Add the `enable_token_revocation` argument to support targeted sign out
+```

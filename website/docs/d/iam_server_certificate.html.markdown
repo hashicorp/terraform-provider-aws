@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificate"
 description: |-
@@ -12,7 +12,7 @@ Use this data source to lookup information about IAM Server Certificates.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_server_certificate" "my-domain" {
   name_prefix = "my-domain.org"
   latest      = true
@@ -40,6 +40,7 @@ resource "aws_elb" "elb" {
 
 ## Attributes Reference
 
+* `id` is set to the unique id of the IAM Server Certificate
 * `arn` is set to the ARN of the IAM Server Certificate
 * `path` is set to the path of the IAM Server Certificate
 * `expiration_date` is set to the expiration date of the IAM Server Certificate

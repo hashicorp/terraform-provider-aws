@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_redshift_cluster_iam_roles
+```
+
+```release-note:enhancement
+resource/aws_redshift_cluster: The `default_iam_role_arn` argument is now Computed
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Added missing `engine_name` values for sources and/or targets
+```
+
+```release-note:enhancement
+resource/aws_dms_endpoint: Add plan time validation for `mongodb_settings.auth_type`, `mongodb_settings.auth_mechanism`, `mongodb_settings.nesting_level` and `s3_settings.compression_type` arguments
+```

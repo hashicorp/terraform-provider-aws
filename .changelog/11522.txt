@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket_object: Add `source_hash` argument to compliment `etag`'s encryption limitations
+```

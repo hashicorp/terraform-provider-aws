@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_virtual_interface_groups"
 description: |-
@@ -12,7 +12,7 @@ Provides details about multiple EC2 Local Gateway Virtual Interface Groups, such
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ec2_local_gateway_virtual_interface_groups" "all" {}
 ```
 
@@ -37,3 +37,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - AWS Region.
 * `ids` - Set of EC2 Local Gateway Virtual Interface Group identifiers.
 * `local_gateway_virtual_interface_ids` - Set of EC2 Local Gateway Virtual Interface identifiers.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

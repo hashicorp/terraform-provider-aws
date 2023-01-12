@@ -1,0 +1,216 @@
+---
+subcategory: "S3 Control"
+layout: "aws"
+page_title: "AWS: aws_s3control_storage_lens_configuration"
+description: |-
+  Provides a resource to manage an S3 Storage Lens configuration.
+---
+
+# Resource: aws_s3control_storage_lens_configuration
+
+Provides a resource to manage an S3 Storage Lens configuration.
+
+## Example Usage
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3control_storage_lens_configuration" "example" {
+  config_id = "example-1"
+
+  storage_lens_configuration {
+    enabled = true
+
+    account_level {
+      activity_metrics {
+        enabled = true
+      }
+
+      bucket_level {
+        activity_metrics {
+          enabled = true
+        }
+      }
+    }
+
+    data_export {
+      cloud_watch_metrics {
+        enabled = true
+      }
+
+      s3_bucket_destination {
+        account_id            = data.aws_caller_identity.current.account_id
+        arn                   = aws_s3_bucket.target.arn
+        format                = "CSV"
+        output_schema_version = "V_1"
+
+        encryption {
+          sse_s3 {}
+        }
+      }
+    }
+
+    exclude {
+      buckets = [aws_s3_bucket.b1.arn, aws_s3_bucket.b2.arn]
+      regions = ["us-east-2"]
+    }
+  }
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `account_id` - (Optional) The AWS account ID for the S3 Storage Lens configuration. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `config_id` - (Required) The ID of the S3 Storage Lens configuration.
+* `storage_lens_configuration` - (Required) The S3 Storage Lens configuration. See [Storage Lens Configuration](#storage-lens-configuration) below for more details.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Storage Lens Configuration
+
+The `storage_lens_configuration` block supports the following:
+
+* `account_level` (Required) The account-level configurations of the S3 Storage Lens configuration. See [Account Level](#account-level) below for more details.
+* `aws_org` (Optional) The Amazon Web Services organization for the S3 Storage Lens configuration. See [AWS Org](#aws-org) below for more details.
+* `data_export` (Optional) Properties of S3 Storage Lens metrics export including the destination, schema and format. See [Data Export](#data-export) below for more details.
+* `enabled` (Required) Whether the S3 Storage Lens configuration is enabled.
+* `exclude` (Optional) What is excluded in this configuration. Conflicts with `include`. See [Exclude](#exclude) below for more details.
+* `include` (Optional) What is included in this configuration. Conflicts with `exclude`. See [Include](#include) below for more details.
+
+### Account Level
+
+The `account_level` block supports the following:
+
+* `activity_metrics` (Optional) S3 Storage Lens activity metrics. See [Activity Metrics](#activity-metrics) below for more details.
+* `advanced_cost_optimization_metrics` (Optional) Advanced cost-optimization metrics for S3 Storage Lens. See [Advanced Cost-Optimization Metrics](#advanced-cost-optimization-metrics) below for more details.
+* `advanced_data_protection_metrics` (Optional) Advanced data-protection metrics for S3 Storage Lens. See [Advanced Data-Protection Metrics](#advanced-data-protection-metrics) below for more details.
+* `bucket_level` (Required) S3 Storage Lens bucket-level configuration. See [Bucket Level](#bucket-level) below for more details.
+* `detailed_status_code_metrics` (Optional) Detailed status code metrics for S3 Storage Lens. See [Detailed Status Code Metrics](#detailed-status-code-metrics) below for more details.
+
+### Activity Metrics
+
+The `activity_metrics` block supports the following:
+
+* `enabled` (Optional) Whether the activity metrics are enabled.
+
+### Advanced Cost-Optimization Metrics
+
+The `advanced_cost_optimization_metrics` block supports the following:
+
+* `enabled` (Optional) Whether advanced cost-optimization metrics are enabled.
+
+### Advanced Data-Protection Metrics
+
+The `advanced_data_protection_metrics` block supports the following:
+
+* `enabled` (Optional) Whether advanced data-protection metrics are enabled.
+
+### Detailed Status Code Metrics
+
+The `detailed_status_code_metrics` block supports the following:
+
+* `enabled` (Optional) Whether detailed status code metrics are enabled.
+
+### Bucket Level
+
+The `bucket_level` block supports the following:
+
+* `activity_metrics` (Optional) S3 Storage Lens activity metrics. See [Activity Metrics](#activity-metrics) above for more details.
+* `advanced_cost_optimization_metrics` (Optional) Advanced cost-optimization metrics for S3 Storage Lens. See [Advanced Cost-Optimization Metrics](#advanced-cost-optimization-metrics) above for more details.
+* `advanced_data_protection_metrics` (Optional) Advanced data-protection metrics for S3 Storage Lens. See [Advanced Data-Protection Metrics](#advanced-data-protection-metrics) above for more details.
+* `detailed_status_code_metrics` (Optional) Detailed status code metrics for S3 Storage Lens. See [Detailed Status Code Metrics](#detailed-status-code-metrics) above for more details.
+* `prefix_level` (Optional) Prefix-level metrics for S3 Storage Lens. See [Prefix Level](#prefix-level) below for more details.
+
+### Prefix Level
+
+The `prefix_level` block supports the following:
+
+* `storage_metrics` (Required) Prefix-level storage metrics for S3 Storage Lens. See [Prefix Level Storage Metrics](#prefix-level-storage-metrics) below for more details.
+
+### Prefix Level Storage Metrics
+
+The `storage_metrics` block supports the following:
+
+* `enabled` (Optional) Whether prefix-level storage metrics are enabled.
+* `selection_criteria` (Optional) Selection criteria. See [Selection Criteria](#selection-criteria) below for more details.
+
+### Selection Criteria
+
+The `selection_criteria` block supports the following:
+
+* `delimiter` (Optional) The delimiter of the selection criteria being used.
+* `max_depth` (Optional) The max depth of the selection criteria.
+* `min_storage_bytes_percentage` (Optional) The minimum number of storage bytes percentage whose metrics will be selected.
+
+### AWS Org
+
+The `aws_org` block supports the following:
+
+* `arn` (Required) The Amazon Resource Name (ARN) of the Amazon Web Services organization.
+
+### Data Export
+
+The `data_export` block supports the following:
+
+* `cloud_watch_metrics` (Optional) Amazon CloudWatch publishing for S3 Storage Lens metrics. See [Cloud Watch Metrics](#cloud-watch-metrics) below for more details.
+* `s3_bucket_destination` (Optional) The bucket where the S3 Storage Lens metrics export will be located. See [S3 Bucket Destination](#s3-bucket-destination) below for more details.
+
+### Cloud Watch Metrics
+
+The `cloud_watch_metrics` block supports the following:
+
+* `enabled` (Required) Whether CloudWatch publishing for S3 Storage Lens metrics is enabled.
+
+### S3 Bucket Destination
+
+The `s3_bucket_destination` block supports the following:
+
+* `account_id` (Required) The account ID of the owner of the S3 Storage Lens metrics export bucket.
+* `arn` (Required) The Amazon Resource Name (ARN) of the bucket.
+* `encryption` (Optional) Encryption of the metrics exports in this bucket. See [Encryption](#encryption) below for more details.
+* `format` (Required) The export format. Valid values: `CSV`, `Parquet`.
+* `output_schema_version` (Required) The schema version of the export file. Valid values: `V_1`.
+* `prefix` (Optional) The prefix of the destination bucket where the metrics export will be delivered.
+
+### Encryption
+
+The `encryption` block supports the following:
+
+* `sse_kms` (Optional) SSE-KMS encryption. See [SSE KMS](#sse-kms) below for more details.
+* `sse_s3` (Optional) SSE-S3 encryption. An empty configuration block `{}` should be used.
+
+### SSE KMS
+
+The `sse_kms` block supports the following:
+
+* `key_id` (Required) KMS key ARN.
+
+### Exclude
+
+The `exclude` block supports the following:
+
+* `buckets` (Optional) List of S3 bucket ARNs.
+* `regions` (Optional) List of AWS Regions.
+
+### Include
+
+The `include` block supports the following:
+
+* `buckets` (Optional) List of S3 bucket ARNs.
+* `regions` (Optional) List of AWS Regions.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the S3 Storage Lens configuration.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Import
+
+S3 Storage Lens configurations can be imported using the `account_id` and `config_id`, separated by a colon (`:`), e.g.
+
+```
+$ terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1
+```

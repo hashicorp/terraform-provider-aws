@@ -14,7 +14,7 @@ Provides a resource to attach an AWS Organizations policy to an organization acc
 
 ### Organization Account
 
-```hcl
+```terraform
 resource "aws_organizations_policy_attachment" "account" {
   policy_id = aws_organizations_policy.example.id
   target_id = "123456789012"
@@ -23,7 +23,7 @@ resource "aws_organizations_policy_attachment" "account" {
 
 ### Organization Root
 
-```hcl
+```terraform
 resource "aws_organizations_policy_attachment" "root" {
   policy_id = aws_organizations_policy.example.id
   target_id = aws_organizations_organization.example.roots[0].id
@@ -32,7 +32,7 @@ resource "aws_organizations_policy_attachment" "root" {
 
 ### Organization Unit
 
-```hcl
+```terraform
 resource "aws_organizations_policy_attachment" "unit" {
   policy_id = aws_organizations_policy.example.id
   target_id = aws_organizations_organizational_unit.example.id
@@ -46,9 +46,13 @@ The following arguments are supported:
 * `policy_id` - (Required) The unique identifier (ID) of the policy that you want to attach to the target.
 * `target_id` - (Required) The unique identifier (ID) of the root, organizational unit, or account number that you want to attach the policy to.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-`aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g. with an account target
+`aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g., with an account target
 
 ```
 $ terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678

@@ -13,10 +13,9 @@ Provides a Pinpoint ADM (Amazon Device Messaging) Channel resource.
 ~> **Note:** All arguments including the Client ID and Client Secret will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_pinpoint_adm_channel" "channel" {
@@ -27,7 +26,6 @@ resource "aws_pinpoint_adm_channel" "channel" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -37,9 +35,13 @@ The following arguments are supported:
 * `client_secret` - (Required) Client Secret (part of OAuth Credentials) obtained via Amazon Developer Account.
 * `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Pinpoint ADM Channel can be imported using the `application-id`, e.g.
+Pinpoint ADM Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_adm_channel.channel application-id

@@ -12,7 +12,7 @@ Provides an AWS Backup vault notifications resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_sns_topic" "test" {
   name = "backup-vault-events"
 }
@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Backup vault notifications can be imported using the `name`, e.g.
+Backup vault notifications can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_backup_vault_notifications.test TestVault

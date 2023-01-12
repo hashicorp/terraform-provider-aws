@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_email_identity"
 description: |-
@@ -14,7 +14,7 @@ Provides an SES email identity resource
 
 The following arguments are supported:
 
-* `email` - (Required) The email address to assign to SES
+* `email` - (Required) The email address to assign to SES.
 
 ## Attributes Reference
 
@@ -24,7 +24,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_email_identity" "example" {
   email = "email@example.com"
 }

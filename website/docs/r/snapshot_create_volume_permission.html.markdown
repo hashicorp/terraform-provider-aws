@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_snapshot_create_volume_permission"
 description: |-
@@ -12,7 +12,7 @@ Adds permission to create volumes off of a given EBS Snapshot.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_snapshot_create_volume_permission" "example_perm" {
   snapshot_id = aws_ebs_snapshot.example_snapshot.id
   account_id  = "12345678"
@@ -32,8 +32,8 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 The following arguments are supported:
 
-* `snapshot_id` - (required) A snapshot ID
-* `account_id` - (required) An AWS Account ID to add create volume permissions
+* `snapshot_id` - (Required) A snapshot ID
+* `account_id` - (Required) An AWS Account ID to add create volume permissions. The AWS Account cannot be the snapshot's owner
 
 ## Attributes Reference
 

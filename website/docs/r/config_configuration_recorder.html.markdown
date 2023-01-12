@@ -14,7 +14,7 @@ Provides an AWS Config Configuration Recorder. Please note that this resource **
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_config_configuration_recorder" "foo" {
   name     = "example"
   role_arn = aws_iam_role.r.arn
@@ -63,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Configuration Recorder can be imported using the name, e.g.
+Configuration Recorder can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_config_configuration_recorder.foo example

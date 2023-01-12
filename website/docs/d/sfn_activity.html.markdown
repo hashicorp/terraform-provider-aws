@@ -1,5 +1,5 @@
 ---
-subcategory: "Step Function (SFN)"
+subcategory: "SFN (Step Functions)"
 layout: "aws"
 page_title: "AWS: aws_sfn_activity"
 description: |-
@@ -12,7 +12,7 @@ Provides a Step Functions Activity data source
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_sfn_activity" "sfn_activity" {
   name = "my-activity"
 }
@@ -22,12 +22,12 @@ data "aws_sfn_activity" "sfn_activity" {
 
 The following arguments are supported:
 
-* `name` - (Optional) The name that identifies the activity.
-* `arn` - (Optional) The Amazon Resource Name (ARN) that identifies the activity.
+* `name` - (Optional) Name that identifies the activity.
+* `arn` - (Optional) ARN that identifies the activity.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the activity.
-* `creation_date` - The date the activity was created.
+* `id` - ARN that identifies the activity.
+* `creation_date` - Date the activity was created.

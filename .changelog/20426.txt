@@ -1,0 +1,3 @@
+```release-note:bug
+aws/resource_aws_amplify_branch: Correctly handle branch names that contain '/'
+```

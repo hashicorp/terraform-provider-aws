@@ -10,9 +10,11 @@ description: |-
 
 Manages an individual Service Quota.
 
+~> **NOTE:** Global quotas apply to all AWS regions, but can only be accessed in `us-east-1` in the Commercial partition or `us-gov-west-1` in the GovCloud partition. In other regions, the AWS API will return the error `The request failed because the specified service does not exist.`
+
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_servicequotas_service_quota" "example" {
   quota_code   = "L-F678F1CE"
   service_code = "vpc"
@@ -43,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ~> *NOTE* This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
 
-`aws_servicequotas_service_quota` can be imported by using the service code and quota code, separated by a front slash (`/`), e.g.
+`aws_servicequotas_service_quota` can be imported by using the service code and quota code, separated by a front slash (`/`), e.g.,
 
 ```
 $ terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE

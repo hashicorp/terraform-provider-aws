@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_connection_route"
 description: |-
@@ -12,7 +12,7 @@ Provides a static route between a VPN connection and a customer gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
 }

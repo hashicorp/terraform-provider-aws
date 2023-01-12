@@ -1,0 +1,7 @@
+```release-note:bug
+aws/resource_aws_lex_bot: Correctly determine `version` attribute
+```
+
+```release-note:bug
+aws/resource_aws_lex_intent: Correctly determine `version` attribute
+```

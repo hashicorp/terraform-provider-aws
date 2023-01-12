@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_fsx_openzfs_file_system
+```
+
+```release-note:new-resource
+aws_fsx_openzfs_volume
+```
+
+```release-note:new-resource
+aws_fsx_openzfs_snapshot
+```

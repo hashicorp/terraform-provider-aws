@@ -12,7 +12,7 @@ Information about single Outpost Instance Type.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_outposts_outpost_instance_type" "example" {
   arn                      = data.aws_outposts_outpost.example.arn
   preferred_instance_types = ["m5.large", "m5.4xlarge"]
@@ -29,7 +29,7 @@ resource "aws_ec2_instance" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Outpost Amazon Resource Name (ARN).
+* `arn` - (Required) Outpost ARN.
 
 The following arguments are optional:
 

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dx_private_virtual_interface: Add `sitelink_enabled` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_transit_virtual_interface: Add `sitelink_enabled` argument
+```

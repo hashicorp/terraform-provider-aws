@@ -1,102 +1,68 @@
-# Roadmap:  February 2021 - April 2021
+# Roadmap:  November 2022 - January 2022
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top 10 Community Issues, [Core Services](docs/CORE_SERVICES.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors, are not available we will create the resources and implementation ourselves.
+We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
 Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
 
-This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
+This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-From [November through January](docs/roadmaps/2020_November_to_January.md), we added support for (among other things):
+In the period spanning August to October 2022, 808 Pull Requests were opened in the provider and 783 were closed/merged, adding support for the following (among many others):
 
-- SSO Permission Sets
-- EC2 Managed Prefix Lists
-- Firewall Manager Policies
-- SASL/SCRAM Authentication for MSK
-- ImageBuilder
-- LakeFormation
-- Serverless Application Repository
-- Cloudwatch Composite Alarms
+- Elemental MediaLive
+- RDS Reserved Instances
+- SESV2
+- BYOIP Support for Global Accelerator
+- RDS Custom Managed Databases
 
-As well as partnering with AWS to provide launch day support for:
+From November ‘22 - January ‘23, we will be prioritizing the following areas of work:
 
-- Network Firewall
-- Code Signing for Lambda
-- Container Images for Lambda
-- Gateway Load Balancer
-- Spot Launch for EKS Managed Node Groups
+## New Services  
 
-From February-April ‘21, we will be prioritizing the following areas of work:
+### AWS Audit Manager
 
-## Provider Functionality: Default Tags
+Issue: [#4936](https://github.com/hashicorp/terraform-provider-aws/issues/17981)
 
-Issue: [#7926](https://github.com/hashicorp/terraform-provider-aws/issues/7926)
+_[AWS Audit Manager](https://aws.amazon.com/audit-manager/) helps you continuously audit your AWS usage to simplify how you assess risk and compliance with regulations and industry standards. Audit Manager automates evidence collection to reduce the “all hands on deck” manual effort that often happens for audits and enable you to scale your audit capability in the cloud as your business grows. With Audit Manager, it is easy to assess if your policies, procedures, and activities – also known as controls – are operating effectively. When it is time for an audit, AWS Audit Manager helps you manage stakeholder reviews of your controls and enables you to build audit-ready reports with much less manual effort._
 
-Default Tags builds on the workflows in Ignore Tags to provide additional control over the ways Terraform manages tagging capabilities. Users will be able to specify lists of tags to apply to all resources in a configuration at the provider level. Our goal in offering this use case is to assist in tidying up configuration files, decreasing development efforts, and streamlining cost allocation and resource attribution within organizations of all sizes. 
-
-## New Services
-
-### CloudWatch Synthetics
-Issue: [#11145](https://github.com/hashicorp/terraform-provider-aws/issues/11145)
-
-_[CloudWatch Synthetics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries.html) You can use Amazon CloudWatch Synthetics to create canaries, configurable scripts that run on a schedule, to monitor your endpoints and APIs. Canaries follow the same routes and perform the same actions as a customer, which makes it possible for you to continually verify your customer experience even when you don't have any customer traffic on your applications. By using canaries, you can discover issues before your customers do._
-
-Support for CloudWatch Synthetics will include:
-
-New Resource(s):
-- aws_synthetics_canary
-
-New Datasource(s):
-- aws_synthetics_canary_runs
-
-### Managed Workflows for Apache Airflow
-
-Issue: [#16432](https://github.com/hashicorp/terraform-provider-aws/issues/16432)
-
-_[Managed Workflows for Apache Airflow](https://aws.amazon.com/blogs/aws/introducing-amazon-managed-workflows-for-apache-airflow-mwaa/) Amazon Managed Workflows for Apache Airflow (MWAA) is a managed orchestration service for Apache Airflow1 that makes it easier to set up and operate end-to-end data pipelines in the cloud at scale. Apache Airflow is an open-source tool used to programmatically author, schedule, and monitor sequences of processes and tasks referred to as “workflows.” With Managed Workflows, you can use Airflow and Python to create workflows without having to manage the underlying infrastructure for scalability, availability, and security. Managed Workflows automatically scales its workflow execution capacity to meet your needs, and is integrated with AWS security services to help provide you with fast and secure access to data._
-
-Support for Amazon Managed Workflows for Apache Airflow will include:
+Support for AWS Audit Manager may include:
 
 New Resource(s):
 
-- aws_mwaa_environment
+- `aws_auditmanager_assessment`
+- `aws_auditmanager_assessment_framework`
+- `aws_auditmanager_assessment_report`
+- `aws_auditmanager_control`
 
-## Core Service Reliability
-Core Services are areas of high usage or strategic importance for our users. We strive to offer rock solid reliability in these areas. This quarter we will have a focus on RDS and Elasticache (which we are also promoting to Core Service status) to address some common pain points in their usage and ensure they continue to meet our standards.
+## Re:Invent
 
-### RDS
+This quarter includes Re:Invent 2022 and as such, we will be looking out for key launch events and aligning provider support to those most desired by the community.
 
-- [#15177](https://github.com/hashicorp/terraform-provider-aws/issues/15177): Subsequent plan/apply forces global cluster recreation when source cluster's storage_encrypted=true
-- [#15583](https://github.com/hashicorp/terraform-provider-aws/issues/15583):  aws db parameter group ... converts keys and values to lowercase and fails 'apply' due to aws_db_parameter_group changes
-- [#1198](https://github.com/hashicorp/terraform-provider-aws/issues/1198): Unable to ignore changes to RDS minor engine version
-- [#9401](https://github.com/hashicorp/terraform-provider-aws/issues/9401): Destroy/recreate DB instance on minor version update rather than updating
-- [#2635](https://github.com/hashicorp/terraform-provider-aws/issues/2635): RDS - storage_encrypted = true does not work
-- [#467](https://github.com/hashicorp/terraform-provider-aws/issues/467): With aws_db_instance when you remove the snapshot_identifier it wants to force a new resource
-- [#10197](https://github.com/hashicorp/terraform-provider-aws/issues/10197): AWS aurora unexpected state 'configuring-iam-database-auth' when modifying the `iam_database_authentication_enabled` flag
-- [#13891](https://github.com/hashicorp/terraform-provider-aws/issues/13891): RDS Cluster is not reattached to Global Cluster after failing deletion
+## Enhancements to Existing Services
 
-## Technical Debt Theme
+This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-Last quarter we continued to improve the stability of our Acceptance Test suite. Following on from that work we will begin to integrate our Pull Request workflow with our Acceptance testing suite with a goal of being able to determine which tests to run, trigger, and view results of Acceptance Test runs on GitHub. This will improve our time to merge incoming PR's and further protect against regressions.
-
-We also spent time last quarter improving our documentation to give contributors more explicit guidance on best practice patterns for [data conversion](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md) and [error handling](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/error-handling.md).  
+- [SSO: Support for permission boundary policies](https://github.com/hashicorp/terraform-provider-aws/issues/25893)
+- [Stop Instances](https://github.com/hashicorp/terraform-provider-aws/issues/22)
+- [Proposal: Add support Object-level logging in the existing trail for resource 'aws_s3_bucket'](https://github.com/hashicorp/terraform-provider-aws/issues/9459)
+- [Add support for auto-adjusting budgets](https://github.com/hashicorp/terraform-provider-aws/issues/23268)
+- [Support managed rule group configs in aws_wafv2_web_acl for the new managed rule AWSManagedRulesATPRuleSet](https://github.com/hashicorp/terraform-provider-aws/issues/23290)
+- [Add Support for WAFv2 Managed Rule Group Configuration](https://github.com/hashicorp/terraform-provider-aws/issues/23287)
+- [Add data source aws_organizations_accounts](https://github.com/hashicorp/terraform-provider-aws/pull/18589)
+- [Add support for elasticsearch outbound connection and relevant accepter](https://github.com/hashicorp/terraform-provider-aws/pull/22988)
+- [provider: Add scrubbing for sensitive data in logs](https://github.com/hashicorp/terraform-provider-aws/issues/26029)
+- [Add support for Route 53 IP Based Routing Policy](https://github.com/hashicorp/terraform-provider-aws/issues/25321)
+- [Add ability to query ECR repository for most recently pushed image](https://github.com/hashicorp/terraform-provider-aws/issues/12798)
+- [rds: export db snapshot data to S3](https://github.com/hashicorp/terraform-provider-aws/issues/16181)
 
 ## Research Topics
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-We are interested in your thoughts and feedback about the proposals below and encourage you to comment on the linked issues or schedule time with @maryelizbeth via the link on her GitHub profile to discuss.
+### Default Tags
 
-### API Calls/IAM Actions Per Terraform Resource (Minimum IAM)
-Issue: [#9154](https://github.com/hashicorp/terraform-provider-aws/issues/9154)
-
-To address security concerns and best practices we are considering how Terraform could surface minimally viable IAM policies for taking actions on resources or executing a TF plan. This is in the early stages of research and we are particularly interested in whether or not this would be useful and the resources or services areas for which it is most valuable.
-
-### Lifecycle: Retain [Add 'retain' attribute to the Terraform lifecycle meta-parameter]
-Issue: [#902](https://github.com/hashicorp/terraform-provider-aws/issues/902)
-
-Some resources (e.g. log groups) are intended to be created but never destroyed. Terraform currently does not have a lifecycle attribute for retaining such resources. We are curious as to whether or not retaining resources is a workflow that meets the needs of our community and if so, how and where we might make use of that in the AWS Provider.
+[#17829](https://github.com/hashicorp/terraform-provider-aws/issues/17829) added the `default_tags` block to allow practitioners to tags at the provider level. This allows configured resources capable of assigning tags to have them inherit those as well as be able to specify them at the resource level. This has proven extremely popular with the community, however it comes with a number of significant caveats ([#18311](https://github.com/hashicorp/terraform-provider-aws/issues/18311), [#19583](https://github.com/hashicorp/terraform-provider-aws/issues/19583), [#19204](https://github.com/hashicorp/terraform-provider-aws/issues/19204)) for use which have resulted from limitations in the provider SDK we use. New functionality in the [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) and [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework) should allow us to temper these caveats. This quarter we plan to research and propose changes to allow `default_tags` to be more widely usable.
 
 ## Disclosures
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_orderable_db_instance"
 description: |-
@@ -12,7 +12,7 @@ Information about RDS orderable DB instances and valid parameter combinations.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_rds_orderable_db_instance" "test" {
   engine         = "mysql"
   engine_version = "5.7.22"
@@ -25,7 +25,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 Valid parameter combinations can also be found with `preferred_engine_versions` and/or `preferred_instance_classes`.
 
-```hcl
+```terraform
 data "aws_rds_orderable_db_instance" "test" {
   engine        = "mysql"
   license_model = "general-public-license"
@@ -34,7 +34,6 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
 }
 ```
-
 
 ## Argument Reference
 
@@ -73,3 +72,4 @@ In addition to all arguments above, the following attributes are exported:
 * `outpost_capable` - Whether a DB instance supports RDS on Outposts.
 * `read_replica_capable` - Whether a DB instance can have a read replica.
 * `supported_engine_modes` - A list of the supported DB engine modes.
+* `supported_network_types` - The network types supported by the DB instance (`IPV4` or `DUAL`).

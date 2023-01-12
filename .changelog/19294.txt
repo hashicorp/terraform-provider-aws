@@ -1,0 +1,23 @@
+```release-note:new-resource
+aws_s3control_object_lambda_access_point
+```
+
+```release-note:new-resource
+aws_s3control_object_lambda_access_point_policy
+```
+
+```release-note:new-resource
+aws_s3control_access_point_policy
+```
+
+```release-note:bug
+aws_s3_access_point: `vpc_configuration.vpc_id` is _ForceNew_
+```
+
+```release-note:enhancement
+aws_s3_access_point: Add `alias` attribute
+```
+
+```release-note:enhancement
+aws_s3_access_point: Add `endpoints` attribute
+```

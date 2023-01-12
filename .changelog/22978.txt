@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule`
+```
+
+```release-note:bug
+resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule`
+```

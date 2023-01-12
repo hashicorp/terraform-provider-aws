@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_policy_attachment"
 description: |-
@@ -18,7 +18,7 @@ Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user" "user" {
   name = "test-user"
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_networkmanager_core_network_policy_document: Fix bug where bool values in `segments` blocks weren't being included in json payloads
+```

@@ -1,0 +1,578 @@
+//go:build sweep
+// +build sweep
+
+package appmesh
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appmesh"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+)
+
+func init() {
+	resource.AddTestSweepers("aws_appmesh_gateway_route", &resource.Sweeper{
+		Name: "aws_appmesh_gateway_route",
+		F:    sweepGatewayRoutes,
+	})
+
+	resource.AddTestSweepers("aws_appmesh_mesh", &resource.Sweeper{
+		Name: "aws_appmesh_mesh",
+		F:    sweepMeshes,
+		Dependencies: []string{
+			"aws_appmesh_virtual_service",
+			"aws_appmesh_virtual_router",
+			"aws_appmesh_virtual_node",
+			"aws_appmesh_virtual_gateway",
+		},
+	})
+
+	resource.AddTestSweepers("aws_appmesh_route", &resource.Sweeper{
+		Name: "aws_appmesh_route",
+		F:    sweepRoutes,
+	})
+
+	resource.AddTestSweepers("aws_appmesh_virtual_gateway", &resource.Sweeper{
+		Name: "aws_appmesh_virtual_gateway",
+		F:    sweepVirtualGateways,
+		Dependencies: []string{
+			"aws_appmesh_gateway_route",
+		},
+	})
+
+	resource.AddTestSweepers("aws_appmesh_virtual_node", &resource.Sweeper{
+		Name: "aws_appmesh_virtual_node",
+		F:    sweepVirtualNodes,
+	})
+
+	resource.AddTestSweepers("aws_appmesh_virtual_router", &resource.Sweeper{
+		Name: "aws_appmesh_virtual_router",
+		F:    sweepVirtualRouters,
+		Dependencies: []string{
+			"aws_appmesh_route",
+		},
+	})
+
+	resource.AddTestSweepers("aws_appmesh_virtual_service", &resource.Sweeper{
+		Name: "aws_appmesh_virtual_service",
+		F:    sweepVirtualServices,
+	})
+}
+
+func sweepMeshes(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).AppMeshConn()
+	input := &appmesh.ListMeshesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Meshes {
+			r := ResourceMesh()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.MeshName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Mesh Service Mesh sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping App Mesh Service Meshes (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVirtualGateways(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).AppMeshConn()
+	input := &appmesh.ListMeshesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Meshes {
+			meshName := aws.StringValue(v.MeshName)
+			input := &appmesh.ListVirtualGatewaysInput{
+				MeshName: aws.String(meshName),
+			}
+
+			err := conn.ListVirtualGatewaysPages(input, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.VirtualGateways {
+					virtualGatewayName := aws.StringValue(v.VirtualGatewayName)
+					r := ResourceVirtualGateway()
+					d := r.Data(nil)
+					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualGatewayName)) // Logged in Delete handler, not used in API call.
+					d.Set("mesh_name", meshName)
+					d.Set("name", virtualGatewayName)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Virtual Gateways (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Mesh Virtual Gateway sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Gateways (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepVirtualNodes(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).AppMeshConn()
+	input := &appmesh.ListMeshesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Meshes {
+			meshName := aws.StringValue(v.MeshName)
+			input := &appmesh.ListVirtualNodesInput{
+				MeshName: aws.String(meshName),
+			}
+
+			err := conn.ListVirtualNodesPages(input, func(page *appmesh.ListVirtualNodesOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.VirtualNodes {
+					virtualNodeName := aws.StringValue(v.VirtualNodeName)
+					r := ResourceVirtualNode()
+					d := r.Data(nil)
+					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualNodeName)) // Logged in Delete handler, not used in API call.
+					d.Set("mesh_name", meshName)
+					d.Set("name", virtualNodeName)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Virtual Nodes (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Mesh Virtual Node sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Nodes (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepVirtualRouters(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).AppMeshConn()
+	input := &appmesh.ListMeshesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Meshes {
+			meshName := aws.StringValue(v.MeshName)
+			input := &appmesh.ListVirtualRoutersInput{
+				MeshName: aws.String(meshName),
+			}
+
+			err := conn.ListVirtualRoutersPages(input, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.VirtualRouters {
+					virtualRouterName := aws.StringValue(v.VirtualRouterName)
+					r := ResourceVirtualRouter()
+					d := r.Data(nil)
+					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualRouterName)) // Logged in Delete handler, not used in API call.
+					d.Set("mesh_name", meshName)
+					d.Set("name", virtualRouterName)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Virtual Routers (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Mesh Virtual Router sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Routers (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepVirtualServices(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).AppMeshConn()
+	input := &appmesh.ListMeshesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Meshes {
+			meshName := aws.StringValue(v.MeshName)
+			input := &appmesh.ListVirtualServicesInput{
+				MeshName: aws.String(meshName),
+			}
+
+			err := conn.ListVirtualServicesPages(input, func(page *appmesh.ListVirtualServicesOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.VirtualServices {
+					virtualServiceName := aws.StringValue(v.VirtualServiceName)
+					r := ResourceVirtualService()
+					d := r.Data(nil)
+					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualServiceName)) // Logged in Delete handler, not used in API call.
+					d.Set("mesh_name", meshName)
+					d.Set("name", virtualServiceName)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Virtual Services (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Mesh Virtual Service sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Services (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepGatewayRoutes(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).AppMeshConn()
+	input := &appmesh.ListMeshesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Meshes {
+			meshName := aws.StringValue(v.MeshName)
+			input := &appmesh.ListVirtualGatewaysInput{
+				MeshName: aws.String(meshName),
+			}
+
+			err := conn.ListVirtualGatewaysPages(input, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.VirtualGateways {
+					virtualGatewayName := aws.StringValue(v.VirtualGatewayName)
+					input := &appmesh.ListGatewayRoutesInput{
+						MeshName:           aws.String(meshName),
+						VirtualGatewayName: aws.String(virtualGatewayName),
+					}
+
+					err := conn.ListGatewayRoutesPages(input, func(page *appmesh.ListGatewayRoutesOutput, lastPage bool) bool {
+						if page == nil {
+							return !lastPage
+						}
+
+						for _, v := range page.GatewayRoutes {
+							gatewayRouteName := aws.StringValue(v.GatewayRouteName)
+							r := ResourceGatewayRoute()
+							d := r.Data(nil)
+							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualGatewayName, gatewayRouteName)) // Logged in Delete handler, not used in API call.
+							d.Set("mesh_name", meshName)
+							d.Set("name", gatewayRouteName)
+							d.Set("virtual_gateway_name", virtualGatewayName)
+
+							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+						}
+
+						return !lastPage
+					})
+
+					if sweep.SkipSweepError(err) {
+						continue
+					}
+
+					if err != nil {
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Gateway Routes (%s): %w", region, err))
+					}
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Virtual Gateways (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Mesh Gateway Route sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Gateway Routes (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepRoutes(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).AppMeshConn()
+	input := &appmesh.ListMeshesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Meshes {
+			meshName := aws.StringValue(v.MeshName)
+			input := &appmesh.ListVirtualRoutersInput{
+				MeshName: aws.String(meshName),
+			}
+
+			err := conn.ListVirtualRoutersPages(input, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.VirtualRouters {
+					virtualRouterName := aws.StringValue(v.VirtualRouterName)
+					input := &appmesh.ListRoutesInput{
+						MeshName:          aws.String(meshName),
+						VirtualRouterName: aws.String(virtualRouterName),
+					}
+
+					err := conn.ListRoutesPages(input, func(page *appmesh.ListRoutesOutput, lastPage bool) bool {
+						if page == nil {
+							return !lastPage
+						}
+
+						for _, v := range page.Routes {
+							routeName := aws.StringValue(v.RouteName)
+							r := ResourceRoute()
+							d := r.Data(nil)
+							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualRouterName, routeName)) // Logged in Delete handler, not used in API call.
+							d.Set("mesh_name", meshName)
+							d.Set("name", routeName)
+							d.Set("virtual_router_name", virtualRouterName)
+
+							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+						}
+
+						return !lastPage
+					})
+
+					if sweep.SkipSweepError(err) {
+						continue
+					}
+
+					if err != nil {
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Routes (%s): %w", region, err))
+					}
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Virtual Routers (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping App Mesh Route sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Routes (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}

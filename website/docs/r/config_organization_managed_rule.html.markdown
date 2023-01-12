@@ -16,7 +16,7 @@ Manages a Config Organization Managed Rule. More information about these rules c
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_organizations_organization" "example" {
   aws_service_access_principals = ["config-multiaccountsetup.amazonaws.com"]
   feature_set                   = "ALL"
@@ -53,16 +53,15 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_config_organization_managed_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5m`) How long to wait for the rule to be created.
-* `delete` - (Default `5m`) How long to wait for the rule to be deleted.
-* `update` - (Default `5m`) How long to wait for the rule to be updated.
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
-Config Organization Managed Rules can be imported using the name, e.g.
+Config Organization Managed Rules can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_config_organization_managed_rule.example example

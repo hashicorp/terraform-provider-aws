@@ -1,0 +1,67 @@
+//go:build sweep
+// +build sweep
+
+package kinesis
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+)
+
+func init() {
+	resource.AddTestSweepers("aws_kinesis_stream", &resource.Sweeper{
+		Name: "aws_kinesis_stream",
+		F:    sweepStreams,
+	})
+}
+
+func sweepStreams(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	input := &kinesis.ListStreamsInput{}
+	conn := client.(*conns.AWSClient).KinesisConn()
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.StreamSummaries {
+			r := ResourceStream()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.StreamARN))
+			d.Set("enforce_consumer_deletion", true)
+			d.Set("name", v.StreamName)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Kinesis Streams (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Kinesis Streams (%s): %w", region, err)
+	}
+
+	return nil
+}
