@@ -2069,6 +2069,12 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		if aws.StringValue(input.StorageType) == storageTypeIO1 {
 			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
 		}
+
+		// Need to send the iops and allocated_size if migrating to a gp3 volume that's larger than the threshold.
+		if aws.StringValue(input.StorageType) == storageTypeGP3 && !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
 	}
 
 	if d.HasChange("vpc_security_group_ids") {
