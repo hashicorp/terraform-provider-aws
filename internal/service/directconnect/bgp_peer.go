@@ -175,7 +175,7 @@ func resourceBGPPeerDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrMessageContains(err, "DirectConnectClientException", "The last BGP Peer on a Virtual Interface cannot be deleted") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Direct Connect BGP Peer (%s): %w", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -195,7 +195,7 @@ func resourceBGPPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect BGP peer (%s) to be deleted: %s", d.Id(), err)
+		return fmt.Errorf("deleting Direct Connect BGP Peer (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil
