@@ -34,3 +34,7 @@ func (client *AWSClient) S3ConnURICleaningDisabled() *s3.S3 {
 func (client *AWSClient) SetHTTPClient(httpClient *http.Client) {
 	client.httpClient = httpClient
 }
+
+func (client *AWSClient) HTTPClient() *http.Client {
+	return client.httpClient
+}

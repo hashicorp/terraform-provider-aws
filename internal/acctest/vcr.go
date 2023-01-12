@@ -380,9 +380,15 @@ func closeVCRRecorder(t *testing.T) {
 	if ok {
 		if !t.Failed() {
 			log.Print("[DEBUG] stopping VCR recorder")
-			if err := meta.Session.Config.HTTPClient.Transport.(*recorder.Recorder).Stop(); err != nil {
-				t.Error(err)
+			roundTripper := meta.HTTPClient().Transport
+			if v, ok := roundTripper.(*recorder.Recorder); ok {
+				if err := v.Stop(); err != nil {
+					t.Error(err)
+				}
+			} else {
+				t.Logf("provider meta RoundTripper type: %T", roundTripper)
 			}
+
 		}
 
 		delete(providerMetas, testName)
