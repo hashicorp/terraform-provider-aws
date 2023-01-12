@@ -53,6 +53,8 @@ BUG FIXES:
 * resource/aws_lb_target_group: Change `protocol_version` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#17845](https://github.com/hashicorp/terraform-provider-aws/issues/17845))
 * resource/aws_lb_target_group: When creating a new target group, return an error if there is an existing target group with the same name. Use [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) for existing target groups ([#26977](https://github.com/hashicorp/terraform-provider-aws/issues/26977))
 * resource/aws_mq_configuration: Improve refresh to avoid unnecessary diffs in `data` ([#28837](https://github.com/hashicorp/terraform-provider-aws/issues/28837))
+* resource/aws_s3_bucket: Improve refresh to avoid unnecessary diffs in `policy` ([#28855](https://github.com/hashicorp/terraform-provider-aws/issues/28855))
+* resource/aws_s3_bucket_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28855](https://github.com/hashicorp/terraform-provider-aws/issues/28855))
 * resource/aws_vpc_endpoint: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
 * resource/aws_vpc_endpoint_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
 
