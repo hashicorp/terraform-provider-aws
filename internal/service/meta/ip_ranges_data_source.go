@@ -154,8 +154,8 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 
 	data.CreateDate = types.StringValue(ipRanges.CreateDate)
 	data.ID = types.StringValue(ipRanges.SyncToken)
-	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv4Prefixes)
-	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv6Prefixes)
+	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueListLegacy(ctx, ipv4Prefixes)
+	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueListLegacy(ctx, ipv6Prefixes)
 	data.SyncToken = types.Int64Value(int64(syncToken))
 	data.URL = types.StringValue(url)
 

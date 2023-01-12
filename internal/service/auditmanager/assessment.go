@@ -201,7 +201,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
-	plan.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -513,9 +513,9 @@ func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, meta *c
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		rd.Tags = tftags.Null
 	} else {
-		rd.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
+		rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
 	}
-	rd.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	rd.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	return diags
 }

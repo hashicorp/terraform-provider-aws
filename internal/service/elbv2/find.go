@@ -34,35 +34,6 @@ func FindListenerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.Listener, error) {
 	return result, err
 }
 
-func FindLoadBalancerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.LoadBalancer, error) {
-	input := &elbv2.DescribeLoadBalancersInput{
-		LoadBalancerArns: aws.StringSlice([]string{arn}),
-	}
-
-	var result *elbv2.LoadBalancer
-
-	err := conn.DescribeLoadBalancersPages(input, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, lb := range page.LoadBalancers {
-			if lb == nil {
-				continue
-			}
-
-			if aws.StringValue(lb.LoadBalancerArn) == arn {
-				result = lb
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return result, err
-}
-
 func FindTargetGroupByARN(conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, error) {
 	input := &elbv2.DescribeTargetGroupsInput{
 		TargetGroupArns: aws.StringSlice([]string{arn}),
