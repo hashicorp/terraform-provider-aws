@@ -8,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestLBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
@@ -1598,12 +1598,12 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1643,19 +1643,19 @@ func TestAccELBV2TargetGroup_ALBAlias_changeNameForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albBasic(rNameAfter),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameAfter),
 				),
 			},
@@ -1672,19 +1672,19 @@ func TestAccELBV2TargetGroup_ALBAlias_changePortForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdatedPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "port", "442"),
 				),
 			},
@@ -1701,19 +1701,19 @@ func TestAccELBV2TargetGroup_ALBAlias_changeProtocolForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdatedProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 				),
 			},
@@ -1730,18 +1730,18 @@ func TestAccELBV2TargetGroup_ALBAlias_changeVPCForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(resourceName, &before),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdatedVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(resourceName, &after),
 				),
 			},
 		},
@@ -1757,12 +1757,12 @@ func TestAccELBV2TargetGroup_ALBAlias_generatedName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albGeneratedName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 				),
 			},
 		},
@@ -1778,12 +1778,12 @@ func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1813,12 +1813,12 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1838,7 +1838,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 			{
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1846,7 +1846,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 			{
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1862,7 +1862,7 @@ func TestAccELBV2TargetGroup_ALBAlias_missingPortProtocolVPC(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_albMissingPort(rName),
@@ -1889,12 +1889,12 @@ func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-")),
 				),
 			},
@@ -1911,19 +1911,19 @@ func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "30"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "60"),
 				),
 			},
@@ -1940,12 +1940,12 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName),
 				),
@@ -1953,7 +1953,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albUpdateTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Type", "ALB Target Group"),
@@ -1972,12 +1972,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2001,7 +2001,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albUpdateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2035,12 +2035,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
@@ -2049,7 +2049,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 			{
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
@@ -2058,7 +2058,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 			{
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "least_outstanding_requests"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "least_outstanding_requests"),
@@ -2077,12 +2077,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckATargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2103,7 +2103,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2128,7 +2128,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckATargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2174,7 +2174,7 @@ func TestAccELBV2TargetGroup_Name_noDuplicates(t *testing.T) {
 			},
 			{
 				Config:      testAccTargetGroupConfig_duplicateNameFirstAndSecond(tgName),
-				ExpectError: regexp.MustCompile("target group with name (.*?) already exist"),
+				ExpectError: regexp.MustCompile("ELBv2 Target Group (.*?) already exist"),
 			},
 		},
 	})
@@ -3253,27 +3253,23 @@ func testAccCheckTargetGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+		_, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("unexpected error checking ALB (%s) destroyed: %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if targetGroup == nil {
-			continue
-		}
-
-		return fmt.Errorf("Target Group %q still exists", rs.Primary.ID)
+		return fmt.Errorf("ELBv2 Target Group %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
+func testAccCheckTargetGroupExists(n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -3281,22 +3277,19 @@ func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.Te
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Target Group ID is set")
+			return errors.New("No ELBv2 Target Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+		output, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if targetGroup == nil {
-			return fmt.Errorf("Target Group (%s) not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		*res = *targetGroup
 		return nil
 	}
 }
@@ -3860,65 +3853,4 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName)
-}
-
-func testAccCheckATargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_alb_target_group" {
-			continue
-		}
-
-		describe, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
-			TargetGroupArns: []*string{aws.String(rs.Primary.ID)},
-		})
-
-		if err == nil {
-			if len(describe.TargetGroups) != 0 &&
-				*describe.TargetGroups[0].TargetGroupArn == rs.Primary.ID {
-				return fmt.Errorf("Target Group %q still exists", rs.Primary.ID)
-			}
-		}
-
-		// Verify the error
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-			return nil
-		} else {
-			return fmt.Errorf("Unexpected error checking ALB destroyed: %s", err)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckATargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return errors.New("No Target Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
-
-		describe, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
-			TargetGroupArns: []*string{aws.String(rs.Primary.ID)},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if len(describe.TargetGroups) != 1 ||
-			*describe.TargetGroups[0].TargetGroupArn != rs.Primary.ID {
-			return errors.New("Target Group not found")
-		}
-
-		*res = *describe.TargetGroups[0]
-		return nil
-	}
 }
