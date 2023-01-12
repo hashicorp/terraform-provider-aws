@@ -95,6 +95,10 @@ func ResourceExternalKey() *schema.Resource {
 					validation.StringLenBetween(0, 32768),
 					validation.StringIsJSON,
 				),
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
