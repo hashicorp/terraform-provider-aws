@@ -356,7 +356,7 @@ func testAccDatabaseCreateTables(dbName string) resource.TestCheckFunc {
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -369,12 +369,12 @@ func testAccDatabaseCreateTables(dbName string) resource.TestCheckFunc {
 			},
 		}
 
-		resp, err := athenaconn.StartQueryExecution(input)
+		resp, err := conn.StartQueryExecution(input)
 		if err != nil {
 			return err
 		}
 
-		_, err = tfathena.QueryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = tfathena.QueryExecutionResult(conn, aws.StringValue(resp.QueryExecutionId))
 		return err
 	}
 }
@@ -386,7 +386,7 @@ func testAccDatabaseDestroyTables(dbName string) resource.TestCheckFunc {
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -398,12 +398,12 @@ func testAccDatabaseDestroyTables(dbName string) resource.TestCheckFunc {
 			},
 		}
 
-		resp, err := athenaconn.StartQueryExecution(input)
+		resp, err := conn.StartQueryExecution(input)
 		if err != nil {
 			return err
 		}
 
-		_, err = tfathena.QueryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = tfathena.QueryExecutionResult(conn, aws.StringValue(resp.QueryExecutionId))
 		return err
 	}
 }
@@ -415,7 +415,7 @@ func testAccCheckDatabaseDropFails(dbName string) resource.TestCheckFunc {
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -427,12 +427,12 @@ func testAccCheckDatabaseDropFails(dbName string) resource.TestCheckFunc {
 			},
 		}
 
-		resp, err := athenaconn.StartQueryExecution(input)
+		resp, err := conn.StartQueryExecution(input)
 		if err != nil {
 			return err
 		}
 
-		_, err = tfathena.QueryExecutionResult(*resp.QueryExecutionId, athenaconn)
+		_, err = tfathena.QueryExecutionResult(conn, aws.StringValue(resp.QueryExecutionId))
 		if err == nil {
 			return fmt.Errorf("drop database unexpectedly succeeded for a database with tables")
 		}
