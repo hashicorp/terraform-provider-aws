@@ -34,6 +34,8 @@ BUG FIXES:
 * resource/aws_ecr_repository_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
 * resource/aws_ecrpublic_repository_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
 * resource/aws_efs_file_system_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28800](https://github.com/hashicorp/terraform-provider-aws/issues/28800))
+* resource/aws_elasticsearch_domain: Improve refresh to avoid unnecessary diffs in `access_policies` ([#28801](https://github.com/hashicorp/terraform-provider-aws/issues/28801))
+* resource/aws_elasticsearch_domain_policy: Improve refresh to avoid unnecessary diffs in `access_policies` ([#28801](https://github.com/hashicorp/terraform-provider-aws/issues/28801))
 * resource/aws_glacier_vault: Improve refresh to avoid unnecessary diffs in `access_policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
 * resource/aws_glacier_vault_lock: Improve refresh to avoid unnecessary diffs in `policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
 * resource/aws_glue_resource_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28807](https://github.com/hashicorp/terraform-provider-aws/issues/28807))
@@ -55,6 +57,8 @@ BUG FIXES:
 * resource/aws_mq_configuration: Improve refresh to avoid unnecessary diffs in `data` ([#28837](https://github.com/hashicorp/terraform-provider-aws/issues/28837))
 * resource/aws_s3_bucket: Improve refresh to avoid unnecessary diffs in `policy` ([#28855](https://github.com/hashicorp/terraform-provider-aws/issues/28855))
 * resource/aws_s3_bucket_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28855](https://github.com/hashicorp/terraform-provider-aws/issues/28855))
+* resource/aws_sqs_queue: Improve refresh to avoid unnecessary diffs in `policy` ([#28840](https://github.com/hashicorp/terraform-provider-aws/issues/28840))
+* resource/aws_sqs_queue_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28840](https://github.com/hashicorp/terraform-provider-aws/issues/28840))
 * resource/aws_vpc_endpoint: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
 * resource/aws_vpc_endpoint_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
 
