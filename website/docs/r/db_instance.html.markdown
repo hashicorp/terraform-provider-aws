@@ -160,6 +160,8 @@ Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
 docs](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow)
 for more information.
+* `manage_master_user_password` - (Optional) Set to true to allow RDS to manage the master user password in secrets manager. Cannot be set if `password` is provided.
+* `master_user_secret_kms_key_id` - (Optional) The ARN of a KMS key used to protect the secret that RDS creates. A default key will be used if not provided.
 * `max_allocated_storage` - (Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to `allocated_storage`. Must be greater than or equal to `allocated_storage` or `0` to disable Storage Autoscaling.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points
 when Enhanced Monitoring metrics are collected for the DB instance. To disable
@@ -179,7 +181,7 @@ Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.
 * `password` - (Required unless a `snapshot_identifier` or `replicate_source_db`
-is provided) Password for the master DB user. Note that this may show up in
+is provided or `manage_master_user_password` is set.) Password for the master DB user. Note that this may show up in
 logs, and it will be stored in the state file.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
@@ -310,6 +312,7 @@ in a Route 53 Alias record).
 * `instance_class`- The RDS instance class.
 * `latest_restorable_time` - The latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
 * `maintenance_window` - The instance maintenance window.
+* `master_user_secret_arn` - The ARN of the secret used to manage the master user password. Only available when `manage_master_user_password` is set to true.
 * `multi_az` - If the RDS instance is multi AZ enabled.
 * `name` - The database name.
 * `port` - The database port.

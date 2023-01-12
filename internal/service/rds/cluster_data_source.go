@@ -100,6 +100,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_user_secret_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -190,6 +194,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("iam_roles", iamRoleARNs)
 	d.Set("kms_key_id", dbc.KmsKeyId)
+	if dbc.MasterUserSecret != nil {
+		d.Set("master_user_secret_arn", dbc.MasterUserSecret.SecretArn)
+	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("port", dbc.Port)

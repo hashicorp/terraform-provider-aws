@@ -119,6 +119,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_user_secret_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -234,6 +238,9 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("kms_key_id", v.KmsKeyId)
 	d.Set("license_model", v.LicenseModel)
 	d.Set("master_username", v.MasterUsername)
+	if v.MasterUserSecret != nil {
+		d.Set("master_user_secret_arn", v.MasterUserSecret.SecretArn)
+	}
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)

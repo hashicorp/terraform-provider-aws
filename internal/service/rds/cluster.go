@@ -237,10 +237,30 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"manage_master_user_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"master_password"},
+			},
+			"master_user_secret_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			//lintignore:S019
+			"master_user_secret_arn": {
+				Type:     schema.TypeString,
+				Optional: false,
+				Required: false,
+				Computed: true,
+			},
 			"master_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -534,9 +554,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("master_password"); ok {
-			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
-			requiresModifyDbCluster = true
+		if !d.Get("manage_master_user_password").(bool) {
+			if v, ok := d.GetOk("master_password"); ok {
+				modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+				requiresModifyDbCluster = true
+			}
 		}
 
 		if v, ok := d.GetOk("network_type"); ok {
@@ -585,8 +607,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
-		if _, ok := d.GetOk("master_password"); !ok {
-			diags = sdkdiag.AppendErrorf(diags, `"master_password": required field is not set`)
+		if !d.Get("manage_master_user_password").(bool) {
+			if _, ok := d.GetOk("master_password"); !ok {
+				diags = sdkdiag.AppendErrorf(diags, `"master_password": required field is not set`)
+			}
 		}
 		if _, ok := d.GetOk("master_username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"master_username": required field is not set`)
@@ -602,7 +626,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			S3BucketName:        aws.String(tfMap["bucket_name"].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
@@ -649,6 +672,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("kms_key_id"); ok {
 			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("master_password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("network_type"); ok {
@@ -877,10 +912,19 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
 		// Note: Username and password credentials are required and valid
-		// unless the cluster is a read-replica. This also applies to clusters
-		// within a global cluster. Providing a password and/or username for
-		// a replica will result in an InvalidParameterValue error.
+		// unless the cluster password is managed by RDS, or it is a read-replica.
+		// This also applies to clusters within a global cluster.
+		// Providing a password and/or username for a replica
+		// will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
 		}
@@ -1031,6 +1075,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("iam_roles", iamRoleARNs)
 	d.Set("iops", dbc.Iops)
 	d.Set("kms_key_id", dbc.KmsKeyId)
+	if dbc.MasterUserSecret != nil {
+		d.Set("master_user_secret_arn", dbc.MasterUserSecret.SecretArn)
+	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("port", dbc.Port)
@@ -1177,6 +1224,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("iops") {
 			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+		}
+
+		if d.Get("manage_master_user_password").(bool) {
+			if d.HasChange("manage_master_user_password") {
+				input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+			}
+			if d.HasChange("master_user_secret_kms_key_id") {
+				input.MasterUserSecretKmsKeyId = aws.String(d.Get("master_user_secret_kms_key_id").(string))
+			}
 		}
 
 		if d.HasChange("master_password") {

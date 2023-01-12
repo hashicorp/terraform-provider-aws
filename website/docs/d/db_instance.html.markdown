@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - If StorageEncrypted is true, the KMS key identifier for the encrypted DB instance.
 * `license_model` - License model information for this DB instance.
 * `master_username` - Contains the master username for the DB instance.
+* `master_user_secret_arn` - The ARN of the secret used to manage the master user password if available.
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - If the DB instance is a Multi-AZ deployment.
