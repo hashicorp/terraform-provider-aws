@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestLBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
@@ -3253,27 +3254,23 @@ func testAccCheckTargetGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+		_, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("unexpected error checking ALB (%s) destroyed: %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if targetGroup == nil {
-			continue
-		}
-
-		return fmt.Errorf("Target Group %q still exists", rs.Primary.ID)
+		return fmt.Errorf("ELBv2 Target Group %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
+func testAccCheckTargetGroupExists(n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -3281,22 +3278,19 @@ func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.Te
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Target Group ID is set")
+			return errors.New("No ELBv2 Target Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+		output, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if targetGroup == nil {
-			return fmt.Errorf("Target Group (%s) not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		*res = *targetGroup
 		return nil
 	}
 }
