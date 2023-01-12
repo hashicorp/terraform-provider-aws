@@ -155,7 +155,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
@@ -240,7 +240,7 @@ func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccTargetGroupDataSourceConfig_base(rName string) string {
+func testAccTargetGroupDataSourceConfig_base(rName, resourceType string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -248,7 +248,7 @@ resource "aws_lb_listener" "test" {
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = %[2]s.test.id
     type             = "forward"
   }
 }
@@ -263,7 +263,7 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 
   tags = {
-    TestName = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -290,11 +290,11 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, resourceType))
 }
 
 func testAccTargetGroupDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccTargetGroupDataSourceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTargetGroupDataSourceConfig_base(rName, "aws_lb_target_group"), fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
@@ -328,7 +328,7 @@ data "aws_lb_target_group" "alb_tg_test_with_name" {
 }
 
 func testAccTargetGroupDataSourceConfig_appCookie(rName string) string {
-	return acctest.ConfigCompose(testAccTargetGroupDataSourceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTargetGroupDataSourceConfig_base(rName, "aws_lb_target_group"), fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 8080
@@ -364,7 +364,7 @@ data "aws_lb_target_group" "alb_tg_test_with_arn" {
 }
 
 func testAccTargetGroupDataSourceConfig_backwardsCompatibility(rName string) string {
-	return acctest.ConfigCompose(testAccTargetGroupDataSourceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTargetGroupDataSourceConfig_base(rName, "aws_alb_target_group"), fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
   port     = 8080
